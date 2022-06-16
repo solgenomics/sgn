@@ -251,6 +251,17 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plants per Plot: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_plant_entries" name="add_plant_entries" type="text" />
+                                        <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
+                                    </div>
+                                    <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                        <div class="col-sm-8" >
+                                            <input name="trial_create_plants_per_plot_inherit_treatments" id="trial_create_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
+                                        </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="add_project_description" name="add_project_description" maxlength="250"></textarea>
@@ -279,6 +290,8 @@ rect.bordered {
 %        $method = 'CRD';
 %    } elsif ($type eq 'Complete Block'){
 %        $method = 'RCBD';
+%    } elsif ($type eq 'Resolvable Row-Column'){
+%        $method = 'RRC';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
@@ -709,7 +722,7 @@ rect.bordered {
                                         </div>
                                     </div> -->
                                     <div class="form-group form-group-sm" id="field_map_row_aug">
-                                        <label class="col-sm-7 control-label">Number of rows (optional): </label>
+                                        <label class="col-sm-7 control-label">Number of rows (required): </label>
                                         <div class="col-sm-5" >
                                           <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" placeholder="Will use number of blocks by default"/>
                                         </div>

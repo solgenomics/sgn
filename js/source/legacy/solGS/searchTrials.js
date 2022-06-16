@@ -110,14 +110,15 @@ function listAllTrials (trials)  {
 }
 
 
-function checkTrainingPopulation (popId) {
+function checkTrainingPopulation (popIds) {
 
     var protocolId = jQuery('#genotyping_protocol_id').val();
 
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        url: '/solgs/check/training/population/' + popId + '/gp/' + protocolId,
+        url: '/solgs/check/training/population',
+        data: {'population_ids' : popIds, 'genotyping_protocol_id': protocolId},
         success: function(response) {
             if (response.is_training_population) {
 			jQuery("#searched_trials_message").hide();
@@ -232,9 +233,9 @@ function checkPopulationExists (name) {
             url: '/solgs/check/population/exists/',
             success: function(res) {
 
-		if (res.population_id) {
+		if (res.population_ids) {
 
-		    checkTrainingPopulation(res.population_id);
+		    checkTrainingPopulation(res.population_ids);
 
 		    jQuery('#searched_trials_message').html(
 			'<p>Checking if the trial or population can be used <br />'
@@ -270,7 +271,7 @@ function createTrialsTable (tableId) {
 
     var table = '<table id="' + tableId +  '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>';
+    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>More details</th>';
    // table    += '<th id="color_tip" title="You can combine Trials with matching color."><span class="glyphicon glyphicon-question-sign"></span></th>';
     table    += '</tr></thead>';
     table    += '</table>';
@@ -299,7 +300,7 @@ function displayTrainingPopulations (tableDetails) {
 	    jQuery('#' + divId).html(table).show();
 
 	    jQuery('#' + tableId).dataTable({
-                    'order'        : [[1, "desc"], [4, "desc"]],
+                    'order'        : [[0, "desc"],  [2, "desc"], [3, "desc"]],
 		    'searching'    : true,
 		    'ordering'     : true,
 		    'processing'   : true,

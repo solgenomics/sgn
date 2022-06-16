@@ -17,17 +17,20 @@ Displays a page with a table of all the analyses run by the currently logged in 
 Lukas Mueller <lam87@cornell.edu>
 
 =cut
-  
+
 </%doc>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => ['analyses' ] &>
 
 <& /page/page_title.mas, title => "Your Analyses and Analysis Models" &>
 
-<button class="btn btn-primary" name="upload_new_analysis_button" style="float:right">Upload Analysis</button><br />
+<button class='btn btn-primary' style='margin:3px;float:right' id='drone_imagery_calculate_statistics_link'>Drone Imagery Statistics</button><button class='btn btn-primary' style='margin:3px;float:right' id='analysis_calculate_statistics_link'>Single/Multi Trial GEBV Analysis</button><button class="btn btn-default" name="upload_new_analysis_button" style="margin:3px;float:right">Upload Analysis</button><br />
 <hr>
 
+<& /analyses/analysis_calculate_statistics.mas &>
 <& /analyses/upload_analysis_dialogs.mas &>
+<& /breeders_toolbox/drone_imagery/drone_imagery_analysis.mas &>
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="well">
 <h3>Your Analyses</h3>

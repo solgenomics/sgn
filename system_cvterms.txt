@@ -18,6 +18,7 @@ experiment_type	seedlot_experiment				00077
 experiment_type	grafting_experiment				00079
 experiment_type	analysis_experiment	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 experiment_type	analysis_model_experiment	For saving results in analysis models	06/04/2020	lam87nm529	00125
+experiment_type	analytics_protocol_experiment	For saving results of analytics protocols	01/22/2021	nm529	00136
 experiment_type	drone_run_experiment	For saving drone run experiment	07/20/2020	nm529	00126
 experiment_type	sampling_layout	For saving sampling trials	11/25/2020	nm529	00132
 genotype_property	igd number
@@ -121,6 +122,8 @@ project_property	genotyping_facility_plate_id	To retrieve status info from genot
 project_property	drone_run_averaged_temperature_growing_degree_days	The averaged-temperature growing degree days corresponding to a drone run event	09/02/2019	nm529	00114
 project_property	drone_run_averaged_precipitation_sum	The averaged-precipitation across the growing season corresponding to a drone run event	09/02/2019	nm529	00130
 project_property	drone_run_related_time_cvterms_json	A json string containing time cvterms to annotate the drone run	09/02/2019	nm529	00114
+project_property	drone_run_base_date	A datetime YYYY/MM/DD HH:mm:ss for the base date of the imaging event. Useful when multiple, fixed, camera rigs are capturing different sections of the field experiment, and the cameras are not capturing at the exact same times.	03/24/2021	nm529	00141
+project_property	drone_run_camera_rig_description	A ddescription for camera rig, Useful when multiple, fixed, camera rigs are capturing different sections of the field experiment, and the cameras are not capturing at the exact same times.	03/24/2021	nm529	00141
 project_property	drone_run_is_raw_images	To distinguish when uploading raw images or orthomosaic images as drone runs	07/5172020	nm529	00126
 project_property	drone_run_ground_control_points	Ground control points (GCPs) can optionally be saved for a drone run	08/01/2020	nm529	00127
 project_property	drone_run_project_type	To distinguish the type of drone run being stored (Aerial Medium to High Res, Aerial Low Res)	10/5/2018	nm529	00103
@@ -153,11 +156,15 @@ project_property	drone_run_raw_images_saved_micasense_stacks	When uploading raw 
 project_property	drone_run_raw_images_saved_micasense_stacks_separated	After uploading raw Micasense images, the captures are separated based on the imaging pass	07/20/2020	nm529	00126
 project_property	drone_run_raw_images_saved_micasense_stacks_rotated	When interactively matching raw drone captures, this stores the rotated positions	07/06/2020	nm529	00126
 project_property	drone_run_raw_images_saved_gps_pixel_positions	When interactively matching raw drone captures, this stores the final positions	07/06/2020	nm529	00126
+project_property	drone_run_opendronemap_process_running	When an opendronemap process is running this is set to 1	03/16/2021	nm529	00140
+project_property	drone_run_geoparam_coordinates_type	When GeoTIFF orthophotos are saved, this indicates if WGS84 or UTM was used	04/22/2021	nm529	00142
+project_property	drone_run_geoparam_coordinates	When GeoTIFF orthophotos are saved, this saves the geocoords	04/22/2021	nm529	00142
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property    product_profile_json    00131
 project_property	sampling_facility	For saving the sampling facility of a sampling trial	11/25/2020	nm529	00132
 project_property	sampling_trial_sample_type	For saving the sample type of a sampling trial	11/25/2020	nm529	00132
+project_property    trial_status_json For recording trial activities tt15 00157
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -301,21 +308,23 @@ protocol_property	vcf_map_details	Information about protocol, such as marker nam
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
 protocol_property	analysis_model_properties	Properties of analysis model in json	6/8/2020	nm529	00125
+protocol_property	analysis_model_properties_multi_trial	Properties of analysis model for single/multi trials in json	3/15/2021	nm529	00140
 protocol_property	high_dimensional_phenotype_protocol_properties	Properties of high dimensional data protocol in json	11/16/2020	nm529	00132
+protocol_property	analytics_protocol_properties	Properties of an analytics protocol in json	1/21/2021	nm529	00136
+protocol_property	analytics_protocol_result_summary	Result summary of an analytics protocol in json	1/21/2021	nm529	00136
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups using replicate, genetic relationship matrix, and row and column positions	6/11/2020	nm529	00125
 protocol_type	sommer_grm_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic blups using replicate and genetic relationship matrix	9/20/2020	nm529	00130
-protocol_type	sommer_grm_temporal_random_regression_gdd_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	6/11/2020	nm529	00125
-protocol_type	sommer_grm_temporal_random_regression_dap_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	6/11/2020	nm529	00125
 protocol_type	lmer_germplasmname_replicate	An nd_protocol for analysis using R LMER for univariate genetic blups using replicate and germplasm name	6/11/2020	nm529	00125
-protocol_type	waves_nirs_spectral_predictions	A protocol type for NIRs spectral prediction models using the R waves (Jenna Hershberger) package	7/29/2020	nm529	00127
 protocol_type	uploaded_generic_analysis_model	An nd_protocol for analysis for uploaded user results	8/19/2020	nm529	00128
 protocol_type	blupf90_grm_random_regression_gdd_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	8/27/2020	nm529	00128
 protocol_type	blupf90_grm_random_regression_dap_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	8/27/2020	nm529	00128
+protocol_type	drone_imagery_analytics_env_simulation_protocol	An nd_protocol for storing analytics results from drone imagery environmental simulation	1/21/2021	nm529	00136
 protocol_type	high_dimensional_phenotype_nirs_protocol	An nd_protocol for storing high dimensional phenotype NIRS data	11/16/2020	nm529	00132
 protocol_type	high_dimensional_phenotype_transcriptomics_protocol	An nd_protocol for storing high dimensional phenotype transcriptomics data	11/16/2020	nm529	00132
 protocol_type	high_dimensional_phenotype_metabolomics_protocol	An nd_protocol for storing high dimensional phenotype metabolomics data	11/16/2020	nm529	00132
+protocol_type	waves_nirs_spectral_predictions	A protocol type for NIRs spectral prediction models using the R waves (Jenna Hershberger) package	7/29/2020	nm529	00127
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073

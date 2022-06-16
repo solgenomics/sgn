@@ -174,7 +174,7 @@ sub get_training_pop_gebv_file {
     my $pop_id   = $c->stash->{training_pop_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $gebv_file;
@@ -241,7 +241,7 @@ sub get_gebv_arrayref {
 sub check_population_type {
     my ($self, $c, $pop_id) = @_;
 
-    $c->stash->{population_type} = $c->model('solGS::solGS')->get_population_type($pop_id);
+    $c->stash->{population_type} = $c->controller('solGS::Search')->model($c)->get_population_type($pop_id);
 }
 
 
@@ -376,7 +376,7 @@ sub run_boxplot {
     $c->stash->{r_temp_file}  = "boxplot-${boxplot_id}";
     $c->stash->{r_script}     = 'R/solGS/genetic_gain.r';
 
-    $c->controller("solGS::solGS")->run_r_script($c);
+    $c->controller("solGS::AsyncJob")->run_r_script($c);
 
 }
 

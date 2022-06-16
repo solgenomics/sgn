@@ -21,7 +21,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->controller('solGS::Files')->validation_file($c);
@@ -153,27 +153,39 @@ sub create_model_summary {
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $tr_abbr = $c->stash->{trait_abbr};
 
     my $path = $c->req->path;
-    my $trait_page;
 
-    if ($path =~ /solgs\/traits\/all\/population\//)
-    {
-	$trait_page = qq | <a href="/solgs/trait/$trait_id/population/$model_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
-    elsif ($path =~ /solgs\/models\/combined\/trials\//)
-    {
-	$trait_page = qq | <a href="/solgs/model/combined/trials/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
+	my $data_set_type;
+	if ($path =~ /solgs\/traits\/all\/population\//)
+	{
+
+	  	$data_set_type = 'single population';
+	}
+	elsif ($path =~ /solgs\/models\/combined\/trials\//)
+	{
+	 	$data_set_type = 'combined populations';
+	}
+
+	my $args = {
+		'trait_id' => $trait_id,
+		'training_pop_id' => $model_id,
+		'genotyping_protocol_id' => $protocol_id,
+		'data_set_type' => $data_set_type
+	};
+
+	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
+	my $trait_page = qq | <a href="$model_page" onclick="solGS.waitPage()">$tr_abbr</a>|;
 
     $self->get_model_accuracy_value($c, $model_id, $tr_abbr);
     my $accuracy_value = $c->stash->{accuracy_value};
 
     my $heritability = $c->controller("solGS::Heritability")->get_heritability($c, $model_id, $trait_id);
+    my $additive_variance = $c->controller("solGS::Heritability")->get_additive_variance($c, $model_id, $trait_id);
 
-    my $model_summary = [$trait_page, $accuracy_value, $heritability];
+    my $model_summary = [$trait_page, $accuracy_value, $additive_variance, $heritability];
 
     $c->stash->{model_summary} = $model_summary;
 

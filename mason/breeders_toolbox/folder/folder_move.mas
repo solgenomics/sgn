@@ -1,6 +1,6 @@
 
 <%args>
-$project_type => 'Trial' #Trial or Cross or Genotyping Plate
+$project_type => undef
 $folder_id => undef
 $folder_name => undef
 $parent_folder_id => undef
@@ -10,20 +10,20 @@ $breeding_program_name => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
-
+% my $dialog_type;
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;
-% if ($project_type eq 'Trial') { $folder_for_trials = 1; }
-% if ($project_type eq 'Genotyping Plate') { $folder_for_genotyping_trials = 1; }
-% if ($project_type eq 'Cross') { $folder_for_crosses = 1; }
+% if ($project_type eq 'field_trial') { $folder_for_trials = 1;  $dialog_type = 'trial'}
+% if ($project_type eq 'genotyping_plate') { $folder_for_genotyping_trials = 1; $dialog_type = 'genotyping plate' }
+% if ($project_type eq 'crossing_experiment') { $folder_for_crosses = 1; $dialog_type = 'crossing experiment' }
 
 <div class="modal fade" id="move_folder_dialog" name="move_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="moveFolderDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="moveFolderDialog">Move a folder</h4>
+        <h4 class="modal-title" id="moveFolderDialog">Move a <% $dialog_type %> folder</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -117,7 +117,7 @@ jQuery(document).ready(function() {
       breeding_program_change_move_folders();
     }
   });
-  
+
   jQuery("#move_folder_breeding_program_select_div").on('change', "#move_folder_breeding_program_id", function() {
     breeding_program_change_move_parent_folders();
     breeding_program_change_move_folders();

@@ -15,7 +15,6 @@ var solGS = solGS || function solGS() {};
 solGS.submitJob = {
 
     waitPage: function(page, args) {
-
 		var host = window.location.protocol + '//'  + window.location.host;
 		page = page.replace(host, '');
 
@@ -28,7 +27,9 @@ solGS.submitJob = {
 			+ '|solgs/combined/model/\\d+|\\w+_\\d+/selection/'
 		    + '|solgs/models/combined/trials/'
 	     	+ '|solgs/traits/all/population/'
-	    	+ '|kinship/analysis/';
+            + '|pca/analysis/'
+            + '|kinship/analysis/'
+            + '|cluster/analysis/';
 
 		if (page.match(matchItems)) {
 
@@ -46,7 +47,6 @@ solGS.submitJob = {
 		    }
 		}
 		else {
-			console.log(' goto matchItems ' + matchItems)
 	    	  this.goToPage(page, args);
 		}
     },
@@ -123,12 +123,14 @@ solGS.submitJob = {
 
     askUser: function(page, args) {
 
-	var t = '<p>This analysis takes long time. '
+	var title = '<p>This analysis may take a long time. '
 	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
 
+    var jobSubmit = '<div id= "job_submission">' + title + '</div>';
 
-	jQuery('<div />')
-	    .html(t)
+    jQuery(jobSubmit).appendTo('body');
+
+	jQuery('#job_submission')
 	    .dialog({
 		height : 200,
 		width  : 400,
@@ -175,6 +177,7 @@ solGS.submitJob = {
 	    args = {};
 	}
 
+
 	jQuery.ajax({
 	    type    : 'POST',
 	    dataType: 'json',
@@ -186,9 +189,7 @@ solGS.submitJob = {
 		    args['first_name']  = contact.first_name;
 		    args['user_email'] = contact.email;
 		    args['user_name'] = contact.user_name;
-
 		    solGS.submitJob.getProfileDialog(page, args);
-
 		} else {
 		    solGS.submitJob.loginAlert();
 		}
@@ -270,12 +271,14 @@ solGS.submitJob = {
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
 	jQuery.blockUI({message: 'Please wait..'});
 
-	var matchItems = 'solgs/confirm/request'
+	var matchItems = 'solgs/submission/feedback'
 	    + '|solgs/trait/'
 	    + '|solgs/traits/all/population/'
 	    + '|solgs/models/combined/trials/'
 	    + '|solgs/model/combined/trials/'
-	    + '|kinship/analysis';
+	    + '|pca/analysis'
+        + '|kinship/analysis/'
+        + '|cluster/analysis/';
 
 	if (page.match(matchItems)) {
 	    window.location = page;
@@ -362,12 +365,11 @@ solGS.submitJob = {
 		+ '|solgs/combined/model/\\d+|\\w+_\\d+/selection/'
 	    + '|solgs/selection/\\d+|\\w+_\\d+/model/';
 
-	if (page.match(matchItems) ) {
+	if (page.match(matchItems)) {
 	    args = this.getArgsFromUrl(page, args);
 	}
 
 	var form = this.getProfileForm(args);
-
 	jQuery('<div />', {id: 'email-form'})
 	    .html(form)
 	    .dialog({
@@ -379,30 +381,8 @@ solGS.submitJob = {
 		    Submit: {
 			click: function(e) {
 
-			    var userEmail = jQuery("#user_email").val();
-			    var analysisName = jQuery('#analysis_name').val();
-			    var analysisType = args.analysis_type;
-			    var userName  = args.user_name;
-			    var dataSetType = args.data_set_type;
-
-			    args['user_email'] = userEmail;
-			    args['analysis_name'] = analysisName;
-			    args['analysis_page'] = page;
-
-			    //args = JSON.stringify(args);
-
-			    var analysisProfile = {
-				'user_name'    : userName,
-				'analysis_name': analysisName,
-				'analysis_page': page,
-				'analysis_type': analysisType,
-				'data_set_type': dataSetType,
-				'arguments'    : args,
-			    };
-
-
-			    solGS.submitJob.checkAnalysisName(analysisName, analysisProfile);
-			    solGS.submitJob.checkEmail(userEmail);
+			var analysisProfile = solGS.submitJob.structureAnalysisProfile(page, args);
+            solGS.submitJob.validateAnalysisInput(analysisProfile);
 
 			},
 			id   :'submit_job',
@@ -423,63 +403,106 @@ solGS.submitJob = {
     },
 
 
-    checkEmail: function(email) {
+    structureAnalysisProfile: function(page, args) {
+        var userEmail = jQuery("#user_email").val();
+        var analysisName = jQuery('#analysis_name').val();
+        var analysisType = args.analysis_type;
+        var userName  = args.user_name;
+        var dataSetType = args.data_set_type;
 
-	if (email == '') {
-	    jQuery("#user_email")
-		.css('border', 'solid #FF0000');
+        args['user_email'] = userEmail;
+        args['analysis_name'] = analysisName;
+        args['analysis_page'] = page;
 
-	    jQuery("#form-feedback-user-email")
-		.text('Please give your email.');
-	}
+        args = JSON.stringify(args);
+
+        var analysisProfile = {
+        'user_name'    : userName,
+        'analysis_name': analysisName,
+        'analysis_page': page,
+        'analysis_type': analysisType,
+        'data_set_type': dataSetType,
+        'arguments'    : args,
+        };
+
+        return analysisProfile;
+    },
+
+
+    validateAnalysisInput: function(analysisProfile) {
+        var analysisName = jQuery('#analysis_name').val();
+
+       var checkName = solGS.submitJob.checkAnalysisName(analysisName);
+
+       checkName.done( function(res) {
+           if (res.analysis_exists) {
+                jQuery("#analysis_name")
+                .css('border', 'solid #FF0000');
+
+                jQuery("#form-feedback-analysis-name")
+                .text('The same name exists or you have not provided a name. Please give a new name.');
+           }
+           else {
+
+               var email = jQuery('#user_email').val();
+               var emailPass = solGS.submitJob.checkEmail(email);
+
+                if (emailPass) {
+                    jQuery("#email-form").dialog('close');
+                    solGS.submitJob.saveAnalysisProfile(analysisProfile);
+                }
+           }
+       });
+
+       checkName.fail( function(res) {
+           var message = 'Error occured submitting the job. Please contact the developers.'
+               + "\n\nHint: " + response.result;
+           solGS.alertMessage(message);
+       });
 
     },
 
 
-    checkAnalysisName: function(name, analysisProfile) {
+    checkEmail: function(email) {
 
-	jQuery.ajax({
+    var emailPass;
+    var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
+    if (!email.match(emailRegex)) {
+        jQuery("#user_email")
+		.css('border', 'solid #FF0000');
+
+	    jQuery("#form-feedback-user-email")
+		.text('Please fill in a proper email.');
+
+        emailPass = 0;
+
+    } else {
+        emailPass = 1;
+    }
+
+    return emailPass;
+
+    },
+
+
+    checkAnalysisName: function(name) {
+
+	var analysisName = jQuery.ajax({
 	    dataType: 'json',
 	    type    : 'POST',
  	    data    : {'name': name},
-	    url     : '/solgs/check/analysis/name',
-	    success : function(res) {
+	    url     : '/solgs/check/analysis/name'
+    });
 
-		if (res.match > 0) {
-		    jQuery("#analysis_name")
-			.css('border', 'solid #FF0000');
-
-		    jQuery("#form-feedback-analysis-name")
-			.text('The same name exists. Please give a new name.');
-
-		    var email = jQuery('#user_email').val();
-	 	    solGS.submitJob.checkEmail(email);
-
-		} else {
-		    analysisProfile['arguments'] = JSON.stringify(analysisProfile.arguments);
-
-		    var email = jQuery('#user_email').val();
-	 	    solGS.submitJob.checkEmail(email);
-
-		    if (email) {
-		    jQuery("#email-form").dialog('close');
-			solGS.submitJob.saveAnalysisProfile(analysisProfile);
-		    }
-		}
-	    },
-	    error: function (response) {
-		var message = 'Error occured submitting the job. Please contact the developers.'
-		    + "\n\nHint: " + response.result;
-		solGS.alertMessage(message);
-	    }
-	});
-
+    return analysisName;
     },
 
 
     getArgsFromUrl: function(url, args) {
 
 	var referer = document.URL;
+    var host = window.location.protocol + '//'  + window.location.host;
+    referer = referer.replace(host, '');
 
 	if (args === undefined) { args = {};}
 
@@ -587,6 +610,8 @@ solGS.submitJob = {
 	args['training_pop_desc'] = jQuery('#training_pop_desc').val();
 	args['selection_pop_desc'] = jQuery('#selection_pop_desc').val();
 	args['genotyping_protocol_id'] = protocolId;
+    args['referer'] = referer;
+
 
 	return args;
 
@@ -659,18 +684,19 @@ solGS.submitJob = {
 	    type    : 'POST',
  	    data    : profile,
 	    url     : '/solgs/run/saved/analysis/',
-	    success : function(response) {
-		if (response.result.match(/Submitted/)) {
-		    solGS.submitJob.confirmRequest();
+	    success : function(res) {
+		if (res.result.match(/Submitted/)) {
+
+		    solGS.submitJob.submissionFeedback(res.arguments);
 		} else {
 		    var message = 'Error occured submitting the job. Please contact the developers.'
-			+ "\n\nHint: " + response.result;
+			+ "\n\nHint: " + res.result;
 		    solGS.alertMessage(message);
 		}
 	    },
 	    error: function (response) {
 		var message = 'Error occured submitting the job. Please contact the developers.'
-		    + "\n\nHint: " + response.result;
+		    + "\n\nHint: " + res.result;
 		solGS.alertMessage(message);
 	    }
 	});
@@ -678,10 +704,13 @@ solGS.submitJob = {
     },
 
 
-    confirmRequest: function() {
+    submissionFeedback: function(args) {
 
-	solGS.submitJob.goToPage('/solgs/confirm/request');
+        args = JSON.parse(args);
+        var analysisType = args.analysis_type;
+        analysisType = analysisType.replace(/\s+|-/g, '_');
 
+       solGS.submitJob.goToPage( '/solgs/submission/feedback/?job=' + analysisType);
     },
 
 
@@ -845,6 +874,21 @@ solGS.getTraitDetails = function(traitId) {
 
 }
 
+solGS.getTrainingTraitsIds  = function() {
+
+    var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	var traitId   = jQuery("#trait_id").val();
+
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+	} else {
+	    trainingTraitsIds = [traitId];
+	}
+
+    return trainingTraitsIds;
+
+}
+
 
 solGS.getPopulationDetails = function() {
 
@@ -875,22 +919,25 @@ solGS.getPopulationDetails = function() {
         dataSetType = 'single population';
     }
 
+    var protocolId   = jQuery("#genotyping_protocol_id").val();
     return {
 	'training_pop_id'   : trainingPopId,
-        'population_name'   : trainingPopName,
+    'population_name'   : trainingPopName,
 	'training_pop_name' : trainingPopName,
 	'selection_pop_id'  : selectionPopId,
 	'selection_pop_name': selectionPopName,
 	'combo_pops_id'     : comboPopsId,
-	'data_set_type'     : dataSetType
+	'data_set_type'     : dataSetType,
+    'genotyping_protocol_id': protocolId
     };
 }
 
 
 solGS.showMessage = function(divId, msg) {
-     jQuery("#" + divId)
-        .css({"padding-left": '0px'})
-        .html(msg);
+
+    divId = divId.match(/#/) ? divId : '#' + divId;
+
+    jQuery(divId).html(msg).show();
 
 }
 

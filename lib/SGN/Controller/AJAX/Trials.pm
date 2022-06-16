@@ -9,6 +9,7 @@ use Data::Dumper;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
+use File::Slurp qw | read_file |;
 use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -95,12 +96,12 @@ sub _write_cached_folder_tree {
     my $html = "";
     my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
 
-    print STDERR "Starting get trials $tree_type at time ".localtime()."\n";
+    print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
     foreach my $project (@$projects) {
         my %project = ( "id" => $project->[0], "name" => $project->[1]);
         $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
     }
-    print STDERR "Finished get trials $tree_type at time ".localtime()."\n";
+    print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
 
     my $OUTFILE;
     open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
@@ -133,4 +134,33 @@ sub trial_autocomplete_GET :Args(0) {
 
     print STDERR "Returning...\n";
     $c->stash->{rest} = \@response_list;
+}
+
+
+sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_name = $c->req->param('name');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if ( !$trial_name || $trial_name eq '' ) {
+        $c->stash->{rest} = {error => "Trial name required"};
+        $c->detach();
+    }
+
+    # Get trial id by name
+    my $trial_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "phenotyping_trial", "project_type")->cvterm_id();
+    my $rs = $schema->resultset("Project::Project")->find(
+        { 'name' => $trial_name, 'projectprops.type_id' => $trial_type_id },
+        { join => 'projectprops' }
+    );
+    my $trial_id = $rs->project_id() if $rs;
+
+    # Trial not found
+    if ( !$trial_id || $trial_id eq '' ) {
+        $c->stash->{rest} = {error => "Trial not found"};
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { trial_id => $trial_id };
 }

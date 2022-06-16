@@ -1,0 +1,296 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<style>
+@media (min-width: 768px) {
+    .modal-xl {
+        width: 90%;
+        max-width:1200px;
+    }
+}
+</style>
+
+<div class="modal fade" id="intercross_wishlist_download_dialog" name="intercross_wishlist_download_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossWishlistDownloadDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossWishlistDownloadDialog">Create Intercross Wishlist</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <&| /page/explanation.mas, title=>'File Information' &>
+                                <p>
+                                    <b>File Information</b>
+                                    <br>
+                                    <a id="intercross_wishlist_file_info">Intercross Wishlist</a>
+                                    <br>
+                                </p>
+                            </&>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Female parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="wishlist_female_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Male parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="wishlist_male_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id ="intercross_wishlist_form_div">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="wishlist_footer" style="display:none" >
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="wishlist_submit" name="wishlist_submit">Create Wishlist</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="intercross_wishlist_download_message" name="intercross_wishlist_download_message" tabindex="-1" role="dialog" aria-labelledby="intercrossWishlistDownloadMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossWishlistDownloadMessage">Intercross Wishlist File Created</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The Intercross wishlist file was created successfully.
+                    </p>
+                    <p>
+                        <a id="intercross_wishlist_download_link">Download Intercross Wishlist</a>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="intercross_wishlist_download_close_button" id="intercross_wishlist_download_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="intercross_wishlist_file_info_dialog" name="intercross_wishlist_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossWishlistFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossWishlistFileInfoDialog">Intercross Wishlist</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Names in the list must be uniquenames.
+                    </b>
+                    <br>
+                        Intercross Wishlist file is a CSV file (.csv).
+                    <br>
+                         The file can be used directly with Intercross app.
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                    The first row (header) contains the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>femaleDbId</td>
+                                <td>maleDbId</td>
+                                <td>femaleName</td>
+                                <td>maleName</td>
+                                <td>wishType</td>
+                                <td>wishMin</td>
+                                <td>wishMax</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Column Information:
+                    </b>
+                    <ul>
+                        <li><b>femaleDbId:</b> stock_id of female parent in the database.</li>
+                        <li><b>maleDbId:</b> stock_id of male parent in the database</li>
+                        <li><b>femaleName:</b> female uniquename in the database.</li>
+                        <li><b>maleName:</b> male uniquename in the database.</li>
+                        <li><b>wishType:</b> type of field crossing data (must be one of these types: flower, fruit, seed).</li>
+                        <li><b>wishMin:</b> expected minimum number of the specified type.</li>
+                        <li><b>wishMax:</b> expected maximum number of the specified type.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var crossing_experiment_id = "<% $trial_id %>";
+    var lo = new CXGN.List();
+
+    jQuery('#wishlist_female_list_select').html(lo.listSelect('wishlist_female_list_select', ['accessions'], 'Select a list of female parents', undefined, undefined));
+    jQuery('#wishlist_male_list_select').html(lo.listSelect('wishlist_male_list_select', ['accessions'], 'Select a list of male parents', undefined, undefined));
+
+    jQuery('#download_intercross_wishlist').click(function(){
+        jQuery('#intercross_wishlist_download_dialog').modal("show");
+    });
+
+    jQuery("#intercross_wishlist_file_info").click(function(){
+        jQuery("#intercross_wishlist_file_info_dialog").modal("show");
+    });
+
+    var female_list_id;
+    var male_list_id;
+    jQuery("#wishlist_female_list_select").change(function() {
+        female_list_id = jQuery('#wishlist_female_list_select').val();
+        if (female_list_id){
+            var female_accession_validation = 1;
+            female_accession_validation = lo.legacy_validate(female_list_id, 'uniquenames', true);
+            if (female_accession_validation != 1) {
+                alert("The female list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else if (female_list_id && male_list_id) {
+                wishlist_form();
+            }
+        }
+    })
+
+    jQuery("#wishlist_male_list_select").change(function() {
+        male_list_id = jQuery('#wishlist_male_list_select').val();
+        if (male_list_id){
+            var male_accession_validation = 1;
+            male_accession_validation = lo.legacy_validate(male_list_id, 'uniquenames', true);
+            if (male_accession_validation != 1) {
+                alert("The male list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else if (!female_list_id) {
+                alert("Please select female list");
+                return;
+            } else if (female_list_id && male_list_id) {
+                wishlist_form();
+            }
+        }
+    });
+
+    function wishlist_form () {
+        var female_list_id = jQuery('#wishlist_female_list_select').val();
+        var female_list = lo.getList(female_list_id);
+
+        var male_list_id = jQuery('#wishlist_male_list_select').val();
+        var male_list = lo.getList(male_list_id);
+
+        var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Info (type,min,max). Supported types:flower,fruit,seed.</th></tr></thead><tbody>';
+        for(var i=0; i<female_list.length; i++){
+            html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="wishlist_male_accession_id_'+ i +'_info" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
+        };
+        html = html + '</tbody></table>';
+
+        jQuery('#intercross_wishlist_form_div').html(html);
+
+        var wishlist_male_parents = jQuery('#wishlist_male_select_table')
+            .find("div")
+            .map(function() { return this.id; })
+            .get();
+        for(var i=0; i<wishlist_male_parents.length; i++){
+            var female_id = jQuery('#wishlist_male_accession_id_'+ i +'_info').data('related');
+            get_select_box('items', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'list_items':male_list, 'names_as_select':1, 'data-related':female_id});
+        };
+    };
+
+    jQuery(document).on('change', "select[name='wishlist_male_accession_id_select']", function() {
+        var div_id = '#' + this.id;
+        var male_names = jQuery(div_id).val();
+        if (male_names.length > 0){
+            wishlist_change_males(div_id, div_id + '_info');
+        }
+
+        jQuery('#wishlist_footer').show();
+    });
+
+    function wishlist_change_males(div_id, select_id){
+        var male_names = jQuery(div_id).val();
+        var female_name = jQuery(div_id).data('related');
+        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Type, Min, Max (e.g. flower, 5, 30)</th></tr></thead><tbody>';
+        for (var i=0; i<male_names.length; i++){
+            html = html + '<tr><td>' + male_names[i] + '</td><td><input class="form-control" male_name="' + male_names[i] + '" female_name="' + female_name + '" name ="wishlist_activity_info" id="wishlist_activity_info_'+ i +'" value="" placeholder=""/></td></tr>';
+        };
+        html = html + '</tbody></table>';
+        jQuery(select_id).html(html);
+    };
+
+    jQuery('#wishlist_submit').click(function(e){
+        e.preventDefault();
+        wishlist_data = [];
+        jQuery('input[name="wishlist_activity_info"]').each(function() {
+            value = this.value;
+            var male_name = jQuery(this).attr('male_name');
+            var female_name = jQuery(this).attr('female_name');
+            wishlist_data.push({ 'female_name':female_name, 'male_name':male_name, 'activity_info':value });
+        });
+
+        jQuery.ajax({
+            url: '/ajax/intercross/create_intercross_wishlist',
+            method: 'POST',
+            data: {
+                'wishlist_data': JSON.stringify(wishlist_data),
+                'crossing_experiment_id': crossing_experiment_id
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery('#intercross_wishlist_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
+                    jQuery("#intercross_wishlist_download_message").modal("show");
+                    jQuery('#intercross_wishlist_download_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred creating the wishlist file.');
+                jQuery('#intercross_wishlist_download_dialog').modal("hide");
+            },
+        });
+    });
+
+    jQuery("#intercross_wishlist_download_close_button").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>

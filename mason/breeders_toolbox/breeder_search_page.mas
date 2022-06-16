@@ -181,35 +181,49 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <table class="table">
                 <tr>
-                  <td colspan="4">
-                    <span>Chromosome</span>
-                    <select class="wizard-download-genotypes-chromosome-number form-control input-sm"></select>
-                  </td>
-                  <td colspan="4">
-                    <span>Start Position</span>
-                    <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control input-sm">
-                  </td>
-                  <td colspan="4">
-                    <span>End Position</span>
-                    <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control input-sm">
-                  </td>
+                    <td colspan="12">
+                        <span class="glyphicon glyphicon-info-sign" title="You can use either chromosome or markers (markerset) to filter genotyping data. You cannot use both criteria at the same time."></span>
+                        <span>Filter by Chromosome or Markerset</span>
+                    </td>
                 </tr>
                 <tr>
-                  <td colspan="6">
-                    <span>Genotypes Download Format</span>
-                    <select class="wizard-download-genotypes-format form-control input-sm" >
-                        <option value="VCF">VCF File Format</option>
-                        <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
-                    </select>
-                  </td>
-                  <td colspan="6">
-                    <span>Marker Set Filter</span>
-                    <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
-                  </td>
+                    <td colspan="4">
+                        <span>Chromosome</span>
+                        <select class="wizard-download-genotypes-chromosome-number form-control input-sm"></select>
+                    </td>
+                    <td colspan="4">
+                        <span>Start Position</span>
+                        <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control input-sm">
+                    </td>
+                    <td colspan="4">
+                        <span>End Position</span>
+                        <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control input-sm">
+                    </td>
                 </tr>
                 <tr>
                     <td colspan="6">
-                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, and marker set options. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
+                        <span>Markerset Filter</span>
+                        <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
+                    </td>
+                    <td colspan="6">
+                        <br/>
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">Manage Markersets</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <span>Genotypes Download Format</span>
+                        <select class="wizard-download-genotypes-format form-control input-sm" >
+                            <option value="VCF">VCF File Format</option>
+                            <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
+                        </select>
+                    </td>
+                    <td colspan="6">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, or markerset. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
                         <span>Download Genotypes</span><br/>
                         <button class="wizard-download-genotypes btn btn-sm btn-primary">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
@@ -217,10 +231,6 @@ $dataset_id => undef
                         </button>
                     </td>
                     <td colspan="6">
-                        <span>Marker Set Filter</span><br/>
-                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
-                            Manage Marker Sets
-                        </button>
                     </td>
                 </tr>
             </table>
@@ -245,9 +255,15 @@ $dataset_id => undef
                 <td colspan="12">
                   <span>Genomic Relationship Matrix (GRM) Download Format</span>
                   <select class="wizard-download-genotypes-grm-format form-control input-sm" >
-                      <!--option value="heatmap">Heatmap (.pdf)</option-->
-                      <option value="matrix">Matrix (.tsv)</option>
-                      <option value="three_column">3-Column Format (.tsv)</option>
+                      <option value="matrix_uniquenames">Matrix Stock Names (.tsv)</option>
+                      <option value="three_column_uniquenames">3-Column Stock Names (.tsv)</option>
+                      <option value="three_column_reciprocal_uniquenames">3-Column Reciprocal Stock Names (.tsv)</option>
+                      <option value="heatmap">Heatmap (.pdf)</option>
+                      <option value="matrix">Matrix Stock IDs (.tsv)</option>
+                      <option value="three_column">3-Column Stock IDs(.tsv)</option>
+                      <option value="three_column_stock_id_integer">3-Column Stock IDs Integer (.tsv)</option>
+                      <option value="three_column_reciprocal">3-Column Reciprocal Stock IDs (.tsv)</option>
+                      <option value="three_column_reciprocal_stock_id_integer">3-Column Reciprocal Stock IDs Integer (.tsv)</option>
                   </select>
                   <br/>
                     <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GRM can be downloaded in a matrix format (.tsv) and a three column format."></span>
@@ -326,14 +342,21 @@ $dataset_id => undef
               </td>
             </tr>
             <tr>
-              <td colspan="2">
+            <td colspan="1">
+              <select class="wizard-download-phenotypes-speed form-control input-sm">
+                <option value="" disabled>Download Type</option>
+                <option selected value="Native">Default</option>
+                <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
+              </select>
+            </td>
+              <td colspan="1">
                 <select class="wizard-download-phenotypes-format form-control input-sm">
-                  <option value="" disabled>Format</option>
+                  <option value="" disabled>Download Format</option>
                   <option selected value="csv">CSV</option>
                   <option value="xls">XLS</option>
                 </select>
               </td>
-              <td>
+              <td colspan="1">
                 <select class="wizard-download-phenotypes-level form-control input-sm">
                   <option value="" disabled>Data Level</option>
                   <option selected value="all">All</option>
@@ -354,6 +377,16 @@ $dataset_id => undef
               <td colspan="2">
                 <div class="checkbox">
                   <label>
+                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox">
+                    Include accession entry numbers
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3" style="border-top: none; padding-top: 0">
+                <div class="checkbox">
+                  <label>
                     <input class="wizard-download-phenotypes-outliers" type="checkbox">
                     Supress user defined phenotype outliers
                   </label>
@@ -363,7 +396,7 @@ $dataset_id => undef
             <tr>
               <td>
                 <span>Trait Name Contains</span>
-                <input placeholder="" type="text" class="wizard-download-phenotypes-name form-control">
+                <input placeholder="e.g. plant height" type="text" class="wizard-download-phenotypes-name form-control">
               </td>
               <td>
                 <span>Min Value</span>

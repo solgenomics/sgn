@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /search/combine_trials_table.mas - a table with trials to combine
 
@@ -16,20 +16,31 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
+<%perl>
+	my $combine_button;
+	if ($c->req->path =~ /solgs\/search\/trials\/trait/) {
+		$combine_button = 'Combine trials & build model';
+	} else {
+		$combine_button = 'Combine trials';
+	}
+
+
+</%perl>
 
 <div id="selected_trials" style="display:none;width:100%">
 
-  <hr style="size:10px;color:#5cb85c;"/>
-
- <p style="text-align:center"> Trials to combine </p>
-
- <hr style="size:10px;color:#5cb85c;"/>
+ <p class="message"> Selected trials </p>
 
 <table class ="table" id="selected_trials_table" style="text-align:left;width:100%">
 <tr>
-  <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>&nbsp</th>
+  <th></th>
+  <th>Trial</th>
+  <th>Description</th>
+  <th>Location</th>
+  <th>Year</th>
+  <th>More details</th>
 </tr>
-<tr> 
+<tr>
 </tr>
 </table>
 </div>
@@ -39,8 +50,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <tr>
   <td>
     <div id="combine_trials_div" style="display:none">
-      <input  class="button" type="button" id="combine_trait_trials" value="Combine trials & build model"/>
-  </div>  
+      <input  class="button" type="button" id="combine_trait_trials" value="<% $combine_button %>"/>
+  </div>
   </td>
   <td>
     <div id="search_again_div" style="display:none;text-align:right">

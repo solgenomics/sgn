@@ -83,13 +83,13 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
 
     my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
-    if ($empty) { unshift @$breeding_programs, [ "", "please select" ]; }
+    if ($empty) { unshift @$breeding_programs, [ "", "Please select a program" ]; }
 
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
       choices => $breeding_programs,
-      selected => $default
+#      selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -277,7 +277,14 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         }
     }
 
-    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+#    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+    if ($empty) {
+        if ($get_crossing_trials) {
+            unshift @projects, [ "", "Please select a crossing experiment" ];
+        } else {
+            unshift @projects, [ "", "Please select a trial" ];
+        }
+    }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -314,12 +321,23 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $empty = $c->req->param("empty") || "";
     my $multiple = $c->req->param("multiple") || 0;
     my $live_search = $c->req->param("live_search") || 0;
+    my $include_location_year = $c->req->param("include_location_year");
+    my $include_lists = $c->req->param("include_lists") || 0;
 
     my @trials;
+    if ($include_lists) { push @trials, [ "", "----INDIVIDUAL TRIALS----" ]; }
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
-          push @trials, $_;
+          my $trial_id = $_->[0];
+          my $trial_name = $_->[1];
+          if ($include_location_year) {
+              my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id });
+              my $location_array = $trial->get_location();
+              my $year = $trial->get_year();
+              $trial_name .= " (".$location_array->[1]." $year)";
+          }
+          push @trials, [$trial_id, $trial_name];
       }
     }
     if ($trial_name_values) {
@@ -330,6 +348,36 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
         @trials = @trials_redef;
     }
     @trials = sort { $a->[1] cmp $b->[1] } @trials;
+
+    if ($include_lists) {
+        my $lists = CXGN::List::available_lists($c->dbc->dbh(), $c->user()->get_sp_person_id());
+        my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh());
+        my $lt = CXGN::List::Transform->new();
+
+        push @trials, ["", "----YOUR LISTS OF TRIALS----"];
+        foreach my $item (@$lists) {
+            if ( @$item[5] eq "trials" ) {
+                my $list = CXGN::List->new({ dbh=>$c->dbc->dbh(), list_id => @$item[0] });
+                my $list_elements = $list->retrieve_elements_with_ids(@$item[0]);
+                my @list_element_names = map { $_->[1] } @$list_elements;
+                my $transform = $lt->transform($schema, 'projects_2_project_ids', \@list_element_names);
+                my @trial_ids = @{$transform->{transform}};
+                push @trials, [join(',', @trial_ids), @$item[1] . ' (' . @$item[3] . ' trials)'];
+            }
+        }
+
+        push @trials, ["", "----PUBLIC LISTS OF TRIALS----"];
+        foreach my $item (@$public_lists) {
+            if ( @$item[5] eq "trials" ) {
+                my $list = CXGN::List->new({ dbh=>$c->dbc->dbh(), list_id => @$item[0] });
+                my $list_elements = $list->retrieve_elements_with_ids(@$item[0]);
+                my @list_element_names = map { $_->[1] } @$list_elements;
+                my $transform = $lt->transform($schema, 'projects_2_project_ids', \@list_element_names);
+                my @trial_ids = @{$transform->{transform}};
+                push @trials, [join(',', @trial_ids), @$item[1] . ' (' . @$item[3] . ' trials)'];
+            }
+        }
+    }
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 
@@ -736,12 +784,47 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_analytics_protocols : Path('/ajax/html/select/analytics_protocols') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $checkbox_name = $c->req->param('checkbox_name');
+    my $protocol_type = $c->req->param('analytics_protocol_type');
+
+    my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $protocol_type, 'protocol_type')->cvterm_id();
+    my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_properties', 'protocol_property')->cvterm_id();
+
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
+        FROM nd_protocol
+        JOIN nd_protocolprop USING(nd_protocol_id)
+        WHERE nd_protocol.type_id=$protocol_type_cvterm_id AND nd_protocolprop.type_id=$protocolprop_type_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+
+    my $html = '<table class="table table-bordered table-hover" id="html-select-analyticsprotocol-table"><thead><tr><th>Select</th><th>Analytics Name</th><th>Description</th><th>Create Date</th><th>Properties</th></tr></thead><tbody>';
+
+    while (my ($nd_protocol_id, $name, $description, $create_date, $props_json) = $h->fetchrow_array()) {
+        my $props = decode_json $props_json;
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$create_date.'</td><td>';
+        while (my($k,$v) = each %$props) {
+            $html .= "$k: $v<br/>";
+        }
+        $html .= '</td></tr>';
+    }
+    $html .= "</tbody></table>";
+
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-analyticsprotocol-table').DataTable({ }); } );</script>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_protocols') Args(0) {
     my $self = shift;
     my $c = shift;
     my $checkbox_name = $c->req->param('checkbox_name');
     my $data_type_cvterm_id = $c->req->param('sequence_metadata_data_type_id');
-    
+    my $include_query_link = $c->req->param('include_query_link');
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
@@ -756,27 +839,57 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Properties</th></tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table-' . $data_type_cvterm_id . '">';
+    my $select_th = defined $checkbox_name ? "<th>Select</th>" : "";
+    $html .= '<thead><tr>' . $select_th . '<th>Protocol&nbsp;Name</th><th>Description</th><th>Properties</th></tr></thead>';
+    $html .= '<tbody>';
 
     while (my ($nd_protocol_id, $name, $description, $props_json) = $h->fetchrow_array()) {
+
+        # Decode the json props
         my $props = decode_json $props_json;
-        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>';
-        while (my($k,$v) = each %$props) {
-            if (ref $v eq ref {}) {
-                $html .= "$k:<br />";
-                while (my($k2,$v2) = each %$v) {
-                    $html .= "&nbsp;&nbsp;$k2: $v2<br />";
-                }
-            }
-            else {
-                $html .= "$k: $v<br />";
+
+        # Add link to protocol name, if requested
+        if ( $include_query_link ) {
+            $name = "<a href='/search/sequence_metadata?nd_protocol_id=$nd_protocol_id&reference_genome=" . $props->{'reference_genome'} . "'>$name</a>";
+        }
+
+        # Build the row of the table
+        my $select_td = defined $checkbox_name ? '<td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td>' : '';
+        $html .= '<tr>' . $select_td . '<td>'.$name.'</td><td>'.$description.'</td><td>';
+
+        my $type = $props->{'sequence_metadata_type'};
+        $type =~ s/ /&nbsp;/;
+        $html .= "<strong>Data&nbsp;Type:</strong>&nbsp;" . $type . "<br />";
+        $html .= "<strong>Reference&nbsp;Genome:</strong>&nbsp;" . $props->{'reference_genome'} . "<br />";
+        $html .= "<strong>Score:</strong>&nbsp;" . $props->{'score_description'} . "<br />";
+        $html .= "<strong>Attributes:</strong><br />";
+
+        my $attributes = $props->{'attribute_descriptions'};
+        $html .= "<table class='table table-striped' style='min-width: 300px'>";
+        $html .= "<thead><tr><th>Key</th><th>Description</th></tr></thead>";
+        while (my($k,$v) = each %$attributes) {
+            $html .= "<tr><td>$k</td><td>$v</td></tr>";
+        }
+        $html .= "</table>";
+
+        my $links = $props->{'links'};
+        if ( defined $links ) {
+            $html .= "<strong>Links:</strong><br />";
+            $html .= "<table class='table table-striped' style='min-width: 300px'>";
+            $html .= "<thead><tr><th>Title</th><th>URL&nbsp;Template</th></tr></thead>";
+            while (my($k,$v) = each %$links) {
+                $html .= "<tr><td>$k</td><td>$v</td></tr>";
             }
         }
+        $html .= "</table>";
+
         $html .= '</td></tr>';
+
     }
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-sdmprotocol-table').DataTable({ }); } );</script>";
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-sdmprotocol-table-" . $data_type_cvterm_id . "').DataTable({ }); } );</script>";
 
     $c->stash->{rest} = { select => $html };
 }
@@ -904,8 +1017,7 @@ sub get_analysis_models : Path('/ajax/html/select/models') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+    my $model_properties_cvterm_id = $c->req->param('nd_protocol_type') ? SGN::Model::Cvterm->get_cvterm_row($schema, $c->req->param('nd_protocol_type'), 'protocol_property')->cvterm_id() : SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
 
     my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
         FROM nd_protocol
@@ -1028,6 +1140,47 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             }
         }
         if ($select_format eq 'component_table_select') {
+            my $html = '<table class="table table-hover table-bordered" id="'.$id.'"><thead><th>Observation Variable Components</th><th>Select</th></thead><tbody>';
+            my %unique_components;
+            foreach (values %unique_traits_ids) {
+                foreach my $component (@{$_->[2]}) {
+                    $unique_components{$_->[0]}->{num_pheno} = $_->[3];
+                    $unique_components{$_->[0]}->{imaging_project_id} = $_->[4];
+                    $unique_components{$_->[0]}->{imaging_project_name} = $_->[5];
+                    if ($component->{cv_type} && $component->{cv_type} eq $contains_composable_cv_type) {
+                        $unique_components{$_->[0]}->{contains_cv_type} = $component->{name};
+                    }
+                    else {
+                        push @{$unique_components{$_->[0]}->{cv_types}}, $component->{name};
+                    }
+                }
+            }
+            my %separated_components;
+            while (my ($k, $v) = each %unique_components) {
+                my $string_cv_types = join ',', @{$v->{cv_types}};
+                push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}, $v->{num_pheno}, $v->{imaging_project_id}, $v->{imaging_project_name}];
+            }
+            foreach my $k (sort keys %separated_components) {
+                my $v = $separated_components{$k};
+                $html .= "<tr><td>".$k."</td><td>";
+                foreach (@$v) {
+                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'";
+                    if ($select_all) {
+                        $html .= "checked";
+                    }
+                    $html .= ">&nbsp;".$_->[1]." (".$_->[2]." Phenotypes";
+                    if ($_->[3] && $_->[4]) {
+                        $html .= " From ".$_->[4];
+                    }
+                    $html .= ")<br/>";
+                }
+                $html .= "</td></tr>";
+            }
+            $html .= "</tbody></table>";
+            $c->stash->{rest} = { select => $html };
+            $c->detach;
+        }
+        elsif ($select_format eq 'component_table_multiseason_select') {
             my $html = '<table class="table table-hover table-bordered" id="'.$id.'"><thead><th>Observation Variable Components</th><th>Select</th></thead><tbody>';
             my %unique_components;
             foreach (values %unique_traits_ids) {
@@ -1617,6 +1770,45 @@ sub get_drone_imagery_drone_runs_with_gcps : Path('/ajax/html/select/drone_runs_
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_drone_imagery_drone_runs : Path('/ajax/html/select/drone_runs') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $id = $c->req->param("id") || "drone_imagery_drone_run_select";
+    my $name = $c->req->param("name") || "drone_imagery_drone_run_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $field_trial_id = $c->req->param('field_trial_id');
+
+    my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
+
+    my $q = "SELECT project.project_id, project.name
+        FROM project
+        JOIN projectprop AS processed ON(project.project_id = processed.project_id AND processed.type_id=$processed_cvterm_id)
+        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+        WHERE project_relationship.object_project_id=?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($field_trial_id);
+
+    my @result;
+    while( my ($project_id, $name) = $h->fetchrow_array()) {
+        push @result, [$project_id, $name];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_drone_imagery_plot_polygon_types : Path('/ajax/html/select/drone_imagery_plot_polygon_types') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1931,6 +2123,33 @@ sub get_drone_imagery_drone_run_band : Path('/ajax/html/select/drone_imagery_dro
     $c->stash->{rest} = { select => $html };
 }
 
+
+sub get_items_select : Path('/ajax/html/select/items') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $params = _clean_inputs($c->req->params);
+    my $items = $params->{list_items},
+    my $size = $params->{size};
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
+    my $data_related = $c->req->param("data-related") || "";
+    my $names_as_select = $params->{names_as_select}->[0] || 0;
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+
+    my $html = simple_selectbox_html(
+        multiple => $multiple,
+        choices => $items,
+        size => $size,
+        data_related => $data_related,
+        id => $id,
+        name => $name
+    );
+
+    $c->stash->{rest} = { select => $html };
+
+}
+
+
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
@@ -1951,5 +2170,6 @@ sub _clean_inputs {
 	}
 	return $params;
 }
+
 
 1;

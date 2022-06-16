@@ -1,4 +1,4 @@
-import "../legacy/d3/d3v4Min.js";
+import "../legacy/d3/d3v5Min.js";
 import "../legacy/CXGN/Dataset.js";
 
 /**
@@ -52,6 +52,11 @@ export function WizardDownloads(main_id,wizard){
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
         var include_duplicate_genotypes = d3.select(".wizard-download-genotypes-duplicates-include").property("checked");
         var marker_set_list_id = d3.select(".wizard-download-genotypes-marker-set-list-id").node().value;
+        if(chromosome_number && marker_set_list_id) {
+            alert(`Please indicate either chromosome or markerset, not both.`);
+            d3.select(this).attr("disabled",null);
+            return;
+        }
         var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}&marker_set_list_id=${marker_set_list_id}&include_duplicate_genotypes=${include_duplicate_genotypes}`;
         window.open(url,'_blank');
       });
@@ -123,9 +128,11 @@ export function WizardDownloads(main_id,wizard){
         var location_ids = JSON.stringify(locations.map(d=>d.id));
         var year_ids = JSON.stringify(years.map(d=>d.id));
 
+        var speed = d3.select(".wizard-download-phenotypes-speed").node().value;
         var format = d3.select(".wizard-download-phenotypes-format").node().value;
         var level = d3.select(".wizard-download-phenotypes-level").node().value;
         var timestamp = d3.selectAll('.wizard-download-phenotypes-timestamp').property('checked')?1:0;
+        var entry_numbers = d3.selectAll('.wizard-download-phenotypes-entry-numbers').property('checked')?1:0;
         var outliers = d3.selectAll('.wizard-download-phenotypes-outliers').property('checked')?1:0;
         var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
         var min = d3.select(".wizard-download-phenotypes-min").node().value;
@@ -133,10 +140,10 @@ export function WizardDownloads(main_id,wizard){
 
         var url = document.location.origin+
         `/breeders/trials/phenotype/download?trial_list=${trial_ids}`+
-        `&format=${format}&trait_list=${trait_ids}&trait_component_list=${comp_ids}`+
+        `&speed=${speed}&format=${format}&trait_list=${trait_ids}&trait_component_list=${comp_ids}`+
         `&accession_list=${accession_ids}&plot_list=${plot_ids}&plant_list=${plant_ids}&location_list=${location_ids}`+
         `&year_list=${year_ids}&dataLevel=${level}&phenotype_min_value=${min}&phenotype_max_value=${max}`+
-        `&timestamp=${timestamp}&trait_contains=${names}`+
+        `&timestamp=${timestamp}&entry_numbers=${entry_numbers}&trait_contains=${names}`+
         `&include_row_and_column_numbers=1&exclude_phenotype_outlier=${outliers}`+
         `&include_pedigree_parents=0`;
         window.open(url,'_blank');

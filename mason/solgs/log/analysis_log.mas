@@ -4,12 +4,14 @@
 
 
 <div id="analysis_log_div" style="display:none">
-  <table class="table" id="analysis_list" style="text-align: left;"> 
+  <table class="table" id="analysis_list" style="text-align: left;">
     <thead>
       <tr>
-	<th>Analysis name</th>
-	<th>Status</th>
-	<th>Result page</th>
+    	<th>Analysis name</th>
+        <th>Analysis type</th>
+        <th>Submitted on</th>
+    	<th>Status</th>
+    	<th>Result page</th>
       </tr>
     </thead>
   </table>

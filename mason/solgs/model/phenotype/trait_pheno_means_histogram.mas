@@ -1,0 +1,44 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/model/phenotype/trait_pheno_means_histogram.mas - displays histogram plot of accession phenotype means data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<%perl>
+
+
+</%perl>
+
+
+<style>
+
+
+.bar rect {
+  shape-rendering: crispEdges;
+  margin: 50px;
+  stroke: white;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+<div id="pheno_means_histo_canvas">
+    <div class="message" id="histogram_message" style="display:none"></div>
+</div>

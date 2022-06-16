@@ -8,7 +8,6 @@ $username
 $first_name
 $last_name
 $populations_list => undef
-$solgs_jobs_list => undef
 $loci_editor_privileges => undef
 $loci_annotations => undef
 $user_status => undef
@@ -52,7 +51,7 @@ $user_status => undef
                     <div style="margin-top: 1em">
                         <center><h4>Upload Accessioned Golden Path (AGP) File</h4></center>
                         <hr>
-                        
+
                         <form class="form-horizontal" action="/sequencing/agp.pl" method="post" enctype="multipart/form-data">
                             <div class="row">
                                 <div class="col-sm-6">
@@ -74,7 +73,7 @@ $user_status => undef
                                 </div>
                             </div>
                         </form>
-                        
+
                         <center><h4>Upload Tiling Path Format (TPF) File</h4></center>
                         <hr>
 
@@ -99,7 +98,7 @@ $user_status => undef
                                 </div>
                             </div>
                         </form>
-                        
+
                     </div>
 
                 </div>
@@ -124,9 +123,9 @@ $user_status => undef
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'solGS Submitted Analysis Jobs', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+    <&| /page/info_section.mas, title=>'solGS analyses jobs', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
-            <% $solgs_jobs_list %>
+            <& /solgs/log/analysis_log.mas &>
         </div>
     </&>
 

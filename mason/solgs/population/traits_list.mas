@@ -1,0 +1,83 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/population/traits_list.mas - displays training population traits available for GS modeling
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+
+$training_pop_id
+$training_pop_traits_details
+$genotyping_protocol_id
+$data_set_type => ''
+
+
+</%args>
+
+<%perl>
+my $traits_list;
+
+foreach my $trait_detail (@$training_pop_traits_details)
+{
+    my $id = $trait_detail->[0];
+    my $trait = $trait_detail->[1];
+    my $acronym = $trait_detail->[2];
+    my $path;
+    if ($data_set_type =~ /combined/) {
+        $path = "/solgs/model/combined/trials/$training_pop_id/trait/$id/gp/$genotyping_protocol_id";
+    } else {
+        $path = "/solgs/trait/$id/population/$training_pop_id/gp/$genotyping_protocol_id";
+    }
+
+     my $trait_link   = qq | <a href="$path" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
+     my $row          = <<ROW;
+     <tr>
+       <td>
+         <input type  = "checkbox"
+           class      = "trait_id"
+           name       = "trait_id"
+           value      = $id > $trait_link
+       </td>
+     </tr>
+ROW
+
+        $traits_list .=  $row;
+
+}
+
+</%perl>
+
+% if ($traits_list) {
+ <div id="traits_selection_div">
+
+  <table  class="table-condensed" id="population_traits_list">
+   <% $traits_list %>
+     <tr>
+       <td>
+         <input class   = "button"
+                type    = "submit"
+		        id      = "runGS"
+                value   = "Build model"
+                name    = "runGS"
+                >
+       </td>
+     </tr>
+   </table>
+
+</div>
+%} else {
+
+<div id="traits_list_message"  class="message">
+<p>There are no phenotyped traits for this population.</p>
+</div>
+
+%}

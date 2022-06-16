@@ -27,6 +27,7 @@ sub search {
     my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
     my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
     my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+    my $observation_unit_names_list = $params->{observationUnitName} || ($params->{observationUnitNames} || ());
     my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
@@ -58,6 +59,7 @@ sub search {
             accession_list=>$accession_ids_arrayref,
             folder_list=>$folder_ids_arrayref,
             program_list=>$program_ids_arrayref,
+            observation_unit_names_list=>$observation_unit_names_list,
             limit=>$limit,
             offset=>$offset,
             # phenotype_min_value=>$phenotype_min_value,

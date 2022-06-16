@@ -461,8 +461,8 @@ jQuery("#delete_field_map_dialog").dialog({
 autoOpen: false,
 modal: true,
 autoResize:true,
-    width: 500,
-    position: ['top', 75],
+    // width: 500,
+    // position: ['top', 75],
 buttons: {
         "Cancel": function () {
             jQuery('#delete_field_map_dialog').dialog("close");

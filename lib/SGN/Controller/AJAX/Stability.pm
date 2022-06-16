@@ -35,12 +35,6 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
-    my @trait_info;
-    foreach my $t (@$traits) {
-        my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
-        push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
-    }
-
     
     $c->tempfiles_subdir("stability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
@@ -50,9 +44,9 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
-    print STDERR Dumper(@trait_info);
+    print STDERR Dumper($traits);
     $c->stash->{rest} = {
-        options => \@trait_info,
+        options => $traits,
         tempfile => $tempfile."_phenotype.txt",
 #        tempfile => $file_response,
     };
@@ -103,13 +97,13 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
   chomp;
 
   my @fields = split "\t";
-  my %line = {};
+  my %line;
   for(my $n=0; $n <@keys; $n++) {
       if (exists($fields[$n]) && defined($fields[$n])) {
     $line{$keys[$n]}=$fields[$n];
       }
   }
-    print STDERR Dumper(\%line);
+  #print STDERR Dumper(\%line);
   push @data, \%line;
     }
 
@@ -123,9 +117,9 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $method = $c->req->param('method_id');
     my $trait_id = $c->req->param('trait_id');
     
-    print STDERR $dataset_id;
-    print STDERR $trait_id;
-    print STDERR Dumper $method;
+    print STDERR "DATASET_ID: $dataset_id\n";
+    print STDERR "TRAIT ID: $trait_id\n";
+    print STDERR "Method: ".Dumper($method);
 
     $c->tempfiles_subdir("stability_files");
     my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
@@ -141,7 +135,8 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $temppath = $stability_tmp_output . "/" . $tempfile;
+    #my $temppath = $stability_tmp_output . "/" . $tempfile;
+    my $temppath =  $tempfile;
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
 
@@ -157,7 +152,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $figure1file = $tempfile . "_" . "figure1.png";
     my $figure2file = $tempfile . "_" . "figure2.png";
 
-
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
@@ -171,9 +165,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             max_cluster_jobs => 1_000_000_000,
         });
 
-        print STDERR Dumper $pheno_filepath;
-
-    # my $job;
     $cmd->run_cluster(
             "Rscript ",
             $c->config->{basepath} . "/R/stability/ammi_script.R",
@@ -184,21 +175,19 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $AMMIFile,
             $method
     );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
 
-    my $resultfile = $AMMIFile.".results";
+    while ($cmd->alive) { 
+	sleep(1);
+    }
+
     my $error;
-    my $lines;
 
-    if (! -e $resultfile) { 
-    $error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
+    if (! -e $AMMIFile) { 
+	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
     }
-    else { 
-    $lines = read_file($temppath.".results");
-    }
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
+
+    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
+
     copy($AMMIFile, $figure_path);
     copy($figure1file, $figure_path);
     copy($figure2file, $figure_path);
@@ -211,9 +200,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     
     my $figure2basename = basename($figure2file);
     my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
-
-
-    print $AMMIFile_response;
         
     $c->stash->{rest} = {
         AMMITable => $AMMIFile_response,

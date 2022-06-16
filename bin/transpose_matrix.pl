@@ -11,7 +11,11 @@ while (<>) {
     $outline[$i] = "\t" x $oldlastcol;
   }
   for (my $i=0; $i <=$lastcol; $i++) {
-    $outline[$i] .= "$line[$i]\t"
+    if ($outline[$i] =~ /\w/) {
+        $outline[$i] .= "\t$line[$i]";
+    } else {
+	$outline[$i] = $line[$i];
+    }
   }
 }
 for (my $i=0; $i <= $lastcol; $i++) {

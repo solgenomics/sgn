@@ -541,7 +541,7 @@ sub _retrieve_stock_owner {
  Desc:  store a new stock or update an existing stock
  Ret:   a database id
  Args:  none
- Side Effects: checks for stock uniqueness using the organism_id and case-insensitive uniquename 
+ Side Effects: checks for stock uniqueness using the organism_id and case-insensitive uniquename
 checks if the stock exists in the database (if a stock_id is provided), and if does, will attempt to update
  Example:
 
@@ -1500,6 +1500,27 @@ sub _new_metadata_id {
     return $metadata_id;
 }
 
+=head2 add_synonym
+
+Usage: $self->add_synonym
+ Desc:  add a synonym for this stock. a stock can have many synonyms
+ Ret:   nothing
+ Args:  name
+ Side Effects:
+ Example:
+
+=cut
+
+sub add_synonym {
+    my $self = shift;
+    my $synonym = shift;
+    my $synonym_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_synonym', 'stock_property');
+    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
+    $stock->create_stockprops({$synonym_cvterm->name() => $synonym});
+}
+
+
+
 =head2 merge()
 
  Usage:         $s->merge(221, 1);
@@ -1519,10 +1540,8 @@ sub merge {
 
     if ($other_stock_id == $self->stock_id()) {
 	print STDERR "Trying to merge stock into itself ($other_stock_id) Skipping...\n";
-	return;
+	return "Error: cannot merge stock into itself";
     }
-
-
 
     my $stockprop_count=0;
     my $subject_rel_count=0;
@@ -1534,19 +1553,74 @@ sub merge {
     my $stock_owner_count=0;
     my $parent_1_count=0;
     my $parent_2_count=0;
+    my $nd_experiment_stock_count=0;
     my $other_stock_deleted = 'NO';
+    my $add_old_name_as_synonym = 0;
     my $pui_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'PUI', 'stock_property')->cvterm_id();
 
     my $schema = $self->schema();
 
+    my $other_row = $schema->resultset("Stock::Stock")->find( { stock_id => $other_stock_id });
+
+    # check if parents are the same
+    my $other_stock = CXGN::Stock->new( { schema => $self->schema(), stock_id => $other_stock_id });
+
+    my $other_parents = $other_stock->get_parents();
+    my $this_parents = $self->get_parents();
+
+    print STDERR "OTHER parents: ".Dumper($other_parents);
+    print STDERR "This parents: ".Dumper($this_parents);
+
+    my $skip_mother_comp = 0;
+    my $skip_father_comp = 0;
+
+    if (! defined($other_parents->{mother_id}) || ! defined($this_parents->{mother_id})) {
+	print STDERR "Can't compare mothers for these accessions.\n";
+	$skip_mother_comp =1;
+    }
+
+    if (! defined($other_parents->{father_id}) || ! defined($this_parents->{father_id})) {
+	print STDERR "Can't compare fathers for this accession.\n";
+	$skip_father_comp = 1;
+    }
+
+    my $mother_identical = 0;
+    my $father_identical = 0;
+    if (! $skip_mother_comp) {
+	if ( (defined($other_parents->{mother_id}) && defined($this_parents->{mother_id})) && ($other_parents->{mother_id} == $this_parents->{mother_id})) {
+	    $mother_identical = 1;
+	}
+    }
+    if (! $skip_father_comp) {
+	if ( (defined($other_parents->{father_id}) && defined($this_parents->{father_id})) && ( $other_parents->{father_id} == $this_parents->{father_id})) {
+	    $father_identical = 1;
+	}
+    }
+
+    if ( (!$skip_mother_comp && $mother_identical) && (!$skip_father_comp && $father_identical)) {
+	print STDERR "Mother and Father between this and other match ($other_parents->{mother_id} vs $this_parents->{mother_id}).\n";
+    }
+    elsif ($skip_mother_comp && $father_identical || $skip_father_comp && $mother_identical) {
+	print STDERR "One parent undefined, the other matches...\n";
+    }
+    elsif ($skip_mother_comp && $skip_father_comp) {
+	print STDERR "Skipping this comparison - not enough data! \n";
+    }
+    else {
+	print STDERR join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
+	return;
+    }
+
     # move stockprops
     #
-    my $sprs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $other_stock_id });
-    while (my $row = $sprs->next()) {
-      if ($delete_other_stock && ($row->type_id() eq $pui_cvterm_id)) {
-          # Do not save PUIs of stocks that will be deleted
-          next;
-        }
+    my $other_sprs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $other_stock_id });
+
+    while (my $row = $other_sprs->next()) {
+	# not sure what this does...
+	if ($delete_other_stock && ($row->type_id() eq $pui_cvterm_id)) {
+	    # Do not save PUIs of stocks that will be deleted
+	    next();
+	}
 	# check if this stockprop already exists for this stock; save only if not
 	#
 	my $thissprs = $schema->resultset("Stock::Stockprop")->search(
@@ -1576,6 +1650,7 @@ sub merge {
 	    print STDERR "MERGED stockprop_id ".$row->stockprop_id." for stock $other_stock_id type_id $type_id value $value into stock ".$self->stock_id()."\n";
 	    $stockprop_count++;
 	}
+
     }
 
     # move subject relationships
@@ -1584,9 +1659,16 @@ sub merge {
 
     while (my $row = $ssrs->next()) {
 
-	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $row->object_id, type_id => $row->type_id() });
+	# the next query is done to make sure that we don't add the same information again.
+	# Only if the info is not already there can we safely add it. This will for example
+	# prevent us from ending up with 4 parents etc.
+	#
+	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $other_stock_id, type_id => $row->type_id() });
 
-	if ($this_subject_rel_rs->count() == 0) { # this stock does not have the relationship
+	if ($this_subject_rel_rs->count() != 0) { # this stock does not have the relationship
+	    print STDERR "Target object ".$row->uniquename()." already has this relationship (".$this_subject_rel_rs->count()." counts)\n";
+	}
+	else {
 	    # get the max rank
 	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), type_id => $row->type_id() });
 	    my $rank = 0;
@@ -1602,32 +1684,14 @@ sub merge {
 	}
     }
 
-    # move object relationships
-    #
-
-    # TO DO: do not move parents if target already has parents.
-    #
-    # my $female_parent_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'female_parent')->cvterm_id();
-    # my $male_parent_id   = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'male_parent')->cvterm_id();
-
-    # my $female_parent_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $female_parent_id });
-    # my $male_parent_rs   = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $male_parent_id });
-
-    # if ($female_parent_rs->count() > 0) {
-    # 	print STDERR "The target $stock_id already had a female parent... not moving any other objects.\n";
-    # 	return;
-    # }
-    # if ($male_parent_rs ->count() > 0) {
-    # 	print STDERR "The target $stock_id already had a male parent... not moving any other objects.\n";
-    # 	return;
-    # }
-
-
     my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
     while (my $row = $osrs->next()) {
-	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
+	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $other_stock_id, type_id => $row->type_id() });
 
-	if ($this_object_rel_rs->count() == 0) {
+	if ($this_object_rel_rs->count() != 0) {
+	    print STDERR "Target object ".$row->uniquename()." already has this relationship with ".$this_object_rel_rs->count()." counts\n";;
+	}
+	else {
 	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id(), type_id => $row->type_id() });
 	    my $rank = 0;
 	    if ($rank_rs->count() > 0) {
@@ -1654,7 +1718,12 @@ sub merge {
 
     # move stock_cvterm relationships
     #
-
+    my $scvr = $schema->resultset("Stock::StockCvterm")->search( { stock_id => $other_stock_id } );
+    while (my $row = $scvr->next()) {
+	$row->stock_id($self->stock_id);
+	$row->update();
+	print STDERR "Moving stock_cvterm relationships for $other_stock_id to stock ".$self->stock_id()."\n";
+    }
 
     # move stock_dbxref
     #
@@ -1663,6 +1732,7 @@ sub merge {
 	$row->stock_id($self->stock_id());
 	$row->update();
 	$stock_dbxref_count++;
+	print STDERR "Moving stock_dbxref relationships from $other_stock_id to stock ".$self->stock_id()."\n";
     }
 
     # move sgn.pcr_exp_accession relationships
@@ -1674,9 +1744,15 @@ sub merge {
 
 
 
-    # move stock_genotype relationships
+    # move stock_genotype relationships and other nd_experiment entries
     #
-
+    my $ndes = $schema->resultset("NaturalDiversity::NdExperimentStock")->search( { stock_id => $other_stock_id } );
+    while (my $row = $ndes->next()) {
+	$row->stock_id($self->stock());
+	$row->update();
+	$nd_experiment_stock_count++;
+	print STDERR "Moving nd_experiment_stock relationships from $other_stock_id to stock ".$self->stock_id()."\n";
+    }
 
     my $phenome_schema = CXGN::Phenome::Schema->connect(
 	sub { $self->schema()->storage()->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }
@@ -1750,11 +1826,17 @@ sub merge {
 	$parent_2_count++;
     }
 
-    if ($delete_other_stock) {
-	my $row = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $other_stock_id });
-	$row->delete();
-	$other_stock_deleted = 'YES';
-    }
+
+    # transfer the other uniquename as a synonym
+    #
+    $self->add_synonym($other_row->uniquename());
+    $add_old_name_as_synonym++;
+    # deletion is handled by the script now
+#    if ($delete_other_stock) {
+#	my $row = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $other_stock_id });
+#	$row->delete();
+#	$other_stock_deleted = 'YES';
+ #   }
 
 
     print STDERR "Done with merge of stock_id $other_stock_id into ".$self->stock_id()."\n";
@@ -1770,6 +1852,7 @@ sub merge {
     Stock owners: $stock_owner_count
     Map parents: $parent_1_count
     Map parents: $parent_2_count
+    Added old name as synonym: $add_old_name_as_synonym
     Other stock deleted: $other_stock_deleted.
 COUNTS
 

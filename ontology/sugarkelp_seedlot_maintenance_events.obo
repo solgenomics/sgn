@@ -1,0 +1,376 @@
+format-version: 1.2
+date: 07:07:2021 11:00
+saved-by: djw64
+remark: The seedlot maintenance event ontology for sugar kelp
+default-namespace: seedlot_maintenance_event
+ontology: SEEDLOT_MAINTENANCE
+
+
+
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0000000
+name: Seedlot Maintenance Events
+
+
+
+
+! ============================
+! CATEGORIES
+! ============================
+
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0000001
+name: Actions
+def: "Actions taken for proper gametophyte maintenance" []
+is_a: SEEDLOT_MAINTENANCE:0000000
+
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0000002
+name: Observations
+def: "Observations made while performing gametophyte maintenance" []
+is_a: SEEDLOT_MAINTENANCE:0000000
+
+
+
+
+! ============================
+! ACTIONS
+! ============================
+
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001001
+name: Water Change
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000001
+
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001002
+name: Blended
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000001
+
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001003
+name: Container Scraped
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000001
+
+
+
+
+! ============================
+! OBSERVATIONS
+! ============================
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002001
+name: Light Intensity
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002002
+name: Light Color
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002003
+name: Container Size
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002004
+name: Form
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002005
+name: Biomass
+def: "Biomass rating relative to container size.  &lt;a href=\"/static_content/references/biomass.pdf\" target=\"_blank\"&gt;Biomass Reference Sheet.&lt;/a&gt;" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002006
+name: Health
+def: "General health assessment for GP culture. Take into account color (1,2, or 3 = unhealthy; 4,5,6, or 7 = healthy) and contaminants." []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002007
+name: Color
+def: "Gametophyte color rating on a 1-7 scale.  &lt;a href=\"/static_content/references/color.pdf\" target=\"_blank\"&gt;Culture Color Reference Sheet.&lt;/a&gt;" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002008
+name: Stickiness
+def: "General stickiness assessment of GP culture. Sticky GPs will remain attached to glass even after swirling the culture." []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002009
+name: Clumping
+def: "General clumping assessment of GP culture. GPs that exhibit clumping will appear to be “grouped” in the bottom of the flask." []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002010
+name: Contaminants
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002011
+name: Additional Notes
+def: "Any additional notes, usually concerning culture termination or partial use for an experiment" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+
+
+
+! ============================
+! VALUES
+! ============================
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010001
+name: Successful
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0001001
+is_a: SEEDLOT_MAINTENANCE:0001002
+is_a: SEEDLOT_MAINTENANCE:0001003
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010002
+name: Unsuccessful
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0001001
+is_a: SEEDLOT_MAINTENANCE:0001002
+is_a: SEEDLOT_MAINTENANCE:0001003
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010003
+name: <10
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002001
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010004
+name: 20
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002001
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010005
+name: 30-45
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002001
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010006
+name: 50-75
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002001
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010007
+name: red
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010008
+name: white
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010009
+name: 1 L
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002003
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010010
+name: 500 mL
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002003
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010011
+name: 250 mL
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002003
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010012
+name: 125 mL
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002003
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010013
+name: vial
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002003
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010026
+name: Backup vial
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002004
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010027
+name: Flask
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002004
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010028
+name: Backup vial sibling
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002004
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010014
+name: high
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002005
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010015
+name: medium
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002005
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010016
+name: low
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002005
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010017
+name: healthy
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002006
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010018
+name: not healthy
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002006
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010019
+name: 1
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002007
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010020
+name: 2
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002007
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010021
+name: 3
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002007
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010022
+name: 4
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002007
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010023
+name: 5
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002007
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010024
+name: 6
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002007
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010025
+name: 7
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002007
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010037
+name: yes
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002008
+is_a: SEEDLOT_MAINTENANCE:0002009
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010038
+name: no
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002008
+is_a: SEEDLOT_MAINTENANCE:0002009
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010029
+name: green
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010030
+name: bacteria
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010031
+name: other
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010032
+name: all
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010033
+name: green and bacteria
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010034
+name: green and other
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010035
+name: bacteria and other
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0010036
+name: none
+def: "" []
+is_a: SEEDLOT_MAINTENANCE:0002010

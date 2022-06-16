@@ -18,6 +18,9 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Cross;
 use CXGN::Pedigree::AddCrossTissueSamples;
 use LWP::UserAgent;
+use CXGN::Trial::Download;
+use Spreadsheet::WriteExcel;
+use Spreadsheet::Read;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -88,7 +91,7 @@ my $after_adding_cross_in_experiment_stock = $schema->resultset("NaturalDiversit
 is($after_adding_cross, $before_adding_cross + 1);
 is($after_adding_stocks, $before_adding_stocks + 1);
 is($after_adding_stockprop, $before_adding_stockprop + 1);
-is($after_adding_stockprop_all, $before_adding_stockprop_all + 1);
+is($after_adding_stockprop_all, $before_adding_stockprop_all + 2);
 is($after_adding_relationship, $before_adding_relationship + 4);
 is($after_adding_cross_in_experiment, $before_adding_cross_in_experiment + 1);
 is($after_adding_cross_in_experiment_stock, $before_adding_cross_in_experiment_stock + 1);
@@ -110,7 +113,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_simple_file" => [ $file, 'backcross_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -131,7 +134,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_simple_file" => [ $file, 'crosses_simple_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -167,7 +170,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_plots_file" => [ $file, 'crosses_plots_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -206,7 +209,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_plants_file" => [ $file, 'crosses_plants_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -463,6 +466,7 @@ my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_na
 my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
 my $family_female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
 my $family_male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
+my $family_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_type", "stock_property")->cvterm_id();
 
 my $before_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
 my $before_add_family_name = $schema->resultset("Stock::Stock")->search({type_id => $family_name_type_id})->count();
@@ -470,6 +474,7 @@ my $before_upload_family_relationship = $schema->resultset("Stock::StockRelation
 my $before_upload_family_member = $schema->resultset("Stock::StockRelationship")->search({type_id => $cross_member_of_cvterm_id})->count();
 my $before_upload_family_female = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_female_parent_cvterm_id})->count();
 my $before_upload_family_male = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_male_parent_cvterm_id})->count();
+my $before_upload_family_stockprop = $schema->resultset("Stock::Stockprop")->search({type_id => $family_type_cvterm_id})->count();
 
 $file = $f->config->{basepath}."/t/data/cross/family_name_upload.xls";
 $ua = LWP::UserAgent->new;
@@ -477,7 +482,7 @@ $response = $ua->post(
     'http://localhost:3010/ajax/cross/upload_family_names',
     Content_Type => 'form-data',
     Content => [
-        family_name_upload_file => [ $file, 'family_name_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
+        same_parents_file => [ $file, 'family_name_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -492,6 +497,7 @@ my $after_upload_family_relationship = $schema->resultset("Stock::StockRelations
 my $after_upload_family_member = $schema->resultset("Stock::StockRelationship")->search({type_id => $cross_member_of_cvterm_id})->count();
 my $after_upload_family_female = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_female_parent_cvterm_id})->count();
 my $after_upload_family_male = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_male_parent_cvterm_id})->count();
+my $after_upload_family_stockprop = $schema->resultset("Stock::Stockprop")->search({type_id => $family_type_cvterm_id})->count();
 
 is($after_family_name_stocks, $before_family_name_stocks +2);
 is($after_add_family_name, $before_add_family_name + 2);
@@ -499,11 +505,14 @@ is($after_upload_family_relationship, $before_upload_family_relationship + 8);
 is($after_upload_family_member, $before_upload_family_member + 4);
 is($after_upload_family_female, $before_upload_family_female + 2);
 is($after_upload_family_male, $before_upload_family_male + 2);
+is($after_upload_family_stockprop, $before_upload_family_stockprop +2);
 
 #test retrieving family name info
 my $family_stock_rs = $schema->resultset("Stock::Stock")->find({name => 'family1x2', type_id => $family_name_type_id});
 my $family_stock_id = $family_stock_rs->stock_id();
-print STDERR "FAMILY ID =".Dumper($family_stock_id)."\n";
+my $family_type = $schema->resultset("Stock::Stockprop")->find({stock_id => $family_stock_id, type_id => $family_type_cvterm_id})->value();
+is ($family_type, 'same_parents');
+#print STDERR "FAMILY ID =".Dumper($family_stock_id)."\n";
 $mech->post_ok('http://localhost:3010/ajax/family/members/'.$family_stock_id);
 $response = decode_json $mech->content;
 my %data = %$response;
@@ -569,6 +578,84 @@ my $result3 = $data3{data};
 my $number_of_result3 = @$result3;
 is($number_of_result3, 1);
 
+#test crossing experiment download
+my @cross_properties = ("Tag Number", "Pollination Date", "Number of Bags", "Number of Flowers", "Number of Fruits", "Number of Seeds");
+my $tempfile = "/tmp/test_download_crossing_experiment.xls";
+my $format = 'CrossingExperimentXLS';
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema => $f->bcs_schema,
+    trial_list => [$crossing_trial2_id],
+    filename => $tempfile,
+    format => $format,
+    field_crossing_data_order => \@cross_properties
+});
+
+$create_spreadsheet->download();
+my $contents = ReadData $tempfile;
+
+my $columns = $contents->[1]->{'cell'};
+my @column_array = @$columns;
+my $number_of_columns = scalar @column_array;
+#print STDERR "COLUMNS =".Dumper ($columns)."\n";
+
+ok(scalar($number_of_columns) == 21, "check number of columns.");
+is_deeply($contents->[1]->{'cell'}->[1], [
+    undef,
+    'Cross Unique ID',
+    'test_backcross1',
+    'test_backcross2',
+    'test_backcross3',
+    'test_cross_upload1',
+    'test_cross_upload2',
+    'test_cross_upload3',
+    'test_cross_upload4',
+    'test_cross_upload5',
+    'test_cross_upload6'
+], "check column 1");
+
+is_deeply($contents->[1]->{'cell'}->[3], [
+    undef,
+    'Cross Type',
+    'backcross',
+    'backcross',
+    'backcross',
+    'biparental',
+    'self',
+    'biparental',
+    'self',
+    'biparental',
+    'self'
+], "check column 3");
+
+is_deeply($contents->[1]->{'cell'}->[4], [
+    undef,
+    'Female Parent',
+    'test_add_cross',
+    'test_add_cross',
+    'test_add_cross',
+    'UG120001',
+    'UG120001',
+    'UG120001',
+    'UG120001',
+    'TMEB419',
+    'TMEB419'
+], "check column 4");
+
+
+# test retrieving all cross entries
+my $crosses = CXGN::Cross->new({schema => $schema});
+my $result = $crosses->get_all_cross_entries();
+my @all_cross_entries = @$result;
+my $first_cross = $all_cross_entries[0];
+is(scalar @all_cross_entries, 10);
+is($first_cross->[1],'test_add_cross');
+is($first_cross->[2],'biparental');
+is($first_cross->[4],'UG120001');
+is($first_cross->[8],'UG120002');
+is($first_cross->[11],'2017/02/02' );
+is($first_cross->[13],8);
+is($first_cross->[15],'test_crossingtrial');
+
 #test deleting crossing
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_deleting_accessions = $schema->resultset("Stock::Stock")->search({ type_id => $accession_type_id})->count();
@@ -625,12 +712,12 @@ is($after_deleting_experiment, $before_deleting_experiment);
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_trial2_id.'/delete_all_crosses_in_crossingtrial');
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_trial_id.'/delete_all_crosses_in_crossingtrial');
 
-my $after_delete_all_crosses_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
+my $after_delete_all_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $after_delete_all_crosses_in_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
 my $after_delete_all_crosses_in_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 my $stocks_after_delete_all_crosses = $schema->resultset("Stock::Stock")->search({})->count();
 
-is($after_delete_all_crosses_crosses, $before_adding_cross + 1); #one cross cannot be deleted because progenies have associated data
+is($after_delete_all_crosses, $before_adding_cross + 1); #one cross cannot be deleted because progenies have associated data
 is($after_delete_all_crosses_in_experiment, $before_adding_cross_in_experiment + 1); #one cross cannot be deleted because progenies have associated data
 
 # nd_experiment_stock has 38 more rows after adding plants for testing uploading crosses with plant info

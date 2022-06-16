@@ -1,0 +1,76 @@
+<%args>
+
+$list_id
+$list_name
+$list_description => undef
+$list_type
+$list_size
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<& /page/page_title.mas, title => "Details for List '$list_name'" &>
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0,&>
+    <table class="table table-bordered table-hover">
+        <tr><td><b>List Name</b></td><td><% $list_name %></td></tr>
+        <tr><td><b>List ID</b></td><td><% $list_id %></td></tr>
+        <tr><td><b>Type</b></td><td><% $list_type %></td></tr>
+        <tr><td><b>Number of Items</b></td><td><% $list_size %></td></tr>
+        <tr><td><b>Description</b></td><td><% $list_description %></td></tr>
+    </table>
+</&>
+
+<&| /page/info_section.mas, title => 'List Items', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <form id="download_list_details" action="/list/download_details" method="POST">
+            <button class="btn btn-primary" type="button" id="download_details_button">Download List Items</button>
+            <input type="hidden" id="list_download_token" name="list_download_token"/>
+            <input name="list_id" id="list_id" type="hidden" value="<% $list_id %>">
+        </form>
+    </div>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "list_items_table" class="table table-hover table-striped">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var items_table = jQuery('#list_items_table').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/list/details/' + <% $list_id %>,
+        'columns': [
+            { title: "Seedlot Name", "data": null, "render": function ( data, type, row ){return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"}},
+            { title: "Content Name", "data": null, "render": function ( data, type, row ) {
+                if (row.content_type == 'accession'){
+                    return "<a href='/stock/"+row.content_id+"/view'>"+row.content_name+"</a>"
+                } else if (row.content_type == 'cross') {
+                    return "<a href='/cross/"+row.content_id+"'>"+row.content_name+"</a>"
+                }
+            }},
+            { title: "Content Type", "data": "content_type" },
+            { title: "Box Name", "data": "box_name" },
+            { title: "Current Count", "data": "current_count" },
+            { title: "Current Weight", "data": "current_weight" },
+            { title: "Quality", "data": "quality" },
+        ],
+    });
+
+    jQuery('#download_details_button').click(function() {
+        jQuery('#download_list_details').submit();
+    });
+
+});
+
+</script>

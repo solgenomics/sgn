@@ -274,4 +274,6 @@ is_deeply($cells, [
           ]
         ], 'test fieldbook ajax file contents');
 
+
+$f->clean_up_db();
 done_testing;

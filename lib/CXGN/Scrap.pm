@@ -80,7 +80,7 @@ sub get_encoded_arguments {
 
 # =head2 get_all_encoded_arguments
 
-# Args: none
+# Args: optional list of evil characters to encode. Defaults to "<>&'\";"
 # Ret : hash of ( argument name => HTML-encoded value of that argument )
 
 # WARNING: this method does not work for POSTs of type multipart/form-data, particularly with file uploads.  This method only works with GET and other POST requests.
@@ -88,12 +88,12 @@ sub get_encoded_arguments {
 # =cut
 
 sub get_all_encoded_arguments {
-  my ($self) = @_;
-
+  my ($self, $to_encode) = @_;
+  $to_encode = defined $to_encode ? $to_encode : "<>&'\";" ;
   my @paramnames = $c->req->param;
   return map {
       my $p = $self->get_arguments($_);
-      $_ => HTML::Entities::encode_entities($p,"<>&'\";");
+      $_ => HTML::Entities::encode_entities($p,$to_encode);
   } @paramnames;
 }
 

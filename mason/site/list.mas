@@ -68,26 +68,90 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="listValidationErrorDialog">List Validation Failed</h4>
+                <h4 class="modal-title" id="listValidationErrorDialog">List Validation Report: Failed</h4>
             </div>
             <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="validate_stock_add_missing_accessions_html">
-                    </div>
-                    <div class="well">
-                    <h3>Elements not found:</h3>
-                    <table>
-                        <tbody></tbody>
-                    </table>
-                    </div>
+              <div class="container-fluid">
+		<div id='validate_stock_missing_accessions_html' style='display:none'></div>
+	      </div>
+	      <div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div>
+              <div class="well">
+		
+                <h3>Elements not found:</h3>
+
+		<div id="elements_not_found_stats"></div>
+
+		<table id="missing_accessions_table" style="margin:0pt">
+		</table><br />
+					
+                <div id="validate_stock_add_missing_accessions">
                 </div>
+
+		<div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3>
+		  <div id='validate_stock_add_missing_accessions_for_list_div'></div>
+		  <div id='stocks_with_wrong_case'></div>
+		</div>
+		
+		<div id="validate_stock_missing_accessions"></div>
+		
+		<div id="adjust_case_div">
+		  <h3>Mismatched case</h3>
+		  <table id="wrong_case_table" style="margin:0pt">
+		  </table>
+		  <br />
+		  
+		</div>
+		
+		<div id="wrong_case_message_div"></div>
+		<br />
+		
+		<button class="btn btn-default" id="adjust_case_action_button" disabled>Adjust Case</button>
+		<br /><br />
+		<div>
+		  Click the Adjust Case button to align the case in the list with what is in the database.
+		</div>
+		
+		<h3>Multiple mismatched case</h3>
+		<div id="multiple_case_match_message_div">
+		  <br />
+		  Items listed here have mulitple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly.
+		</div>
+		
+		<table id="multiple_wrong_case_table" style="margin:0pt">
+		</table>
+		
+		<div id="multiple_case_match_div"><br /><br /></div>
+		
+		<h3>List elements matching a synonym</h3>
+		<div id="synonym_matches_div">
+		  
+		  <table id="element_matches_synonym"  style="margin:0pt">
+		  </table>
+		  <br />
+		  <button class="btn btn-default" id="replace_synonyms_with_uniquenames_button">Replace synonyms with corresponding DB name</button>
+		  
+		</div>
+		
+		<div id="synonym_message"></div>
+		<br />
+		
+		<h3>Multiple synonym matches</h3>
+		<div id="multiple_synonym_matches_div">
+		  <table id="element_matches_multiple_synonyms_table" style="margin:0pt">
+		  </table>
+		  
+		  Multiple synonym matches have to be resolved manually. Contact database administrators if necessary.
+		</div>
+              </div>
             </div>
-            <div class="modal-footer">
-                <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+	</div>
+	
+        <div class="modal-footer">
+          <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
     </div>
 </div>
+
 
 <div class="modal fade" id="fuzzy_search_result_display" name="fuzzy_search_result_display" tabindex="-1" role="dialog" aria-labelledby="fuzzySearchResultDialog">
     <div class="modal-dialog modal-xl" role="document">

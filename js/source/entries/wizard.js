@@ -5,7 +5,7 @@ import {WizardDownloads} from "../modules/wizard-downloads.js";
 
 const initialtypes = [
   "accessions",
-  "breeding_programs", 
+  "breeding_programs",
   "genotyping_protocols",
   "genotyping_projects",
   "locations",
@@ -18,7 +18,7 @@ const initialtypes = [
   "years"
 ];
 
-const types = { 
+const types = {
   "accessions":"Accessions",
   "breeding_programs":"Breeding Programs",
   "genotyping_protocols":"Genotyping Protocols",
@@ -40,8 +40,10 @@ function makeURL(target,id){
     case "accessions":
     case "plants":
     case "plots":
-    case "seedlots":
       return document.location.origin+`/stock/${id}/view`;
+      break;
+    case "seedlots":
+      return document.location.origin+`/breeders/seedlot/${id}`;
       break;
     case "breeding_programs":
       return document.location.origin+`/breeders/manage_programs`;
@@ -74,9 +76,9 @@ export function WizardSetup(main_id){
   var list = new CXGN.List();
   var wiz = new Wizard(d3.select(main_id).select(".wizard-main").node(),4)
     .types(types)
-    .initial_types(initialtypes) 
+    .initial_types(initialtypes)
     // Function which returns the first column contents for a given target type
-    // Returns list of of unique names or objects with a "name" key 
+    // Returns list of of unique names or objects with a "name" key
     // ["name","name",...]|[{"name":"example"},...]
     .load_initial((target)=>{
       var formData = new FormData();
@@ -93,9 +95,9 @@ export function WizardSetup(main_id){
     })
     // Function which returns column contents for a given target type
     // and list of constraints spedified by categories order (["type",...])
-    // selections ({"type":[id1,id2,id3],...}) and 
+    // selections ({"type":[id1,id2,id3],...}) and
     // operations ({"type":intersect?1:0,...})
-    // Returns list of of unique names or objects with a "name" key 
+    // Returns list of of unique names or objects with a "name" key
     // ["name","name",...]|["name","name",...]|[{"name":"example"},...]
     .load_selection((target,categories,selections,operations)=>{
       if(categories.some(c=>selections[c].length<1)) return []
@@ -118,7 +120,7 @@ export function WizardSetup(main_id){
         })
     })
     // Function which returns the list contents for a given listID
-    // // Returns type and list of of unique names or objects with a "name" key 
+    // // Returns type and list of of unique names or objects with a "name" key
     // {"type":"typeID","items":["name","name",...]|[{"name":"example"},...]}
     .load_list((listID)=>{
         return new Promise(res=>{
@@ -136,7 +138,7 @@ export function WizardSetup(main_id){
            });
         })
     });
-    
+
     var load_lists = ()=>(new Promise((resolve,reject)=>{
       var private_lists = list.availableLists(initialtypes);
       var public_lists = list.publicLists(initialtypes);
@@ -151,9 +153,9 @@ export function WizardSetup(main_id){
       // Dictionary of {"listID":{name:"listName",type:"typeName"}} pairs, sets or resets lists show in dropdowns
       wiz.lists(listdict)
     });
-    
+
     load_lists();
-    
+
     wiz.add_to_list((listID,items)=>{
       var count = list.addBulk(listID,items.map(i=>i.name));
       if(count) alert(`${count} items added to list.`);
@@ -166,15 +168,15 @@ export function WizardSetup(main_id){
         list.setListType(newID, colType);
         var count = list.addBulk(newID,items.map(i=>i.name));
         if(count) alert(`${count} items added to list ${listName}.`);
-      } 
+      }
       load_lists();
     });
-    
+
     var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
     var dat = new WizardDatasets(d3.select(main_id).select(".wizard-datasets").node(),wiz);
 
     var lo = new CXGN.List();
-    jQuery('#wizard-download-genotypes-marker-set-list-id').html(lo.listSelect('wizard-download-genotypes-marker-set-list-id', ['markers'], 'Select a marker set', 'refresh', undefined));
+    jQuery('#wizard-download-genotypes-marker-set-list-id').html(lo.listSelect('wizard-download-genotypes-marker-set-list-id', ['markers'], 'Select a markerset', 'refresh', undefined));
 
     return {
       wizard:wiz,

@@ -300,7 +300,8 @@ my $store_args = {
     user_id=>$sp_person_id,
     archived_filename=>$archived_filename_with_path,
     archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-    temp_file_sql_copy=>$opt_B
+    temp_file_sql_copy=>$opt_B,
+    genotyping_data_type=>'SNP'
 };
 
 if ($opt_c eq 'VCF') {
@@ -335,6 +336,11 @@ if (scalar(keys %$genotype_info) > 0) {
     my $result = $store_genotypes->store_identifiers();
     $protocol_id = $result->{nd_protocol_id};
     $project_id = $result->{project_id};
+
+    # Rebuild and refresh the materialized_markerview table
+    my $basepath = dirname(__FILE__);
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/refresh_materialized_markerview.pl -H $opt_H -D $opt_D -U $opt_U -P $pw");
 }
 
 print STDERR "Done loading first sample, moving on...\n";    

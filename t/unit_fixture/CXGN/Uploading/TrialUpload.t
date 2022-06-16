@@ -189,11 +189,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -394,9 +394,9 @@ is_deeply($design, $igd_design_check, "check igd design");
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	chado_schema => $c->bcs_schema,
-     	dbh => $c->dbh(),
-     	user_name => 'janedoe', #not implemented
-     	trial_year => '2016',
+ 	dbh => $c->dbh(),
+	owner_id => 41,
+ 	trial_year => '2016',
 	trial_location => 'test_location',
 	program => 'test',
 	trial_description => "Test Genotyping Plate Upload",
@@ -635,11 +635,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_with_seedlot_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -1166,5 +1166,190 @@ is_deeply(\@intertek_download, [
           'test_genotype_upload_coordinate_trial1,C,01,tomato,"Solanum lycopersicum",18DNA00001_C01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
           'test_genotype_upload_coordinate_trial1,D,01,tomato,"Solanum lycopersicum",18DNA00001_D01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"'
         ]);
+
+
+#Upload trial with management factors
+
+my $file_name_with_managementfactors = 't/data/trial/trial_layout_example_with_management_factor.xls';
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $file_name_with_managementfactors,
+  subdirectory => 'temp_trial_upload',
+  archive_path => '/tmp',
+  archive_filename => 'trial_layout_example_with_management_factor.xls',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $management_factor_archived_filename_with_path = $uploader->archive();
+my $md5_management_factor = $uploader->get_md5($management_factor_archived_filename_with_path);
+ok($management_factor_archived_filename_with_path);
+ok($md5_management_factor);
+
+$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $management_factor_archived_filename_with_path);
+$parser->load_plugin('TrialExcelFormat');
+$parsed_data = $parser->parse();
+ok($parsed_data, "Check if parse validate excel file works");
+ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+
+print STDERR Dumper $parsed_data;
+
+my $parsed_data_check_with_management_factor = {
+          '7' => {
+                   'plot_number' => '7',
+                   'col_number' => '2',
+                   'block_number' => '2',
+                   'rep_number' => '1',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession4',
+                   'row_number' => '3',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name7'
+                 },
+          '5' => {
+                   'col_number' => '2',
+                   'plot_number' => '5',
+                   'rep_number' => '1',
+                   'block_number' => '2',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession3',
+                   'row_number' => '1',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name5'
+                 },
+          '3' => {
+                   'block_number' => '1',
+                   'rep_number' => '1',
+                   'plot_number' => '3',
+                   'col_number' => '1',
+                   'range_number' => '1',
+                   'plot_name' => 'trial_management_factor_plot_name3',
+                   'row_number' => '3',
+                   'stock_name' => 'test_accession2',
+                   'is_a_control' => 0
+                 },
+          '4' => {
+                   'stock_name' => 'test_accession2',
+                   'is_a_control' => 0,
+                   'row_number' => '4',
+                   'plot_name' => 'trial_management_factor_plot_name4',
+                   'range_number' => '1',
+                   'col_number' => '1',
+                   'plot_number' => '4',
+                   'block_number' => '1',
+                   'rep_number' => '2'
+                 },
+          '8' => {
+                   'rep_number' => '2',
+                   'block_number' => '2',
+                   'plot_number' => '8',
+                   'col_number' => '2',
+                   'row_number' => '4',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name8',
+                   'stock_name' => 'test_accession4',
+                   'is_a_control' => 0
+                 },
+          '1' => {
+                   'block_number' => '1',
+                   'rep_number' => '1',
+                   'plot_number' => '1',
+                   'col_number' => '1',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession1',
+                   'plot_name' => 'trial_management_factor_plot_name1',
+                   'range_number' => '1',
+                   'row_number' => '1'
+                 },
+          '2' => {
+                   'plot_name' => 'trial_management_factor_plot_name2',
+                   'range_number' => '1',
+                   'row_number' => '2',
+                   'stock_name' => 'test_accession1',
+                   'is_a_control' => 0,
+                   'plot_number' => '2',
+                   'col_number' => '1',
+                   'block_number' => '1',
+                   'rep_number' => '2'
+                 },
+                 'treatments' => {
+                                   'manage_factor2' => {
+                                                         'new_treatment_stocks' => [
+                                                                                     'trial_management_factor_plot_name3',
+                                                                                     'trial_management_factor_plot_name4',
+                                                                                     'trial_management_factor_plot_name5'
+                                                                                   ]
+                                                       },
+                                   'fert_factor1' => {
+                                                       'new_treatment_stocks' => [
+                                                                                   'trial_management_factor_plot_name1',
+                                                                                   'trial_management_factor_plot_name2',
+                                                                                   'trial_management_factor_plot_name3',
+                                                                                   'trial_management_factor_plot_name6',
+                                                                                   'trial_management_factor_plot_name7',
+                                                                                   'trial_management_factor_plot_name8'
+                                                                                 ]
+                                                     }
+                                 },
+          '6' => {
+                   'row_number' => '2',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name6',
+                   'stock_name' => 'test_accession3',
+                   'is_a_control' => 0,
+                   'plot_number' => '6',
+                   'col_number' => '2',
+                   'rep_number' => '2',
+                   'block_number' => '2'
+                 }
+        };
+
+is_deeply($parsed_data, $parsed_data_check_with_management_factor, 'check trial excel parse data' );
+
+my $trial_create_with_management_factor = CXGN::Trial::TrialCreate
+    ->new({
+	   chado_schema => $c->bcs_schema(),
+	   dbh => $c->dbh(),
+	   trial_year => "2016",
+	   trial_description => "Trial Upload Test with Management Factors",
+	   trial_location => "test_location",
+	   trial_name => "Trial_upload_test_with_management_factor",
+	   design_type => "RCBD",
+	   design => $parsed_data,
+	   program => "test",
+	   upload_trial_file => $management_factor_archived_filename_with_path,
+	   operator => "janedoe",
+       owner_id => 41
+	  });
+
+my $save_with_management_factor = $trial_create_with_management_factor->save_trial();
+
+ok($save_with_management_factor->{'trial_id'}, "check that trial_create worked with management factor");
+my $project_name_with_management_factor = $c->bcs_schema()->resultset('Project::Project')->find({project_id => $save_with_management_factor->{'trial_id'}})->name();
+ok($project_name_with_management_factor == "Trial_upload_test_with_management_factor", "check that trial_create really worked");
+
+my $trial_with_management_factor = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $save_with_management_factor->{'trial_id'} });
+my $management_factors = $trial_with_management_factor->get_treatments();
+print STDERR Dumper $management_factors;
+is(scalar(@$management_factors), 2);
+
+my $trial_management_factor1 = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $management_factors->[0]->[0] } );
+my $management_factor_name1 = $trial_management_factor1->name();
+print STDERR Dumper $management_factor_name1;
+is($management_factor_name1, "Trial_upload_test_with_management_factor_fert_factor1");
+my $management_factor_plots1 = $trial_management_factor1->get_plots();
+print STDERR Dumper $management_factor_plots1;
+is(scalar(@$management_factor_plots1), 6);
+
+my $trial_management_factor2 = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $management_factors->[1]->[0] } );
+my $management_factor_name2 = $trial_management_factor2->name();
+print STDERR Dumper $management_factor_name2;
+is($management_factor_name2, "Trial_upload_test_with_management_factor_manage_factor2");
+my $management_factor_plots2 = $trial_management_factor2->get_plots();
+print STDERR Dumper $management_factor_plots2;
+is(scalar(@$management_factor_plots2), 3);
 
 done_testing();

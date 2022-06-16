@@ -41,6 +41,7 @@ use List::Util qw/sum/;
 use Parallel::ForkManager;
 use CXGN::Image::Search;
 use CXGN::Trait::Search;
+use File::Slurp;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -63,6 +64,7 @@ sub image_analysis_submit_POST : Args(0) {
     my $trait = $c->req->param('trait');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $main_production_site_url = $c->config->{main_production_site_url};
+    _log_analysis_activity($c,$image_ids,$service,$trait);
 
     unless (ref($image_ids) eq 'ARRAY') { $image_ids = [$image_ids]; }
 
@@ -333,7 +335,7 @@ sub image_analysis_group_POST : Args(0) {
             foreach my $trait (keys %{$uniquename_data}) {
                 my $details = $uniquename_data->{$trait};
                 my @values = map { $_->{'value'}} @{$uniquename_data->{$trait}};
-                @values= grep { $_ != 'NA' } @values; # remove NAs before calculating mean
+                @values= grep { $_ ne 'NA' } @values; # remove NAs before calculating mean
                 # print STDERR "\n\n\nVALUES ARE @values and length is ". scalar @values . "\n\n\n";
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
                 print STDERR "Mean value is $mean_value\n";
@@ -354,6 +356,26 @@ sub image_analysis_group_POST : Args(0) {
     }
     # print STDERR "table data is ".Dumper(@table_data);
     $c->stash->{rest} = { success => 1, results => \@table_data };
+}
+
+sub get_activity_data : Path('/ajax/image_analysis/activity') Args(0) {
+  my $self = shift;
+  my $c = shift;
+
+  my @activity;
+  if ($c->config->{image_analysis_log}) {
+    my $logfile = $c->config->{image_analysis_log};
+    my @file_data = read_file($logfile, chomp => 1);
+    foreach my $line (@file_data) {
+        my @values = split("\t", $line);
+        my @ts_parts = split(" ", $values[0]);
+        push @activity, { date => $ts_parts[0]};
+    }
+  }
+
+  my $json = JSON->new();
+  $c->stash->{rest} = { activity => $json->encode(\@activity)};
+
 }
 
 sub _check_user_login {
@@ -384,6 +406,32 @@ sub _check_user_login {
         $user_role = $c->user->get_object->get_user_type();
     }
     return ($user_id, $user_name, $user_role);
+}
+
+sub _log_analysis_activity {
+    my $c = shift;
+    my $image_ids = shift;
+    my $service = shift;
+    my $trait = shift;
+    my $now = DateTime->now();
+
+    if ($c->config->{image_analysis_log}) {
+      my $logfile = $c->config->{image_analysis_log};
+      open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
+      print $F join("\t", (
+            $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
+            $c->user->get_object->get_username(),
+            $service,
+            $trait,
+            $image_ids
+            ));
+      print $F "\n";
+      close($F);
+      print STDERR "Analysis submission logged in $logfile\n";
+    }
+    else {
+      print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
+    }
 }
 
 1;

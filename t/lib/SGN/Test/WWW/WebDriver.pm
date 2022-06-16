@@ -69,7 +69,7 @@ has 'host' => ( is => 'rw',
 
 has 'driver' => ( is => 'rw',
 		  isa => 'Selenium::Remote::Driver',
-		  default => sub { Selenium::Remote::Driver->new('base_url' => $ENV{SGN_TEST_SERVER} ) },
+		  default => sub { Selenium::Remote::Driver->new('base_url' => $ENV{SGN_TEST_SERVER}, 'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost') },
     );
 
 has 'user_data' => ( is => 'rw',
@@ -102,6 +102,7 @@ sub login {
     my $password = shift;
     
     $self->get("/user/login");
+    sleep(2);
     my $d = $self->driver();
     my $username_field = $d->find_element("username", "id");
     $username_field->click();

@@ -22,7 +22,7 @@ my @phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
 
 
 =cut
- 
+
 
 
 use strict;
@@ -30,7 +30,7 @@ use warnings;
 use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
-use List::MoreUtils ':all';
+use List::MoreUtils qw | :all !before !after |;
 use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -107,24 +107,24 @@ sub get_trial_phenotypes_heatmap {
 	my $numeric_regex_2 = '/^\s*$/';
 
 	my @where_clause;
-	
+
 	if ($trial_id && $trait_id){
 		push @where_clause, " (". $columns{'trait_id'}." in ($trait_id) OR ". $columns{'trait_id'}." is NULL )";
-		#push @where_clause, $columns{'trait_id'}." in ($trait_id)";	
+		#push @where_clause, $columns{'trait_id'}." in ($trait_id)";
 		push @where_clause, "plot.type_id in ($plot_type_id)";
-		push @where_clause, $columns{'trial_id'}." in ($trial_id)";	
-		#push @where_clause, " (". $columns{'phenotype_value'}." ~\'$numeric_regex\' OR ". $columns{'phenotype_value'}." is NULL )";	
-		push @where_clause, $columns{'phenotype_value'}." ~\'$numeric_regex\' ";	
+		push @where_clause, $columns{'trial_id'}." in ($trial_id)";
+		#push @where_clause, " (". $columns{'phenotype_value'}." ~\'$numeric_regex\' OR ". $columns{'phenotype_value'}." is NULL )";
+		push @where_clause, $columns{'phenotype_value'}." ~\'$numeric_regex\' ";
 	}
-    
+
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
 	my  $q = $select_clause . $from_clause . $where_clause . $order_clause;
-	
+
 	my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
 	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results, @phenoID);
-	
+
 	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value, $pheno_id) = $h->fetchrow_array()) {
 		if (!$row_number && !$col_number){
 			if ($block_number){
@@ -143,10 +143,10 @@ sub get_trial_phenotypes_heatmap {
 		push @plot_No, $plot_number;
 		push @block_No, $block_number;
 		push @rep_No, $rep;
-        push @phenoID, $pheno_id; 
+        push @phenoID, $pheno_id;
 		push @msg, "plot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
     }
-	
+
 	# my ($min_col, $max_col) = minmax @col_No;
 	# my ($min_row, $max_row) = minmax @row_No;
 	# my (@unique_col,@unique_row);
@@ -156,24 +156,24 @@ sub get_trial_phenotypes_heatmap {
 	# for my $y (1..$max_row){
 	# 	push @unique_row, $y;
 	# }
-	
+
     my $false_coord;
 	if ($col_No[0] == ""){
         @col_No = ();
         $false_coord = 'false_coord';
 		my @row_instances = uniq @row_No;
 		my %unique_row_counts;
-		$unique_row_counts{$_}++ for @row_No;        
+		$unique_row_counts{$_}++ for @row_No;
         my @col_number2;
         for my $key (keys %unique_row_counts){
             push @col_number2, (1..$unique_row_counts{$key});
         }
-        for (my $i=0; $i < scalar(@$result); $i++){               
+        for (my $i=0; $i < scalar(@$result); $i++){
             @$result[$i]->{'col'} = $col_number2[$i];
             push @col_No, $col_number2[$i];
-        }		
+        }
 	}
-    
+
     my ($min_col, $max_col) = minmax @col_No;
 	my ($min_row, $max_row) = minmax @row_No;
 	my (@unique_col,@unique_row);
@@ -183,7 +183,7 @@ sub get_trial_phenotypes_heatmap {
 	for my $y (1..$max_row){
 		push @unique_row, $y;
 	}
-    
+
     my $trial = CXGN::Trial->new({
 		bcs_schema => $schema,
 		trial_id => $trial_id

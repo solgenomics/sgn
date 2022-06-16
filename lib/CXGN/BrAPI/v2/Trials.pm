@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial::Folder;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -123,14 +124,14 @@ sub details {
 		if ($folder->is_folder) {
 			my $total_count = 1;
 			my @folder_studies;
-			my %additional_info;
+			my $additional_info = $folder->additional_info;
             my $folder_id = $folder->folder_id;
-            my $folder_description = $folder->name; #description doesn't exist 
+            my $folder_description = $folder->description;
             my $breeding_program_id = $folder->breeding_program->project_id();
 
 			my %result = (
                 active=>JSON::true,
-				additionalInfo=>\%additional_info,
+				additionalInfo=>$additional_info,
                 commonCropName=>$crop,
                 contacts=>undef,
                 datasetAuthorships=>undef,
@@ -175,7 +176,7 @@ sub store {
         my $folder_name = $params->{trialName} || undef;
         my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
         if ($existing) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A folder or trial with the name %s already exists in the database. Please select another name.',$folder_name ));
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A trial or study with the name %s already exists in the database. Please select another name.',$folder_name ), 409);
         }
     }
 
@@ -184,19 +185,30 @@ sub store {
         my $parent_folder_id = $params->{programDbId} || undef;        
         my $breeding_program_id = $params->{programDbId} || undef;
         my $description = $params->{trialDescription} || undef;
+        my $additional_info = $params->{additionalInfo} || undef;
         my $folder_for_trials = 1;
         my $folder_for_crosses = 0;
-        my $folder_for_genotyping_trials = 0;     
+        my $folder_for_genotyping_trials = 0;
+
+        # Check that the breeding program was passed and exists
+        if (! defined $breeding_program_id) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, 'programDbId is required', 400);
+        }
+        my $program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
+        if (! defined $program) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Program with that id does not exist', 404);
+        }
 
         my $folder = CXGN::Trial::Folder->create({
-            bcs_schema => $schema,
-            parent_folder_id => $parent_folder_id,
-            name => $folder_name,
-            breeding_program_id => $breeding_program_id,
-            description => $description,
-            folder_for_trials => $folder_for_trials,
-            folder_for_crosses => $folder_for_crosses,
-            folder_for_genotyping_trials => $folder_for_genotyping_trials
+            bcs_schema                   => $schema,
+            parent_folder_id             => $parent_folder_id,
+            name                         => $folder_name,
+            breeding_program_id          => $breeding_program_id,
+            description                  => $description,
+            folder_for_trials            => $folder_for_trials,
+            folder_for_crosses           => $folder_for_crosses,
+            folder_for_genotyping_trials => $folder_for_genotyping_trials,
+            additional_info              => $additional_info
         });
 
         push @stored_ids, $folder->folder_id();
@@ -210,6 +222,7 @@ sub store {
     my %program_name_list;
     my %trial_id_list;
     my %trial_name_list;
+    my $result_data;
     if (scalar(@stored_ids)>0){
         %trial_id_list = map { $_ => 1} @stored_ids;
         my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
@@ -217,12 +230,12 @@ sub store {
 
         foreach my $program (@$programs) {
             $program = { "id" => $program->[0], "name" => $program->[1], "program_id" => $program->[0], "program_name" => $program->[1],  "program_description" => $program->[2] };
-            $data = _get_folders($program, $schema, $data, 'breeding_program', undef, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
+            $result_data = _get_folders($program, $schema, $result_data, 'breeding_program', undef, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
         }
     }
 
-    my $total_count = $data ? scalar @{$data} : 0;
-    my %result = (data => $data);
+    my $total_count = $result_data ? scalar @{$result_data} : 0;
+    my %result = (data => $result_data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 
@@ -248,11 +261,21 @@ sub update {
     my $parent_folder_id = $params->{programDbId} || undef;        
     my $breeding_program_id = $params->{programDbId} || undef;
     my $description = $params->{trialDescription} || undef;
+    my $additional_info = $params->{additionalInfo} || undef;
+
+    # Check that the breeding program was passed and exists
+    if (! defined $breeding_program_id) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'programDbId is required', 400);
+    }
+    my $program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
+    if (! defined $program) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Program with that id does not exist', 404);
+    }
 
     my $folder = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $folder_id });
     if ($folder){
         $folder->name($folder_name);
-        $folder->description($description);
+        $folder->description($description || '');
         $folder->update();
     }
 
@@ -263,6 +286,18 @@ sub update {
     if ($project_rel_row){
         $project_rel_row->object_project_id($breeding_program_id);
         $project_rel_row->update();
+    }
+
+    # Additional info - Delete and create new
+    my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project_additional_info', 'project_property');
+    my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')-> search( { project_id => $folder_id });
+    while (my $folder_type_row = $folder_type->next) {
+        if ($folder_type_row->type_id() == $additional_info_cvterm->cvterm_id()) {
+            $folder_type_row->delete();
+        }
+    }
+    if ($additional_info) {
+        $folder->create_projectprops({ $additional_info_cvterm->name() => encode_json($additional_info) });
     }
 
     #retrieve updated trial
@@ -277,7 +312,7 @@ sub update {
 
     my %result = (
         active=>JSON::true,
-        additionalInfo=>\%additional_info,
+        additionalInfo=>$folder->additional_info,
         commonCropName=>$crop,
         contacts=>undef,
         datasetAuthorships=>undef,
@@ -319,6 +354,7 @@ sub _get_folders {
     my %additional_info;
     my @folder_studies;
 
+    my $trial_filter = 0;
 	my $studies = _get_studies($self, $schema, $parent_type);
     my %studies = %{$studies};
 	if (%studies) {
@@ -330,7 +366,7 @@ sub _get_folders {
             elsif (!$studies{$study}->{'folder_for_crosses'} && !$studies{$study}->{'folder_for_trials'} && $studies{$study}->{'trial_folder'}) { # it's a folder, recurse a layer deeper
                 $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
             }
-            elsif ($studies{$study}->{'design'}) { # it's a study, add it to studies array
+            elsif (exists $studies{$study}->{'design'}) { # it's a study, add it to studies array
                 my $passes_search = 1;
                 if (%location_id_list) {
                     if (!exists($location_id_list{ $studies{$study}->{'project location'}}) ) {
@@ -356,7 +392,7 @@ sub _get_folders {
                     }
                 }
 
-                if ($passes_search){
+                if ($passes_search > 0){
                     my $location_name = '';
                     my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find({nd_geolocation_id=>$studies{$study}->{'project location'}});
                     if ($location){
@@ -373,36 +409,40 @@ sub _get_folders {
     	}
     }
 
-    my $trial_filter = 0;
-
+    # Filter out the results
     if (scalar(keys %trial_id_list) > 0 && !exists($trial_id_list{ $self->{'id'} } )){
         $trial_filter = 1;
     } elsif (scalar(keys %trial_name_list) > 0 && !exists($trial_name_list{ $self->{'name'} } )){
         $trial_filter = 1;
-    } 
-
-    unless ( scalar @folder_studies < 1 && (%location_id_list || %study_id_list || %study_name_list || %location_names_list || %trial_id_list )) { #skip empty folders if call was issued with search paramaters
-        if ($trial_filter < 1 ){
-            push @{$data}, {
-                            active=>JSON::true,
-                            additionalInfo=>\%additional_info,
-                            commonCropName=>$crop,
-                            contacts=>undef,
-                            datasetAuthorships=>undef,
-                            documentationURL=>undef,
-                            endDate=>undef,
-                            externalReferences=>undef,
-                            programDbId=>qq|$self->{'program_id'}|,
-                            programName=>$self->{'program_name'},
-                            publications=>undef,
-                            startDate=>undef,
-                            trialDbId=>qq|$self->{'id'}|,
-                            trialName=>$self->{'name'},
-                            trialDescription=>$self->{'program_description'},
-                            trialPUI=>undef
-            }				
-        }; 
+    } elsif ($parent_type eq 'breeding_program') {
+        # Filter out breeding programs. Kind of confusing, but $parent_type seems to actually be $self_type
+        $trial_filter = 1;
+    } elsif ((%location_id_list || %location_names_list || %study_id_list || %study_name_list) && scalar(@folder_studies) eq 0) {
+        # Filter our trials that don't have required search studies if filter was passed
+        $trial_filter = 1;
     }
+
+    if ($trial_filter < 1){
+        print Dumper($self);
+        push @{$data}, {
+            active=>JSON::true,
+            additionalInfo=>$self->{project_additional_info} ? decode_json($self->{project_additional_info}) : undef,
+            commonCropName=>$crop,
+            contacts=>undef,
+            datasetAuthorships=>undef,
+            documentationURL=>undef,
+            endDate=>undef,
+            externalReferences=>undef,
+            programDbId=>qq|$self->{'program_id'}|,
+            programName=>$self->{'program_name'},
+            publications=>undef,
+            startDate=>undef,
+            trialDbId=>qq|$self->{'id'}|,
+            trialName=>$self->{'name'},
+            trialDescription=>$self->{'description'},
+            trialPUI=>undef
+        }
+    };
 
 	return $data;
 
@@ -431,14 +471,15 @@ sub _get_studies {
             subject_project_id => { 'not in' => \@folder_contents }
         },
         {   join      => { subject_project => { projectprops => 'type' } },
-            '+select' => ['subject_project.name', 'projectprops.value', 'type.name'],
-            '+as'     => ['project_name', 'project_value', 'project_type']
+            '+select' => ['subject_project.name', 'subject_project.description', 'projectprops.value', 'type.name'],
+            '+as'     => ['project_name', 'project_description', 'project_value', 'project_type']
         }
      );
 
     while (my $row = $rs->next) {
         my $name = $row->get_column('project_name');
         $studies{$name}{'name'} = $name;
+        $studies{$name}{'description'} = $row->get_column('project_description');
         $studies{$name}{'id'} = $row->subject_project_id();
         $studies{$name}{'program_name'} = $self->{'program_name'};
         $studies{$name}{'program_id'} = $self->{'program_id'};

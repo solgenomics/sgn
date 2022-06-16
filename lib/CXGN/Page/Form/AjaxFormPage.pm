@@ -21,7 +21,7 @@ all others.
 
 AjaxFormPage contains a number of pre-populated accessors for often used CXGN
 features, such as CXGN::Page (get_page()), CXGN::DB::Connection (get_dbh()), and
-CXGN::Login (get_user()). 
+CXGN::Login (get_user()).
 
 When creating a derived class, you need to override the following functions:
 
@@ -40,7 +40,7 @@ Naama Menda (nm249@cornell.edu)
 
 =head1 FUNCTIONS AND INTERFACES
 
-The following is a list of object functions. Some of these functions are used internally, and some need to be overridden in child classes. See the description above and the individual functions for more details. 
+The following is a list of object functions. Some of these functions are used internally, and some need to be overridden in child classes. See the description above and the individual functions for more details.
 
 =cut
 
@@ -71,9 +71,9 @@ use base qw /CXGN::Debug/ ;
 =head2 new
 
  Usage:        my $s = CXGN::Page::SimpleFormPageSubClass->new();
- Desc:         This class needs to be subclassed and certain functions 
+ Desc:         This class needs to be subclassed and certain functions
                overridden (the functions are listed above). The constructor
-               should not be overridden or called from the overridden 
+               should not be overridden or called from the overridden
                constructor.
  Ret:          $self
  Args:
@@ -102,7 +102,7 @@ sub new {
     $self->set_dbh($dbh);
 
     $self->set_login(CXGN::Login->new($self->get_dbh()));
-    my %args = $self->get_ajax_page()->get_all_encoded_arguments(); ##
+    my %args = $self->get_ajax_page()->get_all_encoded_arguments("<>&\";"); ##
     my %json_hash=();
     # sanitize the inputs, we don't want to end up like bobby tables school.
     #
@@ -132,20 +132,20 @@ sub new {
 	}
     }
 
-    if ($self->get_action() eq "view") { 
+    if ($self->get_action() eq "view") {
  	$self->view();
     }
-    elsif ($self->get_action() eq "edit") { 
+    elsif ($self->get_action() eq "edit") {
  	$self->edit();
     }
-    elsif ($self->get_action() eq "new") { 
+    elsif ($self->get_action() eq "new") {
 	$self->set_object_id(0);
 	my %args = $self->get_args();
 	$args{$self->get_primary_key()}=0;
 	$self->set_args(%args);
 	$self->add();
     }
-    elsif ($self->get_action() eq "store") { 
+    elsif ($self->get_action() eq "store") {
  	$self->store();
     }
     elsif ($self->get_action() eq "confirm_delete") {
@@ -181,7 +181,7 @@ sub new {
 
 =cut
 
-sub check_modify_privileges { 
+sub check_modify_privileges {
     my $self = shift;
     my %json_hash= $self->get_json_hash();
     # implement quite strict access controls by default
@@ -193,7 +193,7 @@ sub check_modify_privileges {
 	return 0;
     }
     if (!$person_id) { $json_hash{login} = 1 ;  }
-    if ($user_type !~ /submitter|sequencer|curator/) { 
+    if ($user_type !~ /submitter|sequencer|curator/) {
         if (!$json_hash{error} ) {
 	    $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."; }
 	$self->set_json_hash(%json_hash);
@@ -231,7 +231,7 @@ sub check_modify_privileges {
 
 =cut
 
-sub define_object { 
+sub define_object {
     my $self = shift;
 
     my %json_hash= $self->get_json_hash();
@@ -242,7 +242,7 @@ sub define_object {
     $self->set_primary_key();
     $self->set_owners();
 
-    if ( $self->get_object()->get_obsolete() eq 't' ) { 
+    if ( $self->get_object()->get_obsolete() eq 't' ) {
 	$json_hash{error} = "Object is obsolete!";
 	$self->set_json_hash(%json_hash);
 	$self->print_json();
@@ -278,23 +278,23 @@ sub add {
                which can but should not overridden, first, the privileges are checked
                and all the form fields are validated for correctness. If this fails,
                the input form is shown again with an appropriate error message.
-               Else, the store is issued for the object (set using set_object). 
+               Else, the store is issued for the object (set using set_object).
                If this succeeds, the form div is updated  but with
                the 'view' action parameter.
  Ret:
  Args:
- Side Effects: If the form fails validation, 
+ Side Effects: If the form fails validation,
                the 'validate' key in $self->get_json_hash is set to '1',
                and the form is re-printed with the relevant error message.
-               If validation passes, $form->store is called. 
-               If this was an insert of a new object, 
-               sets $self->set_object_id($last)insert_id)  
+               If validation passes, $form->store is called.
+               If this was an insert of a new object,
+               sets $self->set_object_id($last)insert_id)
  Example:
 
 =cut
 
 
-sub store { 
+sub store {
     my $self = shift;
     my $dont_show_form = shift;
     my %json_hash= $self->get_json_hash();
@@ -324,7 +324,7 @@ sub store {
 
         # was it an insert? get the insert id
 	#
-	if (!$self->get_object_id()) { 
+	if (!$self->get_object_id()) {
 	    my $id = $self->get_form()->get_insert_id();
 	    $self->set_object_id($id);
 	}
@@ -348,7 +348,7 @@ sub store {
 
 =cut
 
-sub view { 
+sub view {
     my $self = shift;
 
     # make sure we get a static form.
@@ -382,9 +382,9 @@ sub get_user {
 =head2 generate_form
 
  Usage:        $s->generate_form()
- Desc:         this method needs to be overridden. In this method, 
+ Desc:         this method needs to be overridden. In this method,
                a new form must be generated (as a CXGN::Page::Form object)
-               which can be instantiated either as a Static or Editable 
+               which can be instantiated either as a Static or Editable
                version.
  Ret:
  Args:
@@ -393,7 +393,7 @@ sub get_user {
 
 =cut
 
-sub generate_form { 
+sub generate_form {
     my $self = shift;
     my $error=  "Please subclass 'generate_form' function!\n";
     warn $error;
@@ -408,7 +408,7 @@ sub generate_form {
 
  Usage:
  Desc:         actually performs the delete in the database.
-               Database objects should implement the delete as a 
+               Database objects should implement the delete as a
                obsoletion. See L<CXGN::DB::ModifiableI>
  Ret:
  Args:
@@ -417,7 +417,7 @@ sub generate_form {
 
 =cut
 
-sub delete { 
+sub delete {
     my $self = shift;
     warn "Override 'delete' function in derived class\n";
 
@@ -437,14 +437,14 @@ sub delete {
                in the appropriate Editable or Static form.
  Ret:
  Args:
- Side Effects: Sets user_type, is_owner, and editable_form_id keys for 
+ Side Effects: Sets user_type, is_owner, and editable_form_id keys for
                $self->get_json_hash() to be used in the javascript object
-               (See CXGN/Page/Form/JSFormPage.js ) 
+               (See CXGN/Page/Form/JSFormPage.js )
  Example:
 
 =cut
 
-sub display_form { 
+sub display_form {
     my $self=shift;
     my %json_hash= $self->get_json_hash();
     # edit links are printed from the javascript object! See JSFormPage.js
@@ -492,7 +492,7 @@ sub set_ajax_page {
  Usage:        $dbh = $s->get_dbh();
  Desc:         get the dbh connection of this simple form page.
                the simple form page constructor initializes this
-               property 
+               property
  Ret:
  Args:
  Side Effects:
@@ -597,7 +597,7 @@ sub set_object {
 
 sub get_object_name {
   my $self = shift;
-  return $self->{object_name}; 
+  return $self->{object_name};
 }
 
 sub set_object_name {
@@ -610,11 +610,11 @@ sub set_object_name {
 
  Usage:  my @owners = $self->get_owners()
  Desc:  find the owner(s) of your object
-        most tables have a single owner (the field sp_person_id) 
+        most tables have a single owner (the field sp_person_id)
         and this accessor will return an array with one element.
-        However, if the object has multiple owners  
+        However, if the object has multiple owners
         (such as 'Locus' - group of owners is defined in locus_owner table)
-        this function will need to be overriden (see CXGN/Phenome/Locus.pm) 
+        this function will need to be overriden (see CXGN/Phenome/Locus.pm)
  Ret:   an array
  Args:  none
  Side Effects:
@@ -625,7 +625,7 @@ sub set_object_name {
 sub get_owners {
   my $self=shift;
   return @{$self->{owners}};
-  
+
 }
 
 sub set_owners {
@@ -636,7 +636,7 @@ sub set_owners {
 =head2 get_action, set_action
 
  Usage:        my $action = $s ->get_action()
- Desc:         the current action of the simple form page. 
+ Desc:         the current action of the simple form page.
                can be either edit, save, view, etc.
                the action is set by the constructor, so the
                setter should never be called.
@@ -645,7 +645,7 @@ sub set_owners {
  Side Effects:
  Example:
 
-=cut 
+=cut
 
 sub get_action {
   my $self=shift;
@@ -686,7 +686,7 @@ sub set_primary_key {
 
  Usage:        $s->get_script_name()
  Desc:         gets the name of the script that uses the simple form page.
-               useful for constructing links. 
+               useful for constructing links.
  Ret:
  Args:
  Side Effects:
@@ -696,14 +696,14 @@ sub set_primary_key {
 
 sub get_script_name {
     my $self=shift;
-    if (!exists($self->{script_name})) { 
+    if (!exists($self->{script_name})) {
 	#return CXGN::Apache::Request::page_name();
 	return $ENV{SCRIPT_NAME};
     }
-    else { 
+    else {
 	return $self->{script_name};
     }
-    
+
 }
 
 sub set_script_name {
@@ -738,9 +738,9 @@ sub set_object_id {
  Usage:        my $f = $s->get_form()
  Desc:         get the form object associated with the simple
                form page. The form is initialized automatically to the
-               appropriate subclass, either L<CXGN::Page::Form::Static> or 
-               L<CXGN::Page::Form::Editable>, depending on the action, 
-               according to the form object defined in the generate_form 
+               appropriate subclass, either L<CXGN::Page::Form::Static> or
+               L<CXGN::Page::Form::Editable>, depending on the action,
+               according to the form object defined in the generate_form
                method, which needs to be overridden in the subclass.
  Ret:
  Args:
@@ -764,22 +764,22 @@ sub set_form {
 =head2 accessors get_json_hash, set_json_hash
 
  Usage: my %json_hash= $self->get_json_hash() ;
-        
+
         # the store function in this class sets the validate key to 1
         #if the form fields pass permissions and validation
         my $validate = $json_hahs{validate};
-        
+
          $json_hash{error} = "this is an error";
          $json_hash{html} = $self->get_form()->as_table_string();
          $json_hash{user_type} = $user_type;
-         
+
          $json_hash{is_owner} = 1;
          $json_hash{editable_form_id} = $self->get_form()->get_form_id();
          $json_hash{refering_page} = "/my_page.pl?id=$id";
 
-         #Force page reloading (e.g. after deleting an object)  
-         $json_hash{reload} = 1; 
-         
+         #Force page reloading (e.g. after deleting an object)
+         $json_hash{reload} = 1;
+
          $self->set_json_hash(%json_hash)
  Desc:
  Property
@@ -812,7 +812,7 @@ sub set_json_hash {
 
 sub get_is_owner {
   my $self = shift;
-  return $self->{is_owner}; 
+  return $self->{is_owner};
 }
 
 sub set_is_owner {
@@ -836,23 +836,23 @@ sub set_is_owner {
 sub init_form {
     my $self = shift;
     my $form_id = shift;
-    
-    if ($self->get_action() =~/edit|^store|new/) { 
+
+    if ($self->get_action() =~/edit|^store|new/) {
 	$self->set_form( CXGN::Page::Form::Editable -> new({no_buttons=>1, form_id=>$form_id} ) ) ;
-	
+
     }elsif ($self->get_action() =~/confirm_store/) {
-	$self->set_form( CXGN::Page::Form::ConfirmStore->new() ) ; 
-	
+	$self->set_form( CXGN::Page::Form::ConfirmStore->new() ) ;
+
     }else  {
 	$self->set_form( CXGN::Page::Form::Static -> new() );
     }
-    
+
 }
 
 =head2 get_request, set_request
 
  Usage:        my $r = $s->get_request()
- Desc:         returns the apache request object for the 
+ Desc:         returns the apache request object for the
                simple form page.
  Ret:
  Args:
@@ -874,21 +874,21 @@ sub set_request {
 
 =head2 validate_parameters_before_store
 
- Desc: Allow for custom validation of the form as a whole, 
-       and in perl rather than javascript; parameters can be 
-       removed, modified or added as necessary before the database 
+ Desc: Allow for custom validation of the form as a whole,
+       and in perl rather than javascript; parameters can be
+       removed, modified or added as necessary before the database
        is touched. Meant to be overridden.
-		 
-       Complements ElementI::validate(), which simply allows for 
+
+       Complements ElementI::validate(), which simply allows for
        checking format of individual fields.
-       validate_parameters_before_store() is called after all 
+       validate_parameters_before_store() is called after all
        Elements have validate()d themselves.
-		 
-       To avoid letting the store go through, create an error or 
+
+       To avoid letting the store go through, create an error or
        message page and call exit().
 
  Ret:  none
- 
+
 =cut
 
 sub validate_parameters_before_store {
@@ -896,11 +896,11 @@ sub validate_parameters_before_store {
 
 =head2 process_parameters_after_store
 
- Desc: Allow for custom postprocessing, eg logging to disk, sending 
+ Desc: Allow for custom postprocessing, eg logging to disk, sending
        e-mail confirmations, or changing the template of the form
        before it\'s viewed again. Meant to be overridden.
  Ret:  none
- 
+
 =cut
 
 sub process_parameters_after_store {
@@ -955,20 +955,20 @@ sub send_form_email {
     my $mailing_list = $opts->{mailing_list};
     my $refering_page_link = $opts->{refering_page};
     my $action = $opts->{action};
-    
+
     my $user=$self->get_user();
-    
+
     my $object_id = $self->get_object_id();
-    
+
     my $username =
         $user->get_first_name() . " "
 	. $user->get_last_name();
     my $sp_person_id = $user->get_sp_person_id();
-    
-    
+
+
     my $user_link =
 	qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
-    
+
     my $usermail = $user->get_private_email();
     my $fdbk_body;
     if ( $action eq 'delete' ) {
@@ -983,11 +983,10 @@ sub send_form_email {
         $fdbk_body =
 	    "$username ($user_link) has submitted data for " . $self->get_object_name() ." ($refering_page_link) \n $usermail";
     }
-    
+
     CXGN::Contact::send_email( $subject, $fdbk_body,$mailing_list );
     CXGN::Feed::update_feed( $subject, $fdbk_body );
 }
 
 
 1;
-

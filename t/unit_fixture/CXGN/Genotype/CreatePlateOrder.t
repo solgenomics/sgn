@@ -166,10 +166,13 @@ is_deeply($geno_design, {
         }, 'check genotyping plate design');
 
 my $genotyping_trial_create;
+
+my $trial_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial', 'project_type')->cvterm_id();
+
 ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
+    owner_id => 41,
     program => "test",
     trial_location => "test_location",
     operator => "janedoe",
@@ -178,6 +181,7 @@ ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     design_type => 'genotyping_plate',
     design => $geno_design,
     trial_name => $plate_info->{name},
+    trial_type => $trial_type_cvterm_id,
     is_genotyping => 1,
     genotyping_user_id => 41,
     genotyping_project_name => $plate_info->{project_name},

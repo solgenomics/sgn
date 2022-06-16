@@ -31,6 +31,12 @@ sub search {
     my $phenotype_ids_arrayref = $params->{observationDbId} || ($params->{observationDbIds} || ());
     my $descriptors_arrayref = $params->{descriptiveOntologyTerm} || ($params->{descriptiveOntologyTerms} || ());
 
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size;
+
+    my $limit = $end_index-$start_index;
+    my $offset = $start_index;
+
     my $image_search = CXGN::Image::Search->new({
         bcs_schema=>$self->bcs_schema(),
         people_schema=>$self->people_schema(),
@@ -38,9 +44,11 @@ sub search {
         image_name_list=>$image_names_arrayref,
         description_list=>$descriptors_arrayref,
         stock_id_list=>$stock_ids_arrayref,
-        image_id_list=>$image_ids_arrayref
+        image_id_list=>$image_ids_arrayref,
         # still need to implement in the search
         # phenotype_id_list=>$phenotype_ids_arrayref,
+        limit=>$limit,
+        offset=>$offset
     });
     my ($result, $total_count) = $image_search->search();
 
@@ -68,11 +76,20 @@ sub search {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id};
+        }
+
         push @data, {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
+                tags => \@sorted_tags,
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
@@ -498,7 +515,7 @@ sub detail {
 }
 
 sub _get_mimetype {
-    my $extension = shift;
+    my $extension = shift || '';
     my %mimetypes = (
         '.jpg' => 'image/jpeg',
         '.JPG' => 'image/jpeg',

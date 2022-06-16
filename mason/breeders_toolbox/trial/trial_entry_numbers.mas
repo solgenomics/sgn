@@ -1,0 +1,93 @@
+
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ "jquery", "jquery.dataTables", 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ] &>
+
+<& /breeders_toolbox/trial/trial_entry_numbers_template_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
+<& /breeders_toolbox/trial/trial_entry_numbers_upload_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
+
+<div id="trial_entry_numbers" style="display: none">
+    <br />
+    <table id="trial_entry_numbers_table" class="display"></table>
+    <br /><br />
+</div>
+
+<button id="set_entry_numbers_template_btn" class="btn btn-default">Generate Entry Number Template</button>
+<button id="set_entry_numbers_upload_btn" class="btn btn-default">Upload Entry Number Template</button>
+
+<script src="//cdn.datatables.net/plug-ins/1.11.3/sorting/natural.js" defer></script>
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+
+        loadEntryNumbers();
+
+        jQuery("#set_entry_numbers_template_btn").click(function() {
+            jQuery("#set_entry_numbers_template_dialog").modal("show");
+        });
+        jQuery("#set_entry_numbers_upload_btn").click(function() {
+            jQuery("#trial_entry_numbers_upload_dialog").modal("show");
+        });
+
+        // Init DataTable
+        jQuery('#trial_entry_numbers_table').DataTable({
+            dom: 'Bfrtip',
+            autoWidth: false,
+            data: [],
+            columns: [
+                { title: "Accession", data: "stock_name" },
+                { title: "Entry Number", data: "entry_number"}
+            ],
+            columnDefs: [
+                { type: 'natural', targets: 1 }
+            ],
+            order: [[ 1, "asc" ]],
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    title: '<% $trial_name %>_entry_numbers',
+                    exportOptions: {
+                        orthogonal: 'export'
+                    }
+                },
+                {
+                    extend: 'csvHtml5',
+                    title: '<% $trial_name %>_entry_numbers',
+                    exportOptions: {
+                        orthogonal: 'export'
+                    }
+                }
+            ]
+        });
+    });
+
+    function loadEntryNumbers() {
+        jQuery.ajax({
+            url: "/ajax/breeders/trial/<% $trial_id %>/entry_numbers",
+            type: 'GET',
+            success: function(response) {
+                if ( response && response.entry_numbers ) {
+                    displayEntryNumbers(response.entry_numbers);
+                }
+                else {
+                    alert("ERROR: Could not load entry numbers due to a server error!");
+                }
+            },
+            error: function() {
+                alert("ERROR: Could not load entry numbers due to a server error!");
+            }
+        });
+    }
+
+    function displayEntryNumbers(entryNumbers) {
+        if ( entryNumbers && entryNumbers.length > 0 ) {
+            let dt = jQuery('#trial_entry_numbers_table').DataTable();
+            dt.clear();
+            dt.rows.add(entryNumbers);
+            dt.draw();
+            jQuery("#trial_entry_numbers").show();
+        }
+    }
+</script>

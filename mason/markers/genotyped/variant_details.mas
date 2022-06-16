@@ -1,0 +1,133 @@
+<%doc>
+=head1 NAME
+
+Variant Detail Page
+
+=head1 DESCRIPTION
+
+A detail page for variants / markers stored in the genotype protocol props, 
+and summarized in the materialized_markerview materialized view
+
+=head1 ARGUMENTS
+
+=over 5
+
+=item variant_name
+
+The name of the variant, as used in the variant_name column of the materialized_markerview table
+
+=item markers
+
+An arrayref containing a hash for each marker for the variant.  The marker hash has the following 
+keys: chrom, species_name, reference_genome_name, pos, alt, ref
+
+=item related_variants 
+
+A hashref containing the variants and the markers related to one or more of the markers in the current variant
+
+=back
+</%doc>
+
+<%args>
+    $variant_name => undef
+    $markers => undef
+</%args>
+
+<%init>
+    if ( !$variant_name ) {
+        print "<p><strong>ERROR: </strong>Missing variant name!</p>";
+    }
+    if ( !$markers ) {
+        print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
+    }
+
+    # Set variant properties
+    my $species = ${$markers}[0]->{'species_name'};
+    my $ref = ${$markers}[0]->{'reference_genome_name'};
+    my $chrom = ${$markers}[0]->{'chrom'};
+    my $pos = ${$markers}[0]->{'pos'};
+
+    # Set title
+    my $title = $species . " Markers";
+    my $subtitle = "Chromosome " . $chrom . " @ " . $pos;
+
+    # Set parameters for flanking sequence
+    my $flanking_sequence_blast_db = undef;
+    my $conf_blast_db = $c->config->{flanking_sequence_blast_db};
+    if ( defined $conf_blast_db && $conf_blast_db ne '' ) {
+        my @blast_dbs = split(',', $conf_blast_db);
+        foreach my $blast_db (@blast_dbs) {
+            my @blast_db_parts = split('\|', $blast_db);
+            if ( $blast_db_parts[0] eq $species && $blast_db_parts[1] eq $ref ) {
+                $flanking_sequence_blast_db = $blast_db_parts[2];
+            }
+        }
+    }
+
+    # Set parameters for jbrowse
+    my $jbrowse_location = $chrom . ':' . $pos;
+
+    # Set query parameters for the sequence metadata table
+    my %smd_params = (
+        "sequence_metadata_results" => {
+            "feature" => $chrom,
+            "species" => $species,
+            "reference_genome" => $ref,
+            "start" => $pos,
+            "end" => $pos
+        }
+    );
+</%init>
+
+
+
+<& /page/page_title.mas, title=> $title &>
+<& /page/page_title.mas, title=> $subtitle &>
+
+<br /><br />
+
+
+<!-- VARIANT DETAILS TABLE -->
+<&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
+    <& /markers/genotyped/genotype_locations.mas, markers => $markers &>
+</&>
+
+
+
+<!-- FLANKING SEQUENCE -->
+% if (defined $flanking_sequence_blast_db) {
+<&| /page/info_section.mas, title=>'Flanking Sequence', collapsible=>1, collapsed=>0 &>
+    <& /markers/genotyped/flanking_sequence.mas, blast_db => $flanking_sequence_blast_db, chrom => $chrom, pos => $pos &>
+</&>
+% }
+
+
+
+<!-- RELATED VARIANTS LINKS -->
+<&| /page/info_section.mas, title=>'Related Markers', collapsible=>1, collapsed=>0 &>
+    <& /markers/genotyped/related_markers.mas, variant_name => $variant_name &>
+</&>
+
+
+
+<!-- EXTERNAL LINKS -->
+<&| /page/info_section.mas, title=>'External Links', collapsible=>1, collapsed=>0 &>
+    <& /markers/genotyped/external_links.mas, markers => $markers &>
+</&>
+
+
+
+<!-- JBROWSE LINKS -->
+<&| /page/info_section.mas, title=>'Genome Browser', collapsible=>1 &>
+    <& /feature/jbrowse_exact_match.mas, feature=> $jbrowse_location, src_feature=> $ref &>
+</&>
+
+
+
+
+<!-- SEQUENCE METADATA RESULTS -->
+<&| /page/info_section.mas, title=>'Sequence Metadata', collapsible=>1, collapsed=>0 &>
+  <& /tools/sequence_metadata/quick_query_sequence_metadata.mas, params=>\%smd_params &>
+</&>
+
+

@@ -53,8 +53,8 @@ sub detail {
                 sampleDbId => qq|$sample_db_id|,
                 sampleName => $s->uniquename,
                 sampleGroupDbId => $source_plant_id,
-                sampleBarcode => undef, 
-                samplePUI  => undef, 
+                sampleBarcode => undef,
+                samplePUI  => undef,
                 sampleDescription  => $s->notes,
                 sampleTimestamp => $s->acquisition_date,
                 sampleType => $s->get_plate_sample_type,
@@ -79,7 +79,7 @@ sub search {
     my $page = $self->page;
     my $status = $self->status;
     my @data;
-    
+
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
@@ -99,7 +99,7 @@ sub search {
 
     my @geno_trial_ids = [];
     if (@study_ids || @plate_ids){
-        @geno_trial_ids = (@study_ids, @plate_ids); 
+        @geno_trial_ids = (@study_ids, @plate_ids);
     }
 
     my $sample_search = CXGN::Stock::TissueSample::Search->new({
@@ -130,8 +130,8 @@ sub search {
             sampleDbId => qq|$_->{sampleDbId}|,
             sampleName => $_->{sampleName},
             sampleGroupDbId => $_->{plantDbId} ? qq|$_->{plantDbId}| : undef,
-            sampleBarcode => undef, 
-            samplePUI  => undef, 
+            sampleBarcode => undef,
+            samplePUI  => undef,
             sampleDescription  => $_->{notes},
             sampleTimestamp => $_->{acquisition_date},
             sampleType => $_->{tissue_type},
@@ -156,13 +156,13 @@ sub store {
     my $user_id = shift;
 
     if (!$user_id){
-       return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+       return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a sample!'));
     }
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my @data;
-    
+
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
@@ -175,7 +175,7 @@ sub store {
     my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
     my $inherits_plot_treatments = 1;
 
-    if ($trial->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
+    if ($trial->create_tissue_samples($tissue_names, $inherits_plot_treatments, $user_id)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

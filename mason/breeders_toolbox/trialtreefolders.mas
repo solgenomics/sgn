@@ -14,9 +14,9 @@ $design_types => ()
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
-<& /breeders_toolbox/folder/folder_set.mas, project_type => 'Trials and Analyses' &>
-<& /breeders_toolbox/folder/folder_new.mas &>
-<& /breeders_toolbox/folder/folder_move.mas &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type => 'field_trial' &>
+<& /breeders_toolbox/folder/folder_new.mas, project_type => 'field_trial' &>
+<& /breeders_toolbox/folder/folder_move.mas, project_type => 'field_trial' &>
 <& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
 
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
@@ -53,7 +53,7 @@ $design_types => ()
       <hr>
       <h4>Folders</h4>
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial(s) and analyses to folder</button><br/><br/>
+      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial(s) to folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
 
       <div id="folder_edit_options" style="display:none">
@@ -108,6 +108,9 @@ $design_types => ()
                 },
                 "sampling_trial" : {
                     "icon": 'glyphicon glyphicon-th text-success',
+                },
+                "pcr_genotyping_data_project" : {
+                    "icon": 'glyphicon glyphicon-align-left text-warning',
                 }
             },
             "search" : {
@@ -133,7 +136,7 @@ $design_types => ()
           //console.log(html);
           jQuery('#trial_list').jstree( {
               "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-              "valid_children" : [ "folder", "trial", "breeding_program", "genotyping_data_project", "analyses" ],
+              "valid_children" : [ "folder", "trial", "breeding_program", "genotyping_data_project", "analyses", "sampling_trial" ],
               "types" : {
                   "breeding_program" : {
                       "icon": 'glyphicon glyphicon-briefcase text-info',
@@ -209,6 +212,9 @@ $design_types => ()
             window.open('/breeders_toolbox/trial/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'trial') {
+            window.open('/breeders_toolbox/trial/'+node.id);
+            event.stopPropagation();
+        } else if (node.type == 'sampling_trial') {
             window.open('/breeders_toolbox/trial/'+node.id);
             event.stopPropagation();
         }

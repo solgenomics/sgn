@@ -16,7 +16,8 @@ my $trial_plot_layout = CXGN::Trial::TrialLayoutDownload::PlotLayout->new({
     design => $design,
     trial => $selected_trial,
     treatment_info_hash => \%treatment_info_hash,
-    overall_performance_hash => \%fieldbook_trait_hash
+    overall_performance_hash => \%fieldbook_trait_hash,
+    all_stats => $all_stats,
 });
 my $result = $trial_plot_layout->retrieve();
 
@@ -53,6 +54,7 @@ sub retrieve {
     my $trait_header = $self->trait_header || [];
     my $exact_performance_hash = $self->exact_performance_hash || {};
     my $overall_performance_hash = $self->overall_performance_hash || {};
+    my $all_stats = $self->all_stats;
     my @output;
     my $trial_stock_type = $self->trial_stock_type();
 
@@ -122,7 +124,7 @@ sub retrieve {
 
         $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{'plot_name'});
         $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{'plot_name'});
-        $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info);
+        $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info, $all_stats);
         push @output, $line;
     }
 

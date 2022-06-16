@@ -85,13 +85,13 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 
         $self->catalogue_combined_pops($c, \@pops_ids);
 
-	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
+	# $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
 
 	$self->multi_pops_geno_files($c, \@pops_ids);
         my $geno_files = $c->stash->{multi_pops_geno_files};
         @g_files = split(/\t/, $geno_files);
 
-        $c->controller('solGS::solGS')->compare_genotyping_platforms($c, \@g_files);
+        $c->controller('solGS::Search')->compare_genotyping_platforms($c, \@g_files);
         $not_matching_pops =  $c->stash->{pops_with_no_genotype_match};
 
         if (!$not_matching_pops)
@@ -109,11 +109,20 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     else
     {
         my $pop_id = $pops_ids[0];
-	$c->stash->{training_pop_id} = $pop_id;
-        $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
-        $ret->{redirect_url} = "/solgs/population/$pop_id/gp/$protocol_id";
-	$ret->{pop_id} = $pop_id;
-	$ret->{genotyping_protocol_id} = $protocol_id;
+		$c->stash->{training_pop_id} = $pop_id;
+        # $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
+
+		my $args = {
+   		  'training_pop_id' => $pop_id,
+   		  'genotyping_protocol_id' => $protocol_id,
+   		  'data_set_type' => 'single population'
+   	  	};
+
+   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+
+        $ret->{redirect_url} = $training_pop_page;
+		$ret->{pop_id} = $pop_id;
+		$ret->{genotyping_protocol_id} = $protocol_id;
     }
 
     $ret = to_json($ret);
@@ -127,9 +136,9 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     my ($self, $c, $combo_pops_id, $gp, $protocol_id) = @_;
 
-    $c->stash->{pop_id} = $combo_pops_id;
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{data_set_type}     = 'combined populations';
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $self->get_combined_pops_list($c, $combo_pops_id);
@@ -148,18 +157,17 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
     	    . " and create the training population data.";
 
-	$c->controller('solGS::Utils')->generic_message($c, $msg);
+		$c->controller('solGS::Utils')->generic_message($c, $msg);
     }
     else
     {
-	$self->save_common_traits_acronyms($c);
+		$self->save_common_traits_acronyms($c);
 
-	$c->controller('solGS::solGS')->get_all_traits($c, $combo_pops_id);
-	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
+		$c->controller('solGS::Trait')->get_all_traits($c, $combo_pops_id);
+		$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 
-
-	$self->combined_pops_summary($c);
-	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
+		$self->combined_pops_summary($c);
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
     }
 }
 
@@ -202,56 +210,72 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 
     if ($traits_selection_id =~ /^\d+$/)
     {
-	$c->controller('solGS::TraitsGebvs')->get_traits_selection_list($c, $traits_selection_id);
-	@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
+		$c->controller('solGS::Gebvs')->get_traits_selection_list($c, $traits_selection_id);
+		@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
     }
 
 	$self->combined_pops_summary($c);
     my $training_pop_name = $c->stash->{training_pop_name};
     my $training_pop_desc = $c->stash->{training_pop_desc};
-    my $training_pop_page = $c->stash->{training_pop_page};
+    #my $training_pop_page = $c->stash->{training_pop_page};
 
     my @select_analysed_traits;
+	my $args = {
+		 	'training_pop_id' => $combo_pops_id,
+			'genotyping_protocol_id' => $protocol_id,
+			'data_set_type' => 'combined populations'
+		};
 
-    if (!@traits_ids)
-    {
-	my $msg = "Cached output for this page does not exist anymore.\n"
-	    . " Please go to $training_pop_page and run the analysis.";
+	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+	$training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
-	$c->controller('solGS::Utils')->generic_message($c, $msg);
-    }
-    else
+	if (!@traits_ids)
     {
-	my @traits_pages;
-	if (scalar(@traits_ids) == 1)
-	{
-	    my $trait_id = $traits_ids[0];
-	    $c->res->redirect("/solgs/model/combined/trials/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
-	    $c->detach();
+		$c->stash->{message} = "Cached output for this page does not exist anymore.\n" .
+			    " Please go to $training_pop_page and run the analysis.";
+
+		$c->stash->{template} = "/generic_message.mas";
 	}
 	else
 	{
-	    foreach my $trait_id (@traits_ids)
-	    {
-		#$self->combine_trait_data($c);
-		#$self->build_model_combined_trials_trait($c);
-		$c->stash->{trait_id} = $trait_id;
+		my @traits_pages;
+		if (scalar(@traits_ids) == 1)
+		{
+		    my $trait_id = $traits_ids[0];
+			my $args = {
+	  		   	'trait_id' => $trait_id,
+	     		'training_pop_id' => $combo_pops_id,
+	  			'genotyping_protocol_id' => $protocol_id,
+	  			'data_set_type' => 'combined populations'
+	  		};
 
-		$c->controller('solGS::modelAccuracy')->create_model_summary($c, $combo_pops_id, $trait_id);
-		my $model_summary = $c->stash->{model_summary};
+	        my $model_page = $c->controller('solGS::Path')->model_page_url($args);
+		    $c->res->redirect($model_page);
+		    $c->detach();
+		}
+		else
+		{
+		    foreach my $trait_id (@traits_ids)
+		    {
+				$c->stash->{trait_id} = $trait_id;
 
-		push @traits_pages, $model_summary;
-	    }
-	}
+				$c->controller('solGS::modelAccuracy')->create_model_summary($c, $combo_pops_id, $trait_id);
+				my $model_summary = $c->stash->{model_summary};
+
+				push @traits_pages, $model_summary;
+			}
+		}
+
 
 	$c->stash->{training_pop_id} = $combo_pops_id;
 	$c->stash->{training_pop_name} = $training_pop_name;
 	$c->stash->{training_pop_desc} = $training_pop_desc;
 	$c->stash->{training_pop_page} = $training_pop_page;
 	$c->stash->{training_traits_ids} = \@traits_ids;
+    $c->stash->{training_traits_code} = $traits_selection_id;
 
-	$c->controller('solGS::solGS')->analyzed_traits($c);
-	my $analyzed_traits = $c->stash->{analyzed_traits_ids};
+	$c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
+	my $analyzed_traits = $c->stash->{training_pop_analyzed_traits_ids};
 
 	$c->stash->{trait_pages} = \@traits_pages;
 
@@ -259,10 +283,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 
 	$c->stash->{model_data} = \@training_pop_data;
 
-	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
-
-
-	#$c->stash->{template} = '/solgs/population/combined/multiple_traits_output.mas';
+	$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 	$c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
     }
 }
@@ -281,10 +302,18 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 
 	if (!$cached)
 	{
-	    my $training_pop_page = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">here</a> |;
+
+		my $args = {
+			 'training_pop_id' => $combo_pops_id,
+			 'genotyping_protocol_id' => $protocol_id,
+			 'data_set_type' => 'combined populations'
+		 };
+
+		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+	    $training_pop_page   = qq | <a href="$training_pop_page">training population page </a>|;
 
 	    my $msg = "Cached output for this model does not exist anymore.\n"
-		. " Please go to $training_pop_page and run the analysis.";
+		. " Please go to the $training_pop_page and run the analysis.";
 
 	    $c->controller('solGS::Utils')->generic_message($c, $msg);
 
@@ -305,7 +334,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list};
 	    }
 
-	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
 	    $self->combined_pops_summary($c);
 
@@ -337,36 +366,37 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{combined_populations} = 1;
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	my $trait_abbr = $c->stash->{trait_abbr};
 
     if ($selection_pop_id =~ /list/)
     {
-	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
-	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
-	$c->stash->{selection_pop_id} = $c->stash->{project_id};
-	$c->stash->{selection_pop_name} = $c->stash->{project_name};
-	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
-	$c->stash->{selection_pop_owner} = $c->stash->{owner};
+		$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
+		$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
+		$c->stash->{selection_pop_id} = $c->stash->{project_id};
+		$c->stash->{selection_pop_name} = $c->stash->{project_name};
+		$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+		$c->stash->{selection_pop_owner} = $c->stash->{owner};
     }
      elsif ($selection_pop_id =~ /dataset/)
     {
-	$c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
-	$c->controller('solGS::Dataset')->dataset_population_summary($c);
-	$c->stash->{selection_pop_id} = $c->stash->{project_id};
-	$c->stash->{selection_pop_name} = $c->stash->{project_name};
-	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
-	$c->stash->{selection_pop_owner} = $c->stash->{owner};
+		$c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
+		$c->controller('solGS::Dataset')->dataset_population_summary($c);
+		$c->stash->{selection_pop_id} = $c->stash->{project_id};
+		$c->stash->{selection_pop_name} = $c->stash->{project_name};
+		$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+		$c->stash->{selection_pop_owner} = $c->stash->{owner};
     }
     else
     {
-	$c->controller('solGS::solGS')->get_project_details($c, $selection_pop_id);
-	$c->stash->{selection_pop_id} = $c->stash->{project_id};
-	$c->stash->{selection_pop_name} = $c->stash->{project_name};
-	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+		$c->controller('solGS::Search')->get_project_details($c, $selection_pop_id);
+		$c->stash->{selection_pop_id} = $c->stash->{project_id};
+		$c->stash->{selection_pop_name} = $c->stash->{project_name};
+		$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
 
-        $c->controller('solGS::solGS')->get_project_owners($c, $selection_pop_id);
+        $c->controller('solGS::Search')->get_project_owners($c, $selection_pop_id);
         $c->stash->{selection_pop_owner} = $c->stash->{project_owners};
     }
 
@@ -374,15 +404,27 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     my $sel_pop_mr_cnt = $c->controller('solGS::solGS')->get_markers_count($c, $mr_cnt_args);
     $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
 
-    my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
+    my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
     $c->stash->{protocol_url} = $protocol;
 
-    my $training_pop = "Training population $model_id";
-    my $model_link   = qq | <a href="/solgs/model/combined/trials/$model_id/trait/$trait_id/gp/$protocol_id">$training_pop -- $trait_abbr</a>|;
-    $c->stash->{model_page_url} = $model_link;
+	my $args = {
+		 'training_pop_id' => $model_id,
+		 'trait_id' => $trait_id,
+		 'genotyping_protocol_id' => $protocol_id,
+		 'data_set_type' => 'combined populations'
+	 };
+
+	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+	my $training_pop = "Training population $model_id";
+    my $pop_link   = qq | <a href="$training_pop_page">$training_pop </a>|;
+
+    $c->stash->{pop_link} = $pop_link;
     $c->stash->{training_pop_name} = $training_pop;
 
-    # my $identifier    = $model_id . '_' . $selection_pop_id;
+	my $training_model_page = $c->controller('solGS::Path')->model_page_url($args);
+    my $model_link   = qq | <a href="$training_model_page">$training_pop -- $trait_abbr </a>|;
+	$c->stash->{model_page_url} = $model_link;
+
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $model_id, $selection_pop_id, $trait_id);
     my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
@@ -391,16 +433,17 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
 
-    $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|;
+	my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
+	$gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
+	$c->stash->{blups_download_url} = $gebvs_download;
 
-    #$c->stash->{template} = $c->controller('solGS::Files')->template('/selection/combined/selection_trait.mas');
     $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
 }
 
 
-sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
-    my ($self, $c, $trait_id) = @_;
+sub combine_populations :Path('/solgs/combine/populations/trait') Args() {
+    my ($self, $c, $trait_id, $protocol_id) = @_;
 
     my (@pop_ids, $ids);
 
@@ -409,7 +452,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
         $ids = $c->req->param($trait_id);
         @pop_ids = split(/,/, $ids);
 
-        $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+        $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     my $combo_pops_id;
@@ -425,13 +468,13 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 
         $self->multi_pops_phenotype_data($c, \@pop_ids);
         $self->multi_pops_genotype_data($c, \@pop_ids);
-	$self->multi_pops_geno_files($c, \@pop_ids);
-	$self->multi_pops_pheno_files($c, \@pop_ids);
+		$self->multi_pops_geno_files($c, \@pop_ids);
+		$self->multi_pops_pheno_files($c, \@pop_ids);
 
         my $geno_files = $c->stash->{multi_pops_geno_files};
         my @g_files = split(/\t/, $geno_files);
 
-        $c->controller('solGS::solGS')->compare_genotyping_platforms($c, \@g_files);
+        $c->controller('solGS::Search')->compare_genotyping_platforms($c, \@g_files);
         my $not_matching_pops =  $c->stash->{pops_with_no_genotype_match};
 
         if (!$not_matching_pops)
@@ -471,8 +514,16 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
     else
     {
         my $pop_id = $pop_ids[0];
-	$ret->{pop_id} = $pop_id;
-        $ret->{redirect_url} = "/solgs/trait/$trait_id/population/$pop_id";
+		$ret->{pop_id} = $pop_id;
+		my $args = {
+			'trait_id' => $trait_id,
+			'training_pop_id' => $pop_id,
+			'genotyping_protocol_id' => $protocol_id,
+			'data_set_type' => 'single population'
+		 };
+
+	 	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
+        $ret->{redirect_url} = $model_page;
     }
 
     $ret = to_json($ret);
@@ -483,8 +534,8 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 }
 
 
-sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm') Args(1) {
-    my ($self, $c, $trait_id) = @_;
+sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm') Args() {
+    my ($self, $c, $trait_id, $protocol_id) = @_;
 
     my (@pop_ids, $ids);
 
@@ -502,18 +553,18 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
 
     foreach my $pop_id (@pop_ids)
     {
-        my $markers     = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);
+        my $markers     = $c->controller('solGS::Search')->model($c)->get_project_genotyping_markers($pop_id);
         my @markers     = split(/\t/, $markers);
         my $markers_num = scalar(@markers);
 
-        $c->controller('solGS::solGS')->trial_compatibility_table($c, $markers_num);
+        $c->controller('solGS::Search')->trial_compatibility_table($c, $markers_num);
         my $match_code = $c->stash->{trial_compatibility_code};
 
-        my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
+        my $pop_rs = $c->model('solGS::Search')->project_details($pop_id);
 
-	$c->controller('solGS::solGS')->get_projects_details($c, $pop_rs);
-	#my $pop_details  = $self->get_projects_details($c, $pop_rs);
-	my $pop_details  = $c->stash->{projects_details};
+		$c->controller('solGS::Search')->get_projects_details($c, $pop_rs);
+		#my $pop_details  = $self->get_projects_details($c, $pop_rs);
+		my $pop_details  = $c->stash->{projects_details};
         my $pop_name     = $pop_details->{$pop_id}{project_name};
         my $pop_desc     = $pop_details->{$pop_id}{project_desc};
         my $pop_year     = $pop_details->{$pop_id}{project_year};
@@ -521,8 +572,17 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
 
         my $checkbox = qq |<form> <input style="background-color: $match_code;" type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
 
+		my $args = {
+ 		   	'trait_id' => $trait_id,
+    		'training_pop_id' => $pop_id,
+ 			'genotyping_protocol_id' => $protocol_id,
+ 			'data_set_type' => 'single population'
+ 		};
+
+         my $model_page = $c->controller('solGS::Path')->model_page_url($args);
         $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
-    push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id/" onclick="solGS.waitPage()">$pop_name</a>|,
+
+		push @selected_pops_details, [$checkbox,  qq|<a href="$model_page" onclick="solGS.waitPage()">$pop_name</a>|,
                                $pop_desc, $pop_location, $pop_year, $match_code
         ];
 
@@ -561,7 +621,7 @@ sub multi_pops_pheno_files {
     if ($trait_id)
     {
         my $name = "trait_${trait_id}_multi_pheno_files";
-	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+		my $temp_dir = $c->stash->{solgs_tempfiles_dir};
         my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
         write_file($tempfile, {binmode => ':utf8'}, $files);
     }
@@ -581,8 +641,8 @@ sub multi_pops_geno_files {
     {
         foreach my $pop_id (@$pop_ids)
         {
-	    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-	    $files .= $c->stash->{genotype_file_name};
+	    	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+	    	$files .= $c->stash->{genotype_file_name};
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);
         }
 
@@ -590,14 +650,14 @@ sub multi_pops_geno_files {
     }
     else
     {
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_ids);
-	$files = $c->stash->{genotype_file_name};
+		$c->controller('solGS::Files')->genotype_file_name($c, $pop_ids);
+		$files = $c->stash->{genotype_file_name};
     }
 
     if ($trait_id)
     {
         my $name = "trait_${trait_id}_multi_geno_files";
-	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+		my $temp_dir = $c->stash->{solgs_tempfiles_dir};
         my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
         write_file($tempfile, {binmode => ':utf8'}, $files);
     }
@@ -621,15 +681,12 @@ sub multi_pops_phenotype_data {
 	    push @job_ids, $c->stash->{r_job_id};
         }
 
-	if (@job_ids)
-	{
-	    @job_ids = uniq(@job_ids);
-	    $c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
-	}
+		if (@job_ids)
+		{
+		    @job_ids = uniq(@job_ids);
+		    $c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
+		}
     }
-
-
-  #  $self->multi_pops_pheno_files($c, $pop_ids);
 
 }
 
@@ -647,16 +704,15 @@ sub multi_pops_genotype_data {
         {
             $c->stash->{pop_id} = $pop_id;
             $c->controller('solGS::solGS')->genotype_file($c, $pop_id);
-	    push @job_ids, $c->stash->{r_job_id};
+	    	push @job_ids, $c->stash->{r_job_id};
         }
 
-	if (@job_ids)
-	{
-	    @job_ids = uniq(@job_ids);
-	    $c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
-	}
+		if (@job_ids)
+		{
+		    @job_ids = uniq(@job_ids);
+		    $c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
+		}
     }
-#  $self->multi_pops_geno_files($c, $pop_ids);
 
 }
 
@@ -680,10 +736,11 @@ sub catalogue_combined_pops {
 
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
-    if (!$combo_pops_id) {
-	$c->stash->{pops_ids_list} = $trials_ids;
-	$self->create_combined_pops_id($c);
-	$combo_pops_id = $c->stash->{combo_pops_id};
+    if (!$combo_pops_id)
+	{
+		$c->stash->{pops_ids_list} = $trials_ids;
+		$self->create_combined_pops_id($c);
+		$combo_pops_id = $c->stash->{combo_pops_id};
     }
 
     my $entry = join(',', @$trials_ids);
@@ -727,8 +784,8 @@ sub get_combined_pops_list {
     {
         if ($entry =~ m/$id/)
         {
-		    chomp($entry);
-	            my ($combo_pops_id, $pops)  = split(/\t/, $entry);
+	    	chomp($entry);
+            my ($combo_pops_id, $pops)  = split(/\t/, $entry);
 
 		    if ($id == $combo_pops_id)
 		    {
@@ -755,15 +812,25 @@ sub combined_pops_summary {
     my $desc = 'This training population is a combination of ';
     my $projects_owners;
 
+	my $tr_page_args = {
+	  'genotyping_protocol_id' => $protocol_id,
+	  };
+
+	my $training_pop_page;
     foreach my $pop_id (@pops_ids)
     {
-        $c->controller('solGS::solGS')->get_project_details($c, $pop_id);
+		$c->controller('solGS::Search')->get_project_details($c, $pop_id);
         my $pr_name = $c->stash->{project_name};
-		my $href = '/solgs/population/' . $pop_id . '/gp/' . 1;
-        $desc .= '<a href=' . $href . '> ' .  $pr_name . '</a>';
-       $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
 
-        $c->controller('solGS::solGS')->get_project_owners($c, $pop_id);
+		$tr_page_args->{training_pop_id} = $pop_id;
+		$tr_page_args->{ 'data_set_type'} = 'single population';
+
+	   	$training_pop_page = $c->controller('solGS::Path')->training_page_url($tr_page_args);
+
+		$desc .= '<a href=' .  $training_pop_page. '> ' .  $pr_name . '</a>';
+        $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
+
+        $c->controller('solGS::Search')->get_project_owners($c, $pop_id);
         my $project_owner = $c->stash->{project_owners};
 
         if ($project_owner)
@@ -772,41 +839,60 @@ sub combined_pops_summary {
         }
     }
 
-    my $marker_args = {'training_pop' => 1, 'training_pop_id' => $combo_pops_id};
+    my $marker_args = {
+		'training_pop' => 1,
+		'training_pop_id' => $combo_pops_id,
+		'data_set_type' => 'combined populations'
+	};
+
     my $markers_no = $c->controller('solGS::solGS')->get_markers_count($c, $marker_args);
 
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
-    my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
-    my $training_pop_name = "Training population $combo_pops_id";
-    my $pop_link   = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">$training_pop_name </a>|;
 
 	my $model_link;
 	if ($trait_id)
 	{
-		$model_link   = qq | <a href="/solgs/model/combined/trials//$combo_pops_id/trait/$trait_id/gp/$protocol_id">$training_pop_name -- $trait_abbr</a>|;
+		my $model_page_args = {
+			 'training_pop_id' => $combo_pops_id,
+			 'trait_id' => $trait_id,
+			 'genotyping_protocol_id' => $protocol_id,
+			 'data_set_type' => 'combined populations'
+		};
+
+		$model_link = $c->controller('solGS::Path')->model_page_url($model_page_args);
 	}
 
-    my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
+    my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
+    my $training_pop_name = "Training population $combo_pops_id";
+
+	$tr_page_args->{'training_pop_id'} = $combo_pops_id;
+	$tr_page_args->{'data_set_type'} = 'combined populations';
+
+	$training_pop_page = $c->controller('solGS::Path')->training_page_url($tr_page_args);
+
+    my $pop_link   = qq | <a href="$training_pop_page">$training_pop_name</a>|;
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
 
 	$c->controller('solGS::Files')->traits_acronym_file($c, $combo_pops_id);
-    my $traits_list_file = $c->stash->{traits_acronym_file};
+	my $traits_list_file = $c->stash->{traits_acronym_file};
 
-    my @traits_list = read_file($traits_list_file, {binmode => ':utf8'});
-    my $traits_no   = scalar(@traits_list) - 1;
+	my @traits_list = read_file($traits_list_file, {binmode => ':utf8'});
+	my $traits_no   = scalar(@traits_list) - 1;
 
     $c->stash(
-	markers_no   => $markers_no,
-	stocks_no    => $stocks_no,
-	traits_no => $traits_no,
-	training_pop_id => $combo_pops_id,
-	training_pop_desc => $desc,
-	training_pop_name => $training_pop_name,
-	training_pop_page => $pop_link,
-	owner        => $projects_owners,
-	protocol_url => $protocol,
-	training_pop_url  => $pop_link,
-	model_page_url => $model_link
+		markers_no   => $markers_no,
+		stocks_no    => $stocks_no,
+		traits_no => $traits_no,
+		training_pop_id => $combo_pops_id,
+		training_pop_desc => $desc,
+		training_pop_name => $training_pop_name,
+		training_pop_page => $pop_link,
+		owner        => $projects_owners,
+		protocol_url => $protocol,
+		training_pop_url  => $pop_link,
+		model_page_url => $model_link
         );
 
 }
@@ -821,10 +907,10 @@ sub cache_combined_pops_data {
 
     if ($trait_abbr)
     {
-	$c->stash->{data_set_type} = 'combined populations';
-	$c->stash->{pop_id} =  $combo_pops_id;
-	$c->controller('solGS::Files')->model_phenodata_file($c);
-	$c->stash->{trait_combined_pheno_file} = $c->stash->{model_phenodata_file};
+		$c->stash->{data_set_type} = 'combined populations';
+		$c->stash->{training_pop_id} =  $combo_pops_id;
+		$c->controller('solGS::Files')->model_phenodata_file($c);
+		$c->stash->{trait_combined_pheno_file} = $c->stash->{model_phenodata_file};
     }
 
     $c->controller('solGS::Files')->genotype_file_name($c, $combo_pops_id);
@@ -837,23 +923,22 @@ sub build_model_combined_trials_trait {
     my ($self, $c) = @_;
 
     $c->stash->{data_set_type} = 'combined populations';
-     $c->stash->{pop_id} = $c->stash->{combo_pops_id};
+    $c->stash->{pop_id} = $c->stash->{combo_pops_id};
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
     unless  ( -s $gebv_file )
     {
+		$self->get_combine_populations_args_file($c);
+		my $combine_job_file = $c->stash->{combine_populations_args_file};
 
-	$self->get_combine_populations_args_file($c);
-	my $combine_job_file = $c->stash->{combine_populations_args_file};
+		$c->stash->{prerequisite_jobs}  = $c->stash->{combine_populations_args_file};
+		$c->stash->{prerequisite_type}  = 'combine_populations';
 
-	$c->stash->{prerequisite_jobs}  = $c->stash->{combine_populations_args_file};
-	$c->stash->{prerequisite_type}  = 'combine_populations';
+		$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
+		$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 
-	$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
-	$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
-
-	$c->controller('solGS::solGS')->run_async($c);
+		$c->controller('solGS::AsyncJob')->run_async($c);
     }
 }
 
@@ -866,36 +951,35 @@ sub combine_data_build_multiple_traits_models {
 
     if (!@selected_traits)
     {
-     croak "No traits to predict: $!\n";
+    	croak "No traits to predict: $!\n";
     }
 
     my @unpredicted_traits;
     foreach my $trait_id (@selected_traits)
     {
-	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);
-	my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
+		$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);
+		my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
-	push @unpredicted_traits, $trait_id if !-s $gebv_file;
+		push @unpredicted_traits, $trait_id if !-s $gebv_file;
     }
 
     if (@unpredicted_traits)
     {
-	$c->stash->{training_traits_ids} = \@unpredicted_traits;
+		$c->stash->{training_traits_ids} = \@unpredicted_traits;
 
-	$self->get_combine_populations_args_file($c);
-	my $combine_job_file = $c->stash->{combine_populations_args_file};
+		$self->get_combine_populations_args_file($c);
+		my $combine_job_file = $c->stash->{combine_populations_args_file};
 
-	$c->stash->{prerequisite_jobs}  = $c->stash->{combine_populations_args_file};
-	$c->stash->{prerequisite_type}  = 'combine_populations';
+		$c->stash->{prerequisite_jobs}  = $c->stash->{combine_populations_args_file};
+		$c->stash->{prerequisite_type}  = 'combine_populations';
 
-	$c->stash->{training_pop_id} = $combo_pops_id;
-	$c->stash->{data_set_type} = 'combined populations';
-	$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
-	$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
+		$c->stash->{training_pop_id} = $combo_pops_id;
+		$c->stash->{data_set_type} = 'combined populations';
+		$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
+		$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 
-	$c->controller('solGS::solGS')->run_async($c);
+		$c->controller('solGS::AsyncJob')->run_async($c);
     }
-
 
 }
 
@@ -911,45 +995,43 @@ sub predict_selection_pop_combined_pops_model {
     $c->stash->{pop_id} = $training_pop_id;
 
     my @selected_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-print STDERR "\npredict_selection_pop_combined_pops_model: selected_traits: @selected_traits\n";
+
     $c->controller('solGS::solGS')->traits_with_valid_models($c);
     my @traits_with_valid_models = @{$c->stash->{traits_ids_with_valid_models}};
-print STDERR "\npredict_selection_pop_combined_pops_model: traits_ids_with_valid_models: @traits_with_valid_models\n";
     $c->stash->{training_traits_ids} = \@traits_with_valid_models;
 
     my @prediction_traits;
     foreach my $trait_id (@selected_traits)
     {
-	# my $identifier = $training_pop_id .'_' . $selection_pop_id;
-	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
+		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 
-     	if (!-s $c->stash->{rrblup_selection_gebvs_file})
-	{
-	    push @prediction_traits, $trait_id;
-	}
+	    if (!-s $c->stash->{rrblup_selection_gebvs_file})
+		{
+		    push @prediction_traits, $trait_id;
+		}
     }
 
     if (@prediction_traits)
     {
-	$c->stash->{training_traits_ids} = \@prediction_traits;
+		$c->stash->{training_traits_ids} = \@prediction_traits;
 
-	$c->controller('solGS::solGS')->get_selection_pop_query_args_file($c);
-	my $pre_req = $c->stash->{selection_pop_query_args_file};
+		$c->controller('solGS::AsyncJob')->get_selection_pop_query_args_file($c);
+		my $pre_req = $c->stash->{selection_pop_query_args_file};
 
-	$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
+		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
 
-	$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
-	my $dep_jobs =  $c->stash->{gs_modeling_jobs_args_file};
+		$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
+		my $dep_jobs =  $c->stash->{gs_modeling_jobs_args_file};
 
-	$c->stash->{prerequisite_jobs} = $pre_req;
-	$c->stash->{prerequisite_type} = 'selection_pop_download_data';
-	$c->stash->{dependent_jobs} =  $dep_jobs;
+		$c->stash->{prerequisite_jobs} = $pre_req;
+		$c->stash->{prerequisite_type} = 'selection_pop_download_data';
+		$c->stash->{dependent_jobs} =  $dep_jobs;
 
-	$c->controller('solGS::solGS')->run_async($c);
+		$c->controller('solGS::AsyncJob')->run_async($c);
     }
     else
     {
-	croak "No traits to predict: $!\n";
+		croak "No traits to predict: $!\n";
     }
 
 }
@@ -974,33 +1056,31 @@ sub combine_trait_data {
 
     unless ( $geno_cnt > 10  && $pheno_cnt > 10 )
     {
-	$self->get_combined_pops_list($c);
-	my $combined_pops_list = $c->stash->{combined_pops_list};
-	$c->stash->{trait_combine_populations} = $combined_pops_list;
+		$self->get_combined_pops_list($c);
+		my $combined_pops_list = $c->stash->{combined_pops_list};
+		$c->stash->{trait_combine_populations} = $combined_pops_list;
 
-	$self->prepare_multi_pops_data($c);
+		$self->prepare_multi_pops_data($c);
 
-	my $background_job = $c->stash->{background_job};
-	my $prerequisite_jobs = $c->stash->{multi_pops_data_jobs};
+		my $background_job = $c->stash->{background_job};
+		my $prerequisite_jobs = $c->stash->{multi_pops_data_jobs};
 
-	if ($background_job)
-	{
-	    if ($prerequisite_jobs =~ /^:+$/)
-	    {
-		$prerequisite_jobs = undef;
-	    }
+		if ($background_job)
+		{
+		    if ($prerequisite_jobs =~ /^:+$/)
+		    {
+			$prerequisite_jobs = undef;
+		    }
 
-	    if ($prerequisite_jobs)
-	    {
-		###Needs work####
-		$c->stash->{prerequisite_jobs}  =  $prerequisite_jobs;
-		$c->stash->{prerequisite_type} = 'download_data';
+		    if ($prerequisite_jobs)
+		    {
+			###Needs work####
+			$c->stash->{prerequisite_jobs}  =  $prerequisite_jobs;
+			$c->stash->{prerequisite_type} = 'download_data';
 
-	    }
+		    }
+		}
 	}
-
-	$self->r_combine_populations($c);
-    }
 
 }
 
@@ -1009,7 +1089,7 @@ sub combine_data_build_model {
     my ($self, $c) = @_;
 
     my $trait_id = $c->stash->{trait_id};
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $c->stash->{prerequisite_type} = 'combine_populations';
 
@@ -1031,7 +1111,7 @@ sub r_combine_populations_args {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c, $temp_file_template);
+    my $cluster_files = $c->controller('solGS::AsyncJob')->create_cluster_accessible_tmp_files($c, $temp_file_template);
     my $out_file      = $cluster_files->{out_file_temp};
     my $err_file      = $cluster_files->{err_file_temp};
     my $in_file       = $cluster_files->{in_file_temp};
@@ -1043,20 +1123,20 @@ sub r_combine_populations_args {
     }
 
     my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_file,
-	'err_file' => $err_file
+		'temp_dir' => $temp_dir,
+		'out_file' => $out_file,
+		'err_file' => $err_file
     };
 
-    my $job_config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+    my $job_config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
 
     my $cmd = "Rscript --slave $in_file $out_file --args $input_files $output_files";
 
     my $args = {
-	'cmd' => $cmd,
-	'temp_dir' => $temp_dir,
-	'config' => $job_config,
-	'background_job'  => $background_job,
+		'cmd' => $cmd,
+		'temp_dir' => $temp_dir,
+		'config' => $job_config,
+		'background_job'  => $background_job,
     };
 
     $c->stash->{combine_populations_args} = $args;
@@ -1075,27 +1155,27 @@ sub get_combine_populations_args_file {
     $self->get_combined_pops_list($c);
     my $trials = $c->stash->{combo_pops_list};
 
-    $c->controller('solGS::solGS')->training_pop_data_query_job_args($c, $trials, $protocol_id);
+    $c->controller('solGS::AsyncJob')->training_pop_data_query_job_args($c, $trials, $protocol_id);
     my $query_jobs = $c->stash->{training_pop_data_query_job_args};
 
     my $preq_jobs = {};
 
     foreach my $trait_id (@$traits)
     {
-	$c->stash->{trait_id} = $trait_id;
-	$c->controller('solGS::solGS')->get_trait_details($c);
-	$self->r_combine_populations_args($c);
-	push @$combine_jobs,  $c->stash->{combine_populations_args};
+		$c->stash->{trait_id} = $trait_id;
+		$c->controller('solGS::Trait')->get_trait_details($c);
+		$self->r_combine_populations_args($c);
+		push @$combine_jobs,  $c->stash->{combine_populations_args};
     }
 
     if ($query_jobs->[0])
     {
-	$preq_jobs->{1} = $query_jobs;
-	$preq_jobs->{2} = $combine_jobs;
+		$preq_jobs->{1} = $query_jobs;
+		$preq_jobs->{2} = $combine_jobs;
     }
     else
     {
-	$preq_jobs = $combine_jobs;
+		$preq_jobs = $combine_jobs;
     }
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -1132,8 +1212,8 @@ sub combined_pops_gs_input_files {
     my $selection_population_file;
     if ($selection_pop_id)
     {
-	$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
-	$selection_population_file = $c->stash->{selection_population_file};
+		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
+		$selection_population_file = $c->stash->{selection_population_file};
     }
 
     my $input_files = join("\t",
@@ -1143,8 +1223,6 @@ sub combined_pops_gs_input_files {
 			   $dataset_file,
 			   $selection_population_file,
 	);
-
-
 
     my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_combo_${trait_abbr}");
     write_file($input_file, {binmode => ':utf8'}, $input_files);
@@ -1170,7 +1248,6 @@ sub count_combined_trials_lines_count {
 	$self->cache_combined_pops_data($c);
 	my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
-
 	if (-s $combined_pops_geno_file)
 	{
 	    my $args = {
@@ -1186,24 +1263,24 @@ sub count_combined_trials_lines_count {
     }
     else
     {
-	$self->get_combined_pops_list($c);
-	my $pops_ids = $c->stash->{combined_pops_list};
+		$self->get_combined_pops_list($c);
+		my $pops_ids = $c->stash->{combined_pops_list};
 
-	$self->multi_pops_geno_files($c, $pops_ids);
-	my $geno_files = $c->stash->{multi_pops_geno_files};
+		$self->multi_pops_geno_files($c, $pops_ids);
+		my $geno_files = $c->stash->{multi_pops_geno_files};
 
-	my @geno_files = split(/\t/, $geno_files);
+		my @geno_files = split(/\t/, $geno_files);
 
-	foreach my $geno_file (@geno_files)
-	{
+		foreach my $geno_file (@geno_files)
+		{
 
-	    my $genos = qx /cut -f 1 $geno_file/;
-	    my @genos = split(" ", $genos);
+		    my $genos = qx /cut -f 1 $geno_file/;
+		    my @genos = split(" ", $genos);
 
-	    push @genotypes, @genos;
-	}
+		    push @genotypes, @genos;
+		}
 
-	$genos_cnt = scalar(uniq(@genotypes));
+		$genos_cnt = scalar(uniq(@genotypes));
     }
 
     return $genos_cnt;
@@ -1218,11 +1295,11 @@ sub process_trials_list_details {
 
     if ($data_str =~ /list/)
     {
-	$c->controller('solGS::List')->get_list_trials_ids($c);
+		$c->controller('solGS::List')->get_list_trials_ids($c);
     }
     elsif  ($data_str =~ /dataset/)
     {
-	$c->controller('solGS::Dataset')->get_dataset_trials_ids($c);
+		$c->controller('solGS::Dataset')->get_dataset_trials_ids($c);
     }
 
     my $pops_ids = $c->stash->{pops_ids_list} || $c->stash->{trials_ids} ||  [$c->stash->{pop_id}];
@@ -1231,17 +1308,17 @@ sub process_trials_list_details {
 
     if ($pops_ids->[0])
     {
-	foreach my $p_id (@$pops_ids)
-	{
-	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};
-	}
+		foreach my $p_id (@$pops_ids)
+		{
+		    my $pr_rs = $c->controller('solGS::Search')->get_project_details($c, $p_id);
+		    $pops_names{$p_id} = $c->stash->{project_name};
+		}
 
-	if (scalar(@$pops_ids) > 1 )
-	{
-	    $c->stash->{pops_ids_list} = $pops_ids;
-	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	}
+		if (scalar(@$pops_ids) > 1 )
+		{
+		    $c->stash->{pops_ids_list} = $pops_ids;
+		    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+		}
     }
 
     $c->stash->{trials_names} = \%pops_names;
@@ -1260,7 +1337,7 @@ sub find_common_traits {
     my @common_traits;
     foreach my $trial_id (@$combined_pops_list)
     {
-#	my $trial_traits = $c->model('solGS::solGS')->trial_traits($pop_id);
+#	my $trial_traits = $c->controller('solGS::Search')->model($c)->trial_traits($pop_id);
 #	my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($c, $trial_traits);
 	my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $trial_id);
 
@@ -1294,7 +1371,7 @@ sub save_common_traits_acronyms {
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->controller('solGS::Files')->traits_list_file($c, $combo_pops_id);
     my $traits_file = $c->stash->{traits_list_file};
-    my $common_traits = join("\t", @$common_traits);
+    $common_traits = join("\t", @$common_traits);
     write_file($traits_file, {binmode => ':utf8'}, $common_traits) if $traits_file;
 
 }
@@ -1361,8 +1438,8 @@ sub combine_trait_data_input {
     $c->controller('solGS::Files')->model_info_file($c);
     my $model_info_file = $c->stash->{model_info_file};
 
-
-
+    $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
+    my $trait_raw_phenodatafile =   $c->stash->{trait_raw_phenodata_file};
     my $input_files = join ("\t",
                             $pheno_files,
                             $geno_files,
@@ -1372,6 +1449,7 @@ sub combine_trait_data_input {
     my $output_files = join ("\t",
                              $combined_pops_pheno_file,
                              $combined_pops_geno_file,
+                             $trait_raw_phenodatafile
         );
 
     my $temp_dir    = $c->stash->{solgs_tempfiles_dir};
@@ -1397,7 +1475,7 @@ sub r_combine_populations  {
     $self->combine_trait_data_input($c);
     $c->stash->{r_script}     = 'R/solGS/combine_populations.r';
 
-    $c->controller('solGS::solGS')->run_r_script($c);
+    $c->controller('solGS::AsyncJob')->run_r_script($c);
 
 }
 

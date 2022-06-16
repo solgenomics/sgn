@@ -18,12 +18,13 @@ $stocks_no
 $markers_no
 $traits_no =>''
 $trait_id
-$descriptive_stat
+$model_pheno_means_descriptive_stat
+$model_pheno_raw_descriptive_stat =>''
 $selection_prediction_download =>''
 $selection_pop_id => ''
 $selection_pop_name => ''
 $list_of_prediction_pops=> ''
-$analyzed_traits => ''
+$training_pop_analyzed_traits => ''
 $owner=>''
 $protocol_url => ''
 $combo_pops_id => ''
@@ -36,12 +37,7 @@ $training_pop_url
 </%perl>
 
 
-
-    <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot",
-                                              "flot.flot", "flot.categories",
-                                              "flot.tooltip", "flot.selection", "flot.navigate",
-                                              "flot.axisLabels", "statistics/simple_statistics"]
-    &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "statistics/simple_statistics"] &>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
@@ -57,9 +53,9 @@ $training_pop_url
   &>
 
  <& summary.mas,
-    pop_id   => $training_pop_id,
-   	pop_name => $training_pop_name,
-    pop_desc => $training_pop_desc,
+    training_pop_id   => $training_pop_id,
+   	training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
 	training_pop_url    => $training_pop_url,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
@@ -85,17 +81,15 @@ $training_pop_url
   title       => "Trait phenotype data"
 &>
 
-<& trait_phenotype_data.mas,
-   pop_id           => $training_pop_id,
-   trait_id         => $trait_id,
-   descriptive_stat => $descriptive_stat,
-
+<& /solgs/model/phenotype/trait_phenotype_data.mas,
+   model_pheno_means_descriptive_stat => $model_pheno_means_descriptive_stat,
+   model_pheno_raw_descriptive_stat => $model_pheno_raw_descriptive_stat
  &>
 
 </&>
 
-<& /solgs/pca/analysis.mas &>
-<& /solgs/cluster/analysis.mas &>
+<& /solgs/tools/pca/analysis.mas &>
+<& /solgs/tools/cluster/analysis.mas &>
 
 % if ($show_data)
 %{
@@ -123,7 +117,7 @@ $training_pop_url
 &>
 
 
-<& /solgs/kinship/analysis.mas,
+<& /solgs/tools/kinship/analysis.mas,
    pop_id  => $training_pop_id,
   &>
 
@@ -134,7 +128,7 @@ $training_pop_url
 
 <& selection_populations.mas,
    selection_prediction_download     => $selection_prediction_download,
-   analyzed_traits         => $analyzed_traits,
+   training_pop_analyzed_traits         => $training_pop_analyzed_traits,
    training_pop_id        => $training_pop_id,
    training_pop_name   => $training_pop_name,
    selection_pop_id       => $selection_pop_id,

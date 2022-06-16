@@ -16,6 +16,9 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location;
 use Try::Tiny;
 use CXGN::Tools::Run;
+use CXGN::Dataset;
+use CXGN::Dataset::File;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -322,4 +325,81 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     $c->stash->{rest} = {success => 1};
 }
 
+sub progress : Path('/ajax/progress') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $trait_id = $c->req->param("trait_id");
+
+    print STDERR "Trait id = $trait_id\n";
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "select projectprop.value, avg(phenotype.value::REAL), stddev(phenotype.value::REAL),count(*) from phenotype join cvterm on(cvalue_id=cvterm_id) join nd_experiment_phenotype using(phenotype_id) join nd_experiment_project using(nd_experiment_id) join projectprop using(project_id)  where cvterm.cvterm_id=? and phenotype.value not in ('-', 'miss','#VALUE!','..') and projectprop.type_id=(SELECT cvterm_id FROM cvterm where name='project year') group by projectprop.type_id, projectprop.value order by projectprop.value";
+
+    my $h = $dbh->prepare($q);
+
+    $h->execute($trait_id);
+    
+    my $data = [];
+
+    while (my ($year, $mean, $stddev, $count) = $h->fetchrow_array()) {
+	push @$data, [ $year, sprintf("%.2f", $mean), sprintf("%.2f", $stddev), $count ];
+    }
+
+    print STDERR "Data = ".Dumper($data);
+    
+    $c->stash->{rest} = { data => $data };
+}
+
+
+sub radarGraph : Path('/ajax/radargraph') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->param('dataset_id');
+    
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh = $schema->storage->dbh();
+
+
+    # my $stock_id = $c->req->param("stock_id");
+    # my $cvterm_id = $c->req->param("cvterm_id");
+
+    # my $q = 'select accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(*) 
+    #         from cvterm 
+    #         join phenotype on(cvalue_id=cvterm_id) 
+    #         join nd_experiment_phenotype using(phenotype_id) 
+    #         join nd_experiment_stock using(nd_experiment_id) 
+    #         join stock using(stock_id) 
+    #         join stock_relationship on(subject_id=stock.stock_id) 
+    #         join stock as accessions on(stock_relationship.object_id=accessions.stock_id) 
+    #         where stock.type_id=76393 and accessions.stock_id=? and cvterm.cvterm_id=? and phenotype.value ~ \'^[0-9]+\.?[0-9]*$\' 
+    #         group by accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id;';
+    # my $h = $dbh->prepare($q);
+
+
+    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+    my $trait_list = $ds->retrieve_phenotypes();
+    my $ds_name = $ds->name();
+
+    #print STDERR "Dataset Id = $dataset_id\n";
+    #print STDERR "Trait List = ".Dumper($trait_list);
+
+    $c->stash->{rest} = {
+        data => \@$trait_list, 
+        name => $ds_name,
+    };
+
+
+    #print STDERR "Dataset Id = $dataset_id\n";
+    #print STDERR "Trait List = ".Dumper($trait_list);
+
+
+}
+
 1;
+
+
+

@@ -109,7 +109,7 @@ jQuery(document).ready(function ($) {
         plate_data.list_id = jQuery('#accession_select_box_list_select').val();
 
         var l = new CXGN.List();
-        if (! l.validate(plate_data.list_id, 'accessions', true) && ! l.validate(plate_data.list_id, 'plots', true) && ! l.validate(plate_data.list_id, 'plants', true) && ! l.validate(plate_data.list_id, 'tissue_samples', true)) {
+        if (! l.legacy_validate(plate_data.list_id, 'accessions', true) && ! l.legacy_validate(plate_data.list_id, 'plots', true) && ! l.legacy_validate(plate_data.list_id, 'plants', true) && ! l.legacy_validate(plate_data.list_id, 'tissue_samples', true)) {
             alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
             return;
         }
@@ -365,7 +365,7 @@ jQuery(document).ready(function ($) {
                 url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html("Deleting genotyping experiment...<br />");
+                    jQuery('#working_msg').html("Deleting genotyping plate...<br />");
                 },
                 success: function(response) {
                     if (response.error) {
@@ -472,7 +472,7 @@ jQuery(document).ready(function ($) {
                 console.log(success_string);
                 jQuery('#upload_genotype_submit_complete').html(success_string);
                 Workflow.complete('#upload_genotype_submit');
-                Workflow.focus("#upload_genotypes_workflow", 5);
+                Workflow.focus("#upload_genotypes_workflow", 6);
             }
         }
     });

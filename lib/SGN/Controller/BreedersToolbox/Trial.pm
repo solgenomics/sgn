@@ -16,6 +16,7 @@ use CXGN::List::Validate;
 use CXGN::List;
 use JSON::XS;
 use Data::Dumper;
+use CXGN::TrialStatus;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -75,7 +76,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_name} = $trial->get_name();
     $c->stash->{trial_owner} = $trial->get_owner_link();
-        
+
     my $trial_type_data = $trial->get_project_type();
     my $trial_type_name = $trial_type_data ? $trial_type_data->[1] : '';
     $c->stash->{trial_type} = $trial_type_name;
@@ -93,6 +94,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_description} = $trial->get_description();
 
+    my $activities = $c->config->{'trial_activities'};
+    my @activity_list = split ',', $activities;
+    my $trial_status = CXGN::TrialStatus->new({ bcs_schema => $schema, parent_id => $c->stash->{trial_id}, activity_list => \@activity_list });
+    $c->stash->{latest_trial_activity} = $trial_status->get_latest_activity();
+
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
     $c->stash->{location_name} = $location_data->[1];
@@ -105,7 +111,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{user_can_modify} = ($user->check_roles("submitter") && $user->check_roles($c->stash->{breeding_program_name})) || $user->check_roles("curator") ;
 
 
-    
+
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
@@ -162,7 +168,12 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{management_factor_date} = $trial->get_management_factor_date;
         $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
-    elsif ($design_type eq "genotype_data_project"){
+    elsif (($design_type eq "genotype_data_project") || ($design_type eq "pcr_genotype_data_project")){
+        if ($design_type eq "pcr_genotype_data_project") {
+            $c->stash->{genotype_data_type} = 'pcr_genotype_project'
+        } else {
+            $c->stash->{genotype_data_type} = 'snp_genotype_project'
+        }
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
     elsif ($design_type eq "drone_run"){
@@ -172,7 +183,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     elsif ($trial_type_name eq "crossing_trial"){
         print STDERR "It's a crossing trial!\n\n";
         my $program_name = $breeding_program_data->[0]->[1];
-        my $locations = JSON::XS->new->decode($program_object->get_all_locations_by_breeding_program());
+        my $locations = $program_object->get_all_locations_by_breeding_program();
         my @locations_by_program;
         foreach my $location_hashref (@$locations) {
             my $properties = $location_hashref->{'properties'};
@@ -200,14 +211,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 }
 
 
-=head2 view_by_name 
+=head2 view_by_name
 
 Public Path: /breeders/trial/view_by_name/$name
 Path Params:
     name = trial unique name
 
 Search for the trial that matches the provided trial name.
-If 1 match is found, display the trial detail page.  Display an 
+If 1 match is found, display the trial detail page.  Display an
 error message if no matches are found.
 
 =cut
@@ -262,7 +273,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $what = shift;
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
     my $user = $c->user();
     if (!$user) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -348,6 +358,15 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
 
+    my @field_crossing_data_order;
+    if ( ($format eq "crossing_experiment_xls") && ($what eq "layout")) {
+        $plugin = "CrossingExperimentXLS";
+        $what = "crosses";
+        $format = "xls";
+        my $cross_properties = $c->config->{cross_properties};
+        @field_crossing_data_order = split ',',$cross_properties;
+    }
+
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
@@ -369,7 +388,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
-        include_measured => $include_measured
+        include_measured => $include_measured,
+        field_crossing_data_order => \@field_crossing_data_order
     });
 
     my $error = $download->download();
@@ -480,7 +500,7 @@ sub search_trial : Private {
     my ( $self, $c, $trial_query ) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $rs = $schema->resultset('Project::Project');
-    
+
     my $matches;
     my $count = 0;
 
@@ -506,7 +526,7 @@ sub search_trial : Private {
 
         my $schema = $c->dbic_schema("Bio::Chado::Schema");
         $c->stash->{schema} = $schema;
-        
+
         my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
         $c->stash->{trial} = $trial;
 

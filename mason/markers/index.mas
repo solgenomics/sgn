@@ -105,6 +105,8 @@ my $src_feature = "SL2.50";
 
 <& /markers/attributions.mas, marker=>$marker &>
 
+<& /markers/genotyped_markers.mas, marker_id=>$marker_id &>
+
 <&| /page/info_section.mas, title => "Genomic location of $marker_name", collapsible=>1 &>
 <& /feature/jbrowse_exact_match.mas, feature=> $marker_name, src_feature=> $src_feature &>
 </&>

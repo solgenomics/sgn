@@ -14,7 +14,7 @@ my $d = SGN::Test::WWW::WebDriver->new();
 $d->get_ok('/tools/trial/comparison/list');
 
 sleep(2);
-$d->find_element_ok('unamefield', 'id', "find username input field");
+$d->find_element_ok('username', 'id', "find username input field");
 
 $d->while_logged_in_as('submitter', sub {
     $d->get_ok('/tools');  # something else than the index page, which has a dialog that messes up the test
@@ -34,23 +34,19 @@ $d->while_logged_in_as('submitter', sub {
 
 sleep(1);
 
-    $d->find_element_ok("dialog_add_list_item", "id", "add trial test list")->send_keys("Kasese solgs trial\ntrial2 NaCRRI\n");
+    $d->find_element_ok("dialog_add_list_item", "id", "add trial test list")->send_keys("Kasese solgs trial\ntrial2 NaCRRI");
 
 sleep(1);
 
     $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
 
-    sleep(1);
+    sleep(3);
 
-    my $type_select = $d->find_element_ok("type_select", "id", "find type select");
-    
-    $type_select->send_keys("trials");
+    $d->find_element_ok("trials", "name", "find type select")->click();
+    sleep(3);
 
-    sleep(2);
-
-    
     $d->find_element_ok("close_list_item_dialog", "id", "find close list item dialog")->click();
-    
+
     sleep(1);
 
     $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
@@ -59,34 +55,41 @@ sleep(1);
 
     $d->get_ok('/tools/trial/comparison/list');
 
-    sleep(1);
+    sleep(6);
 
-    my $trial_select = $d->find_element_ok("trial_list_select_list_select", "id", "find trial list select");
-    
-    sleep(1);
-
-    $trial_select->send_keys("new_trial_list\n");
+    $d->find_element("trials_list_select", "id", "find trials select")->click();
 
     sleep(2);
 
-    my $trait_select = $d->find_element_ok("trait_select", "id", "find trial select");
-    
+    $d->find_element("trials_list_select", "id", "find trials select")->send_keys('new_trial_list');
+
+    sleep(6);
+    $d->find_element_ok("unit_select", "id", "select plot observation level")->click();
+
+    sleep(12);
+
+  #  $d->find_element_ok("unit_select", "id", "select plot observation level")->send_keys("Plot");
+
+  #  sleep(2);
+
+    my $trait_select = $d->find_element_ok("trait_select", "id", "find trait select");
+
     sleep(2);
+
+    $trait_select->click();
+
+    sleep(1);
 
     $trait_select->send_keys("dry matter content percentage|CO_334:0000092");
 
     sleep(1);
 
-    my $submit_trial_list = $d->find_element_ok("submit_trial_list", "id", "find submit trial list button");
+    #my $submit_trial_list = $d->find_element_ok("submit_trial_list", "id", "find submit trial list button");
 
-    sleep(1);
-
-    $submit_trial_list->click();
-
-    sleep(1);
+    #sleep(12);
 
     my $source = $d->driver()->get_page_source();
-    
+
     like($source, qr/427/, "total accession count");
     like($source, qr/254/, "common accession count");
 
