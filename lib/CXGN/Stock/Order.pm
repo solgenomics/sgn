@@ -278,7 +278,7 @@ sub get_tracking_identifiers_from_person_id {
         }
     }
 
-    return \%tracking_identifiers
+    return \%tracking_identifiers;
 }
 
 
@@ -318,9 +318,47 @@ sub update_order_status_details {
     my $updated_orderprop = $order_prop->store_sp_orderprop();
 
 
-
 }
 
+
+sub get_order_status {
+    my $self = shift;
+    my $people_schema = $self->people_schema();
+    my $schema = $self->bcs_schema();
+    my $order_id = $self->sp_order_id();
+    my $dbh = $self->dbh();
+    my @all_item_status;
+
+    my $order_progress_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'order_progress_json', 'sp_order_property')->cvterm_id();
+    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id, type_id => $order_progress_cvterm_id });
+    if ($orderprop_rs) {
+        my $orderprop_value = $orderprop_rs->value();
+        my $orderprop_value_hash = JSON::Any->jsonToObj($orderprop_value);
+        print STDERR "STATUS HASH =".Dumper($orderprop_value_hash)."\n";
+        my $order_status = $orderprop_value_hash->{'order_status_details'};
+        my %order_status_hash = %{$order_status};
+
+        foreach my $item_name (keys %order_status_hash) {
+            my @each_item_status = ();
+            my $order_status_string;
+            my $subculture_status = $order_status_hash{$item_name}{'subculture'};
+            my %subculture_status_hash = %{$subculture_status};
+            while (my ($key, $value) = each %subculture_status_hash) {
+                my @subculture_info = ();
+                my $subculture_date = 'subculture date:'.''.$key;
+                push @subculture_info, $subculture_date;
+                my $subculture_copies = 'number of copies:'.''.$value;
+                push @subculture_info, $subculture_copies;
+                $order_status_string = join("<br>", @subculture_info);
+            }
+
+            push @all_item_status, [$item_name, $order_status_string];
+        }
+    }
+
+    return \@all_item_status;
+
+}
 
 
 1;

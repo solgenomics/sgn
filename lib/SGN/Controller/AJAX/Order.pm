@@ -668,5 +668,24 @@ sub get_ona_order_status_GET {
 }
 
 
+sub get_order_status :Path('/ajax/order/get_order_status') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $order_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+
+    print STDERR "ORDER ID =".Dumper($order_id)."\n";
+
+    my $order = CXGN::Stock::Order->new({dbh => $dbh, people_schema => $people_schema, bcs_schema => $schema, sp_order_id => $order_id});
+    my $order_status = $order->get_order_status();
+
+    print STDERR "ORDER STATUS =".Dumper($order_status)."\n";
+    $c->stash->{rest} = {data => $order_status};
+
+}
+
+
 
 1;

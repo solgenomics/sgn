@@ -35,3 +35,42 @@ $comments
         </div>
     </div>
 </&>
+
+<&| /page/info_section.mas, title => 'Order Status', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="order_status_table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Latest Status</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+<td>
+    <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
+</td>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var order_id = "<% $order_id %>";
+
+
+    var order_status = jQuery('#order_status_table').DataTable({
+        'ajax': '/ajax/order/get_order_status/'+order_id,
+    });
+
+
+
+});
+
+</script>
