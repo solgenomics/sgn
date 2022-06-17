@@ -131,16 +131,26 @@ sub search {
         my @sub_and_wheres;
         push @sub_and_wheres, "cvterm.cv_id = $cv_id";
         push @sub_and_wheres, "reltype.name='VARIABLE_OF'";
+        my @dbxrefid_where;
         if (scalar(@dbxref_ids)>0){
-            # TODO: Should this be OR?
             foreach (@dbxref_ids) {
-                push @sub_and_wheres, "dbxref.accession = '$_'";
+                push @dbxrefid_where, "dbxref.accession = '$_'";
             }
         }
+        if(scalar(@dbxrefid_where)>0) {
+            my $dbxref_id_where_str = '('. (join ' OR ', @dbxrefid_where) . ')';
+            push @sub_and_wheres, $dbxref_id_where_str;
+        }
+
+        my @dbxref_term_where;
         if (scalar(@dbxref_terms)>0) {
             foreach (@dbxref_terms) {
-                push @sub_and_wheres, "db.name = '$_'";
+                push @dbxref_term_where, "db.name = '$_'";
             }
+        }
+        if(scalar(@dbxref_term_where)>0) {
+            my $dbxref_term_where_str = '('. (join ' OR ', @dbxref_term_where) . ')';
+            push @sub_and_wheres, $dbxref_term_where_str;
         }
 
         my $sub_and_where_clause = join ' AND ', @sub_and_wheres;
