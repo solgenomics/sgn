@@ -46,8 +46,11 @@ solGS.genotypingProtocol = {
           divPlaces = ["#pca_div", "#cluster_div", "#kinship_div"];
         }
 
-        var sessionGenoProtocol = solGS.genotypingProtocol.getSessionGenoProtocol();
-        console.log("sessionGenProtocol " + sessionGenoProtocol);
+        var sessionGenoProtocol;
+        if (document.URL.match(/solgs\//)) {
+          sessionGenoProtocol = solGS.genotypingProtocol.getSessionGenoProtocol();
+          console.log("sessionGenProtocol " + sessionGenoProtocol);
+        }
 
         for (i = 0; i < divPlaces.length; i++) {
           if (sessionGenoProtocol) {
