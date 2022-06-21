@@ -50,10 +50,11 @@ jobs:
 
       - name: Get breedbase_dockerfile
         if: steps.extract_branch.outputs.branch == 'develop'
-        uses: actions/checkout@develop
+        uses: actions/checkout@master
         with:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
+          ref: 'develop'
           
 #       TODO: add support for future and release branches
 
