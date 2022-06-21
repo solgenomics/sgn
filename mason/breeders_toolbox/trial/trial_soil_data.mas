@@ -1,0 +1,34 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+
+<&| /page/info_section.mas, title => "Trial Soil Data", collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "trial_soil_data_table" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Data Type</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<script defer="defer">
+
+jQuery(document).ready(function () {
+
+
+});
+
+</script>
