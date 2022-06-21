@@ -147,6 +147,7 @@ $latest_trial_activity => undef
 <& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/upload_soil_data_dialogs.mas, trial_id => $trial_id &>
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 
