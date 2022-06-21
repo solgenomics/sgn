@@ -5,13 +5,6 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.iframe-post-form' ] &>
 
 
-  <div class="col-sm-6">
-
-    <div id="plots_counts"></div>
-  </div>
-
-
-
 <script>
 
 
@@ -24,7 +17,7 @@ jQuery(document).ready(function(){
               //alert(response.plots[0].length);
               //console.log(response.plots[0]);
               var html = '';
-              html += 'Items: ';
+              html += 'Number of plots: ';
                html += response.plots[0].length;
               jQuery("#plots_counts").html(html);
           },

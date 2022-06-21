@@ -4,14 +4,6 @@ $trial_id
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.iframe-post-form' ] &>
 
-
-  <div class="col-sm-6">
-
-    <div id="controls_counts"></div>
-  </div>
-
-
-
 <script>
 
 
@@ -24,7 +16,7 @@ jQuery(document).ready(function(){
               //alert(response.accessions[0].length);
               //console.log(response.accessions[0]);
               var html = '';
-              html += 'Items: ';
+              html += 'Number of controls: ';
                html += response.accessions[0].length;
               jQuery("#controls_counts").html(html);
           },

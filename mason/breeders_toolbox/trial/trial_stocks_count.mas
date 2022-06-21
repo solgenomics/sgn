@@ -5,13 +5,6 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.iframe-post-form' ] &>
 
 
-
-  <div class="col-sm-6">
-
-    <div id="stocks_counts"></div>
-  </div>
-
-
 <script>
 
 jQuery(document).ready(function(){
@@ -23,7 +16,7 @@ jQuery(document).ready(function(){
               //alert(response.data.length);
               console.log(response.data);
               var html = '';
-              html += 'Items: ';
+              html += 'Number of accessions: ';
                html += response.data.length;
               jQuery("#stocks_counts").html(html);
           },
