@@ -78,7 +78,7 @@ rect.bordered {
                                 <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
 
@@ -632,7 +632,7 @@ rect.bordered {
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                <button id="next_step_design_information_button" type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
                                 <center>
 
                             </&>
@@ -689,7 +689,7 @@ rect.bordered {
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                <button id="next_step_trail_linkage_button" type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
                                 <center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Field Map Information" &>
@@ -741,7 +741,7 @@ rect.bordered {
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                <button id="next_step_field_map_button"  type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
                                 <center>
 
                             </&>
@@ -842,7 +842,7 @@ rect.bordered {
                                 </ul>
                                 <br/>
                                 <center>
-                                <button class="btn btn-primary" name="create_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                                <button id="create_trial_success_complete_button" class="btn btn-primary" name="create_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
                                 </center>
                             </&>
 
