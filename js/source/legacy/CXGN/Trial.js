@@ -494,13 +494,29 @@ buttons: {
 
 });
 
-    jQuery('#calculate_spatial_correction').click(function() {
+jQuery('#calculate_spatial_correction').click(function() {
+  var trial_id = get_trial_id();
+  alert(trial_id);
+	var yes = confirm("You are about to calculate a spatial correction for the field layout. Continue?");
+  if (yes) {
+    jQuery.ajax( {
+      url: '/ajax/spatial_model/generate_results/'+trial_id,
+    
+      success: function(response){
+      if (response.error) {
+        alert (response.error);
+      }
+      else {
+        alert('hello');
 
-	confirm("You are about to calculate a spatial correction for the field layout. Continue?");
+      }
+    }
+    })
+  }
 
     });
 
-    
+
 jQuery("#update_field_map_dialog_message").dialog({
 autoOpen: false,
 modal: true,

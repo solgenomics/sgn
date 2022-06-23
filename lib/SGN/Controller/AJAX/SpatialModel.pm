@@ -76,12 +76,12 @@ sub extract_trait_data :Path('/ajax/spatial_model/getdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
-sub generate_results: Path('/ajax/spatial_model/generate_results') : {
+sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $dataset_id = $c->req->param('dataset_id');
+    my $trial_id = shift;
 
-    print STDERR "DATASET_ID: $dataset_id\n";
+    print STDERR "TRIAL_ID: $trial_id\n";
 
     $c->tempfiles_subdir("spatial_model_files");
     my $spatial_model_tmp_output = $c->config->{cluster_shared_tempdir}."/spatial_model_files";
@@ -100,8 +100,8 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') : {
 
     my $temppath =  $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes=>0);
-
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema,  file_name => $temppath, quotes=>0);
+    $ds -> trial_id($trial_id);
     open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
     open(my $CLEAN, ">", $pheno_filepath.".clean") || die "Can't open pheno_filepath clean for writing";
 
