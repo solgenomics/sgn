@@ -156,7 +156,7 @@ foreach ( @{ $dbxrefs{'PhyloGenes'} } ) {
 }
 
 my $tomDel;
-foreach ( @{ $dbxrefs{TomDel'} } ) {
+foreach ( @{ $dbxrefs{'TomDel'} } ) {
   if ( $_->[1] eq '0' ) {
     my $url       = $_->[0]->get_urlprefix() . $_->[0]->get_url();
     my $accession = $_->[0]->get_accession();
