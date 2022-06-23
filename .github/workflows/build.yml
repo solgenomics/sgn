@@ -55,6 +55,7 @@ jobs:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
           ref: 'develop'
+          submodules: 'recursive'
           
 #       TODO: add support for future and release branches
 
@@ -65,10 +66,11 @@ jobs:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
           ref: 'master'
+          submodules: 'recursive'
 
-      - name: Get the submodules
-        working-directory: ./breedbase_dockerfile
-        run: git submodule update --init --recursive --remote
+#       - name: Get the submodules
+#         working-directory: ./breedbase_dockerfile
+#         run: git submodule update --init --recursive --remote
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
