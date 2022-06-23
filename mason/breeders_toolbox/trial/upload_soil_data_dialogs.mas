@@ -127,8 +127,8 @@ $trial_name
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>Data type</td>
-                                <td>Value</td>
+                                <td>soil_data_type</td>
+                                <td>soil_data_value</td>
                             </tr>
                         </tbody>
                     </table>
