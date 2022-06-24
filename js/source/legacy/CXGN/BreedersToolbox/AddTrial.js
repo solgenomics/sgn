@@ -524,8 +524,12 @@ jQuery(document).ready(function ($) {
             unreplicated_stock_list_id = $('#list_of_unrep_family_name_list_select').val();
         }
 
-        var stock_list_array = list.getList(stock_list_id);
-        var stock_list = JSON.stringify(stock_list_array);
+        var stock_list;
+        var stock_list_array;
+        if (stock_list_id) {
+            stock_list_array = list.getList(stock_list_id);
+            stock_list = JSON.stringify(stock_list_array);
+        }
 
         var control_list;
         var control_list_array;
@@ -536,7 +540,6 @@ jQuery(document).ready(function ($) {
 
         var control_list_crbd;
         var control_list_crbd_array;
-
         if (control_stock_list_id_crbd) {
             control_list_crbd_array = list.getList(control_stock_list_id_crbd);
             control_list_crbd = JSON.stringify(control_list_crbd_array);
