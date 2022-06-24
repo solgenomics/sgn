@@ -543,7 +543,7 @@ if (length(selectionData) == 0) {
               validation <- paste("validation", trFoRe, sep = ".")
               cvTest <- paste("CV", trFoRe, sep = " ")
 
-              if ( class(accuracy) != "try-error")
+              if (inherits(accuracy, 'try-error') == FALSE)
               {
                   accuracy <- round(accuracy[1,2], digits = 3)
                   accuracy <- data.matrix(accuracy)
