@@ -85,6 +85,30 @@ sub model_phenodata_file {
     }
 }
 
+
+sub model_genodata_file {
+    my ($self, $c) = @_;
+
+    my $pop_id        = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} ;
+    my $trait_abbr    = $c->stash->{trait_abbr};
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+
+    my $id =   "${pop_id}-${trait_abbr}-${protocol_id}";
+    if ($trait_abbr)
+    {
+	no warnings 'uninitialized';
+
+	my $cache_data = {key       => 'model_genodata_' . $id,
+			  file      => 'model_genodata_' .  $id . '.txt',
+			  stash_key => 'model_genodata_file',
+			  cache_dir => $c->stash->{solgs_cache_dir}
+	};
+
+	$self->cache_file($c, $cache_data);
+    }
+}
+
+
 sub trait_raw_phenodata_file {
     my ($self, $c) = @_;
 
@@ -108,6 +132,7 @@ sub trait_raw_phenodata_file {
 
 
 
+
 sub model_info_file {
     my ($self, $c) = @_;
 
@@ -126,6 +151,9 @@ sub model_info_file {
 
     $self->cache_file($c, $cache_data);
 }
+
+
+
 
 
 sub filtered_training_genotype_file {
