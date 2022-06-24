@@ -1,0 +1,29 @@
+
+<%doc>
+
+=head1 NAME
+
+/solgs/population/download.mas - template for data download links.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
+    title       => "Download Data"
+&>
+
+    <div id="training_pop_download"></div>
+    <div id="training_pop_download_message"  class="message"></div>
+</&>
