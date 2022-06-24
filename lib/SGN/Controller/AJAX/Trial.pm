@@ -1296,4 +1296,118 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
 }
 
+
+sub upload_soil_data : Path('/ajax/trial/upload_soil_data') : ActionClass('REST') { }
+
+sub upload_soil_data_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $soil_data_trial_id = $c->req->param('soil_data_trial_id');
+    my $soil_data_description = $c->req->param('soil_data_description');
+    my $soil_data_year = $c->req->param('soil_data_year_select');
+    my $soil_data_gps = $c->req->param('soil_data_gps');
+    my $type_of_sampling = $c->req->param('type_of_sampling');
+
+    print STDERR "TRIAL ID =".Dumper($soil_data_trial_id)."\n";
+    print STDERR "DESCRIPTION =".Dumper($soil_data_description)."\n";
+    print STDERR "YEAR =".Dumper($soil_data_year)."\n";
+    print STDERR "GPS =".Dumper($soil_data_gps)."\n";
+    print STDERR "TYPE OF SAMPLING =".Dumper($type_of_sampling)."\n";
+
+    my $upload = $c->req->upload('soil_data_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "soil_data_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_id;
+    my $user_name;
+    my $error;
+
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not uploading soil data.\n";
+        $c->stash->{rest} = {errors => "You need to be logged in to upload soil data." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {errors =>  "You have insufficient privileges to upload soil data." };
+        return;
+    }
+
+    $user_id = $c->user()->get_object()->get_sp_person_id();
+    $user_name = $c->user()->get_object()->get_username();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user->get_object->get_user_type()
+    });
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="soil data upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('SoilDataXLS');
+    $parsed_data = $parser->parse();
+    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {success => "1"};
+
+
+
+
+}
+
+
 1;

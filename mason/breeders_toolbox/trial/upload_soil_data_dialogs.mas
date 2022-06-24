@@ -44,6 +44,9 @@ $trial_name
                                 <input class="form-control" type="text" id="type_of_sampling" name="type_of_sampling" />
                             </div>
                         </div>
+                        <div style="visibility:hidden">
+                            <input class="form-control" name="soil_data_trial_id" id="soil_data_trial_id" disabled value="<% $trial_id %>">
+                        </div>
                         <div class="well well-sm">
                             <div class="row">
                                 <div class="col-sm-4">
@@ -191,13 +194,13 @@ jQuery(document).ready(function(){
             return;
         }
 
-        jQuery('#upload_additional_info_form').attr("action", "/ajax/cross/upload_info");
+        jQuery('#upload_soil_data_form').attr("action", "/ajax/trial/upload_soil_data");
 
-        jQuery("#upload_additional_info_form").submit();
-        jQuery("#upload_additional_info_dialog").modal("hide");
+        jQuery("#upload_soil_data_form").submit();
+        jQuery("#upload_soil_data_dialog").modal("hide");
     });
 
-    jQuery('#upload_additional_info_form').iframePostForm({
+    jQuery('#upload_soil_data_form').iframePostForm({
         json: true,
         post: function(){
             jQuery("#working_modal").modal("show");
@@ -205,9 +208,9 @@ jQuery(document).ready(function(){
         complete: function(response){
             jQuery("#working_modal").modal("hide");
             if (response.error_string){
-                jQuery("#upload_crossinfo_error_display tbody").html('');
-                jQuery("#upload_crossinfo_error_display tbody").append(response.error_string);
-                jQuery("#upload_crossinfo_error_display").modal("show");
+                jQuery("#upload_soil_data_error_display tbody").html('');
+                jQuery("#upload_soil_data_error_display tbody").append(response.error_string);
+                jQuery("#upload_soil_data_error_display").modal("show");
                 return;
             }
             if (response.error) {
@@ -215,7 +218,7 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                jQuery('#cross_info_saved_dialog_message').modal("show");
+                jQuery('#soil_data_saved_dialog_message').modal("show");
             }
         }
     });
