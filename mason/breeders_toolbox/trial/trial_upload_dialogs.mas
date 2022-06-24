@@ -711,8 +711,8 @@ $design_types => ()
                     <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, purpose, unique number, and location.)</li>
                     <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
                     <li>location (The name of the location where the trial was held, must exist in the database.)</li>
-                    <li>year (The year the trial was held.)</li>
-                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design) Augmented (Augmented Design), MAD (Modified Augmented Design), Westcott (Westcott Design), Lattice (Lattice Design))</li>
+                    <li>year (The year the trial was held.)</li>                    
+                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
                     <li>plot_name (Must be unique across entire database. It is often a concatenation of the trial name and the plot number.)</li>
                     <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>
