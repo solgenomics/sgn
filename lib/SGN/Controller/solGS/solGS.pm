@@ -566,6 +566,7 @@ sub output_files {
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller("solGS::Files")->model_phenodata_file($c);
+    $c->controller("solGS::Files")->model_genodata_file($c);
     $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
@@ -589,6 +590,7 @@ sub output_files {
                           $c->stash->{marker_effects_file},
                           $c->stash->{validation_file},
                           $c->stash->{model_phenodata_file},
+                          $c->stash->{model_genodata_file},
                           $c->stash->{trait_raw_phenodata_file},
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
