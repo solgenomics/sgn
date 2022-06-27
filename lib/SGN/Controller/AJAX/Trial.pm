@@ -49,6 +49,7 @@ use CXGN::BreederSearch;
 use YAML;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
+use CXGN::BreedersToolbox::SoilData;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1305,14 +1306,14 @@ sub upload_soil_data_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $soil_data_trial_id = $c->req->param('soil_data_trial_id');
-    my $soil_data_description = $c->req->param('soil_data_description');
+    my $trial_id = $c->req->param('soil_data_trial_id');
+    my $description = $c->req->param('soil_data_description');
     my $soil_data_year = $c->req->param('soil_data_year_select');
     my $soil_data_gps = $c->req->param('soil_data_gps');
     my $type_of_sampling = $c->req->param('type_of_sampling');
 
-    print STDERR "TRIAL ID =".Dumper($soil_data_trial_id)."\n";
-    print STDERR "DESCRIPTION =".Dumper($soil_data_description)."\n";
+    print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
+    print STDERR "DESCRIPTION =".Dumper($description)."\n";
     print STDERR "YEAR =".Dumper($soil_data_year)."\n";
     print STDERR "GPS =".Dumper($soil_data_gps)."\n";
     print STDERR "TYPE OF SAMPLING =".Dumper($type_of_sampling)."\n";
@@ -1400,12 +1401,24 @@ sub upload_soil_data_POST : Args(0) {
         }
         $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
+    } else {
+        my $soil_data_details = $parsed_data->{'soil_data_details'};
+        my $data_type_order = $parsed_data->{'data_type_order'};
+
+        my $soil_data = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $chado_schema });
+        $soil_data->parent_id($trial_id);
+        $soil_data->description($description);
+        $soil_data->year($soil_data_year);
+        $soil_data->gps($soil_data_gps);
+        $soil_data->type_of_sampling($type_of_sampling);
+        $soil_data->data_type_order($data_type_order);
+        $soil_data->soil_data_details($soil_data_details);
+
+        my $soil_data_prop_id = $soil_data->store();
+        print STDERR "PROJECTPROP ID =".Dumper($soil_data_prop_id)."\n";
     }
 
     $c->stash->{rest} = {success => "1"};
-
-
-
 
 }
 

@@ -13,7 +13,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds trial_soil_data cvterm
+This patch adds soil_data_json cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'trial_soil_data' project_property cvterm
+This patch adds the 'soil_data_json' project_property cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -61,7 +61,7 @@ sub patch {
     print STDERR "INSERTING CV TERMS...\n";
 
     $schema->resultset("Cv::Cvterm")->create_with({
-        name => 'trial_soil_data',
+        name => 'soil_data_json',
         cv => 'project_property'
     });
 
