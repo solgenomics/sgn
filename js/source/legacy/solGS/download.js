@@ -15,26 +15,16 @@ solGS.download = {
 
     args = JSON.stringify(args);
 
-    jQuery.ajax({
+    var popDataReq = jQuery.ajax({
       type: "POST",
       dataType: "json",
       data: {
         arguments: args,
       },
       url: "/solgs/download/training/pop/data",
-      success: function (res) {
-        var errorMsg = "Error occured getting training pop data download links.";
-
-        if (res) {
-          solGS.download.createTrainingPopDownloadLinks(res);
-        } else {
-          jQuery("#training_pop_download_message").html(errorMsg);
-        }
-      },
-      error: function (res) {
-        jQuery("#training_pop_download_message").html("errorMsg");
-      },
     });
+
+    return popDataReq;
   },
 
   createTrainingPopDownloadLinks: function (res) {
@@ -78,26 +68,16 @@ solGS.download = {
     }
     args = JSON.stringify(args);
 
-    jQuery.ajax({
+    var modelInputReq = jQuery.ajax({
       type: "POST",
       dataType: "json",
       data: {
         arguments: args,
       },
       url: "/solgs/download/model/input/data",
-      success: function (res) {
-        var errorMsg = "Error occured getting model input data download links.";
-
-        if (res) {
-          solGS.download.createModelInputDownloadLinks(res);
-        } else {
-          jQuery("#download_message").html(errorMsg);
-        }
-      },
-      error: function (res) {
-        jQuery("#download_message").html("errorMsg");
-      },
     });
+
+    return modelInputReq;
   },
 
   createModelInputDownloadLinks: function (res) {
@@ -127,9 +107,22 @@ solGS.download = {
 jQuery(document).ready(function () {
   solGS.checkPageType().done(function (res) {
     if (res.page_type.match(/training population/)) {
-      solGS.download.getTrainingPopRawDataFiles();
+      solGS.download.getTrainingPopRawDataFiles().done(function (res) {
+        solGS.download.createTrainingPopDownloadLinks(res);
+      });
+
+      solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
+        jQuery("#download_message").html(errorMsg);
+      });
     } else if (res.page_type.match(/training model/)) {
-      solGS.download.getModelInputDataFiles();
+      solGS.download.getModelInputDataFiles().done(function (res) {
+        solGS.download.createModelInputDownloadLinks(res);
+      });
+
+      var errorMsg = "Error occured getting model input data download links.";
+      solGS.download.getModelInputDataFiles().fail(function (res) {
+        jQuery("#download_message").html(errorMsg);
+      });
     }
   });
 
