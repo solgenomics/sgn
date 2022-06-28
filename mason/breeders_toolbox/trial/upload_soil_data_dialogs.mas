@@ -164,7 +164,7 @@ $trial_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_cross_info_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_soil_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
             </div>
         </div>
     </div>
@@ -220,6 +220,11 @@ jQuery(document).ready(function(){
             }
         }
     });
+
+    jQuery("#dismiss_soil_data_saved_dialog").click(function(){
+        location.reload();
+    });
+
 
 
 });
