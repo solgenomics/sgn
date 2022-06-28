@@ -65,7 +65,7 @@ for(i in 1:length(trait)){
 
     print(paste("Dependent variables : ", dependent_variables))
 
-    pd <- pd[!(is.na(pd$Dry_matter_content_percentage_CO_343_0000429)), ]
+    pd <- pd[!(is.na(pd[c(dependent_variables)])), ]
 
 
 
