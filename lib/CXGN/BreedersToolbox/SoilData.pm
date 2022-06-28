@@ -59,5 +59,32 @@ sub BUILD {
 }
 
 
+sub get_soil_data {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $project_id = $self->parent_id();
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+    my $key_ref = $self->allowed_fields();
+    my @fields = @$key_ref;
+
+    my $soil_data_rs = $schema->resultset("Project::Projectprop")->search({ project_id => $project_id, type_id => $type_id }, { order_by => {-asc => 'projectprop_id'} });
+    my @soil_data_list;
+    while (my $r = $soil_data_rs->next()){
+        my $prop_id = $r->projectprop_id();
+        my $soil_data_json = $r->value();
+        my $soil_data_hash = JSON::Any->jsonToObj($soil_data_json);
+        my $description = $soil_data_hash->{'description'};
+        my $year = $soil_data_hash->{'year'};
+        my $gps = $soil_data_hash->{'gps'};
+        my $type_of_sampling = $soil_data_hash->{'type_of_sampling'};
+        push @soil_data_list, [$prop_id, $description, $year, $gps, $type_of_sampling];
+    }
+#    print STDERR "PROFILE LIST =".Dumper(\@profile_list)."\n";
+
+    return \@soil_data_list;
+}
+
+
 
 1;

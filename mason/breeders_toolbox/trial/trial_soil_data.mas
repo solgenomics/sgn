@@ -11,11 +11,14 @@ $trial_id
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
-                <table id = "trial_soil_data_table" class="table table-hover table-striped">
+                <table id = "soil_data_table" class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Data Type</th>
-                            <th>Value</th>
+                            <th>Soil Data ID</th>
+                            <th>Description</th>
+                            <th>Year</th>
+                            <th>GPS</th>
+                            <th>Type of Sampling</th>
                         </tr>
                     </thead>
                 </table>
@@ -28,6 +31,14 @@ $trial_id
 
 jQuery(document).ready(function () {
 
+    jQuery('#soil_data_table').DataTable({
+        'autoWidth': false,
+        'searching': false,
+        'info': false,
+        'paging': false,
+        'order': false,
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/soil_data',
+    });
 
 });
 

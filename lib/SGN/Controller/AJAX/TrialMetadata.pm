@@ -31,6 +31,7 @@ use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
 use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
+use CXGN::BreedersToolbox::SoilData;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -3022,7 +3023,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
-    
+
     $c->stash->{rest} = {success => 1};
 }
 
@@ -4876,13 +4877,28 @@ sub update_trial_design_type_POST : Args(0) {
 
     my $trial = $c->stash->{trial};
 
-    $trial->set_design_type($trial_design_type); 
+    $trial->set_design_type($trial_design_type);
 
     $c->stash->{rest} = {success => 1 };
-    
+
     return;
 
 }
+
+
+sub get_soil_data :Chained('trial') PathPart('soil_data') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trial_id = $c->stash->{trial_id};
+
+    my $soil_data = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id });
+    my $soil_data_list = $soil_data->get_soil_data();
+
+    $c->stash->{rest} = { data => $soil_data_list };
+}
+
 
 
 1;
