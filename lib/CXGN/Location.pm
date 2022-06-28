@@ -88,7 +88,27 @@ has 'altitude' => (
 has 'noaa_station_id' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
-);
+    );
+
+has 'county' =>
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+has 'state' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+has 'rainfall_zone' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+has 'agronomic_zone' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
 
 sub BUILD {
     my $self = shift;
@@ -112,18 +132,24 @@ sub BUILD {
         $self->longitude( $self->longitude || $location->longitude);
         $self->altitude( $self->altitude || $location->altitude);
         $self->noaa_station_id( $self->noaa_station_id || $self->_get_ndgeolocationprop('noaa_station_id', 'geolocation_property'));
+	$self->county( $self->county || $self->_get_ndgeolocationprop('county', 'geolocation_property'));
+	$self->state( $self->state || $self->get_ndgeolocationprop('state', 'geolocation_property'));
+	$self->rainfall_zone( $self->rainfall_zone || $self->get_ndgeolocationprop('rainfall_zone', 'geolocation_property'));
+	$self->agronomic_zone( $self->agronomic_zone || $self->get_ndgeolocationprop('agronomic_zone', 'geolocation_property'));
+	
+	
     }
-
+    
     print STDERR "Breeding programs are: ".$self->breeding_programs()."\n";
-
+    
     return $self;
 }
 
 sub store_location {
-	my $self = shift;
+    my $self = shift;
     my $schema = $self->bcs_schema();
     my $error;
-
+    
     my $nd_geolocation_id = $self->nd_geolocation_id();
     my $name = _trim($self->name());
     my $abbreviation = $self->abbreviation();
@@ -135,6 +161,10 @@ sub store_location {
     my $longitude = $self->longitude();
     my $altitude = $self->altitude();
     my $noaa_station_id = $self->noaa_station_id();
+    my $county = $self->county();
+    my $state = $self->state();
+    my $rainfall_zone = $self->rainfall_zone();
+    my $agronomic_zone = $self->agronomic_zone();
 
     # Validate properties
 
@@ -219,6 +249,19 @@ sub store_location {
             if ($noaa_station_id){
                 $self->_store_ndgeolocationprop('noaa_station_id', 'geolocation_property', $noaa_station_id);
             }
+	    if ($county) {
+		$self->_store_ndgeolocationprop('county', 'geolocation_property', $county);
+	    }
+	    if ($state) {
+		$self->_store_ndgeolocationprop('state', 'geolocation_property', $state);
+	    }
+	    if ($rainfall_zone) {
+		$self->_store_ndgeolocationprop('rainfall_zone', 'geolocation_property', $rainfall_zone);
+	    }
+	    if ($agronomic_zone) {
+		$self->_store_ndgeolocationprop('agronomic_zone', 'geolocation_property', $agronomic_zone);
+	    }
+		
         }
         catch {
             $error =  $_;
@@ -247,6 +290,10 @@ sub store_location {
             $self->_update_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             $self->_update_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
             $self->_update_ndgeolocationprop('noaa_station_id', 'geolocation_property', $noaa_station_id);
+	    $self->_update_ndgeolocationprop('county', 'geolocation_property', $county);
+	    $self->_update_ndgeolocationprop('state', 'geolocation_property', $state);
+	    $self->_update_ndgeolocationprop('rainfall_zone', 'geolocation_property', $rainfall_zone);
+	    $self->_update_ndgeolocationprop('agronomic_zone', 'geolocation_property', $agronomic_zone);
             $self->_store_breeding_programs($breeding_program_ids);
         }
         catch {

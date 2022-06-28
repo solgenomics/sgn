@@ -57,7 +57,11 @@ sub store_location :Path("/ajax/location/store") Args(0) {
     my $longitude   = $params->{longitude} || undef;
     my $altitude    = $params->{altitude} || undef;
     my $noaa_station_id    = $params->{noaa_station_id} || undef;
-
+    my $county = $params->{county} || undef;
+    my $state = $params->{state} || undef;
+    my $rainfall_zone = $params->{rainfall_zone} || undef;
+    my $agronomic_zone = $params->{agronomic_zone} || undef;
+    
     if (! $c->user()) {
         $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
         return;
@@ -82,7 +86,11 @@ sub store_location :Path("/ajax/location/store") Args(0) {
         latitude => $latitude,
         longitude => $longitude,
         altitude => $altitude,
-        noaa_station_id => $noaa_station_id
+        noaa_station_id => $noaa_station_id,
+	county => $county,
+	state => $state,
+	rainfall_zone => $rainfall_zone,
+	agronomic_zone => $agronomic_zone,
     });
 
     my $store = $location->store_location();
@@ -209,6 +217,10 @@ sub upload_locations_POST : Args(0) {
             longitude => $data[7],
             altitude => $data[8],
             noaa_station_id => $data[9],
+	    county => $data[10],
+	    state => $data[11],
+	    rainfall_zone => $data[12],
+	    agronomic_zone => $data[13],
         });
 
         my $store = $location->store_location();
