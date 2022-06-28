@@ -19,6 +19,7 @@ $trial_id
                             <th>Year</th>
                             <th>GPS</th>
                             <th>Type of Sampling</th>
+                            <th>Soil Data</th>
                         </tr>
                     </thead>
                 </table>
@@ -34,8 +35,6 @@ jQuery(document).ready(function () {
     jQuery('#soil_data_table').DataTable({
         'autoWidth': false,
         'searching': false,
-        'info': false,
-        'paging': false,
         'order': false,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/soil_data',
     });

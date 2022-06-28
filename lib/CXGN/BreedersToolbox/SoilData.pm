@@ -78,9 +78,20 @@ sub get_soil_data {
         my $year = $soil_data_hash->{'year'};
         my $gps = $soil_data_hash->{'gps'};
         my $type_of_sampling = $soil_data_hash->{'type_of_sampling'};
-        push @soil_data_list, [$prop_id, $description, $year, $gps, $type_of_sampling];
+        my $data_type_order = $soil_data_hash->{'data_type_order'};
+        my @data_order = @$data_type_order;
+        my $soil_data_details = $soil_data_hash->{'soil_data_details'};
+
+        my @all_soil_data;
+        foreach my $type(@data_order) {
+            my $soil_data = $soil_data_details->{$type};
+            my $soil_data_string = $type.":"." ".$soil_data;
+            push @all_soil_data, $soil_data_string;
+        }
+        my $soil_data_details_string = join("<br>", @all_soil_data);
+
+        push @soil_data_list, [$prop_id, $description, $year, $gps, $type_of_sampling, $soil_data_details_string];
     }
-#    print STDERR "PROFILE LIST =".Dumper(\@profile_list)."\n";
 
     return \@soil_data_list;
 }
