@@ -214,21 +214,48 @@ f <- rowSums(GC, na.rm = TRUE) / apply(GC, 1, function(x) sum(!is.na(x)))
 
 
 write("DISTANCE MATRIX...", stderr())
-# 4b. Get the additive and dominance relationship matrices. This uses AGHmatrix.
+# 4b. Get the additive and dominance relationship matrices following Batista et al., 2021
+# https://doi.org/10.1007/s00122-021-03994-w
 
-A <- Gmatrix(G, method = "VanRaden", ploidy = userPloidy, missingValue = NA)
+# Additive: this gives a different result than AGHmatrix VanRaden's Gmatrix
+# AGHmatrix: Weights are implemented for "VanRaden" method as described in Liu (2020)?
+allele_freq = colSums(G) / (userPloidy * nrow(G))
+W = t(G) - userPloidy * allele_freq
+WWt = crossprod(W)
+denom = sum(userPloidy * allele_freq * (1 - allele_freq))
+A = WWt / denom
 
-write(paste('User ploidy: ', userPloidy), stderr());
+# Check with paper equation:
+#w <- G - (userPloidy/2)
+#num <- w %*% t(w)
+#denom = sum(userPloidy * allele_freq * (1 - allele_freq))
+#A2 <- num/denom
+#table(A == A2)
+#cor(as.vector(A), as.vector(A2)) # 0.9996...
 
+
+# Dominance or digenic dominance
 if(userPloidy == 2){
   D <- Gmatrix(G, method = "Su", ploidy = userPloidy, missingValue = NA)
 }
 
-
-write("PLOIDY...", stderr())
-# I haven't tested this yet
 if(userPloidy > 2){
-  D <- Gmatrix(G, method = "Slater", ploidy = userPloidy, missingValue = NA)
+# Digenic dominance
+C_matrix = matrix(length(combn(userPloidy, 2)) / 2,
+                  nrow = nrow(t(G)),
+                  ncol = ncol(t(G)))
+
+Ploidy_matrix = matrix(userPloidy,
+                       nrow = nrow(t(G)),
+                       ncol = ncol(t(G)))
+
+Q = (allele_freq^2 * C_matrix) -
+  (Ploidy_matrix - 1) * allele_freq * t(G) +
+  0.5 * t(G) * (t(G) - 1)
+
+Dnum = crossprod(Q)
+denomDom = sum(C_matrix[ ,1] * allele_freq^2 * (1 - allele_freq)^2)
+D = Dnum/denomDom
 }
 
 
@@ -312,12 +339,12 @@ for(i in 1:length(userResponse)){
   if(!is.na(userRandom[1])){
     randEff <- paste(userRandom, collapse = " + ")
     ID2 <- paste(userID, 2, sep = "")
-    randEff2 <- paste("~vs(", userID, ", Gu = A) + vs(", ID2, ", Gu = D)", sep = "")
+    randEff2 <- paste("~vsr(", userID, ", Gu = A) + vsr(", ID2, ", Gu = D)", sep = "")
     randArg <- paste(randEff2, randEff, sep = " + ")
   }
   if(is.na(userRandom[1])){
     ID2 <- paste(userID, 2, sep ="")
-    randArg <- paste("~vs(", userID, ", Gu = A) + vs(", ID2, ", Gu = D)", sep = "")
+    randArg <- paste("~vsr(", userID, ", Gu = A) + vsr(", ID2, ", Gu = D)", sep = "")
   }
 
   write(paste("Fit mixed GBLUP model...", randArg), stderr())
@@ -480,7 +507,7 @@ if(!is.na(userSexes)){  # "plant sex estimation 0-4"
   crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
   colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
 
-  write(paste("CROSSPLAN REPLACED = ", head(crossPlan)), stderr());	
+  write(paste("CROSSPLAN REPLACED = ", head(crossPlan)), stderr());
 
   # Look up the parent sexes and subset
   crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$germplasmName), userSexes] # get sexes ordered by Parent1
@@ -489,15 +516,15 @@ if(!is.na(userSexes)){  # "plant sex estimation 0-4"
 
   crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$germplasmName), userSexes] # get sexes ordered by Parent2
 
-  write(paste("PARENTS2 ", head(crossPlan)), stderr())		      
-  
-  crossPlan <- crossPlan[!(crossPlan$P1Sex==0 | crossPlan$P2Sex==0),] #remove the 0s 
+  write(paste("PARENTS2 ", head(crossPlan)), stderr())
+
+  crossPlan <- crossPlan[!(crossPlan$P1Sex==0 | crossPlan$P2Sex==0),] #remove the 0s
   crossPlan <- crossPlan[!(crossPlan$P1Sex==1 & crossPlan$P2Sex==1),] #remove same sex crosses with score of 1
   crossPlan <- crossPlan[!(crossPlan$P1Sex==2 & crossPlan$P2Sex==2),] #remove same sex crosses with score of 2
 
-  write(paste("CROSSPLAN FILTERED = ", head(crossPlan)), stderr())      
+  write(paste("CROSSPLAN FILTERED = ", head(crossPlan)), stderr())
   #crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
-  
+
   # subset the number of crosses the user wishes to output
   crossPlan[1:userNCrosses, ]
   finalcrosses=crossPlan[1:userNCrosses, ]
