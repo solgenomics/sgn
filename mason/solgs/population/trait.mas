@@ -136,6 +136,8 @@ $training_pop_url
     list_of_prediction_pops => $list_of_prediction_pops,
 &>
 
+<& /solgs/population/download.mas &>
+
 %}
 % else
 %{

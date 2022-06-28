@@ -17,6 +17,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
+<& /util/import_javascript.mas, classes => ['solGS.download'] &>
 
 <&| /page/info_section.mas,
     collapsible => 1,
@@ -25,5 +26,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 &>
 
     <div id="training_pop_download"></div>
-    <div id="training_pop_download_message"  class="message"></div>
+    <div id="model_input_data_download"></div>
+    <div id="download_message"  class="message"></div>
 </&>
