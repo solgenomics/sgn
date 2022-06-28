@@ -46,44 +46,56 @@ $mm->tempfile($pheno_tempfile);
 
 is($mm->engine(), "lme4", "engine test if engine not set");
 
-$mm->dependent_variables( [ "dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012" ] );
+foreach my $engine ("lme4", "sommer") { 
 
-$mm->fixed_factors( [ "replicate" ]  );
+    $mm->engine($engine);
+    
+    $mm->dependent_variables( [ "dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012" ] );
 
-$mm->random_factors( [ "germplasmName" ] );
+    $mm->fixed_factors( [ "replicate" ]  );
 
-my ($model_string, $error) = $mm->generate_model();
+    $mm->random_factors( [ "germplasmName" ] );
 
-is($model_string, "replicate + (1|germplasmName)", "model string test for BLUPs");
+    my ($model_string, $error) = $mm->generate_model();
 
-$mm->run_model("Slurm", "localhost", "/tmp");
+    if ($engine eq "lme4") { 
+	is($model_string, "replicate + (1|germplasmName)", "model string test for BLUPs");
+    }
+    else {
+	print STDERR "MODEL STRING: $model_string\n";
+    }
+    
+    $mm->run_model("Slurm", "localhost", "/tmp");
 
-print STDERR "Using tempfile base ".$mm->tempfile()."\n";
+    print STDERR "Using tempfile base ".$mm->tempfile()."\n";
 
-ok( -e $mm->tempfile().".params", "check existence of parmams file");
-ok( -e $mm->tempfile().".adjustedBLUPs", "check existence of adjustedBLUPs result file");
-ok( -e $mm->tempfile().".BLUPs", "check existence of BLUPs result file");
+    ok( -e $mm->tempfile().".params", "check existence of parmams file");
+    ok( -e $mm->tempfile().".adjustedBLUPs", "check existence of adjustedBLUPs result file");
+    ok( -e $mm->tempfile().".BLUPs", "check existence of BLUPs result file");
 
-is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 413, "check number of lines in adjustedBLUEs file...");
+    is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 413, "check number of lines in adjustedBLUEs file...");
 
 
-$mm->fixed_factors( [ "germplasmName" ]  );
+    $mm->fixed_factors( [ "germplasmName" ]  );
 
-$mm->random_factors( [ "replicate" ] );
+    $mm->random_factors( [ "replicate" ] );
 
-my $model_string = $mm->generate_model();
+    my $model_string = $mm->generate_model();
 
-print STDERR "MODEL STRING = $model_string\n";
+    print STDERR "MODEL STRING = $model_string\n";
 
-is("germplasmName + (1|replicate)", $model_string, "model string test for BLUEs");
+    is("germplasmName + (1|replicate)", $model_string, "model string test for BLUEs");
 
-$mm->run_model("Slurm", "localhost", "/tmp");
+    $mm->run_model("Slurm", "localhost", "/tmp");
 
-sleep(10);
+    sleep(10);
 
-ok( -e $mm->tempfile().".adjustedBLUEs", "check existence of adjustedBLUEs result file");
-ok( -e $mm->tempfile().".BLUEs", "check existence of BLUEs result file");
-is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
+    ok( -e $mm->tempfile().".adjustedBLUEs", "check existence of adjustedBLUEs result file");
+    ok( -e $mm->tempfile().".BLUEs", "check existence of BLUEs result file");
+    is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
+
+}
+
 
 
 # cleanup for next test :-)
