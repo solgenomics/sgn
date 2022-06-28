@@ -567,7 +567,7 @@ sub phenotype_metadata_file {
 
 
 sub rrblup_training_gebvs_file {
-    my ($self, $c, $identifier, $trait_id) = @_;
+    my ($self, $c, $identifier, $trait_id, $protocol_id) = @_;
 
     $identifier = $c->stash->{pop_id} || $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} if !$identifier;
     $trait_id  = $c->stash->{trait_id} if !$trait_id;
@@ -575,7 +575,7 @@ sub rrblup_training_gebvs_file {
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
 
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     my $file_id = "$identifier-${trait_abbr}-GP-${protocol_id}";
 
     my $cache_data = {key       => 'rrblup_training_gebvs_' . $file_id,
