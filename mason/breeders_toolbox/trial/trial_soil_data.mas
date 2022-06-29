@@ -20,6 +20,7 @@ $trial_id
                             <th>GPS</th>
                             <th>Type of Sampling</th>
                             <th>Soil Data</th>
+                            <th>Download</th>
                         </tr>
                     </thead>
                 </table>

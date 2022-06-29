@@ -4893,10 +4893,28 @@ sub get_soil_data :Chained('trial') PathPart('soil_data') Args(0){
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $trial_id = $c->stash->{trial_id};
 
-    my $soil_data = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id });
-    my $soil_data_list = $soil_data->get_soil_data();
+    my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id });
+    my $soil_data = $soil_data_obj->get_soil_data();
+    my @soil_data_list = @$soil_data;
+    my @formatted_soil_data;
+    foreach my $info_ref (@soil_data_list) {
+        my @all_soil_data = ();
+        my @info = @$info_ref;
+        my $trial_id = pop @info;
+        my $soil_data_details = pop @info;
+        my $order_ref = pop @info;
+        my @data_type_order = @$order_ref;
+        foreach my $type(@data_type_order) {
+            my $soil_data = $soil_data_details->{$type};
+            my $soil_data_string = $type.":"." ".$soil_data;
+            push @all_soil_data, $soil_data_string;
+        }
+        my $soil_data_details_string = join("<br>", @all_soil_data);
+        push @info, ($soil_data_details_string, "<a class='btn btn-sm btn-default' href='/breeders/trial/$trial_id/download/soil_data?format=xls&dataLevel=$info[0]'>Download</a>");
+        push @formatted_soil_data, [@info];
+    }
 
-    $c->stash->{rest} = { data => $soil_data_list };
+    $c->stash->{rest} = { data => \@formatted_soil_data };
 }
 
 

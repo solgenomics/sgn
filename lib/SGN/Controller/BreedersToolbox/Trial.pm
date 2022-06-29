@@ -271,6 +271,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
+    print STDERR "WHAT =".Dumper($what)."\n";
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
@@ -359,7 +360,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my @field_crossing_data_order;
-    if ( ($format eq "crossing_experiment_xls") && ($what eq "layout")) {
+    if ($format eq "crossing_experiment_xls") {
         $plugin = "CrossingExperimentXLS";
         $what = "crosses";
         $format = "xls";
