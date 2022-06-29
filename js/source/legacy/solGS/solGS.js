@@ -790,6 +790,26 @@ solGS.getTrainingTraitsIds = function () {
   return trainingTraitsIds;
 };
 
+solGS.getModelArgs = function () {
+  var args = this.getTrainingPopArgs();
+  var trainingTraitsIds = this.getTrainingTraitsIds();
+  console.log("training traits ids: " + trainingTraitsIds);
+  if (trainingTraitsIds) {
+    args["training_traits_ids"] = trainingTraitsIds;
+  }
+
+  return args;
+};
+
+solGS.getTrainingPopArgs = function () {
+  var args = {
+    training_pop_id: jQuery("#training_pop_id").val(),
+    genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
+  };
+
+  return args;
+};
+
 solGS.getPopulationDetails = function () {
   var trainingPopId = jQuery("#population_id").val();
   var trainingPopName = jQuery("#population_name").val();
