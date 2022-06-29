@@ -8,11 +8,7 @@ var solGS = solGS || function solGS() {};
 
 solGS.download = {
   getTrainingPopRawDataFiles: function () {
-    var args = {
-      training_pop_id: jQuery("#training_pop_id").val(),
-      genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
-    };
-
+    var args = solGS.getTrainingPopArgs();
     args = JSON.stringify(args);
 
     var popDataReq = jQuery.ajax({
@@ -56,16 +52,7 @@ solGS.download = {
   },
 
   getModelInputDataFiles: function () {
-    var args = {
-      training_pop_id: jQuery("#training_pop_id").val(),
-      genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
-    };
-
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-    console.log("training traits ids: " + trainingTraitsIds);
-    if (trainingTraitsIds) {
-      args["training_traits_ids"] = trainingTraitsIds;
-    }
+    var args = solGS.getModelArgs();
     args = JSON.stringify(args);
 
     var modelInputReq = jQuery.ajax({
@@ -104,17 +91,7 @@ solGS.download = {
   },
 
   getValidationFile: function () {
-    var args = {
-      training_pop_id: jQuery("#training_pop_id").val(),
-      genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
-    };
-
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-    console.log("training traits ids: " + trainingTraitsIds);
-    if (trainingTraitsIds) {
-      args["training_traits_ids"] = trainingTraitsIds;
-    }
-
+    var args = solGS.getModelArgs();
     args = JSON.stringify(args);
 
     var valDataReq = jQuery.ajax({
