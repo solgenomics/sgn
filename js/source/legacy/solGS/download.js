@@ -1,5 +1,5 @@
 /**
- * solGS prediction raw, model input and output downloads
+ * solGS prediction raw, model input downloads
  * Isaak Y Tecle <iyt2@cornell.edu>
  *
  */
@@ -102,6 +102,46 @@ solGS.download = {
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
     );
   },
+
+  getValidationFile: function () {
+    var args = {
+      training_pop_id: jQuery("#training_pop_id").val(),
+      genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
+    };
+
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
+    console.log("training traits ids: " + trainingTraitsIds);
+    if (trainingTraitsIds) {
+      args["training_traits_ids"] = trainingTraitsIds;
+    }
+
+    args = JSON.stringify(args);
+
+    var valDataReq = jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: {
+        arguments: args,
+      },
+      url: "/solgs/download/model/validation",
+    });
+
+    return valDataReq;
+  },
+
+  createValidationDownloadLink: function (res) {
+    var valFileName = res.validation_file.split("/").pop();
+    var valFileLink =
+      '<a href="' +
+      res.validation_file +
+      '" download=' +
+      valFileName +
+      '">' +
+      "Download model accuracy" +
+      "</a>";
+
+    jQuery("#validation_download").prepend('<p style="margin-top: 20px">' + valFileLink + "</p>");
+  },
 };
 
 jQuery(document).ready(function () {
@@ -112,6 +152,7 @@ jQuery(document).ready(function () {
       });
 
       solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
+        var errorMsg = "Error occured getting training pop raw data files.";
         jQuery("#download_message").html(errorMsg);
       });
     } else if (res.page_type.match(/training model/)) {
@@ -119,9 +160,18 @@ jQuery(document).ready(function () {
         solGS.download.createModelInputDownloadLinks(res);
       });
 
-      var errorMsg = "Error occured getting model input data download links.";
       solGS.download.getModelInputDataFiles().fail(function (res) {
+        var errorMsg = "Error occured getting model input data files.";
         jQuery("#download_message").html(errorMsg);
+      });
+
+      solGS.download.getValidationFile().done(function (res) {
+        solGS.download.createValidationDownloadLink(res);
+      });
+
+      solGS.download.getValidationFile().fail(function (res) {
+        var errorMsg = "Error occured getting model validation file.";
+        jQuery("#validation_download_message").html(errorMsg);
       });
     }
   });
