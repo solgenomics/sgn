@@ -626,15 +626,31 @@ sub get_ona_order_status_GET {
         my $message1 = $resp1->decoded_content;
         my $message_hash1 = decode_json $message1;
 #        print STDERR "DATA FROM SENDUSU =".Dumper($message_hash1)."\n";
+
         my @status_info = @$message_hash1;
         my %item_status;
         foreach my $info_hash (@status_info)  {
             if ($info_hash->{'subculture/sub_orderNo'}) {
-                my $item_identifier = $info_hash->{'subculture/sub_orderNo'};
+                my $subculture_item_identifier = $info_hash->{'subculture/sub_orderNo'};
                 my $subculture_date = $info_hash->{'subculture/subcultureDate'};
                 my $subculture_copies = $info_hash->{'subculture/copies'};
-                $item_status{$item_identifier}{'subculture'}{$subculture_date} = $subculture_copies;
+                $item_status{$subculture_item_identifier}{'subculture'}{$subculture_date} = $subculture_copies;
             }
+
+            if ($info_hash->{'rooting/root_orderNo'}) {
+                my $rooting_item_identifier = $info_hash->{'rooting/root_orderNo'};
+                my $rooting_date = $info_hash->{'rooting/rootingDate'};
+                my $number_rooted = $info_hash->{'rooting/numberRooted'};
+                $item_status{$rooting_item_identifier}{'rooting'}{$rooting_date} = $number_rooted;
+            }
+
+            if ($info_hash->{'harden/harden_orderNo'}) {
+                my $harden_item_identifier = $info_hash->{'harden/harden_orderNo'};
+                my $hardening_date = $info_hash->{'harden/hardeningDate'};
+                my $number_hardened = $info_hash->{'harden/numberHardened'};
+                $item_status{$harden_item_identifier}{'harden'}{$hardening_date} = $number_hardened;
+            }
+
         }
 #        print STDERR "ITEM STATUS =".Dumper(\%item_status)."\n";
         my %update_status;
