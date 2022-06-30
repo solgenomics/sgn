@@ -32,7 +32,7 @@ $ds->store();
 
 my $dsf = CXGN::Dataset::File->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema(), sp_dataset_id => $ds->sp_dataset_id(), file_name => $tempfile, quotes => 0 });
 
-#$dsf->file_name($tempfile);
+$dsf->file_name($tempfile);
 $dsf->retrieve_phenotypes();
 
 ok( -e $tempfile."_phenotype.txt", "phenotype file exists test");
