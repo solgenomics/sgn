@@ -119,6 +119,38 @@ solGS.download = {
 
     jQuery("#validation_download").prepend('<p style="margin-top: 20px">' + valFileLink + "</p>");
   },
+
+  getMarkerEffectsFile: function () {
+    var args = solGS.getModelArgs();
+    args = JSON.stringify(args);
+
+    var markerEffectsReq = jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: {
+        arguments: args,
+      },
+      url: "/solgs/download/model/marker/effects",
+    });
+
+    return markerEffectsReq;
+  },
+
+  createMarkerEffectsDownloadLink: function (res) {
+    var effectsFileName = res.marker_effects_file.split("/").pop();
+    var effectsFileLink =
+      '<a href="' +
+      res.marker_effects_file +
+      '" download=' +
+      effectsFileName +
+      '">' +
+      "Download marker effects" +
+      "</a>";
+
+    jQuery("#marker_effects_download").prepend(
+      '<p style="margin-top: 20px">' + effectsFileLink + "</p>"
+    );
+  },
 };
 
 jQuery(document).ready(function () {
@@ -149,6 +181,15 @@ jQuery(document).ready(function () {
       solGS.download.getValidationFile().fail(function (res) {
         var errorMsg = "Error occured getting model validation file.";
         jQuery("#validation_download_message").html(errorMsg);
+      });
+
+      solGS.download.getMarkerEffectsFile().done(function (res) {
+        solGS.download.createMarkerEffectsDownloadLink(res);
+      });
+
+      solGS.download.getMarkerEffectsFile().fail(function (res) {
+        var errorMsg = "Error occured getting marker effects file.";
+        jQuery("#marker_effects_download_message").html(errorMsg);
       });
     }
   });
