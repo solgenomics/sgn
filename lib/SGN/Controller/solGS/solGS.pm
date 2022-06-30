@@ -372,10 +372,10 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		$model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
 		$c->stash->{model_page_url} = $model_page;
 
-		my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
-		$gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
+		# my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
+		# $gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
 
-		$c->stash->{blups_download_url} = $gebvs_download;
+		# $c->stash->{blups_download_url} = $gebvs_download;
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
     }
@@ -469,7 +469,7 @@ sub gs_modeling_files {
     $self->input_files($c);
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
-    $c->controller('solGS::Download')->training_prediction_download_urls($c);
+    # $c->controller('solGS::Download')->training_prediction_download_urls($c);
     $self->top_markers($c, $c->stash->{marker_effects_file});
     $self->model_parameters($c);
 
