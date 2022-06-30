@@ -1,0 +1,33 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.iframe-post-form' ] &>
+
+
+<script>
+
+
+jQuery(document).ready(function(){
+  jQuery('#trial_design_section_onswitch').one("click", function(){
+    jQuery.ajax ( {
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
+        success: function(response){
+              //console.log(response);
+              //alert(response.plots[0].length);
+              //console.log(response.plots[0]);
+              var html = '';
+              html += 'Number of plots: ';
+               html += response.plots[0].length;
+              jQuery("#plots_counts").html(html);
+          },
+          error: function(response){
+              alert('Error displaying plots count');
+          }
+
+      });
+    });
+});
+
+
+</script>

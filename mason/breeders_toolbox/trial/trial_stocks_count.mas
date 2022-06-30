@@ -1,0 +1,32 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.iframe-post-form' ] &>
+
+
+<script>
+
+jQuery(document).ready(function(){
+  jQuery('#trial_design_section_onswitch').one("click", function(){
+    jQuery.ajax ( {
+        url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/stocks',
+        success: function(response){
+              //console.log(response);
+              //alert(response.data.length);
+              console.log(response.data);
+              var html = '';
+              html += 'Number of accessions: ';
+               html += response.data.length;
+              jQuery("#stocks_counts").html(html);
+          },
+          error: function(response){
+              alert('Error displaying accession count');
+          }
+
+      });
+    });
+});
+
+
+</script>
