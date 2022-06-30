@@ -1,6 +1,6 @@
 use strict;
 
-package SGN::Controller::AJAX::SPATIALMODEL;
+package SGN::Controller::AJAX::SpatialModel;
 
 use Moose;
 use Data::Dumper;
@@ -29,7 +29,7 @@ __PACKAGE__->config(
     );
 
 
-sub shared_phenotypes: Path('/ajax/spatial_model/shared_phenotypes') : {
+sub shared_phenotypes: Path('/ajax/spatial_model/shared_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
@@ -101,7 +101,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my $temppath =  $tempfile;
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema,  file_name => $temppath, quotes=>0);
-    $ds -> trial_id($trial_id);
+    $ds -> trials([$trial_id]);
     open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
     open(my $CLEAN, ">", $pheno_filepath.".clean") || die "Can't open pheno_filepath clean for writing";
 
@@ -130,9 +130,9 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     my $last_index = scalar(@new_header)-1;
 
-    while(<$PF>) {
-	chomp;
-	my @f = split /\t/;
+    #while(<$PF>) {
+	#chomp;
+	#my @f = split /\t/;
 
 
         my $cmd = CXGN::Tools::Run->new({
@@ -198,4 +198,5 @@ sub make_R_trait_name {
 
     return $trait;
 }
-}
+
+1;
