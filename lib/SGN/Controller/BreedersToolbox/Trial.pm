@@ -368,6 +368,14 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         @field_crossing_data_order = split ',',$cross_properties;
     }
 
+    my $prop_id;
+    if ($format eq "soil_data_xls") {
+        $plugin = "SoilDataXLS";
+        $what = "soil_data";
+        $format = "xls";
+        $prop_id = $c->req->param("prop_id");
+    }
+
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
@@ -390,7 +398,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
         include_measured => $include_measured,
-        field_crossing_data_order => \@field_crossing_data_order
+        field_crossing_data_order => \@field_crossing_data_order,
+        prop_id => $prop_id
     });
 
     my $error = $download->download();
