@@ -339,20 +339,48 @@ sub get_order_status {
         my %order_status_hash = %{$order_status};
 
         foreach my $item_name (keys %order_status_hash) {
+            my ($order_id, $stock_name) = split /_/, $item_name, 2;
             my @each_item_status = ();
             my $order_status_string;
             my $subculture_status = $order_status_hash{$item_name}{'subculture'};
-            my %subculture_status_hash = %{$subculture_status};
-            while (my ($key, $value) = each %subculture_status_hash) {
-                my @subculture_info = ();
-                my $subculture_date = 'subculture date:'.''.$key;
-                push @subculture_info, $subculture_date;
-                my $subculture_copies = 'number of copies:'.''.$value;
-                push @subculture_info, $subculture_copies;
-                $order_status_string = join("<br>", @subculture_info);
-            }
+            my $rooting_status = $order_status_hash{$item_name}{'rooting'};
+            my $harden_status = $order_status_hash{$item_name}{'harden'};
+            my @status_info = ();
+            my %status_hash = {};
+            my $status_details;
+            if ($harden_status) {
+                push @status_info, 'Hardening';
+                %status_hash = %{$harden_status};
+                while (my ($key, $value) = each %status_hash) {
+                    $status_details = $key.":"." ".$value." "."copies";
+                    push @status_info, $status_details;
+                }
 
-            push @all_item_status, [$item_name, $order_status_string];
+                $order_status_string = join("<br>", @status_info);
+                push @all_item_status, [$stock_name, $order_status_string];
+                last;
+            } elsif ($rooting_status) {
+                push @status_info, 'Rooting';
+                %status_hash = %{$rooting_status};
+                while (my ($key, $value) = each %status_hash) {
+                    $status_details = $key.":"." ".$value." "."copies";
+                    push @status_info, $status_details;
+                }
+
+                $order_status_string = join("<br>", @status_info);
+                push @all_item_status, [$stock_name, $order_status_string];
+                last;
+            } elsif ($subculture_status){
+                push @status_info, 'Subculture';
+                %status_hash = %{$subculture_status};
+                while (my ($key, $value) = each %status_hash) {
+                    $status_details = $key.":"." ".$value." "."copies";
+                    push @status_info, $status_details;
+                }
+
+                $order_status_string = join("<br>", @status_info);
+                push @all_item_status, [$stock_name, $order_status_string];
+            }
         }
     }
 
