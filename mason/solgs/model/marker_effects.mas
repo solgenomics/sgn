@@ -22,7 +22,7 @@ $top_marker_effects
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 1, 
-  title       => "Marker Effects" 
+  title       => "Marker effects" 
 &>
  
 <i>Top 10 markers</i>:

@@ -22,7 +22,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <&| /page/info_section.mas,
     collapsible => 1,
     collapsed   => 0,
-    title       => "Download Data"
+    title       => "Download data"
 &>
 
     <div id="training_pop_download"></div>
