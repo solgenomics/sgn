@@ -99,7 +99,7 @@ jQuery(document).ready(function () {
   });
 
   solGS.checkPageType().done(function (res) {
-    if (res.page_type.match(/training model/)) {
+    if (res.page_type.match(/training model|selection population/)) {
       solGS.gebvs.getGebvsFiles().done(function (res) {
         solGS.gebvs.createGebvsDownloadLinks(res);
       });
