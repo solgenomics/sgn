@@ -208,29 +208,22 @@ sub pheno_correlation_output_files {
     my $pop_id = $c->stash->{corre_pop_id};
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
 
-    my $file_cache  = Cache::File->new(cache_root => $corre_cache_dir);
-    $file_cache->purge();
+    my $table_cache_data = {key    => 'corre_coefficients_table_' . $pop_id,
+		      file      => "corre_coefficients_table_${pop_id}" . '.txt',
+		      stash_key => 'corre_coefficients_table_file',
+		      cache_dir => $corre_cache_dir
+    };
 
-    my $key_table = 'corre_coefficients_table_' . $pop_id;
-    my $key_json  = 'corre_coefficients_json_' . $pop_id;
-    my $corre_coefficients_file      = $file_cache->get($key_table);
-    my $corre_coefficients_json_file = $file_cache->get($key_json);
+    $c->controller('solGS::Files')->cache_file($c, $table_cache_data);
 
-    unless ($corre_coefficients_file && $corre_coefficients_json_file )
-    {
-        $corre_coefficients_file = catfile($corre_cache_dir, "corre_coefficients_table_${pop_id}");
+    my $json_cache_data = {key    => 'corre_coefficients_json_' . $pop_id,
+		      file      => "corre_coefficients_json_${pop_id}" . '.txt',
+		      stash_key => 'corre_coefficients_json_file',
+		      cache_dir => $corre_cache_dir
+    };
 
-        write_file($corre_coefficients_file, {binmode => ':utf8'});
-        $file_cache->set($key_table, $corre_coefficients_file, '30 days');
+   $c->controller('solGS::Files')->cache_file($c, $json_cache_data);
 
-        $corre_coefficients_json_file = catfile($corre_cache_dir, "corre_coefficients_json_${pop_id}");
-
-        write_file($corre_coefficients_json_file, {binmode => ':utf8'});
-        $file_cache->set($key_json, $corre_coefficients_json_file, '30 days');
-    }
-
-    $c->stash->{corre_coefficients_table_file} = $corre_coefficients_file;
-    $c->stash->{corre_coefficients_json_file}  = $corre_coefficients_json_file;
 }
 
 
@@ -259,24 +252,23 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
-    my $pop_id = $c->stash->{corre_pop_id};
 
     $self->pheno_correlation_output_files($c);
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};
 
-    my $ret->{status} = 'failed';
+    my $ret->{status} = 'Correlation analysis failed.';
 
     if (!-s $corre_json_file)
     {
-	$c->controller('solGS::Utils')->save_metadata($c);
+	    $c->controller('solGS::Utils')->save_metadata($c);
         $self->run_pheno_correlation_analysis($c);
-        $corre_json_file = $c->stash->{corre_coefficients_json_file};
     }
 
     if (-s $corre_json_file)
     {
         $ret->{status}   = 'success';
         $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{corre_table_file} = $self->download_pheno_correlation_file($c);
     }
 
     $ret = to_json($ret);
@@ -338,31 +330,31 @@ sub run_genetic_correlation_analysis {
 }
 
 
-sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/population') Args(1) {
-    my ($self, $c, $id) = @_;
+sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/population') Args(0) {
+    my ($self, $c) = @_;
 
-    my $corr_dir = $c->stash->{correlation_cache_dir};
-    my $corr_file = catfile($corr_dir,  "corre_coefficients_table_${id}");
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    unless (!-e $corr_file || -s $corr_file <= 1)
-    {
-	my @corr_data;
-	my $count=1;
+	my $corre_table_file = $self->download_pheno_correlation_file($c);
 
-	foreach my $row ( read_file($corr_file, {binmode => ':utf8'}) )
-	{
-	    if ($count==1) {  $row = 'Traits,' . $row;}
-	    $row =~ s/NA//g;
-	    $row = join(",", split(/\s/, $row));
-	    $row .= "\n";
-
-	    push @corr_data, [ $row ];
-	    $count++;
-	}
+	my $ret = {'corre_table_file' => $corre_table_file};
+	$ret = to_json($ret);
 
 	$c->res->content_type("text/plain");
-	$c->res->body(join "",  map{ $_->[0] } @corr_data);
-    }
+	$c->res->body($ret);
+}
+
+
+sub download_pheno_correlation_file {
+    my ($self, $c) = @_;
+
+    $self->pheno_correlation_output_files($c);
+    my $file = $c->stash->{corre_coefficients_table_file};
+
+    $file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'correlation');
+
+    return $file;
 }
 
 
