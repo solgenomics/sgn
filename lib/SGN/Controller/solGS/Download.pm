@@ -4,69 +4,48 @@ package SGN::Controller::solGS::Download;
 use Moose;
 use namespace::autoclean;
 
-use Carp qw/ carp confess croak /;
-use File::Slurp qw /write_file read_file/;
-use JSON;
 
-BEGIN { extends 'Catalyst::Controller' }
+BEGIN { extends 'Catalyst::Controller::REST' }
 
 
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON' },
+    );
 
-# __PACKAGE__->config(
-#     default   => 'application/json',
-#     stash_key => 'rest',
-#     map       => { 'application/json' => 'JSON' },
-#     );
 
-
-sub download_training_pop_data :Path('/solgs/download/training/pop/data') {
+sub download_training_pop_data :Path('/solgs/download/training/pop/data') Args(0) {
 	my ($self, $c) = @_;
 
 	my $args = $c->req->param('arguments');
-    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
 	my $geno_file = $self->download_raw_geno_data_file($c);
 	my $pheno_file = $self->download_raw_pheno_data_file($c);
 
-	# $c->stash->{rest}{training_pop_raw_geno_file} = $geno_file;
-	# $c->stash->{rest}{training_pop_raw_pheno_file} = $pheno_file;
-
-	my $ret = {'training_pop_raw_geno_file' => $geno_file,
-	'training_pop_raw_pheno_file' => $pheno_file};
-
-	$ret = to_json($ret);
-
-	$c->res->content_type('application/json');
-    $c->res->body($ret);
+	$c->stash->{rest}{training_pop_raw_geno_file} = $geno_file;
+	$c->stash->{rest}{training_pop_raw_pheno_file} = $pheno_file;
 
 }
 
 
-sub download_model_input_data :Path('/solgs/download/model/input/data') {
+sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) {
 	my ($self, $c) = @_;
 
 	my $args = $c->req->param('arguments');
-    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
 	my $geno_file = $self->download_model_geno_data_file($c);
 	my $pheno_file = $self->download_model_pheno_data_file($c);
 
-	# $c->stash->{rest}{training_pop_raw_geno_file} = $geno_file;
-	# $c->stash->{rest}{training_pop_raw_pheno_file} = $pheno_file;
-print STDERR "\ndownload_model_input_data geno file: $geno_file -- phe: $pheno_file\n";
-
-	my $ret = {'model_geno_data_file' => $geno_file,
-	'model_pheno_data_file' => $pheno_file};
-
-	$ret = to_json($ret);
-
-	$c->res->content_type('application/json');
-    $c->res->body($ret);
+	$c->stash->{rest}{model_geno_data_file} = $geno_file;
+	$c->stash->{rest}{model_pheno_data_file} = $pheno_file;
 
 }
 
 
-sub download_gebvs :Path('/solgs/download/gebvs/pop') Args() {
+sub download_gebvs :Path('/solgs/download/gebvs/pop') Args(0) {
     my ($self, $c) = @_;
 
 	my $args = $c->req->param('arguments');
@@ -82,94 +61,22 @@ sub download_gebvs :Path('/solgs/download/gebvs/pop') Args() {
 		$gebvs_file = $self->download_training_gebvs_file($c);
 	}
 
-    my $ret = {'gebvs_file' => $gebvs_file};
-	$ret = to_json($ret);
-
-	$c->res->content_type('application/json');
-    $c->res->body($ret);
+	$c->stash->{rest}{gebvs_file} = $gebvs_file;
 
 }
 
 
-sub download_marker_effects :Path('/solgs/download/model/marker/effects') Args() {
+sub download_marker_effects :Path('/solgs/download/model/marker/effects') Args(0) {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
 	my $marker_effects_file = $self->download_marker_effects_file($c);
-
-	my $ret = {'marker_effects_file' => $marker_effects_file};
-	$ret = to_json($ret);
-
-	$c->res->content_type("text/plain");
-	$c->res->body($ret);
+	$c->stash->{rest}{marker_effects_file} = $marker_effects_file;
     
 }
 
-# sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
-#     my ($self, $c, $training_pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;
-
-#     $c->stash->{training_pop_id} = $training_pop_id;
-#     $c->stash->{genotyping_protocol_id} = $protocol_id;
-
-#     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
-#     my $trait_abbr = $c->stash->{trait_abbr};
-
-#     $c->controller('solGS::Files')->marker_effects_file($c);
-#     my $markers_file = $c->stash->{marker_effects_file};
-
-#     unless (!-s $markers_file)
-#     {
-#         my @effects = read_file($markers_file, {binmode => ':utf8'});
-
-#         $c->res->content_type("text/plain");
-#         $c->res->body(join("", @effects));
-#     }
-
-# }
-
-
-# sub training_prediction_download_urls {
-#     my ($self, $c) = @_;
-
-#     my $data_set_type = $c->stash->{data_set_type};
-#     my $pop_id = $c->stash->{training_pop_id};
-#     my $protocol_id = $c->stash->{genotyping_protocol_id};
-#     my $trait_id = $c->stash->{trait_id};
-
-# 	# my $gebvs_url = $self->gebvs_download_url($c);
-# 	# my $gebvs_link = $c->controller('solGS::Path')->create_hyperlink($gebvs_url, 'Download GEBVs');
-
-# 	# my $marker_url = $self->marker_effects_download_url($c);
-# 	# my $marker_link = $c->controller('solGS::Path')->create_hyperlink($marker_url, 'Download marker effects');
-
-# 	my $val_url = $self->validation_download_url($c);
-# 	my $val_link = $c->controller('solGS::Path')->create_hyperlink($val_url, 'Download model accuracy');
-
-#     $c->stash(
-# 		# blups_download_url          => $gebvs_link,
-# 		# marker_effects_download_url => $marker_link,
-# 		validation_download_url     => $val_link
-# 	);
-
-# }
-
-
-# sub marker_effects_download_url {
-# 	my ($self, $c) = @_;
-
-# 	my $data_set_type = $c->stash->{data_set_type};
-# 	my $protocol_id = $c->stash->{genotyping_protocol_id};
-# 	my $trait_id = $c->stash->{trait_id};
-# 	my $pop_id = $c->stash->{training_pop_id};
-
-# 	my $url = "/solgs/download/marker/pop/$pop_id/trait/$trait_id/"
-# 	. "gp/$protocol_id";
-
-# 	return $url;
-
-# }
 
 sub selection_prediction_download_urls {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
