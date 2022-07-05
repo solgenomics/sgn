@@ -33,7 +33,7 @@ traits = args[2]
 # 3. Process the phenotypic data.
 ################################################################################
 #read in the phenotypic data
-userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t", fill=TRUE) 
+userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t", fill=TRUE)
 
 #The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
@@ -55,22 +55,22 @@ userPheno$C <- as.factor(userPheno$colNumber)
 userModels <- list()
 
 for(i in 1:length(userResponse)){
-  
+
    fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID,")", sep = "")
-   
+
    randArg <- paste("~vs(", R, ")+vs(", C, ")+ spl2Da(",col,"," ,row ,")", sep = "")
-   
-   
+
+
    m2.sommer <- mmer(fixed = as.formula(fixedArg),
                      random = as.formula(randArg),
                      rcov= ~units,
                      data=userPheno, verbose = FALSE)
-   
-   
-   
-   
+
+
+
+
    userModels[[i]] <- m2.sommer
-   
+
 }
 
 
@@ -80,20 +80,15 @@ for(i in 1:length(userResponse)){
 
 
 for(i in 1:length(userModels)){
-  
+
   m2.sommer <- userModels[[i]]
-  
-  #Variance_Components <- summary(m2.sommer)$varcomp
-  
- # outputFile= paste(userID, " Spatial Variance Components", ".out", sep="")
-  
-  write.csv(Variance_Components, outputFile)
-  
-  res <- (randef(m2.sommer)$`u:variety`)
-  BLUP <- as.data.frame(res)
-  
+
+  blue = summary(mixmodel)$beta
+  BLUE<-as.data.frame(blue)
+
+
  # adj = coef(m2.sommer)$Trait
-  outfile_blup = paste(phenotypeFile, ".BLUPs", sep="");
-  write.table(BLUP, outfile_blup)
-  
+  outfile_blue = paste(phenotypeFile, ".BLUEs", sep="");
+  write.table(BLUE, outfile_blue)
+
 }
