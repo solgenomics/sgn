@@ -55,6 +55,16 @@ page_formats["US Letter PDF"] = {
                 vertical_gap:0,
                 number_of_columns:1,
                 number_of_rows:1
+            },
+            'CASS': {
+                label_width: 378,
+                label_height: 72,
+                left_margin: 224,
+                top_margin: 30,
+                horizontal_gap: 10,
+                vertical_gap: 1.5,
+                number_of_columns: 1,
+                number_of_rows: 10
             }
         }
 };
