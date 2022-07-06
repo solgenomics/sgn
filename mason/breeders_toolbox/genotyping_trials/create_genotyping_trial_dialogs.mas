@@ -28,7 +28,7 @@ $facilities => ();
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
 
@@ -103,7 +103,7 @@ $facilities => ();
 
                                 <br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="plate_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Well Info" &>
@@ -295,7 +295,7 @@ $facilities => ();
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="well_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
@@ -305,7 +305,7 @@ $facilities => ();
 
                                 <br/>
                                 <center>
-                                <button class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                <button id="trial_linkage_intro_button"  class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
                                 <center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
@@ -345,7 +345,7 @@ $facilities => ();
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_trial_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
