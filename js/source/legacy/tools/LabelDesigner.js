@@ -76,7 +76,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 1,
                 number_of_rows: 10
             },
-            'IITA-3': {
+            'IITA-3 | IITA-2': {
                 label_width: 378,
                 label_height: 32,
                 left_margin: 224,
