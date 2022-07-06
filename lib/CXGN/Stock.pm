@@ -1410,6 +1410,29 @@ sub _remove_stockprop {
 
 }
 
+sub _remove_stockprop_all_of_type {
+
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id() } );
+    
+    if ($rs->count() > 0) {
+        while (my $row = $rs->next()) {
+            $row->delete();
+        }
+        return 1;
+    }
+    elsif ($rs->count() == 0) {
+        return 0;
+    }
+    else {
+        print STDERR "Error removing stockprop from stock ".$self->stock_id().". Please check this manually.\n";
+        return 0;
+    }
+}
+
 sub _retrieve_organismprop {
     my $self = shift;
     my $type = shift;
@@ -1520,19 +1543,17 @@ sub _store_parent_relationship {
     }
 }
 
-sub _update_parent_relationship {
+sub _remove_parent_relationship {
     my $self = shift;
     my $relationship_type = shift;
-    my $parent_accession = shift;
-    my $cross_type = shift;
-    print STDERR "***STOCK.PM Updating parent relationship\n\n";
     my $parent_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, $relationship_type,'stock_relationship')->cvterm_id();
-    my $pop_rs = $self->stock->search_related('stock_relationship_subjects', {'type_id'=>$parent_cvterm_id});
-    while (my $r=$pop_rs->next){
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id=>$parent_cvterm_id, object_id => $self->stock_id() } );
+
+    while (my $r=$rs->next){
         $r->delete();
     }
-    $self->_store_population_relationship($relationship_type, $parent_accession, $cross_type);
 }
+
 ###
 
 =head2 _new_metadata_id()

@@ -43,20 +43,32 @@ jobs:
         uses: actions-ecosystem/action-get-latest-tag@v1
         id: get-latest-tag
 
-      - name: Get breedbase_dockerfile
-        uses: actions/checkout@master
-        with:
-          repository: Breeding-Insight/breedbase_dockerfile
-          path: breedbase_dockerfile
-
-      - name: Get the submodules
-        working-directory: ./breedbase_dockerfile
-        run: git submodule update --init --recursive --remote
-
       - name: Extract branch name
         shell: bash
         run: echo ::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})
         id: extract_branch
+
+      - name: Get breedbase_dockerfile
+        if: steps.extract_branch.outputs.branch == 'develop'
+        uses: actions/checkout@master
+        with:
+          repository: Breeding-Insight/breedbase_dockerfile
+          path: breedbase_dockerfile
+          ref: 'develop'
+          
+#       TODO: add support for future and release branches
+
+      - name: Get breedbase_dockerfile
+        if: steps.extract_branch.outputs.branch != 'develop'
+        uses: actions/checkout@master
+        with:
+          repository: Breeding-Insight/breedbase_dockerfile
+          path: breedbase_dockerfile
+          ref: 'master'
+
+      - name: Get the submodules
+        working-directory: ./breedbase_dockerfile
+        run: git submodule update --init --recursive --remote
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn

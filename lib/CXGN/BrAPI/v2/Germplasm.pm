@@ -684,7 +684,6 @@ sub store {
             my $accessionNumber = $params->{accessionNumber} || undef;
             my $germplasmPUI = $params->{germplasmPUI} || undef;
             my $germplasmSeedSource = $params->{seedSource} || undef;
-            my $synonyms = $params->{synonyms}->[0]->{synonym} || undef;
             my $instituteCode = $params->{instituteCode} || undef;
             my $instituteName = $params->{instituteName} || undef;
             my $biologicalStatusOfAccessionCode = $params->{biologicalStatusOfAccessionCode} || undef;
@@ -718,6 +717,13 @@ sub store {
             my $pedigree_array = _process_pedigree_string($pedigree);
             my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
             my $father = defined $pedigree_array && scalar(@$pedigree_array) > 1 ? @$pedigree_array[1] : undef;
+            my $synonyms = $params->{synonyms} || [];
+            my @synonymNames;
+            foreach(@$synonyms) {
+                if ($_->{synonym}) {
+                    push @synonymNames, $_->{synonym};
+                }
+            }
             #not supported
             # speciesAuthority
             # genus
@@ -748,7 +754,7 @@ sub store {
                     accessionNumber                 => $accessionNumber,
                     germplasmPUI                    => $germplasmPUI,
                     germplasmSeedSource             => $germplasmSeedSource,
-                    synonyms                        => $synonyms ? [ $synonyms ] : [],
+                    synonyms                        => \@synonymNames,
                     instituteCode                   => $instituteCode,
                     instituteName                   => $instituteName,
                     biologicalStatusOfAccessionCode => $biologicalStatusOfAccessionCode,
@@ -878,12 +884,11 @@ sub update {
     my $coderef_bcs = sub {
         foreach my $params (@$data){
             my $species = $params->{species} || $default_species;
-            my $name = $params->{defaultDisplayName} || undef;
             my $uniquename = $params->{germplasmName} || undef;
+            my $name = $params->{defaultDisplayName} || $uniquename;
             my $accessionNumber = $params->{accessionNumber} || undef;
             my $germplasmPUI = $params->{germplasmPUI} || undef;
             my $germplasmSeedSource = $params->{seedSource} || undef;
-            my $synonyms = $params->{synonyms}->[0]->{synonym} || undef;
             my $instituteCode = $params->{instituteCode} || undef;
             my $instituteName = $params->{instituteName} || undef;
             my $biologicalStatusOfAccessionCode = $params->{biologicalStatusOfAccessionCode} || undef;
@@ -891,16 +896,17 @@ sub update {
             my $typeOfGermplasmStorageCode = $params->{storageTypes}->[0]->{code} || undef;
             my $donors = $params->{donors} || undef;
             my $acquisitionDate = $params->{acquisitionDate} || undef;
+            my $externalReferences = $params->{externalReferences} || undef;
             #adding breedbase specific info using additionalInfo
+            my $population_name = $params->{collection} || undef;
             my $organization_name = $params->{additionalInfo}->{organizationName} || undef;
-            my $population_name = $params->{additionalInfo}->{populationName} || undef;
             my $transgenic = $params->{additionalInfo}->{transgenic} || undef;
             my $notes = $params->{additionalInfo}->{notes} || undef;
             my $state = $params->{additionalInfo}->{state} || undef;
             my $variety = $params->{additionalInfo}->{variety} || undef;
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
-            my $externalReferences = $params->{externalReferences} || undef;
+            my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
             # Get misc additionalInfo and remove specific codes above
             my %specific_keys = map { $_ => 1 } ("organizationName", "transgenic", "notes", "state", "variety", "locationCode", "description", "stock_id");
             my $raw_additional_info = $params->{additionalInfo} || undef;
@@ -910,6 +916,17 @@ sub update {
                     if (!exists($specific_keys{$key})) {
                         $additional_info{$key} = $raw_additional_info->{$key};
                     }
+                }
+            }
+            my $pedigree = $params->{pedigree} || undef;
+            my $pedigree_array = _process_pedigree_string($pedigree);
+            my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
+            my $father = defined $pedigree_array && scalar(@$pedigree_array) > 1 ? @$pedigree_array[1] : undef;
+            my $synonyms = $params->{synonyms} || [];
+            my @synonymNames;
+            foreach(@$synonyms) {
+                if ($_->{synonym}) {
+                    push @synonymNames, $_->{synonym};
                 }
             }
             #not supported
@@ -930,38 +947,40 @@ sub update {
 
             if (exists($allowed_organisms{$species})){
                 my $stock = CXGN::Stock::Accession->new({
-                    schema=>$schema,
-                    check_name_exists=>0,
-                    main_production_site_url=>$main_production_site_url,
-                    type=>'accession',
-                    type_id=>$type_id,
-                    species=>$species,
-                    stock_id=>$germplasm_id, #For adding properties to an accessions
-                    name=>$name,
-                    uniquename=>$uniquename,
-                    organization_name=>$organization_name,
-                    population_name=>$population_name,
-                    description=>$description,
-                    accessionNumber=>$accessionNumber,
-                    germplasmPUI=>$germplasmPUI,
-                    germplasmSeedSource=>$germplasmSeedSource,
-                    synonyms=>$synonyms ? [ $synonyms ] : [],
-                    instituteCode=>$instituteCode,
-                    instituteName=>$instituteName,
-                    biologicalStatusOfAccessionCode=>$biologicalStatusOfAccessionCode,
-                    countryOfOriginCode=>$countryOfOriginCode,
-                    typeOfGermplasmStorageCode=>$typeOfGermplasmStorageCode,
-                    donors=>$donors,
-                    acquisitionDate=>$acquisitionDate,
-                    transgenic=>$transgenic,
-                    notes=>$notes,
-                    state=>$state,
-                    variety=>$variety,
-                    locationCode=>$locationCode,
-                    sp_person_id => $user_id,
-                    user_name => $user_name,
-                    modification_note => 'Bulk load of accession information',
-                    additional_info => \%additional_info
+                    schema                          => $schema,
+                    check_name_exists               => 0,
+                    main_production_site_url        => $main_production_site_url,
+                    type                            => 'accession',
+                    type_id                         => $type_id,
+                    species                         => $species,
+                    stock_id                        => $germplasm_id,
+                    name                            => $name,
+                    uniquename                      => $uniquename,
+                    organization_name               => $organization_name,
+                    population_name                 => $population_name,
+                    description                     => $description,
+                    accessionNumber                 => $accessionNumber,
+                    germplasmPUI                    => $germplasmPUI,
+                    germplasmSeedSource             => $germplasmSeedSource,
+                    synonyms                        => \@synonymNames,
+                    instituteCode                   => $instituteCode,
+                    instituteName                   => $instituteName,
+                    biologicalStatusOfAccessionCode => $biologicalStatusOfAccessionCode,
+                    countryOfOriginCode             => $countryOfOriginCode,
+                    typeOfGermplasmStorageCode      => $typeOfGermplasmStorageCode,
+                    donors                          => $donors,
+                    acquisitionDate                 => $acquisitionDate eq '' ? undef : $acquisitionDate,
+                    transgenic                      => $transgenic,
+                    notes                           => $notes,
+                    state                           => $state,
+                    variety                         => $variety,
+                    locationCode                    => $locationCode,
+                    sp_person_id                    => $user_id,
+                    user_name                       => $user_name,
+                    modification_note               => 'Bulk load of accession information',
+                    mother_accession                => $mother,
+                    father_accession                => $father,
+                    additional_info                 => \%additional_info
                 });
                 my $added_stock_id = $stock->store();
                 
@@ -978,7 +997,7 @@ sub update {
                     bcs_schema => $self->bcs_schema,
                     table_name => 'stock',
                     table_id_key => 'stock_id',
-                    external_references => $externalReferences,
+                    external_references => $externalReferences ? $externalReferences : [],
                     id => $germplasm_id
                 });
                 my $reference_result = $references->store();

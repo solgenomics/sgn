@@ -1,0 +1,8 @@
+version: "1"
+rules:
+  - base: develop
+    upstream: solgenomics:master
+    mergeMethod: merge
+    assignees:
+      - timparsons
+label: "upstream-merge"
