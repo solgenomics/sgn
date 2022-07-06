@@ -37,7 +37,7 @@ jQuery(document).ready(function () {
         'autoWidth': false,
         'searching': false,
         'order': false,
-        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/soil_data',
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_soil_data',
     });
 
 });

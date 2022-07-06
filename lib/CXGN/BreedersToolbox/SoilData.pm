@@ -59,7 +59,7 @@ sub BUILD {
 }
 
 
-sub get_soil_data {
+sub get_all_soil_data {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $project_id = $self->parent_id();
@@ -86,6 +86,31 @@ sub get_soil_data {
 
     return \@soil_data_list;
 }
+
+
+sub get_soil_data {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $project_id = $self->parent_id();
+    my $projectprop_id = $self->prop_primary_key();
+
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+    my $key_ref = $self->allowed_fields();
+    my @fields = @$key_ref;
+
+    my $soil_data_rs = $schema->resultset("Project::Projectprop")->find({ project_id => $project_id, projectprop_id => $projectprop_id, type_id => $type_id }, { order_by => {-asc => 'projectprop_id'} });
+    my $soil_data_json = $soil_data_rs->value();
+    my $soil_data_hash = JSON::Any->jsonToObj($soil_data_json);
+    my @soil_data_info;
+
+    foreach $field (@fields) {
+        push @soil_data_info, $soild_data_hash->{$field};
+    }
+
+    return \@soil_data_info;
+}
+
 
 
 

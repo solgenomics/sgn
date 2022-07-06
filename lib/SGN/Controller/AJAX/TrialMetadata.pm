@@ -4886,7 +4886,7 @@ sub update_trial_design_type_POST : Args(0) {
 }
 
 
-sub get_soil_data :Chained('trial') PathPart('soil_data') Args(0){
+sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -4894,7 +4894,7 @@ sub get_soil_data :Chained('trial') PathPart('soil_data') Args(0){
     my $trial_id = $c->stash->{trial_id};
 
     my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id });
-    my $soil_data = $soil_data_obj->get_soil_data();
+    my $soil_data = $soil_data_obj->get_all_soil_data();
     my @soil_data_list = @$soil_data;
     my @formatted_soil_data;
     foreach my $info_ref (@soil_data_list) {
