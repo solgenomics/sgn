@@ -127,7 +127,8 @@ sub check_label_format {
         '1 1/4" x 2"' => 1,
         'Custom' => 1,
         'CASS' => 1,
-        'MUSA' => 1
+        'MUSA' => 1,
+        'IITA-3' => 1
     );
     return $valid_formats{$format};
 }
