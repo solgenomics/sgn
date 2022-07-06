@@ -31,14 +31,6 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    my @header = ('Data Type', 'Data Value' );
-
-    my $col_count = 0;
-    foreach (@header){
-        $ws->write(0, $col_count, $_);
-        $col_count++;
-    }
-
     my $trial = $schema->resultset("Project::Project")->find( { project_id => $trial_id });
     my $trial_name = $trial->name();
 
@@ -59,9 +51,9 @@ sub download {
         push @download_info, [$type, $soil_data_details->{$type}];
     }
 
-    my $row_count = 1;
+    my $row_count = 0;
     for my $k (0 .. $#download_info) {
-        for my $l (0 .. $#header) {
+        for my $l (0 .. 1) {
             $ws->write($row_count, $l, $download_info[$k][$l]);
         }
         $row_count++;
