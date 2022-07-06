@@ -85,6 +85,16 @@ page_formats["US Letter PDF"] = {
                 vertical_gap: 4,
                 number_of_columns: 1,
                 number_of_rows: 20
+            },
+            '32 Label Size Sticker': {
+                label_width: 94.5,
+                label_height: 72,
+                left_margin: 45,
+                top_margin: 39,
+                horizontal_gap: 45,
+                vertical_gap: 20,
+                number_of_columns: 4,
+                number_of_rows: 8
             }
         }
 };

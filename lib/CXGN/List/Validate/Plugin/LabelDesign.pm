@@ -128,7 +128,8 @@ sub check_label_format {
         'Custom' => 1,
         'CASS' => 1,
         'MUSA' => 1,
-        'IITA-3 | IITA-2' => 1
+        'IITA-3 | IITA-2' => 1,
+        '32 Label Size Sticker' => 1
     );
     return $valid_formats{$format};
 }
