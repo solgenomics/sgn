@@ -49,10 +49,9 @@ sub patch {
     say  "Checking if this db_patch was executed before or if previous db_patches have been executed.\n";
     say  "Executing the SQL commands.\n";
 
-    my $sql = <<SQL;
+    $self->dbh->do(<<EOSQL);
 
-DO $$
-
+DO \$\$
 BEGIN
     IF EXISTS(
         SELECT column_name FROM information_schema.columns WHERE table_schema = 'sgn_people' and table_name = 'list' AND column_name = 'create_date'
@@ -61,11 +60,10 @@ BEGIN
         update sgn_people.list set "timestamp" = create_date;
         ALTER TABLE sgn_people.list DROP COLUMN create_date;
     END IF;
-END $$;
-SQL
+END \$\$;
+EOSQL
 
-    $self->dbh->do($sql);
-    say "Done";
+    say "You're done!";
 }
 
 1;
