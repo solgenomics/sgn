@@ -601,13 +601,15 @@ sub check_cluster_analysis {
         			my $end_process = $self->end_status_check();
         			if ($end_process)
         			{
-        			    if (!-s $output_details->{$k}->{input_file})
+						my $input_file = $output_details->{$k}->{input_file};
+						
+        			    if (!-s $input_file )
         			    {
-        				$output_details->{$k}->{failure_reason} = 'No input data was found for this cluster analysis.';
+        				$output_details->{$k}->{failure_reason} = "The input data file ($input_file) is empty.\n";
         			    }
         			    else
         			    {
-        				$output_details->{$k}->{failure_reason} = 'The cluster analysis failed.';
+        				$output_details->{$k}->{failure_reason} = "The clustering algorithm (R) caught an exception. Details are in the analysis error file.\n";
         			    }
 
         			    $output_details->{$k}->{success} = 0;
