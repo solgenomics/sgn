@@ -449,6 +449,7 @@ is_deeply(\@all_project_types, [
 
           'pollinating_trial',
           'storage_trial'
+          'Sensory Trial'
         ], "check get_all_project_types");
 
 
@@ -473,7 +474,7 @@ my $td = CXGN::Trial::TrialDesign->new(
 
 my $number_of_plots = $number_of_reps * scalar(@$stock_list);
 # print STDERR "\n\n before calculating design! \n\n";
-  
+
 $td->calculate_design();
 # print STDERR "\n\nGot passed calculating design! \n\n";
 
