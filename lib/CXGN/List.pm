@@ -164,6 +164,36 @@ sub available_public_lists {
     return \@lists;
 }
 
+sub all_lists {
+    my $dbh = shift;
+    my $owner = shift;
+    my $requested_type = shift;
+
+    my $h;
+    if ($owner) {
+        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, timestamp, modify_timestamp FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+        $h = $dbh->prepare($q);
+        $h->execute($owner);
+    } else {
+        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, timestamp, modify_timestamp FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+        $h = $dbh->prepare($q);
+        $h->execute();
+    }
+
+    my @lists = ();
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
+        if ($requested_type) {
+            if ($type && ($type eq $requested_type)) {
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
+            }
+        }
+        else {
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
+        }
+    }
+    return \@lists;
+}
+
 sub delete_list {
     my $dbh = shift;
     my $list_id = shift;
@@ -196,7 +226,6 @@ sub exists_list {
     }
     return { list_id => undef };
 }
-
 
 around 'BUILDARGS' => sub {
     my $orig = shift;

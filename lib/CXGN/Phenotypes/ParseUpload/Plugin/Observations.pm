@@ -129,6 +129,7 @@ sub parse {
     my %data = ();
     my %seen = ();
     my (@observations, @unit_dbids, @variables, @values, @timestamps);
+
     foreach my $obs (@data){
 
         my $obsunit_db_id = $obs->{'observationUnitDbId'};
@@ -167,7 +168,8 @@ sub parse {
         push @values, $value;
 
         # track data for store
-        $data{$obsunit_db_id}->{$trait_name} = [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info];
+        push @{$data{$obsunit_db_id}->{$trait_name}}, [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info];
+
     }
     #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;

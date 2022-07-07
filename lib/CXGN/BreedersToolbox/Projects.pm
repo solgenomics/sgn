@@ -7,6 +7,8 @@ use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
 use Encode;
+use CXGN::BrAPI::v2::ExternalReferences;
+use Try::Tiny;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -36,7 +38,21 @@ sub get_breeding_programs {
 
     my @projects;
     while (my $row = $rs->next()) {
-	push @projects, [ $row->project_id, $row->name, $row->description ];
+
+        my @project_array = ($row->project_id);
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->schema,
+            table_name => 'project',
+            table_id_key => 'project_id',
+            id => \@project_array
+        });
+        my $external_references = $references->search();
+        my @external_references_array;
+        foreach my $values (values %{$external_references}) {
+            push @external_references_array, $values;
+        }
+
+	    push @projects, [ $row->project_id, $row->name, $row->description, @external_references_array ];
     }
 
     return \@projects;
@@ -455,6 +471,7 @@ sub new_breeding_program {
     my $self= shift;
     my $name = shift;
     my $description = shift;
+    my $external_references = shift;
 
     my $type_id = $self->get_breeding_program_cvterm_id();
 
@@ -467,7 +484,8 @@ sub new_breeding_program {
 
     }
     my $project_id;
-    eval {
+
+    my $coderef = sub {
 
 		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
 		my $error = $role->add_sp_role($name);
@@ -475,33 +493,57 @@ sub new_breeding_program {
 			die $error;
 		}
 
-	my $row = $self->schema()->resultset("Project::Project")->create(
-	    {
-		name => $name,
-		description => $description,
-	    });
+        my $row = $self->schema()->resultset("Project::Project")->create(
+            {
+            name => $name,
+            description => $description,
+            });
 
-	$row->insert();
-    $project_id = $row->project_id();
+        $row->insert();
+        $project_id = $row->project_id();
 
-	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
-	    {
-		type_id => $type_id,
-		project_id => $row->project_id(),
+        my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
+            {
+            type_id => $type_id,
+            project_id => $row->project_id(),
 
-	    });
-	$prop_row->insert();
+            });
+        $prop_row->insert();
+
+        # save external references if specified
+        if ($external_references) {
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema          => $self->schema,
+                external_references => $external_references,
+                table_name          => 'project',
+                table_id_key         => 'project_id',
+                id             => $project_id
+            });
+
+            $references->store();
+
+            if ($references->{'error'}) {
+                return { error => $references->{'error'} };
+            }
+        }
 
     };
 
+    my $transaction_error;
 
+    try {
+        $self->schema()->txn_do($coderef);
+    } catch {
+        $transaction_error =  $_;
+    };
 
-    if ($@) {
-        return { error => "An error occurred while generating a new breeding program. ($@)" };
-    } else {
-        print STDERR "The new breeding program $name was created with id $project_id\n";
-        return { success => "The new breeding program $name was created.", id => $project_id };
+    if ($transaction_error) {
+        warn $transaction_error;
+        return {error => "An error occurred while generating a new breeding program."}
     }
+
+    print STDERR "The new breeding program $name was created with id $project_id\n";
+    return { success => "The new breeding program $name was created.", id => $project_id };
 
 }
 

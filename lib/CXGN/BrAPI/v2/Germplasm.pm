@@ -12,6 +12,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::Cross;
 use Try::Tiny;
+use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -38,8 +39,8 @@ sub search {
     my $study_names = $params->{studyName} || ($params->{studyNames} || ());
     my $parent_db_id = $params->{parentDbId} || ($params->{parentDbIds} || ());
     my $progeny_db_id = $params->{progenyDbId} || ($params->{progenyDbIds} || ());
-    my $external_reference_id = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
-    my $external_reference_source = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
+    my $external_reference_id_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $external_reference_source_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
     if ( $collection || $progeny_db_id || $parent_db_id ){
         push @$status, { 'error' => 'The following search parameters are not implemented: collection, parentDbId, progenyDbId' };
@@ -63,12 +64,10 @@ sub search {
 
     my %stockprops_values;
     if ($accession_numbers_arrayref && scalar(@$accession_numbers_arrayref)>0){
-        foreach (@$accession_numbers_arrayref) {
-            $stockprops_values{'accession number'} = {
-                matchtype => 'contains',
-                value => $_
-            };
-        }
+        $stockprops_values{'accession number'} = {
+            matchtype => 'one of',
+            value => join(',', @$accession_numbers_arrayref)
+        };
     }
     if ($germplasm_puis_arrayref && scalar(@$germplasm_puis_arrayref)>0){
         foreach (@$germplasm_puis_arrayref) {
@@ -108,7 +107,19 @@ sub search {
         stock_id_list=>$germplasm_ids_arrayref,
         stock_type_id=>$accession_type_cvterm_id,
         stockprops_values=>\%stockprops_values,
-        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
+        stockprop_columns_view=>{
+            'accession number'=>1,
+            'PUI'=>1,
+            'seed source'=>1,
+            'institute code'=>1,
+            'institute name'=>1,
+            'biological status of accession code'=>1,
+            'country of origin'=>1,
+            'type of germplasm storage code'=>1,
+            'acquisition date'=>1,
+            'ncbi_taxonomy_id'=>1,
+            'stock_additional_info'=>1
+        },
         trial_id_list=>$study_db_id,
         trial_name_list=>$study_names,
         limit=>$limit,
@@ -155,29 +166,30 @@ sub search {
             };
         }
 
-        #Get external references
+        #Get external references and check for search params
         my @references;
-
+        my $external_reference_id = $external_reference_id_arrayref->[0];
+        my $external_reference_source = $external_reference_source_arrayref->[0];
+        my $match_found = $external_reference_id || $external_reference_source ? 0 : 1;
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
-                my $reference_source = $_->[0] || undef;
-                my $url = $_->[1];
-                my $accession = $_->[2];
-                my $reference_id;
 
-                if($reference_source eq 'DOI') {
-                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
-                } else {
-                    $reference_id = ($accession) ? "$url$accession" : $url;
+                push @references, $_;
+                if (!$match_found) {
+                    my $source_found = $external_reference_source ? 0 : 1;
+                    my $id_found = $external_reference_id ? 0 : 1;
+                    if (!$id_found) {
+                        $id_found = $external_reference_id && $_->{referenceID} eq $external_reference_id ? 1 : 0;
+                    }
+                    if (!$source_found) {
+                        $source_found = $external_reference_source && $_->{referenceSource} eq $external_reference_source ? 1 : 0;
+                    }
+                    $match_found = $id_found && $source_found;
                 }
-
-                push @references, {
-                    referenceID => $reference_id,
-                    referenceSource => $reference_source
-                };
-
             }
         }
+        # Skip this germplasm if an external reference match was not found
+        if (!$match_found) { next; }
 
         my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $q = "SELECT value FROM stock_relationship WHERE object_id = ? AND type_id = ?;";
@@ -190,9 +202,9 @@ sub search {
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'},
-            additionalInfo=>undef,
-            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
+            additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne ''? decode_json $_->{'stock_additional_info'} : undef,
+            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
             collection=>undef,
@@ -580,7 +592,7 @@ sub store {
     my $c = shift;
 
     if (!$user_id){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'), 401);
     }
 
     my $page_size = $self->page_size;
@@ -596,20 +608,31 @@ sub store {
 
     my $accession_list;
     my $organism_list;
+    my $pedigree_parents;
+    my $default_species = $c->config->{preferred_species};
 
     foreach (@$data){
         my $accession = $_->{germplasmName} || undef;
-        my $organism = $_->{species} || undef;
+        my $organism = $_->{species} || $default_species;
+        my $pedigree = $_->{pedigree} || undef;
         push @$accession_list, $accession;
         push @$organism_list, $organism;
+        my $pedigree_array = _process_pedigree_string($pedigree);
+        if (defined $pedigree_array) {
+            push @$pedigree_parents, @$pedigree_array;
+        }
     }
 
     #validate accessions
-    my $validator = CXGN::List::Validate->new();
-    my @absent_accessions = @{$validator->validate($schema, 'accessions', $accession_list)->{'missing'}};
-    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
-    my $existing_accessions = '';
+    my $search_accession_list;
+    push @$search_accession_list, @$accession_list;
+    if (defined $pedigree_parents) {
+        push @$search_accession_list, @$pedigree_parents;
+    }
+    my %accessions_missing_hash = _get_nonexisting_accessions($self, $search_accession_list);
 
+    # Check if new germplasm already exist
+    my $existing_accessions = '';
     foreach (@$accession_list){
         if (!exists($accessions_missing_hash{$_})){
             $existing_accessions = $existing_accessions . $_ ."," ;
@@ -617,7 +640,19 @@ sub store {
     }
 
     if (length($existing_accessions) >0){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Existing germplasm in the database: %s', $existing_accessions));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Existing germplasm in the database: %s', $existing_accessions), 409);
+    }
+
+    # Check if pedigree parents don't exist
+    my $missing_parents = '';
+    foreach (@$pedigree_parents){
+        if (exists($accessions_missing_hash{$_})){
+            $missing_parents = $missing_parents . $_ ."," ;
+        }
+    }
+
+    if (length($missing_parents) >0){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Missing parent accessions: %s', $missing_parents), 404);
     }
 
     #validate organism
@@ -639,7 +674,7 @@ sub store {
         }
     }
     if (length($missing_organisms) >0){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Organisms were not found on the database: %s', $missing_organisms));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Organisms were not found on the database: %s', $missing_organisms), 404);
     }
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -647,13 +682,12 @@ sub store {
     my @added_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
-            my $species = $params->{species} || undef;
-            my $name = $params->{defaultDisplayName} || undef;
+            my $species = $params->{species} || $default_species;
             my $uniquename = $params->{germplasmName} || undef;
+            my $name = $params->{defaultDisplayName} || $uniquename;
             my $accessionNumber = $params->{accessionNumber} || undef;
             my $germplasmPUI = $params->{germplasmPUI} || undef;
             my $germplasmSeedSource = $params->{seedSource} || undef;
-            my $synonyms = $params->{synonyms}->[0]->{synonym} || undef;
             my $instituteCode = $params->{instituteCode} || undef;
             my $instituteName = $params->{instituteName} || undef;
             my $biologicalStatusOfAccessionCode = $params->{biologicalStatusOfAccessionCode} || undef;
@@ -663,8 +697,8 @@ sub store {
             my $acquisitionDate = $params->{acquisitionDate} || undef;
             my $externalReferences = $params->{externalReferences} || undef;
             #adding breedbase specific info using additionalInfo
+            my $population_name = $params->{collection} || undef;
             my $organization_name = $params->{additionalInfo}->{organizationName} || undef;
-            my $population_name = $params->{additionalInfo}->{populationName} || undef;
             my $transgenic = $params->{additionalInfo}->{transgenic} || undef;
             my $notes = $params->{additionalInfo}->{notes} || undef;
             my $state = $params->{additionalInfo}->{state} || undef;
@@ -672,7 +706,28 @@ sub store {
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
             my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
-
+            # Get misc additionalInfo and remove specific codes above
+            my %specific_keys = map { $_ => 1 } ("organizationName", "transgenic", "notes", "state", "variety", "locationCode", "description", "stock_id");
+            my $raw_additional_info = $params->{additionalInfo} || undef;
+            my %additional_info;
+            if (defined $raw_additional_info) {
+                foreach my $key (keys %$raw_additional_info) {
+                    if (!exists($specific_keys{$key})) {
+                        $additional_info{$key} = $raw_additional_info->{$key};
+                    }
+                }
+            }
+            my $pedigree = $params->{pedigree} || undef;
+            my $pedigree_array = _process_pedigree_string($pedigree);
+            my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
+            my $father = defined $pedigree_array && scalar(@$pedigree_array) > 1 ? @$pedigree_array[1] : undef;
+            my $synonyms = $params->{synonyms} || [];
+            my @synonymNames;
+            foreach(@$synonyms) {
+                if ($_->{synonym}) {
+                    push @synonymNames, $_->{synonym};
+                }
+            }
             #not supported
             # speciesAuthority
             # genus
@@ -680,60 +735,62 @@ sub store {
             # biologicalStatusOfAccessionDescription
             # germplasmSeedSourceDescription
             # breedingMethodDbId
-            # collection
             # documentationURL
             # germplasmOrigin
             # germplasmPreprocessing
             # taxonIds
             # subtaxa
             # subtaxaAuthority
-            # pedigree
 
             if (exists($allowed_organisms{$species})){
                 my $stock = CXGN::Stock::Accession->new({
-                    schema=>$schema,
-                    check_name_exists=>0,
-                    main_production_site_url=>$main_production_site_url,
-                    type=>'accession',
-                    type_id=>$type_id,
-                    species=>$species,
-                    name=>$name,
-                    uniquename=>$uniquename,
-                    organization_name=>$organization_name,
-                    population_name=>$population_name,
-                    description=>$description,
-                    accessionNumber=>$accessionNumber,
-                    germplasmPUI=>$germplasmPUI,
-                    germplasmSeedSource=>$germplasmSeedSource,
-                    synonyms=>[$synonyms],
-                    instituteCode=>$instituteCode,
-                    instituteName=>$instituteName,
-                    biologicalStatusOfAccessionCode=>$biologicalStatusOfAccessionCode,
-                    countryOfOriginCode=>$countryOfOriginCode,
-                    typeOfGermplasmStorageCode=>$typeOfGermplasmStorageCode,
-                    donors=>$donors,
-                    acquisitionDate=>$acquisitionDate,
-                    transgenic=>$transgenic,
-                    notes=>$notes,
-                    state=>$state,
-                    variety=>$variety,
-                    locationCode=>$locationCode,
-                    sp_person_id => $user_id,
-                    user_name => $user_name,
-                    modification_note => 'Bulk load of accession information'
+                    schema                          => $schema,
+                    check_name_exists               => 0,
+                    main_production_site_url        => $main_production_site_url,
+                    type                            => 'accession',
+                    type_id                         => $type_id,
+                    species                         => $species,
+                    name                            => $name,
+                    uniquename                      => $uniquename,
+                    organization_name               => $organization_name,
+                    population_name                 => $population_name,
+                    description                     => $description,
+                    accessionNumber                 => $accessionNumber,
+                    germplasmPUI                    => $germplasmPUI,
+                    germplasmSeedSource             => $germplasmSeedSource,
+                    synonyms                        => \@synonymNames,
+                    instituteCode                   => $instituteCode,
+                    instituteName                   => $instituteName,
+                    biologicalStatusOfAccessionCode => $biologicalStatusOfAccessionCode,
+                    countryOfOriginCode             => $countryOfOriginCode,
+                    typeOfGermplasmStorageCode      => $typeOfGermplasmStorageCode,
+                    donors                          => $donors,
+                    acquisitionDate                 => $acquisitionDate eq '' ? undef : $acquisitionDate,
+                    transgenic                      => $transgenic,
+                    notes                           => $notes,
+                    state                           => $state,
+                    variety                         => $variety,
+                    locationCode                    => $locationCode,
+                    sp_person_id                    => $user_id,
+                    user_name                       => $user_name,
+                    modification_note               => 'Bulk load of accession information',
+                    mother_accession                => $mother,
+                    father_accession                => $father,
+                    additional_info                 => \%additional_info
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
 
-                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-                    bcs_schema => $self->bcs_schema,
-                    table_name => 'Stock::StockDbxref',
-                    table_id_key => 'stock_id',
-                    external_references => $externalReferences,
-                    id => $added_stock_id
-                });
-                my $reference_result = $references->store();
-
+                if ($externalReferences && scalar $externalReferences > 0) {
+                    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                        bcs_schema => $self->bcs_schema,
+                        table_name => 'stock',
+                        table_id_key => 'stock_id',
+                        external_references => $externalReferences,
+                        id => $added_stock_id
+                    });
+                    my $reference_result = $references->store();
+                }
             }
         }
     };
@@ -773,6 +830,8 @@ sub update {
     my $user_id = shift;
     my $c = shift;
 
+    my $default_species = $c->config->{preferred_species};
+
     if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
@@ -797,7 +856,7 @@ sub update {
     my $organism_list;
 
     foreach (@$data){
-        my $organism = $_->{species} || undef;
+        my $organism = $_->{species} || $default_species;
         push @$organism_list, $organism;
     }
 
@@ -828,13 +887,12 @@ sub update {
     my @added_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
-            my $species = $params->{species} || undef;
-            my $name = $params->{defaultDisplayName} || undef;
+            my $species = $params->{species} || $default_species;
             my $uniquename = $params->{germplasmName} || undef;
+            my $name = $params->{defaultDisplayName} || $uniquename;
             my $accessionNumber = $params->{accessionNumber} || undef;
             my $germplasmPUI = $params->{germplasmPUI} || undef;
             my $germplasmSeedSource = $params->{seedSource} || undef;
-            my $synonyms = $params->{synonyms}->[0]->{synonym} || undef;
             my $instituteCode = $params->{instituteCode} || undef;
             my $instituteName = $params->{instituteName} || undef;
             my $biologicalStatusOfAccessionCode = $params->{biologicalStatusOfAccessionCode} || undef;
@@ -842,16 +900,39 @@ sub update {
             my $typeOfGermplasmStorageCode = $params->{storageTypes}->[0]->{code} || undef;
             my $donors = $params->{donors} || undef;
             my $acquisitionDate = $params->{acquisitionDate} || undef;
+            my $externalReferences = $params->{externalReferences} || undef;
             #adding breedbase specific info using additionalInfo
+            my $population_name = $params->{collection} || undef;
             my $organization_name = $params->{additionalInfo}->{organizationName} || undef;
-            my $population_name = $params->{additionalInfo}->{populationName} || undef;
             my $transgenic = $params->{additionalInfo}->{transgenic} || undef;
             my $notes = $params->{additionalInfo}->{notes} || undef;
             my $state = $params->{additionalInfo}->{state} || undef;
             my $variety = $params->{additionalInfo}->{variety} || undef;
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
-            my $externalReferences = $params->{externalReferences} || undef;
+            my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
+            # Get misc additionalInfo and remove specific codes above
+            my %specific_keys = map { $_ => 1 } ("organizationName", "transgenic", "notes", "state", "variety", "locationCode", "description", "stock_id");
+            my $raw_additional_info = $params->{additionalInfo} || undef;
+            my %additional_info;
+            if (defined $raw_additional_info) {
+                foreach my $key (keys %$raw_additional_info) {
+                    if (!exists($specific_keys{$key})) {
+                        $additional_info{$key} = $raw_additional_info->{$key};
+                    }
+                }
+            }
+            my $pedigree = $params->{pedigree} || undef;
+            my $pedigree_array = _process_pedigree_string($pedigree);
+            my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
+            my $father = defined $pedigree_array && scalar(@$pedigree_array) > 1 ? @$pedigree_array[1] : undef;
+            my $synonyms = $params->{synonyms} || [];
+            my @synonymNames;
+            foreach(@$synonyms) {
+                if ($_->{synonym}) {
+                    push @synonymNames, $_->{synonym};
+                }
+            }
             #not supported
             # speciesAuthority
             # genus
@@ -870,37 +951,40 @@ sub update {
 
             if (exists($allowed_organisms{$species})){
                 my $stock = CXGN::Stock::Accession->new({
-                    schema=>$schema,
-                    check_name_exists=>0,
-                    main_production_site_url=>$main_production_site_url,
-                    type=>'accession',
-                    type_id=>$type_id,
-                    species=>$species,
-                    stock_id=>$germplasm_id, #For adding properties to an accessions
-                    name=>$name,
-                    uniquename=>$uniquename,
-                    organization_name=>$organization_name,
-                    population_name=>$population_name,
-                    description=>$description,
-                    accessionNumber=>$accessionNumber,
-                    germplasmPUI=>$germplasmPUI,
-                    germplasmSeedSource=>$germplasmSeedSource,
-                    synonyms=>[$synonyms],
-                    instituteCode=>$instituteCode,
-                    instituteName=>$instituteName,
-                    biologicalStatusOfAccessionCode=>$biologicalStatusOfAccessionCode,
-                    countryOfOriginCode=>$countryOfOriginCode,
-                    typeOfGermplasmStorageCode=>$typeOfGermplasmStorageCode,
-                    donors=>$donors,
-                    acquisitionDate=>$acquisitionDate,
-                    transgenic=>$transgenic,
-                    notes=>$notes,
-                    state=>$state,
-                    variety=>$variety,
-                    locationCode=>$locationCode,
-                    sp_person_id => $user_id,
-                    user_name => $user_name,
-                    modification_note => 'Bulk load of accession information'
+                    schema                          => $schema,
+                    check_name_exists               => 0,
+                    main_production_site_url        => $main_production_site_url,
+                    type                            => 'accession',
+                    type_id                         => $type_id,
+                    species                         => $species,
+                    stock_id                        => $germplasm_id,
+                    name                            => $name,
+                    uniquename                      => $uniquename,
+                    organization_name               => $organization_name,
+                    population_name                 => $population_name,
+                    description                     => $description,
+                    accessionNumber                 => $accessionNumber,
+                    germplasmPUI                    => $germplasmPUI,
+                    germplasmSeedSource             => $germplasmSeedSource,
+                    synonyms                        => \@synonymNames,
+                    instituteCode                   => $instituteCode,
+                    instituteName                   => $instituteName,
+                    biologicalStatusOfAccessionCode => $biologicalStatusOfAccessionCode,
+                    countryOfOriginCode             => $countryOfOriginCode,
+                    typeOfGermplasmStorageCode      => $typeOfGermplasmStorageCode,
+                    donors                          => $donors,
+                    acquisitionDate                 => $acquisitionDate eq '' ? undef : $acquisitionDate,
+                    transgenic                      => $transgenic,
+                    notes                           => $notes,
+                    state                           => $state,
+                    variety                         => $variety,
+                    locationCode                    => $locationCode,
+                    sp_person_id                    => $user_id,
+                    user_name                       => $user_name,
+                    modification_note               => 'Bulk load of accession information',
+                    mother_accession                => $mother,
+                    father_accession                => $father,
+                    additional_info                 => \%additional_info
                 });
                 my $added_stock_id = $stock->store();
                 
@@ -915,9 +999,9 @@ sub update {
 
                 my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                     bcs_schema => $self->bcs_schema,
-                    table_name => 'Stock::StockDbxref',
+                    table_name => 'stock',
                     table_id_key => 'stock_id',
-                    external_references => $externalReferences,
+                    external_references => $externalReferences ? $externalReferences : [],
                     id => $germplasm_id
                 });
                 my $reference_result = $references->store();
@@ -975,7 +1059,19 @@ sub _simple_search {
         uniquename_list=>$germplasm_names_arrayref,
         stock_id_list=>$germplasm_ids_arrayref,
         stock_type_id=>$accession_type_cvterm_id,
-        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
+        stockprop_columns_view=>{
+            'accession number'=>1,
+            'PUI'=>1,
+            'seed source'=>1,
+            'institute code'=>1,
+            'institute name'=>1,
+            'biological status of accession code'=>1,
+            'country of origin'=>1,
+            'type of germplasm storage code'=>1,
+            'acquisition date'=>1,
+            'ncbi_taxonomy_id'=>1,
+            'stock_additional_info'=>1
+        },
         display_pedigree=>1
     });
     my ($result, $total_count) = $stock_search->search();
@@ -1021,21 +1117,7 @@ sub _simple_search {
         my @references;
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
-                my $reference_source = $_->[0] || undef;
-                my $url = $_->[1];
-                my $accession = $_->[2];
-                my $reference_id;
-
-                if($reference_source eq 'DOI') {
-                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
-                } else {
-                    $reference_id = ($accession) ? "$url$accession" : $url;
-                }
-
-                push @references, {
-                    referenceID => $reference_id,
-                    referenceSource => $reference_source
-                };
+                push @references, $_;
             }
         }
 
@@ -1050,12 +1132,12 @@ sub _simple_search {
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'},
-            additionalInfo=>undef,
-            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
+            additionalInfo=>defined $_->{'stock_additional_info'} ? decode_json $_->{'stock_additional_info'} : undef,
+            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
-            collection=>undef,
+            collection=>$_->{population_name},
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
@@ -1083,6 +1165,39 @@ sub _simple_search {
         };
     }
     return @data;
+}
+
+sub _process_pedigree_string {
+    my $pedigree = shift;
+
+    my $pedigree_parents;
+
+    if (defined $pedigree) {
+        my @pedigree_array = split('/', $pedigree);
+        if (scalar(@pedigree_array) > 0){
+            my $mother = @pedigree_array[0];
+            push @$pedigree_parents, $mother;
+            if (scalar(@pedigree_array) > 1){
+                my $father = @pedigree_array[1];
+                push @$pedigree_parents, $father;
+            }
+        }
+    }
+
+    return $pedigree_parents;
+}
+
+sub _get_nonexisting_accessions {
+    my $self = shift;
+    my $accession_list = shift;
+
+    my $schema = $self->bcs_schema;
+
+    my $validator = CXGN::List::Validate->new();
+    my @absent_accessions = @{$validator->validate($schema, 'accessions', $accession_list)->{'missing'}};
+    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
+
+    return %accessions_missing_hash;
 }
 
 1;

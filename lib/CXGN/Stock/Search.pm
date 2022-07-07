@@ -462,7 +462,13 @@ sub search {
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
+                    my $stockprop_list_search_sql = "stock_id in " .
+                        "(" .
+                            "select id from (" .
+	                            "select jsonb_object_keys(\"$term_name\") as accession_number_key, stock_id as id from materialized_stockprop" .
+                            ") as json_return where json_return.accession_number_key in ($search_vals_sql)" .
+                        ")";
+                    push @stockprop_wheres, $stockprop_list_search_sql;
                 } else {
                     push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
                 }
@@ -603,12 +609,14 @@ ORDER BY organism_id ASC;";
     # Get additional stock properties (pedigree, synonyms, donor info)
     my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\"
+               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name
         FROM stock
         LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
         LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
         LEFT JOIN stock_relationship f_rel ON (stock.stock_id = f_rel.object_id AND f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
+        LEFT JOIN stock_relationship family_rel ON (stock.stock_id = family_rel.subject_id AND family_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of'))
+        LEFT JOIN stock family ON (family_rel.object_id = family.stock_id)
         LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
         WHERE stock.stock_id IN ($id_ph);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
@@ -628,6 +636,7 @@ ORDER BY organism_id ASC;";
         my @donor_accessions = keys %{$donor_json};
         my @donor_institutes = keys %{$donor_inst_json};
         my @donor_puis = keys %{$donor_pui_json};
+        my $population_name = $r[10] || undef;
 
         # add stock props to the result hash
         $result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
@@ -649,6 +658,8 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
         $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
+
+        $result_hash{$stock_id}{population_name} = $population_name;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
@@ -721,9 +732,6 @@ sub _refresh_materialized_stockprop {
         my $h = $schema->storage->dbh()->prepare($q);
 
         my $stockprop_refresh_q = "
-        DROP EXTENSION IF EXISTS tablefunc CASCADE;
-        CREATE EXTENSION tablefunc;
-
         DROP MATERIALIZED VIEW IF EXISTS public.materialized_stockprop CASCADE;
         CREATE MATERIALIZED VIEW public.materialized_stockprop AS
         SELECT *
