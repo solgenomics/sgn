@@ -4911,7 +4911,16 @@ sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
         }
         my $soil_data_details_string = join("<br>", @all_soil_data);
         push @info, ($soil_data_details_string, "<a class='btn btn-sm btn-default' href='/breeders/trial/$trial_id/download/soil_data?format=soil_data_xls&dataLevel=soil_data&prop_id=$info[0]'>Download</a>");
-        push @formatted_soil_data, [@info];
+        push @formatted_soil_data, {
+            prop_id => $info[0],
+            description => $info[1],
+            year => $info[2],
+            gps => $info[3],
+            type_of_sampling => $info[4],
+            soil_data => $info[5],
+            download_link => $info[6]
+
+        };
     }
 
     $c->stash->{rest} = { data => \@formatted_soil_data };

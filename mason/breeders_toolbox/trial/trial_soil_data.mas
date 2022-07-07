@@ -12,17 +12,6 @@ $trial_id
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <table id = "soil_data_table" class="table table-hover table-striped">
-                    <thead>
-                        <tr>
-                            <th>Soil Data ID</th>
-                            <th>Description</th>
-                            <th>Year</th>
-                            <th>GPS</th>
-                            <th>Type of Sampling</th>
-                            <th>Soil Data</th>
-                            <th>Download</th>
-                        </tr>
-                    </thead>
                 </table>
             </div>
         </div>
@@ -33,11 +22,22 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-    jQuery('#soil_data_table').DataTable({
+    var soil_data_table = jQuery('#soil_data_table').DataTable({
         'autoWidth': false,
         'searching': false,
         'order': false,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_soil_data',
+        columns: [
+            { title: "Soil Data ID", "data": "prop_id" },
+            { title: "Description", "data": "description" },
+            { title: "Year", "data": "year" },
+            { title: "GPS", "data": "gps" },
+            { title: "Type of Sampling", "data": "type_of_sampling" },
+            { title: "Soil Data", "data": "soil_data" },
+            { title: "Download", "data": "download_link" },
+            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteSoilData("+row.prop_id+")'>Delete</a>"; } },
+
+        ]
     });
 
 });
