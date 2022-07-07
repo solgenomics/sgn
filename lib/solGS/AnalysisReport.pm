@@ -1003,11 +1003,10 @@ sub kinship_analysis_message {
     {
 	if ($k =~ /kinship/) {
 
-	    my $output_page;
+	    my $output_page = $output_details->{$k}->{output_page};
 
 	    if ($output_details->{$k}->{success})
-	    {
-		$output_page = $output_details->{$k}->{output_page};
+	    {	
 		$message = 'Your kinship analysis is done. You can access the result here:'
 		    . "\n\n$output_page\n\n";
 	    }
@@ -1036,11 +1035,10 @@ sub pca_analysis_message {
     {
 	if ($k =~ /pca/) {
 
-	    my $output_page;
+	    my $output_page = $output_details->{$k}->{output_page};
 
 	    if ($output_details->{$k}->{success})
-	    {
-		$output_page = $output_details->{$k}->{output_page};
+	    {	
 		$message = 'Your PCA is done. You can access the result here:'
 		    . "\n\n$output_page\n\n";
 	    }
@@ -1070,11 +1068,11 @@ sub cluster_analysis_message {
     {
 	if ($k =~ /cluster/) {
 
-	    my $output_page;
+	    my $output_page = $output_details->{$k}->{output_page};
 
 	    if ($output_details->{$k}->{success})
 	    {
-		$output_page = $output_details->{$k}->{output_page};
+		
 		$message = 'Your clustering is done. You can access the result here:'
 		    . "\n\n$output_page\n\n";
 	    }
