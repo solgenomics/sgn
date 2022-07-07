@@ -4910,8 +4910,9 @@ sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
             push @all_soil_data, $soil_data_string;
         }
         my $soil_data_details_string = join("<br>", @all_soil_data);
-        push @info, ($soil_data_details_string, "<a class='btn btn-sm btn-default' href='/breeders/trial/$trial_id/download/soil_data?format=soil_data_xls&dataLevel=soil_data&prop_id=$info[0]'>Download</a>");
+        push @info, ($soil_data_details_string, "<a href='/breeders/trial/$trial_id/download/soil_data?format=soil_data_xls&dataLevel=soil_data&prop_id=$info[0]'>Download</a>");
         push @formatted_soil_data, {
+            trial_id => $trial_id,
             prop_id => $info[0],
             description => $info[1],
             year => $info[2],
@@ -4919,13 +4920,40 @@ sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
             type_of_sampling => $info[4],
             soil_data => $info[5],
             download_link => $info[6]
-
         };
     }
 
     $c->stash->{rest} = { data => \@formatted_soil_data };
 }
 
+
+sub delete_soil_data : Chained('trial') PathPart('delete_soil_data') : ActionClass('REST'){ }
+
+sub delete_soil_data_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $prop_id = $c->req->param("prop_id");
+    my $trial_id = $c->stash->{trial_id};
+    print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
+    print STDERR "PROP ID =".Dumper($prop_id)."\n";
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to delete soil data." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $curator     = $c->user()->check_roles('curator') if $user_id;
+
+    if (!$curator == 1) {
+        $c->stash->{rest} = {error_string => "You must be curator to delete soil data." };
+        return;
+    }
+
+
+    $c->stash->{rest} = {success => 1 };
+
+}
 
 
 1;
