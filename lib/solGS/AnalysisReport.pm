@@ -690,7 +690,6 @@ sub email_addresses {
 
     my $user_email = $analysis_profile->{user_email};
     my $user_name  = $analysis_profile->{user_name};
-    print STDERR "\nuser_email: $user_email -- fs: $first_name -- un: $user_name\n";
 
     my $email_from;
     my $email_to;
