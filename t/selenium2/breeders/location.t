@@ -8,8 +8,9 @@ use SGN::Test::WWW::WebDriver;
 my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->while_logged_in_as("submitter", sub {
+    sleep(1);
+    
     $t->get_ok('/breeders/locations');
-
     sleep(5);
 
     my $add_location_link = $t->find_element_ok(

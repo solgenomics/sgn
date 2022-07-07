@@ -69,19 +69,19 @@ has 'schema' => (isa => 'Bio::Chado::Schema', is => 'rw');
 
 has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema',is => 'rw');
 
-has 'create_date' => (isa => 'Str',
-    is => 'rw',
-);
 
 # class method: Use like so: CXGN::List::create_list
 sub create_list {
     my $dbh = shift;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
     my ($name, $desc, $owner) = @_;
     my $new_list_id;
     eval {
-    my $q = "INSERT INTO sgn_people.list (name, description, owner) VALUES (?, ?, ?) RETURNING list_id";
+    my $q = "INSERT INTO sgn_people.list (name, description, owner, timestamp) VALUES (?, ?, ?, ?) RETURNING list_id";
     my $h = $dbh->prepare($q);
-    $h->execute($name, $desc, $owner);
+    $h->execute($name, $desc, $owner, $timestamp);
     ($new_list_id) = $h->fetchrow_array();
     print STDERR "NEW LIST using returning = $new_list_id\n";
 
@@ -124,19 +124,19 @@ sub available_lists {
     my $owner = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, timestamp, modify_timestamp FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute($owner);
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $create_date) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
 	if ($requested_type) {
 	    if ($type && ($type eq $requested_type)) {
-		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
 	    }
 	}
 	else {
-	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
 	}
     }
     return \@lists;
@@ -146,19 +146,19 @@ sub available_public_lists {
     my $dbh = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username, list.create_date FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username, timestamp, modify_timestamp FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute();
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username, $create_date) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
         if ($requested_type) {
             if ($type && ($type eq $requested_type)) {
-                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $create_date ];
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp];
             }
         }
         else {
-            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $create_date ];
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp];
         }
     }
     return \@lists;
@@ -171,24 +171,24 @@ sub all_lists {
 
     my $h;
     if ($owner) {
-        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, timestamp, modify_timestamp FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
         $h = $dbh->prepare($q);
         $h->execute($owner);
     } else {
-        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, timestamp, modify_timestamp FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
         $h = $dbh->prepare($q);
         $h->execute();
     }
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $create_date) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
         if ($requested_type) {
             if ($type && ($type eq $requested_type)) {
-                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
             }
         }
         else {
-            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
         }
     }
     return \@lists;
@@ -300,12 +300,12 @@ after 'type' => sub {
     $h->execute($self->list_id);
 
     eval {
-	$q = "UPDATE sgn_people.list SET type_id=? WHERE list_id=?";
-	$h = $self->dbh->prepare($q);
-	$h->execute($cvterm_id, $self->list_id);
+			$q = "UPDATE sgn_people.list SET type_id=? WHERE list_id=?";
+			$h = $self->dbh->prepare($q);
+			$h->execute($cvterm_id, $self->list_id);
     };
     if ($@) {
-	return "An error occurred while updating the type of list ".self->list_id." to $type. $@";
+			return "An error occurred while updating the type of list ".self->list_id." to $type. $@";
     }
     return 0;
 };
@@ -338,21 +338,31 @@ sub add_element {
     #remove trailing spaces
     $element =~ s/^\s+|\s+$//g;
     if (!$element) {
-	return "Empty list elements are not allowed";
+			return "Empty list elements are not allowed";
     }
     if ($self->exists_element($element)) {
-	return "The element $element already exists";
+			return "The element $element already exists";
     }
 
     my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
     my $ih = $self->dbh()->prepare($iq);
     eval {
-	$ih->execute($self->list_id(), $element);
+			$ih->execute($self->list_id(), $element);
     };
     if ($@) {
         print STDERR Dumper $@;
-	return "An error occurred storing the element $element ($@)";
+				return "An error occurred storing the element $element ($@)";
     }
+
+		my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+		eval {
+    	my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+    	my $h = $self->dbh()->prepare($q);
+    	$h->execute($timestamp,$self->list_id());
+		};
+
 
     my $elements = $self->elements();
     push @$elements, $element;
@@ -373,6 +383,16 @@ sub remove_element {
 
 	return "An error occurred while attempting to delete item $element";
     }
+
+		my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+		eval {
+    	my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+    	my $h1 = $self->dbh()->prepare($q);
+    	$h1->execute($timestamp,$self->list_id());
+		};
+
     my $elements = $self->elements();
     my @clean = grep(!/^$element$/, @$elements);
     $self->elements(\@clean);
@@ -412,6 +432,15 @@ sub update_element_by_id {
 		return "An error occurred while attempting to update item $element_id";
 	}
 
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$self->list_id());
+	};
+
 	return;
 }
 
@@ -428,6 +457,15 @@ sub replace_by_name {
 		return "An error occurred while attempting to update item $item_name";
 	}
 
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$self->list_id());
+	};
+
 	return;
 }
 
@@ -442,6 +480,15 @@ sub remove_by_name {
 	if ($@) {
 		return "An error occurred while attempting to remove item $item_name";
 	}
+
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$self->list_id());
+	};
 
 	return;
 }
@@ -635,6 +682,15 @@ sub add_bulk {
 		$self->dbh()->rollback;
 		return {error => "An error occurred in bulk addition to list. ($@)"};
 	}
+
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$list_id);
+	};
 
 	$elements = $self->elements();
 	push @$elements, \@elements_added;
