@@ -4950,8 +4950,17 @@ sub delete_soil_data_POST : Args(0) {
         return;
     }
 
+    my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id, prop_id => $prop_id });
+    my $error = $soil_data_obj->delete_soil_data();
 
-    $c->stash->{rest} = {success => 1 };
+    print STDERR "ERROR = $error\n";
+
+    if ($error) {
+	    $c->stash->{rest} = { error_string => "An error occurred attempting to delete soil data."};
+	    return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
 
 }
 
