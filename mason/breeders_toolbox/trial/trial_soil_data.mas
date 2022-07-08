@@ -30,13 +30,12 @@ jQuery(document).ready(function () {
         columns: [
             { title: "Soil Data ID", "data": "prop_id" },
             { title: "Description", "data": "description" },
-            { title: "Year", "data": "year" },
+            { title: "Date", "data": "date" },
             { title: "GPS", "data": "gps" },
             { title: "Type of Sampling", "data": "type_of_sampling" },
             { title: "Soil Data", "data": "soil_data" },
             { title: "Download", "data": "download_link" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteSoilData("+row.prop_id+")'>Delete</a>"; } },
-
         ]
     });
 

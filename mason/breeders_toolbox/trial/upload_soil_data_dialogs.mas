@@ -3,6 +3,7 @@ $trial_id
 $trial_name
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'moment_min', 'daterangepicker' ] &>
 
 <div class="modal fade" id="upload_soil_data_dialog" name="upload_soil_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSoilDataDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -28,9 +29,9 @@ $trial_name
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Year:</label>
+                            <label class="col-sm-4 control-label">Date:</label>
                             <div class="col-sm-8">
-                                <div id="soil_data_year" name="soil_data_year" ></div>
+                                <input class="form-control" id="soil_data_date" name="soil_data_date" title="data_date" type="text"/>
                             </div>
                         </div>
                         <div class="form-group">
@@ -176,7 +177,19 @@ $trial_name
 jQuery(document).ready(function(){
 
     jQuery("#trial_upload_soil_data_button").click(function(){
-        get_select_box('years', 'soil_data_year', {'id':'soil_data_year_select', 'name':'soil_data_year_select', 'auto_generate':1});
+
+        var soil_data_date_element = jQuery("#soil_data_date");
+        set_daterangepicker_default (soil_data_date_element);
+        jQuery('input[title="data_date"]').daterangepicker(
+            {"singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+            },
+            function(start){
+                soil_data_date_element.val(start.format('MM/DD/YYYY'));
+                highlight_changed_details(soil_data_date_element);
+            }
+        );
 
         jQuery("#soil_data_spreadsheet_format").click(function(){
             jQuery("#upload_soil_data_spreadsheet_format_dialog").modal("show");
@@ -186,6 +199,25 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#soil_data_submit").click(function(){
+
+        var soil_data_description = jQuery("#soil_data_description").val();
+        if ( soil_data_description === ''){
+            alert("Please provide description");
+            return;
+        }
+
+        var soil_data_date = jQuery("#soil_data_date").val();
+        if ( soil_data_date === ''){
+            alert("Please select a date");
+            return;
+        }
+
+        var type_of_sampling = jQuery("#type_of_sampling").val();
+        if ( type_of_sampling === ''){
+            alert("Please indicate type of sampling");
+            return;
+        }
+
         var uploadFile = jQuery("#soil_data_upload_file").val();
         if (uploadFile === ''){
             alert("Please select a file");

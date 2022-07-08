@@ -4915,7 +4915,7 @@ sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
             trial_id => $trial_id,
             prop_id => $info[0],
             description => $info[1],
-            year => $info[2],
+            date => $info[2],
             gps => $info[3],
             type_of_sampling => $info[4],
             soil_data => $info[5],

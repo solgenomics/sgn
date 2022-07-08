@@ -31,7 +31,7 @@ use SGN::Model::Cvterm;
 
 has 'description' => (isa => 'Str', is => 'rw');
 
-has 'year' => (isa => 'Maybe[Str]', is => 'rw');
+has 'date' => (isa => 'Maybe[Str]', is => 'rw');
 
 has 'gps' => (isa => 'Maybe[Str]', is => 'rw');
 
@@ -51,7 +51,7 @@ sub BUILD {
     $self->prop_primary_key('projectprop_id');
     $self->prop_type('soil_data_json');
     $self->cv_name('project_property');
-    $self->allowed_fields([ qw | description year gps type_of_sampling data_type_order soil_data_details | ]);
+    $self->allowed_fields([ qw | description date gps type_of_sampling data_type_order soil_data_details | ]);
     $self->parent_table('project');
     $self->parent_primary_key('project_id');
 
@@ -72,13 +72,13 @@ sub get_all_soil_data {
         my $soil_data_json = $r->value();
         my $soil_data_hash = JSON::Any->jsonToObj($soil_data_json);
         my $description = $soil_data_hash->{'description'};
-        my $year = $soil_data_hash->{'year'};
+        my $date = $soil_data_hash->{'date'};
         my $gps = $soil_data_hash->{'gps'};
         my $type_of_sampling = $soil_data_hash->{'type_of_sampling'};
         my $data_type_order = $soil_data_hash->{'data_type_order'};
         my $soil_data_details = $soil_data_hash->{'soil_data_details'};
 
-        push @soil_data_list, [$prop_id, $description, $year, $gps, $type_of_sampling, $data_type_order, $soil_data_details, $project_id];
+        push @soil_data_list, [$prop_id, $description, $date, $gps, $type_of_sampling, $data_type_order, $soil_data_details, $project_id];
     }
 
     return \@soil_data_list;
