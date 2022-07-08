@@ -538,6 +538,7 @@ sub check_pca_analysis {
 	{
 
 	    my $scores_file = $output_details->{$k}->{scores_file};
+
 	    if ($scores_file)
 	    {
 		while (1)
@@ -554,13 +555,25 @@ sub check_pca_analysis {
 			my $end_process = $self->end_status_check();
 			if ($end_process)
 			{
-			    if (!-s $output_details->{$k}->{genotype_file})
-			    {
-				$output_details->{$k}->{failure_reason} = 'No input data was found for this PCA.';
-			    }
+				# my $input_files = $output_details->{$k}->{input_file};
+				# my @input_files = split(/\t/, $input_file);
+				my $failure_reason;
+				my $input_file = $output_details->{$k}->{input_file};
+				# foreach my $input_file ($input_file) 
+				# {
+				if (!-s $input_file)
+				{
+					$failure_reason = "This dataset has no data. $input_file is empty.";
+				}
+				# }
+			    
+				if ($failure_reason) 
+				{
+					$output_details->{$k}->{failure_reason} = $failure_reason;	
+				}
 			    else
 			    {
-				$output_details->{$k}->{failure_reason} = 'The PCA failed.';
+				$output_details->{$k}->{failure_reason} = 'The pca algorithm (R) caught an exception. Details are in the analysis error file.';
 			    }
 
 			    $output_details->{$k}->{success} = 0;
