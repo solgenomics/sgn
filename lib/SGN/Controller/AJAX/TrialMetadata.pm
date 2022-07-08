@@ -4935,18 +4935,16 @@ sub delete_soil_data_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $prop_id = $c->req->param("prop_id");
     my $trial_id = $c->stash->{trial_id};
-    print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
-    print STDERR "PROP ID =".Dumper($prop_id)."\n";
 
     if (!$c->user()) {
-        $c->stash->{rest} = {error_string => "You must be logged in to delete soil data." };
+        $c->stash->{rest} = {error => "You must be logged in to delete soil data." };
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $curator     = $c->user()->check_roles('curator') if $user_id;
 
     if (!$curator == 1) {
-        $c->stash->{rest} = {error_string => "You must be curator to delete soil data." };
+        $c->stash->{rest} = {error => "You must be curator to delete soil data." };
         return;
     }
 
@@ -4956,7 +4954,7 @@ sub delete_soil_data_POST : Args(0) {
     print STDERR "ERROR = $error\n";
 
     if ($error) {
-	    $c->stash->{rest} = { error_string => "An error occurred attempting to delete soil data."};
+	    $c->stash->{rest} = { error => "An error occurred attempting to delete soil data. ($@)"};
 	    return;
     }
 

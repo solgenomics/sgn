@@ -111,16 +111,30 @@ sub get_soil_data {
 sub delete_soil_data {
     my $self = shift;
     my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage()->dbh();
     my $project_id = $self->parent_id();
     my $projectprop_id = $self->prop_id();
     my $type = $self->prop_type();
     my $type_id = $self->_prop_type_id();
 
-    my $q = "DELETE FROM projectprop WHERE projectprop_id = ? AND project_id = ? AND type_id = ?";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($projectprop_id, $project_id, $type_id);
+    eval {
+        $dbh->begin_work();
 
-    return 0;
+        my $q = "DELETE FROM projectprop WHERE projectprop_id = ? AND project_id = ? AND type_id = ?";
+        my $h = $dbh->prepare($q);
+
+        $h->execute($projectprop_id, $project_id, $type_id);
+    };
+
+    if ($@) {
+        print STDERR "An error occurred while deleting soil data "."$@\n";
+        $dbh->rollback();
+        return $@;
+    } else {
+        $dbh->commit();
+        return 0;
+    }
+
 }
 
 
