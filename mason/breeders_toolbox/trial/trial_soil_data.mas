@@ -11,8 +11,10 @@ $trial_id
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
-                <table id = "soil_data_table" class="table table-hover table-striped">
-                </table>
+                <div style="overflow:scroll">
+                    <table id = "soil_data_table" class="table table-hover table-striped">
+                    </table>
+                </div>
             </div>
         </div>
     </div>

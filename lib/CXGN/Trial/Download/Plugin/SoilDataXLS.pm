@@ -40,7 +40,7 @@ sub download {
     my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, prop_id => $prop_id, parent_id => $trial_id });
     my $soil_data = $soil_data_obj->get_soil_data();
     push @download_info, ['Soil Data Description', $soil_data->[0]];
-    push @download_info, ['Date', $soil_data->[1]];
+    push @download_info, ['Sampling Date', $soil_data->[1]];
     push @download_info, ['Soil Data GPS', $soil_data->[2]];
     push @download_info, ['Type of Sampling', $soil_data->[3]];
 
