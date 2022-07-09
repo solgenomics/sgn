@@ -76,9 +76,9 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: soil data type missing";
         }
 
-        if (!$data_value || $data_value eq '') {
-            push @error_messages, "Cell B$row_name: soil data value missing";
-        }
+#        if (!$data_value || $data_value eq '') {
+#            push @error_messages, "Cell B$row_name: soil data value missing";
+#        }
     }
 
     #store any errors found in the parsed file to parse_errors accessor
