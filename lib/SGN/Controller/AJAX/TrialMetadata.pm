@@ -4935,17 +4935,35 @@ sub delete_soil_data_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $prop_id = $c->req->param("prop_id");
     my $trial_id = $c->stash->{trial_id};
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
 
-    if (!$c->user()) {
-        $c->stash->{rest} = {error => "You must be logged in to delete soil data." };
-        return;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to delete soil data!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to delete soil data!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $curator     = $c->user()->check_roles('curator') if $user_id;
 
-    if (!$curator == 1) {
-        $c->stash->{rest} = {error => "You must be curator to delete soil data." };
-        return;
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = {error=>'Only a curator can delete soil data'};
+        $c->detach();
     }
 
     my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id, prop_id => $prop_id });
