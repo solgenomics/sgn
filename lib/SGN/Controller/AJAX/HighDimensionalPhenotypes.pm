@@ -168,13 +168,13 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
 
     my $nirs_dir = $c->tempfiles_subdir('/nirs_files');
     my $tempfile_string = $c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
-    my $filter_json_filepath = $c->config->{basepath}."/".$tempfile_string."_input_json";
-    my $output_csv_filepath = $c->config->{basepath}."/".$tempfile_string."_output.csv";
-    my $output_raw_csv_filepath = $c->config->{basepath}."/".$tempfile_string."_output_raw.csv";
-    my $output_outliers_filepath = $c->config->{basepath}."/".$tempfile_string."_output_outliers.csv";
+    my $filter_json_filepath = $c->config->{basepath}.$tempfile_string."_input_json";
+    my $output_csv_filepath = $c->config->{basepath}.$tempfile_string."_output.csv";
+    my $output_raw_csv_filepath = $c->config->{basepath}.$tempfile_string."_output_raw.csv";
+    my $output_outliers_filepath = $c->config->{basepath}.$tempfile_string."_output_outliers.csv";
 
     my $output_plot_filepath_string = $tempfile_string."_output_plot.png";
-    my $output_plot_filepath = $c->config->{basepath}."/".$output_plot_filepath_string;
+    my $output_plot_filepath = $c->config->{basepath}.$output_plot_filepath_string;
 
     my $json = JSON->new->utf8->canonical();
     my $filter_data_input_json = $json->encode(\@filter_input);
