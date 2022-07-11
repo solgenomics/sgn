@@ -271,6 +271,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
+    print STDERR "WHAT =".Dumper($what)."\n";
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
@@ -359,12 +360,20 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my @field_crossing_data_order;
-    if ( ($format eq "crossing_experiment_xls") && ($what eq "layout")) {
+    if ($format eq "crossing_experiment_xls") {
         $plugin = "CrossingExperimentXLS";
         $what = "crosses";
         $format = "xls";
         my $cross_properties = $c->config->{cross_properties};
         @field_crossing_data_order = split ',',$cross_properties;
+    }
+
+    my $prop_id;
+    if ($format eq "soil_data_xls") {
+        $plugin = "SoilDataXLS";
+        $what = "soil_data";
+        $format = "xls";
+        $prop_id = $c->req->param("prop_id");
     }
 
     my $trial_name = $trial->get_name();
@@ -389,7 +398,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
         include_measured => $include_measured,
-        field_crossing_data_order => \@field_crossing_data_order
+        field_crossing_data_order => \@field_crossing_data_order,
+        prop_id => $prop_id
     });
 
     my $error = $download->download();

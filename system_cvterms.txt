@@ -164,7 +164,9 @@ project_property	analysis_metadata_json	For saving results in analysis trials	06
 project_property    product_profile_json    00131
 project_property	sampling_facility	For saving the sampling facility of a sampling trial	11/25/2020	nm529	00132
 project_property	sampling_trial_sample_type	For saving the sample type of a sampling trial	11/25/2020	nm529	00132
+project_property    file_metadata_json For recording metadata of intercross files (downloaded and uploaded files) tt15 00155
 project_property    trial_status_json For recording trial activities tt15 00157
+project_property    soil_data_json For storing soil data tt15 00160
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
