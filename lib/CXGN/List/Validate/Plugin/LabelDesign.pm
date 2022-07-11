@@ -126,11 +126,11 @@ sub check_label_format {
         '2" x 2 5/8"' => 1,
         '1 1/4" x 2"' => 1,
         'Custom' => 1,
-        'CASS' => 1,
-        'MUSA' => 1,
-        'IITA-3 | IITA-2' => 1,
-        '32 Label Size Sticker' => 1,
-        '20 Label Size Sticker' => 1
+        'CASS [1" x 5 1/4"]' => 1,
+        'MUSA [1" x 5 1/4"]' => 1,
+        'IITA-3 | IITA-2 [2/5" x 5 1/4"]' => 1,
+        '32 Label Size Sticker [1" x 1 1/3"]' => 1,
+        '20 Label Size Sticker [5/6" x 3 3/5"]' => 1
     );
     return $valid_formats{$format};
 }

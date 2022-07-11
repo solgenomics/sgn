@@ -56,7 +56,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns:1,
                 number_of_rows:1
             },
-            'CASS': {
+            'CASS [1" x 5 1/4"]': {
                 label_width: 378,
                 label_height: 72,
                 left_margin: 224,
@@ -66,7 +66,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 1,
                 number_of_rows: 10
             },
-            'MUSA': {
+            'MUSA [1" x 5 1/4"]': {
                 label_width: 378,
                 label_height: 72,
                 left_margin: 224,
@@ -76,7 +76,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 1,
                 number_of_rows: 10
             },
-            'IITA-3 | IITA-2': {
+            'IITA-3 | IITA-2 [2/5" x 5 1/4"]': {
                 label_width: 378,
                 label_height: 32,
                 left_margin: 224,
@@ -86,7 +86,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 1,
                 number_of_rows: 20
             },
-            '32 Label Size Sticker': {
+            '32 Label Size Sticker [1" x 1 1/3"]': {
                 label_width: 94.5,
                 label_height: 72,
                 left_margin: 45,
@@ -96,7 +96,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 4,
                 number_of_rows: 8
             },
-            '20 Label Size Sticker': {
+            '20 Label Size Sticker [5/6" x 3 3/5"]': {
                 label_width: 260,
                 label_height: 60,
                 left_margin: 30,
