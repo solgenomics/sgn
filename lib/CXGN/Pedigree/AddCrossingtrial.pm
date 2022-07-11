@@ -56,6 +56,11 @@ has 'parent_folder_id' => (isa => 'Str',
     required => 0,
     );
 
+has 'owner_id' => (isa => 'Int',
+    is => 'rw',
+    );
+
+
 sub existing_crossingtrials {
     my $self = shift;
     my $crossingtrial_name = $self->get_crossingtrial_name();
@@ -118,6 +123,8 @@ sub save_crossingtrial {
     $crossing_trial->set_project_type($project_type_cvterm_id);
     $crossing_trial->set_year($self->get_year());
     $crossing_trial->set_breeding_program($self->get_breeding_program_id);
+    $crossing_trial->set_trial_owner($self->get_owner_id);
+
     return {success=>1, trial_id=>$crossing_trial->get_trial_id};
 }
 
