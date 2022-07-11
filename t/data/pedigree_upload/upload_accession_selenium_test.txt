@@ -1,0 +1,6 @@
+progeny name	female parent accession	male parent accession	type
+test_accession1	test_accession3	test_accession4	biparental
+test_accession2	test_accession1		open
+test_accession5	test_accession1	TestPopulation1	open
+test_accession4	test_accession1_synonym1	test_accession1_synonym1	self
+test_accession3	test_accession2_synonym1	test_accession2_synonym2	biparental
