@@ -88,7 +88,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(150);
     my $sel = $d->find_element('//div[@class="list_upload"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel);
     sleep(2);

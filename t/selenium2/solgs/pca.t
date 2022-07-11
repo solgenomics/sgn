@@ -69,7 +69,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(120);
+    sleep(140);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca pg')->click();
     sleep(3);
 
@@ -97,7 +97,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(140);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check accessions list geno  pca plot')->click();
     sleep(5);
 
@@ -113,7 +113,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(140);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check plots list pheno pca plot')->click();
     sleep(5);
 
@@ -129,7 +129,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(140);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials list geno  pca plot')->click();
     sleep(5);
 
@@ -145,7 +145,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials list pheno pca plot')->click();
     sleep(5);
 
@@ -163,7 +163,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check accessions dataset geno pca plot')->click();
     sleep(5);
 
@@ -179,7 +179,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check plots dataset  pheno pca plot')->click();
     sleep(5);
 
@@ -212,7 +212,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials dataset pheno pca plot')->click();
     sleep(5);
 
@@ -235,7 +235,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(70);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trial page pheno pca plot')->click();
     sleep(5);
 
@@ -258,7 +258,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(70);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials page geno pca plot')->click();
     sleep(5);
 
@@ -280,7 +280,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(80);
+    sleep(100);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back to solgs homepage')->click();
     sleep(3);
 
@@ -316,7 +316,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(70);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot in model page')->click();
     sleep(5);
 
@@ -333,7 +333,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(70);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check pheno pca plot in model page')->click();
     sleep(5);
 
@@ -356,7 +356,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(3);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(180);
+    sleep(100);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back to model page')->click();
     sleep(3);
 
@@ -414,7 +414,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(80);
+    sleep(100);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back to solgs homepage')->click();
     sleep(3);
 
@@ -448,7 +448,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(120);
+    sleep(140);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back to training pop page')->click();
     sleep(7);
 
@@ -528,7 +528,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(100);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot in selection pop page')->click();
     sleep(5);
 
