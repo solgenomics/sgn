@@ -372,10 +372,6 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		$model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
 		$c->stash->{model_page_url} = $model_page;
 
-		my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
-		$gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
-
-		$c->stash->{blups_download_url} = $gebvs_download;
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
     }
@@ -469,7 +465,6 @@ sub gs_modeling_files {
     $self->input_files($c);
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
-    $c->controller('solGS::Download')->training_prediction_download_urls($c);
     $self->top_markers($c, $c->stash->{marker_effects_file});
     $self->model_parameters($c);
 
@@ -566,6 +561,7 @@ sub output_files {
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller("solGS::Files")->model_phenodata_file($c);
+    $c->controller("solGS::Files")->model_genodata_file($c);
     $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
@@ -589,6 +585,7 @@ sub output_files {
                           $c->stash->{marker_effects_file},
                           $c->stash->{validation_file},
                           $c->stash->{model_phenodata_file},
+                          $c->stash->{model_genodata_file},
                           $c->stash->{trait_raw_phenodata_file},
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
@@ -661,7 +658,6 @@ sub predict_selection_pop_multi_traits {
     my @unpredicted_traits;
     foreach my $trait_id (@{$c->stash->{training_traits_ids}})
     {
-	# my $identifier = $training_pop_id .'_' . $selection_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id,  $trait_id);
 
 	push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
@@ -866,9 +862,6 @@ sub model_parameters {
     $c->stash->{model_parameters} = $params;
 
 }
-
-
-
 
 
 sub selection_population_predicted_traits :Path('/solgs/selection/population/predicted/traits/') Args(0) {

@@ -92,15 +92,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('run_pheno_correlation', 'id', 'run correlation')->click();
     sleep(60);
-    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
+    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
-    $d->find_element_ok('Download correlation', 'partial_link_text',  'download  corr coefs')->click();
-    sleep(3);
-    $d->find_element_ok('//*[contains(text(), "DMCP")]', 'xpath', 'check corr download')->click();
-    sleep(5);
+    $d->find_element_ok('Download correlation coefficients', 'partial_link_text',  'download corr coef table'); 
+    sleep(2);
 
-    $d->driver->go_back();
-    sleep(5);
     $d->driver->refresh();
     sleep(5);
 
@@ -259,15 +255,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('run_pheno_correlation', 'id', 'run correlation')->click();
     sleep(60);
-    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
+    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
-    $d->find_element_ok('Download correlation', 'partial_link_text',  'download  corr coefs')->click();
-    sleep(3);
-    $d->find_element_ok('//*[contains(text(), "DMCP")]', 'xpath', 'check corr download')->click();
-    sleep(5);
-
-    $d->driver->go_back();
-    sleep(5);
+    $d->find_element_ok('Download correlation coefficients', 'partial_link_text',  'download corr coef table');
+    sleep(2);
+    
     $d->driver->refresh();
     sleep(5);
 
@@ -321,7 +313,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('run_genetic_correlation', 'id',  'calc gen corr')->click();
     sleep(70);
-    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
+    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
 
     $d->driver->refresh();
@@ -335,7 +327,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('run_genetic_correlation', 'id',  'calc gen corr')->click();
     sleep(70);
-    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
+    $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
 
 
@@ -375,11 +367,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(70);
     $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
     sleep(5);
-    $d->find_element_ok('Download correlation', 'partial_link_text',  'download  corr coefs')->click();
-    sleep(3);
-    $d->find_element_ok('//*[contains(text(), "DMCP")]', 'xpath', 'check corr download')->click();
-    sleep(5);
-
+    $d->find_element_ok('Download correlation coefficients', 'partial_link_text',  'download corr coef table');
+    sleep(2);
+   
 
     foreach my $list_id ($trials_list_id, $accessions_list_id, $plots_list_id) {
         $list_id =~ s/\w+_//g;
