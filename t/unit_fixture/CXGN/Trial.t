@@ -434,6 +434,7 @@ is_deeply(\@all_project_types, [
           'Screen House',
           'Seed Multiplication',
           'Seedling Nursery',
+          'Sensory Trial',
           'Specialty Trial',
           'Uniform Yield Trial',
           'Variety Release Trial',
@@ -443,14 +444,12 @@ is_deeply(\@all_project_types, [
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
-	      'heterosis_trial',
-	      	      'misc_trial',
-	      'phenotyping_trial',
-
+	        'heterosis_trial',
+	      	'misc_trial',
+	        'phenotyping_trial',
           'pollinating_trial',
-          'storage_trial',
-          'Sensory Trial'
-        ], "check get_all_project_types");
+          'storage_trial'
+      ], "check get_all_project_types");
 
 
 my $stock_count_rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { } );
