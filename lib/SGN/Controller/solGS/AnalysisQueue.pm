@@ -451,7 +451,7 @@ sub structure_output_details {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $referer        = $c->req->referer;
+    my $referer        = $c->req->referer || $analysis_page;
     my $base           = $c->controller('solGS::Path')->clean_base_name($c);
     my $output_details = {};
 
@@ -560,28 +560,24 @@ sub structure_pca_analysis_output {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $pop_id = $c->stash->{pca_pop_id};
-
     my $base = $c->controller('solGS::Path')->clean_base_name($c);
 
     my $pca_page = $base . $analysis_page;
     $analysis_data->{analysis_page} = $pca_page;
-
-    my %output_details = ();
-
-# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-    my $geno_file = $c->stash->{genotype_file_name};
-
+    my $pop_id = $c->stash->{pca_pop_id};
+    
     $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
+    my $input_file = $c->controller('solGS::pca')->pca_data_input_files($c);
+    
     $c->controller('solGS::pca')->pca_scores_file($c);
     my $scores_file = $c->stash->{pca_scores_file};
 
-    $output_details{ 'pca_' . $pop_id } = {
+    my %output_details = ('pca_' . $pop_id  => {
         'output_page'   => $pca_page,
         'pca_pop_id'    => $pop_id,
-        'genotype_file' => $geno_file,
+        'input_file' => $input_file,
         'scores_file'   => $scores_file,
-    };
+    });
 
     return \%output_details;
 
@@ -600,11 +596,8 @@ sub structure_cluster_analysis_output {
     $analysis_data->{analysis_page} = $cluster_page;
     my $cluster_type = $c->stash->{cluster_type};
 
-    my %output_details = ();
-
-# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-# my $geno_file = $c->stash->{genotype_file_name};
-    my $input_file;
+    my $input_file =$c->controller('solGS::Cluster')->cluster_data_input_files($c);
+   
     $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
     $c->controller('solGS::Cluster')->cluster_result_file($c);
 
@@ -615,13 +608,13 @@ sub structure_cluster_analysis_output {
     else {
         $result_file = $c->stash->{"${cluster_type}_result_newick_file"};
     }
-
-    $output_details{ 'cluster_' . $pop_id } = {
+    
+    my %output_details = ( 'cluster_' . $pop_id  => {
         'output_page'    => $cluster_page,
         'cluster_pop_id' => $pop_id,
         'input_file'     => $input_file,
         'result_file'    => $result_file,
-    };
+    });
 
     return \%output_details;
 
@@ -1063,7 +1056,7 @@ sub run_analysis {
         }
         else {
             $c->stash->{status} = 'Error: Unknown job';
-            print STDERR "\n Uknown job.\n";
+            print STDERR "\n Unknown job.\n";
         }
     };
 
