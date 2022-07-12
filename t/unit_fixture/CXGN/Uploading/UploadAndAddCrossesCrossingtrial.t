@@ -29,6 +29,7 @@ local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
+my $phenome_schema = $f->phenome_schema;
 
 my $mech = Test::WWW::Mechanize->new;
 
@@ -727,7 +728,12 @@ is($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experi
 is($stocks_after_delete_all_crosses, $before_adding_stocks + 43);
 
 # remove added crossing trials after test so that they don't affect downstream tests
+my $project_owner_row_1 = $phenome_schema->resultset('ProjectOwner')->find( { project_id=> $crossing_trial_rs->project_id()});
+$project_owner_row_1->delete();
 $crossing_trial_rs->delete();
+
+my $project_owner_row_2 = $phenome_schema->resultset('ProjectOwner')->find( { project_id=> $crossing_trial2_rs->project_id()});
+$project_owner_row_2->delete(); 
 $crossing_trial2_rs->delete();
 
 
