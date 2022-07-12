@@ -374,7 +374,7 @@ solGS.submitJob = {
 
     return analysisProfile;
   },
-
+  
   validateAnalysisInput: function (analysisProfile) {
     var analysisName = jQuery("#analysis_name").val();
 
@@ -776,17 +776,67 @@ solGS.getTraitDetails = function (traitId) {
   }
 };
 
+solGS.alertMessage = function (msg, msgTitle, divId) {
+  if (!msgTitle) {
+    msgTitle = "Message";
+  }
+
+  if (!divId) {
+    divId = "error_message";
+  }
+
+  jQuery("<div />", { id: divId })
+    .html(msg)
+    .dialog({
+      height: "auto",
+      width: "auto",
+      modal: true,
+      title: msgTitle,
+      buttons: {
+        OK: {
+          click: function () {
+            jQuery(this).dialog("close");
+            //window.location = window.location.href;
+          },
+          class: "btn btn-success",
+          text: "OK",
+        },
+      },
+    });
+};
+
+solGS.getTraitDetails = function (traitId) {
+  if (!traitId) {
+    traitId = jQuery("#trait_id").val();
+  }
+
+  if (traitId) {
+    jQuery.ajax({
+      dataType: "json",
+      type: "POST",
+      data: { trait_id: traitId },
+      url: "/solgs/details/trait/" + traitId,
+      success: function (trait) {
+        jQuery(document.body).append(
+          '<input type="hidden" id="trait_name" value="' + trait.name + '"></input>'
+        );
+        jQuery(document.body).append(
+          '<input type="hidden" id="trait_abbr" value="' + trait.abbr + '"></input>'
+        );
+      },
+    });
+  }
+};
+
 solGS.getTrainingTraitsIds = function () {
   var trainingTraitsIds = jQuery("#training_traits_ids").val();
   var traitId = jQuery("#trait_id").val();
 
   if (trainingTraitsIds) {
     trainingTraitsIds = trainingTraitsIds.split(",");
-  } else {
+  } else if (traitId) {
     trainingTraitsIds = [traitId];
   }
-
-  var traitsCode = jQuery("#training_traits_code").val();
 
   return trainingTraitsIds;
 };
@@ -795,6 +845,27 @@ solGS.getTrainingTraitsCode = function () {
   var trainingTraitsCode = jQuery("#training_traits_code").val();
 
   return trainingTraitsCode;
+};
+
+solGS.getModelArgs = function () {
+  var args = this.getTrainingPopArgs();
+  var trainingTraitsIds = this.getTrainingTraitsIds();
+  console.log("training traits ids: " + trainingTraitsIds);
+  if (trainingTraitsIds) {
+    args["training_traits_ids"] = trainingTraitsIds;
+  }
+
+  return args;
+};
+
+
+solGS.getTrainingPopArgs = function () {
+  var args = {
+    training_pop_id: jQuery("#training_pop_id").val(),
+    genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
+  };
+
+  return args;
 };
 
 solGS.getPopulationDetails = function () {
@@ -844,19 +915,15 @@ solGS.showMessage = function (divId, msg) {
   jQuery(divId).html(msg).show();
 };
 
-solGS.pageType = function () {
-  var type;
-  var path = location.pathname;
+solGS.checkPageType = function () {
+  var pageType = jQuery.ajax({
+    dataType: "json",
+    type: "POST",
+    data: { page: document.URL },
+    url: "/solgs/check/page/type",
+  });
 
-  if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
-    type = "single model";
-  } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
-    type = "multiple models";
-  } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
-    type = "selection prediction";
-  }
-
-  return type;
+  return pageType;
 };
 
 //executes two functions alternately

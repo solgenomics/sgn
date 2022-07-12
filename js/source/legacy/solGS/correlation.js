@@ -162,6 +162,45 @@ solGS.correlation = {
         if (response.result) {
           solGS.correlation.runPhenoCorrelationAnalysis(args);
         } else {
+          jQuery(corrMsgDiv)
+            .html("This population has no valid traits to correlate.")
+            .fadeOut(8400);
+        }
+      },
+      error: function (res) {
+        jQuery(corrMsgDiv)
+          .html("Error occured preparing the additive genetic data for correlation analysis.")
+          .fadeOut(8400);
+      },
+    });
+  },
+
+  phenotypicCorrelation: function () {
+    var correPopId = jQuery("#corre_pop_id").val();
+    var dataSetType = jQuery("#data_set_type").val();
+    var dataStr = jQuery("#data_structure").val();
+
+    var args = {
+      corre_pop_id: correPopId,
+      data_set_type: dataSetType,
+      data_structure: dataStr,
+    };
+
+    args = JSON.stringify(args);
+
+    jQuery("#run_pheno_correlation").hide();
+    jQuery("#correlation_canvas .multi-spinner-container").show();
+    jQuery("#correlation_message").html("Running correlation... please wait...").show();
+
+    jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: { arguments: args },
+      url: "/correlation/phenotype/data/",
+      success: function (response) {
+        if (response.result) {
+          solGS.correlation.runPhenoCorrelationAnalysis(args);
+        } else {
           jQuery("#correlation_message")
             .html("This population has no phenotype data.")
             .fadeOut(8400);
@@ -192,13 +231,12 @@ solGS.correlation = {
         if (response.data) {
           solGS.correlation.plotCorrelation(response.data, "#correlation_canvas");
 
-          var corrDownload =
-            '<a href="/download/phenotypic/correlation/population/' +
-            correPopId +
-            '">Download correlation coefficients</a>';
+          var corrDownload = solGS.correlation.createPhenoCorrDownloadLink(
+            response.corre_table_file
+          );
 
           jQuery("#correlation_canvas")
-            .append("<br />[ " + corrDownload + " ]")
+            .append("<br />" + corrDownload)
             .show();
 
           jQuery("#correlation_canvas .multi-spinner-container").hide();
@@ -224,6 +262,20 @@ solGS.correlation = {
         jQuery("#run_pheno_correlation").show();
       },
     });
+  },
+
+  createPhenoCorrDownloadLink: function (correFile) {
+    var correFileName = correFile.split("/").pop();
+    var correFileLink =
+      '<a href="' +
+      correFile +
+      '" download=' +
+      correFileName +
+      '">' +
+      "Download correlation coefficients" +
+      "</a>";
+
+    return correFileLink;
   },
 
   showCorrProgress: function (canvas, msg) {
@@ -258,9 +310,6 @@ solGS.correlation = {
   runGenCorrelationAnalysis: function (args) {
     var divPlace = JSON.parse(args);
     canvas = divPlace.canvas;
-    if (!canvas) {
-      canvas = "#correlation_canvas";
-    }
     corrMsgDiv = divPlace.corr_msg_div;
 
     var msg = "Running genetic correlation analysis";

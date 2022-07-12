@@ -46,7 +46,7 @@ $locations
 
                             <br/>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_cross_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Crossing Experiment" &>
@@ -55,7 +55,7 @@ $locations
                             <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
                             <center>
                                 <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a crossing experiment, click here</button><br/><br/>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing experiment, go to Next Step</button>
+                                <button id="next_step_cross_experiment" class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing experiment, go to Next Step</button>
                             </center>
 
                         </&>
@@ -120,7 +120,7 @@ $locations
                                 </div>
                                 <br/><br/>
                                 <center>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                    <button id="next_step_cross_information" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Enter parentage information" &>
@@ -249,7 +249,7 @@ $locations
                                 </div>
                                 <br>
                                 <center>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                    <button id="next_step_basic_information" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Additional cross info" &>
@@ -392,7 +392,7 @@ $locations
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="new_cross_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

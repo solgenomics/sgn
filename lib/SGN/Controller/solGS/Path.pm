@@ -3,6 +3,24 @@ package SGN::Controller::solGS::Path;
 use Moose;
 use namespace::autoclean;
 
+use JSON;
+
+BEGIN { extends 'Catalyst::Controller' }
+
+
+sub check_page_type :Path('/solgs/check/page/type') Args(0) {
+	my ($self, $c) = @_;
+
+	my $page_type = $self->page_type($c, $c->req->param('page'));
+
+	my $ret = {'page_type' => $page_type};
+	$ret = to_json($ret);
+
+	$c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
 
 sub model_page_url {
 	my ($self, $args) = @_;
@@ -89,12 +107,15 @@ sub page_type {
 
     print STDERR "\nurl: $url\n";
     my $model_pages = '/solgs/trait'
-    . '|solgs/traits/all/'
-    . '|solgs/model/combined/trials/'
-    . '|solgs/models/combined/trials/';
+    . '|/solgs/traits/all/'
+    . '|/solgs/model/combined/trials/'
+    . '|/solgs/models/combined/trials/';
 
     my $selection_pop_pages = '/solgs/selection'
-    . '|solgs/combined/model/';
+    . '|/solgs/combined/model/';
+
+	my $training_pop_pages = '/solgs/population/'
+	. '|/solgs/populations/combined/';
 
 	if ($url =~ $model_pages)
 	{
@@ -103,6 +124,9 @@ sub page_type {
 	elsif ($url =~ $selection_pop_pages)
 	{
 		$type = 'selection population';
+	}
+	elsif ($url =~ $training_pop_pages) {
+		$type = 'training population';
 	}
 
 	return $type;

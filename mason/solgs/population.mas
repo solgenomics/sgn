@@ -94,7 +94,8 @@ $training_pop_id = $pop_id;
 %}
 
   <& /solgs/population/trait_acronyms.mas &>
-
+  <& /solgs/population/download.mas &>
+  
 %} else {
 
 <&| /page/info_section.mas,

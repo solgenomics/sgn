@@ -656,7 +656,7 @@ is($first_cross->[11],'2017/02/02' );
 is($first_cross->[13],8);
 is($first_cross->[15],'test_crossingtrial');
 
-#test deleting crossing
+#test deleting cross
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_deleting_accessions = $schema->resultset("Stock::Stock")->search({ type_id => $accession_type_id})->count();
 my $before_deleting_stocks = $schema->resultset("Stock::Stock")->search({})->count();
@@ -668,7 +668,7 @@ my $experiment_stock_before_deleting_cross = $schema->resultset("NaturalDiversit
 my $deleting_cross_id = $schema->resultset("Stock::Stock")->find({name=>'test_cross_upload1'})->stock_id;
 $mech->post_ok('http://localhost:3010/ajax/cross/delete', [ 'cross_id' => $deleting_cross_id]);
 $response = decode_json $mech->content;
-is_deeply($message_hash, {'success' => 1});
+is($response->{'success'}, '1');
 
 my $after_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $after_deleting_accessions = $schema->resultset("Stock::Stock")->search({ type_id => $accession_type_id})->count();
@@ -690,7 +690,7 @@ my $before_deleting_empty_experiment = $schema->resultset("Project::Project")->s
 my $crossing_experiment_id = $schema->resultset("Project::Project")->find({name=>'test_crossingtrial_deletion'})->project_id;
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_experiment_id.'/delete/crossing_experiment');
 $response = decode_json $mech->content;
-is_deeply($message_hash, {'success' => 1});
+is($response->{'success'}, '1');
 
 my $after_deleting_empty_experiment = $schema->resultset("Project::Project")->search({})->count();
 
