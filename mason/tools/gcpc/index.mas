@@ -30,13 +30,18 @@
 	<label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
 	<br>
 
-	<button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+	<button class="btn btn-primary" id="select_dataset" type="submit" name="select_dataset" value="select_dataset">Select Dataset</button>
 	<br>
 	<br>
 
       </div>
-      <div id="sin_list"></div>
 
+      <div id="fixed_and_random_factors">
+      
+      </div>
+
+      <div id="sin_list">
+      </div>
 
       <center>
 	<div id="trait_histogram_plot">
@@ -91,24 +96,17 @@ jQuery(document).ready(function() {
     $('#trait_histogram_plot').html('');
     $('#stability_output').empty();
   });
-  jQuery('#selectDataset').click(function() {
+  jQuery('#select_dataset').click(function() {
     var dataset_id = get_dataset_id();
     $.ajax({
-      url: '/ajax/gcpc/shared_phenotypes',
+      url: '/ajax/gcpc/factors',
       data: {'dataset_id': dataset_id},
       success: function(response) {
         if (response.error) {
           $('#dataset_select').val('ERROR');
         }
         else {
-//	    alert(response.options);
-//	    	    alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
+	  jQuery('#fixed_and_random_factors').html(response.html);
 
 
 	}

@@ -29,29 +29,99 @@ __PACKAGE__->config(
     );
 
 
-sub shared_phenotypes: Path('/ajax/gcpc/shared_phenotypes') : {
+# sub shared_phenotypes: Path('/ajax/gcpc/shared_phenotypes') : {
+#     my $self = shift;
+#     my $c = shift;
+#     my $dataset_id = $c->req->param('dataset_id');
+#     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+#     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+#     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+#     my $traits = $ds->retrieve_traits();
+    
+#     $c->tempfiles_subdir("gcpc_files");
+#     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"gcpc_files/trait_XXXXX");
+#     $people_schema = $c->dbic_schema("CXGN::People::Schema");
+#     $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+#     my $temppath = $c->config->{basepath}."/".$tempfile;
+#     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+#     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
+
+#     print STDERR Dumper($traits);
+#     $c->stash->{rest} = {
+#         options => $traits,
+#         tempfile => $tempfile."_phenotype.txt",
+# #        tempfile => $file_response,
+#     };
+# }
+
+
+sub factors :Path('/ajax/gcpc/factors') Args(0) {
     my $self = shift;
     my $c = shift;
+
     my $dataset_id = $c->req->param('dataset_id');
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
-    my $traits = $ds->retrieve_traits();
-    
-    $c->tempfiles_subdir("gcpc_files");
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"gcpc_files/trait_XXXXX");
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $temppath = $c->config->{basepath}."/".$tempfile;
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
-    my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
-    print STDERR Dumper($traits);
-    $c->stash->{rest} = {
-        options => $traits,
-        tempfile => $tempfile."_phenotype.txt",
-#        tempfile => $file_response,
-    };
+
+    $c->tempfiles_subdir("gcpc_files");
+    my $gcpc_tmp_output = $c->config->{cluster_shared_tempdir}."/gcpc_files";
+    mkdir $gcpc_tmp_output if ! -d $gcpc_tmp_output;
+    my ($tmp_fh, $tempfile) = tempfile(
+      "gcpc_download_XXXXX",
+      DIR=> $gcpc_tmp_output,
+    );
+
+    my $temppath =  $tempfile;
+
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes=>0);
+
+     $ds->retrieve_phenotypes();
+
+
+    open(my $PF, "<", $temppath."_phenotype.txt") || die "Can't open pheno file $temppath"."_phenotype.txt";
+    open(my $CLEAN, ">", $temppath."_phenotype.txt.clean") || die "Can't open pheno_filepath clean for writing";
+
+    my $header = <$PF>;
+    chomp($header);
+
+    my @fields = split /\t/, $header;
+
+    my @file_traits = @fields[ 39 .. @fields-1 ];
+    my @other_headers = @fields[ 0 .. 38 ];
+
+    print STDERR "FIELDS: ".Dumper(\@file_traits);
+
+    foreach my $t (@file_traits) {
+	$t = make_R_trait_name($t);
+    }
+
+    print STDERR "FILE TRAITS: ".Dumper(\@file_traits);
+
+    my @new_header = (@other_headers, @file_traits);
+    print $CLEAN join("\t", @new_header)."\n";
+
+    while(<$PF>) {
+	print $CLEAN $_;
+    }
+
+
+    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt.clean" });
+
+    my @factor_select;
+
+    # only use if factor has multiple levels, start from appropriate hardcoded list
+    #
+    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber germplasmName|;
+    foreach my $factor (@factors) {
+	if ($pf->distinct_levels_for_factor($factor) > 1) {
+	    push @factor_select, $factor;
+	}
+    }
+
+    $c->stash->{rest} = \@factors;
+
 }
 
 my $method_id;
