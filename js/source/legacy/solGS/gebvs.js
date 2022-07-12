@@ -14,12 +14,14 @@ solGS.gebvs = {
     var comboPopsId = jQuery("#combo_pops_id").val();
     var selectionPopId = jQuery("#selection_pop_id").val();
     var protocolId = jQuery("#genotyping_protocol_id").val();
-    
+    var selProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+
     var params = {
       training_pop_id: popId,
       combo_pops_id: comboPopsId,
       selection_pop_id: selectionPopId,
       genotyping_protocol_id: protocolId,
+      selection_pop_genotyping_protocol_id: selProtocolId,
       trait_id: traitId,
     };
 
