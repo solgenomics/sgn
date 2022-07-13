@@ -68,6 +68,27 @@ sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) 
 
 # }
 
+sub download_gebvs :Path('/solgs/download/gebvs/pop') Args(0) {
+    my ($self, $c) = @_;
+
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+	my $gebvs_file;
+	if ($c->stash->{selection_pop_id})
+	{
+		$gebvs_file = $self->download_selection_gebvs_file($c);
+	}
+	else
+	{
+		$gebvs_file = $self->download_training_gebvs_file($c);
+	}
+
+	$c->stash->{rest}{gebvs_file} = $gebvs_file;
+
+}
+
+
 
 sub download_marker_effects :Path('/solgs/download/model/marker/effects') Args(0) {
     my ($self, $c) = @_;
@@ -225,13 +246,6 @@ sub download_selection_gebvs_file {
 	my $trait_id = $c->stash->{trait_id};
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
 	
-		if ($protocol_id =~ /-/)
-# 	{
-# 		($protocol_id, $sel_protocol_id)= split(/-/, $protocol_id);
-# 	}
-	
-#     $c->stash->{genotyping_protocol_id} = $protocol_id;
-# 	$c->stash->{selection_pop_genotyping_protocol_id} = $sel_protocol_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id);
 	my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
