@@ -31,13 +31,14 @@ solGS.gebvs = {
   getGebvsData: function () {
     var action = "/solgs/trait/gebvs/data";
     var params = this.getGebvsParams();
+    params = JSON.stringify(params);
 
     var gebvsData = jQuery.ajax({
       async: false,
       type: 'POST',
       url: action,
       dataType: "json",
-      data: params,
+      data: {arguments: params},
     });
 
     return gebvsData;
@@ -56,14 +57,17 @@ solGS.gebvs = {
   },
 
   getGebvsFiles: function () {
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-    var args = {
-      training_pop_id: jQuery("#training_pop_id").val(),
-      selection_pop_id: jQuery("#selection_pop_id").val(),
-      training_traits_ids: trainingTraitsIds,
-      genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
-    };
+    // var trainingTraitsIds = solGS.getTrainingTraitsIds();
+    // var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
 
+    // var args = {
+    //   training_pop_id: jQuery("#training_pop_id").val(),
+    //   selection_pop_id: jQuery("#selection_pop_id").val(),
+    //   training_traits_ids: trainingTraitsIds,
+    //   genotyping_protocol_id: protocols.genotyping_protocol_id,
+    //   selection_pop_genotyping_protocol_id: protocols.selection_pop_genotyping_protocol_id,
+    // };
+    var args = solGS.getSelectionPredictionArgs();
     args = JSON.stringify(args);
 
     var gebvsDataReq = jQuery.ajax({
