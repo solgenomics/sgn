@@ -34,6 +34,7 @@ solGS.gebvs = {
 
     var gebvsData = jQuery.ajax({
       async: false,
+      type: 'POST',
       url: action,
       dataType: "json",
       data: params,
