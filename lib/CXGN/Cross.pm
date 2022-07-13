@@ -1541,7 +1541,7 @@ sub get_cross_transaction_ids_in_experiment {
             my @transaction_ids = keys %transaction_hash;
             push @info, [$cross_id, $cross_name, [@transaction_ids]];
         } else {
-            push @info, [$cross_id, $cross_name, $cross_combination, [$cross_transaction_json]];
+            push @info, [$cross_id, $cross_name, [$cross_transaction_json]];
         }
     }
 
