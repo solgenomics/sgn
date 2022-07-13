@@ -15,19 +15,10 @@ BEGIN { extends 'Catalyst::Controller' }
 sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     my ($self, $c) = @_;
 
-    my $trait_id = $c->req->param('trait_id');
-    my $pop_id   = $c->req->param('training_pop_id');
-    my $combo_pops_id = $c->req->param('combo_pops_id');
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
-    $c->stash->{combo_pops_id} = $combo_pops_id;
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{training_pop_id} = $pop_id;
-
-    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
     $self->get_regression_data_files($c);
 
@@ -54,7 +45,6 @@ sub get_regression_data_files {
 
     my $pop_id     = $c->stash->{pop_id};
     my $trait_abbr = $c->stash->{trait_abbr};
-    my $cache_dir  = $c->stash->{solgs_cache_dir};
 
     $c->controller('solGS::Files')->model_phenodata_file($c);
     my $phenotype_file = $c->stash->{model_phenodata_file};
@@ -105,19 +95,10 @@ sub get_additive_variance {
 sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0) {
     my ($self, $c) = @_;
 
-    my $trait_id      = $c->req->param('trait_id');
-    my $pop_id        = $c->req->param('training_pop_id');
-    my $combo_pops_id = $c->req->param('combo_pops_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{training_pop_id} = $pop_id;
-
-    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
-    $c->stash->{combo_pops_id} = $combo_pops_id;
-
+    my $trait_id = $c->stash->{trait_id};
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
@@ -144,6 +125,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
 
     my @pheno_deviations = map { [$_->[0], $round->round(( $_->[1] - $pheno_mean ))] } @pheno_data;
 
+    my $pop_id = $c->stash->{training_pop_id};
     my $heritability =  $self->get_heritability($c, $pop_id, $trait_id);
 
     my $ret->{status} = 'failed';

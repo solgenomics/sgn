@@ -8,28 +8,30 @@
 
 jQuery(document).ready( function() {
 
-    var popDetails  = solGS.getPopulationDetails();
-    var traitId     = jQuery("#trait_id").val();
-    var protocolId  = jQuery('#genotyping_protocol_id').val();
+    // var popDetails  = solGS.getPopulationDetails();
+    // var traitId     = jQuery("#trait_id").val();
+    // var protocolId  = jQuery('#genotyping_protocol_id').val();
     
-    var args = {
-	'trait_id'       : traitId,
-	'training_pop_id': popDetails.training_pop_id,
-	'combo_pops_id'  : popDetails.combo_pops_id,
-	'genotyping_protocol_id': protocolId
-    };
+    // var args = {
+	// 'trait_id'       : traitId,
+	// 'training_pop_id': popDetails.training_pop_id,
+	// 'combo_pops_id'  : popDetails.combo_pops_id,
+	// 'genotyping_protocol_id': protocolId
+    // };
    
+    var args = solGS.getModelArgs();
     checkDataExists(args);   
  
 });
 
 
 function checkDataExists (args) {
-    
+    args = JSON.stringify(args);
+
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: args,
+        data: {arguments: args},
         url: '/heritability/check/data/',
         success: function(response) {
             if(response.exists === 'yes') {
@@ -75,7 +77,7 @@ function getRegressionData (args) {
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: args,
+        data: {arguments: args},
         url: '/heritability/regression/data/',
         success: function(response) {
             if(response.status === 'success') {
