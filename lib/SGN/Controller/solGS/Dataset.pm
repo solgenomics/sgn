@@ -46,24 +46,15 @@ sub check_predicted_dataset_selection :Path('/solgs/check/predicted/dataset/sele
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $json = JSON->new();
-    $args = $json->decode($args);
-
-    my $training_pop_id  = $args->{training_pop_id};
-    my $selection_pop_id = $args->{selection_pop_id};
-    $c->stash->{training_traits_ids} = $args->{training_traits_ids};
-    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
-
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+   
     $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id);
 
-    my $ret->{output} = $c->stash->{selection_prediction_download};
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
+    $c->stash->{rest}{output} = $c->stash->{selection_prediction_download};
+   
 }
 
 
