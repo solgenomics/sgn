@@ -118,7 +118,8 @@ sub download {
             my $transactions = $each_cross_transactions->[2];
             if ($transactions) {
                 my @transactions_array = @$transactions;
-                my $transaction_ids_string = join(",", @transactions_array);
+                my @sorted_ids = sort(@transactions_array);
+                my $transaction_ids_string = join(",", @sorted_ids);
                 $cross_id_hash{$transaction_cross_id}{'transaction_ids'} = $transaction_ids_string;
             }
         }

@@ -7,7 +7,9 @@ use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use SGN::Model::Cvterm;
-
+use CXGN::Trial::Download;
+use Spreadsheet::WriteExcel;
+use Spreadsheet::Read;
 use Data::Dumper;
 use JSON;
 local $Data::Dumper::Indent = 0;
@@ -89,6 +91,53 @@ is($transaction_rows, 2);
 
 my $after_upload_identifier_rows = $schema->resultset("Stock::Stockprop")->search({type_id => $cross_identifier_type_id})->count();
 is($after_upload_identifier_rows, $before_upload_identifier_rows + 2);
+
+#test crossing experiment download with transaction info
+my @cross_properties = ("Tag Number", "Pollination Date", "Number of Bags", "Number of Flowers", "Number of Fruits", "Number of Seeds");
+my $tempfile = "/tmp/test_download_crossing_experiment.xls";
+my $format = 'CrossingExperimentXLS';
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema => $f->bcs_schema,
+    trial_list => [$crossing_experiment_id],
+    filename => $tempfile,
+    format => $format,
+    field_crossing_data_order => \@cross_properties
+});
+
+$create_spreadsheet->download();
+my $contents = ReadData $tempfile;
+
+my $columns = $contents->[1]->{'cell'};
+my @column_array = @$columns;
+my $number_of_columns = scalar @column_array;
+ok(scalar($number_of_columns) == 22, "check number of columns.");
+
+is_deeply($contents->[1]->{'cell'}->[1], [
+    undef,
+    'Cross Unique ID',
+    'intercross_upload_1',
+    'intercross_upload_2'
+], "check cross unique ids column");
+
+my $transaction_column = $contents->[1]->{'cell'}->[21];
+my @transaction_array = @$transaction_column;
+my $correct_grouping_1;
+my $correct_grouping_2;
+
+if ('transaction_id_0001,transaction_id_0004' ~~ @transaction_array){
+    $correct_grouping_1 = 1;
+} else {
+    $correct_grouping_1 = 0
+}
+
+if ('transaction_id_0002,transaction_id_0003' ~~ @transaction_array){
+    $correct_grouping_2 = 1;
+} else {
+    $correct_grouping_2 = 0
+}
+
+is($correct_grouping_1, 1);
+is($correct_grouping_2, 1);
 
 #deleting crosses and crossing experiment after testing
 $mech->post_ok('http://localhost:3010/ajax/cross/delete', [ 'cross_id' => $intercross_upload_1_id]);

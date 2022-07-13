@@ -598,7 +598,7 @@ my @column_array = @$columns;
 my $number_of_columns = scalar @column_array;
 #print STDERR "COLUMNS =".Dumper ($columns)."\n";
 
-ok(scalar($number_of_columns) == 21, "check number of columns.");
+ok(scalar($number_of_columns) == 22, "check number of columns.");
 is_deeply($contents->[1]->{'cell'}->[1], [
     undef,
     'Cross Unique ID',
