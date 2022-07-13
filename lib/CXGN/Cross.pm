@@ -1298,7 +1298,6 @@ sub get_cross_additional_info_trial {
 
     $h->execute($cross_combination_typeid, $cross_additional_info_typeid, $trial_id);
 
-
     my @data = ();
     while(my($cross_id, $cross_name, $cross_combination, $cross_additional_info_json) = $h->fetchrow_array()){
       #print STDERR Dumper $cross_props;
@@ -1505,6 +1504,48 @@ sub get_all_cross_entries {
     }
 
     return \@cross_data;
+}
+
+
+=head2 get_cross_transaction_ids_in_experiment
+
+    Class method.
+    Returns all cross transaction ids in a specific crossing experiment.
+    Example: my @cross_transaction_ids = CXGN::Cross->get_cross_transaction_ids_in_experiment($schema, $trial_id);
+
+=cut
+
+sub get_cross_transaction_ids_in_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_transaction_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value
+        FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id) AND stock.type_id = ?
+        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($cross_type_id, $cross_transaction_type_id, $trial_id);
+
+    my @info = ();
+    while(my($cross_id, $cross_name, $cross_transaction_json) = $h->fetchrow_array()){
+        if ($cross_transaction_json){
+            my $cross_transaction_info = decode_json $cross_transaction_json;
+            my %transaction_hash = %{$cross_transaction_info};
+            my @transaction_ids = keys %transaction_hash;
+            push @info, [$cross_id, $cross_name, [@transaction_ids]];
+        } else {
+            push @info, [$cross_id, $cross_name, $cross_combination, [$cross_transaction_json]];
+        }
+    }
+
+    return \@info;
 }
 
 
