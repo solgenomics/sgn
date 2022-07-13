@@ -66,7 +66,7 @@ solGS.save = {
   },
 
   analysisResultType: function () {
-    var type = solGS.pageType();
+    var type = solGS.checkPageType();
     return type;
   },
 
