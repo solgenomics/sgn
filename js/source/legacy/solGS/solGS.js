@@ -435,7 +435,6 @@ solGS.submitJob = {
   },
 
   getArgsFromUrl: function (url, args) {
-    console.log("geargsfromurl " + url + " args " + args);
     var referer = document.URL;
     var host = window.location.protocol + "//" + window.location.host;
     referer = referer.replace(host, "");
@@ -528,16 +527,10 @@ solGS.submitJob = {
     }
 
     var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
-    var protocolId = args.genotyping_protocol_id;
-    if (!protocolId) {
-      protocolId = protocols.genotyping_protocol_id;
-    }
-
-    var popDesc = jQuery("#training_pop_desc").val();
-
+    
     args["training_pop_desc"] = jQuery("#training_pop_desc").val();
     args["selection_pop_desc"] = jQuery("#selection_pop_desc").val();
-    args["genotyping_protocol_id"] = protocolId;
+    args["genotyping_protocol_id"] = protocols.genotyping_protocol_id;
     args["selection_pop_genotyping_protocol_id"] = protocols.selection_pop_genotyping_protocol_id;
     args["referer"] = referer;
 
@@ -850,14 +843,25 @@ solGS.getTrainingTraitsCode = function () {
 solGS.getModelArgs = function () {
   var args = this.getTrainingPopArgs();
   var trainingTraitsIds = this.getTrainingTraitsIds();
-  console.log("training traits ids: " + trainingTraitsIds);
+  var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+
   if (trainingTraitsIds) {
     args["training_traits_ids"] = trainingTraitsIds;
+    args["genotyping_protocol_id"] = protocols.genotyping_protocol_id;
   }
 
   return args;
 };
 
+solGS.getSelectionPredictionArgs = function () {
+  var args = this.getModelArgs();
+  var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+ 
+  args["selection_pop_id"] = jQuery("#selection_pop_id").val();
+  args["selection_pop_genotyping_protocol_id"] = protocols.selection_pop_genotyping_protocol_id;
+  
+  return args;
+};
 
 solGS.getTrainingPopArgs = function () {
   var args = {
