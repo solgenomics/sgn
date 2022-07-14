@@ -629,21 +629,6 @@ sub top_blups {
 }
 
 
-sub predict_selection_pop_single_trait {
-    my ($self, $c) = @_;
-
-    if ($c->stash->{data_set_type} =~ /single population/)
-    {
-	$self->predict_selection_pop_single_pop_model($c)
-    }
-    else
-    {
-	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
-    }
-
-}
-
-
 sub predict_selection_pop_multi_traits {
     my ($self, $c) = @_;
 
@@ -664,36 +649,34 @@ sub predict_selection_pop_multi_traits {
     my @unpredicted_traits;
     foreach my $trait_id (@{$c->stash->{training_traits_ids}})
     {
-	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id,  $trait_id);
+        $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
+	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id,  $trait_id);
 
-	push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
+	    push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
     }
 
     if (@unpredicted_traits)
     {
-	$c->stash->{training_traits_ids} = \@unpredicted_traits;
+        $c->stash->{training_traits_ids} = \@unpredicted_traits;
 
-	$c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
+        $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
 
-	if (!-s $c->stash->{genotype_file_name})
-	{
-	    $c->controller('solGS::AsyncJob')->get_selection_pop_query_args_file($c);
-	    $c->stash->{prerequisite_jobs} = $c->stash->{selection_pop_query_args_file};
-	}
+        if (!-s $c->stash->{genotype_file_name})
+        {
+            $c->controller('solGS::AsyncJob')->get_selection_pop_query_args_file($c);
+            $c->stash->{prerequisite_jobs} = $c->stash->{selection_pop_query_args_file};
+        }
 
-	$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id, $protocol_id);
+        $c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id, $protocol_id);
 
-	$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
-	$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
+        $c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
+        $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 
-
-	#$c->stash->{prerequisite_type} = 'selection_pop_download_data';
-
-	$c->controller('solGS::AsyncJob')->run_async($c);
+	    $c->controller('solGS::AsyncJob')->run_async($c);
     }
     else
     {
-	croak "No traits to predict: $!\n";
+	    croak "No traits to predict: $!\n";
     }
 
 }
@@ -756,7 +739,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
         $c->stash->{combo_pops_id}     = $combo_pops_id;
         $c->stash->{trait_id}          = $trait_id;
 
-		$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
+		$self->predict_selection_pop_multi_traits($c);
 
         $c->controller('solGS::combinedTrials')->combined_pops_summary($c);
         $self->model_phenotype_stat($c);
@@ -809,7 +792,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
         {
 		    $c->stash->{trait_abbr} = $trait_abbr;
 		    $c->controller('solGS::Trait')->get_trait_details_of_trait_abbr($c);
-		    $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
+		    $self->predict_selection_pop_multi_traits($c);
 		}
 
         $c->res->redirect("/solgs/models/combined/trials/$training_pop_id/gp/$protocol_id");
