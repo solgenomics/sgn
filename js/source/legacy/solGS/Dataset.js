@@ -177,7 +177,7 @@ solGS.dataset = {
 
     var protocolId, selPopProtocolId;
     if (d.categories["genotyping_protocols"]) {
-      protocolId = d.categories["genotyping_protocols"][0];
+      selPopProtocolId = d.categories["genotyping_protocols"][0];
     } else {
       var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
       selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
@@ -200,18 +200,18 @@ solGS.dataset = {
   checkPredictedDatasetSelection: function (datasetId, datasetName) {
     var args = this.createDatasetSelectionArgs(datasetId, datasetName);
 
-    var trainingPopGenoPro = jQuery("#genotyping_protocol_id").val();
-    var selectionPopGenoPro = args.genotyping_protocol_id;
+    // var trainingPopGenoPro = jQuery("#genotyping_protocol_id").val();
+    // var selectionPopGenoPro = args.selection_pop_genotyping_protocol_id;
 
-    if (trainingPopGenoPro != selectionPopGenoPro) {
-      var msg =
-        "This dataset of selection candidates has a " +
-        "different genotyping protocol from the training " +
-        "population. Please use a dataset with " +
-        "a matching genotyping protocol.";
+    // if (trainingPopGenoPro != selectionPopGenoPro) {
+    //   var msg =
+    //     "This dataset of selection candidates has a " +
+    //     "different genotyping protocol from the training " +
+    //     "population. Please use a dataset with " +
+    //     "a matching genotyping protocol.";
 
-      solGS.alertMessage(msg);
-    } else {
+    //   solGS.alertMessage(msg);
+    // } else {
       args = JSON.stringify(args);
 
       jQuery.ajax({
@@ -238,7 +238,7 @@ solGS.dataset = {
           }
         },
       });
-    }
+    // }
   },
 
   queueDatasetSelectionPredictionJob: function (datasetId) {
