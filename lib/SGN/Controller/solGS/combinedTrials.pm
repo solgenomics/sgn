@@ -984,59 +984,6 @@ sub combine_data_build_multiple_traits_models {
 }
 
 
-sub predict_selection_pop_combined_pops_model {
-    my ($self, $c) = @_;
-
-    my $data_set_type    = $c->stash->{data_set_type};
-    my $training_pop_id  = $c->stash->{training_pop_id} ||  $c->stash->{combo_pops_id} || $c->stash->{model_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{pop_id} = $training_pop_id;
-
-    my @selected_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-
-    $c->controller('solGS::solGS')->traits_with_valid_models($c);
-    my @traits_with_valid_models = @{$c->stash->{traits_ids_with_valid_models}};
-    $c->stash->{training_traits_ids} = \@traits_with_valid_models;
-
-    my @prediction_traits;
-    foreach my $trait_id (@selected_traits)
-    {
-		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
-
-	    if (!-s $c->stash->{rrblup_selection_gebvs_file})
-		{
-		    push @prediction_traits, $trait_id;
-		}
-    }
-
-    if (@prediction_traits)
-    {
-		$c->stash->{training_traits_ids} = \@prediction_traits;
-
-		$c->controller('solGS::AsyncJob')->get_selection_pop_query_args_file($c);
-		my $pre_req = $c->stash->{selection_pop_query_args_file};
-
-		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
-
-		$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
-		my $dep_jobs =  $c->stash->{gs_modeling_jobs_args_file};
-
-		$c->stash->{prerequisite_jobs} = $pre_req;
-		$c->stash->{prerequisite_type} = 'selection_pop_download_data';
-		$c->stash->{dependent_jobs} =  $dep_jobs;
-
-		$c->controller('solGS::AsyncJob')->run_async($c);
-    }
-    else
-    {
-		croak "No traits to predict: $!\n";
-    }
-
-}
-
-
 sub combine_trait_data {
     my ($self, $c) = @_;
 
