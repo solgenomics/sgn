@@ -179,7 +179,7 @@ sub filtered_selection_genotype_file {
 
     my $pop_id = $c->stash->{selection_pop_id};
 
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     my $file_id = "${pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id,
@@ -285,10 +285,9 @@ sub analysis_report_file {
 sub genotype_file_name {
     my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
-
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $protocol_id = $c->stash->{genotyping_protocol_id};
+    if (!$protocol_id) {
+        die "can't get genotype file name with out genotyping protocol id: $!\n";
+    }
 
     my $dir;
     if ($pop_id =~ /list/)
@@ -647,11 +646,11 @@ sub first_stock_genotype_file {
 
 
 sub selection_population_file {
-    my ($self, $c, $selection_pop_id) = @_;
+    my ($self, $c, $selection_pop_id, $protocol_id) = @_;
 
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
-    my $file = "selection_population_file_${selection_pop_id}";
+    my $file = "selection_population_file_${selection_pop_id}-${protocol_id}";
     my $tempfile = $self->create_tempfile($tmp_dir, $file);
 
     $c->stash->{selection_pop_id}  = $selection_pop_id;
@@ -660,7 +659,7 @@ sub selection_population_file {
 
     my $geno_files = $filtered_geno_file;
 
-    $self->genotype_file_name($c, $selection_pop_id);
+    $self->genotype_file_name($c, $selection_pop_id, $protocol_id);
     $geno_files .= "\t" . $c->stash->{genotype_file_name};
 
     write_file($tempfile, {binmode => ':utf8'}, $geno_files);
