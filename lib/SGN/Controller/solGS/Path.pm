@@ -102,21 +102,24 @@ sub create_hyperlink {
 sub page_type {
 	my ($self, $c, $url) = @_;
 
-	# my $path = $c->req->path;
+	my $base = $c->req->base;
+	$url =~ s/$base//;
+
+    my $model_pages = 'solgs/trait'
+    . '|solgs/traits/all/'
+    . '|solgs/model/combined/trials/'
+    . '|solgs/models/combined/trials/';
+
+    my $selection_pop_pages = 'solgs/selection'
+    . '|solgs/combined/model/';
+
+	my $training_pop_pages = 'solgs/population/'
+	. '|solgs/populations/combined/';
+
+	my $search_page = 'solgs/search'
+	. '|solgs'; 
+
 	my $type;
-
-    print STDERR "\nurl: $url\n";
-    my $model_pages = '/solgs/trait'
-    . '|/solgs/traits/all/'
-    . '|/solgs/model/combined/trials/'
-    . '|/solgs/models/combined/trials/';
-
-    my $selection_pop_pages = '/solgs/selection'
-    . '|/solgs/combined/model/';
-
-	my $training_pop_pages = '/solgs/population/'
-	. '|/solgs/populations/combined/';
-
 	if ($url =~ $model_pages)
 	{
 		$type = 'training model';
@@ -125,8 +128,13 @@ sub page_type {
 	{
 		$type = 'selection population';
 	}
-	elsif ($url =~ $training_pop_pages) {
+	elsif ($url =~ $training_pop_pages) 
+	{
 		$type = 'training population';
+	}
+	elsif ($url =~ /^solgs\/search|^solgs$/) 
+	{
+		$type = 'home page';
 	}
 
 	return $type;
