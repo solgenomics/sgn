@@ -467,8 +467,8 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args() {
         $c->stash->{trait_combine_populations} = \@pop_ids;
 
         $self->multi_pops_phenotype_data($c, \@pop_ids);
-        $self->multi_pops_genotype_data($c, \@pop_ids);
-		$self->multi_pops_geno_files($c, \@pop_ids);
+        $self->multi_pops_genotype_data($c, \@pop_ids, $protocol_id);
+		$self->multi_pops_geno_files($c, \@pop_ids, $protocol_id);
 		$self->multi_pops_pheno_files($c, \@pop_ids);
 
         my $geno_files = $c->stash->{multi_pops_geno_files};
@@ -479,7 +479,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args() {
 
         if (!$not_matching_pops)
         {
-            $self->cache_combined_pops_data($c);
+            $self->cache_combined_pops_data($c, $protocol_id);
 
             my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
             my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
@@ -630,7 +630,7 @@ sub multi_pops_pheno_files {
 
 
 sub multi_pops_geno_files {
-    my ($self, $c, $pop_ids) = @_;
+    my ($self, $c, $pop_ids, $protocol_id) = @_;
 
     $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
 
@@ -641,7 +641,7 @@ sub multi_pops_geno_files {
     {
         foreach my $pop_id (@$pop_ids)
         {
-	    	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+	    	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
 	    	$files .= $c->stash->{genotype_file_name};
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);
         }
@@ -650,7 +650,7 @@ sub multi_pops_geno_files {
     }
     else
     {
-		$c->controller('solGS::Files')->genotype_file_name($c, $pop_ids);
+		$c->controller('solGS::Files')->genotype_file_name($c, $pop_ids, $protocol_id);
 		$files = $c->stash->{genotype_file_name};
     }
 
@@ -692,7 +692,7 @@ sub multi_pops_phenotype_data {
 
 
 sub multi_pops_genotype_data {
-    my ($self, $c, $pop_ids) = @_;
+    my ($self, $c, $pop_ids, $protocol_id) = @_;
 
     $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
 
@@ -703,7 +703,7 @@ sub multi_pops_genotype_data {
         foreach my $pop_id (@$pop_ids)
         {
             $c->stash->{pop_id} = $pop_id;
-            $c->controller('solGS::solGS')->genotype_file($c, $pop_id);
+            $c->controller('solGS::solGS')->genotype_file($c, $pop_id, $protocol_id);
 	    	push @job_ids, $c->stash->{r_job_id};
         }
 
@@ -863,7 +863,7 @@ sub combined_pops_summary {
 		$model_link = $c->controller('solGS::Path')->model_page_url($model_page_args);
 	}
 
-    my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
+    my $stocks_no = $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id, $protocol_id);
     my $training_pop_name = "Training population $combo_pops_id";
 
 	$tr_page_args->{'training_pop_id'} = $combo_pops_id;
@@ -899,11 +899,12 @@ sub combined_pops_summary {
 
 
 sub cache_combined_pops_data {
-    my ($self, $c) = @_;
+    my ($self, $c, $protocol_id) = @_;
 
     my $trait_id      = $c->stash->{trait_id};
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
+    $protocol_id   = $c->stash->{genotyping_protocol_id} if !$protocol_id;
 
     if ($trait_abbr)
     {
@@ -913,7 +914,9 @@ sub cache_combined_pops_data {
 		$c->stash->{trait_combined_pheno_file} = $c->stash->{model_phenodata_file};
     }
 
-    $c->controller('solGS::Files')->genotype_file_name($c, $combo_pops_id);
+    my $protocol_id;
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $combo_pops_id, $protocol_id);
     $c->stash->{trait_combined_geno_file} = $c->stash->{genotype_file_name};
 
 }
@@ -989,11 +992,12 @@ sub combine_trait_data {
 
     my $combo_pops_id = $c->stash->{combo_pops_id};
     my $trait_id      = $c->stash->{trait_id};
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
     my $solgs_controller = $c->controller('solGS::solGS');
     $solgs_controller->get_trait_details($c, $trait_id);
 
-    $self->cache_combined_pops_data($c);
+    $self->cache_combined_pops_data($c, $protocol_id);
 
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
@@ -1159,7 +1163,8 @@ sub combined_pops_gs_input_files {
     my $selection_population_file;
     if ($selection_pop_id)
     {
-		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
+        my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id, $sel_pop_protocol_id);
 		$selection_population_file = $c->stash->{selection_population_file};
     }
 
@@ -1180,7 +1185,7 @@ sub combined_pops_gs_input_files {
 
 
 sub count_combined_trials_lines_count {
-    my ($self, $c, $combo_pops_id, $trait_id) = @_;
+    my ($self, $c, $combo_pops_id, $trait_id, $protocol_id) = @_;
 
     $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
     $trait_id  = $c->stash->{trait_id} if !$trait_id;
@@ -1192,7 +1197,7 @@ sub count_combined_trials_lines_count {
     if ($c->req->path =~ /solgs\/model\/combined\/populations\//)
     {
 
-	$self->cache_combined_pops_data($c);
+	$self->cache_combined_pops_data($c, $protocol_id);
 	my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
 	if (-s $combined_pops_geno_file)
@@ -1213,7 +1218,7 @@ sub count_combined_trials_lines_count {
 		$self->get_combined_pops_list($c);
 		my $pops_ids = $c->stash->{combined_pops_list};
 
-		$self->multi_pops_geno_files($c, $pops_ids);
+		$self->multi_pops_geno_files($c, $pops_ids, $protocol_id);
 		my $geno_files = $c->stash->{multi_pops_geno_files};
 
 		my @geno_files = split(/\t/, $geno_files);
@@ -1363,15 +1368,16 @@ sub combine_trait_data_input {
     my $combo_pops_id = $c->stash->{combo_pops_id};
     my $trait_id      = $c->stash->{trait_id};
     my $trait_abbr    = $c->stash->{trait_abbr};
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
     $self->get_combined_pops_list($c);
     my $combo_pops_list = $c->stash->{combined_pops_list};
-    $self->multi_pops_geno_files($c, $combo_pops_list);
+    $self->multi_pops_geno_files($c, $combo_pops_list, $protocol_id);
     $self->multi_pops_pheno_files($c, $combo_pops_list);
     my $pheno_files = $c->stash->{multi_pops_pheno_files};
     my $geno_files  = $c->stash->{multi_pops_geno_files};
 
-    $self->cache_combined_pops_data($c);
+    $self->cache_combined_pops_data($c, $protocol_id);
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
