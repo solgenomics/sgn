@@ -40,7 +40,7 @@ sub _validate_with_plugin {
     }
 
     my $num_cols = scalar(@columns);
-    if ($num_cols != 11){
+    if ($num_cols < 11){
         push @error_messages, 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -62,6 +62,18 @@ sub _validate_with_plugin {
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
+    }
+
+    my $has_facility_identifier;
+    if ($column[11]) {
+        if ($column[11] ne "facility_identifier") {
+            push @error_messages, 'File contents incorrect. Additonal column header must be: "facility_identifier"';
+            $errors{'error_messages'} = \@error_messages;
+            $self->_set_parse_errors(\%errors);
+            return;
+        } else {
+            $has_facility_identifier = 1;
+        }
     }
 
     my %seen_sample_ids;
@@ -127,6 +139,11 @@ sub _validate_with_plugin {
         }
         if (!$columns[9] || $columns[9] eq '' || ($columns[9] ne 'leaf' && $columns[9] ne 'root' && $columns[9] ne 'stem')){
             push @error_messages, 'The tenth column must contain tissue type of either leaf, root, or stem on row: '.$row;
+        }
+        if ($has_facility_identifier = 1) {
+            if (!$columns[11] || $columns[11] eq ''){
+                push @error_messages, 'The twelfth column must contain facility identifier on row: '.$row;
+            }
         }
     }
 
@@ -229,6 +246,10 @@ sub _parse_with_plugin {
         my $tissue_type = $columns[9];
         my $extraction = $columns[10];
         $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        my $facility_identifier;
+        if ($column[11]) {
+            $facility_identifier = $column[11];
+        }
 
         my $key = $row;
         if (index($source_name, 'BLANK') != -1) {
@@ -255,6 +276,12 @@ sub _parse_with_plugin {
         $design{$key}->{extraction} = $extraction;
         $design{$key}->{concentration} = 'NA';
         $design{$key}->{volume} = 'NA';
+        if ($facility_identifier) {
+            $design{$key}->{facility_identifier} = $facility_identifier;
+        } else {
+            $design{$key}->{facility_identifier} = 'NA';
+
+        }
     }
 
     #print STDERR Dumper \%design;

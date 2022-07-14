@@ -264,7 +264,8 @@ sub parse_genotype_trial_file_POST : Args(0) {
             extraction => $val->{extraction},
             acquisition_date => $val->{date},
             notes => $val->{notes},
-            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id}
+            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id},
+            facility_identifier => $value->{facility_identifier}
         };
     }
 
