@@ -1158,15 +1158,11 @@ sub predict_selection_traits {
     }
 
     my $referer = $c->req->referer;
-    if ( $referer =~ /solgs\/trait\/|solgs\/traits\/all\/population\// ) {
+    if ( $referer =~ /solgs\/trait\/|solgs\/traits\/all\/population\/|\/combined\// ) {
         $c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
+    
     }
-    elsif ( $referer =~ /\/combined\// ) {
-        $c->stash->{data_set_type} = 'combined populations';
-        $c->controller('solGS::combinedTrials')
-          ->predict_selection_pop_combined_pops_model($c);
-    }
-
+    
 }
 
 sub run_kinship_analysis {
