@@ -322,7 +322,7 @@ sub predict_list_selection_pop_single_pop_model {
     my $trait_id         = $c->stash->{trait_id};
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $protocol_id      = $c->stash->{genotyping_protocol_id};
+    my $protocol_id      = $c->stash->{selection_pop_genotyping_protocol_id};
 
     $c->stash->{list_prediction} = 1;
 
@@ -386,7 +386,7 @@ sub predict_list_selection_pop_combined_pops_model {
     my $training_pop_id   = $c->stash->{training_pop_id};
     my $selection_pop_id  = $c->stash->{selection_pop_id};
     my $trait_id          = $c->stash->{trait_id};
-
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     $c->stash->{pop_id} = $training_pop_id;
     $c->stash->{list_prediction} = 1;
 
@@ -402,7 +402,7 @@ sub predict_list_selection_pop_combined_pops_model {
 	my $pheno_file = $c->stash->{trait_combined_pheno_file};
 	my $geno_file  = $c->stash->{trait_combined_geno_file};
 
-	$self->user_selection_population_file($c, $selection_pop_id);
+	$self->user_selection_population_file($c, $selection_pop_id, $sel_pop_protocol_id);
 
 	$c->controller("solGS::solGS")->get_rrblup_output($c);
 	$c->stash->{status} = 'success';
@@ -412,7 +412,7 @@ sub predict_list_selection_pop_combined_pops_model {
 	$c->stash->{status} = 'success';
     }
 
-    $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id );
+    $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id, $sel_pop_protocol_id);
 
 }
 
@@ -459,11 +459,10 @@ sub user_selection_population_file {
     my ($self, $c, $pred_pop_id, $protocol_id) = @_;
 
     my $list_dir = $c->stash->{solgs_lists_dir};
-
-    my ($fh, $tempfile) = tempfile("selection_population_${pred_pop_id}-XXXXX",
+    my $id = "${pred_pop_id}-${protocol_id}";
+    my ($fh, $tempfile) = tempfile("selection_population_${id}-XXXXX",
                                    DIR => $list_dir
         );
-
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pred_pop_id, $protocol_id);
     my $pred_pop_file = $c->stash->{genotype_file_name};
@@ -624,6 +623,10 @@ sub genotypes_list_genotype_query_job {
     my $list_id = $c->stash->{list_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
+    if ($c->stash->{analysis_type} =~ /selection prediction/) {
+        $protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+    }
+
     my $pop_id = 'list_' . $list_id;;
     my $data_dir = $c->stash->{solgs_lists_dir};
     my $pop_type = "list";
@@ -631,7 +634,7 @@ sub genotypes_list_genotype_query_job {
     $self->get_genotypes_list_details($c);
     my $genotypes_ids = $c->stash->{genotypes_ids};
 
-    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
 
     my $args = {
@@ -817,6 +820,9 @@ sub create_list_geno_data_query_jobs {
     my $list_type = $c->stash->{list_type};
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
+    if ($c->stash->{analysis_type} =~ /selection prediction/) {
+        $protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+    }
 
     if ($list_type =~ /accessions/)
     {
