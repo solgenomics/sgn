@@ -635,8 +635,7 @@ sub predict_selection_pop_multi_traits {
     my $data_set_type    = $c->stash->{data_set_type};
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $protocol_id      = $c->stash->{genotyping_protocol_id};
-
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     $c->stash->{pop_id} = $training_pop_id;
 
     my @traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
@@ -654,20 +653,19 @@ sub predict_selection_pop_multi_traits {
 
 	    push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
     }
-
     if (@unpredicted_traits)
     {
         $c->stash->{training_traits_ids} = \@unpredicted_traits;
 
-        $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
+        $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $sel_pop_protocol_id);
 
         if (!-s $c->stash->{genotype_file_name})
         {
-            $c->controller('solGS::AsyncJob')->get_selection_pop_query_args_file($c);
+            $c->controller('solGS::AsyncJob')->get_selection_pop_query_args_file($c);            
             $c->stash->{prerequisite_jobs} = $c->stash->{selection_pop_query_args_file};
         }
 
-        $c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id, $protocol_id);
+        $c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id, $sel_pop_protocol_id);
 
         $c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
         $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
@@ -688,8 +686,7 @@ sub predict_selection_pop_single_pop_model {
     my $trait_id          = $c->stash->{trait_id};
     my $training_pop_id   = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $protocol_id       = $c->stash->{genotyping_protocol_id};
-
+    my $protocol_id       = $c->stash->{selection_pop_genotyping_protocol_id};
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
