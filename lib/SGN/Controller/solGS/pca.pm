@@ -303,7 +303,8 @@ sub pca_list_genotype_data {
 
     if ($referer =~ /solgs\/trait\/\d+\/population\//)
     {
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+        my $protocol_id = $c->stash->{genotyping_protocol_id};
+	    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     }
     elsif ($referer =~ /solgs\/selection\//)
     {
@@ -651,16 +652,18 @@ sub pca_geno_input_files {
 sub training_selection_geno_files {
     my ($self, $c) = @_;
 
-    my $tr_pop = $c->stash->{training_pop_id};
-    my $sel_pop =  $c->stash->{selection_pop_id};
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id =  $c->stash->{selection_pop_id};
 
     my @files;
-    foreach my $id (($tr_pop, $sel_pop))
-    {
-	$c->controller('solGS::Files')->genotype_file_name($c, $id);
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+	$c->controller('solGS::Files')->genotype_file_name($c, $tr_pop_id, $protocol_id);
 	push @files, $c->stash->{genotype_file_name};
-    }
 
+    my $sel_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+    $c->controller('solGS::Files')->genotype_file_name($c, $sel_pop_id, $sel_protocol_id);
+	push @files, $c->stash->{genotype_file_name};
+  
     my $files = join("\t", @files);
     $c->stash->{genotype_files_list} = $files;
 }
