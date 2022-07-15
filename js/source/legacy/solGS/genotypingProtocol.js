@@ -11,28 +11,18 @@ solGS.genotypingProtocol = {
     var protocolName = arg.name || arg.protocol_name;
     var msg = "You are using genotyping protocol: <b>" + protocolName + "</b>.";
     divPlace = this.formatDivId(divPlace);
-
     jQuery(divPlace + " #genotyping_protocol #genotyping_protocol_message").val(arg.protocol_id);
     jQuery(divPlace + " #genotyping_protocol #genotyping_protocol_message").html(msg);
 
-    var page = document.URL;
-    var host = window.location.protocol + "//" + window.location.host;
-    page = page.replace(host, "");
-    var popType = [
-      "solgs/trait/",
-      "solgs/traits/all/",
-      "solgs/combined/model/",
-      "solgs/models/combined/trials/",
-    ];
-
-    if (popType.filter((item) => item.match(/page/))) {
-      console.log("setting selection pop genotype pop...");
-      jQuery(divPlace + " #genotyping_protocol #selection_pop_genotyping_protocol_id").val(
-        arg.protocol_id
-      );
-    } else {
-      jQuery(divPlace + " #genotyping_protocol #genotyping_protocol_id").val(arg.protocol_id);
-    }
+    solGS.checkPageType().done(function(res){
+      if (res.page_type.match(/training model/)) {
+        jQuery(divPlace + " #genotyping_protocol #selection_pop_genotyping_protocol_id").val(
+          arg.protocol_id
+        );
+      } else {
+        jQuery(divPlace + " #genotyping_protocol #genotyping_protocol_id").val(arg.protocol_id);
+      }
+    });
   },
 
   getAllProtocols: function () {
@@ -92,14 +82,6 @@ solGS.genotypingProtocol = {
     var selPopProtocolName = sessionStorage.getItem("selection_pop_genotyping_protocol_name");
     var divPlace = sessionStorage.getItem("selection_pop_genotyping_protocol_div");
 
-    console.log(
-      "session storage protocol id " +
-        selPopProtocolId +
-        " name " +
-        selPopProtocolName +
-        " div " +
-        divPlace
-    );
     if (selPopProtocolId) {
       var sessionData = {
         protocol_id: selPopProtocolId,
