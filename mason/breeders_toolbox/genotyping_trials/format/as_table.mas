@@ -87,6 +87,9 @@ jQuery(document).ready(function () {
                             if(response.design[well].source_tissue_id){
                                 cell = cell + "<br/>Source Tissue: <a href='/stock/" + response.design[well].source_tissue_id +"/view'>" + response.design[well].source_tissue_name + "</a>";
                             }
+                            if(response.design[well].facility_identifier){
+                                cell = cell + "<br/>Facility ID:" + response.design[well].facility_identifier;
+                            }
                             cell = cell + "<br/><a onclick='replace_plate_accessions(\""+ response.design[well].plot_name +"\",\""+ response.design[well].plot_id +"\",\""+ response.design[well].accession_name +"\");'>Details</a>";
                             cell = cell + "<br/><br/>";
                         }
@@ -105,11 +108,11 @@ jQuery(document).ready(function () {
             alert("Error retrieving plate layout.");
         }
     });
-    
+
     jQuery("#new_cell_accession").autocomplete({
         appendTo: "#replace_plate_accessions_dialog",
         source: '/ajax/stock/accession_autocomplete',
-    }); 
+    });
 });
 
 function replace_plate_accessions(sample, sample_id, accession){
