@@ -1066,8 +1066,7 @@ sub run_analysis {
     my @error = $@;
 
     if ( $error[0] ) {
-        $c->stash->{status} =
-"run_analysis failed. Please try re-running the analysis and wait for it to finish. $error[0]";
+        $c->stash->{status} = "run_analysis failed. $error[0]";
     }
     else {
         $c->stash->{status} = 'Submitted';
@@ -1162,7 +1161,7 @@ sub predict_selection_traits {
         $c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
     
     }
-    
+
 }
 
 sub run_kinship_analysis {
