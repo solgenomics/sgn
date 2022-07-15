@@ -65,8 +65,8 @@ sub _validate_with_plugin {
     }
 
     my $has_facility_identifier;
-    if ($column[11]) {
-        if ($column[11] ne "facility_identifier") {
+    if ($columns[11]) {
+        if ($columns[11] ne "facility_identifier") {
             push @error_messages, 'File contents incorrect. Additonal column header must be: "facility_identifier"';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
@@ -247,8 +247,8 @@ sub _parse_with_plugin {
         my $extraction = $columns[10];
         $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         my $facility_identifier;
-        if ($column[11]) {
-            $facility_identifier = $column[11];
+        if ($columns[11]) {
+            $facility_identifier = $columns[11];
         }
 
         my $key = $row;
@@ -284,7 +284,7 @@ sub _parse_with_plugin {
         }
     }
 
-    #print STDERR Dumper \%design;
+#    print STDERR "UPLOADED DESIGN =".Dumper(\%design)."\n";
     $self->_set_parsed_data(\%design);
 
     return 1;
