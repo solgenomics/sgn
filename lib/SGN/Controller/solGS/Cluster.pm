@@ -265,7 +265,8 @@ sub cluster_list_genotype_data {
     my $geno_file;
 
     if ( $referer =~ /solgs\/trait\/\d+\/population\// ) {
-        $c->controller('solGS::Files')->genotype_file_name( $c, $pop_id );
+        my $protocol_id = $c->stash->{genotyping_protocol_id};
+        $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
         $c->stash->{genotype_file} = $c->stash->{genotype_file_name};
     }
     elsif ( $referer =~ /solgs\/selection\// ) {
