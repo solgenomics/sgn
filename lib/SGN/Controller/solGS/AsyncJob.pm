@@ -360,7 +360,8 @@ sub run_async {
     if ($background_job)
     {
 	$c->stash->{async} = 1;
-	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c, 2);
+    my $duration = 2;
+	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c, $duration);
 	$report_file = $c->stash->{analysis_report_job_args_file};
     }
 
@@ -401,7 +402,7 @@ sub get_selection_pop_query_args {
     my ($self, $c) = @_;
 
     my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     my $selection_pop_geno_file;
     my $pop_type;
 
@@ -455,6 +456,10 @@ sub get_cluster_query_job_args {
 
     my $pop_id = $c->stash->{selection_pop_id};
     my $protocol_id =  $c->stash->{genotyping_protocol_id};
+
+    if ($c->stash->{analysis_type} =~ /selection prediction/) {
+        $protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+    }
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
