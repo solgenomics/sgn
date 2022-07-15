@@ -88,7 +88,7 @@ $d->while_logged_in_as("submitter", sub {
  
     $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');#->click();
     sleep(3);
-    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');#->click();
+    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
     sleep(3);
    # #  #trial type training population: single trait modeling
 
@@ -107,23 +107,18 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(15);
+    
     my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
-    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy');#->click();
+    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy');
     sleep(3);
-
-    # $d->driver->go_back();
-    # sleep(5);
 
     my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
-    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs');#->click();
+    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs');
     sleep(3);
-
-    # $d->driver->go_back();
-    # sleep(5);
 
 	my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
@@ -149,7 +144,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('Genotype data', 'partial_link_text',  'download model genotype data');#->click();
     sleep(3);
-    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download model phenotype data');#->click();
+    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download model phenotype data');
     sleep(3);
     # $d->driver->go_back();
     # sleep(5);
