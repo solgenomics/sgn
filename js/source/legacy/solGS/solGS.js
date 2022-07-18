@@ -55,15 +55,18 @@ solGS.submitJob = {
       args["training_traits_ids"] = trainingTraitsIds;
     }
 
+    args["analysis_page"] = page;
+
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: { page: page, args: args },
+      data: { page: page, arguments: args },
       url: "/solgs/check/cached/result/",
       success: function (response) {
         if (response.cached) {
+         
           args = JSON.parse(args);
           solGS.submitJob.goToPage(page, args);
         } else {
@@ -85,7 +88,7 @@ solGS.submitJob = {
     jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: { args: args },
+      data: { arguments: args },
       url: "/solgs/check/training/pop/size/",
       success: function (res) {
         var trainingPopSize = res.member_count;
@@ -526,8 +529,9 @@ solGS.submitJob = {
       }
     }
 
+    console.log('calling geno protocols')
     var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
-    
+    console.log('got  protocols ' + protocols.genotyping_protocol_id)
     args["training_pop_desc"] = jQuery("#training_pop_desc").val();
     args["selection_pop_desc"] = jQuery("#selection_pop_desc").val();
     args["genotyping_protocol_id"] = protocols.genotyping_protocol_id;
