@@ -110,6 +110,13 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
     my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
     my $upload_coordinate_custom = $c->req->upload('genotyping_trial_layout_upload_coordinate_template');
+    my $facility_identifiers= $c->req->param('upload_include_facility_identifiers');
+    my $include_facility_identifiers;
+    if ($facility_identifiers){
+        $include_facility_identifiers = 1;
+    }
+
+
     if ($upload_xls && $upload_coordinate){
         $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
         return;
@@ -221,7 +228,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     );
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, facility_identifiers_included => $include_facility_identifiers);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse(\%parse_args);
 

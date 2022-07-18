@@ -11,6 +11,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $facility_identifiers = $self->get_facility_identifiers_included();
 
     my $delimiter = ',';
     my @error_messages;
@@ -40,41 +41,58 @@ sub _validate_with_plugin {
     }
 
     my $num_cols = scalar(@columns);
-    if ($num_cols < 11){
-        push @error_messages, 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
-        $errors{'error_messages'} = \@error_messages;
-        $self->_set_parse_errors(\%errors);
-        return;
-    }
-
-    if ( $columns[0] ne "date" &&
-        $columns[1] ne "plate_id" &&
-        $columns[2] ne "plate_name" &&
-        $columns[3] ne "sample_id" &&
-        $columns[4] ne "well_A01" &&
-        $columns[5] ne "well_01A" &&
-        $columns[6] ne "tissue_id" &&
-        $columns[7] ne "dna_person" &&
-        $columns[8] ne "notes" &&
-        $columns[9] ne "tissue_type" &&
-        $columns[10] ne "extraction" ) {
-            push @error_messages, 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
+    if ($facility_identifiers){
+        if ($num_cols != 12){
+            push @error_messages, 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
-    }
-
-    my $has_facility_identifier;
-    if ($columns[11]) {
-        if ($columns[11] ne "facility_identifier") {
-            push @error_messages, 'File contents incorrect. Additonal column header must be: "facility_identifier"';
+        }
+    } else {
+        if ($num_cols != 11){
+            push @error_messages, 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
-        } else {
-            $has_facility_identifier = 1;
         }
     }
+
+    if ($facility_identifiers) {
+        if ( $columns[0] ne "date" ||
+            $columns[1] ne "plate_id" ||
+            $columns[2] ne "plate_name" ||
+            $columns[3] ne "sample_id" ||
+            $columns[4] ne "well_A01" ||
+            $columns[5] ne "well_01A" ||
+            $columns[6] ne "tissue_id" ||
+            $columns[7] ne "dna_person" ||
+            $columns[8] ne "notes" ||
+            $columns[9] ne "tissue_type" ||
+            $columns[10] ne "extraction" ||
+            $columns[11] ne "facility_identifier") {
+            push @error_messages, 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"';
+            $errors{'error_messages'} = \@error_messages;
+            $self->_set_parse_errors(\%errors);
+            return;
+        }
+    } else {
+            if ( $columns[0] ne "date" ||
+                $columns[1] ne "plate_id" ||
+                $columns[2] ne "plate_name" ||
+                $columns[3] ne "sample_id" ||
+                $columns[4] ne "well_A01" ||
+                $columns[5] ne "well_01A" ||
+                $columns[6] ne "tissue_id" ||
+                $columns[7] ne "dna_person" ||
+                $columns[8] ne "notes" ||
+                $columns[9] ne "tissue_type" ||
+                $columns[10] ne "extraction" ) {
+                push @error_messages, 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
+                $errors{'error_messages'} = \@error_messages;
+                $self->_set_parse_errors(\%errors);
+                return;
+            }
+        }
 
     my %seen_sample_ids;
     my %seen_source_names;
@@ -140,7 +158,7 @@ sub _validate_with_plugin {
         if (!$columns[9] || $columns[9] eq '' || ($columns[9] ne 'leaf' && $columns[9] ne 'root' && $columns[9] ne 'stem')){
             push @error_messages, 'The tenth column must contain tissue type of either leaf, root, or stem on row: '.$row;
         }
-        if ($has_facility_identifier = 1) {
+        if ($facility_identifiers) {
             if (!$columns[11] || $columns[11] eq ''){
                 push @error_messages, 'The twelfth column must contain facility identifier on row: '.$row;
             }
