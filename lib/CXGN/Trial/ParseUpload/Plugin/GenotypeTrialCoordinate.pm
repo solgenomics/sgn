@@ -11,7 +11,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $facility_identifiers = $self->get_facility_identifiers_included();
+    my $include_facility_identifiers = $self->get_facility_identifiers_included();
 
     my $delimiter = ',';
     my @error_messages;
@@ -41,7 +41,7 @@ sub _validate_with_plugin {
     }
 
     my $num_cols = scalar(@columns);
-    if ($facility_identifiers){
+    if ($include_facility_identifiers){
         if ($num_cols != 12){
             push @error_messages, 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"';
             $errors{'error_messages'} = \@error_messages;
@@ -57,7 +57,7 @@ sub _validate_with_plugin {
         }
     }
 
-    if ($facility_identifiers) {
+    if ($include_facility_identifiers) {
         if ( $columns[0] ne "date" ||
             $columns[1] ne "plate_id" ||
             $columns[2] ne "plate_name" ||
@@ -158,7 +158,7 @@ sub _validate_with_plugin {
         if (!$columns[9] || $columns[9] eq '' || ($columns[9] ne 'leaf' && $columns[9] ne 'root' && $columns[9] ne 'stem')){
             push @error_messages, 'The tenth column must contain tissue type of either leaf, root, or stem on row: '.$row;
         }
-        if ($facility_identifiers) {
+        if ($include_facility_identifiers) {
             if (!$columns[11] || $columns[11] eq ''){
                 push @error_messages, 'The twelfth column must contain facility identifier on row: '.$row;
             }
@@ -210,6 +210,7 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $include_facility_identifiers = $self->get_facility_identifiers_included();
     my $delimiter = ',';
     my %parse_result;
     my @error_messages;
@@ -265,7 +266,7 @@ sub _parse_with_plugin {
         my $extraction = $columns[10];
         $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         my $facility_identifier;
-        if ($columns[11]) {
+        if ($include_facility_identifiers) {
             $facility_identifier = $columns[11];
         }
 
@@ -294,11 +295,10 @@ sub _parse_with_plugin {
         $design{$key}->{extraction} = $extraction;
         $design{$key}->{concentration} = 'NA';
         $design{$key}->{volume} = 'NA';
-        if ($facility_identifier) {
+        if ($include_facility_identifier) {
             $design{$key}->{facility_identifier} = $facility_identifier;
         } else {
             $design{$key}->{facility_identifier} = 'NA';
-
         }
     }
 
