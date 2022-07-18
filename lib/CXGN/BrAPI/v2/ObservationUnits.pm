@@ -79,7 +79,8 @@ sub search {
     my $offset = $page_size*$page;
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        'MaterializedViewTable',
+        #'MaterializedViewTable',
+	'Native',
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level->[0],
