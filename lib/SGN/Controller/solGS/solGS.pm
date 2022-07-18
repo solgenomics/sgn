@@ -205,34 +205,30 @@ sub training_pop_lines_count {
 sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     my ($self, $c) = @_;
 
-    my $args = $c->req->param('args');
-
-    my $json = JSON->new();
-    $args = $json->decode($args);
-
-    my $pop_id = @{$args->{training_pop_id}}[0];
-    my $type   = $args->{data_set_type};
-    my $protocol_id  = $args->{genotyping_protocol_id};
-
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+    
+    my $training_pop_id = $c->stash->{training_pop_id};
+    my $data_set_type = $c->stash->{data_set_type};
+    my $trait_id = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $count;
-    if ($type =~ /single/)
+    if ($data_set_type =~ /single population/)
     {
-	$count = $self->training_pop_lines_count($c, $pop_id, $protocol_id);
+	    $count = $self->training_pop_lines_count($c, $training_pop_id, $protocol_id);
     }
-    elsif ($type =~ /combined/)
+    elsif ($data_set_type =~ /combined populations/)
     {
-	$c->stash->{combo_pops_id} = $pop_id;
-	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_lines_count($c, $pop_id, $protocol_id);
+	    $count = $c->controller('solGS::combinedTrials')->count_combined_trials_lines_count($c, $training_pop_id, $trait_id, $protocol_id);
     }
 
     my $ret->{status} = 'failed';
 
     if ($count)
     {
-	$ret->{status} = 'success';
-	$ret->{member_count} = $count;
+	    $ret->{status} = 'success';
+	    $ret->{member_count} = $count;
     }
 
     $ret = to_json($ret);
@@ -246,9 +242,9 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
 sub selection_trait :Path('/solgs/selection/') Args() {
     my ($self, $c, $selection_pop_id,
         $model_key, $training_pop_id,
-        $trait_key, $trait_id, $gp, $protocol_id) = @_;
+        $trait_key, $trait_id, $gp, $protocol_ids) = @_;
 
-    my ($protocol_id, $sel_pop_protocol_id) = split(/-/, $protocol_id);
+    my ($protocol_id, $sel_pop_protocol_id) = split(/-/, $protocol_ids);
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	my $trait_abbr = $c->stash->{trait_abbr};
 
