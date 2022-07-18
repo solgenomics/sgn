@@ -78,16 +78,16 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 
     if (scalar(@pops_ids) > 1)
     {
-	$c->stash->{pops_ids_list} = \@pops_ids;
-	$self->create_combined_pops_id($c);
-	$combo_pops_id = $c->stash->{combo_pops_id};
-	$c->stash->{training_pop_id} = $combo_pops_id;
+        $c->stash->{pops_ids_list} = \@pops_ids;
+        $self->create_combined_pops_id($c);
+        $combo_pops_id = $c->stash->{combo_pops_id};
+        $c->stash->{training_pop_id} = $combo_pops_id;
 
         $self->catalogue_combined_pops($c, \@pops_ids);
 
-	# $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
+	    # $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
 
-	$self->multi_pops_geno_files($c, \@pops_ids);
+	    $self->multi_pops_geno_files($c, \@pops_ids, $protocol_id);
         my $geno_files = $c->stash->{multi_pops_geno_files};
         @g_files = split(/\t/, $geno_files);
 
@@ -104,7 +104,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         }
 
         $ret->{combined_pops_id} = $combo_pops_id;
-	$ret->{genotyping_protocol_id} = $protocol_id;
+	    $ret->{genotyping_protocol_id} = $protocol_id;
     }
     else
     {
@@ -170,31 +170,6 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
     }
 }
-
-
-# sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
-#     my ($self, $c, $combo_pops_id, $trait_txt, $trait_id, $gp, $protocol_id) = @_;
-#
-#     $c->stash->{combo_pops_id} = $combo_pops_id;
-#     $c->stash->{trait_id}      = $trait_id;
-#
-#     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-#
-#     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);
-#     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
-#
-#     if ( -s $gebv_file )
-#     {
-#         $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
-#         $c->detach();
-#     }
-#     else
-#     {
-# ###	$self->combine_trait_data($c);
-# 	$self->build_model_combined_trials_trait($c);
-#     }
-# }
-
 
 sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
     my ($self, $c, $combo_pops_id, $tr_txt, $traits_selection_id, $gp, $protocol_id) = @_;
@@ -343,12 +318,11 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	    $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
 	    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 	    $c->controller('solGS::solGS')->top_blups($c,  $c->stash->{rrblup_training_gebvs_file});
-	    $c->controller('solGS::Download')->training_prediction_download_urls($c);
+	    # $c->controller('solGS::Download')->training_prediction_download_urls($c);
 	    $c->controller('solGS::Files')->marker_effects_file($c);
 	    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
 	    $c->controller('solGS::solGS')->model_parameters($c);
 
-	    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/trait.mas');
 	}
 }
@@ -913,8 +887,6 @@ sub cache_combined_pops_data {
 		$c->controller('solGS::Files')->model_phenodata_file($c);
 		$c->stash->{trait_combined_pheno_file} = $c->stash->{model_phenodata_file};
     }
-
-    my $protocol_id;
 
     $c->controller('solGS::Files')->genotype_file_name($c, $combo_pops_id, $protocol_id);
     $c->stash->{trait_combined_geno_file} = $c->stash->{genotype_file_name};
