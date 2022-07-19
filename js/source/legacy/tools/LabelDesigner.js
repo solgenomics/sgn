@@ -55,6 +55,56 @@ page_formats["US Letter PDF"] = {
                 vertical_gap:0,
                 number_of_columns:1,
                 number_of_rows:1
+            },
+            'CASS [1" x 5 1/4"]': {
+                label_width: 378,
+                label_height: 72,
+                left_margin: 224,
+                top_margin: 30,
+                horizontal_gap: 10,
+                vertical_gap: 1.5,
+                number_of_columns: 1,
+                number_of_rows: 10
+            },
+            'MUSA [1" x 5 1/4"]': {
+                label_width: 378,
+                label_height: 72,
+                left_margin: 224,
+                top_margin: 30,
+                horizontal_gap: 10,
+                vertical_gap: 1.5,
+                number_of_columns: 1,
+                number_of_rows: 10
+            },
+            'IITA-3 | IITA-2 [2/5" x 5 1/4"]': {
+                label_width: 378,
+                label_height: 32,
+                left_margin: 224,
+                top_margin: 39,
+                horizontal_gap: 5,
+                vertical_gap: 4,
+                number_of_columns: 1,
+                number_of_rows: 20
+            },
+            '32 Label Size Sticker [1" x 1 1/3"]': {
+                label_width: 94.5,
+                label_height: 72,
+                left_margin: 45,
+                top_margin: 39,
+                horizontal_gap: 45,
+                vertical_gap: 20,
+                number_of_columns: 4,
+                number_of_rows: 8
+            },
+            '20 Label Size Sticker [5/6" x 3 3/5"]': {
+                label_width: 260,
+                label_height: 60,
+                left_margin: 30,
+                top_margin: 36.7,
+                horizontal_gap: 30,
+                vertical_gap: 12,
+                number_of_columns: 2,
+                number_of_rows: 10
             }
         }
 };

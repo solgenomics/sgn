@@ -115,6 +115,11 @@ $d->while_logged_in_as("submitter", sub {
 # $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
    # sleep(4);
 
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');#->click();
+    sleep(3);
+    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
+    sleep(3);
+
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -134,6 +139,19 @@ $d->while_logged_in_as("submitter", sub {
 
     #$d->get('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'combo trials tr pop page');
    # sleep(2);
+
+   my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy');
+    sleep(3);
+
+    my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
+    sleep(5);
+    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs');
+    sleep(3);
+
    my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
    sleep(2);
@@ -141,34 +159,25 @@ $d->while_logged_in_as("submitter", sub {
    sleep(130);
    $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
    sleep(20);
+
    $d->driver->go_back();
    sleep(15);
-
-    my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
-    sleep(2);
-    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy')->click();
-    sleep(3);
-    $d->driver->go_back();
-    sleep(5);
-
-    my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
-    sleep(5);
-    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs')->click();
-    sleep(3);
-    $d->driver->go_back();
-    sleep(5);
-
-    my $sel_pred = $d->find_element('Marker Effects', 'partial_link_text', 'scroll to marker effects');
+  
+    my $sel_pred = $d->find_element('Marker effects', 'partial_link_text', 'scroll to marker effects');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
-    $d->find_element_ok('Marker Effects', 'partial_link_text', 'expand marker effects')->click();
+    $d->find_element_ok('Marker effects', 'partial_link_text', 'expand marker effects')->click();
     sleep(2);
-    $d->find_element_ok('Download marker', 'partial_link_text',  ' download marker effects')->click();
+    $d->find_element_ok('Download marker', 'partial_link_text',  ' download marker effects');
     sleep(3);
-    $d->driver->go_back();
-    sleep(5);
+
+    my $download = $d->find_element('Download data', 'partial_link_text', 'download model data section');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $download);
+    sleep(2);
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download model genotype data');
+    sleep(3);
+    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download model phenotype data');
+    sleep(3);
 
 	my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
 	my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
@@ -228,7 +237,7 @@ $d->while_logged_in_as("submitter", sub {
 
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
-
+    sleep(5);
      $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select list sl pop')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
@@ -368,6 +377,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
+
     $d->driver->go_back();
     sleep(5);
 

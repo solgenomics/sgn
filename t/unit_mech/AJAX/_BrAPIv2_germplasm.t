@@ -216,7 +216,7 @@ print STDERR "\n\n" . Dumper $response;
 is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Germplasm'},{'message' => 'Germplasm updated','messageType' => 'INFO'}]},'result' => {'pedigree' => 'NA/NA','instituteCode' => 'PER0017','species' => 'Manihot esculenta','externalReferences' => [],'collection' => undef,'commonCropName' => undef,'breedingMethodDbId' => 'unknown','speciesAuthority' => undef,'donors' => [{'donorAccessionNumber' => 'A0000123','germplasmPUI' => 'PER0017','donorInstituteCode' => 'PER0017'}],'seedSource' => 'A0000001/A00000027','seedSourceDescription' => 'A0000001/A00000027','acquisitionDate' => '2018-01-07','genus' => 'Manihot','germplasmPreprocessing' => undef,'accessionNumber' => 'fem_maleProgeny_002','germplasmPUI' => 'http://accession/fem_maleProgeny_0027,http://localhost:3010/stock/41279/view','documentationURL' => 'http://accession/fem_maleProgeny_0027,http://localhost:3010/stock/41279/view','synonyms' => [{'type' => undef,'synonym' => 'variety_17'}],'biologicalStatusOfAccessionCode' => '4207','instituteName' => 'BTI Ithaca','additionalInfo' => undef,'germplasmName' => 'test_Germplasm','subtaxa' => undef,'biologicalStatusOfAccessionDescription' => undef,'germplasmOrigin' => [],'taxonIds' => [],'germplasmDbId' => '41279','storageTypes' => [{'code' => '207','description' => undef}],'defaultDisplayName' => 'IITA-TMS-IBA30572','countryOfOriginCode' => 'BES7','subtaxaAuthority' => undef}});
 
 
-#Crossing 
+#Crossing
 
 #location and year is Needed
 $data = '[ { "additionalInfo": { "locationName" : "test_location", "year" : "2019" }, "commonCropName": "Cassava", "crossingProjectDescription": "Crosses between germplasm X and germplasm Y", "crossingProjectName": "Ibadan_Crosses_2018", "externalReferences": [], "programDbId": "134", "programName": "test" },{ "additionalInfo": { "locationName" : "test_location", "year" : "2019" }, "commonCropName": "Cassava", "crossingProjectDescription": "Crosses between germplasm X and germplasm Y", "crossingProjectName": "Ibadan_Crosses_2018-2", "externalReferences": [], "programDbId": "134", "programName": "test" } ]';
@@ -230,6 +230,22 @@ $resp = $ua->put("http://localhost:3010/brapi/v2/crossingprojects/140", Content 
 $response = decode_json $resp->{_content};
 print STDERR "\n\n" . Dumper $response;
 is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Crossing','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Crossing project updated'}],'pagination' => {'currentPage' => 0,'totalPages' => 1,'pageSize' => 10,'totalCount' => 1},'datafiles' => []},'result' => {'commonCropName' => undef,'crossingProjectDescription' => 'Ibadan_Crosses_2018 - 2','crossingProjectName' => 'Ibadan_Crosses_2018 - 2','additionalInfo' => {},'programName' => 'test','programDbId' => '134','externalReferences' => [],'crossingProjectDbId' => '140'}});
+
+#deleting crossing experiments
+my $project_id_1 = $f->bcs_schema()->resultset("Project::Project")->find({name=>'Ibadan_Crosses_2018'})->project_id;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id_1.'/delete/crossing_experiment');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $project_id_2 = $f->bcs_schema()->resultset("Project::Project")->find({name=>'Ibadan_Crosses_2018-2'})->project_id;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id_2.'/delete/crossing_experiment');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $project_id_3 = $f->bcs_schema()->resultset("Project::Project")->find({name=>'Ibadan_Crosses_2018 - 2'})->project_id;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id_3.'/delete/crossing_experiment');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
 $f->clean_up_db();
 
@@ -256,4 +272,3 @@ $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{d
 $f->clean_up_db();
 
 done_testing();
-	

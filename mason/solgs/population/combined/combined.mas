@@ -98,6 +98,7 @@ $data_set_type => ''
 &>
 
 <& /solgs/population/trait_acronyms.mas &>
+<& /solgs/population/download.mas &>
 
 %}
 % else
