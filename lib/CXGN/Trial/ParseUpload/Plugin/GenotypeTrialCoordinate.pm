@@ -295,7 +295,7 @@ sub _parse_with_plugin {
         $design{$key}->{extraction} = $extraction;
         $design{$key}->{concentration} = 'NA';
         $design{$key}->{volume} = 'NA';
-        if ($include_facility_identifier) {
+        if ($include_facility_identifiers) {
             $design{$key}->{facility_identifier} = $facility_identifier;
         } else {
             $design{$key}->{facility_identifier} = 'NA';
