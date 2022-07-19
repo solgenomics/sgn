@@ -19,28 +19,42 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
 
-  <& /page/page_title.mas, title=>"GCPC" &>
+<!-- temporarily comment out <& /page/page_title.mas, title=>"Genomic Prediction of Cross Performance (GCPC)" &> -->
+  <h2 style="text-align: center;font-size:20px;"> Genomic Prediction of Cross Performance (GCPC)</h2>
+ <br>
 
+ <b style="font-size:15px; color: #254117">Select a Genotyped Dataset</b>
+<br>
 
-    <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+    <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Available Datasets", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
       <input type="hidden" name="outformat" value="0" />
 
 
       <div class="form-group form-inline">
-	<label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
+	<div id="dataset_select"></div>
 	<br>
 
-	<button class="btn btn-primary" id="select_dataset" type="submit" name="select_dataset" value="select_dataset">Select Dataset</button>
+	<button class="btn btn-success" id="select_dataset" type="submit" name="select_dataset" value="select_dataset">Proceed to Factor Selection</button>
 	<br>
 	<br>
 
       </div>
 
-      <div id="fixed_and_random_factors">
-      
+      <div class="col" style="background-color:MintCream; padding: 10px 20px 25px" id="fixed_and_random_factors">
+        <div class="text-center">Factors will appear here..</div>
+
       </div>
+
+      <br>
+      <br>
+      <br>
+      <br>
+
+      <div>
 
       <div id="sin_list">
+      </div>
+      <i style="font-size:13px">This is a drop-down menu showing your pre-constructed selection indices. Select one and proceed to run the model.</i>
       </div>
 
       <center>
@@ -49,9 +63,10 @@
       </center>
 
       <br>
-
+      <br>
+      <br>
       <div style="text-align: center">
-	<button class="btn btn-primary" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GCPC</button>
+	<button class="btn btn-success" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GCPC</button>
       </div>
       <br />
 
@@ -60,7 +75,7 @@
 </&>
 
 
-<div id="gcpc_results_download_link">Waiting for link...</div>
+<div id="gcpc_results_download_link"></div>
 
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
@@ -106,8 +121,9 @@ jQuery(document).ready(function() {
           $('#dataset_select').val('ERROR');
         }
         else {
-	  jQuery('#fixed_and_random_factors').html(response.html);
 
+	  jQuery('#fixed_and_random_factors').html(response.html);
+alert("factors successfully retrieved!");
 
 	}
 
@@ -188,6 +204,15 @@ jQuery(document).ready(function() {
 
   jQuery('#runGCPC').click( function () {
       $('#gcpc_files').empty();
+          var factors = ["studyYear", "programName" , "studyName", "studyDesign" , "plantingDate", "locationName",  "replicate" , "rowNumber",  "colNumber" , "germplasmName"];
+          var factor_param = "";
+          for (var n=0; n<factors.length; n++) {
+          var value = jQuery('input[name="'+factors[n]+ '_factor"]:checked').val();
+          factor_param+='&amp;'+factors[n]+'_factor='+value;
+
+          }
+        alert(factor_param);
+
 
 			      var sin_list_id = jQuery('#sin_list_list_select option:selected').val();
 			      //alert("SIN LIST ID "+sin_list_id);
@@ -201,7 +226,7 @@ jQuery(document).ready(function() {
 
       jQuery('#working_modal').modal('show');
       $.ajax({
-        'url': '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id,
+        'url': '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id+factor_param,
         'method': "GET",
 	'timeout': 60000000,
         'contentType': 'application/json'
@@ -225,7 +250,7 @@ jQuery(document).ready(function() {
 	     'destroy': true,
              'timeout': 6000000,
              'data' : data.data,
-             
+
              "order": [[ 3, "desc" ]]
              //"columns": [
              //   { "data": "Cross #" },
@@ -269,6 +294,13 @@ function get_dataset_id() {
 
 <!-- STYLE -->
 <style>
+
+.btn-success
+{
+  background-color: #68889E;
+  color:#FFF;
+  border-color: #2F3E48;
+}
 
 h1 {
   display:none;
@@ -351,6 +383,7 @@ h1 {
   overflow:scroll;
   overflow-x: hidden;
 }
+
 
 
 </style>

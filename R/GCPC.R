@@ -25,6 +25,9 @@ genotypeFile = args[2]
 traits = args[3]
 weights = args[4]
 userSexes = args[5]
+userFixed = args[6]
+userRandom = args[7]
+
 
 write(paste('PLANT SEX CVTERM: ', userSexes), stderr())
 
@@ -72,7 +75,8 @@ userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t", fill=TRUE) #test
 #    f is automatically included as a fixed effect- a note to the user would be good.
 
 #userFixed <- c()
-userFixed <- c("studyYear") # for testing only
+#userFixed <- c("studyYear") # for testing only
+userFixed <-unlist(strsplit(userFixed, split=",", fixed=T))
 
 
 # d. The user should be able to select their random variables from a menu
@@ -81,8 +85,8 @@ userFixed <- c("studyYear") # for testing only
 #    to this vector, 'userRandom'.
 
 #userRandom <- c()
-userRandom <- "blockNumber" # for testing only
-
+#userRandom <- "blockNumber" # for testing only
+userRandom <-unlist(strsplit(userRandom, split=",", fixed=T))
 
 # e. The user should be able to indicate which of the userPheno column names
 #    represents individual genotypes identically as they are represented in the VCF
