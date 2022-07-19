@@ -12,7 +12,6 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $include_facility_identifiers = $self->get_facility_identifiers_included();
-
     my $delimiter = ',';
     my @error_messages;
     my %errors;
@@ -268,6 +267,7 @@ sub _parse_with_plugin {
         my $facility_identifier;
         if ($include_facility_identifiers) {
             $facility_identifier = $columns[11];
+            $facility_identifier =~ s/^\s+|\s+$//g;
         }
 
         my $key = $row;

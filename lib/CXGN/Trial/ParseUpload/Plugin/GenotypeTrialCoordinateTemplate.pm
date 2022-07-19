@@ -252,6 +252,7 @@ sub _parse_with_plugin {
         my $facility_identifier;
         if ($include_facility_identifiers) {
             $facility_identifier = $columns[6];
+            $facility_identifier =~ s/^\s+|\s+$//g;
         }
         $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $col_number = sprintf("%02d", $col_number);
