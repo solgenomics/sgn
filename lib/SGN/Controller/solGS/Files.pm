@@ -589,7 +589,7 @@ sub rrblup_training_gebvs_file {
 
 
 sub rrblup_selection_gebvs_file {
-    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
+    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id) = @_;
 
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
