@@ -330,7 +330,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 
 sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     my ($self, $c, $model_id, $sel_key, $selection_pop_id,
-        $trait_key, $trait_id, $gp, $protocol_id) = @_;
+        $trait_key, $trait_id, $gp, $protocol_ids) = @_;
 
     $c->stash->{combo_pops_id}        = $model_id;
 	$c->stash->{training_pop_id}        = $model_id;
@@ -338,9 +338,13 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{selection_pop_id}     = $selection_pop_id;
     $c->stash->{data_set_type}        = 'combined populations';
     $c->stash->{combined_populations} = 1;
+    
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $protocol_id = $c->stash->{genotyping_protocol_id};
+    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    # $protocol_id = $c->stash->{genotyping_protocol_id};
+    my ($protocol_id, $sel_pop_protocol_id) = split(/-/, $protocol_ids); 
+    $c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
 
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	my $trait_abbr = $c->stash->{trait_abbr};
@@ -407,9 +411,9 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
 
-	my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
-	$gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
-	$c->stash->{blups_download_url} = $gebvs_download;
+	# my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
+	# $gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
+	# $c->stash->{blups_download_url} = $gebvs_download;
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
