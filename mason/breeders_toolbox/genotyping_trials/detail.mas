@@ -292,7 +292,8 @@ genotyping_facility_status => $genotyping_facility_status,
 genotyping_facility_submitted => $genotyping_facility_submitted,
 genotyping_plate_format => $genotyping_plate_format,
 genotyping_plate_sample_type => $genotyping_plate_sample_type,
-genotyping_raw_data_link => $raw_data_link
+genotyping_raw_data_link => $raw_data_link,
+trial_description => $trial_description
 &>
 
 <& /breeders_toolbox/genotyping_trials/replace_plate_accessions_dialog.mas,
