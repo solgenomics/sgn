@@ -103,9 +103,10 @@ $t->while_logged_in_as("submitter", sub {
     sleep(3);
 
     $t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
-    sleep(5);
+    sleep(7);
 
     $t->find_element_ok("test", "partial_link_text", "check program in tree")->click();
+    sleep(3);
 
     $t->find_element_ok("jstree-icon", "class", "view drop down for program")->click();
     sleep(5);
