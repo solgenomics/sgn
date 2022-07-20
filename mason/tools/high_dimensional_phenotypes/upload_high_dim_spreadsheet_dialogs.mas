@@ -317,7 +317,10 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Data Level: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="upload_nirs_spreadsheet_data_level" name="upload_nirs_spreadsheet_data_level">
-                                        <option value="tissue_samples">Samples</option>
+                                        <option value="plots">Plots</option>
+                                        <option value="plants">Plants</option>
+                                        <option value="subplots">Subplots</option>
+                                        <option value="tissue_samples">Tissue Samples</option>
                                     </select>
                                 </div>
                             </div>
