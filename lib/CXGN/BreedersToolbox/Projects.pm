@@ -13,6 +13,21 @@ has 'schema' => (
 		 isa      => 'DBIx::Class::Schema',
 		);
 
+has 'id' => (
+	isa => 'Maybe[Int]',
+	is => 'rw',
+);
+
+has 'name' => (
+    isa => 'Str',
+	is => 'rw',
+);
+
+has 'description' => (
+    isa => 'Maybe[Str]',
+	is => 'rw',
+);
+
 
 sub trial_exists {
     my $self = shift;
@@ -319,7 +334,7 @@ sub get_all_locations_by_breeding_program {
      return \@locations;
 }
 
-# this was modified to return a Perl datastructure, not JSON, as 
+# this was modified to return a Perl datastructure, not JSON, as
 # it is fed into other Perl data structures that are being converted
 # to JSON, which results in illegal JSON. The code that calls this
 # function was adapted to the change.
@@ -451,56 +466,64 @@ sub get_accessions_by_breeding_program {
 
 }
 
-sub new_breeding_program {
-    my $self= shift;
-    my $name = shift;
-    my $description = shift;
+sub store_breeding_program {
+    my $self = shift;
+    my $schema = $self->schema();
+
+    my $id = $self->id();
+    my $name = _trim($self->name());
+    my $description = $self->description();
 
     my $type_id = $self->get_breeding_program_cvterm_id();
 
-    my $rs = $self->schema()->resultset("Project::Project")->search(
-	{
-	    name => $name,
-	});
+    if (!$name) {
+        return { error => "Cannot save a breeding program with an undefined name. A name is required." };
+    }
+
+    my $rs = $schema->resultset("Project::Project")->search({ name => $name });
     if ($rs->count() > 0) {
-	return { error => "A breeding program with name '$name' already exists." };
+        return { error => "A breeding program with name '$name' already exists." };
+    }
+
+    # Add new program if no id supplied
+    if (!$id) {
+        eval {
+
+    		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+    		my $error = $role->add_sp_role($name);
+    		if ($error){
+    			die $error;
+    		}
+
+    	my $row = $schema->resultset("Project::Project")->create(
+    	    {
+    		name => $name,
+    		description => $description,
+    	    });
+
+    	$row->insert();
+        $project_id = $row->project_id();
+
+    	my $prop_row = $schema->resultset("Project::Projectprop")->create(
+    	    {
+    		type_id => $type_id,
+    		project_id => $row->project_id(),
+
+    	    });
+    	$prop_row->insert();
+
+        };
+    }
+    # Edit existing program if id supplied
+    elsif ($id) {
 
     }
-    my $project_id;
-    eval {
-
-		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
-		my $error = $role->add_sp_role($name);
-		if ($error){
-			die $error;
-		}
-
-	my $row = $self->schema()->resultset("Project::Project")->create(
-	    {
-		name => $name,
-		description => $description,
-	    });
-
-	$row->insert();
-    $project_id = $row->project_id();
-
-	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
-	    {
-		type_id => $type_id,
-		project_id => $row->project_id(),
-
-	    });
-	$prop_row->insert();
-
-    };
-
-
 
     if ($@) {
-        return { error => "An error occurred while generating a new breeding program. ($@)" };
+        return { error => "An error occurred while adding or editing a breeding program. ($@)" };
     } else {
-        print STDERR "The new breeding program $name was created with id $project_id\n";
-        return { success => "The new breeding program $name was created.", id => $project_id };
+        print STDERR "The breeding program $name was stored with description $description and id $id\n";
+        return { success => "The breeding program $name was stored with description $description.", id => $id };
     }
 
 }

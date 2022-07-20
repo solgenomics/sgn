@@ -113,7 +113,7 @@ jQuery(document).ready(function() {
      	  return;
       }
       $.ajax({
-	  url: '/breeders/program/new',
+	  url: '/breeders/program/store',
      	  data: { 'name': name, 'desc': desc },
      	  beforeSend: function()  { jQuery('#working').dialog("open") },
      	  error: function(response) {

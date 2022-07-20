@@ -39,23 +39,28 @@ sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
     $c->stash->{rest} = $breeding_programs;
 }
 
-sub new_breeding_program :Path('/breeders/program/new') Args(0) {
+sub store_breeding_program :Path('/breeders/program/store') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $id = $c->req->param("id") || undef;
     my $name = $c->req->param("name");
     my $desc = $c->req->param("desc");
 
     if (!($c->user() || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add a breeding program.' };
+	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
     }
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-    my $new_program = $p->new_breeding_program($name, $desc);
+    my $program = $p->store_breeding_program(
+        id => $id,
+        name => $name,
+        description => $desc,
+    );
 
-    print STDERR "New program is ".Dumper($new_program)."\n";
+    print STDERR "Program is ".Dumper($program)."\n";
 
-    $c->stash->{rest} = $new_program;
+    $c->stash->{rest} = $program;
 
     # if ($new_program->{'error'}) {
 	# $c->stash->{rest} = { error => $error };
@@ -332,7 +337,7 @@ sub progress : Path('/ajax/progress') Args(0) {
     my $trait_id = $c->req->param("trait_id");
 
     print STDERR "Trait id = $trait_id\n";
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
 
@@ -341,7 +346,7 @@ sub progress : Path('/ajax/progress') Args(0) {
     my $h = $dbh->prepare($q);
 
     $h->execute($trait_id);
-    
+
     my $data = [];
 
     while (my ($year, $mean, $stddev, $count) = $h->fetchrow_array()) {
@@ -349,7 +354,7 @@ sub progress : Path('/ajax/progress') Args(0) {
     }
 
     print STDERR "Data = ".Dumper($data);
-    
+
     $c->stash->{rest} = { data => $data };
 }
 
@@ -358,7 +363,7 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
-    
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $dbh = $schema->storage->dbh();
@@ -367,15 +372,15 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     # my $stock_id = $c->req->param("stock_id");
     # my $cvterm_id = $c->req->param("cvterm_id");
 
-    # my $q = 'select accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(*) 
-    #         from cvterm 
-    #         join phenotype on(cvalue_id=cvterm_id) 
-    #         join nd_experiment_phenotype using(phenotype_id) 
-    #         join nd_experiment_stock using(nd_experiment_id) 
-    #         join stock using(stock_id) 
-    #         join stock_relationship on(subject_id=stock.stock_id) 
-    #         join stock as accessions on(stock_relationship.object_id=accessions.stock_id) 
-    #         where stock.type_id=76393 and accessions.stock_id=? and cvterm.cvterm_id=? and phenotype.value ~ \'^[0-9]+\.?[0-9]*$\' 
+    # my $q = 'select accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(*)
+    #         from cvterm
+    #         join phenotype on(cvalue_id=cvterm_id)
+    #         join nd_experiment_phenotype using(phenotype_id)
+    #         join nd_experiment_stock using(nd_experiment_id)
+    #         join stock using(stock_id)
+    #         join stock_relationship on(subject_id=stock.stock_id)
+    #         join stock as accessions on(stock_relationship.object_id=accessions.stock_id)
+    #         where stock.type_id=76393 and accessions.stock_id=? and cvterm.cvterm_id=? and phenotype.value ~ \'^[0-9]+\.?[0-9]*$\'
     #         group by accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id;';
     # my $h = $dbh->prepare($q);
 
@@ -388,7 +393,7 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     #print STDERR "Trait List = ".Dumper($trait_list);
 
     $c->stash->{rest} = {
-        data => \@$trait_list, 
+        data => \@$trait_list,
         name => $ds_name,
     };
 
@@ -400,6 +405,3 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
 }
 
 1;
-
-
-
