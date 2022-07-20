@@ -304,12 +304,11 @@ sub stash_json_args {
                  }
             }
 
-            if ($key =~ /trait_id|training_traits_ids/)
+            if ($key =~ /training_traits_ids/)
             {
                 $c->stash->{training_traits_ids} = $val;
                 $c->stash->{trait_id} = $val->[0];
             }
-
         }
         else
         {
@@ -319,7 +318,7 @@ sub stash_json_args {
 
     if  ($c->stash->{data_set_type} =~ /combined/)
     {
-        $c->stash->{combo_pops_id} = $c->stash->{training_pop_id};
+         $c->stash->{combo_pops_id} = $c->stash->{training_pop_id};
     }
 
 }
