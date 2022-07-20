@@ -12,6 +12,7 @@ $trial_description
 $folder_name
 $folder_id
 $identifier_prefix
+$trial_owner
 </%args>
 
 
@@ -120,6 +121,18 @@ $identifier_prefix
                 </td>
             </tr>
 
+            <tr>
+                <td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%  print "$trial_owner";
+% } else {
+%  print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
         </table>
 
     </div>

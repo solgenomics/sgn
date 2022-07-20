@@ -410,10 +410,10 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
 
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
-
-	# my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
-	# $gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
-	# $c->stash->{blups_download_url} = $gebvs_download;
+    # my $training_pop_name = $c->stash->{training_pop_name};
+    # my $model_link = "$training_pop_name -- $trait_abbr";
+    # $model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
+    # $c->stash->{model_page_url} = $model_page;
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
