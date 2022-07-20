@@ -94,9 +94,9 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'queue modeling job')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP model Kasese');
+    $d->find_element_ok('analysis_name', 'id', 'fill in analysis name form')->send_keys('Test DMCP model Kasese');
     sleep(2);
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
@@ -157,15 +157,15 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('population_search_entry', 'id', 'sel population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(30);
-    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
+    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click selection pop')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'queue selection prediction job')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test DMCP selection pred Kasese');
+    $d->find_element_ok('analysis_name', 'id', 'job queueing form')->send_keys('Test DMCP selection pred Kasese');
     sleep(2);
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
