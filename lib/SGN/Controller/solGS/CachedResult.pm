@@ -56,44 +56,44 @@ sub _check_cached_output {
 
     if ($analysis_page =~ /solgs\/population\//)
     {
-    	$self->_check_single_trial_training_data($c, $training_pop_id, $protocol_id);
+    	$self->_check_single_trial_training_data($c);
     }
     elsif ($analysis_page =~ /solgs\/populations\/combined\//)
     {
-    	$self->_check_combined_trials_data($c, $training_pop_id, $protocol_id);
+    	$self->_check_combined_trials_data($c);
     }
     elsif ($analysis_page =~ /solgs\/trait\//)
     {
-    	$self->_check_single_trial_model_output($c, $training_pop_id, $trait_id, $protocol_id);
+    	$self->_check_single_trial_model_output($c);
     }
     elsif ($analysis_page =~ /solgs\/model\/combined\/trials\//)
     {
-    	$self->_check_combined_trials_model_output($c, $training_pop_id, $trait_id, $protocol_id);
+    	$self->_check_combined_trials_model_output($c);
     }
     elsif ($analysis_page =~ /solgs\/selection\/(\d+|\w+_\d+)\/model\//)
     {
     	my $referer = $c->req->referer;
-
+        my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     	if ($referer =~ /solgs\/traits\/all\//)
     	{
-    	    $self->_check_selection_pop_all_traits_output($c, $training_pop_id, $selection_pop_id);
+    	    $self->_check_selection_pop_all_traits_output($c);
     	}
     	elsif ($referer =~ /solgs\/models\/combined\/trials\//)
     	{
-    	    $self->_check_selection_pop_all_traits_output($c, $training_pop_id, $selection_pop_id);
+    	    $self->_check_selection_pop_all_traits_output($c);
     	}
     	else
     	{
-    	    $self->_check_selection_pop_output($c, $training_pop_id, $selection_pop_id, $trait_id);
+    	    $self->_check_selection_pop_output($c);
     	}
     }
     elsif ($analysis_page =~ /solgs\/traits\/all\/population\//)
     {
-    	$self->_check_single_trial_model_all_traits_output($c, $training_pop_id, $training_traits_ids, $protocol_id);
+    	$self->_check_single_trial_model_all_traits_output($c);
     }
     elsif ($analysis_page =~ /solgs\/models\/combined\/trials\//)
     {
-    	$self->_check_combined_trials_model_all_traits_output($c, $training_pop_id, $training_traits_ids, $protocol_id);
+    	$self->_check_combined_trials_model_all_traits_output($c);
     }
     elsif ($analysis_page =~ /kinship\/analysis/) {
     	my $kinship_pop_id  = $c->stash->{kinship_pop_id};
@@ -134,6 +134,9 @@ sub _check_cached_output {
 
 sub _check_single_trial_training_data {
     my ($self, $c, $pop_id, $protocol_id) = @_;
+    
+    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     $c->stash->{rest}{cached} = $self->check_single_trial_training_data($c, $pop_id, $protocol_id);
 
@@ -141,7 +144,11 @@ sub _check_single_trial_training_data {
 
 
 sub _check_single_trial_model_output {
-    my ($self, $c, $pop_id, $trait_id, $protocol_id) = @_;
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{training_pop_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id, $protocol_id);
 
@@ -153,7 +160,11 @@ sub _check_single_trial_model_output {
 
 
 sub _check_single_trial_model_all_traits_output {
-    my ($self, $c, $pop_id, $traits_ids, $protocol_id) = @_;
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{training_pop_id};
+    my $traits_ids = $c->stash->{training_traits_ids};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id, $protocol_id);
 
@@ -177,62 +188,76 @@ sub _check_single_trial_model_all_traits_output {
 
 
 sub _check_combined_trials_data {
-    my ($self, $c, $pop_id, $protocol_id) = @_;
+    my ($self, $c) = @_;
 
+    my $pop_id = $c->stash->{training_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
     $c->stash->{combo_pops_id} = $pop_id;
+
     $c->controller('solGS::combinedTrials')->get_combined_pops_list($c);
     my $trials = $c->stash->{combined_pops_list};
 
     foreach my $trial (@$trials)
     {
-	$self->_check_single_trial_training_data($c, $trial, $protocol_id);
-	my $cached = $c->stash->{rest}{cached};
+	    $self->_check_single_trial_training_data($c, $trial, $protocol_id);
 
-	last if !$c->stash->{rest}{cached};
+	    last if !$c->stash->{rest}{cached};
     }
 }
 
 
 sub _check_combined_trials_model_output {
-    my ($self, $c, $pop_id, $trait_id, $protocol_id) = @_;
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{training_pop_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $cached_pop_data  = $self->check_combined_trials_training_data($c, $pop_id, $trait_id, $protocol_id);
 
     if ($cached_pop_data)
     {
-	$c->stash->{rest}{cached} =  $self->check_single_trial_model_output($c, $pop_id, $trait_id, $protocol_id);
+	    $c->stash->{rest}{cached} =  $self->check_single_trial_model_output($c, $pop_id, $trait_id, $protocol_id);
     }
 
 }
 
 
 sub _check_combined_trials_model_all_traits_output {
-    my ($self, $c, $pop_id, $traits, $protocol_id) = @_;
+    my ($self, $c) = @_;
 
-    $self->check_combined_trials_model_all_traits_output($c, $pop_id, $traits, $protocol_id);
+    my $pop_id = $c->stash->{training_pop_id};
+    my $traits_ids = $c->stash->{training_traits_ids};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    $self->check_combined_trials_model_all_traits_output($c, $pop_id, $traits_ids, $protocol_id);
 
-    foreach my $tr (@$traits)
+    foreach my $trait_id (@$traits_ids)
     {
-	my $tr_cache = $c->stash->{$tr}{cached};
+        my $tr_cache = $c->stash->{$trait_id}{cached};
 
-	if (!$tr_cache)
-	{
-	    $c->stash->{rest}{cached} = undef;
-	    last;
-	}
-	else
-	{
-	       $c->stash->{rest}{cached} = 1;
-	}
+        if (!$tr_cache)
+        {
+            $c->stash->{rest}{cached} = undef;
+            last;
+        }
+        else
+        {
+            $c->stash->{rest}{cached} = 1;
+        }
     }
 
 }
 
 
 sub _check_selection_pop_all_traits_output {
-    my ($self, $c, $tr_pop_id, $sel_pop_id) = @_;
+    my ($self, $c) = @_;
 
-    $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id = $c->stash->{selection_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+
+    $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id, $protocol_id, $sel_pop_protocol_id);
     my $sel_traits_ids = $c->stash->{selection_pop_analyzed_traits_ids};
 
     $c->stash->{training_pop_id} = $tr_pop_id;
@@ -255,34 +280,46 @@ sub _check_selection_pop_all_traits_output {
 
 
 sub _check_selection_pop_output {
-    my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
+    my ($self, $c) = @_;
+
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id = $c->stash->{selection_pop_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
 
     my $data_set_type = $c->stash->{data_set_type};
 
     if ($data_set_type =~ 'combined populations')
     {
-	$self->_check_combined_trials_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
+	$self->_check_combined_trials_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id, $protocol_id, $sel_pop_protocol_id);
     }
     else
     {
-	$self->_check_single_trial_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
+	$self->_check_single_trial_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id, $protocol_id, $sel_pop_protocol_id);
     }
 
 }
 
 
 sub _check_single_trial_model_selection_output {
-    my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
+    my ($self, $c) = @_;
 
-    my $cached_pop_data = $self->check_single_trial_training_data($c, $tr_pop_id);
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id = $c->stash->{selection_pop_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+
+    my $cached_pop_data = $self->check_single_trial_training_data($c, $tr_pop_id, $protocol_id);
 
     if ($cached_pop_data)
     {
-	my $cached_model_out = $self->check_single_trial_model_output($c, $tr_pop_id, $trait_id);
+	my $cached_model_out = $self->check_single_trial_model_output($c, $tr_pop_id, $trait_id, $protocol_id);
 
 	if ($cached_model_out)
 	{
-	    $c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
+	    $c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id, $protocol_id, $sel_pop_protocol_id);
 	}
     }
 
@@ -290,17 +327,23 @@ sub _check_single_trial_model_selection_output {
 
 
 sub _check_combined_trials_model_selection_output {
-    my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
+    my ($self, $c) = @_;
 
-    my $cached_tr_data = $self->check_combined_trials_training_data($c, $tr_pop_id, $trait_id);
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id = $c->stash->{selection_pop_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+
+    my $cached_tr_data = $self->check_combined_trials_training_data($c, $tr_pop_id, $trait_id, $protocol_id, $sel_pop_protocol_id);
 
     if ($cached_tr_data)
     {
-	my $cached_model_out = $self->_check_combined_trials_model_output($c, $tr_pop_id, $trait_id);
+	my $cached_model_out = $self->_check_combined_trials_model_output($c);
 
 	if ($cached_model_out)
 	{
-	    $c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
+	    $c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id, $protocol_id, $sel_pop_protocol_id);
 	}
     }
 
@@ -329,10 +372,6 @@ sub _check_cluster_output {
 
 sub check_single_trial_training_data {
     my ($self, $c, $pop_id, $protocol_id) = @_;
-
-    # $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
-    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    # $protocol_id = $c->stash->{genotyping_protocol_id};
 
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $cached_pheno = -s $c->stash->{phenotype_file_name};
@@ -373,7 +412,7 @@ sub check_single_trial_model_output {
 sub check_single_trial_model_all_traits_output {
     my ($self, $c, $pop_id, $traits_ids, $protocol_id) = @_;
 
-    my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id);
+    my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id, $protocol_id);
 
     if ($cached_pop_data)
     {
@@ -405,6 +444,9 @@ sub check_combined_trials_model_all_traits_output {
 sub check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
 
+    # $c->stash->{genotyping_protocol_id} = $protocol_id;
+    # $c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
+
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $tr_pop_id, $sel_pop_id, $trait_id);
     my $cached_gebv = -s $c->stash->{rrblup_selection_gebvs_file};
 
@@ -421,14 +463,14 @@ sub check_selection_pop_output {
 
 
 sub check_selection_pop_all_traits_output {
-    my ($self, $c, $tr_pop_id, $sel_pop_id) = @_;
+    my ($self, $c, $tr_pop_id, $sel_pop_id, $protocol_id, $sel_pop_protocol_id) = @_;
 
     $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
     my $traits_ids = $c->stash->{selection_pop_analyzed_traits_ids};
 
     foreach my $tr (@$traits_ids)
     {
-	$c->stash->{$tr}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $tr);
+	    $c->stash->{$tr}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $tr);
     }
 
 }
@@ -436,7 +478,6 @@ sub check_selection_pop_all_traits_output {
 
 sub check_combined_trials_training_data {
     my ($self, $c, $combo_pops_id, $trait_id, $protocol_id) = @_;
-print STDERR "\ncheck_combined_trials_training_data popid: $combo_pops_id -- trait: $trait_id -- protocol id: $protocol_id\n";
 
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     
