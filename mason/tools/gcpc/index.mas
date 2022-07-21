@@ -113,17 +113,19 @@ jQuery(document).ready(function() {
   });
   jQuery('#select_dataset').click(function() {
     var dataset_id = get_dataset_id();
+    jQuery('#working_modal').modal('show');
     $.ajax({
       url: '/ajax/gcpc/factors',
       data: {'dataset_id': dataset_id},
       success: function(response) {
         if (response.error) {
+        jQuery('#working_modal').modal('hide');
           $('#dataset_select').val('ERROR');
         }
         else {
-
-	  jQuery('#fixed_and_random_factors').html(response.html);
-alert("factors successfully retrieved!");
+        jQuery('#working_modal').modal('hide');
+	       jQuery('#fixed_and_random_factors').html(response.html);
+         //alert("factors successfully retrieved!");
 
 	}
 
@@ -211,7 +213,7 @@ alert("factors successfully retrieved!");
           factor_param+='&amp;'+factors[n]+'_factor='+value;
 
           }
-        alert(factor_param);
+
 
 
 			      var sin_list_id = jQuery('#sin_list_list_select option:selected').val();
@@ -240,10 +242,12 @@ alert("factors successfully retrieved!");
 	  alert(data.error); return;
       }
 
-      alert('Download link = '+data.download_link);
+      //alert('Download link = '+data.download_link);
      if (data.download_link) {
       jQuery('#gcpc_results_download_link').html(data.download_link);
       }
+
+
       //alert('JSON data retrieved: '+JSON.stringify(data));
 	jQuery('#working_modal').modal('hide');
         jQuery('#gcpc_output').DataTable( {
