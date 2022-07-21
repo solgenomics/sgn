@@ -20,7 +20,6 @@ sub _validate_with_plugin {
     my %seen_plot_names;
     my %seen_accession_names;
     my %seen_seedlot_names;
-
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
     if ( !$excel_obj ) {
@@ -178,7 +177,7 @@ sub _validate_with_plugin {
         my $concentration;
         my $volume;
         my $is_blank;
-        my $family_identifier;
+        my $facility_identifier;
 
         if ($worksheet->get_cell($row,0)) {
             $date  = $worksheet->get_cell($row,0)->value();
