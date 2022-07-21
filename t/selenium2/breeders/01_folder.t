@@ -17,13 +17,13 @@ $t->while_logged_in_as("submitter", sub {
     sleep(2);
 
     $t->get_ok("/breeders/trials");
-    sleep(3);
+    sleep(7);
 
     $t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
-    sleep(5);
+    sleep(10);
 
   $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
-  sleep(2);
+  sleep(5);
 
   $t->find_element_ok("new_folder_dialog_link", "id", "create new folder")->click();
 
@@ -38,13 +38,13 @@ $t->while_logged_in_as("submitter", sub {
   sleep(5);
 
   $t->find_element_ok('button[id="close_new_folder_success_dialog"]', "css", "close new folder success dialog")->click();
-  sleep(5);
+  sleep(8);
 
   $t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
-  sleep(5);
+  sleep(10);
 
   $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
-  sleep(2);
+  sleep(5);
 
   my $page_source = $t->driver->get_page_source();
 
@@ -71,7 +71,7 @@ $t->while_logged_in_as("submitter", sub {
   sleep(5);
 
   $t->find_element_ok('button[id="close_new_folder_success_dialog"]', "css", "close new folder success dialog")->click();
-  sleep(3);
+  sleep(7);
 
   $t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
   sleep(5);

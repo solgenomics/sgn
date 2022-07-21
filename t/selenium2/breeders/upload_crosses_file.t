@@ -100,7 +100,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(2);
 
     $t->find_element_ok("refresh_crosses_jstree_html_trialtree_button", "id", "find and click 'refresh crosses trial jstree'")->click();
-    sleep(5);
+    sleep(10);
 
     $t->find_element_ok('//div[@id="crosses_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with crosses trial list')->click();
     sleep(5);
@@ -120,5 +120,4 @@ $t->while_logged_in_as("submitter", sub {
 );
 
 $t->driver()->close();
-$f->clean_up_db();
 done_testing();
