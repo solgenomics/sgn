@@ -33,7 +33,7 @@ my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on
 					  );
 my $phenome_schema= CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh } , { on_connect_do => ['set search_path to public,phenome;'] }  );
 
-my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row('seedlot', 'stock_type')->cvterm_id();
+my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
 print STDERR "SEEDLOT CVTERM ID = $seedlot_cvterm_id\n";
 
 open(my $F, "<", $file) || die "Can't open $file\n";
