@@ -65,7 +65,8 @@ sub search {
 	foreach (@$lists){
 		my $name = $_->[1];
 		my $id = $_->[0];
-		my $create_date = $_->[-1];
+		my $create_date = $_->[-2];
+		my $modified_date = $_->[-1];
 		if ( $names_arrayref && ! grep { $_ eq $name } @{$names_arrayref} ) { next;};
 		if ( $list_ids_arrayref && ! grep { $_ eq $id } @{$list_ids_arrayref} ) { next;};
 		if ( $list_source_arrayref && ! grep { $_ eq $hostname } @{$list_source_arrayref} ) { next;};
@@ -82,7 +83,7 @@ sub search {
 			push @data , {
 				additionalInfo      => {},
 				dateCreated         => CXGN::TimeUtils::db_time_to_iso_utc($create_date),
-				dateModified        => undef,
+				dateModified        => CXGN::TimeUtils::db_time_to_iso_utc($modified_date),
 				listDbId            => qq|$id|,
 				listDescription     => $_->[2],
 				listName            => $name,

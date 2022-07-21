@@ -48,7 +48,7 @@ sub search {
                 join $table\_dbxref as o_dbxref using ($table_id)
                 join dbxref as ref on (ref.dbxref_id=o_dbxref.dbxref_id)
                 join db using (db_id)";
-    if ($ids) { 
+    if ($ids && scalar(@$ids) > 0) {
         my $list_ids = join ("," , @$ids);
         $query = $query . " where s.$table_id in ($list_ids)"; 
     }
