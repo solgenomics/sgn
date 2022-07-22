@@ -59,6 +59,7 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use CXGN::List;
 use CXGN::Dataset;
+use File::Spec;
 
 has 'user_id' => (isa => 'Int',
     is => 'rw',
@@ -546,7 +547,19 @@ sub get_accessions_names {
 
 }
 
+sub site_cluster_shared_dir { 
+    my $self = shift;
 
+    my $tmp = $self->fixture->get_conf('cluster_shared_tempdir');
+    my $host = $self->fixture->get_conf('main_production_site_url');
+
+    $host    =~ s/(http?)|(:\d+)|\/|://g;
+    $host    =~ s/(www\.)//;
+    $host    = File::Spec->catdir($tmp, $host);
+   
+    return $host;
+
+}
 ###
 1;
 ###
