@@ -290,19 +290,6 @@ sub _build_plot_names {
     elsif ($self->get_design_type() eq "greenhouse") {
         $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;
     }
-    elsif ($self->get_design_type() eq "Alpha") {
-      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
-      $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
-    }
-    elsif ($self->get_design_type() eq "CRD") {
-      print STDERR Dumper (%design);
-      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
-      $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
-    }
-    elsif ($self->get_design_type() eq "Lattice") {
-      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
-      $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
-    }
 	else {
       my $plot_num_per_block = $design{$key}->{plot_num_per_block};
       $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
