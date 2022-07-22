@@ -870,7 +870,7 @@ is_deeply($message_hash, {
             'notes' => 'newplate',
             'facility_identifier' => 'NA'
         },
-    '   B01' => {
+        'B01' => {
             'plot_name' => '18DNA00101_B01',
             'extraction' => 'NA',
             'row_number' => 'B',
