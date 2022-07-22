@@ -6,12 +6,14 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use SGN::Role::Site::Files;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
-# my $solgs_data = SGN::Test::solGSData->new();
+my $cache_dir = $solgs_data->site_cluster_shared_dir();
+print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 # my $accessions_list = $solgs_data->get_list_details('accessions');
@@ -55,7 +57,7 @@ print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n"
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
-`rm -r /tmp/localhost/`;
+`rm -r  $cache_dir`;
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
@@ -192,7 +194,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "> 0")]', 'xpath', 'check corr plot')->click();
     sleep(5);
 
-    `rm -r /tmp/localhost/`;
+    `rm -r $cache_dir`;
     sleep(5);
 
     $d->get('/solgs');
@@ -351,7 +353,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 
-    `rm -r /tmp/localhost/`;
+    `rm -r $cache_dir`;
     sleep(3);
 
     $d->get_ok('/breeders/trial/139', 'trial detail home page');
