@@ -84,6 +84,7 @@ sub _validate_with_plugin {
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
+        }
     }
 
     my %seen_sample_ids;

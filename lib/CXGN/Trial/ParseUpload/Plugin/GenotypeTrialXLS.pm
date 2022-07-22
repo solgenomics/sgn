@@ -291,7 +291,7 @@ sub _validate_with_plugin {
         }
 
         if ($include_facility_identifiers) {
-            if (!$facility_identifier || $facility_identifier eq '')) {
+            if (!$facility_identifier || ($facility_identifier eq '')) {
                 push @error_messages, "Cell O$row_name: facility_identifier is misssing";
             }
         }
