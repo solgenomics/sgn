@@ -14,6 +14,8 @@ my $f = SGN::Test::Fixture->new();
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
 print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
+my $cluster_dir =  $cache_dir . '/GBSApeKIgenotypingv4/cluster';
+my $log_dir =  $cache_dir . '/GBSApeKIgenotypingv4/log';
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 # my $accessions_list = $solgs_data->get_list_details('accessions');
@@ -585,11 +587,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $cache_dir = $cache_dir . '/GBSApeKIgenotypingv4/cluster';
-    `rm -r $cache_dir`;
+    `rm -r $cluster_dir`;
     sleep(3);
-    $cache_dir = $cache_dir . '/GBSApeKIgenotypingv4/log';
-    `rm -r $cache_dir`;
+    `rm -r $log_dir`;
     sleep(5);
 
 # $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
@@ -763,11 +763,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $cache_dir = $cache_dir . '/GBSApeKIgenotypingv4/cluster';
-    `rm -r $cache_dir`;
+    `rm -r $cluster_dir`;
     sleep(3);
-    $cache_dir = $cache_dir . '/GBSApeKIgenotypingv4/log';
-    `rm -r $cache_dir`;
+    `rm -r $log_dir`;
     sleep(5);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
