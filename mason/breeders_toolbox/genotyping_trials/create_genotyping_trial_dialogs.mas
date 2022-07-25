@@ -25,7 +25,7 @@ $facilities => ();
                                 <p>Each well in the plate has a globally unique tissue sample ID.</p>
                                 <p>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
                                 <p>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
-                                <p>In addition to the sample ID, you have an option to include facility identifier for each well. </p>
+                                <p>In addition to sample ID, you have an option to include facility identifier for each well. </p>
                                 <br/><br/>
                                 <center>
                                 <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -397,7 +397,8 @@ $facilities => ();
                             </tr>
                         </tbody>
                     </table>
-
+                    Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "facility_identifier".
+                    <br/><br/>
                     <b>Required fields:</b>
                     <ul>
                     <li>date (should be YYYY-MM-DD)</li>
@@ -467,7 +468,8 @@ $facilities => ();
                             </tr>
                         </tbody>
                     </table>
-
+                    Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "facility_identifier".
+                    <br/><br/>
                     <b>Required fields:</b>
                     <ul>
                     <li>date (should be YYYY-MM-DD)</li>
@@ -532,7 +534,8 @@ $facilities => ();
                             </tr>
                         </tbody>
                     </table>
-
+                    Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "Facility Identifier".
+                    <br/><br/>
                     <b>Required fields:</b>
                     <ul>
                         <li>Value (the identifier of the origin material. e.g. 2018MyPlant0001. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. This can also say 'exclude' to indicate a BLANK)</li>
