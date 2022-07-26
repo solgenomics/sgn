@@ -3,6 +3,7 @@ use strict;
 
 use lib 't/lib';
 
+use File::Spec::Functions qw / catfile catdir/;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -20,9 +21,9 @@ my $solgs_data = SGN::Test::solGSData->new(
 );
 
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
-my $cluster_dir =  $cache_dir . '/GBSApeKIgenotypingv4/cluster';
-my $log_dir =  $cache_dir . '/GBSApeKIgenotypingv4/log';
+my $protocol_dir = $solgs_data->default_protocol_dir();
+my $cluster_dir =  catdir($protocol_dir, 'cluster');
+my $log_dir = catdir($protocol_dir, 'log');
 
 my $accessions_list = $solgs_data->load_accessions_list();
 

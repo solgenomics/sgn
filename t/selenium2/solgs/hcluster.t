@@ -3,6 +3,7 @@ use strict;
 
 use lib 't/lib';
 
+use File::Spec::Functions qw / catfile catdir/;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -12,10 +13,11 @@ my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
+
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
-my $cluster_dir =  $cache_dir . '/GBSApeKIgenotypingv4/cluster';
-my $log_dir =  $cache_dir . '/GBSApeKIgenotypingv4/log';
+my $protocol_dir = $solgs_data->default_protocol_dir();
+my $cluster_dir =  catdir($protocol_dir, 'cluster');
+my $log_dir = catdir($protocol_dir, 'log');
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 # my $accessions_list = $solgs_data->get_list_details('accessions');
