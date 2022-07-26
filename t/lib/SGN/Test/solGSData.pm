@@ -561,6 +561,21 @@ sub site_cluster_shared_dir {
     return $host_dir;
 
 }
+
+sub default_protocol_dir { 
+    my $self = shift;
+
+    my $host_dir = $self->site_cluster_shared_dir();
+
+    my $default_protocol = $self->fixture->get_conf('default_genotyping_protocol');
+    $default_protocol       = 'analysis-data' if ($default_protocol =~ /undefined/) || !$default_protocol;$default_protocol       =~ s/\s+//g;
+
+    my $geno_dir    = File::Spec->catdir($host_dir, $default_protocol);
+
+    return $geno_dir;
+
+}
+
 ###
 1;
 ###
