@@ -12,10 +12,10 @@ my $f = SGN::Test::Fixture->new();
 
 
 $d->while_logged_in_as("submitter", sub {
-    sleep(1);
+    sleep(3);
 	
 	$d->get_ok('/breeders/trial/137');
-	sleep(3);
+	sleep(4);
 
 	$d->find_element_ok("lists_link", "name", "find lists_link")->click();
 

@@ -67,6 +67,7 @@ jQuery(document).ready(function ($) {
         plate_data.well_notes = jQuery('#genotyping_well_notes').val();
         plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
         plate_data.genotyping_facility_submit = jQuery('#genotyping_trial_facility_submit_select').val();
+        plate_data.include_facility_identifiers = jQuery('#upload_genotype_plate_include_facility_identifiers').val();
 
         if (plate_data.name == '') {
             alert("A name is required and it should be unique in the database. Please try again.");

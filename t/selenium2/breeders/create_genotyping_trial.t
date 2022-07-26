@@ -77,7 +77,7 @@ $t->while_logged_in_as("submitter", sub {
 
 	# SCREEN 5 /Confirm/
 	$t->find_element_ok('add_geno_trial_submit', 'id', 'find "submit genotyping trial" and click')->click();
-	sleep(20);
+	sleep(40);
 
 	$t->driver()->accept_alert();
 	$t->find_element_ok('close_trial_button', 'id', 'find "close trial button" and click')->click();

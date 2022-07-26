@@ -305,7 +305,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
-        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1, 'facility_identifier'=>1};
     }
     if ($data_level eq 'samplingtrial'){
         $selected_cols = {'trial_name'=>1, 'year'=>1, 'location'=>1, 'sampling_facility'=>1, 'sampling_trial_sample_type'=>1, 'acquisition_date'=>1, 'tissue_sample_name'=>1, 'plot_number'=>1, 'rep_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1 };
@@ -439,7 +439,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1,
-        'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+        'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1, 'facility_identifier' =>1};
     }
 
     my $plugin = "";

@@ -253,6 +253,7 @@ stock_property	imaging_event_vehicle_json	For saving imaging event vehicle infor
 stock_property	released_variety_name		For providing the official released name of a variety	   11/18/2020	nm249		00132
 stock_property  cross_transaction_json  For storing crossing activities, then the summary of these data is stored as crossing_metadata_json  11/30/2020  tt15  00132
 stock_property  cross_additional_info  For storing additional parent info for each cross. 2/24/2020  tt15  00138
+stock_property  facility_identifier For storing assigned facility identifier when genotyping plate is sent to a sequencing facility  tt15  00161
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052
 stock_relationship	member_of				00052

@@ -90,7 +90,7 @@ $parsed_data = $parser->parse();
 ok($parsed_data, "Check if parse validate excel file works");
 ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
-print STDERR Dumper $parsed_data;
+#print STDERR Dumper $parsed_data;
 
 my $parsed_data_check = {
 	'1' => {
@@ -335,7 +335,7 @@ my $design;
 $td->calculate_design();
 $design = $td->get_design();
 
-print STDERR Dumper $design;
+#print STDERR Dumper $design;
 
 my $igd_design_check = {
           'A05' => {
@@ -512,7 +512,7 @@ $parsed_data = $parser->parse();
 ok($parsed_data, "Check if parse validate excel file works");
 ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
-print STDERR Dumper $parsed_data;
+#print STDERR Dumper $parsed_data;
 
 my $parsed_data_check = {
           '7' => {
@@ -732,61 +732,64 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
-          'success' => '1',
-          'design' => {
-                        'A01' => {
-                                   'concentration' => '5',
-                                   'acquisition_date' => '2018/02/16',
-                                   'dna_person' => 'nmorales',
-                                   'volume' => '10',
-                                   'col_number' => '1',
-                                   'plot_name' => '2018TestPlate02_A01',
-                                   'ncbi_taxonomy_id' => '9001',
-                                   'stock_name' => 'KASESE_TP2013_885',
-                                   'notes' => 'test well A01',
-                                   'is_blank' => 0,
-                                   'extraction' => 'CTAB',
-                                   'plot_number' => 'A01',
-                                   'row_number' => 'A',
-                                   'tissue_type' => 'leaf'
-                                 },
-                        'A03' => {
-                                   'notes' => 'test well A03',
-                                   'is_blank' => 0,
-                                   'stock_name' => 'KASESE_TP2013_1671',
-                                   'ncbi_taxonomy_id' => '9001',
-                                   'plot_name' => '2018TestPlate02_A03',
-                                   'tissue_type' => 'leaf',
-                                   'row_number' => 'A',
-                                   'plot_number' => 'A03',
-                                   'extraction' => 'CTAB',
-                                   'volume' => '10',
-                                   'dna_person' => 'nmorales',
-                                   'concentration' => '5',
-                                   'acquisition_date' => '2018/02/16',
-                                   'col_number' => '3'
-                                 },
-                        'A02' => {
-                                   'extraction' => undef,
-                                   'plot_number' => 'A02',
-                                   'row_number' => 'A',
-                                   'tissue_type' => 'stem',
-                                   'stock_name' => 'BLANK',
-                                   'notes' => 'test blank',
-                                   'is_blank' => 1,
-                                   'ncbi_taxonomy_id' => undef,
-                                   'plot_name' => '2018TestPlate02_A02',
-                                   'col_number' => '2',
-                                   'volume' => undef,
-                                   'acquisition_date' => '2018/02/16',
-                                   'concentration' => undef,
-                                   'dna_person' => 'nmorales'
-                                 }
-                      }
-        });
+    'success' => '1',
+    'design' => {
+        'A01' => {
+            'concentration' => '5',
+            'acquisition_date' => '2018/02/16',
+            'dna_person' => 'nmorales',
+            'volume' => '10',
+            'col_number' => '1',
+            'plot_name' => '2018TestPlate02_A01',
+            'ncbi_taxonomy_id' => '9001',
+            'stock_name' => 'KASESE_TP2013_885',
+            'notes' => 'test well A01',
+            'is_blank' => 0,
+            'extraction' => 'CTAB',
+            'plot_number' => 'A01',
+            'row_number' => 'A',
+            'tissue_type' => 'leaf',
+            'facility_identifier' => 'NA'
+        },
+        'A03' => {
+            'notes' => 'test well A03',
+            'is_blank' => 0,
+            'stock_name' => 'KASESE_TP2013_1671',
+            'ncbi_taxonomy_id' => '9001',
+            'plot_name' => '2018TestPlate02_A03',
+            'tissue_type' => 'leaf',
+            'row_number' => 'A',
+            'plot_number' => 'A03',
+            'extraction' => 'CTAB',
+            'volume' => '10',
+            'dna_person' => 'nmorales',
+            'concentration' => '5',
+            'acquisition_date' => '2018/02/16',
+            'col_number' => '3',
+            'facility_identifier' => 'NA'
+        },
+        'A02' => {
+            'extraction' => undef,
+            'plot_number' => 'A02',
+            'row_number' => 'A',
+            'tissue_type' => 'stem',
+            'stock_name' => 'BLANK',
+            'notes' => 'test blank',
+            'is_blank' => 1,
+            'ncbi_taxonomy_id' => undef,
+            'plot_name' => '2018TestPlate02_A02',
+            'col_number' => '2',
+            'volume' => undef,
+            'acquisition_date' => '2018/02/16',
+            'concentration' => undef,
+            'dna_person' => 'nmorales',
+            'facility_identifier' => 'NA'
+        }
+    }
+});
 
 my $project = $c->bcs_schema()->resultset("Project::Project")->find( { name => 'test' } );
 my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => 'test_location' } );
@@ -807,7 +810,7 @@ my $plate_data = {
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 
 ok($response->{trial_id});
 
@@ -828,93 +831,98 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
-          'success' => '1',
-          'design' => {
-                        'B12' => {
-                                   'notes' => 'newplate',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 1,
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'B12',
-                                   'volume' => 'NA',
-                                   'tissue_type' => 'leaf',
-                                   'plot_name' => '18DNA00101_B12',
-                                   'extraction' => 'NA',
-                                   'row_number' => 'B',
-                                   'col_number' => '12',
-                                   'acquisition_date' => '8/23/2018',
-                                   'stock_name' => 'BLANK'
-                                 },
-                        'A01' => {
-                                   'stock_name' => 'KASESE_TP2013_1671',
-                                   'acquisition_date' => '8/23/2018',
-                                   'col_number' => '01',
-                                   'row_number' => 'A',
-                                   'extraction' => 'NA',
-                                   'plot_name' => '18DNA00101_A01',
-                                   'tissue_type' => 'leaf',
-                                   'plot_number' => 'A01',
-                                   'volume' => 'NA',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 0,
-                                   'concentration' => 'NA',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate'
-                                 },
-                        'B01' => {
-                                   'plot_name' => '18DNA00101_B01',
-                                   'extraction' => 'NA',
-                                   'row_number' => 'B',
-                                   'col_number' => '01',
-                                   'stock_name' => 'KASESE_TP2013_1671',
-                                   'acquisition_date' => '8/23/2018',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 0,
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'B01',
-                                   'volume' => 'NA',
-                                   'tissue_type' => 'leaf'
-                                 },
-                        'C01' => {
-                                   'col_number' => '01',
-                                   'acquisition_date' => '8/23/2018',
-                                   'stock_name' => 'KASESE_TP2013_885',
-                                   'extraction' => 'NA',
-                                   'row_number' => 'C',
-                                   'plot_name' => '18DNA00101_C01',
-                                   'tissue_type' => 'leaf',
-                                   'is_blank' => 0,
-                                   'dna_person' => 'gbauchet',
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'C01',
-                                   'volume' => 'NA',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate'
-                                 },
-                        'D01' => {
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate',
-                                   'plot_number' => 'D01',
-                                   'volume' => 'NA',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 0,
-                                   'concentration' => 'NA',
-                                   'tissue_type' => 'leaf',
-                                   'plot_name' => '18DNA00101_D01',
-                                   'row_number' => 'D',
-                                   'extraction' => 'NA',
-                                   'acquisition_date' => '8/23/2018',
-                                   'stock_name' => 'KASESE_TP2013_885',
-                                   'col_number' => '01'
-                                 }
-                      }
-        }, 'test upload parse of coordinate genotyping plate');
+    'success' => '1',
+    'design' => {
+        'B12' => {
+            'notes' => 'newplate',
+            'ncbi_taxonomy_id' => 'NA',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 1,
+            'concentration' => 'NA',
+            'plot_number' => 'B12',
+            'volume' => 'NA',
+            'tissue_type' => 'leaf',
+            'plot_name' => '18DNA00101_B12',
+            'extraction' => 'NA',
+            'row_number' => 'B',
+            'col_number' => '12',
+            'acquisition_date' => '8/23/2018',
+            'stock_name' => 'BLANK',
+            'facility_identifier' => 'NA'
+        },
+        'A01' => {
+            'stock_name' => 'KASESE_TP2013_1671',
+            'acquisition_date' => '8/23/2018',
+            'col_number' => '01',
+            'row_number' => 'A',
+            'extraction' => 'NA',
+            'plot_name' => '18DNA00101_A01',
+            'tissue_type' => 'leaf',
+            'plot_number' => 'A01',
+            'volume' => 'NA',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 0,
+            'concentration' => 'NA',
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'facility_identifier' => 'NA'
+        },
+        'B01' => {
+            'plot_name' => '18DNA00101_B01',
+            'extraction' => 'NA',
+            'row_number' => 'B',
+            'col_number' => '01',
+            'stock_name' => 'KASESE_TP2013_1671',
+            'acquisition_date' => '8/23/2018',
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 0,
+            'concentration' => 'NA',
+            'plot_number' => 'B01',
+            'volume' => 'NA',
+            'tissue_type' => 'leaf',
+            'facility_identifier' => 'NA'
+        },
+        'C01' => {
+            'col_number' => '01',
+            'acquisition_date' => '8/23/2018',
+            'stock_name' => 'KASESE_TP2013_885',
+            'extraction' => 'NA',
+            'row_number' => 'C',
+            'plot_name' => '18DNA00101_C01',
+            'tissue_type' => 'leaf',
+            'is_blank' => 0,
+            'dna_person' => 'gbauchet',
+            'concentration' => 'NA',
+            'plot_number' => 'C01',
+            'volume' => 'NA',
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'facility_identifier' => 'NA'
+        },
+        'D01' => {
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'plot_number' => 'D01',
+            'volume' => 'NA',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 0,
+            'concentration' => 'NA',
+            'tissue_type' => 'leaf',
+            'plot_name' => '18DNA00101_D01',
+            'row_number' => 'D',
+            'extraction' => 'NA',
+            'acquisition_date' => '8/23/2018',
+            'stock_name' => 'KASESE_TP2013_885',
+            'col_number' => '01',
+            'facility_identifier' => 'NA'
+        }
+    }
+}, 'test upload parse of coordinate genotyping plate');
 
 my $plate_data = {
     design => $message_hash->{design},
@@ -932,7 +940,7 @@ my $plate_data = {
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 
 ok($response->{trial_id});
 
@@ -953,109 +961,115 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
-          'design' => {
-                        'B01' => {
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 0,
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_B01',
-                                   'col_number' => '01',
-                                   'notes' => '',
-                                   'extraction' => 'CTAB',
-                                   'tissue_type' => 'leaf',
-                                   'volume' => 'NA',
-                                   'concentration' => 'NA',
-                                   'stock_name' => 'test_accession1',
-                                   'plot_number' => 'B01',
-                                   'row_number' => 'B',
-                                   'dna_person' => 'Trevor_Rife'
-                                 },
-                        'B04' => {
-                                   'tissue_type' => 'leaf',
-                                   'extraction' => 'CTAB',
-                                   'notes' => '',
-                                   'col_number' => '04',
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_B04',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 1,
-                                   'row_number' => 'B',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'plot_number' => 'B04',
-                                   'stock_name' => 'BLANK',
-                                   'concentration' => 'NA',
-                                   'volume' => 'NA'
-                                 },
-                        'C01' => {
-                                   'is_blank' => 0,
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'plot_name' => '18DNA00001_C01',
-                                   'acquisition_date' => '2018-02-06',
-                                   'notes' => '',
-                                   'col_number' => '01',
-                                   'extraction' => 'CTAB',
-                                   'tissue_type' => 'leaf',
-                                   'volume' => 'NA',
-                                   'concentration' => 'NA',
-                                   'stock_name' => 'test_accession2',
-                                   'plot_number' => 'C01',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'C'
-                                 },
-                        'C04' => {
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 1,
-                                   'plot_name' => '18DNA00001_C04',
-                                   'acquisition_date' => '2018-02-06',
-                                   'notes' => '',
-                                   'col_number' => '04',
-                                   'tissue_type' => 'leaf',
-                                   'extraction' => 'CTAB',
-                                   'volume' => 'NA',
-                                   'stock_name' => 'BLANK',
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'C04',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'C'
-                                 },
-                        'A01' => {
-                                   'is_blank' => 0,
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_A01',
-                                   'notes' => '',
-                                   'col_number' => '01',
-                                   'extraction' => 'CTAB',
-                                   'tissue_type' => 'leaf',
-                                   'volume' => 'NA',
-                                   'concentration' => 'NA',
-                                   'stock_name' => 'test_accession1',
-                                   'plot_number' => 'A01',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'A'
-                                 },
-                        'D01' => {
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'D',
-                                   'plot_number' => 'D01',
-                                   'stock_name' => 'test_accession2',
-                                   'concentration' => 'NA',
-                                   'volume' => 'NA',
-                                   'tissue_type' => 'leaf',
-                                   'extraction' => 'CTAB',
-                                   'col_number' => '01',
-                                   'notes' => '',
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_D01',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 0
-                                 }
-                      },
-          'success' => '1'
-      }, 'test upload parse of coordinate genotyping plate');
+    'design' => {
+        'B01' => {
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 0,
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_B01',
+            'col_number' => '01',
+            'notes' => '',
+            'extraction' => 'CTAB',
+            'tissue_type' => 'leaf',
+            'volume' => 'NA',
+            'concentration' => 'NA',
+            'stock_name' => 'test_accession1',
+            'plot_number' => 'B01',
+            'row_number' => 'B',
+            'dna_person' => 'Trevor_Rife',
+            'facility_identifier' => 'NA'
+        },
+        'B04' => {
+            'tissue_type' => 'leaf',
+            'extraction' => 'CTAB',
+            'notes' => '',
+            'col_number' => '04',
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_B04',
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 1,
+            'row_number' => 'B',
+            'dna_person' => 'Trevor_Rife',
+            'plot_number' => 'B04',
+            'stock_name' => 'BLANK',
+            'concentration' => 'NA',
+            'volume' => 'NA',
+            'facility_identifier' => 'NA'
+        },
+        'C01' => {
+            'is_blank' => 0,
+            'ncbi_taxonomy_id' => 'NA',
+            'plot_name' => '18DNA00001_C01',
+            'acquisition_date' => '2018-02-06',
+            'notes' => '',
+            'col_number' => '01',
+            'extraction' => 'CTAB',
+            'tissue_type' => 'leaf',
+            'volume' => 'NA',
+            'concentration' => 'NA',
+            'stock_name' => 'test_accession2',
+            'plot_number' => 'C01',
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'C',
+            'facility_identifier' => 'NA'
+        },
+        'C04' => {
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 1,
+            'plot_name' => '18DNA00001_C04',
+            'acquisition_date' => '2018-02-06',
+            'notes' => '',
+            'col_number' => '04',
+            'tissue_type' => 'leaf',
+            'extraction' => 'CTAB',
+            'volume' => 'NA',
+            'stock_name' => 'BLANK',
+            'concentration' => 'NA',
+            'plot_number' => 'C04',
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'C',
+            'facility_identifier' => 'NA'
+        },
+        'A01' => {
+            'is_blank' => 0,
+            'ncbi_taxonomy_id' => 'NA',
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_A01',
+            'notes' => '',
+            'col_number' => '01',
+            'extraction' => 'CTAB',
+            'tissue_type' => 'leaf',
+            'volume' => 'NA',
+            'concentration' => 'NA',
+            'stock_name' => 'test_accession1',
+            'plot_number' => 'A01',
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'A',
+            'facility_identifier' => 'NA'
+        },
+        'D01' => {
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'D',
+            'plot_number' => 'D01',
+            'stock_name' => 'test_accession2',
+            'concentration' => 'NA',
+            'volume' => 'NA',
+            'tissue_type' => 'leaf',
+            'extraction' => 'CTAB',
+            'col_number' => '01',
+            'notes' => '',
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_D01',
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 0,
+            'facility_identifier' => 'NA'
+        }
+    },
+    'success' => '1'
+}, 'test upload parse of coordinate genotyping plate');
 
 my $plate_data = {
     design => $message_hash->{design},
@@ -1073,14 +1087,14 @@ my $plate_data = {
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR "RESPONSE: ".Dumper $response;
+#print STDERR "RESPONSE: ".Dumper $response;
 
 ok($response->{trial_id});
 my $geno_trial_id = $response->{trial_id};
 $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=intertekxls&dataLevel=plate");
 my $intertek_download = $mech->content;
 my $contents = ReadData $intertek_download;
-print STDERR Dumper $contents;
+#print STDERR Dumper $contents;
 is($contents->[0]->{'type'}, 'xls', "check that type of file is correct #1");
 is($contents->[0]->{'sheets'}, '1', "check that type of file is correct #2");
 
@@ -1088,7 +1102,7 @@ my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 7, "check number of col in created file.");
 
-print STDERR Dumper $columns;
+#print STDERR Dumper $columns;
 is_deeply($columns, [
           [],
           [
@@ -1144,27 +1158,27 @@ is_deeply($columns, [
           [
             undef,
             'Comments',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB'
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA'
           ]
         ], 'test intertek genotyping plate download');
 
 $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=dartseqcsv&dataLevel=plate");
 my $intertek_download = $mech->content;
-print STDERR Dumper $intertek_download;
+#print STDERR Dumper $intertek_download;
 my @intertek_download = split "\n", $intertek_download;
-print STDERR Dumper \@intertek_download;
+#print STDERR Dumper \@intertek_download;
 
 is_deeply(\@intertek_download, [
           'PlateID,Row,Column,Organism,Species,Genotype,Tissue,Comments',
-          'test_genotype_upload_coordinate_trial1,A,01,tomato,"Solanum lycopersicum",18DNA00001_A01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
-          'test_genotype_upload_coordinate_trial1,B,01,tomato,"Solanum lycopersicum",18DNA00001_B01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
-          'test_genotype_upload_coordinate_trial1,C,01,tomato,"Solanum lycopersicum",18DNA00001_C01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
-          'test_genotype_upload_coordinate_trial1,D,01,tomato,"Solanum lycopersicum",18DNA00001_D01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"'
+          'test_genotype_upload_coordinate_trial1,A,01,tomato,"Solanum lycopersicum",18DNA00001_A01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"',
+          'test_genotype_upload_coordinate_trial1,B,01,tomato,"Solanum lycopersicum",18DNA00001_B01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"',
+          'test_genotype_upload_coordinate_trial1,C,01,tomato,"Solanum lycopersicum",18DNA00001_C01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"',
+          'test_genotype_upload_coordinate_trial1,D,01,tomato,"Solanum lycopersicum",18DNA00001_D01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"'
         ]);
 
 
@@ -1195,7 +1209,7 @@ $parsed_data = $parser->parse();
 ok($parsed_data, "Check if parse validate excel file works");
 ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
-print STDERR Dumper $parsed_data;
+#print STDERR Dumper $parsed_data;
 
 my $parsed_data_check_with_management_factor = {
           '7' => {
@@ -1333,23 +1347,23 @@ ok($project_name_with_management_factor == "Trial_upload_test_with_management_fa
 
 my $trial_with_management_factor = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $save_with_management_factor->{'trial_id'} });
 my $management_factors = $trial_with_management_factor->get_treatments();
-print STDERR Dumper $management_factors;
+#print STDERR Dumper $management_factors;
 is(scalar(@$management_factors), 2);
 
 my $trial_management_factor1 = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $management_factors->[0]->[0] } );
 my $management_factor_name1 = $trial_management_factor1->name();
-print STDERR Dumper $management_factor_name1;
+#print STDERR Dumper $management_factor_name1;
 is($management_factor_name1, "Trial_upload_test_with_management_factor_fert_factor1");
 my $management_factor_plots1 = $trial_management_factor1->get_plots();
-print STDERR Dumper $management_factor_plots1;
+#print STDERR Dumper $management_factor_plots1;
 is(scalar(@$management_factor_plots1), 6);
 
 my $trial_management_factor2 = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $management_factors->[1]->[0] } );
 my $management_factor_name2 = $trial_management_factor2->name();
-print STDERR Dumper $management_factor_name2;
+#print STDERR Dumper $management_factor_name2;
 is($management_factor_name2, "Trial_upload_test_with_management_factor_manage_factor2");
 my $management_factor_plots2 = $trial_management_factor2->get_plots();
-print STDERR Dumper $management_factor_plots2;
+#print STDERR Dumper $management_factor_plots2;
 is(scalar(@$management_factor_plots2), 3);
 
 done_testing();
