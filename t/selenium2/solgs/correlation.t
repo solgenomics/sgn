@@ -319,6 +319,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->driver->refresh();
     sleep(2);
+
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $cor);
     sleep(5);
@@ -330,7 +331,6 @@ $d->while_logged_in_as("submitter", sub {
     sleep(70);
     $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
-
 
     my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
@@ -344,13 +344,13 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(20);
+    sleep(70);
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
+   
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "> 0")]', 'xpath', 'check corr plot')->click();
     sleep(5);
-
 
     `rm -r $cache_dir`;
     sleep(3);
