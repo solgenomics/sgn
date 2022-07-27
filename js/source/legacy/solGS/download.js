@@ -36,7 +36,7 @@ solGS.download = {
       '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
     var downloadLinks =
-      " <strong>Download training population </strong>: " +
+      " <strong>Download training population</strong>: " +
       genoFileLink +
       " | " +
       phenoFileLink;
@@ -78,7 +78,7 @@ solGS.download = {
       '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
     var downloadLinks =
-      " <strong>Download model </strong>: " + genoFileLink + " | " + phenoFileLink;
+      " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink;
 
     jQuery("#model_input_data_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
