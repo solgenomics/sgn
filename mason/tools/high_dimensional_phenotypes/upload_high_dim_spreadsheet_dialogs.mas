@@ -180,7 +180,16 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Phenotype Type: </label>
+                                <label class="col-sm-3 control-label">Targeted: </label>
+                                <div class="col-sm-9" >
+                                <select class="form-control" id="high_dim_data_upload_metabolomics_targeted">
+                                    <option value="True">True</option>
+                                    <option value="False">False</option>
+                                </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Phenotype Protocol: </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_type" type="text" placeholder="e.g. relative abundance, BLUP, drBLUP, concentration">
                                 </div>
@@ -189,6 +198,31 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Phenotype Units: </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_units" type="text" placeholder="e.g. ug/g">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Sample Collection protocol: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_sample_collection_protocol" type="text" placeholder="e.g. mature dehulled oat seeds">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Sample Extraction Protocol: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_sample_extraction_protocol" type="text" placeholder="e.g. describe extraction protocol used">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">RawData Transformation Protocol: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_rawdata_transformation_protocol" type="text" placeholder="e.g. describe mass spectrometry protocol used">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Metabolite Identification Protocol: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_metabolite_identification_protocol" type="text" placeholder="e.g. describe mass spectrometry protocol used">
                                 </div>
                             </div>
                         </div>
@@ -205,43 +239,73 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography System Brand: </label>
+                                    <label class="col-sm-3 control-label">Chromatography Instrument: </label>
                                     <div class="col-sm-9" >
                                         <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_system_brand" type="text" placeholder="e.g. ThermoFisher MS100 System">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography Column Brand: </label>
+                                    <label class="col-sm-3 control-label">Chromatography AutoSampler Model: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_AutoSampler_Model" type="text" placeholder="e.g. write the name of AutoSampler Model used">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography Column Model: </label>
                                     <div class="col-sm-9" >
                                         <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_brand" type="text" placeholder="e.g. ThermoFisher MS100 Column">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Brand: </label>
+                                    <label class="col-sm-3 control-label">Chromatography Column Type: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_type" type="text" placeholder="e.g. high polarity">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography Protocol: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_protocol" type="text" placeholder="e.g. describe chromatography protocol used">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Mass Spectrometry Protocol: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_mass_spectrometry_protocol" type="text" placeholder="e.g. describe mass spectrometry protocol used">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Instrument: </label>
                                     <div class="col-sm-9" >
                                         <input class="form-control" id="high_dim_data_upload_metabolomics_ms_brand" type="text" placeholder="e.g. ThermoFisher MS100">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Instrument Type: </label>
+                                    <label class="col-sm-3 control-label">MS Mass Analyzer: </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_instrument_type" type="text" placeholder="e.g. time of flight (TOF), triple quadropole">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_mass_analyzer" type="text" placeholder="e.g. single quadropole">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Type: </label>
+                                    <label class="col-sm-3 control-label">MS Ion Source: </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_type" type="text" placeholder="e.g. EI, ESI, APCI, MALDI">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_ion_source" type="text" placeholder="e.g. EI, ESI, APCI, MALDI">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Ion Mode: </label>
+                                    <label class="col-sm-3 control-label">MS Scan Polarity: </label>
                                     <div class="col-sm-9" >
-                                        <select class="form-control" id="high_dim_data_upload_metabolomics_ion_mode">
+                                        <select class="form-control" id="high_dim_data_upload_metabolomics_ms_scan_polarity">
                                             <option value="negative">Negative</option>
                                             <option value="positive">Positive</option>
                                             <option value="both">Both</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Scan MZ Range: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_scan_MZ_Range" type="text" placeholder="e.g. 60-800">
                                     </div>
                                 </div>
                             </div>
@@ -258,6 +322,12 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Data Process Description: </label>
                                 <div class="col-sm-9" >
                                     <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Publication: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_publication" type="text" placeholder="e.g. https://doi.org/10.3389/fgene.2021.643733">
                                 </div>
                             </div>
                         </div>
