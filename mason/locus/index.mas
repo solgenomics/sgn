@@ -169,8 +169,8 @@ foreach ( @{ $dbxrefs{'TomDel'} } ) {
     $pos = $2;
     $jbrowse_url = "https://solgenomics.net/jbrowse_solgenomics/?data=data/json/SL2.50&loc=$chr:$pos&tracks=DNA,gene_models,TomDelDB";
     $tomDel .=
-      qq|<br /><a href="$url$accession" target="blank">TomDelDB genotype frequencies</a> in tomato populations. <a href="jbrowse_url" target="blank">$description</a><br />|;
-    $tomDel .= qq|$tomDel_pub<br />|;   
+      qq|<br /><a href="$url$accession" target="blank">TomDelDB genotype frequencies</a> in tomato populations. <a href="$jbrowse_url" target="blank">$description</a><br />|;
+    $tomDel .= qq|$tomDel_pub<br />|;
     }
 }
 my $pub_subtitle = $curator || $submitter || $sequencer  ?
