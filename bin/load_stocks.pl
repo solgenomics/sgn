@@ -236,21 +236,26 @@ my $coderef= sub  {
             }
         }
 
+	print STDERR "Parsing ".scalar(@columns)." columns...\n";
+	
 	for(my $n = 5; $n<@columns; $n++) {
-	    print STDERR "Retrieving value at $columns[$n]...\n";
+	    print STDERR "Retrieving value at $accession / $columns[$n]...\n";
 	    my $value = $spreadsheet->value_at($accession, $columns[$n]);
-	    my $type_id = $schema->resultset("Cv::Cvterm")->find_or_create(
-		{
-		    name => $columns[$n],
-		    cv_id => $stock_property_cv_id
-		});
-	    
-	    my $stockprop = $schema->resultset("Stock::Stockprop")->find_or_create(
-		{
-		    stock_id => $stock->stock_id,
-		    value => $value,
-		    type_id => $type_id
-		}); 
+	    print STDERR "value is $value\n";
+	    if ($value) { 
+		my $type_rs = $schema->resultset("Cv::Cvterm")->find_or_create(
+		    {
+			name => $columns[$n],
+			cv_id => $stock_property_cv_id
+		    });
+		print STDERR "TYPE ID IS ".$type_rs->cvterm_id."\n";
+		my $stockprop = $schema->resultset("Stock::Stockprop")->find_or_create(
+		    {
+			stock_id => $stock->stock_id,
+			value => $value,
+			type_id => $type_rs->cvterm_id,
+		    });
+	    }
 	}
     }
 	
