@@ -12,7 +12,8 @@ my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
-# my $solgs_data = SGN::Test::solGSData->new();
+my $cache_dir = $solgs_data->site_cluster_shared_dir();
+print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 # my $accessions_list = $solgs_data->get_list_details('accessions');
@@ -55,7 +56,7 @@ print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n"
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
-`rm -r /tmp/localhost/`;
+`rm -r $cache_dir`;
 
 
 $d->while_logged_in_as("submitter", sub {
@@ -407,7 +408,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'dataset dmcp-frw pred')->click();
     sleep(10);
 
-    `rm -r /tmp/localhost/`;
+    `rm -r $cache_dir`;
 
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
