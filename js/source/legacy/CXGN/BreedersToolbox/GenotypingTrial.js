@@ -478,6 +478,11 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    jQuery('[name="create_genotyping_project_link"]').click(function() {
+        jQuery('#create_genotyping_project_dialog').modal("show");
+    });
+
+
 });
 
 function edit_genotyping_trial_details(){
