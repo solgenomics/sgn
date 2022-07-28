@@ -687,17 +687,53 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <h3>Upload details about the metabolites in a tabular spreadsheet (.csv) format with the following columns:</h3>
 
             <ul>
-                <li>metabolite_name (required): This should be the same name as present in a column in your metabolomics data matrix file.</li>
-                <li>inchi_key (optional): The International Chemical Identifier for the metabolite.</li>
-                <li>compound_name (optional): Name for the compound.</li>
+                <li><strong>metabolite_name (required)</strong>: This should be the same name as present in a column in your metabolomics data matrix file.</li>
+                <li><strong>chebi_id (optional)</strong>: Standard formula (e.g., CHEBI:16971) identifier for the metabolite.</li>
+                <li><strong>inchi_id (optional)</strong>: The International Chemical Identifier (e.g, InChI=1S/C6H6O3/c7-4-1-2-5(8)6(9)3-4/h1-3,7-9H) for the metabolite.</li>
+                <li><strong>inchi_key (optional)</strong>: The International Chemical Identifier (shortened version of inchi_id) for the metabolite.</li>
+                <li><strong>pubchem_id (optional)</strong>: Standard formula (e.g., https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:75854) identifier for the metabolite.</li>
+                <li><strong>smiles_id (optional)</strong>: Standard identifier (eg., Oc1ccc(O)c(O)c1) for the metabolite.</li>
+                <li><strong>chemical_formula (required)</strong>: Chemical formula of the metabolite (e.g., C6H6O3).</li>
+                <li><strong>putative_metabolite_identification (optional)</strong>: e.g., Phenylalanine, sucrose, avenanthramide.</li>
+                <li><strong>putative_metabolite_identification_synonyms (required)</strong>: Metabolite synonyms, alternate names of any of the above.</li>
+                <li><strong>mass_to_charge (required)</strong>: M/Z ratio, standard from output, should be a number.</li>
+                <li><strong>retention_time (required)</strong>: Retention time, also standard from machine output; users should confirm that unit is 'seconds'.</li>
+                <li><strong>charge (optional)</strong>: Could be negative or positive.</li>
+                <li><strong>fragmentation (optional)</strong>: e.g. (239:3349 240:1454 342:3557 343:1562).</li>
+                <li><strong>modifications (optional)</strong>: This is if the metabolite was modified to make it easier to measure on the instrument, and what it was modified too (e.g. trimethylsilation).</li>
+                <li><strong>metabolite_species (optional)</strong>: e.g., Acid, alcohol.</li>
+                <li><strong>met_database (required)</strong>: Metabolomics database (e.g., gmd.mpimp-golm.mpg.de).</li>
+                <li><strong>met_database_version (required)</strong>: Metabolomics database version (e.g., var5 alk 161212).</li>
+                <li><strong>met_reliability (required)</strong>: A number 1 through 5, related to  dx.doi.org/10.1021/es5002105.</li>
+                <li><strong>met_search_engine (required)</strong>: e.g., TagFinder4.1 manual supervised annotation.</li>
+                <li><strong>met_search_engine_score (required)</strong>: Score given by search engine.</li>
+                <li><strong>compound_name (optional)</strong>: Name for the compound.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
                 <tbody>
                     <tr>
-                        <td>metabolite_name</td>
-                        <td>inchi_key</td>
-                        <td>compound_name</td>
+                        <td><strong>metabolite_name</strong></td>
+                        <td><strong>chebi_id</strong></td>
+                        <td><strong>inchi_id</strong></td>
+                        <td><strong>inchi_key</strong></td>
+                        <td><strong>pubchem_id</strong></td>
+                        <td><strong>smiles_id</strong></td>
+                        <td><strong>chemical_formula</strong></td>
+                        <td><strong>putative_metabolite_identification</strong></td>
+                        <td><strong>putative_metabolite_identification_synonyms</strong></td>
+                        <td><strong>mass_to_charge</strong></td>
+                        <td><strong>retention_time<s/trong></td>
+                        <td><strong>charge</strong></td>
+                        <td><strong>fragmentation</strong></td>
+                        <td><strong>modifications</strong></td>
+                        <td><strong>metabolite_species</strong></td>
+                        <td><strong>met_database</strong></td>
+                        <td><strong>met_database_version</strong></td>
+                        <td><strong>met_reliability</strong></td>
+                        <td><strong>met_search_engine</strong></td>
+                        <td><strong>met_search_engine_score<s/trong></td>
+                        <td><strong>compound_name</strong></td>
                     </tr>
                 </tbody>
             </table>
