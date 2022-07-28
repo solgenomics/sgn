@@ -554,7 +554,7 @@ sub site_cluster_shared_dir {
     my $tmp = $self->fixture->get_conf('cluster_shared_tempdir');
     my $host = $self->fixture->get_conf('main_production_site_url');
    
-    $host    =~ s/(http?)|(:\d+)|\/|://g;
+    $host    =~ s/(https?)|(:\d+)|\/|://g;
     $host    =~ s/(www\.)//;
     my $host_dir    = File::Spec->catdir($tmp, $host);
     
