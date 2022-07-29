@@ -653,9 +653,10 @@ sub add_genotyping_project_POST :Args(0){
             chado_schema => $schema,
             dbh => $dbh,
             project_name => $project_name,
-            breeding_program => $project_breeding_program,
+            breeding_program_id => $project_breeding_program,
             year => $year,
             project_description => $project_description,
+            nd_geolocation_id => $project_location,
             owner_id => $user_id
         });
         my $store_return = $add_genotyping_project->store_genotyping_project();
