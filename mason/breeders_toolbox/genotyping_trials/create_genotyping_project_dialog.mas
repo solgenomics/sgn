@@ -20,13 +20,13 @@ $facilities
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Project Name: </label>
                                     <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotype_vcf_project_name" name="upload_genotype_vcf_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
+                                        <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Facility: </label>
                                     <div class="col-sm-7">
-                                        <select class="form-control" id="upload_genotype_vcf_facility_select" name="upload_genotype_vcf_facility_select">
+                                        <select class="form-control" id="genotyping_project_facility_select" name="genotyping_project_facility_select">
 %  foreach my $facility (@$facilities) {
                                             <option value="<% $facility %>"><% $facility %></option>
 %  }
@@ -36,19 +36,25 @@ $facilities
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Breeding Program: </label>
                                     <div class="col-sm-7">
-                                        <span id="upload_genotype_breeding_program_select_div"></span>
+                                        <span id="genotyping_project_breeding_program_select_div"></span>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Year: </label>
                                     <div class="col-sm-7">
-                                        <span id="upload_genotype_year_select_div"></span>
+                                        <span id="genotyping_project_year_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Location of Data Generation (optional): </label>
+                                    <div class="col-sm-7">
+                                        <span id="genotyping_project_location_select_div"></span>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Description: </label>
                                     <div class="col-sm-7">
-                                        <textarea class="form-control" id="upload_genotype_vcf_project_description" name="upload_genotype_vcf_project_description" maxlength="250"></textarea>
+                                        <textarea class="form-control" id="genotyping_project_description" name="genotyping_project_description" maxlength="250"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -64,5 +70,76 @@ $facilities
 </div>
 
 <script>
+
+jQuery(document).ready(function(){
+
+    get_select_box("locations", "genotyping_project_location_select_div", {'id': 'genotyping_project_location_select', 'name': 'genotyping_project_location_select'});
+    get_select_box("breeding_programs", "genotyping_project_breeding_program_select_div", {'id': 'genotyping_project_breeding_program_select', 'name': 'genotyping_project_breeding_program_select'});
+    get_select_box("years", "genotyping_project_year_select_div", {'auto_generate': 1, 'id': 'genotyping_project_year_select', 'name': 'genotyping_project_year_select'});
+
+    jQuery('#add_new_genotyping_project_submit').click(function() {
+        var project_name = $("#genotyping_project_name").val();
+        if (!project_name) {
+            alert("Genotyping project name is required");
+            return;
+        }
+
+        var project_facility = $("#genotyping_project_facility_select").val();
+        if (!project_facility) {
+            alert("Genotyping project facility is required");
+            return;
+        }
+
+        var project_breeding_program = $("#genotyping_project_breeding_program_select").val();
+        if (!project_breeding_program) {
+            alert ("Breeding program is required");
+            return;
+        }
+
+        var project_year = $("#genotyping_project_year_select").val();
+        if (!project_year) {
+            alert ("Year is required");
+            return;
+        }
+
+        var project_description = $("#genotyping_project_description").val();
+        if (!project_description) {
+            alert ("Description is required");
+            return;
+        }
+
+        var project_location = $("#genotyping_project_location_select").val();
+
+        jQuery.ajax({
+            url: '/ajax/breeders/add_genotyping_project',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'female_list_id': female_list_id,
+                'male_list_id': male_list_id,
+                'crossing_experiment_id': crossing_experiment_id
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#genotyping_project_stored_message").modal("show");
+                    jQuery('#create_genotyping_project_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred saving genotyping project.');
+                jQuery('#create_genotyping_project_dialog').modal("hide");
+            },
+        });
+    });
+
+});
+
 
 </script>
