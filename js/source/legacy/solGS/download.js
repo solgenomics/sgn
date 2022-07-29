@@ -27,9 +27,6 @@ solGS.download = {
     var genoFile = res.training_pop_raw_geno_file;
     var phenoFile = res.training_pop_raw_pheno_file;
 
-    console.log("geno file: " + genoFile);
-    console.log("pheno file: " + phenoFile);
-
     var genoFileName = genoFile.split("/").pop();
     var genoFileLink =
       '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
@@ -39,9 +36,7 @@ solGS.download = {
       '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
     var downloadLinks =
-      " <strong>Download " +
-      "Training population" +
-      " </strong>: " +
+      " <strong>Download training population</strong>: " +
       genoFileLink +
       " | " +
       phenoFileLink;
@@ -83,7 +78,7 @@ solGS.download = {
       '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
     var downloadLinks =
-      " <strong>Download " + "Model" + " </strong>: " + genoFileLink + " | " + phenoFileLink;
+      " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink;
 
     jQuery("#model_input_data_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"

@@ -11,7 +11,8 @@ my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
-# my $solgs_data = SGN::Test::solGSData->new();
+my $cache_dir = $solgs_data->site_cluster_shared_dir();
+print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 # my $accessions_list = $solgs_data->get_list_details('accessions');
@@ -55,7 +56,7 @@ print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n"
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
-`rm -r /tmp/localhost/`;
+`rm -r  $cache_dir`;
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
@@ -192,7 +193,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "> 0")]', 'xpath', 'check corr plot')->click();
     sleep(5);
 
-    `rm -r /tmp/localhost/`;
+    `rm -r $cache_dir`;
     sleep(5);
 
     $d->get('/solgs');
@@ -318,6 +319,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->driver->refresh();
     sleep(2);
+
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $cor);
     sleep(5);
@@ -329,7 +331,6 @@ $d->while_logged_in_as("submitter", sub {
     sleep(70);
     $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
-
 
     my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
@@ -343,15 +344,15 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(20);
+    sleep(70);
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
+   
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "> 0")]', 'xpath', 'check corr plot')->click();
     sleep(5);
 
-
-    `rm -r /tmp/localhost/`;
+    `rm -r $cache_dir`;
     sleep(3);
 
     $d->get_ok('/breeders/trial/139', 'trial detail home page');
