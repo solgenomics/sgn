@@ -20,7 +20,7 @@ $facilities
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Project Name: </label>
                                     <div class="col-sm-7">
-                                        <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
+                                        <input class="form-control" id="new_genotyping_project_name" name="new_genotyping_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -78,46 +78,50 @@ jQuery(document).ready(function(){
     get_select_box("years", "genotyping_project_year_select_div", {'auto_generate': 1, 'id': 'genotyping_project_year_select', 'name': 'genotyping_project_year_select'});
 
     jQuery('#add_new_genotyping_project_submit').click(function() {
-        var project_name = $("#genotyping_project_name").val();
+
+        var project_name = jQuery("#new_genotyping_project_name").val();
         if (!project_name) {
             alert("Genotyping project name is required");
             return;
         }
 
-        var project_facility = $("#genotyping_project_facility_select").val();
+        var project_facility = jQuery("#genotyping_project_facility_select").val();
         if (!project_facility) {
             alert("Genotyping project facility is required");
             return;
         }
 
-        var project_breeding_program = $("#genotyping_project_breeding_program_select").val();
+        var project_breeding_program = jQuery("#genotyping_project_breeding_program_select").val();
         if (!project_breeding_program) {
             alert ("Breeding program is required");
             return;
         }
 
-        var project_year = $("#genotyping_project_year_select").val();
+        var project_year = jQuery("#genotyping_project_year_select").val();
         if (!project_year) {
             alert ("Year is required");
             return;
         }
 
-        var project_description = $("#genotyping_project_description").val();
+        var project_description = jQuery("#genotyping_project_description").val();
         if (!project_description) {
             alert ("Description is required");
             return;
         }
 
-        var project_location = $("#genotyping_project_location_select").val();
+        var project_location = jQuery("#genotyping_project_location_select").val();
 
         jQuery.ajax({
             url: '/ajax/breeders/add_genotyping_project',
             dataType: "json",
             type: 'POST',
             data:{
-                'female_list_id': female_list_id,
-                'male_list_id': male_list_id,
-                'crossing_experiment_id': crossing_experiment_id
+                'project_name': project_name,
+                'project_breeding_program': project_breeding_program,
+                'project_facility': project_facility,
+                'project_year': project_year,
+                'project_description': project_description,
+                'project_location': project_location
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

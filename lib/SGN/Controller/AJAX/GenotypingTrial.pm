@@ -11,6 +11,7 @@ use CXGN::People::Person;
 use CXGN::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::CreatePlateOrder;
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -629,7 +630,7 @@ sub add_genotyping_project_POST :Args(0){
     my $dbh = $c->dbc->dbh;
     my $project_name = $c->req->param('project_name');
     my $project_breeding_program = $c->req->param('project_breeding_program');
-    my $genotyping_facility = $c->req->param('project_facility');
+    my $project_facility = $c->req->param('project_facility');
     my $project_year = $c->req->param('project_year');
     my $project_description = $c->req->param('project_description');
     my $project_location = $c->req->param('project_location');
@@ -654,7 +655,8 @@ sub add_genotyping_project_POST :Args(0){
             dbh => $dbh,
             project_name => $project_name,
             breeding_program_id => $project_breeding_program,
-            year => $year,
+            project_facility => $project_facility,
+            year => $project_year,
             project_description => $project_description,
             nd_geolocation_id => $project_location,
             owner_id => $user_id

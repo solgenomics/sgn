@@ -76,13 +76,13 @@ sub store_genotyping_project {
 	my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
 
     my $genotyping_project = $schema->resultset('Project::Project')->create({
-        name => $self->get_crossingtrial_name(),
+        name => $self->get_project_name(),
         description => $self->get_project_description(),
         type_id => $project_type_cvterm_id
     });
 
-	$genotyping_project_id = $genotyping_project->project_id();
-	$project->create_projectprops( {$genotyping_facility_cvterm->name() => $self->get_project_facility } );
+	my $genotyping_project_id = $genotyping_project->project_id();
+	$genotyping_project->create_projectprops( {$genotyping_facility_cvterm->name() => $self->get_project_facility } );
 
     my $project = CXGN::Trial->new({
         bcs_schema => $schema,
@@ -95,7 +95,7 @@ sub store_genotyping_project {
     $project->set_year($self->get_year());
     $project->set_breeding_program($self->get_breeding_program_id);
     $project->set_trial_owner($self->get_owner_id);
-
+    print STDERR "GENOTYPING PROJECT ID =".Dumper($genotyping_project_id);
     return {success=>1, trial_id=>$genotyping_project_id};
 
 }
