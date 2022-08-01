@@ -216,13 +216,13 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">RawData Transformation Protocol: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_rawdata_transformation_protocol" type="text" placeholder="e.g. describe mass spectrometry protocol used">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_rawdata_transformation_protocol" type="text" placeholder="e.g. describe the raw data transformation protocol used">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Metabolite Identification Protocol: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_metabolite_identification_protocol" type="text" placeholder="e.g. describe mass spectrometry protocol used">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_metabolite_identification_protocol" type="text" placeholder="e.g. describe the metabolomics identification protocol used">
                                 </div>
                             </div>
                         </div>
