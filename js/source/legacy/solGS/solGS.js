@@ -215,7 +215,7 @@ solGS.submitJob = {
 
   getTraitsSelectionId: function (page, args) {
     var traitIds = args.training_traits_ids;
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     jQuery.ajax({
       dataType: "json",
@@ -291,7 +291,7 @@ solGS.submitJob = {
 
   wrapTraitsForm: function () {
     var popId = jQuery("#population_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     var formId = ' id="traits_selection_form"';
 
@@ -532,7 +532,7 @@ solGS.submitJob = {
 
     var protocolId = args.genotyping_protocol_id;
     if (!protocolId) {
-      protocolId = jQuery("#genotyping_protocol_id").val();
+      protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
     }
 
     var popDesc = jQuery("#training_pop_desc").val();
@@ -674,7 +674,7 @@ jQuery(document).ready(function () {
 
     var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
     var popId = jQuery("#training_pop_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     if (traitIds.length) {
       var page;
@@ -838,7 +838,7 @@ solGS.getPopulationDetails = function () {
     dataSetType = "single population";
   }
 
-  var protocolId = jQuery("#genotyping_protocol_id").val();
+  var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
   return {
     training_pop_id: trainingPopId,
     population_name: trainingPopName,
