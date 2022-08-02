@@ -1002,11 +1002,11 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         $c->stash->{rest} = {error => ["Please give a protocol name and description, or select a previous protocol!"]};
         $c->detach();
     }
-    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc || !$protocol_phenotype_type || !$protocol_phenotype_units)) {
+    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc || !$protocol_phenotype_type || !$protocol_phenotype_units || !$protocol_target || !$protocol_sample_collection || !$protocol_sample_extraction || !$protocol_rawdata_transformation || !$protocol_metabolite_identification)) {
         $c->stash->{rest} = {error => ["Please give all protocol equipment descriptions, or select a previous protocol!"]};
         $c->detach();
     }
-    if (!$protocol_id && $protocol_equipment_type eq 'MS' && (!$protocol_chromatography_system_brand || !$protocol_chromatography_column_brand || !$protocol_ms_brand || !$protocol_ms_type || !$protocol_ms_instrument_type || !$protocol_ms_ion_mode)) {
+    if (!$protocol_id && $protocol_equipment_type eq 'MS' && (!$protocol_chromatography_system_brand || !$protocol_chromatography_column_brand || !$protocol_ms_brand || !$protocol_ms_type || !$protocol_ms_instrument_type || !$protocol_ms_ion_mode || !$protocol_chromatography_type || !$protocol_chromatography_column_type || !$protocol_chromatography_protocol || !$protocol_mass_spectrometry_protocol || !$protocol_ms_scan_mz_range)) {
         $c->stash->{rest} = {error => ["If defining a MS protocol please give all information fields!"]};
         $c->detach();
     }
