@@ -966,17 +966,33 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
     my $protocol_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_desc');
+
     my $protocol_equipment_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_type');
+    my $protocol_target = $c->req->param('upload_metabolomics_spreadsheet_protocol_target');
+    my $protocol_sample_collection = $c->req->param('upload_metabolomics_spreadsheet_protocol_sample_collection_protocol');
+    my $protocol_sample_extraction = $c->req->param('upload_metabolomics_spreadsheet_protocol_sample_extraction_protocol');
+    my $protocol_rawdata_transformation = $c->req->param('upload_metabolomics_spreadsheet_protocol_rawdata_transformation_protocol');
+    my $protocol_metabolite_identification = $c->req->param('upload_metabolomics_spreadsheet_protocol_metabolite_identification_protocol');
+
     my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
     my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
     my $protocol_phenotype_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_type');
     my $protocol_phenotype_units = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_units');
     my $protocol_chromatography_system_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_system_brand');
     my $protocol_chromatography_column_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_brand');
+
+    my $protocol_chromatography_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_type');
+    my $protocol_chromatography_autosampler_model = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_AutoSampler_Model');
+    my $protocol_chromatography_column_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_type');
+    my $protocol_chromatography_protocol = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_protocol');
+    my $protocol_mass_spectrometry_protocol = $c->req->param('upload_metabolomics_spreadsheet_protocol_mass_spectrometry_protocol');
+
     my $protocol_ms_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_brand');
-    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_type');
-    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_instrument_type');
-    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ion_mode');
+    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_mass_analyzer');
+    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_scan_polarity');
+    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_ion_source');
+    my $protocol_ms_scan_mz_range = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_scan_MZ_Range');
+    my $protocol_publication = $c->req->param('upload_metabolomics_spreadsheet_protocol_publication');
 
     if ($protocol_id && $protocol_name) {
         $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
