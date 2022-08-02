@@ -57,6 +57,11 @@ has 'project_facility' => (isa => 'Str',
     required => 1,
     );
 
+has 'data_type' => (isa => 'Str',
+    is => 'rw',
+    required => 1,
+    );
+
 has 'owner_id' => (isa => 'Int',
     is => 'rw',
     );
@@ -74,14 +79,23 @@ sub store_genotyping_project {
 
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project', 'project_type')->cvterm_id();
 	my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
+	my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
 
     my $genotyping_project = $schema->resultset('Project::Project')->create({
         name => $self->get_project_name(),
         description => $self->get_project_description(),
-        type_id => $project_type_cvterm_id
+#        type_id => $project_type_cvterm_id
     });
 
 	my $genotyping_project_id = $genotyping_project->project_id();
+
+    my $data_type = $self->get_data_type();
+	if ($data_type eq 'ssr'){
+		$genotyping_project->create_projectprops({ $design_cvterm->name() => 'pcr_genotype_data_project' });
+	} elsif ($data_type eq 'snp'){
+		$genotyping_project->create_projectprops({ $design_cvterm->name() => 'genotype_data_project' });
+	}
+
 	$genotyping_project->create_projectprops( {$genotyping_facility_cvterm->name() => $self->get_project_facility } );
 
     my $project = CXGN::Trial->new({

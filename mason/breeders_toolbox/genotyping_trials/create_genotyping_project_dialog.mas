@@ -34,6 +34,16 @@ $facilities
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-5 control-label">Data Type: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="data_type">
+                                            <option value="">Select a data type</option>
+                                            <option value="snp">SNP</option>
+                                            <option value="ssr">SSR</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-5 control-label">Breeding Program: </label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_breeding_program_select_div"></span>
@@ -69,6 +79,28 @@ $facilities
     </div>
 </div>
 
+<div class="modal fade" id="genotyping_project_saved_message" name="genotyping_project_saved_message" tabindex="-1" role="dialog" aria-labelledby="genotypingProjectSavedMessage"
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProjectSavedMessage">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The genotyping project was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_genotyping_project_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -88,6 +120,12 @@ jQuery(document).ready(function(){
         var project_facility = jQuery("#genotyping_project_facility_select").val();
         if (!project_facility) {
             alert("Genotyping project facility is required");
+            return;
+        }
+
+        var data_type = jQuery("#data_type").val();
+        if (!data_type) {
+            alert("Data type is required");
             return;
         }
 
@@ -119,6 +157,7 @@ jQuery(document).ready(function(){
                 'project_name': project_name,
                 'project_breeding_program': project_breeding_program,
                 'project_facility': project_facility,
+                'data_type': data_type,
                 'project_year': project_year,
                 'project_description': project_description,
                 'project_location': project_location
@@ -131,8 +170,8 @@ jQuery(document).ready(function(){
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery("#genotyping_project_stored_message").modal("show");
                     jQuery('#create_genotyping_project_dialog').modal("hide");
+                    jQuery("#genotyping_project_saved_message").modal("show");
                 }
             },
             error: function() {
@@ -142,6 +181,11 @@ jQuery(document).ready(function(){
             },
         });
     });
+
+    jQuery("#dismiss_genotyping_project_saved_dialog").click(function(){
+        location.reload();
+    });
+
 
 });
 
