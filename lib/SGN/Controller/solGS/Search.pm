@@ -305,11 +305,18 @@ sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
 sub check_training_population :Path('/solgs/check/training/population/') Args() {
     my ($self, $c) = @_;
 
-    my @pop_ids = $c->req->param('population_ids[]');
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
+    # my @pop_ids = $c->req->param('population_ids[]');
+    # my $protocol_id = $c->req->param('genotyping_protocol_id');
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $protocol_id = $c->stash->{genotyping_protocol_id};
+    $c->controller('solGS::Utils')->stash_json_args($c, $c->req->param('arguments'));
+
+    my @pop_ids = $c->stash->{population_ids};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+    print STDERR "\n pop_ids: @pop_ids -- protocol_id: $protocol_id\n";
+
+    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    # $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my @gs_pop_ids;
 
@@ -796,24 +803,17 @@ sub check_population_is_training_population {
     $c->stash->{pop_id} = $pop_id;
     $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
 
-    my $is_gs;
+    my $is_training;
     my $has_phenotype = $self->check_population_has_phenotype($c);
     my $is_computation = $self->check_saved_analysis_trial($c, $pop_id);
 
 	if ($has_phenotype && !$is_computation)
 	{
-	    my $has_genotype = $self->check_population_has_genotype($c);
-        $is_gs = 1 if $has_genotype;
+	    my $has_genotype = $self->check_population_has_genotype($c, $pop_id, $protocol_id);
+        $is_training = 1 if $has_genotype;
 	}
 
-    if ($is_gs )
-    {
-	return 1;
-    }
-	else
-	{
-		return;
-	}
+   return $is_training;
 
 }
 
@@ -868,14 +868,10 @@ sub check_population_has_genotype {
 
     $c->controller('solGS::Files')->first_stock_genotype_file($c, $pop_id, $protocol_id);
 	my $first_stock_file = $c->stash->{first_stock_genotype_file};
-
     my $has_genotype;
+    $has_genotype = 1 if -s $geno_file || -s $first_stock_file;
 
-    if (-s $geno_file || -s $first_stock_file)
-    {
-	       $has_genotype = 1;
-    }
-    else
+    if (!$has_genotype)
     {
 		$has_genotype = $self->model($c)->has_genotype($pop_id, $protocol_id);
     }
