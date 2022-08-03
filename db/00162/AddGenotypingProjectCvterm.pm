@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-AddGenotypingProjectCvterm.pm
+AddGenotypingProjectCvterms.pm
 
 =head1 SYNOPSIS
 
@@ -12,7 +12,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds genotyping_project as a project_type cvterm.
+This patch adds genotyping_project as a project_type cvterm and genotyping_project_and plate_relationship as a project_relationship cvterm.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -29,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddGenotypingProjectCvterm;
+package AddGenotypingProjectCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -60,13 +60,25 @@ sub patch {
 
     print STDERR "INSERTING CV TERMS...\n";
 
-    $schema->resultset("Cv::Cvterm")->create_with( {
-        name => 'genotyping_project',
-        cv => 'project_type'
-    });
+    my $terms = {
+        'project_type' => [
+            'genotyping_project'
+        ],
+        'project_relationship' => [
+            'genotyping_project_and_plate_relationship'
+        ]
+    };
 
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
 
-print "You're done!\n";
+    print "You're done!\n";
 
 }
 
