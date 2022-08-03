@@ -47,17 +47,13 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-    var trainingTraitsIds = jQuery("#training_traits_ids").val();
-
-    if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
+    
       if (args === undefined) {
         args = { training_traits_ids: trainingTraitsIds };
       } else {
         args["training_traits_ids"] = trainingTraitsIds;
       }
-    }
 
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
@@ -65,7 +61,7 @@ solGS.submitJob = {
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: { page: page, args: args },
+      data: { page: page, arguments: args },
       url: "/solgs/check/cached/result/",
       success: function (response) {
         if (response.cached) {
