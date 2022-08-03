@@ -390,7 +390,7 @@ sub build_single_trait_model {
 }
 
 
-sub trait :Path('/solgs/trait') Args() {
+sub trait :Path('/solgs/trait') Args(5) {
     my ($self, $c, $trait_id, $key, $pop_id, $gp, $protocol_id) = @_;
 
     if ($pop_id =~ /dataset/)
@@ -402,9 +402,8 @@ sub trait :Path('/solgs/trait') Args() {
 	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
     }
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $protocol_id = $c->stash->{genotyping_protocol_id};
-
+    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
 
