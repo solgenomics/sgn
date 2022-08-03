@@ -49,10 +49,11 @@ jQuery(document).ready(function ($) {
     jQuery('#add_geno_trial_submit').click(function () {
         plate_data = new Object();
         plate_data.breeding_program = jQuery('#breeding_program_select').val();
-        plate_data.year = jQuery('#year_select').val();
+//        plate_data.year = jQuery('#year_select').val();
         plate_data.location = jQuery('#location_select').val();
         plate_data.description = jQuery('#genotyping_trial_description').val();
-        plate_data.project_name = jQuery('#genotyping_project_name').val();
+//        plate_data.project_name = jQuery('#genotyping_project_name').val();
+        plate_data.genotyping_project_id = jQuery('#plate_genotyping_project_id').val();
         plate_data.name = jQuery('#genotyping_trial_name').val();
         plate_data.plate_format = jQuery('#genotyping_trial_plate_format').val();
         plate_data.sample_type = jQuery('#genotyping_trial_plate_sample_type').val();
