@@ -34,7 +34,12 @@ $facilities => ();
 
                             <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
                                 <& /page/page_title.mas, title=>"Provide info about your plate" &>
-
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Project Name: </label>
+                                    <div class="col-sm-7">
+                                        <span id="plate_genotyping_project_select_div"></span>
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Facility: </label>
                                     <div class="col-sm-7">
@@ -45,12 +50,7 @@ $facilities => ();
                                         </select>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>-In Coordinate App this is called "Plate ID"<br/>-Should match Vendor Project if you have one<br/>-Name does not need to exist in database previously</small></label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="e.g. NextGenCassava"/>
-                                    </div>
-                                </div>
+
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"<br/>-This is the globally unique name of the plate</small></label>
                                     <div class="col-sm-7">
@@ -74,24 +74,6 @@ $facilities => ();
                                             <option value="RNA">RNA</option>
                                             <option value="Tissue">Tissue</option>
                                         </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Plate's Breeding Program: </label>
-                                    <div class="col-sm-7">
-                                        <span id="breeding_program_select_div"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Plate's Location: </label>
-                                    <div class="col-sm-7">
-                                        <span id="location_select_div"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Plate's Year: </label>
-                                    <div class="col-sm-7">
-                                        <span id="year_select_div"></span>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -609,6 +591,14 @@ jQuery(document).ready(function(){
             jQuery('#genotyping_trial_layout_upload_coordinate_template').val('');
         }
     });
+
+    get_select_box('breeding_programs', 'plate_breeding_program_select_div', {'name' : 'plate_breeding_program_id', 'id' : 'plate_breeding_program_id', 'empty': 1  });
+//    jQuery("#plate_breeding_program_select_div").change(function() {
+//        var breeding_program_id = jQuery("#plate_breeding_program_id").val();
+//        get_select_box('projects', 'plate_genotyping_project_select_div', { 'name' : 'plate_genotyping_project_id', 'id' : 'plate_genotyping_project_id', 'breeding_program_id' : breeding_program_id, 'get_genotyping_projects': '1', 'empty':1});
+//    });
+    get_select_box('projects', 'plate_genotyping_project_select_div', { 'name' : 'plate_genotyping_project_id', 'id' : 'plate_genotyping_project_id', 'get_genotyping_projects': '1', 'empty':1});
+
 
 });
 </script>
