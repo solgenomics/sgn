@@ -147,13 +147,13 @@ function showImagePreview(imageFiles) {
 
 
 function reportVerifyResult(result) {
-    if (result.success) {
+    if (result.success.length > 0) {
         jQuery('#upload_images_submit_store').attr('disabled', false);
         jQuery('#upload_images_status').html(
             formatMessage(result.success, "success")
         );
     }
-    if (result.error) {
+    if (result.error.length > 0) {
         jQuery('#upload_images_submit_store').attr('disabled', true);
         jQuery('#upload_images_status').html(
             formatMessage(result.error, "error")
