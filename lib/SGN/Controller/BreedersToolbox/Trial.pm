@@ -17,6 +17,7 @@ use CXGN::List;
 use JSON::XS;
 use Data::Dumper;
 use CXGN::TrialStatus;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -150,6 +151,22 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_vendor_order_id} = $trial->get_genotyping_vendor_order_id;
         $c->stash->{genotyping_vendor_submission_id} = $trial->get_genotyping_vendor_submission_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
+
+        my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+        my $genotyping_project_plate_relationship = $schema->resultset("Project::ProjectRelationship")->find ({
+            subject_project_id => $c->stash->{trial_id},
+            type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+        });
+        if ($genotyping_project_plate_relationship) {
+            my $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
+            my $genotyping_project = $schema->resultset("Project::Project")->find ({
+                project_id => $genotyping_project_id
+            });
+            my $genotyping_project_name = $genotyping_project->name();
+            my $genotyping_project_link = '<a href="/breeders/trial/'.$genotyping_project_id.'">'.$genotyping_project_name.'</a>';
+            $c->stash->{genotyping_project_link} = $genotyping_project_link;
+        }
+
         if ($trial->get_genotyping_plate_format){
             $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
         }
