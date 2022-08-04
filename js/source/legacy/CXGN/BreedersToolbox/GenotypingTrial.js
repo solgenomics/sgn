@@ -48,9 +48,9 @@ jQuery(document).ready(function ($) {
     var plate_data = new Object();
     jQuery('#add_geno_trial_submit').click(function () {
         plate_data = new Object();
-        plate_data.breeding_program = jQuery('#breeding_program_select').val();
+//        plate_data.breeding_program = jQuery('#breeding_program_select').val();
 //        plate_data.year = jQuery('#year_select').val();
-        plate_data.location = jQuery('#location_select').val();
+//        plate_data.location = jQuery('#location_select').val();
         plate_data.description = jQuery('#genotyping_trial_description').val();
 //        plate_data.project_name = jQuery('#genotyping_project_name').val();
         plate_data.genotyping_project_id = jQuery('#plate_genotyping_project_id').val();
@@ -66,7 +66,7 @@ jQuery(document).ready(function ($) {
         plate_data.well_volume = jQuery('#genotyping_well_volume').val();
         plate_data.well_tissue = jQuery('#genotyping_well_tissue').val();
         plate_data.well_notes = jQuery('#genotyping_well_notes').val();
-        plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
+//        plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
         plate_data.genotyping_facility_submit = jQuery('#genotyping_trial_facility_submit_select').val();
         plate_data.include_facility_identifiers = jQuery('#upload_genotype_plate_include_facility_identifiers').val();
 

@@ -40,6 +40,7 @@ $facilities => ();
                                         <span id="plate_genotyping_project_select_div"></span>
                                     </div>
                                 </div>
+<!--
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Plate's Breeding Program: </label>
                                     <div class="col-sm-7">
@@ -62,6 +63,7 @@ $facilities => ();
                                         </select>
                                     </div>
                                 </div>
+-->
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"<br/>-This is the globally unique name of the plate</small></label>
                                     <div class="col-sm-7">
