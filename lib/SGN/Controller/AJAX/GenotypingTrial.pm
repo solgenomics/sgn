@@ -11,7 +11,7 @@ use CXGN::People::Person;
 use CXGN::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::CreatePlateOrder;
-use CXGN::Genotype::GenotypingProject;
+use CXGN::Genotype::StoreGenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -681,7 +681,7 @@ sub add_genotyping_project_POST :Args(0){
 
     my $error;
     eval{
-        my $add_genotyping_project = CXGN::Genotype::GenotypingProject->new({
+        my $add_genotyping_project = CXGN::Genotype::StoreGenotypingProject->new({
             chado_schema => $schema,
             dbh => $dbh,
             project_name => $project_name,

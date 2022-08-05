@@ -1,11 +1,11 @@
 =head1 NAME
 
-CXGN::Genotype::GenotypingProject - a module for adding crossing experiment
+CXGN::Genotype::StoreGenotypingProject - a module for adding new genotyping project
 
 =cut
 
 
-package CXGN::Genotype::GenotypingProject;
+package CXGN::Genotype::StoreGenotypingProject;
 
 
 use Moose;
