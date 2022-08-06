@@ -69,7 +69,7 @@ while (<$F>) {
     my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_row->stock_id() );
 
     my $accession_id = $accession_row->stock_id();
-    my $accession_name = $accesion_row->uniquename();
+    my $accession_name = $accession_row->uniquename();
     $seedlot->uniquename($seedlot_name);
     $seedlot->accession_stock_id($accession_id);
     $seedlot->box_name($seedlot_name);
