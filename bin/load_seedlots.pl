@@ -52,7 +52,7 @@ while (<$F>) {
     }
 
     my $seedlot_row = $schema->resultset('Stock::Stock')->find( { uniquename => $seedlot_name });
-
+    my $seedlot;
     if ($seedlot_row) {
 	print STDERR "Seedlot $seedlot_name already exists...\n";
 	if ($seedlot_row->type_id() != $seedlot_cvterm_id) {
