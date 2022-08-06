@@ -1321,10 +1321,19 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
             header_column_names => \@metabolites,
             header_column_details => %metabolites_details,
             equipment_type => $protocol_equipment_type,
+
+            target => $protocol_target,
+            sample_collection_description => $protocol_sample_collection,
+            sample_extraction_description => $protocol_sample_extraction,
+            rawdata_transformation_descripson => $protocol_rawdata_transformation,
+            metabolite_identification_description => $protocol_metabolite_identification,
+
             equipment_description => $protocol_equipment_desc,
             data_process_description => $protocol_data_process_desc,
             phenotype_type => $protocol_phenotype_type,
-            phenotype_units => $protocol_phenotype_units
+            phenotype_units => $protocol_phenotype_units,
+            
+            protocol_publication => $protocol_publication
         );
         if ($protocol_equipment_type eq 'MS') {
             $metabolomics_protocol_prop{chromatography_system_brand} = $protocol_chromatography_system_brand;
@@ -1333,6 +1342,13 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
             $metabolomics_protocol_prop{ms_type} = $protocol_ms_type;
             $metabolomics_protocol_prop{ms_instrument_type} = $protocol_ms_instrument_type;
             $metabolomics_protocol_prop{ms_ion_mode} = $protocol_ms_ion_mode;
+
+            $metabolomics_protocol_prop{chromatography_type} = $protocol_chromatography_type;
+            $metabolomics_protocol_prop{chromatography_autosampler_model} = $protocol_chromatography_autosampler_model;
+            $metabolomics_protocol_prop{chromatography_column_type} = $protocol_chromatography_column_type;
+            $metabolomics_protocol_prop{chromatography_protocol_description} = $protocol_chromatography_protocol;
+            $metabolomics_protocol_prop{mass_spectrometry_protocol_description} = $protocol_mass_spectrometry_protocol;
+            $metabolomics_protocol_prop{ms_scan_mz_range} = $protocol_ms_scan_mz_range;
         }
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
