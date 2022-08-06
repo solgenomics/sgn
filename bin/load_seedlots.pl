@@ -65,7 +65,7 @@ while (<$F>) {
 
     my $accession_id = $accession_row->stock_id();
     $seedlot->uniquename($seedlot_name);
-    $seedlot->accession_stock_id();
+    $seedlot->accession_stock_id($accession_id);
     $seedlot->box_name($seedlot_name);
     $seedlot->description($description);
     $seedlot->location_code("Westchester");
