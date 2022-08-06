@@ -69,15 +69,31 @@ while (<$F>) {
     my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_row->stock_id() );
 
     my $accession_id = $accession_row->stock_id();
+    my $accession_name = $accesion_row->uniquename();
     $seedlot->uniquename($seedlot_name);
     $seedlot->accession_stock_id($accession_id);
     $seedlot->box_name($seedlot_name);
     $seedlot->description($description);
     $seedlot->location_code("Westchester");
     $seedlot->breeding_program_id(325);
+    ;
     #$seedlot->operator($operator_name);
     $seedlot->store();
 
+    my $seedlot_id = $seedlot->seedlot_id();
+
+    my $transaction = CXGN::Stock::Seedlot::Transaction->new( schema => $schema);
+
+    $transaction->factor(1);
+    $transaction->from_stock( [ $accession_id, $accession_name ] );
+    $transaction->to_stock( [ $seedlot_id, $seedlot_name ] );
+    $transaction->amount(10);
+    $transaction->operator('admin');
+    $transaction->store();
+    
+    
+
+    
     
 #    my $slt = CXGN::Stock::Seedlot::Transaction->new( { schema => $schema });
 #    $slt->from_stock($accession_name);
