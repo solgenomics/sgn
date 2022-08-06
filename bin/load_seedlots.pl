@@ -59,8 +59,13 @@ while (<$F>) {
 	    print STDERR "Seedlot $seedlot_name exists in the database, but has wrong type_id (".$seedlot_row->type_id().")\n";
 	    next();
 	}
+
+	$seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_row->stock_id() );
     }
-	
+
+    else {
+	$seedlot = CXGN::Stock::Seedlot->new(schema => $schema );
+    }	
     my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_row->stock_id() );
 
     my $accession_id = $accession_row->stock_id();
