@@ -17,6 +17,7 @@ use Data::Dumper;
 use JSON;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -59,5 +60,42 @@ sub genotyping_data_project_search_GET : Args(0) {
 
     $c->stash->{rest} = { data => \@result };
 }
+
+
+sub genotyping_project_plates : Path('/ajax/genotyping_project/genotyping_plates') : ActionClass('REST') { }
+
+sub genotyping_project_plates_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $genotyping_project_id = $c->req->param('genotyping_project_id');
+
+    my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $bcs_schema,
+        project_id => $genotyping_project_id
+    });
+    my ($data, $total_count) = $plate_info->get_plate_info();
+    my @result;
+    foreach (@$data){
+        my $folder_string = '';
+        if ($_->{folder_name}){
+            $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
+        }
+        push @result,
+        [
+            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            $_->{description},
+            $folder_string,
+            $_->{genotyping_plate_format},
+            $_->{genotyping_plate_sample_type},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+        ];
+    }
+
+    $c->stash->{rest} = { data => \@result };
+
+}
+
+
 
 1;

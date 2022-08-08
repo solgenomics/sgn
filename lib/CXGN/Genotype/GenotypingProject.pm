@@ -35,6 +35,12 @@ has 'project_id' => (
     required => 1,
 );
 
+has 'genotyping_plate_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+
 
 sub BUILD {
 
@@ -43,7 +49,7 @@ sub BUILD {
     my $genotyping_project_id = $self->project_id();
 
     my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
-    my $relationships_rs = $self->get_schema()->resultset("Project::ProjectRelationship")->search ({
+    my $relationships_rs = $schema->resultset("Project::ProjectRelationship")->search ({
         object_project_id => $genotyping_project_id,
         type_id => $genotyping_project_relationship_cvterm->cvterm_id()
     });
@@ -64,6 +70,16 @@ sub get_plate_info {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $plate_list = $self->genotyping_plate_list();
+    print STDERR "PLATE LIST =".Dumper($plate_list)."\n";
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema => $schema,
+        trial_design_list => ['genotyping_plate'],
+        trial_id_list => $plate_list
+    });
+    my ($data, $total_count) = $trial_search->search();
+    print STDERR "PLATE DATA =".Dumper($data)."\n";
+
+    return $data;
 
 }
 
