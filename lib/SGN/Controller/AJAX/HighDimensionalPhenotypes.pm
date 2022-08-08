@@ -973,7 +973,8 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $protocol_sample_extraction = $c->req->param('upload_metabolomics_spreadsheet_protocol_sample_extraction_protocol');
     my $protocol_rawdata_transformation = $c->req->param('upload_metabolomics_spreadsheet_protocol_rawdata_transformation_protocol');
     my $protocol_metabolite_identification = $c->req->param('upload_metabolomics_spreadsheet_protocol_metabolite_identification_protocol');
-
+print "EquipType: $protocol_equipment_type\n";
+print "ProtocolTarget: $protocol_target\n";
     my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
     my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
     my $protocol_phenotype_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_type');
@@ -1332,7 +1333,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
             data_process_description => $protocol_data_process_desc,
             phenotype_type => $protocol_phenotype_type,
             phenotype_units => $protocol_phenotype_units,
-            
+
             protocol_publication => $protocol_publication
         );
         if ($protocol_equipment_type eq 'MS') {

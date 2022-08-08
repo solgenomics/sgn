@@ -142,8 +142,26 @@ sub validate {
     }
 
     if ( $columns[0] ne "metabolite_name" ||
-        $columns[1] ne "inchi_key" ||
-        $columns[2] ne "compound_name") {
+        $columns[1] ne "chebi_id" ||
+        $columns[2] ne "inchi_id" ||
+        $columns[3] ne "inchi_key" ||
+        $columns[4] ne "pubchem_id" ||
+        $columns[5] ne "smiles_id" ||
+        $columns[6] ne "chemical_formula" ||
+        $columns[7] ne "putative_metabolite_identification" ||
+        $columns[8] ne "putative_metabolite_identification_synonyms" ||
+        $columns[9] ne "mass_to_charge" ||
+        $columns[10] ne "retention_time" ||
+        $columns[11] ne "charge" ||
+        $columns[12] ne "fragmentation" ||
+        $columns[13] ne "modifications" ||
+        $columns[14] ne "metabolite_species" ||
+        $columns[15] ne "met_database" ||
+        $columns[16] ne "met_database_version" ||
+        $columns[17] ne "met_reliability" ||
+        $columns[18] ne "met_search_engine" ||
+        $columns[19] ne "met_search_engine_score" ||
+        $columns[20] ne "compound_name") {
       $parse_result{'error'} = "Header row must be 'metabolite_name', 'inchi_key', 'compound_name'. Please, check your file.";
       return \%parse_result;
     }

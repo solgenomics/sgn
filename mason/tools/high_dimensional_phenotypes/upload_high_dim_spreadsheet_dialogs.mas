@@ -488,9 +488,26 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_brand" name="upload_metabolomics_spreadsheet_protocol_ms_brand" type="text">
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_type" name="upload_metabolomics_spreadsheet_protocol_ms_type" type="text">
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_instrument_type" name="upload_metabolomics_spreadsheet_protocol_ms_instrument_type" type="text">
-                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ion_mode" name="upload_metabolomics_spreadsheet_protocol_ion_mode" type="text">
+                            <!-- <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ion_mode" name="upload_metabolomics_spreadsheet_protocol_ion_mode" type="text"> -->
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_phenotype_type" name="upload_metabolomics_spreadsheet_protocol_phenotype_type" type="text">
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_phenotype_units" name="upload_metabolomics_spreadsheet_protocol_phenotype_units" type="text">
+
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_target" name="upload_metabolomics_spreadsheet_protocol_target" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_publication" name="upload_metabolomics_spreadsheet_protocol_publication" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_sample_collection_protocol" name="upload_metabolomics_spreadsheet_protocol_sample_collection_protocol" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_sample_extraction_protocol" name="upload_metabolomics_spreadsheet_protocol_sample_extraction_protocol" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_rawdata_transformation_protocol" name="upload_metabolomics_spreadsheet_protocol_rawdata_transformation_protocol" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_metabolite_identification_protocol" name="upload_metabolomics_spreadsheet_protocol_metabolite_identification_protocol" type="text">
+
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_type" name="upload_metabolomics_spreadsheet_protocol_chromatography_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_AutoSampler_Model" name="upload_metabolomics_spreadsheet_protocol_chromatography_AutoSampler_Model" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_column_type" name="upload_metabolomics_spreadsheet_protocol_chromatography_column_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_protocol" name="upload_metabolomics_spreadsheet_protocol_chromatography_protocol" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_mass_spectrometry_protocol" name="upload_metabolomics_spreadsheet_protocol_mass_spectrometry_protocol" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_mass_analyzer" name="upload_metabolomics_spreadsheet_protocol_ms_mass_analyzer" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_scan_polarity" name="upload_metabolomics_spreadsheet_protocol_ms_scan_polarity" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_ion_source" name="upload_metabolomics_spreadsheet_protocol_ms_ion_source" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_scan_MZ_Range" name="upload_metabolomics_spreadsheet_protocol_ms_scan_MZ_Range" type="text">
                         </form>
 
                         <hr>
