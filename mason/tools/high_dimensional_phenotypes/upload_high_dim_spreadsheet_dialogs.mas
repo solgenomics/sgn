@@ -524,7 +524,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" name="met_close_refresh" id="met_close_refresh" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -804,6 +804,10 @@ jQuery(document).ready(function() {
 
         Workflow.complete("#high_dim_data_upload_data_type_step");
         Workflow.focus('#high_dim_data_upload_workflow', 3);
+    });
+
+    jQuery('#met_close_refresh').click(function(){
+        location.reload();
     });
 
     jQuery('#high_dim_data_upload_new_protocol').click(function(){
