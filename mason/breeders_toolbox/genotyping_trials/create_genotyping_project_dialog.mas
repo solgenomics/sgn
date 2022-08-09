@@ -7,22 +7,33 @@ $facilities
 
 <div class="modal fade" id="create_genotyping_project_dialog" name="create_genotyping_project_dialog" tabindex="-1" role="dialog" aria-labelledby="createGenotypingProjectdialog">
     <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
+        <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="createGenotypingProjectdialog">Add New Genotyping Project</h4>
+                <center><h4 class="modal-title" id="createGenotypingProjectdialog">Add New Genotyping Project</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-sm-11">
-                            <div class="form-horizontal">
+                    <&| /util/workflow.mas, id=> "add_genotyping_project_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Genotyping Project" &>
+                            <p>Genotyping Project can be used to group a series of genotyping plates and genotyping data. Genotyping Project should match Vendor Project if you have one.</p>
+                            <hr>
+                            <center>
+                                <button id="next_step_add_new_genotyping_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <form class="form-horizontal" role="form" name="create_genotyping_project_form" id="create_genotyping_project_form">
+                            <&| /util/workflow.mas:step, title=> "Add a genotyping project" &>
+                            <& /page/page_title.mas, title=>"Enter basic information about the genotyping project" &>
+                                <br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Project Name: </label>
                                     <div class="col-sm-7">
                                         <input class="form-control" id="new_genotyping_project_name" name="new_genotyping_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Facility: </label>
                                     <div class="col-sm-7">
@@ -32,7 +43,7 @@ $facilities
 %  }
                                         </select>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Data Type: </label>
                                     <div class="col-sm-7">
@@ -42,38 +53,55 @@ $facilities
                                             <option value="ssr">SSR</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Breeding Program: </label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_breeding_program_select_div"></span>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Year: </label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_year_select_div"></span>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Location of Data Generation (optional): </label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_location_select_div"></span>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Description: </label>
                                     <div class="col-sm-7">
                                         <textarea class="form-control" id="genotyping_project_description" name="genotyping_project_description" maxlength="250"></textarea>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <center>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_new_genotyping_project_submit" id="add_new_genotyping_project_submit">Submit</button>
+                                </center>
+                            </&>
+                        </form>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your genotyping project is now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                Genotyping project was added successfully
+                            </p>
+                            <ul>
+                                <li>You may want to proceed to add genotyping plates and/or genotyping data in the genotyping project you just created.</li>
+                            </ul>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="add_new_genotyping_project_submit" type="button" class="btn btn-primary" >Submit</button>
+                <button id="add_new_genotyping_project_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
