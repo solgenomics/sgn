@@ -88,10 +88,6 @@ $facilities
                         </form>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your genotyping project is now in the database" &>
-                            <p>
-                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                Genotyping project was added successfully
-                            </p>
                             <ul>
                                 <li>You may want to proceed to add genotyping plates and/or genotyping data in the genotyping project you just created.</li>
                             </ul>
@@ -102,27 +98,6 @@ $facilities
             </div>
             <div class="modal-footer">
                 <button id="add_new_genotyping_project_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="genotyping_project_saved_message" name="genotyping_project_saved_message" tabindex="-1" role="dialog" aria-labelledby="genotypingProjectSavedMessage"
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genotypingProjectSavedMessage">Success</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The genotyping project was saved successfully.
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="dismiss_genotyping_project_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -198,8 +173,9 @@ jQuery(document).ready(function(){
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery('#create_genotyping_project_dialog').modal("hide");
-                    jQuery("#genotyping_project_saved_message").modal("show");
+                    Workflow.focus("#add_genotyping_project_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_genotyping_project_workflow");
+                    jQuery("#working_modal").modal("hide");
                 }
             },
             error: function() {
