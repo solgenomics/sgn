@@ -171,11 +171,65 @@ sub validate {
             @fields = $csv->fields();
         }
         my $metabolite_name = $fields[0];
-        my $inchi_key = $fields[1];
-        my $compound_name = $fields[2];
+        my $chebi_id = $fields[1];
+        my $inchi_id = $fields[2];
+        my $inchi_key = $fields[3];
+        my $pubchem_id = $fields[4];
+        my $smiles_id = $fields[5];
+        my $chemical_formula = $fields[6];
+        my $putative_metabolite_identification = $fields[7];
+        my $putative_metabolite_identification_synonyms = $fields[8];
+        my $mass_to_charge = $fields[9];
+        my $retention_time = $fields[10];
+        my $charge = $fields[11];
+        my $fragmentation = $fields[12];
+        my $modifications = $fields[13];
+        my $metabolite_species = $fields[14];
+        my $met_database = $fields[15];
+        my $met_database_version = $fields[16];
+        my $met_reliability = $fields[17];
+        my $met_search_engine = $fields[18];
+        my $met_search_engine_score = $fields[19];
+        my $compound_name = $fields[20];
 
         if (!$metabolite_name){
             $parse_result{'error'}= "Metabolite name is required!";
+            return \%parse_result;
+        }
+        if (!$chemical_formula){
+            $parse_result{'error'}= "Chemical formula is required!";
+            return \%parse_result;
+        }
+        if (!$putative_metabolite_identification_synonyms){
+            $parse_result{'error'}= "Putative metabolite identification synonyms is required!";
+            return \%parse_result;
+        }
+        if (!$mass_to_charge){
+            $parse_result{'error'}= "Mass to charge is required!";
+            return \%parse_result;
+        }
+        if (!$retention_time){
+            $parse_result{'error'}= "Retention time is required!";
+            return \%parse_result;
+        }
+        if (!$met_database){
+            $parse_result{'error'}= "Met database is required!";
+            return \%parse_result;
+        }
+        if (!$met_database_version){
+            $parse_result{'error'}= "Met database version is required!";
+            return \%parse_result;
+        }
+        if (!$met_reliability){
+            $parse_result{'error'}= "Met reliability is required!";
+            return \%parse_result;
+        }
+        if (!$met_search_engine){
+            $parse_result{'error'}= "Met search engine is required!";
+            return \%parse_result;
+        }
+        if (!$met_search_engine_score){
+            $parse_result{'error'}= "Met search engine score is required!";
             return \%parse_result;
         }
     }
