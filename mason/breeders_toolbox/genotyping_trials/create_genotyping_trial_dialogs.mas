@@ -32,6 +32,17 @@ $facilities => ();
                                 </center>
                             </&>
 
+                            <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
+                                <& /page/page_title.mas, title=>"Select a genotyping project" &>
+
+                                <p>Genotyping projects are for grouping genotyping plates and/or genotyping data together. Genotyping Project should match Vendor Project if you have one. </p>
+                                <center>
+                                    <button class="btn btn-info" name="create_genotyping_project_link">If you need to create a genotyping project, click here</button><br/><br/>
+                                    <button id="next_step_creating_genotyping_plates" class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a genotyping project, go to Next Step</button>
+                                </center>
+
+                            </&>
+
                             <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
                                 <& /page/page_title.mas, title=>"Provide info about your plate" &>
                                 <div class="form-group">
@@ -608,12 +619,15 @@ jQuery(document).ready(function(){
     });
 
     get_select_box('breeding_programs', 'plate_breeding_program_select_div', {'name' : 'plate_breeding_program_id', 'id' : 'plate_breeding_program_id', 'empty': 1  });
+
+    jQuery('#next_step_creating_genotyping_plates').click(function(){
+        get_select_box('projects', 'plate_genotyping_project_select_div', { 'name' : 'plate_genotyping_project_id', 'id' : 'plate_genotyping_project_id', 'get_genotyping_projects': '1', 'empty':1});
+    });
+
 //    jQuery("#plate_breeding_program_select_div").change(function() {
 //        var breeding_program_id = jQuery("#plate_breeding_program_id").val();
 //        get_select_box('projects', 'plate_genotyping_project_select_div', { 'name' : 'plate_genotyping_project_id', 'id' : 'plate_genotyping_project_id', 'breeding_program_id' : breeding_program_id, 'get_genotyping_projects': '1', 'empty':1});
 //    });
-    get_select_box('projects', 'plate_genotyping_project_select_div', { 'name' : 'plate_genotyping_project_id', 'id' : 'plate_genotyping_project_id', 'get_genotyping_projects': '1', 'empty':1});
-
 
 });
 </script>
