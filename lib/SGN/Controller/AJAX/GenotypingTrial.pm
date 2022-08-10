@@ -377,7 +377,14 @@ sub store_genotype_trial_POST : Args(0) {
     my $location_data = $trial->get_location();
     my $location_id = $location_data->[0];
     my $location_name = $location_data->[1];
-    my $description = $trial->get_description();
+
+    my $description;
+    my $plate_description = $plate_info->{description};
+    if ($plate_description) {
+        $description = $plate_description;
+    } else {
+        $description = $trial->get_description();
+    }
 
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
     my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
