@@ -187,9 +187,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
     elsif (($design_type eq "genotype_data_project") || ($design_type eq "pcr_genotype_data_project")){
         if ($design_type eq "pcr_genotype_data_project") {
-            $c->stash->{genotype_data_type} = 'pcr_genotype_project'
+            $c->stash->{genotype_data_type} = 'SSR'
         } else {
-            $c->stash->{genotype_data_type} = 'snp_genotype_project'
+            $c->stash->{genotype_data_type} = 'SNP'
         }
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }

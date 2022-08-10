@@ -51,13 +51,13 @@ $genotype_data_type => undef
 
 <& /page/page_title.mas, title=>"Genotyping Data Project: ".$trial_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Plates</h4>", info_section_subtitle => 'View information about genotyping plates included in this genotyping project.', icon_class => "glyphicon glyphicon-th", info_section_id => "genotyping_project_plates" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Protocols</h4>", info_section_subtitle => 'View basic information about the genotyping protocols used in this genotyping data project.', icon_class => "glyphicon glyphicon-cog", info_section_id => "genotyping_data_project_protocols" &>
 
-% if ($genotype_data_type ne 'pcr_genotype_project') {
+% if ($genotype_data_type ne 'SSR') {
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_data_project_data" &>
 % }
 % my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
