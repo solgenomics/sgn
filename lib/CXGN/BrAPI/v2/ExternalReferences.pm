@@ -48,9 +48,15 @@ sub search {
                 join $table\_dbxref as o_dbxref using ($table_id)
                 join dbxref as ref on (ref.dbxref_id=o_dbxref.dbxref_id)
                 join db using (db_id)";
-    if ($ids && scalar(@$ids) > 0) {
-        my $list_ids = join ("," , @$ids);
-        $query = $query . " where s.$table_id in ($list_ids)"; 
+    my $list_ids=undef;
+    if ($ids) {
+        if ( ref($ids) eq "ARRAY" ) {
+            $list_ids = join(",", @$ids);
+        }
+        else{ # $ids must be a Str (assumed to be a single ID)
+            $list_ids = $ids;
+        }
+        $query = $query . " where s.$table_id in ($list_ids)";
     }
 
     my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
