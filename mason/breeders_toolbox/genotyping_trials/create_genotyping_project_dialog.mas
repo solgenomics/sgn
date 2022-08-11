@@ -121,10 +121,6 @@ jQuery(document).ready(function(){
         }
 
         var project_facility = jQuery("#genotyping_project_facility_select").val();
-        if (!project_facility) {
-            alert("Genotyping project facility is required");
-            return;
-        }
 
         var data_type = jQuery("#data_type").val();
         if (!data_type) {
@@ -173,7 +169,7 @@ jQuery(document).ready(function(){
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    refreshGenotypingTrialJsTree(0);
+//                    refreshGenotypingTrialJsTree(0);
                     Workflow.focus("#add_genotyping_project_workflow", -1); //Go to success page
                     Workflow.check_complete("#add_genotyping_project_workflow");
                     jQuery("#working_modal").modal("hide");
@@ -187,10 +183,10 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery("#dismiss_genotyping_project_saved_dialog").click(function(){
-        location.reload();
+    jQuery("#add_new_genotyping_project_close_modal").click(function(){
+        jQuery('#create_genotyping_project_dialog').modal('hide');
+        jQuery(".modal-backdrop").remove();
     });
-
 
 });
 

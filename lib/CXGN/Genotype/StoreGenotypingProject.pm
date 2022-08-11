@@ -54,7 +54,7 @@ has 'project_name' => (isa => 'Str',
 
 has 'project_facility' => (isa => 'Str',
     is => 'rw',
-    required => 1,
+    required => 0,
     );
 
 has 'data_type' => (isa => 'Str',
