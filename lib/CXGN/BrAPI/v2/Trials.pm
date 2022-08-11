@@ -281,6 +281,7 @@ sub update {
     my $breeding_program_id = $params->{programDbId} || undef;
     my $description = $params->{trialDescription} || undef;
     my $additional_info = $params->{additionalInfo} || undef;
+    my $updated_external_references = $params->{externalReferences} || undef;
 
     # Check that the breeding program was passed and exists
     if (! defined $breeding_program_id) {
@@ -329,6 +330,21 @@ sub update {
     my $folder_description = $folder->name; #description doesn't exist 
     my $breeding_program_id = $folder->breeding_program->project_id();
 
+    # external references
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        external_references => $updated_external_references,
+        bcs_schema          => $schema,
+        table_name          => 'project',
+        table_id_key        => 'project_id',
+        id                  => $folder->folder_id(),
+
+    });
+    $references->store();
+
+    if ($references->{'error'}) {
+        return { error => $references->{'error'} };
+    }
+
     my %result = (
         active=>JSON::true,
         additionalInfo=>$folder->additional_info,
@@ -337,7 +353,7 @@ sub update {
         datasetAuthorships=>undef,
         documentationURL=>undef,
         endDate=>undef,
-        externalReferences=>undef,
+        externalReferences=>$updated_external_references,
         programDbId=>qq|$breeding_program_id|,
         programName=>$folder->breeding_program->name(),
         publications=>undef,

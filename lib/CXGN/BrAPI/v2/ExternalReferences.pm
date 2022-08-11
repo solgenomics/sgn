@@ -91,17 +91,16 @@ sub store {
     my $table_id = $self->table_id_key();
     my $id = $self->id();
     my $external_references = $self->external_references();
-
     # Clear old external references
     $self->_remove_external_references();
 
     foreach (@$external_references){
         my $ref_name = $_->{'referenceSource'};
-        my $ref_id = $_->{'referenceID'};
+        my $ref_id = $_->{'referenceId'};
 
         #DOI
         if($ref_name eq "DOI"){
-            my $create_db = $schema->resultset("General::Db")->find_or_create( 
+            my $create_db = $schema->resultset("General::Db")->find_or_create(
             {
             name       => 'DOI',
             urlprefix =>  'http://',
@@ -130,7 +129,7 @@ sub store {
             #});
 
         } else {
-            my ($url,$object_id) = _check_brapi_url($_->{'referenceID'});
+            my ($url,$object_id) = _check_brapi_url($ref_id);
 
             if($ref_name){
 
