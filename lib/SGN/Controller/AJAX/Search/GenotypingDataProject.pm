@@ -45,9 +45,18 @@ sub genotyping_data_project_search_GET : Args(0) {
         if ($_->{folder_name}){
             $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
         }
+        my $design = $_->{design};
+        my $data_type;
+        if ($design eq 'pcr_genotype_data_project') {
+            $data_type = 'SSR';
+        } else {
+            $data_type = 'SNP';
+        }
+        print STDERR "DESIGN =".Dumper($design)."\n";
         push @result,
           [
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            $data_type,
             $_->{description},
             "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
             $folder_string,
