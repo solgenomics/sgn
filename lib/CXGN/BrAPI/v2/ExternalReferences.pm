@@ -48,15 +48,19 @@ sub search {
                 join $table\_dbxref as o_dbxref using ($table_id)
                 join dbxref as ref on (ref.dbxref_id=o_dbxref.dbxref_id)
                 join db using (db_id)";
-    my $list_ids=undef;
+
+    # $ids may be a string or an Array Reference.  This code must handle both cases.
     if ($ids) {
         if ( ref($ids) eq "ARRAY" ) {
-            $list_ids = join(",", @$ids);
+            if (scalar(@$ids) > 0){
+                my $list_ids = join(",", @$ids);
+                $query = $query . " where s.$table_id in ($list_ids)";
+            }
         }
         else{ # $ids must be a Str (assumed to be a single ID)
-            $list_ids = $ids;
+            my $list_ids = $ids;
+            $query = $query . " where s.$table_id in ($list_ids)";
         }
-        $query = $query . " where s.$table_id in ($list_ids)";
     }
 
     my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
@@ -77,6 +81,8 @@ sub search {
         }
 
         push @{$result{$r[3]}}, {
+            # TODO change 'referenceID' to 'referenceId'. The field 'referenceID' was deprecated in v2.1 of the
+            # brapi spec. Now 'referenceId' should be used.
             referenceID => $reference_id,
             referenceSource => $reference_source
         };
@@ -95,8 +101,15 @@ sub store {
     $self->_remove_external_references();
 
     foreach (@$external_references){
+
         my $ref_name = $_->{'referenceSource'};
+
+        # 'referenceID' was deprecated in v2.1 of the brapi spec. Now 'referenceId'
+        # should be used.  Both are now in use.
         my $ref_id = $_->{'referenceId'};
+        if( ! $ref_id ){
+            $ref_id = $_->{'referenceID'};
+        }
 
         #DOI
         if($ref_name eq "DOI"){
@@ -169,7 +182,6 @@ sub store {
 
 sub _remove_external_references {
     my $self = shift;
-    my $schema = $self->bcs_schema();
     my $table = $self->table_name();
     my $table_id = $self->table_id_key();
     my $id = $self->id();

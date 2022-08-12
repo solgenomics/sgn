@@ -118,10 +118,11 @@ sub convert_to_brapi_type {
 
 sub convert_to_breedbase_type {
 	my $type = shift;
-	if ($type eq 'germplasm') {
+	return $type if !$type;
+	if ('germplasm' eq $type) {
 		return 'accessions';
 	}
-	if ($type eq 'observationVariables') {
+	if ('observationVariables' eq $type) {
 		return 'traits';
 	}
 	return $type;
