@@ -130,6 +130,15 @@ sub details {
             my $folder_description = $folder->description;
             my $breeding_program_id = $folder->breeding_program->project_id();
 
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema => $schema,
+                table_name => 'project',
+                table_id_key => 'project_id',
+                id => $folder_id,
+            });
+            my $external_references = $references->search();
+            my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+
 			my %result = (
                 active=>JSON::true,
 				additionalInfo=>$additional_info,
@@ -138,7 +147,7 @@ sub details {
                 datasetAuthorships=>undef,
                 documentationURL=>undef,
                 endDate=>undef,
-                externalReferences=>undef,
+                externalReferences=>@formatted_external_references,
                 programDbId=>qq|$breeding_program_id|,
                 programName=>$folder->breeding_program->name(),
                 publications=>undef,
