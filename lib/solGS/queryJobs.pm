@@ -135,16 +135,17 @@ sub write_geno_data {
     my $marker_headers;
 
     my $model = $self->get_model();
-    my $add_headers;
+    my $add_headers = 1;
     while (my $geno = $search_obj->get_next_genotype_info())
     {
         my $geno_data;
        
         if ($count == 1)
         {
-            $add_headers = 1;
             my $geno_hash = $geno->{selected_genotype_hash};
             $marker_headers = $model->get_dataset_markers($geno_hash);
+        }  else {
+            $add_headers = 0;
         }
     
         $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $add_headers);
