@@ -437,8 +437,7 @@ sub parse_arguments {
 
     my $analysis_data = $c->stash->{analysis_profile};
     my $arguments     = $analysis_data->{arguments};
-    my $data_set_type = $analysis_data->{data_set_type};
-
+  
     if ($arguments) {
         $c->controller('solGS::Utils')->stash_json_args( $c, $arguments );
     }
@@ -626,8 +625,7 @@ sub structure_training_modeling_output {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $pop_id        = $c->stash->{pop_id};
-    my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $training_pop_id = $c->stash->{training_pop_id};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
     my @traits_ids = @{ $c->stash->{training_traits_ids} }
@@ -636,7 +634,7 @@ sub structure_training_modeling_output {
 
     my $base     = $c->controller('solGS::Path')->clean_base_name($c);
     my $url_args = {
-        'training_pop_id'        => $pop_id,
+        'training_pop_id'        => $training_pop_id,
         'genotyping_protocol_id' => $protocol_id,
     };
 
@@ -666,7 +664,7 @@ sub structure_training_modeling_output {
                 $analysis_data->{analysis_page} =
                     $base
                   . "solgs/traits/all/population/"
-                  . $pop_id
+                  . $training_pop_id
                   . '/traits/'
                   . $traits_selection_id . '/gp/'
                   . $protocol_id;
@@ -699,7 +697,7 @@ sub structure_training_modeling_output {
                 $analysis_data->{analysis_page} =
                     $base
                   . "solgs/models/combined/trials/"
-                  . $combo_pops_id
+                  . $training_pop_id
                   . '/traits/'
                   . $traits_selection_id . '/gp/'
                   . $protocol_id;
@@ -717,19 +715,26 @@ sub structure_training_modeling_output {
 
             $trait_page = $base . $model_page;
 
-            $c->stash->{combo_pops_id} = $combo_pops_id;
+            $c->stash->{combo_pops_id} = $training_pop_id;
             $c->controller('solGS::combinedTrials')
               ->cache_combined_pops_data($c);
         }
+    
+      $c->controller('solGS::Files')->model_phenodata_file($c);
+       my $model_pheno_file = $c->stash->{model_phenodata_file};
 
+       $c->controller('solGS::Files')->model_genodata_file($c);
+       my $model_geno_file = $c->stash->{model_genodata_file};
+
+      
         $output_details{ 'trait_id_' . $trait_abbr } = {
             'trait_id'       => $trait_id,
             'trait_name'     => $c->stash->{trait_name},
             'trait_page'     => $trait_page,
             'gebv_file'      => $c->stash->{rrblup_training_gebvs_file},
-            'pop_id'         => $pop_id,
-            'phenotype_file' => $c->stash->{trait_combined_pheno_file},
-            'genotype_file'  => $c->stash->{trait_combined_geno_file},
+            'pop_id'         => $training_pop_id,
+            'phenotype_file' => $model_pheno_file,
+            'genotype_file'  => $model_geno_file,
             'data_set_type'  => $c->stash->{data_set_type},
         };
     }
