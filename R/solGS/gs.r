@@ -192,7 +192,6 @@ if (datasetInfo == 'combined populations') {
          phenoTrait <- subset(formattedPhenoData, select = c('V1', traitAbbr))
          phenoTrait <- as.data.frame(phenoTrait)
          phenoTrait <- na.omit(phenoTrait)
-         print(head(phenoTrait))
          colnames(phenoTrait)[1] <- 'genotypes'
 
      } else if (length(grep('list', phenoFile)) != 0) {
@@ -200,8 +199,6 @@ if (datasetInfo == 'combined populations') {
          phenoTrait <- averageTrait(phenoData, traitAbbr)
 
      } else {
-         print(head(phenoTrait))
-          print(head(phenoData))
          message('phenoTrait trait_abbr ', traitAbbr)
          print(class(traitAbbr))
          print(traitAbbr)
@@ -219,8 +216,6 @@ if (datasetInfo == 'combined populations') {
 
 }
 
-print('phenoTrait')
-print(head(phenoTrait))
 meanType <- names(phenoTrait)[2]
 names(phenoTrait)  <- c('genotypes', traitAbbr)
 
@@ -314,10 +309,9 @@ if (length(selectionData) != 0) {
     selectionData <- data.frame(selectionData)
   }
 }
-
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoDataFilteredObs[1, ], value = TRUE)
-if(length(genoTrCode) != 0) {
+if(length(genoTrCode)) {
   genoData            <- genoData - 1
   genoDataFilteredObs <- genoDataFilteredObs - 1
 }
@@ -329,6 +323,7 @@ if (length(selectionData) != 0 ) {
   }
 }
 
+print(genoData[1:5, ])
 ordered.markerEffects <- c()
 trGEBV                <- c()
 validationAll         <- c()
@@ -402,7 +397,6 @@ if (nCores > 1) {
 } else {
   nCores <- 1
 }
-
 
 if (length(selectionData) == 0) {
 
@@ -496,6 +490,7 @@ if (length(selectionData) == 0) {
 
       set.seed(4567)
 
+    
       k <- 10
       times <- 2
       cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
