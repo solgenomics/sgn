@@ -610,11 +610,13 @@ export function init() {
                 return plot.observationUnitPosition.positionCoordinateX - min_col + col_increment + 1
             }
 
-            var plot_y_coord = function(plot) {
-                let y = plot.observationUnitPosition.positionCoordinateY - min_row + row_increment + 1;
-                if ( plot.type != "border" && !(document.getElementById("invert_row_checkmark").checked == true) ) {
+            var plot_y_coord = function(plot, src) {
+                console.log("--> SET Y: [" + src + " - " + plot.type + "]");
+                let y = plot.observationUnitPosition.positionCoordinateY - min_row + row_increment;
+                if ( plot.type !== "border" && document.getElementById("invert_row_checkmark").checked !== true ) {
                     y = num_rows - y - 1;
                 }
+                console.log(y);
                 return y;
             }
 
@@ -622,8 +624,8 @@ export function init() {
             width = this.meta_data.right_border_selection ? width + 1 : width;
             var height = this.meta_data.top_border_selection ? this.meta_data.num_rows + 3 : this.meta_data.num_rows + 2;
             height = this.meta_data.bottom_border_selection ? height + 1 : height;
-            var row_increment = this.meta_data.invert_row_checkmark ? 0 : -1;
-            row_increment = this.meta_data.top_border_selection ? row_increment - 1 : row_increment;
+            var row_increment = this.meta_data.invert_row_checkmark ? 1 : 0;
+            row_increment = this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? row_increment + 1 : row_increment;
             var col_increment = this.meta_data.left_border_selection ? 1 : 0;
 
             var min_row = this.meta_data.min_row;
@@ -653,7 +655,7 @@ export function init() {
             plots.append("title");
             plots.enter().append("rect")
                 .attr("x", (d) => { return plot_x_coord(d) * 50 })
-                .attr("y", (d) => { return plot_y_coord(d) * 50 + 15 })
+                .attr("y", (d) => { return plot_y_coord(d, "rect") * 50 + 15 })
                 .attr("rx", 4)
                 .attr("class", "col bordered")
                 .attr("width", 50)
@@ -692,7 +694,7 @@ export function init() {
             plots.append("text");
             plots.enter().append("text")
                 .attr("x", (d) => { return plot_x_coord(d) * 50 + 15 })
-                .attr("y", (d) => { return plot_y_coord(d) * 50 + 45 })
+                .attr("y", (d) => { return plot_y_coord(d, "text") * 50 + 45 })
                 .text((d) => { 
                     if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type == "data") { 
                         return d.observationUnitPosition.observationLevel.levelCode;
@@ -713,7 +715,7 @@ export function init() {
             plots.enter().append("image")
                 .attr("xlink:href", image_icon)
                 .attr("x", (d) => { return plot_x_coord(d) * 50 + 5 })
-                .attr("y", (d) => { return plot_y_coord(d) * 50 + 15 })
+                .attr("y", (d) => { return plot_y_coord(d, "image") * 50 + 15 })
                 .attr("width", 20)
                 .attr("height", 20);
                                       
@@ -731,16 +733,9 @@ export function init() {
             var row_labels_col = 1;
             var col_labels_row = 0;
             if (!this.meta_data.invert_row_checkmark) {
-                col_labels_row = min_row - 1;
-                col_labels_row = this.meta_data.bottom_border_selection ? num_rows + 2 : num_rows + 1;
-                col_labels_row = this.meta_data.top_border_selection ? col_labels_row : col_labels_row - 1;
+                col_labels_row = this.meta_data.bottom_border_selection ? num_rows + 1 : num_rows;
                 row_label_arr.reverse();
             }
-
-            console.log("SET LABELS:");
-            console.log(row_label_arr);
-            console.log(col_label_arr);
-            console.log(col_labels_row);
 
             grid.selectAll(".rowLabels") 
                 .data(row_label_arr)
@@ -748,7 +743,7 @@ export function init() {
                 .attr("x", (row_labels_col * 50 - 25))
                 .attr("y", (label, i) => { 
                     let y = this.meta_data.invert_row_checkmark ? i+1 : i;
-                    y = this.meta_data.top_border_selection ? y+1 : y;
+                    y = this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? y+1 : y;
                     return y * 50 + 45;
                 })
                 .text((label) => { return label });
@@ -756,7 +751,10 @@ export function init() {
             grid.selectAll(".colLabels") 
                 .data(col_label_arr)
                 .enter().append("text")
-                .attr("x", (label) => { return (label-min_col+col_increment+2) * 50 - 30 })
+                .attr("x", (label, i) => {
+                    let x = label-min_col+col_increment+2;
+                    return x * 50 - 30;
+                })
                 .attr("y", (col_labels_row * 50) + 45)
                 .text((label) => { return label });
         }
