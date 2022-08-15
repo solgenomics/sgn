@@ -530,7 +530,7 @@ solGS.cluster = {
 			dataType: 'json',
 			data: {
 				'page': page,
-				'args': args
+				'arguments': args
 			},
 			url: '/solgs/check/cached/result/',
 			success: function(res) {
