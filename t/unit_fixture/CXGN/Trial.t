@@ -441,6 +441,7 @@ is_deeply(\@all_project_types, [
           'crossing_block_trial',
           'crossing_trial',
           'genetic_gain_trial',
+          'genotyping_project',
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
