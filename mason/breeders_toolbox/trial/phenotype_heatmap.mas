@@ -19,14 +19,14 @@ $data_level => 'plot'
 
 
     #tooltip {	
-        position: absolute;			
-        width: 220px;					
-        height: 100px;					
-        padding: 5px;				
-        font: 12px sans-serif;		
-        background: lightsteelblue;	
-        border: 0px;		
-        border-radius: 8px;			
+        position: absolute;
+        max-width: 400px;
+        max-height: 200px;
+        padding: 5px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 0px;
+        border-radius: 8px;
         pointer-events: none;
     }
     
@@ -643,10 +643,8 @@ jQuery(document).ready( function() {
             url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&observationUnitLevelName=plot&pageSize=10000',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
-               console.log("FIELD MAP VIEW: get BrAPI ObservationUnits");
              },
              success: function(response) {
-                console.log("FIELD MAP VIEW: done getting BrAPI ObservationUnits");
                 data = response.result.data;
 
                 if (data[0]) {
@@ -676,7 +674,6 @@ jQuery(document).ready( function() {
         .then(
             function() {
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
-                    console.log("Num Real Plots: " + num_real_plots);
                     FieldMap.fill_holes();
                     FieldMap.meta_data.retain_layout = true;
                     FieldMap.meta_data.transpose = false;
@@ -695,10 +692,8 @@ jQuery(document).ready( function() {
                 url: '/brapi/v2/observations?studyDbId='+trial_id+'&pageSize=10000',
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
-                    console.log("HEATMAP: get BrAPI Observations");
                 },
                 success: function(response) {
-                    console.log("HEATMAP: done getting BrAPI Observations");
                     FieldMap.heatmap_queried = true;
                     observations = response.result.data;
                 },

@@ -85,8 +85,6 @@ export function init() {
         }
 
         filter_data(data) {
-            console.log("--> [FM] FILTER DATA");
-            console.log(data);
             var pseudo_layout = {};
             var plot_object = {};
             for (let plot of data) {
@@ -207,12 +205,7 @@ export function init() {
         }
 
         set_meta_data() {
-            console.log("--> [FM] SET META DATA");
-            console.log("Plot Object:");
-            console.log(this.plot_object);
             let unsorted_plot_arr = Object.values(this.plot_object);
-            console.log("Unsorted Plot Array:");
-            console.log(unsorted_plot_arr);
             let ordered_grouped_plot_arr = [];
             for (let plot of unsorted_plot_arr) {
                 if (!ordered_grouped_plot_arr[plot.observationUnitPosition.positionCoordinateY - 1]) {
@@ -222,8 +215,6 @@ export function init() {
                     ordered_grouped_plot_arr[plot.observationUnitPosition.positionCoordinateY - 1][plot.observationUnitPosition.positionCoordinateX - 1] = plot;
                 }
             }
-            console.log("Ordered Group Plot Array:");
-            console.log(ordered_grouped_plot_arr);
             let final_plot_arr = []
             for (let ordered_plot_arr of ordered_grouped_plot_arr) {
                 if ( ordered_plot_arr ) {
@@ -232,8 +223,6 @@ export function init() {
                     });
                 }
             }
-            console.log("Final Plot Array:");
-            console.log(final_plot_arr);
             this.plot_arr = final_plot_arr;
             var min_col = 100000;
             var min_row = 100000;
@@ -247,10 +236,6 @@ export function init() {
                 min_row = plot.observationUnitPosition.positionCoordinateY < min_row ? plot.observationUnitPosition.positionCoordinateY : min_row;
                 max_level_code = parseInt(plot.observationUnitPosition.observationLevel.levelCode) > max_level_code ? plot.observationUnitPosition.observationLevel.levelCode : max_level_code;
             });
-            console.log(`Min Row: ${min_row}`);
-            console.log(`Max Row: ${max_row}`);
-            console.log(`Min Col: ${min_col}`);
-            console.log(`Max Col: ${max_col}`);
             this.meta_data.min_row = min_row;
             this.meta_data.max_row = max_row;
             this.meta_data.min_col = min_col;
@@ -258,12 +243,9 @@ export function init() {
             this.meta_data.num_rows = max_row - min_row + 1;
             this.meta_data.num_cols = max_col - min_col + 1;
             this.meta_data.max_level_code = max_level_code;
-            console.log("Full Meta Data:");
-            console.log(this.meta_data);
         }
 
         fill_holes() {
-            console.log("--> [FM] FILL HOLES");
             var fieldmap_hole_fillers = [];
             let last_coord;
             for (let plot of this.plot_arr) {
@@ -285,7 +267,6 @@ export function init() {
                 }
             }
             this.plot_arr = [...this.plot_arr.filter(plot => plot !== undefined), ...fieldmap_hole_fillers];
-            console.log(this.plot_arr);
         }
 
         check_element(selection, element_id) {
@@ -355,9 +336,6 @@ export function init() {
 
         }
         add_border(border_element, row_or_col, min_or_max) {
-            console.log("--> ADD BORDER: [" + border_element + "]");
-            console.log("row/col: " + row_or_col);
-            console.log("min/max: " + min_or_max);
             var start_iter;
             var end_iter;
             if (row_or_col == "row") {
@@ -367,7 +345,6 @@ export function init() {
                 start_iter = this.meta_data.min_row;
                 end_iter = this.meta_data.max_row;
             }
-            console.log("Iter: " + start_iter + " --> " + end_iter);
 
             if (this.meta_data[border_element]) {
                 for (let i = start_iter; i <= end_iter; i++) {
@@ -531,7 +508,6 @@ export function init() {
         }
         
         FieldMap() {
-            console.log("--> [FM] FieldMap()");
             this.addEventListeners();
             var cc = this.clickcancel();
             const colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"];
@@ -597,26 +573,46 @@ export function init() {
                     return "Plot Name: " + plot.observationUnitName;
                 } else {
                     return ` 
-                        Plot Name: ${plot.observationUnitName}
-                        Plot Number: ${plot.observationUnitPosition.observationLevel.levelCode}
-                        Block Number: ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}
-                        Rep Number: ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}
-                        Accession Name: ${plot.germplasmName}
+                        <strong>Plot Name:</strong> ${plot.observationUnitName}<br />
+                        <strong>Plot Number:</strong> ${plot.observationUnitPosition.observationLevel.levelCode}<br />
+                        <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
+                        <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />
+                        <strong>Accession Name:</strong> ${plot.germplasmName}
                     `
                 }
+            }
+
+            var handle_mouseover = function(d) {
+                if (d.observationUnitPosition.observationLevel) {
+                    d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
+                        .style('fill', 'green')
+                        .style('cursor', 'pointer')
+                        .style("stroke", '#000000');
+                    tooltip.style('opacity', .9)
+                        .style("left", (window.event.clientX+25) + "px")
+                        .style("top", window.event.clientY + "px")
+                        .html(get_plot_message(d));
+                }
+            }
+
+            var handle_mouseout = function(d) {
+                d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
+                    .style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d))
+                    .style('cursor', 'default')
+                    .style("stroke", get_stroke_color);
+                tooltip.style('opacity', 0);
+                plots.exit().remove();
             }
 
             var plot_x_coord = function(plot) {
                 return plot.observationUnitPosition.positionCoordinateX - min_col + col_increment + 1
             }
 
-            var plot_y_coord = function(plot, src) {
-                console.log("--> SET Y: [" + src + " - " + plot.type + "]");
+            var plot_y_coord = function(plot) {
                 let y = plot.observationUnitPosition.positionCoordinateY - min_row + row_increment;
                 if ( plot.type !== "border" && document.getElementById("invert_row_checkmark").checked !== true ) {
                     y = num_rows - y - 1;
                 }
-                console.log(y);
                 return y;
             }
 
@@ -626,6 +622,7 @@ export function init() {
             height = this.meta_data.bottom_border_selection ? height + 1 : height;
             var row_increment = this.meta_data.invert_row_checkmark ? 1 : 0;
             row_increment = this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? row_increment + 1 : row_increment;
+            var y_offset = this.meta_data.top_border_selection && !this.meta_data.invert_row_checkmark ? 50 : 0;
             var col_increment = this.meta_data.left_border_selection ? 1 : 0;
 
             var min_row = this.meta_data.min_row;
@@ -634,10 +631,6 @@ export function init() {
             var max_col = this.meta_data.max_col;
             var num_rows = this.meta_data.num_rows;
             var isHeatMap = this.heatmap_selected;
-
-            console.log("===> POSITION PLOTS <===");
-            console.log(row_increment);
-            console.log(this.plot_arr);
 
             var grid = d3.select("#fieldmap_chart")
                 .append("svg")
@@ -648,35 +641,24 @@ export function init() {
                 .append("rect")
                 .attr("id", "tooltip")
                 .attr("class", "tooltip")
-                .style("position", "absolute")
+                .style("position", "fixed")
                 .style("opacity", 0);
 
             var plots = grid.selectAll("plots").data(this.plot_arr);
             plots.append("title");
             plots.enter().append("rect")
                 .attr("x", (d) => { return plot_x_coord(d) * 50 })
-                .attr("y", (d) => { return plot_y_coord(d, "rect") * 50 + 15 })
-                .attr("rx", 4)
+                .attr("y", (d) => { return plot_y_coord(d) * 50 + 15 + y_offset })
+                .attr("rx", 2)
+                .attr("id", (d) => { return `fieldmap-plot-${d.observationUnitDbId}` })
                 .attr("class", "col bordered")
-                .attr("width", 50)
-                .attr("height", 50)
+                .attr("width", 48)
+                .attr("height", 48)
                 .style("stroke-width", 2)
                 .style("stroke", get_stroke_color)
                 .style("fill", !isHeatMap ? get_fieldmap_plot_color : get_heatmap_plot_color)
-                // .on("mouseover", (d) => { 
-                //     if (d.observationUnitPosition.observationLevel) { 
-                //         d3.select(this).style('fill', 'green').style('cursor', 'pointer');
-                //         tooltip.style('opacity', .9)
-                //         .style('left', (window.event.pageX - 420)+"px")
-                //         .style('top', (window.event.pageY - 1200)+"px")
-                //         .text(get_plot_message(d))
-                //     }
-                // })
-                // .on("mouseout", (d) => { 
-                //     d3.select(this).style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d)).style('cursor', 'default')
-                //     tooltip.style('opacity', 0)
-                //     plots.exit().remove();
-                // })
+                .on("mouseover", handle_mouseover)
+                .on("mouseout", handle_mouseout)
                 .call(cc);
 
             cc.on("click", (el) => { 
@@ -693,15 +675,17 @@ export function init() {
 
             plots.append("text");
             plots.enter().append("text")
-                .attr("x", (d) => { return plot_x_coord(d) * 50 + 15 })
-                .attr("y", (d) => { return plot_y_coord(d, "text") * 50 + 45 })
+                .attr("x", (d) => { return plot_x_coord(d) * 50 + 10 })
+                .attr("y", (d) => { return plot_y_coord(d) * 50 + 50 + y_offset})
                 .text((d) => { 
                     if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type == "data") { 
                         return d.observationUnitPosition.observationLevel.levelCode;
                     }
-                });
+                })
+                .on("mouseover", handle_mouseover)
+                .on("mouseout", handle_mouseout);
 
-            var image_icon = function (d){
+            var image_icon = function(d) {
                 var image = d.plotImageDbIds || []; 
                 var plot_image;
                 if (image.length > 0){
@@ -715,9 +699,11 @@ export function init() {
             plots.enter().append("image")
                 .attr("xlink:href", image_icon)
                 .attr("x", (d) => { return plot_x_coord(d) * 50 + 5 })
-                .attr("y", (d) => { return plot_y_coord(d, "image") * 50 + 15 })
+                .attr("y", (d) => { return plot_y_coord(d) * 50 + 15 + y_offset })
                 .attr("width", 20)
-                .attr("height", 20);
+                .attr("height", 20)
+                .on("mouseover", handle_mouseover)
+                .on("mouseout", handle_mouseout)
                                       
             plots.exit().remove();
 
@@ -744,7 +730,7 @@ export function init() {
                 .attr("y", (label, i) => { 
                     let y = this.meta_data.invert_row_checkmark ? i+1 : i;
                     y = this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? y+1 : y;
-                    return y * 50 + 45;
+                    return y * 50 + 45 + y_offset;
                 })
                 .text((label) => { return label });
 
@@ -755,23 +741,19 @@ export function init() {
                     let x = label-min_col+col_increment+2;
                     return x * 50 - 30;
                 })
-                .attr("y", (col_labels_row * 50) + 45)
+                .attr("y", (col_labels_row * 50) + 45 + y_offset)
                 .text((label) => { return label });
         }
 
 
         load() {
-            console.log("--> [FM] LOAD");
             d3.select("svg").remove();
             this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
-            // this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
-            // this.invert_rows();
             this.add_borders();
             this.render();
         }
 
         render() {
-            console.log("--> [FM] Render");
             jQuery("#working_modal").modal("hide");
             jQuery("#fieldmap_chart").css({ "display": "inline-block" });
             jQuery("#container_fm").css({ "display": "inline-block", "overflow": "auto" });
