@@ -830,16 +830,12 @@ my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->f
 my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'yes',
-    project_name => 'NextGenCassava',
-    description => 'test geno trial upload',
-    location => $location->nd_geolocation_id,
-    year => '2018',
     name => 'test_genotype_upload_trial1',
-    breeding_program => $project->project_id,
-    genotyping_facility => 'igd',
+    genotyping_project_id => $genotyping_project_id,
     sample_type => 'DNA',
     plate_format => '96'
 };
+
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
@@ -960,13 +956,8 @@ is_deeply($message_hash, {
 my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'no',
-    project_name => 'NextGenCassava',
-    description => 'test geno trial upload coordinate template',
-    location => $location->nd_geolocation_id,
-    year => '2018',
     name => 'test_genotype_upload_coordinate_trial101',
-    breeding_program => $project->project_id,
-    genotyping_facility => 'igd',
+    genotyping_project_id => $genotyping_project_id,
     sample_type => 'DNA',
     plate_format => '96'
 };
@@ -1107,13 +1098,8 @@ is_deeply($message_hash, {
 my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'no',
-    project_name => 'NextGenCassava',
-    description => 'test geno trial upload coordinate',
-    location => $location->nd_geolocation_id,
-    year => '2018',
     name => 'test_genotype_upload_coordinate_trial1',
-    breeding_program => $project->project_id,
-    genotyping_facility => 'igd',
+    genotyping_project_id => $genotyping_project_id,
     sample_type => 'DNA',
     plate_format => '96'
 };

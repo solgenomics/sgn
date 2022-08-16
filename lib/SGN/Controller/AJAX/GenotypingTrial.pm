@@ -253,11 +253,9 @@ sub parse_genotype_trial_file_POST : Args(0) {
         else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
-            my @all_errors;
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                push @all_errors, $error_string;
+                $return_error=$return_error.$error_string."<br>";
             }
-            $return_error = join("<br>", @all_errors);
         }
 
         $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
