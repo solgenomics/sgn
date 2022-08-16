@@ -14,6 +14,8 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::List;
 use CXGN::Trial::TrialDesign;
+use CXGN::BreedersToolbox::Projects;
+use CXGN::Genotype::StoreGenotypingProject;
 use DateTime;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
@@ -279,7 +281,7 @@ $parser->load_plugin('ParseIGDFile');
 my $meta = $parser->parse();
 ok($meta, "Check if parse validate excel file works");
 
-#print STDERR Dumper $meta;
+print STDERR "CHECK =".Dumper($meta)."\n";
 
 my $parsed_data_check = {
           'blank_well' => 'F05',
@@ -390,24 +392,58 @@ my $igd_design_check = {
 
 is_deeply($design, $igd_design_check, "check igd design");
 
+#genotyping project for igd
+my $chado_schema = $c->bcs_schema;
+my $location_rs = $chado_schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
+my $location_id = $location_rs->first->nd_geolocation_id;
+
+my $bp_rs = $chado_schema->resultset('Project::Project')->find({name => 'test'});
+my $breeding_program_id = $bp_rs->project_id();
+
+my $add_genotyping_project = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema => $chado_schema,
+	dbh => $c->dbh(),
+    project_name => 'test_genotyping_project_2',
+    breeding_program_id => $breeding_program_id,
+    project_facility => 'igd',
+    data_type => 'snp',
+    year => '2022',
+    project_description => 'genotyping project for test',
+    nd_geolocation_id => $location_id,
+    owner_id => 41
+});
+ok(my $store_return = $add_genotyping_project->store_genotyping_project(), "store genotyping project");
+
+my $gp_rs = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_2'});
+my $genotyping_project_id = $gp_rs->project_id();
+my $trial = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $genotyping_project_id });
+my $location_data = $trial->get_location();
+my $location_name = $location_data->[1];
+my $description = $trial->get_description();
+my $genotyping_facility = $trial->get_genotyping_facility();
+my $plate_year = $trial->get_year();
+
+my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $chado_schema });
+my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
+my $breeding_program_name = $breeding_program_data->[0]->[1];
 
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
-	chado_schema => $c->bcs_schema,
+	chado_schema => $chado_schema,
  	dbh => $c->dbh(),
 	owner_id => 41,
- 	trial_year => '2016',
-	trial_location => 'test_location',
-	program => 'test',
+ 	trial_year => $plate_year,
+	trial_location => $location_name,
+	program => $breeding_program_name,
 	trial_description => "Test Genotyping Plate Upload",
 	design_type => 'genotyping_plate',
 	design => $design,
 	trial_name => "test_genotyping_trial_upload",
 	is_genotyping => 1,
 	genotyping_user_id => $meta->{user_id} || "unknown",
-	genotyping_project_name => $meta->{project_name} || "unknown",
+	genotyping_project_id => $genotyping_project_id,
     genotyping_facility_submitted => 'no',
-    genotyping_facility => 'igd',
+    genotyping_facility => $genotyping_facility,
     genotyping_plate_format => '96',
     genotyping_plate_sample_type => 'DNA',
 	operator => "janedoe"
@@ -426,7 +462,7 @@ ok($project_desc == "Test Genotyping Plate Upload", "check that trial_create rea
 $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
 my $post2_project_diff = $post_project_count - $pre_project_count;
 print STDERR "Project: ".$post2_project_diff."\n";
-ok($post2_project_diff == 2, "check project table after upload igd trial");
+ok($post2_project_diff == 3, "check project table after upload igd trial");
 
 $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post2_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
@@ -441,12 +477,12 @@ ok($post2_nd_experiment_proj_diff == 2, "check ndexperimentproject table after u
 $post_nd_experimentprop_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({})->count();
 my $post2_nd_experimentprop_diff = $post_nd_experimentprop_count - $pre_nd_experimentprop_count;
 print STDERR "NdExperimentprop: ".$post2_nd_experimentprop_diff."\n";
-ok($post2_nd_experimentprop_diff == 2, "check ndexperimentprop table after upload igd trial");
+ok($post2_nd_experimentprop_diff == 1, "check ndexperimentprop table after upload igd trial");
 
 $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post2_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post2_project_prop_diff."\n";
-ok($post2_project_prop_diff == 11, "check projectprop table after upload igd trial");
+ok($post2_project_prop_diff == 15, "check projectprop table after adding genotyping project and uploading igd trial");
 
 $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post2_stock_diff = $post_stock_count - $pre_stock_count;
@@ -471,7 +507,7 @@ ok($post2_nd_experiment_stock_diff == 14, "check ndexperimentstock table after u
 $post_project_relationship_count = $c->bcs_schema->resultset('Project::ProjectRelationship')->search({})->count();
 my $post2_project_relationship_diff = $post_project_relationship_count - $pre_project_relationship_count;
 print STDERR "ProjectRelationship: ".$post2_project_relationship_diff."\n";
-ok($post2_project_relationship_diff == 2, "check projectrelationship table after upload igd trial");
+ok($post2_project_relationship_diff == 4, "check projectrelationship table after adding genotyping project and uploading igd trial");
 
 
 #############################
@@ -660,7 +696,7 @@ ok($project_desc == "Trial Upload Test", "check that trial_create really worked"
 my $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
 my $post1_project_diff = $post_project_count - $pre_project_count;
 print STDERR "Project: ".$post1_project_diff."\n";
-ok($post1_project_diff == 3, "check project table after third upload excel trial");
+ok($post1_project_diff == 4, "check project table after third upload excel trial");
 
 my $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post1_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
@@ -675,12 +711,12 @@ ok($post1_nd_experiment_proj_diff == 3, "check ndexperimentproject table after u
 my $post_nd_experimentprop_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({})->count();
 my $post1_nd_experimentprop_diff = $post_nd_experimentprop_count - $pre_nd_experimentprop_count;
 print STDERR "NdExperimentprop: ".$post1_nd_experimentprop_diff."\n";
-ok($post1_nd_experimentprop_diff == 2, "check ndexperimentprop table after upload excel trial");
+ok($post1_nd_experimentprop_diff == 1, "check ndexperimentprop table after upload excel trial");
 
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 15, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 19, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -705,8 +741,7 @@ ok($post1_nd_experiment_stock_diff == 22, "check ndexperimentstock table after u
 my $post_project_relationship_count = $c->bcs_schema->resultset('Project::ProjectRelationship')->search({})->count();
 my $post1_project_relationship_diff = $post_project_relationship_count - $pre_project_relationship_count;
 print STDERR "ProjectRelationship: ".$post1_project_relationship_diff."\n";
-ok($post1_project_relationship_diff == 3, "check projectrelationship table after upload excel trial");
-
+ok($post1_project_relationship_diff == 5, "check projectrelationship table after upload excel trial");
 
 
 my $mech = Test::WWW::Mechanize->new;
@@ -728,11 +763,9 @@ $response = $ua->post(
         ]
     );
 
-#print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-#print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
     'success' => '1',

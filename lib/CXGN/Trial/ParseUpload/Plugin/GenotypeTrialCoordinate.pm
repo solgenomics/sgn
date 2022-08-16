@@ -56,31 +56,31 @@ sub _validate_with_plugin {
         }
     }
 
-    my $date_header = $column[0];
+    my $date_header = $columns[0];
     $date_header =~ s/^\s+|\s+$//g;
-    my $plate_id_header = $column[1];
+    my $plate_id_header = $columns[1];
     $plate_id_header =~ s/^\s+|\s+$//g;
-    my $plate_name_header = $column[2];
+    my $plate_name_header = $columns[2];
     $plate_name_header =~ s/^\s+|\s+$//g;
-    my $sample_id_header = $column[3];
+    my $sample_id_header = $columns[3];
     $sample_id_header =~ s/^\s+|\s+$//g;
-    my $well_A01_header = $column[4];
+    my $well_A01_header = $columns[4];
     $well_A01_header =~ s/^\s+|\s+$//g;
-    my $well_01A_header = $column[5];
+    my $well_01A_header = $columns[5];
     $well_01A_header =~ s/^\s+|\s+$//g;
-    my $tissue_id_header = $column[6];
+    my $tissue_id_header = $columns[6];
     $tissue_id_header =~ s/^\s+|\s+$//g;
-    my $dna_person_header = $column[7];
+    my $dna_person_header = $columns[7];
     $dna_person_header =~ s/^\s+|\s+$//g;
-    my $notes_header = $column[8];
+    my $notes_header = $columns[8];
     $notes_header =~ s/^\s+|\s+$//g;
-    my $tissue_type_header = $column[9];
+    my $tissue_type_header = $columns[9];
     $tissue_type_header =~ s/^\s+|\s+$//g;
-    my $extraction_header = $column[10];
+    my $extraction_header = $columns[10];
     $extraction_header =~ s/^\s+|\s+$//g;
     my $facility_identifier_header;
     if ($include_facility_identifiers) {
-        $facility_identifier_header = $column[11];
+        $facility_identifier_header = $columns[11];
         $facility_identifier_header =~ s/^\s+|\s+$//g;
     }
 
