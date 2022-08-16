@@ -563,7 +563,7 @@ export function init() {
                         stroke_color = "green";
                     }
                 } else {
-                    stroke_color = "black";
+                    stroke_color = "#666";
                 }
                 return stroke_color;
             }
@@ -587,6 +587,7 @@ export function init() {
                     d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                         .style('fill', 'green')
                         .style('cursor', 'pointer')
+                        .style("stroke-width", 3)
                         .style("stroke", '#000000');
                     tooltip.style('opacity', .9)
                         .style("left", (window.event.clientX+25) + "px")
@@ -599,6 +600,7 @@ export function init() {
                 d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                     .style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d))
                     .style('cursor', 'default')
+                    .style("stroke-width", 2)
                     .style("stroke", get_stroke_color);
                 tooltip.style('opacity', 0);
                 plots.exit().remove();
