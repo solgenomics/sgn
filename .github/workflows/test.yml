@@ -62,6 +62,25 @@ jobs:
 
       - name: Run unit_mech tests
         run: /entrypoint.sh --nopatch t/unit_mech 2>/dev/null
+
+      - name: Run selenium 01_list tests
+        run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
+
+      - name: Run selenium 02_trial tests
+        run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
 #
-      - name: Run selenium tests
-        run: /entrypoint.sh --nopatch t/selenium2 2>/dev/null
+      - name: Run selenium breeders tests
+        run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
+
+      - name: Run selenium onto tests
+        run: /entrypoint.sh --nopatch t/selenium2/onto 2>/dev/null
+
+      - name: Run selenium search tests
+        run: /entrypoint.sh --nopatch t/selenium2/search 2>/dev/null
+
+      - name: Run selenium stock tests
+        run: /entrypoint.sh --nopatch t/selenium2/stock 2>/dev/null
+
+      - name: Run selenium tools tests
+        run: /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null
+        
