@@ -114,7 +114,7 @@ sub factors :Path('/ajax/gcpc/factors') Args(0) {
 
     # only use if factor has multiple levels, start from appropriate hardcoded list
     #
-    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber germplasmName|;
+    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber|;
     foreach my $factor (@factors) {
 	if ($pf->distinct_levels_for_factor($factor) > 1) {
     print STDERR "Processing factor $factor\n";

@@ -1,6 +1,6 @@
-use strict;
+ use strict;
 
-package SGN::Controller::AJAX::SPATIALMODEL;
+package SGN::Controller::AJAX::SpatialModel;
 
 use Moose;
 use Data::Dumper;
@@ -29,7 +29,7 @@ __PACKAGE__->config(
     );
 
 
-sub shared_phenotypes: Path('/ajax/spatial_model/shared_phenotypes') : {
+sub shared_phenotypes: Path('/ajax/spatial_model/shared_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
@@ -76,12 +76,12 @@ sub extract_trait_data :Path('/ajax/spatial_model/getdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
-sub generate_results: Path('/ajax/spatial_model/generate_results') : {
+sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $dataset_id = $c->req->param('dataset_id');
+    my $trial_id = shift;
 
-    print STDERR "DATASET_ID: $dataset_id\n";
+    print STDERR "TRIAL_ID: $trial_id\n";
 
     $c->tempfiles_subdir("spatial_model_files");
     my $spatial_model_tmp_output = $c->config->{cluster_shared_tempdir}."/spatial_model_files";
@@ -90,18 +90,22 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') : {
       "spatial_model_download_XXXXX",
       DIR=> $spatial_model_tmp_output,
     );
+    my $temppath = $c->config->{basepath}."/".$tempfile;
 
-    my $pheno_filepath = $tempfile . "_phenotype.txt";
+    my $pheno_filepath = $temppath . "_phenotype.txt";
+
+    print STDERR "pheno_filepath: $pheno_filepath\n";
 
 
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
 
-    my $temppath =  $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes=>0);
 
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema,  file_name => $temppath, quotes=>0);
+    $ds -> trials([$trial_id]);
+    print STDERR "DS: $ds\n";
     open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
     open(my $CLEAN, ">", $pheno_filepath.".clean") || die "Can't open pheno_filepath clean for writing";
 
@@ -130,9 +134,9 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') : {
 
     my $last_index = scalar(@new_header)-1;
 
-    while(<$PF>) {
-	chomp;
-	my @f = split /\t/;
+    #while(<$PF>) {
+	#chomp;
+	#my @f = split /\t/;
 
 
         my $cmd = CXGN::Tools::Run->new({
@@ -198,4 +202,5 @@ sub make_R_trait_name {
 
     return $trait;
 }
-}
+
+1;
