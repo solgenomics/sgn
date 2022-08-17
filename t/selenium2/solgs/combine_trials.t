@@ -62,7 +62,7 @@ print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
@@ -93,7 +93,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(3);
@@ -116,7 +116,7 @@ $d->while_logged_in_as("submitter", sub {
 # $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
    # sleep(4);
 
-    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');#->click();
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
     sleep(3);

@@ -545,7 +545,7 @@ $d->while_logged_in_as(
         sleep(4);
 
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -568,7 +568,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -1635,7 +1635,7 @@ $d->while_logged_in_as(
         $d->get_ok( '/solgs', 'solgs home page' );
         sleep(2);
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(2);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -1691,7 +1691,7 @@ $d->while_logged_in_as(
         sleep(2);
 
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(2);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
