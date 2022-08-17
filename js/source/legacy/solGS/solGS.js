@@ -47,14 +47,18 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-    
-      if (args === undefined) {
+     var trainingTraitsIds = solGS.getTrainingTraitsIds();
+
+     if (trainingTraitsIds) {
+      trainingTraitsIds = trainingTraitsIds.split(",");
+
+      if (!args) {
         args = { training_traits_ids: trainingTraitsIds };
       } else {
         args["training_traits_ids"] = trainingTraitsIds;
       }
-
+    }
+    
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
 
