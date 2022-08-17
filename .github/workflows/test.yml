@@ -8,7 +8,7 @@ jobs:
   test_breedbase:
     runs-on: ubuntu-latest
     container:
-      image: breedbase/breedbase:v0.46
+      image: breedbase/breedbase:v0.49
       env:
         HOME: /root
         MODE: 'TESTING'
