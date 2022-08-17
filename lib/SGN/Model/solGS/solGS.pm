@@ -32,7 +32,6 @@ use File::Path qw / mkpath /;
 use File::Spec::Functions;
 use List::MoreUtils qw / uniq /;
 use JSON::Any;
-use Math::Round::Var;
 use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
@@ -1091,7 +1090,8 @@ sub create_genotype_row {
     foreach my $marker (@$markers) {
         no warnings 'uninitialized';
 
-        $geno_values .= $genotype_hash->{$marker}->{'DS'};
+        my $dosage = $genotype_hash->{$marker}->{'DS'};
+        $geno_values .= $self->round_allele_dosage_values($dosage);
         $geno_values .= "\t" unless $marker eq $markers->[-1];
     }
 
