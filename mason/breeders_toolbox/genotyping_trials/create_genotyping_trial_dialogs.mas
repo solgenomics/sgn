@@ -13,38 +13,34 @@ $facilities => ();
                 <h4 class="modal-title" id="addGenoTrialDialog">Add Genotyping Plate</h4>
             </div>
             <div class="modal-body">
-                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form">
-
-                    <div class="container-fluid">
-
-                        <&| /util/workflow.mas, id=> "genotyping_trial_create_workflow" &>
-                            <&| /util/workflow.mas:step, title=> "Intro" &>
-                                <& /page/page_title.mas, title=>"This workflow will guide you through adding a genotyping plate in the database" &>
-                                <p>Genotyping plates represent 96 or 384 well plates.</p>
-                                <p>Each plate has a globally unique Plate ID.</p>
-                                <p>Each well in the plate has a globally unique tissue sample ID.</p>
-                                <p>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
-                                <p>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
-                                <p>In addition to sample ID, you have an option to include facility identifier for each well. </p>
-                                <br/><br/>
-                                <center>
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "genotyping_trial_create_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through adding a genotyping plate in the database" &>
+                            <p>Genotyping plates represent 96 or 384 well plates.</p>
+                            <p>Each plate has a globally unique Plate ID.</p>
+                            <p>Each well in the plate has a globally unique tissue sample ID.</p>
+                            <p>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
+                            <p>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
+                            <p>In addition to sample ID, you have an option to include facility identifier for each well. </p>
+                            <br/><br/>
+                            <center>
                                 <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
-                            </&>
+                            </center>
+                        </&>
 
-                            <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
-                                <& /page/page_title.mas, title=>"Select a genotyping project" &>
+                        <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
+                            <& /page/page_title.mas, title=>"Select a genotyping project" &>
+                            <p>Genotyping projects are for grouping genotyping plates and/or genotyping data together. Genotyping Project should match Vendor Project if you have one. </p>
+                            <center>
+                                <button class="btn btn-info" name="create_genotyping_project_link">If you need to create a genotyping project, click here</button><br/><br/>
+                                <button id="next_step_creating_genotyping_plates" class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a genotyping project, go to Next Step</button>
+                            </center>
+                        </&>
 
-                                <p>Genotyping projects are for grouping genotyping plates and/or genotyping data together. Genotyping Project should match Vendor Project if you have one. </p>
-                                <center>
-                                    <button class="btn btn-info" name="create_genotyping_project_link">If you need to create a genotyping project, click here</button><br/><br/>
-                                    <button id="next_step_creating_genotyping_plates" class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a genotyping project, go to Next Step</button>
-                                </center>
-
-                            </&>
-
-                            <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
-                                <& /page/page_title.mas, title=>"Provide info about your plate" &>
+                        <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
+                            <& /page/page_title.mas, title=>"Provide info about your plate" &>
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form">
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Project Name: </label>
                                     <div class="col-sm-7">
@@ -88,20 +84,19 @@ $facilities => ();
                                         <input type="checkbox" id="upload_include_facility_identifiers" name="upload_include_facility_identifiers" >
                                     </div>
                                 </div>
-
                                 <br/>
                                 <center>
-                                <button id="plate_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    <button id="plate_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Well Info" &>
                                 <& /page/page_title.mas, title=>"Provide information about the wells in your plate" &>
-                                <br/><br/>
-
+                                <br/>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Select One: </label>
+                                    <label class="col-sm-3 control-label text-align: right">Select One: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="genotyping_trial_well_input_option">
+                                            <option value="">Select a file format that you want to upload</option>
                                             <option value="xls">I am uploading a plate design I made in Excel</option>
                                             <option value="coordinate">I am uploading a Default Coordinate Android Application plate design</option>
                                             <option value="coordinate_template">I am uploading a Custom Coordinate Android Application plate design</option>
@@ -109,10 +104,10 @@ $facilities => ();
                                         </select>
                                     </div>
                                 </div>
+                                <br/><br/>
 
-                                <div id="genotyping_trial_well_upload_section">
+                                <div id="genotyping_trial_well_upload_section" style="display:none">
                                     <h3>You want to upload an existing plate layout</h3>
-
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
@@ -136,7 +131,6 @@ $facilities => ();
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
@@ -144,7 +138,6 @@ $facilities => ();
 
                                 <div id="genotyping_trial_well_coordinate_upload_section" style="display:none">
                                     <h3>You want to upload a Coordinate Android Application file.</h3>
-
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
@@ -168,7 +161,6 @@ $facilities => ();
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
@@ -176,7 +168,6 @@ $facilities => ();
 
                                 <div id="genotyping_trial_well_coordinate_template_upload_section" style="display:none">
                                     <h3>You want to upload a Custom Android Application file.</h3>
-
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
@@ -200,7 +191,6 @@ $facilities => ();
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
@@ -208,7 +198,6 @@ $facilities => ();
 
                                 <div id="genotyping_trial_well_design_section" style="display:none">
                                     <h3>You want to design a completely new plate.</h3>
-
                                     <div class="well well-sm">
                                         <ul>
                                             <li>Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill 95 wells you should supply a list of 95 elements.</li>
@@ -221,24 +210,29 @@ $facilities => ();
                                             <span id="accession_select_box_span">[loading...]</span>
                                         </div>
                                     </div>
+                                    <br/>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_concentration" name="genotyping_well_concentration" type="text" />
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_volume" name="genotyping_well_volume" type="text" />
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all wells)</small> </label>
                                         <div class="col-sm-5">
@@ -249,30 +243,35 @@ $facilities => ();
                                             </select>
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> NCBI Taxonomy ID: <small>(Official NCBI ID.)</small> </label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_ncbi_taxonomy_id" name="genotyping_well_ncbi_taxonomy_id" type="text" />
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Extraction: <small>(If used the same extraction for all wells)</small> </label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_extraction" name="genotyping_well_extraction" type="text" />
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Person: <small>(If same person prepared all wells.)</small> </label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_dna_person" name="genotyping_well_dna_person" type="text" />
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Date: <small>(If plated on same date. YYYY/MM/DD)</small> </label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" placeholder="YYYY/MM/DD"/>
                                         </div>
                                     </div>
+                                    <br/>
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Notes: <small>(Additional notes for these wells.)</small> </label>
                                         <div class="col-sm-5">
@@ -282,23 +281,25 @@ $facilities => ();
                                 </div>
 
                                 <br/><br/>
-                                <center>
-                                <button id="well_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
+                                <div id="next_upload_button" style="display:none">
+                                    <center>
+                                        <button id="well_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    </center>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
                                 <& /page/page_title.mas, title=>"Is your genotyping plate linked with field trials in the database? This information can also be added from the genotyping plate detail page once the trial is saved in the database." &>
-
                                 <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
-
                                 <br/>
                                 <center>
-                                <button id="trial_linkage_intro_button"  class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                    <button id="trial_linkage_intro_button"  class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
                                 <center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
                                 <& /page/page_title.mas, title=>"Finalize and submit your genotyping plate" &>
 
+                                <p>Automatic submission to the Genotyping Facility currently not working. You can submit it from the Genotyping Plate's detail page or download the information from the Genotyping Plate's detail page and submit it yourself after clicking Submit</p>
+<!--
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <small>Automatic submission currently not working. You can submit it from the Genotyping Plate's detail page or download the information from the Genotyping Plate's detail page and submit it yourself after clicking Submit</small></label>
                                     <div class="col-sm-7">
@@ -308,19 +309,20 @@ $facilities => ();
                                         </select>
                                     </div>
                                 </div>
-                                <hr>
+-->
+                                </form>
+                                <hr/>
                                 <center>
-                                <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
                                 </center>
                             </&>
+
                             <&| /util/workflow.mas:complete, title=> "Complete" &>
                                 <& /page/page_title.mas, title=>"Complete! Your genotyping plate was saved in the database." &>
-
                                 <p>
                                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                                     The genotyping plate was saved successfully
                                 </p>
-
                                 <ul>
                                     <li>You may want to proceed to the genotyping plate detail page for the trial you just created.</li>
                                     <li>You can print barcodes for the plate and tissue samplesl.</li>
@@ -328,9 +330,7 @@ $facilities => ();
                                 <br/>
                             </&>
                         </&>
-
                     </div>
-                </form>
             </div>
             <div class="modal-footer">
                 <button id="close_trial_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -559,6 +559,7 @@ jQuery(document).ready(function(){
     jQuery('#genotyping_trial_well_input_option').change(function(){
         if (jQuery(this).val() == 'xls'){
             jQuery("#genotyping_trial_well_upload_section").show();
+            jQuery('#next_upload_button').show();
             jQuery("#genotyping_trial_well_design_section").hide();
             jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
             jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
@@ -567,6 +568,7 @@ jQuery(document).ready(function(){
         }
         if(jQuery(this).val() == 'coordinate'){
             jQuery('#genotyping_trial_well_coordinate_upload_section').show();
+            jQuery('#next_upload_button').show();
             jQuery("#genotyping_trial_well_design_section").hide();
             jQuery("#genotyping_trial_well_upload_section").hide();
             jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
@@ -575,6 +577,7 @@ jQuery(document).ready(function(){
         }
         if(jQuery(this).val() == 'coordinate_template'){
             jQuery('#genotyping_trial_well_coordinate_template_upload_section').show();
+            jQuery('#next_upload_button').show();
             jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
             jQuery("#genotyping_trial_well_design_section").hide();
             jQuery("#genotyping_trial_well_upload_section").hide();
@@ -583,6 +586,7 @@ jQuery(document).ready(function(){
         }
         if (jQuery(this).val() == 'design' ){
             jQuery("#genotyping_trial_well_design_section").show();
+            jQuery('#next_upload_button').show();
             jQuery("#genotyping_trial_well_upload_section").hide();
             jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
             jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
