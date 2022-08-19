@@ -280,7 +280,7 @@ $facilities => ();
                                     </div>
                                 </div>
 
-                                <br/><br/>
+                                <br/>
                                 <div id="next_upload_button" style="display:none">
                                     <center>
                                         <button id="well_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -310,6 +310,8 @@ $facilities => ();
                                     </div>
                                 </div>
 -->
+                                <input name="genotyping_trial_facility_submit_select" id="genotyping_trial_facility_submit_select" type="hidden" value="no">
+
                                 </form>
                                 <hr/>
                                 <center>
