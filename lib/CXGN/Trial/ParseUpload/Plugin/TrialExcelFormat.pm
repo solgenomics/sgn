@@ -64,9 +64,12 @@ sub _validate_with_plugin {
   my $block_number_head;
   my $is_a_control_head;
   my $rep_number_head;
-  my $range_number_head;
   my $row_number_head;
   my $col_number_head;
+  my $row_in_block_head;
+  my $col_in_block_head;
+  my $row_group_head;
+  my $col_group_head;
 
   if ($worksheet->get_cell(0,0)) {
     $plot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -87,26 +90,35 @@ sub _validate_with_plugin {
     $rep_number_head  = $worksheet->get_cell(0,5)->value();
   }
   if ($worksheet->get_cell(0,6)) {
-    $range_number_head  = $worksheet->get_cell(0,6)->value();
+      $row_number_head  = $worksheet->get_cell(0,6)->value();
   }
   if ($worksheet->get_cell(0,7)) {
-      $row_number_head  = $worksheet->get_cell(0,7)->value();
+      $col_number_head  = $worksheet->get_cell(0,7)->value();
   }
   if ($worksheet->get_cell(0,8)) {
-      $col_number_head  = $worksheet->get_cell(0,8)->value();
+      $row_in_block_head  = $worksheet->get_cell(0,8)->value();
   }
   if ($worksheet->get_cell(0,9)) {
-    $seedlot_name_head  = $worksheet->get_cell(0,9)->value();
+      $col_in_block_head  = $worksheet->get_cell(0,9)->value();
   }
   if ($worksheet->get_cell(0,10)) {
-    $num_seed_per_plot_head = $worksheet->get_cell(0,10)->value();
+      $row_group_head  = $worksheet->get_cell(0,10)->value();
   }
   if ($worksheet->get_cell(0,11)) {
-    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,11)->value();
+      $col_group_head  = $worksheet->get_cell(0,11)->value();
+  }
+  if ($worksheet->get_cell(0,12)) {
+    $seedlot_name_head  = $worksheet->get_cell(0,12)->value();
+  }
+  if ($worksheet->get_cell(0,13)) {
+    $num_seed_per_plot_head = $worksheet->get_cell(0,13)->value();
+  }
+  if ($worksheet->get_cell(0,14)) {
+    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,14)->value();
   }
 
   my @treatment_names;
-  for (12 .. $col_max){
+  for (15 .. $col_max){
       if ($worksheet->get_cell(0,$_)){
           push @treatment_names, $worksheet->get_cell(0,$_)->value();
       }
@@ -142,23 +154,32 @@ sub _validate_with_plugin {
   if (!$rep_number_head || $rep_number_head ne 'rep_number') {
     push @error_messages, "Cell F1: rep_number is missing from the header. (Header is required, but values are optional)";
   }
-  if (!$range_number_head || $range_number_head ne 'range_number') {
-    push @error_messages, "Cell G1: range_number is missing from the header. (Header is required, but values are optional)";
-  }
   if (!$row_number_head || $row_number_head ne 'row_number') {
-    push @error_messages, "Cell H1: row_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell G1: row_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$col_number_head || $col_number_head ne 'col_number') {
-    push @error_messages, "Cell I1: col_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell H1: col_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$row_in_block_head || $row_in_block_head ne 'row_in_block') {
+    push @error_messages, "Cell I1: row_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$col_in_block_head || $col_in_block_head ne 'col_in_block') {
+    push @error_messages, "Cell J1: col_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$row_group_head || $row_group_head ne 'row_group') {
+    push @error_messages, "Cell K1: row_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$col_group_head || $col_group_head ne 'col_group') {
+    push @error_messages, "Cell L1: col_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name') {
-    push @error_messages, "Cell J1: seedlot_name is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell M1: seedlot_name is missing from the header. (Header is required, but values are optional)";
   }
   if (!$num_seed_per_plot_head || $num_seed_per_plot_head ne 'num_seed_per_plot') {
-    push @error_messages, "Cell K1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell N1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
   if (!$weight_gram_seed_per_plot_head || $weight_gram_seed_per_plot_head ne 'weight_gram_seed_per_plot') {
-    push @error_messages, "Cell L1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell O1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
 
   my @pairs;
@@ -175,9 +196,12 @@ sub _validate_with_plugin {
     my $block_number;
     my $is_a_control;
     my $rep_number;
-    my $range_number;
     my $row_number;
     my $col_number;
+    my $row_in_block;
+    my $col_in_block;
+    my $row_group;
+    my $col_group;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -197,23 +221,32 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,5)) {
       $rep_number =  $worksheet->get_cell($row,5)->value();
     }
-    if ($worksheet->get_cell($row,6)) {
-      $range_number =  $worksheet->get_cell($row,6)->value();
+    if ($worksheet->get_cell($row, 6)) {
+	     $row_number = $worksheet->get_cell($row, 6)->value();
     }
     if ($worksheet->get_cell($row, 7)) {
-	     $row_number = $worksheet->get_cell($row, 7)->value();
+	     $col_number = $worksheet->get_cell($row, 7)->value();
     }
     if ($worksheet->get_cell($row, 8)) {
-	     $col_number = $worksheet->get_cell($row, 8)->value();
+         $row_in_block = $worksheet->get_cell($row, 8)->value();
     }
-    if ($worksheet->get_cell($row,9)) {
-      $seedlot_name = $worksheet->get_cell($row,9)->value();
+    if ($worksheet->get_cell($row, 9)) {
+         $col_in_block = $worksheet->get_cell($row, 9)->value();
     }
-    if ($worksheet->get_cell($row,10)) {
-      $num_seed_per_plot = $worksheet->get_cell($row,10)->value();
+    if ($worksheet->get_cell($row, 10)) {
+	     $row_group = $worksheet->get_cell($row, 10)->value();
     }
-    if ($worksheet->get_cell($row,11)) {
-      $weight_gram_seed_per_plot = $worksheet->get_cell($row,11)->value();
+    if ($worksheet->get_cell($row, 11)) {
+	     $col_group = $worksheet->get_cell($row, 11)->value();
+    }
+    if ($worksheet->get_cell($row,12)) {
+      $seedlot_name = $worksheet->get_cell($row,12)->value();
+    }
+    if ($worksheet->get_cell($row,13)) {
+      $num_seed_per_plot = $worksheet->get_cell($row,13)->value();
+    }
+    if ($worksheet->get_cell($row,14)) {
+      $weight_gram_seed_per_plot = $worksheet->get_cell($row,14)->value();
     }
 
     #skip blank lines
@@ -286,29 +319,37 @@ sub _validate_with_plugin {
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
         push @error_messages, "Cell F$row_name: rep_number must be a positive integer: $rep_number";
     }
-    if ($range_number && !($range_number =~ /^\d+?$/)){
-        push @error_messages, "Cell G$row_name: range_number must be a positive integer: $range_number";
-    }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-        push @error_messages, "Cell H$row_name: row_number must be a positive integer: $row_number";
+        push @error_messages, "Cell G$row_name: row_number must be a positive integer: $row_number";
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-        push @error_messages, "Cell I$row_name: col_number must be a positive integer: $col_number";
+        push @error_messages, "Cell H$row_name: col_number must be a positive integer: $col_number";
     }
-
+    if ($row_in_block && !($row_in_block =~ /^\d+?$/)){
+        push @error_messages, "Cell I$row_name: row_in_block must be a positive integer: $row_in_block";
+    }
+    if ($col_in_block && !($col_in_block =~ /^\d+?$/)){
+        push @error_messages, "Cell J$row_name: col_in_block must be a positive integer: $col_in_block";
+    }
+    if ($row_group && !($row_group =~ /^\d+?$/)){
+        push @error_messages, "Cell K$row_name: row_group must be a positive integer: $row_group";
+    }
+    if ($col_group && !($col_group =~ /^\d+?$/)){
+        push @error_messages, "Cell L$row_name: col_group must be a positive integer: $col_group";
+    }
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_seedlot_names{$seedlot_name}++;
         push @pairs, [$seedlot_name, $stock_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
+        push @error_messages, "Cell N$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell L$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
+        push @error_messages, "Cell O$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
     }
 
-    my $treatment_col = 12;
+    my $treatment_col = 15;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
@@ -397,7 +438,7 @@ sub _parse_with_plugin {
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
   my @treatment_names;
-  for (12 .. $col_max){
+  for (15 .. $col_max){
       if ($worksheet->get_cell(0,$_)){
           push @treatment_names, $worksheet->get_cell(0,$_)->value();
       }
@@ -434,9 +475,12 @@ sub _parse_with_plugin {
     my $block_number;
     my $is_a_control;
     my $rep_number;
-    my $range_number;
     my $row_number;
     my $col_number;
+    my $row_in_block;
+    my $col_in_block;
+    my $row_group;
+    my $col_group;
     my $seedlot_name;
     my $num_seed_per_plot = 0;
     my $weight_gram_seed_per_plot = 0;
@@ -462,25 +506,34 @@ sub _parse_with_plugin {
       $rep_number =  $worksheet->get_cell($row,5)->value();
     }
     if ($worksheet->get_cell($row,6)) {
-      $range_number =  $worksheet->get_cell($row,6)->value();
+	     $row_number = $worksheet->get_cell($row, 6)->value();
     }
     if ($worksheet->get_cell($row,7)) {
-	     $row_number = $worksheet->get_cell($row, 7)->value();
+	     $col_number = $worksheet->get_cell($row, 7)->value();
     }
-    if ($worksheet->get_cell($row,8)) {
-	     $col_number = $worksheet->get_cell($row, 8)->value();
+    if ($worksheet->get_cell($row, 8)) {
+         $row_in_block = $worksheet->get_cell($row, 8)->value();
     }
-    if ($worksheet->get_cell($row,9)) {
-        $seedlot_name = $worksheet->get_cell($row, 9)->value();
+    if ($worksheet->get_cell($row, 9)) {
+         $col_in_block = $worksheet->get_cell($row, 9)->value();
+    }
+    if ($worksheet->get_cell($row, 10)) {
+	     $row_group = $worksheet->get_cell($row, 10)->value();
+    }
+    if ($worksheet->get_cell($row, 11)) {
+	     $col_group = $worksheet->get_cell($row, 11)->value();
+    }
+    if ($worksheet->get_cell($row,12)) {
+        $seedlot_name = $worksheet->get_cell($row, 12)->value();
     }
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     }
-    if ($worksheet->get_cell($row,10)) {
-        $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
+    if ($worksheet->get_cell($row,13)) {
+        $num_seed_per_plot = $worksheet->get_cell($row, 13)->value();
     }
-    if ($worksheet->get_cell($row,11)) {
-        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 11)->value();
+    if ($worksheet->get_cell($row,14)) {
+        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 14)->value();
     }
 
     #skip blank lines
@@ -488,7 +541,7 @@ sub _parse_with_plugin {
       next;
     }
 
-    my $treatment_col = 12;
+    my $treatment_col = 15;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
@@ -518,9 +571,6 @@ sub _parse_with_plugin {
     }
     if ($rep_number) {
       $design{$key}->{rep_number} = $rep_number;
-    }
-    if ($range_number) {
-      $design{$key}->{range_number} = $range_number;
     }
     if ($row_number) {
 	     $design{$key}->{row_number} = $row_number;
