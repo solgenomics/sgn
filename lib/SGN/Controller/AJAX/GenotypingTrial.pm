@@ -35,11 +35,6 @@ sub generate_genotype_trial_POST : Args(0) {
     my $plate_info = decode_json $c->req->param("plate_data");
     #print STDERR Dumper $plate_info;
 
-#    if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-#        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
-#        $c->detach();
-#    }
-
     if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{genotyping_project_id} || !$plate_info->{name} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
         $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
@@ -53,18 +48,6 @@ sub generate_genotype_trial_POST : Args(0) {
         $c->stash->{rest} = { error => "To submit to Cornell IGD you need to provide the blank well!" };
         $c->detach();
     }
-
-#    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $plate_info->{location} } );
-#    if (!$location) {
-#        $c->stash->{rest} = { error => "Unknown location" };
-#        $c->detach();
-#    }
-
-#    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $plate_info->{breeding_program} });
-#    if (!$breeding_program) {
-#        $c->stash->{rest} = { error => "Unknown breeding program" };
-#        $c->detach();
-#    }
 
     my $td = CXGN::Trial::TrialDesign->new( { schema => $schema });
 
@@ -327,29 +310,12 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("plate_data");
-    print STDERR "PLATE INFO =".Dumper($plate_info)."\n";
-
-#    if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-#        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
-#        $c->detach();
-#    }
+#    print STDERR "PLATE INFO =".Dumper($plate_info)."\n";
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{genotyping_project_id} || !$plate_info->{name} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
         $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
-
-#    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $plate_info->{location} } );
-#    if (!$location) {
-#        $c->stash->{rest} = { error => "Unknown location" };
-#        $c->detach();
-#    }
-
-#    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $plate_info->{breeding_program} });
-#    if (!$breeding_program) {
-#        $c->stash->{rest} = { error => "Unknown breeding program" };
-#        $c->detach();
-#    }
 
     my $field_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
