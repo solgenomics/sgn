@@ -41,7 +41,7 @@ jobs:
       - name: Update version
         run: sed -i -E "s/^version .*/version ${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER/" sgn.conf
       - name: Update version info
-        run: sed -i -E "s^version_updated .*/version_updated ${{ github.event.repository.updated_at}}/" sgn.conf
+        run: sed -i -E "s/^version_updated .*/version_updated ${{ github.event.repository.updated_at}}/" sgn.conf
       - name: Commit sgn.conf
         run: |
           git config --local user.email "bidevteam@cornell.edu"
