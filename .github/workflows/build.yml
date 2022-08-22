@@ -26,6 +26,35 @@ on:
   workflow_dispatch:
 
 jobs:
+  version:
+    if: github.actor != 'rob-ouser-bi'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Get release version
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+      - name: Update version
+        run: sed -i -E "s/^version .*/version ${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER/" sgn.conf
+      - name: Update version info
+        run: sed -i -E "s^version_updated .*/version_updated ${{ github.event.repository.updated_at}}/" sgn.conf
+      - name: Commit sgn.conf
+        run: |
+          git config --local user.email "bidevteam@cornell.edu"
+          git config --local user.name "rob-ouser-bi"
+          git add .
+          git commit -m "[autocommit] bumping build number"
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.ROB_OUSER_TOKEN }}
+          branch: ${{ github.ref }}
+          force: true
+          
   build:
     runs-on: ubuntu-latest
 
@@ -39,9 +68,9 @@ jobs:
       - name: Get the sgn repo
         uses: actions/checkout@v2
 
-      - name: Get release version
-        uses: actions-ecosystem/action-get-latest-tag@v1
-        id: get-latest-tag
+#       - name: Get release version
+#         uses: actions-ecosystem/action-get-latest-tag@v1
+#         id: get-latest-tag
 
       - name: Extract branch name
         shell: bash
@@ -82,7 +111,7 @@ jobs:
 
       - name: Set tag
         id: vars
-        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER)
+        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:$(sed -nE "s/version (.*)/\1/p" sgn.conf))
         
       - name: Build Docker and push image
         working-directory: ./breedbase_dockerfile
