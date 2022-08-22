@@ -1,0 +1,194 @@
+<%args>
+$facilities
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+<div class="modal fade" id="create_genotyping_project_dialog" name="create_genotyping_project_dialog" tabindex="-1" role="dialog" aria-labelledby="createGenotypingProjectdialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="createGenotypingProjectdialog">Add New Genotyping Project</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "add_genotyping_project_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Genotyping Project" &>
+                            <p>Genotyping Project can be used to group a series of genotyping plates and genotyping data. Genotyping Project should match Vendor Project if you have one.</p>
+                            <hr>
+                            <center>
+                                <button id="next_step_add_new_genotyping_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <form class="form-horizontal" role="form" name="create_genotyping_project_form" id="create_genotyping_project_form">
+                            <&| /util/workflow.mas:step, title=> "Add a genotyping project" &>
+                            <& /page/page_title.mas, title=>"Enter basic information about the genotyping project" &>
+                                <br/>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Project Name: </label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="new_genotyping_project_name" name="new_genotyping_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Facility: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="genotyping_project_facility_select" name="genotyping_project_facility_select">
+%  foreach my $facility (@$facilities) {
+                                            <option value="<% $facility %>"><% $facility %></option>
+%  }
+                                        </select>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Data Type: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="data_type">
+                                            <option value="">Select a data type</option>
+                                            <option value="snp">SNP</option>
+                                            <option value="ssr">SSR</option>
+                                        </select>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Breeding Program: </label>
+                                    <div class="col-sm-7">
+                                        <span id="genotyping_project_breeding_program_select_div"></span>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Year: </label>
+                                    <div class="col-sm-7">
+                                        <span id="genotyping_project_year_select_div"></span>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Location of Data Generation (optional): </label>
+                                    <div class="col-sm-7">
+                                        <span id="genotyping_project_location_select_div"></span>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Description: </label>
+                                    <div class="col-sm-7">
+                                        <textarea class="form-control" id="genotyping_project_description" name="genotyping_project_description" maxlength="250"></textarea>
+                                    </div>
+                                </div>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <center>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_new_genotyping_project_submit" id="add_new_genotyping_project_submit">Submit</button>
+                                </center>
+                            </&>
+                        </form>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your genotyping project is now in the database" &>
+                            <ul>
+                                <li>You may want to proceed to add genotyping plates and/or genotyping data in the genotyping project you just created.</li>
+                            </ul>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_new_genotyping_project_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    get_select_box("locations", "genotyping_project_location_select_div", {'id': 'genotyping_project_location_select', 'name': 'genotyping_project_location_select'});
+    get_select_box("breeding_programs", "genotyping_project_breeding_program_select_div", {'id': 'genotyping_project_breeding_program_select', 'name': 'genotyping_project_breeding_program_select'});
+    get_select_box("years", "genotyping_project_year_select_div", {'auto_generate': 1, 'id': 'genotyping_project_year_select', 'name': 'genotyping_project_year_select'});
+
+    jQuery('#add_new_genotyping_project_submit').click(function() {
+
+        var project_name = jQuery("#new_genotyping_project_name").val();
+        if (!project_name) {
+            alert("Genotyping project name is required");
+            return;
+        }
+
+        var project_facility = jQuery("#genotyping_project_facility_select").val();
+
+        var data_type = jQuery("#data_type").val();
+        if (!data_type) {
+            alert("Data type is required");
+            return;
+        }
+
+        var project_breeding_program = jQuery("#genotyping_project_breeding_program_select").val();
+        if (!project_breeding_program) {
+            alert ("Breeding program is required");
+            return;
+        }
+
+        var project_year = jQuery("#genotyping_project_year_select").val();
+        if (!project_year) {
+            alert ("Year is required");
+            return;
+        }
+
+        var project_description = jQuery("#genotyping_project_description").val();
+        if (!project_description) {
+            alert ("Description is required");
+            return;
+        }
+
+        var project_location = jQuery("#genotyping_project_location_select").val();
+
+        jQuery.ajax({
+            url: '/ajax/breeders/add_genotyping_project',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'project_name': project_name,
+                'project_breeding_program': project_breeding_program,
+                'project_facility': project_facility,
+                'data_type': data_type,
+                'project_year': project_year,
+                'project_description': project_description,
+                'project_location': project_location
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+//                    refreshGenotypingTrialJsTree(0);
+                    Workflow.focus("#add_genotyping_project_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_genotyping_project_workflow");
+                    jQuery("#working_modal").modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred saving genotyping project.');
+                jQuery('#create_genotyping_project_dialog').modal("hide");
+            },
+        });
+    });
+
+    jQuery("#add_new_genotyping_project_close_modal").click(function(){
+        jQuery('#create_genotyping_project_dialog').modal('hide');
+        jQuery(".modal-backdrop").remove();
+    });
+
+});
+
+
+</script>

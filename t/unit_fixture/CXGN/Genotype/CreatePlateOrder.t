@@ -8,6 +8,7 @@ use SGN::Test::Fixture;
 use CXGN::Genotype;
 use CXGN::Genotype::CreatePlateOrder;
 use CXGN::Dataset;
+
 local $Data::Dumper::Indent = 0;
 
 BEGIN {use_ok('CXGN::Trial::TrialCreate');}
@@ -15,6 +16,8 @@ BEGIN {use_ok('CXGN::Trial::TrialLayout');}
 BEGIN {use_ok('CXGN::Trial::TrialDesign');}
 BEGIN {use_ok('CXGN::Trial::TrialLayoutDownload');}
 BEGIN {use_ok('CXGN::Trial::TrialLookup');}
+BEGIN {use_ok('CXGN::BreedersToolbox::Projects');}
+BEGIN {use_ok('CXGN::Genotype::StoreGenotypingProject');}
 
 my $t = SGN::Test::Fixture->new();
 my $schema = $t->bcs_schema;
@@ -51,16 +54,47 @@ foreach my $stock_name (@genotyping_stock_names) {
          });
 };
 
+#genotyping project for genotyping plate order
+my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
+my $location_id = $location_rs->first->nd_geolocation_id;
+
+my $bp_rs = $schema->resultset('Project::Project')->find({name => 'test'});
+my $breeding_program_id = $bp_rs->project_id();
+
+my $add_genotyping_project = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema => $schema,
+    dbh => $dbh,
+    project_name => 'plate_order_genotyping_project',
+    breeding_program_id => $breeding_program_id,
+    project_facility => 'igd',
+    data_type => 'snp',
+    year => '2022',
+    project_description => 'genotyping project for plate order',
+    nd_geolocation_id => $location_id,
+    owner_id => 41
+});
+ok(my $store_return = $add_genotyping_project->store_genotyping_project(), "store genotyping project");
+
+my $gp_rs = $schema->resultset('Project::Project')->find({name => 'plate_order_genotyping_project'});
+my $genotyping_project_id = $gp_rs->project_id();
+my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $genotyping_project_id });
+my $location_data = $trial->get_location();
+my $location_name = $location_data->[1];
+my $description = $trial->get_description();
+my $genotyping_facility = $trial->get_genotyping_facility();
+my $project_year = $trial->get_year();
+
+my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
+my $breeding_program_name = $breeding_program_data->[0]->[1];
+
 my $plate_info = {
     elements => \@genotyping_stock_names,
     plate_format => 96,
     blank_well => 'A02',
     name => 'test_genotyping_trial_name',
-    description => "test description",
-    year => '2015',
-    project_name => 'NextGenCassava',
+    genotyping_project_id => $genotyping_project_id,
     genotyping_facility_submit => 'no',
-    genotyping_facility => 'igd',
     sample_type => 'DNA'
 };
 
@@ -173,20 +207,20 @@ ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
     owner_id => 41,
-    program => "test",
-    trial_location => "test_location",
+    program => $breeding_program_name,
+    trial_location => $location_name,
     operator => "janedoe",
-    trial_year => $plate_info->{year},
-    trial_description => $plate_info->{description},
+    trial_year => $project_year,
+    trial_description => $description,
     design_type => 'genotyping_plate',
     design => $geno_design,
     trial_name => $plate_info->{name},
     trial_type => $trial_type_cvterm_id,
     is_genotyping => 1,
     genotyping_user_id => 41,
-    genotyping_project_name => $plate_info->{project_name},
+    genotyping_project_id => $plate_info->{genotyping_project_id},
     genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
-    genotyping_facility => $plate_info->{genotyping_facility},
+    genotyping_facility => $genotyping_facility,
     genotyping_plate_format => $plate_info->{plate_format},
     genotyping_plate_sample_type => $plate_info->{sample_type},
 }), "create genotyping plate");

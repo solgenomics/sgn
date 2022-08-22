@@ -57,12 +57,24 @@ sub retrieve_plot_info {
 	 ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
      $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
 
-     my $genotyping_project_name_row = $project
-	 ->search_related("nd_experiment_projects")
-	 ->search_related("nd_experiment")
-	 ->search_related("nd_experimentprops")
-	 ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
+#     my $genotyping_project_name_row = $project
+#	 ->search_related("nd_experiment_projects")
+#	 ->search_related("nd_experiment")
+#	 ->search_related("nd_experimentprops")
+#	 ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
+#     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
+
+    my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'genotyping_project_and_plate_relationship', 'project_relationship');
+    my $genotyping_project_plate_relationship = $self->get_schema()->resultset("Project::ProjectRelationship")->find ({
+        subject_project_id => $project->project_id(),
+        type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+    });
+    my $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
+    my $genotyping_project = $self->get_schema()->resultset("Project::Project")->find ({
+        project_id => $genotyping_project_id
+    });
+    my $genotyping_project_name = $genotyping_project->name();
+    print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
 
      $design->{$plot_number}->{genotyping_user_id} = $genotyping_user_id;
      # print STDERR "RETRIEVED: genotyping_user_id: $design->{genotyping_user_id}\n";
