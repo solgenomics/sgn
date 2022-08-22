@@ -112,7 +112,7 @@ jobs:
 
       - name: Set tag
         id: vars
-        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:$(sed -nE "s/version (.*)/\1/p" sgn.conf))
+        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:$(sed -nE "s/^version (.*)/\1/p" sgn.conf))
         
       - name: Build Docker and push image
         working-directory: ./breedbase_dockerfile
