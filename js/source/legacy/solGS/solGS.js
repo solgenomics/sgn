@@ -50,8 +50,6 @@ solGS.submitJob = {
      var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
      if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-
       if (!args) {
         args = { training_traits_ids: trainingTraitsIds };
       } else {
@@ -793,7 +791,6 @@ solGS.getTrainingTraitsIds = function () {
 solGS.getModelArgs = function () {
   var args = this.getTrainingPopArgs();
   var trainingTraitsIds = this.getTrainingTraitsIds();
-  console.log("training traits ids: " + trainingTraitsIds);
   if (trainingTraitsIds) {
     args["training_traits_ids"] = trainingTraitsIds;
   }
