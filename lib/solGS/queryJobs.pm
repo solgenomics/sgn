@@ -199,6 +199,8 @@ sub genotypes_list_genotype_data {
     my $model = $self->get_model();
     my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids, $protocol_id);
 
+    ###empty cached geno file first
+    write_file($geno_file);
     $self->write_geno_data($search_obj, $geno_file);
 
 }
@@ -247,6 +249,8 @@ sub dataset_genotype_data {
 		my $protocol_id = $args->{genotyping_protocol_id};
       	my $search_obj = $model->get_dataset_genotype_data($dataset_id);
 		my $geno_file = $args->{genotype_file};
+        ###empty cached dataset geno file first
+        write_file($geno_file);
    		$self->write_geno_data($model, $search_obj, $geno_file);
 	}
 
