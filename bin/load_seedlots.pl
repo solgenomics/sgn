@@ -11,12 +11,13 @@ use Getopt::Long;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 
-my ( $dbhost, $dbname, $file, $username, $test );
+my ( $dbhost, $dbname, $file, $username, $test, $weight_file );
 
 GetOptions(
     'i=s'        => \$file,
     'u=s'        => \$username,
     't'          => \$test,
+    'w=s'        => \$weight_file,
     'dbname|D=s' => \$dbname,
     'dbhost|H=s' => \$dbhost,
 );
@@ -28,6 +29,18 @@ my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 						 RaiseError => 1}
 				    }
     );
+
+
+my %weights;
+if ($weight_file) {
+    open(my $F, "<", $weight_file) || die "Can't open file $weight_file...";
+    while (<$F>) {
+	chomp;
+	my ($seedlot_name, $current_weight) = split /\t/;
+	
+	$weights{$seedlot_name} = $current_weight;
+    }
+}
 
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] }
 					  );
@@ -87,7 +100,7 @@ while (<$F>) {
     $transaction->factor(1);
     $transaction->from_stock( [ $accession_id, $accession_name ] );
     $transaction->to_stock( [ $seedlot_id, $seedlot_name ] );
-    $transaction->amount(10);
+    $transaction->amount($weights{$seedlot_name});
     $transaction->operator('admin');
     $transaction->store();
     
