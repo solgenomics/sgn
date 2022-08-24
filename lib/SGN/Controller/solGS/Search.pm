@@ -305,18 +305,9 @@ sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
 sub check_training_population :Path('/solgs/check/training/population/') Args() {
     my ($self, $c) = @_;
 
-    # my @pop_ids = $c->req->param('population_ids[]');
-    # my $protocol_id = $c->req->param('genotyping_protocol_id');
-
     $c->controller('solGS::Utils')->stash_json_args($c, $c->req->param('arguments'));
-
     my @pop_ids = $c->stash->{population_ids};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    print STDERR "\n pop_ids: @pop_ids -- protocol_id: $protocol_id\n";
-
-    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    # $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my @gs_pop_ids;
 
@@ -372,25 +363,15 @@ sub search_selection_pops :Path('/solgs/search/selection/populations/') {
 sub check_selection_population_relevance :Path('/solgs/check/selection/population/relevance') Args() {
     my ($self, $c) = @_;
 
-    my $training_pop_id    = $c->req->param('training_pop_id');
-    my $selection_pop_name = $c->req->param('selection_pop_name');
-    my $trait_id           = $c->req->param('trait_id');
-    my $protocol_id        = $c->req->param('genotyping_protocol_id');
-
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-	$c->stash->{trait_id} = $trait_id;
+    $c->controller('solGS::Utils')->stash_json_args($c, $c->req->param('arguments'));
+    my $selection_pop_name = $c->stash->{'selection_pop_name'};
+    my $training_pop_id    = $c->stash->{'training_pop_id'};
+    my $protocol_id = $c->stash->{'genotyping_protocol_id'};
 
     my $referer = $c->req->referer;
 
-    if ($referer =~ /combined\//)
-    {
-	$c->stash->{data_set_type} = 'combined populations';
-	$c->stash->{combo_pops_id} = $training_pop_id;
-    }
-
-    my $pr_rs = $self->model($c)->project_details_by_exact_name($selection_pop_name);
-
     my $selection_pop_id;
+    my $pr_rs = $self->model($c)->project_details_by_exact_name($selection_pop_name);
     while (my $row = $pr_rs->next) {
 	$selection_pop_id = $row->project_id;
     }
