@@ -100,28 +100,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->driver->refresh();
     sleep(3);
-    #
-    # # $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="Single kasese trial"]', 'xpath', 'select clones list')->click();
-    # # sleep(2);
-    # # $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
-    # # sleep(3);
-    # # $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
-    # # sleep(2);
-    # # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    # # sleep(80);
-    # #
-    # # my $sel = $d->find_element('//div[@class="list_upload"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
-    # # my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel);
-    # # sleep(2);
-    # #
-    # # $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
-    # # sleep(4);
-    # # $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
-    # # sleep(3);
-    # #
-    # # $d->driver->refresh();
-    # # sleep(3);
-
+    
     `rm -r $cache_dir`;
     sleep(3);
 
@@ -167,26 +146,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(140);
     $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
     sleep(4);
 
     $d->driver->refresh();
     sleep(3);
-
-    # $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="Dataset trial kasese"]', 'xpath', 'select clones list')->click();
-    # sleep(2);
-    # $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
-    # sleep(3);
-    # $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
-    # sleep(2);
-    # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    # sleep(120);
-    # $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
-    # sleep(4);
-    #
-    # $d->driver->refresh();
-    # sleep(3);
 
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
     sleep(2);
@@ -195,7 +160,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(160);
     $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
     sleep(4);
 
@@ -217,9 +182,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(90);
+    sleep(120);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(10);
+    sleep(3);
 
     # $d->get_ok('/kinship/analysis/dataset_4/gp/1', 'cluster home page');
     # sleep(20);
@@ -252,7 +217,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('run_kinship', 'id', 'select k number')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(120);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel);
     sleep(2);
@@ -341,7 +306,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Kinship', 'partial_link_text', 'toogle kinship')->click();
     sleep(5);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
-    sleep(60);
+    sleep(120);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel);
     sleep(2);
@@ -361,7 +326,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('nacrri');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(3);
@@ -392,7 +357,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('nacrri');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(3);
@@ -458,7 +423,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Kinship', 'partial_link_text', 'toogle kinship')->click();
     sleep(5);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
-    sleep(90);
+    sleep(120);
     $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
     sleep(4);
 
