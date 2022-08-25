@@ -1,6 +1,25 @@
 
+=head1 NAME
 
-# seedlot_name 	accession_name 	operator_name 	amount 	weight(g) 	description 	box_name 	quality 	source
+load_seedlots.pl - load seedlot data into a Breedbase database
+
+=head1 DESCRIPTION
+
+perl load_seedlots.pl -i seedlot_file -u username [-t] -D dbname -H dbhost 
+
+structure of the file columns:
+
+seedlot_name 	accession_name 	operator_name 	amount 	weight(g) 	description 	box_name 	quality 	source
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=head1 DATE
+
+Summer 2022
+
+=cut
 
 
 use strict;
@@ -17,10 +36,10 @@ GetOptions(
     'i=s'        => \$file,
     'u=s'        => \$username,
     't'          => \$test,
-    'w=s'        => \$weight_file,
     'dbname|D=s' => \$dbname,
     'dbhost|H=s' => \$dbhost,
-);
+    'w=s'        => \$weight_file,
+    );
 
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
@@ -33,13 +52,15 @@ my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 
 my %weights;
 if ($weight_file) {
-    open(my $F, "<", $weight_file) || die "Can't open file $weight_file...";
+    open(my $F, "<", $weight_file) || die "Can't open file $file...";
     while (<$F>) {
 	chomp;
 	my ($seedlot_name, $current_weight) = split /\t/;
-	
+
+	print STDERR "SEEDLOT_NAME: $seedlot_name, WEIGHT: $current_weight\n";
 	$weights{$seedlot_name} = $current_weight;
     }
+    close($F);
 }
 
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] }
@@ -95,14 +116,16 @@ while (<$F>) {
 
     my $seedlot_id = $seedlot->seedlot_id();
 
-    my $transaction = CXGN::Stock::Seedlot::Transaction->new( schema => $schema);
-
-    $transaction->factor(1);
-    $transaction->from_stock( [ $accession_id, $accession_name ] );
-    $transaction->to_stock( [ $seedlot_id, $seedlot_name ] );
-    $transaction->amount($weights{$seedlot_name});
-    $transaction->operator('admin');
-    $transaction->store();
+    if ($weights{$seedlot_name}) { 
+	my $transaction = CXGN::Stock::Seedlot::Transaction->new( schema => $schema);
+	
+	$transaction->factor(1);
+	$transaction->from_stock( [ $accession_id, $accession_name ] );
+	$transaction->to_stock( [ $seedlot_id, $seedlot_name ] );
+	$transaction->amount($weights{$seedlot_name});
+	$transaction->operator('admin');
+	$transaction->store();
+    }
     
     
 
