@@ -114,16 +114,13 @@ if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
     readFilteredGenoData <- 1
 }
 
-
 if (is.null(filteredGenoData)) {
     genoData <- fread(genoFile,
                       na.strings = c("NA", "", "--", "-"),
                       header = TRUE)
-
     genoData <- unique(genoData, by='V1')
     genoData <- data.frame(genoData)
     genoData <- column_to_rownames(genoData, 'V1')
-
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
     genoData <- filterGenoData(genoData, maf=0.01)
@@ -132,7 +129,6 @@ if (is.null(filteredGenoData)) {
     filteredGenoData   <- genoData
 
 }
-
 genoData <- genoData[order(row.names(genoData)), ]
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
@@ -200,8 +196,6 @@ if (datasetInfo == 'combined populations') {
 
      } else {
          message('phenoTrait trait_abbr ', traitAbbr)
-         print(class(traitAbbr))
-         print(traitAbbr)
          phenoTrait <- getAdjMeans(phenoData,
                                    traitName = traitAbbr,
                                    calcAverages = TRUE)
@@ -248,20 +242,22 @@ filteredPredGenoData     <- c()
 ##   selectionData[, 1]      <- NULL
 
 ## } else
+
 if (length(selectionFile) != 0) {
 
     selectionData <- fread(selectionFile,
                            header = TRUE,
                            na.strings = c("NA", "", "--", "-"))
 
-    selectionData <- unique(selectionData, by='V1')
-    selectionData <- data.frame(selectionData)
-    selectionData <- column_to_rownames(selectionData, 'V1')
+  selectionData <- data.frame(selectionData)
+   
 
+    selectionData <- unique(selectionData, by='V1')
+   
+    selectionData <- column_to_rownames(selectionData, 'V1')
     selectionData <- convertToNumeric(selectionData)
     selectionData <- filterGenoData(selectionData, maf=0.01)
     selectionData <- roundAlleleDosage(selectionData)
-
     filteredPredGenoData <- selectionData
 }
 
@@ -323,7 +319,6 @@ if (length(selectionData) != 0 ) {
   }
 }
 
-print(genoData[1:5, ])
 ordered.markerEffects <- c()
 trGEBV                <- c()
 validationAll         <- c()
@@ -359,12 +354,11 @@ if (length(relationshipMatrixFile) != 0) {
 
   } else {
     relationshipMatrix           <- A.mat(genoData)
-    diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
+  diag(relationshipMatrix)     <- diag(relationshipMatrix) %>% replace(., . < 1, 1)
+relationshipMatrix <- relationshipMatrix %>% replace(., . < 0, 0)
 
     inbreeding <- diag(relationshipMatrix)
     inbreeding <- inbreeding - 1
-
-    inbreeding <- inbreeding %>% replace(., . < 0, 0)
     inbreeding <- data.frame(inbreeding)
 
     inbreeding <- inbreeding %>%
@@ -387,8 +381,6 @@ traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in%
 traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% rownames(commonObs))]
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
-
-#relationshipMatrixFiltered <- relationshipMatrixFiltered + 1e-3
 
 nCores <- detectCores()
 
