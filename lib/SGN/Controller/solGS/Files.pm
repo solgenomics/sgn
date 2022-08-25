@@ -70,7 +70,7 @@ sub model_phenodata_file {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-    my $id =   "${pop_id}-${trait_abbr}-${protocol_id}";
+    my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     if ($trait_abbr)
     {
 	no warnings 'uninitialized';
@@ -93,7 +93,7 @@ sub model_genodata_file {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-    my $id =   "${pop_id}-${trait_abbr}-${protocol_id}";
+    my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     if ($trait_abbr)
     {
 	no warnings 'uninitialized';
