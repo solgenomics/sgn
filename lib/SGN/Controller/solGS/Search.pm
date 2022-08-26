@@ -326,14 +326,17 @@ sub check_training_population :Path('/solgs/check/training/population/') Args() 
         }
     }
 
-	my $pr_rs = $self->model($c)->project_details(\@gs_pop_ids);
-	$self->projects_links($c, $pr_rs);
-	my $training_pop_data = $c->stash->{projects_pages};
+    my $training_pop_data;
+    my $ret = {is_training_population => 0};
+    if (@gs_pop_ids) {
+        my $pr_rs = $self->model($c)->project_details(\@gs_pop_ids);
+        $self->projects_links($c, $pr_rs);
+        $training_pop_data = $c->stash->{projects_pages};
+        $ret->{is_training_population} =  1 if @gs_pop_ids;
+        $ret->{training_pop_data} = $training_pop_data;
+    }
 
-    my $ret->{is_training_population} =  1 if @gs_pop_ids;
-    $ret->{training_pop_data} = $training_pop_data;
     $ret = to_json($ret);
-
     $c->res->content_type('application/json');
     $c->res->body($ret);
 
