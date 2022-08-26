@@ -854,7 +854,11 @@ solGS.getPopulationDetails = function () {
 solGS.showMessage = function (divId, msg) {
   divId = divId.match(/#/) ? divId : "#" + divId;
 
-  jQuery(divId).html(msg).show();
+  jQuery(divId)
+    .html(msg)
+    .show()
+    .delay(4000)
+    .fadeOut('slow');
 };
 
 solGS.checkPageType = function () {
