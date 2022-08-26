@@ -15,6 +15,7 @@ export function init() {
             this.heatmap_selected = false;
             this.heatmap_selection = String;
             this.heatmap_object = Object;
+            this.display_borders = true;
         }
 
         set_id(trial_id) {
@@ -179,13 +180,26 @@ export function init() {
                 }
                 final_arr.push(...plot_arr);
             }
-            var csv = [planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 'plot_Number', 'plot_Name', 'accession_Name'].join(',');
+
+            var csv = [
+                planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 
+                'trial_name',
+                'plot_Number', 
+                'plot_Name', 
+                'accession_Name'
+            ].join(',');
             csv += "\n";
             final_arr = final_arr.filter(plot => plot !== undefined);
             let order_number = 1;
             final_arr.forEach(function(plot) {
-                    csv += [order_number++, plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName,].join(',');
-                    csv += "\n";
+                csv += [
+                    order_number++, 
+                    plot.studyName,
+                    plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", 
+                    plot.observationUnitName, 
+                    plot.germplasmName
+                ].join(',');
+                csv += "\n";
             });
     
             var hiddenElement = document.createElement('a');
@@ -201,7 +215,7 @@ export function init() {
         }
 
         get_planting_order() {
-            this.traverse_map(this.plot_arr, 'planting_order_layout');
+            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'planting_order_layout');
         }
 
         set_meta_data() {
@@ -243,6 +257,7 @@ export function init() {
             this.meta_data.num_rows = max_row - min_row + 1;
             this.meta_data.num_cols = max_col - min_col + 1;
             this.meta_data.max_level_code = max_level_code;
+            this.meta_data.display_borders = !jQuery("#include_linked_trials_checkmark").is(":checked");
         }
 
         fill_holes() {
@@ -354,11 +369,13 @@ export function init() {
         }
 
         add_borders() {
-            this.add_border("left_border_selection", "col", this.meta_data.min_col - 1);
-            this.add_border("top_border_selection", "row", this.meta_data.min_row - 1);
-            this.add_border("right_border_selection", "col", this.meta_data.max_col + 1);
-            this.add_border("bottom_border_selection", "row", this.meta_data.max_row + 1);
-            this.add_corners();
+            if ( this.meta_data.display_borders ) {
+                this.add_border("left_border_selection", "col", this.meta_data.min_col - 1);
+                this.add_border("top_border_selection", "row", this.meta_data.min_row - 1);
+                this.add_border("right_border_selection", "col", this.meta_data.max_col + 1);
+                this.add_border("bottom_border_selection", "row", this.meta_data.max_row + 1);
+                this.add_corners();
+            }
         }
 
 
@@ -569,17 +586,17 @@ export function init() {
             }
 
             var get_plot_message = function(plot) {
-                if (plot.type != "data") {
-                    return "Plot Name: " + plot.observationUnitName;
-                } else {
-                    return ` 
-                        <strong>Plot Name:</strong> ${plot.observationUnitName}<br />
-                        <strong>Plot Number:</strong> ${plot.observationUnitPosition.observationLevel.levelCode}<br />
+                let html = jQuery("#include_linked_trials_checkmark").is(":checked") ?
+                    `<strong>Trial Name:</strong> ${plot.studyName}<br />` :
+                    "";
+                html += `<strong>Plot Name:</strong> ${plot.observationUnitName}<br />`;
+                if ( plot.type == "data" ) {
+                    html += `<strong>Plot Number:</strong> ${plot.observationUnitPosition.observationLevel.levelCode}<br />
                         <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
                         <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />
-                        <strong>Accession Name:</strong> ${plot.germplasmName}
-                    `
+                        <strong>Accession Name:</strong> ${plot.germplasmName}`
                 }
+                return html;
             }
 
             var handle_mouseover = function(d) {
@@ -618,14 +635,30 @@ export function init() {
                 return y;
             }
 
-            var width = this.meta_data.left_border_selection ? this.meta_data.num_cols + 3 : this.meta_data.num_cols + 2;
-            width = this.meta_data.right_border_selection ? width + 1 : width;
-            var height = this.meta_data.top_border_selection ? this.meta_data.num_rows + 3 : this.meta_data.num_rows + 2;
-            height = this.meta_data.bottom_border_selection ? height + 1 : height;
-            var row_increment = this.meta_data.invert_row_checkmark ? 1 : 0;
-            row_increment = this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? row_increment + 1 : row_increment;
-            var y_offset = this.meta_data.top_border_selection && !this.meta_data.invert_row_checkmark ? 50 : 0;
-            var col_increment = this.meta_data.left_border_selection ? 1 : 0;
+            var width = this.meta_data.display_borders && this.meta_data.left_border_selection ? 
+                this.meta_data.num_cols + 3 : 
+                this.meta_data.num_cols + 2;
+            width = this.meta_data.display_borders && this.meta_data.right_border_selection ? 
+                width + 1 : 
+                width;
+            var height = this.meta_data.display_borders && this.meta_data.top_border_selection ? 
+                this.meta_data.num_rows + 3 : 
+                this.meta_data.num_rows + 2;
+            height = this.meta_data.display_borders && this.meta_data.bottom_border_selection ? 
+                height + 1 : 
+                height;
+            var row_increment = this.meta_data.invert_row_checkmark ?
+                1 : 
+                0;
+            row_increment = this.meta_data.display_borders && this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ?
+                row_increment + 1 : 
+                row_increment;
+            var y_offset = this.meta_data.display_borders && this.meta_data.top_border_selection && !this.meta_data.invert_row_checkmark ? 
+                50 : 
+                0;
+            var col_increment = this.meta_data.display_borders && this.meta_data.left_border_selection ? 
+                1 : 
+                0;
 
             var min_row = this.meta_data.min_row;
             var max_row = this.meta_data.max_row;
@@ -721,7 +754,7 @@ export function init() {
             var row_labels_col = 1;
             var col_labels_row = 0;
             if (!this.meta_data.invert_row_checkmark) {
-                col_labels_row = this.meta_data.bottom_border_selection ? num_rows + 1 : num_rows;
+                col_labels_row = this.meta_data.display_borders && this.meta_data.bottom_border_selection ? num_rows + 1 : num_rows;
                 row_label_arr.reverse();
             }
 
@@ -731,7 +764,7 @@ export function init() {
                 .attr("x", (row_labels_col * 50 - 25))
                 .attr("y", (label, i) => { 
                     let y = this.meta_data.invert_row_checkmark ? i+1 : i;
-                    y = this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? y+1 : y;
+                    y = this.meta_data.display_borders && this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? y+1 : y;
                     return y * 50 + 45 + y_offset;
                 })
                 .text((label) => { return label });
