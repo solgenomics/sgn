@@ -64,15 +64,15 @@ sub solgs_population_search_autocomplete_GET :Args() {
         {
             if (!$is_computation)
             {
-            push @response_list, $row->name;
+                push @response_list, $row->name;
             }           
         }  
     else
 	{  
         my $has_phenotype = $c->controller('solGS::Search')->model($c)->has_phenotype($pop_id);            
-        if (!$is_computation && $has_phenotype)
+        if ($has_phenotype && !$is_computation)
         {
-        push @response_list, $row->name;
+            push @response_list, $row->name;
         }
      }
     }
