@@ -216,7 +216,7 @@ $maintenance_enabled => undef
                                                 </div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="col-sm-3 control-label">Description: </label>
+                                                <label class="col-sm-3 control-label">Transaction Description: </label>
                                                 <div class="col-sm-9" >
                                                     <input class="form-control" id="transaction_new_seedlot_description" placeholder="Optional">
                                                 </div>
@@ -248,7 +248,7 @@ $maintenance_enabled => undef
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Description: </label>
+                    <label class="col-sm-3 control-label">Transaction Description: </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_transaction_description" placeholder="Required">
                     </div>
@@ -297,6 +297,12 @@ $maintenance_enabled => undef
                     <label class="col-sm-3 control-label">Seedlot Name: </label>
                     <div class="col-sm-9" >
                         <input class="form-control" type="text" id="edit_seedlot_details_uniquename" value="LOADING..."/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Seedlot Description: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_description" value="LOADING..."/>
                     </div>
                 </div>
                 <div class="form-group">
@@ -412,7 +418,7 @@ $maintenance_enabled => undef
             { title: "Transaction Num Seeds", "data": "value" },
             { title: "Transaction Weight (g)", "data": "weight" },
             { title: "Operator", "data": "operator" },
-            { title: "Description", "data": "description" },
+            { title: "Transaction Description", "data": "transaction_description" },
             { title: "Options", "data": "null", "render" : function ( data, type, row ) { return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>"; } },
         ],
     });
@@ -425,6 +431,7 @@ $maintenance_enabled => undef
                 jQuery('#seedlot_location_code_div').html(response.location_code);
                 jQuery('#seedlot_breeding_program_div').html(response.breeding_program);
                 jQuery('#edit_seedlot_details_uniquename').val(response.uniquename);
+                jQuery('#edit_seedlot_details_description').val(response.seedlot_description);
                 jQuery('#edit_seedlot_details_breeding_program').val(response.breeding_program);
                 jQuery('#edit_seedlot_details_organization').val(response.organization_name);
                 jQuery('#edit_seedlot_details_population').val(response.population_name);
@@ -505,7 +512,7 @@ $maintenance_enabled => undef
                 to_new_seedlot_timestamp = jQuery('#transaction_new_seedlot_timestamp').val();
                 to_new_seedlot_description = jQuery('#transaction_new_seedlot_description').val();
                 to_new_seedlot_quality = jQuery('#transaction_new_seedlot_quality').val();
-  
+
                 if (to_new_seedlot_accession_name == '' && to_new_seedlot_cross_name == '') {
                     alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
                 }
@@ -529,12 +536,11 @@ $maintenance_enabled => undef
         var amount = jQuery('#seedlot_transaction_amount').val();
         var weight = jQuery('#seedlot_transaction_weight').val();
         var timestamp = jQuery('#seedlot_transaction_timestamp').val();
-        var description = jQuery('#seedlot_transaction_description').val();
+        var transaction_description = jQuery('#seedlot_transaction_description').val();
 
         if (factor == '') { alert("Please provide a factor"); }
         else if (amount == '' && weight == '') { alert("Please provide an amount OR a weight in grams"); }
         else if (timestamp == '') { alert("Please provide a timestamp"); }
-        else if (description == '') { alert("Please provide a description"); }
         else if (from_existing_seedlot_id == '' && to_existing_seedlot_id == '' && to_new_seedlot_name == '') { alert("Please provide seed lot"); }
         else {
 
@@ -546,7 +552,7 @@ $maintenance_enabled => undef
                     'amount': amount,
                     'weight': weight,
                     'timestamp': timestamp,
-                    'description': description,
+                    'transaction_description': transaction_description,
                     'from_existing_seedlot_id': from_existing_seedlot_id,
                     'to_existing_seedlot_id': to_existing_seedlot_id,
                     'to_new_seedlot_name' : to_new_seedlot_name,
@@ -614,7 +620,7 @@ $maintenance_enabled => undef
         var operator = jQuery('#edit_seedlot_transaction_operator').val();
         var amount = jQuery('#edit_seedlot_transaction_amount').val();
         var weight = jQuery('#edit_seedlot_transaction_weight').val();
-        var description = jQuery('#edit_seedlot_transaction_description').val();
+        var transaction_description = jQuery('#edit_seedlot_transaction_description').val();
         var timestamp = jQuery('#edit_seedlot_transaction_timestamp').val();
         if (transaction_id == ''){
             alert('Transaction ID must not be blank');
@@ -663,6 +669,7 @@ $maintenance_enabled => undef
 
     jQuery('#edit_seedlot_details_button').click(function(){
         var uniquename = jQuery('#edit_seedlot_details_uniquename').val();
+        var seedlot_description = jQuery('#edit_seedlot_details_description').val();
         var breeding_program = jQuery('#edit_seedlot_details_breeding_program').val();
         var organization = jQuery('#edit_seedlot_details_organization').val();
         var population = jQuery('#edit_seedlot_details_population').val();
@@ -688,6 +695,7 @@ $maintenance_enabled => undef
                 url: '/ajax/breeders/seedlot/<% $seedlot_id %>/edit',
                 data: {
                     'uniquename':uniquename,
+                    'seedlot_description':seedlot_description,
                     'breeding_program':breeding_program,
                     'organization':organization,
                     'population':population,

@@ -131,6 +131,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
     $c->stash->{rest} = {
         success => 1,
         uniquename => $c->stash->{seedlot}->uniquename(),
+        seedlot_description => $c->stash->{seedlot}->description(),
         seedlot_id => $c->stash->{seedlot}->seedlot_id(),
         current_count => $c->stash->{seedlot}->current_count(),
         current_weight => $c->stash->{seedlot}->current_weight(),
@@ -161,6 +162,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     my $saved_seedlot_name = $seedlot->uniquename;
     my $seedlot_name = $c->req->param('uniquename');
+    my $seedlot_description = $c->req->param('seedlot_description');
     my $breeding_program_name = $c->req->param('breeding_program');
     my $organization = $c->req->param('organization');
     my $population = $c->req->param('population');
@@ -395,7 +397,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $amount = $c->req->param("seedlot_amount");
     my $weight = $c->req->param("seedlot_weight");
     my $timestamp = $c->req->param("seedlot_timestamp");
-    my $description = $c->req->param("seedlot_description");
+    my $description = $c->req->param("seedlot_transaction_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
     if (!$weight && !$amount){
