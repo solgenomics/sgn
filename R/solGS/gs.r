@@ -83,6 +83,8 @@ markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 #traitPhenoFile <- paste("trait_phenotype_data", traitId, sep = "_")
 modelPhenoFile <- grep('model_phenodata', outputFiles, value = TRUE)
 message('model input trait pheno file ', modelPhenoFile)
+modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
+message('model input trait geno file ', modelPhenoFile)
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, value = TRUE)
@@ -651,7 +653,7 @@ if (length(combinedGebvsFile) != 0 ) {
 }
 
 
-if (!is.null(modelPhenoData) & length(modelPhenoFile) != 0) {
+if (!is.null(modelPhenoData) && length(modelPhenoFile) != 0) {
 
     if (!is.null(meanType)) {
         colnames(modelPhenoData) <- meanType
@@ -665,7 +667,17 @@ if (!is.null(modelPhenoData) & length(modelPhenoFile) != 0) {
            )
 }
 
-if (!is.null(traitRawPhenoData) & length(traitRawPhenoFile) != 0) {
+if (!is.null(genoDataFilteredObs) && length(modelGenoFile) != 0) {
+
+    fwrite(genoDataFilteredObs,
+           file  = modelGenoFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
+}
+
+if (!is.null(traitRawPhenoData) && length(traitRawPhenoFile) != 0) {
 
     fwrite(traitRawPhenoData,
            file  = traitRawPhenoFile,
