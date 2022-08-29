@@ -182,22 +182,26 @@ export function init() {
             }
 
             var csv = [
-                planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 
+                planting_or_harvesting_order_layout == "planting_order_layout" ? 'planting_order': "harvesting_order",
+                'location_name',
                 'trial_name',
-                'plot_Number', 
-                'plot_Name', 
-                'accession_Name'
+                'plot_number',
+                'plot_name',
+                'accession_name',
+                'seedlot_name',
             ].join(',');
             csv += "\n";
             final_arr = final_arr.filter(plot => plot !== undefined);
             let order_number = 1;
             final_arr.forEach(function(plot) {
                 csv += [
-                    order_number++, 
+                    order_number++,
+                    "\"" + plot.locationName + "\"",
                     plot.studyName,
-                    plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", 
-                    plot.observationUnitName, 
-                    plot.germplasmName
+                    plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A",
+                    plot.observationUnitName,
+                    plot.germplasmName,
+                    plot.seedLotName ? plot.seedLotName : ''
                 ].join(',');
                 csv += "\n";
             });
@@ -205,7 +209,6 @@ export function init() {
             var hiddenElement = document.createElement('a');
             hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
             hiddenElement.target = '_blank';
-            
             hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data[planting_or_harvesting_order_layout]}_${planting_or_harvesting_order_layout}.csv`;
             hiddenElement.click();    
         }

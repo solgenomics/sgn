@@ -176,7 +176,7 @@ $data_level => 'plot'
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
                 <label>Plot Layout</label>
-                <select class="form-control" name="plot_layout" id="plot_layout" class="fieldmap_edit">
+                <select class="form-control fieldmap_edit" name="plot_layout" id="plot_layout">
                     <option value="">--Select Plot Layout--</option>
                     <option value="serpentine">Serpentine</option>
                     <option value="zigzag">Zigzag</option>
@@ -184,7 +184,7 @@ $data_level => 'plot'
             </div>
             <div clas="form-inline">
                 <label for="invert_row_checkmark">Invert Rows</label>
-                <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes" class="fieldmap_edit">
+                <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
             </div>
         </div>
         <br />
@@ -647,8 +647,6 @@ jQuery(document).ready( function() {
    
 
     function field_map_view() {
-        console.log("--> FIELD MAP VIEW");
-        
         jQuery("#ctrldiv").css("display", "none");
         jQuery.ajax({
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
