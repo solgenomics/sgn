@@ -798,6 +798,22 @@ solGS.getModelArgs = function () {
   return args;
 };
 
+solGS.getSelectionPopArgs = function () {
+  var args = this.getModelArgs();
+  var selPopGenoProtocolId = jQuery('#selection_pop_genotyping_protocol_id').val();
+  var selPopId =  jQuery('#selection_pop_id').val();
+
+  if (!selPopGenoProtocolId ) {
+    selPopGenoProtocolId = jQuery('#genotyping_protocol_id').val();
+  }
+  if (selPopGenoProtocolId) {
+    args["selection_pop_genotyping_protocol_id"] = selPopGenoProtocolId;
+    args["selection_pop_id"] = selPopId;
+  }
+
+  return args;
+};
+
 solGS.getTrainingPopArgs = function () {
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
