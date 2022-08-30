@@ -94,7 +94,7 @@ function checkSelectionPopulationRelevance (popName) {
     var combinedPopsId = jQuery("#combo_pops_id").val();
     var dataSetType;
 
-    var traitId = jQuery('#trait_id').val();
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
     var protocolId = jQuery('#genotyping_protocol_id').val();
 
     if (combinedPopsId) {
@@ -108,23 +108,22 @@ function checkSelectionPopulationRelevance (popName) {
     var popData = {
 	'selection_pop_name' : popName,
 	'training_pop_id'    : trainingPopId,
-	'trait_id'           : traitId,
+	'training_traits_ids'   : trainingTraitsIds,
 	'data_set_type'      : dataSetType,
 	'genotyping_protocol_id': protocolId,
     };
 
+	popData = JSON.stringify(popData);
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: popData,
+		data: {arguments: popData},
         url: '/solgs/check/selection/population/relevance/',
         success: function(response) {
 
 	    var selectionPopId = response.selection_pop_id;
 	    if (selectionPopId) {
-		console.log('tr pop id ' + trainingPopId)
-		console.log('se pop id ' + selectionPopId)
-
+		
 		if (selectionPopId != trainingPopId) {
 
 		    if (response.similarity >= 0.5 ) {

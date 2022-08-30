@@ -112,16 +112,19 @@ function listAllTrials (trials)  {
 
 function checkTrainingPopulation (popIds) {
 
-    var protocolId = jQuery('#genotyping_protocol_id').val();
 	var resultDivId   = '#searched_trials_div';
 	var tableId = '#searched_trials_table';
 	var msgDiv = '#searched_trials_message';
+	var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
-    jQuery.ajax({
+	var args = {'population_ids': popIds, 'genotyping_protocol_id': protocolId };
+	args = JSON.stringify(args);
+	
+    jQuery.ajax({ 
         type: 'POST',
         dataType: 'json',
         url: '/solgs/check/training/population',
-        data: {'population_ids' : popIds, 'genotyping_protocol_id': protocolId},
+        data: {'arguments': args},
         success: function(response) {
             if (response.is_training_population) {
 			jQuery(msgDiv).hide();

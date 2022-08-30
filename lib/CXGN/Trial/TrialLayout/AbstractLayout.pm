@@ -97,7 +97,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout... ($args->{trial_id})\n";
+    # print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout... ($args->{trial_id})\n";
 
     $self->_build_cvterm_hash();
 }
@@ -309,8 +309,8 @@ sub _get_design_from_trial {
     my $design = decode_json $trial_layout_json->value if ($trial_layout_json);
 
     if (keys(%$design)) {
-        print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
-	    print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
+        # print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
+	    # print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
 
 	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
 	    if ($trial_has_plants){

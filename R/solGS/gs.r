@@ -117,16 +117,13 @@ if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)
     readfilteredTrainingGenoData <- 1
 }
 
-
-if (is.null(filteredTrainingGenoData)) {
+if (is.null(filteredGenoData)) {
     genoData <- fread(genoFile,
                       na.strings = c("NA", "", "--", "-"),
                       header = TRUE)
-
     genoData <- unique(genoData, by='V1')
     genoData <- data.frame(genoData)
     genoData <- column_to_rownames(genoData, 'V1')
-
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
     genoData <- filterGenoData(genoData, maf=0.01)
@@ -135,7 +132,6 @@ if (is.null(filteredTrainingGenoData)) {
     filteredTrainingGenoData   <- genoData
 
 }
-
 genoData <- genoData[order(row.names(genoData)), ]
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
@@ -195,7 +191,6 @@ if (datasetInfo == 'combined populations') {
          phenoTrait <- subset(formattedPhenoData, select = c('V1', traitAbbr))
          phenoTrait <- as.data.frame(phenoTrait)
          phenoTrait <- na.omit(phenoTrait)
-         print(head(phenoTrait))
          colnames(phenoTrait)[1] <- 'genotypes'
 
      } else if (length(grep('list', phenoFile)) != 0) {
@@ -203,11 +198,7 @@ if (datasetInfo == 'combined populations') {
          phenoTrait <- averageTrait(phenoData, traitAbbr)
 
      } else {
-         print(head(phenoTrait))
-          print(head(phenoData))
          message('phenoTrait trait_abbr ', traitAbbr)
-         print(class(traitAbbr))
-         print(traitAbbr)
          phenoTrait <- getAdjMeans(phenoData,
                                    traitName = traitAbbr,
                                    calcAverages = TRUE)
@@ -222,8 +213,6 @@ if (datasetInfo == 'combined populations') {
 
 }
 
-print('phenoTrait')
-print(head(phenoTrait))
 meanType <- names(phenoTrait)[2]
 names(phenoTrait)  <- c('genotypes', traitAbbr)
 
@@ -256,21 +245,23 @@ filteredPredGenoData     <- c()
 ##   selectionData[, 1]      <- NULL
 
 ## } else
+
 if (length(selectionFile) != 0) {
 
     selectionData <- fread(selectionFile,
                            header = TRUE,
                            na.strings = c("NA", "", "--", "-"))
 
-    selectionData <- unique(selectionData, by='V1')
-    selectionData <- data.frame(selectionData)
-    selectionData <- column_to_rownames(selectionData, 'V1')
+  selectionData <- data.frame(selectionData)
+   
 
+    selectionData <- unique(selectionData, by='V1')
+   
+    selectionData <- column_to_rownames(selectionData, 'V1')
     selectionData <- convertToNumeric(selectionData)
     selectionData <- filterGenoData(selectionData, maf=0.01)
     selectionData <- roundAlleleDosage(selectionData)
-
-    
+    filteredPredGenoData <- selectionData
 }
 
 
@@ -317,10 +308,9 @@ if (length(selectionData) != 0) {
     selectionData <- data.frame(selectionData)
   }
 }
-
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoDataFilteredObs[1, ], value = TRUE)
-if(length(genoTrCode) != 0) {
+if(length(genoTrCode)) {
   genoData            <- genoData - 1
   genoDataFilteredObs <- genoDataFilteredObs - 1
 }
@@ -367,12 +357,11 @@ if (length(relationshipMatrixFile) != 0) {
 
   } else {
     relationshipMatrix           <- A.mat(genoData)
-    diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
+  diag(relationshipMatrix)     <- diag(relationshipMatrix) %>% replace(., . < 1, 1)
+relationshipMatrix <- relationshipMatrix %>% replace(., . < 0, 0)
 
     inbreeding <- diag(relationshipMatrix)
     inbreeding <- inbreeding - 1
-
-    inbreeding <- inbreeding %>% replace(., . < 0, 0)
     inbreeding <- data.frame(inbreeding)
 
     inbreeding <- inbreeding %>%
@@ -396,8 +385,6 @@ traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationship
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
 
-#relationshipMatrixFiltered <- relationshipMatrixFiltered + 1e-3
-
 nCores <- detectCores()
 
 if (nCores > 1) {
@@ -405,7 +392,6 @@ if (nCores > 1) {
 } else {
   nCores <- 1
 }
-
 
 if (length(selectionData) == 0) {
 
@@ -499,6 +485,7 @@ if (length(selectionData) == 0) {
 
       set.seed(4567)
 
+    
       k <- 10
       times <- 2
       cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)

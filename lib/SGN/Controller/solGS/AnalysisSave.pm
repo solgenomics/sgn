@@ -208,7 +208,7 @@ sub check_stored_analysis {
 
 	my $log = $self->analysis_log($c);
 	my $analysis_name = $log->{analysis_name};
-
+print STDERR "\ncheck_stored_analysis analysis name: $analysis_name\n";
 	if ($analysis_name)
 	{
 		my $schema = $self->schema($c);
@@ -310,11 +310,13 @@ sub analysis_log {
 	my $analysis_page = $c->req->referer;
 	my $base = $c->req->base;
 	$base =~ s/(https?)|(:\d+)|\/|://g;
+
 	$base =~ s/(www\.)//;
 	$analysis_page =~ s/(https?:\/\/)//;
 	$analysis_page =~ s/(www\.)//;
-
 	$analysis_page =~ s/$base//;
+	$analysis_page =~ s/:\d+//;
+
 	my @log;
 	foreach my $log_file (@$files)
 	{
