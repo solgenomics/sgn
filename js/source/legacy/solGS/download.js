@@ -23,6 +23,23 @@ solGS.download = {
     return popDataReq;
   },
 
+  getSelectionPopRawDataFiles: function () {
+    var args = solGS.getSelectionPopArgs();
+    args = JSON.stringify(args);
+
+    var popDataReq = jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: {
+        arguments: args,
+      },
+      url: "/solgs/download/selection/pop/data",
+    });
+
+    return popDataReq;
+  },
+
+
   createTrainingPopDownloadLinks: function (res) {
     var genoFile = res.training_pop_raw_geno_file;
     var phenoFile = res.training_pop_raw_pheno_file;
@@ -42,6 +59,22 @@ solGS.download = {
       phenoFileLink;
 
     jQuery("#training_pop_download").prepend(
+      '<p style="margin-top: 20px">' + downloadLinks + "</p>"
+    );
+  },
+
+  createSelectionPopDownloadLinks: function (res) {
+    var genoFile = res.selection_pop_filtered_geno_file;
+    
+    var genoFileName = genoFile.split("/").pop();
+    var genoFileLink =
+      '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+
+    var downloadLinks =
+      " <strong>Download selection population</strong>: " +
+      genoFileLink;
+
+    jQuery("#selection_pop_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
     );
   },
@@ -149,6 +182,8 @@ solGS.download = {
 };
 
 jQuery(document).ready(function () {
+
+  var downloadMsgDiv = "#download_message";
   solGS.checkPageType().done(function (res) {
     if (res.page_type.match(/training population/)) {
       solGS.download.getTrainingPopRawDataFiles().done(function (res) {
@@ -157,7 +192,7 @@ jQuery(document).ready(function () {
 
       solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
         var errorMsg = "Error occured getting training pop raw data files.";
-        jQuery("#download_message").html(errorMsg);
+        solGS.showMessage(downloadMsgDiv, errorMsg)
       });
     } else if (res.page_type.match(/training model/)) {
       solGS.download.getModelInputDataFiles().done(function (res) {
@@ -166,7 +201,7 @@ jQuery(document).ready(function () {
 
       solGS.download.getModelInputDataFiles().fail(function (res) {
         var errorMsg = "Error occured getting model input data files.";
-        jQuery("#download_message").html(errorMsg);
+        solGS.showMessage(downloadMsgDiv, errorMsg)
       });
 
       solGS.download.getValidationFile().done(function (res) {
@@ -175,7 +210,7 @@ jQuery(document).ready(function () {
 
       solGS.download.getValidationFile().fail(function (res) {
         var errorMsg = "Error occured getting model validation file.";
-        jQuery("#validation_download_message").html(errorMsg);
+        solGS.showMessage("#validation_download_message", errorMsg);
       });
 
       solGS.download.getMarkerEffectsFile().done(function (res) {
@@ -184,12 +219,24 @@ jQuery(document).ready(function () {
 
       solGS.download.getMarkerEffectsFile().fail(function (res) {
         var errorMsg = "Error occured getting marker effects file.";
-        jQuery("#marker_effects_download_message").html(errorMsg);
+        solGS.showMessage("#marker_effects_download_message", errorMsg);
+
       });
-    }
+    } else if (res.page_type.match(/selection population/)) {
+        solGS.download.getSelectionPopRawDataFiles().done(function (res) {
+          solGS.download.createSelectionPopDownloadLinks(res);
+        });
+  
+        solGS.download.getSelectionPopRawDataFiles().fail(function (res) {
+          var errorMsg = "Error occured getting selection population genotype data files.";
+          solGS.showMessage(downloadMsgDiv, errorMsg);
+        });
+      }
   });
 
   solGS.checkPageType().fail(function (res) {
-    solGS.alertMessage("Error occured checking for page type.");
+    var errorMsg = "Error occured checking for page type.";
+    solGS.showMessage(downloadMsgDiv, errorMsg)
+
   });
 });
