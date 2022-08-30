@@ -13,6 +13,7 @@ $odk_service => undef
 
 % if ($odk_service eq 'ONA') {
     <& /breeders_toolbox/cross/cross_wishlist.mas &>;
+    <& /breeders_toolbox/cross/edit_cross_wishlist.mas &>;
 %}
 <& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>\@programs, locations=>\@locations &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations &>

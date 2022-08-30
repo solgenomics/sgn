@@ -396,7 +396,7 @@ jQuery(document).ready(function($) {
 
     });
 
-    jQuery("#create_cross_wishlist").click(function() {
+    jQuery('[name="create_cross_wishlist"]').click( function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
         jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));
         jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));

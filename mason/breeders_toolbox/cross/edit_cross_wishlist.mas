@@ -1,0 +1,51 @@
+
+<style>
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }
+}
+</style>
+
+<div class="modal fade" id="edit_cross_wishlist_dialog" name="edit_cross_wishlist_dialog" tabindex="-1" role="dialog" aria-labelledby="editCrossWishlistDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editCrossWishlistDialog">Edit Cross Wishlist</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="well">
+                        <form class="form-horizontal" id="edit_cross_wishlist_select_form_id" name="edit_cross_wishlist_select_form_id">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
+                                <div class="col-sm-8" >
+                                    <div id="edit_cross_wishlist_select_form_id_div">LOADING...</div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function($){
+
+    jQuery('[name="edit_cross_wishlist"]').click( function() {
+        alert('test');
+        jQuery("#edit_cross_wishlist_dialog").modal("show");
+    });
+
+
+});
+
+
+</script>
