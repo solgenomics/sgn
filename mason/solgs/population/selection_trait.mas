@@ -108,3 +108,6 @@ $data_set_type => ''
    training_pop_id  => $training_pop_id,
    selection_pop_id => $selection_pop_id,
 &>
+
+<& /solgs/population/download.mas &>
+
