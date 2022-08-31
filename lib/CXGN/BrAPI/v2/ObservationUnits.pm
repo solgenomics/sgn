@@ -26,7 +26,7 @@ sub search {
     my $status = $self->status;
     my @data_files;
 
-    my $data_level = $params->{observationUnitLevelName} || ['all'];
+    my $data_level = $params->{observationUnitLevelName} ? [$params->{observationUnitLevelName}] : ['all'];
     my $years_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
     my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
     my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
