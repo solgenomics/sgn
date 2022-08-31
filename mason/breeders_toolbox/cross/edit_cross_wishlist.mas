@@ -28,8 +28,13 @@
                             </div>
                         </form>
                     </div>
+                    <center>
+                        <button class="btn btn-primary" id="get_wishlist_form_female_parent" >Retrieve Female Parents from Selected Form</button>
+                    </center>
                 </div>
             </div>
+
+
         </div>
     </div>
 </div>
@@ -40,9 +45,58 @@
 jQuery(document).ready(function($){
 
     jQuery('[name="edit_cross_wishlist"]').click( function() {
-        alert('test');
         jQuery("#edit_cross_wishlist_dialog").modal("show");
     });
+
+    jQuery.ajax ({
+        url : '/ajax/odk/get_crossing_available_forms',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+            jQuery.ajax ({
+                url : '/ajax/odk/get_crossing_saved_ona_forms',
+                success: function(response_forms){
+                    console.log(response_forms);
+
+                    if (response_forms.error){
+                        alert(response.error);
+                    }
+                    if (response_forms.success){
+
+                        var form_dropdown_select_html = '<select class="form-control" id="edit_cross_wishlist_availabe_odk_crossing_forms"><option value="">Not Using ONA</option>';
+                        var allowed_forms = response_forms.odk_ona_forms;
+                        allowed_forms.push('<% $c->config->{odk_crossing_data_test_form_name} %>');
+                        for(var i=0; i<response.forms.length; i++){
+                            if (jQuery.inArray(response.forms[i].id_string, allowed_forms) != -1){
+                                form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+'</option>';
+                            }
+                        }
+                        form_dropdown_select_html = form_dropdown_select_html + '</select>';
+                        jQuery('#edit_cross_wishlist_select_form_id_div').html(form_dropdown_select_html);
+
+                    }
+                    },
+                    error: function(response_forms){
+                        alert("Error retrieving saved ODK ONA forms");
+                    }
+                });
+
+            }
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving available ODK crossing forms");
+        }
+    });
+
 
 
 });
