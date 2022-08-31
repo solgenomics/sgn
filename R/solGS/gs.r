@@ -117,7 +117,7 @@ if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)
     readfilteredTrainingGenoData <- 1
 }
 
-if (is.null(filteredGenoData)) {
+if (is.null(filteredTrainingGenoData)) {
     genoData <- fread(genoFile,
                       na.strings = c("NA", "", "--", "-"),
                       header = TRUE)
