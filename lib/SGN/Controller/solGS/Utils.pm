@@ -147,7 +147,7 @@ sub abbreviate_term {
 	    elsif ($word =~/^[0-9]/)
 	    {
 		my $str_wrd = $word;
-		my @str = $str_wrd =~ /[\d+-\d+]/g;
+		my @str = $str_wrd =~ /[\d+\-\d+]/g;
 		my $str = join("", @str);
 		my @wrd = $word =~ /[A-Za-z]/g;
 		my $wrd = join("", @wrd);
