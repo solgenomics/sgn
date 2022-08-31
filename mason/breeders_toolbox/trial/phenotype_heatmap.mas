@@ -113,7 +113,8 @@ $data_level => 'plot'
                 </div>
             </div>
         </div>
-        <div clas="form-group form-group-sm">
+        <!-- TODO: Enable the display of linked trials -->
+        <div id="include_linked_trials" class="form-group form-group-sm" style="display: none">
             <label for="include_linked_trials_checkmark" class="control-label">Display Linked Trials:</label><br />
             <input type="checkbox" id="include_linked_trials_checkmark" name="invert_row_checkmark">
         </div>
@@ -616,6 +617,22 @@ var num_real_plots;
 
 var trial_ids = [trial_id];
 
+// TODO: Remove this when we get fetch the linked trials from the DB
+var linked_trial_ids = [];
+function display_linked_trials(trials) {
+    if ( trials ) {
+        linked_trial_ids = trials;
+        jQuery("#include_linked_trials").css("display", "block");
+        jQuery("#include_linked_trials_checkmark").prop('checked', false);
+        jQuery("#include_linked_trials_checkmark").click();
+    }
+    else {
+        linked_trials = [];
+        jQuery("#include_linked_trials_checkmark").prop('checked', true);
+        jQuery("#include_linked_trials_checkmark").click();
+        jQuery("#include_linked_trials").css("display", "none");
+    }
+}
 
 jQuery(document).ready( function() {
     var auth_token;
@@ -1139,14 +1156,13 @@ jQuery(document).ready( function() {
     });
 
     jQuery(document).on('change', '#include_linked_trials_checkmark', () => {
-        let include_linked_trials = jQuery("#include_linked_trials_checkmark").is(":checked");
-        
-        // TODO: Get actual list of additional trials
         trial_ids = [trial_id];
+
+        let include_linked_trials = jQuery("#include_linked_trials_checkmark").is(":checked");
         if ( include_linked_trials ) {
-            trial_ids.push(parseInt(trial_id) === 1371 ? 1370 : 1371);
+            // TODO: Get actual list of additional trials
+            trial_ids = trial_ids.concat(linked_trial_ids);
         }
-        console.log("TRIAL IDS: " + JSON.stringify(trial_ids));
         
         jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
         jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
