@@ -83,9 +83,12 @@ markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 #traitPhenoFile <- paste("trait_phenotype_data", traitId, sep = "_")
 modelPhenoFile <- grep('model_phenodata', outputFiles, value = TRUE)
 message('model input trait pheno file ', modelPhenoFile)
+modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
+message('model input trait geno file ', modelPhenoFile)
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
-filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, value = TRUE)
+filteredTrainingGenoFile       <- grep("filtered_training_genotype_data", outputFiles, value = TRUE)
+filteredSelGenoFile       <- grep("filtered_selection_genotype_data", outputFiles, value = TRUE)
 formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
 
 genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
@@ -98,23 +101,23 @@ if (file.info(genoFile)$size == 0) {
   stop("genotype data file is empty.")
 }
 
-readFilteredGenoData <- c()
-filteredGenoData <- c()
+readfilteredTrainingGenoData <- c()
+filteredTrainingGenoData <- c()
 formattedPhenoData <- c()
 phenoData          <- c()
 genoData           <- c()
 
-if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
-    filteredGenoData     <- fread(filteredGenoFile,
+if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
+    filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,
                                   na.strings = c("NA", "", "--", "-"),
                                   header = TRUE)
 
-    genoData <-  data.frame(filteredGenoData)
+    genoData <-  data.frame(filteredTrainingGenoData)
     genoData <- column_to_rownames(genoData, 'V1')
-    readFilteredGenoData <- 1
+    readfilteredTrainingGenoData <- 1
 }
 
-if (is.null(filteredGenoData)) {
+if (is.null(filteredTrainingGenoData)) {
     genoData <- fread(genoFile,
                       na.strings = c("NA", "", "--", "-"),
                       header = TRUE)
@@ -126,7 +129,7 @@ if (is.null(filteredGenoData)) {
     genoData <- filterGenoData(genoData, maf=0.01)
     genoData <- roundAlleleDosage(genoData)
 
-    filteredGenoData   <- genoData
+    filteredTrainingGenoData   <- genoData
 
 }
 genoData <- genoData[order(row.names(genoData)), ]
@@ -556,6 +559,8 @@ selectionPopResult <- c()
 selectionPopGEBVs  <- c()
 selectionPopGEBVSE <- c()
 
+#selection pop geno data after  cleaning up and removing unique markers to selection pop
+filteredSelGenoData <- selectionData
 if (length(selectionData) != 0) {
 
     genoDataTrSl <- rbind(genoDataFilteredObs, selectionData)
@@ -651,7 +656,7 @@ if (length(combinedGebvsFile) != 0 ) {
 }
 
 
-if (!is.null(modelPhenoData) & length(modelPhenoFile) != 0) {
+if (!is.null(modelPhenoData) && length(modelPhenoFile) != 0) {
 
     if (!is.null(meanType)) {
         colnames(modelPhenoData) <- meanType
@@ -665,7 +670,17 @@ if (!is.null(modelPhenoData) & length(modelPhenoFile) != 0) {
            )
 }
 
-if (!is.null(traitRawPhenoData) & length(traitRawPhenoFile) != 0) {
+if (!is.null(genoDataFilteredObs) && length(modelGenoFile) != 0) {
+
+    fwrite(genoDataFilteredObs,
+           file  = modelGenoFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
+}
+
+if (!is.null(traitRawPhenoData) && length(traitRawPhenoFile) != 0) {
 
     fwrite(traitRawPhenoData,
            file  = traitRawPhenoFile,
@@ -676,11 +691,11 @@ if (!is.null(traitRawPhenoData) & length(traitRawPhenoFile) != 0) {
            )
 }
 
+message('filteredTrainingGenoFile: ', filteredTrainingGenoFile)
 
-
-if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
-  fwrite(filteredGenoData,
-         file  = filteredGenoFile,
+if (!is.null(filteredTrainingGenoData) && file.info(filteredTrainingGenoFile)$size == 0) {
+  fwrite(filteredTrainingGenoData,
+         file  = filteredTrainingGenoFile,
          row.names = TRUE,
          sep   = "\t",
          quote = FALSE,
@@ -688,14 +703,14 @@ if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
 
 }
 
-## if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
-##   fwrite(filteredPredGenoData,
-##          file  = filteredPredGenoFile,
-##          row.names = TRUE,
-##          sep   = "\t",
-##          quote = FALSE,
-##          )
-## }
+if (length(filteredSelGenoFile) != 0 && file.info(filteredSelGenoFile)$size == 0) {
+  fwrite(filteredSelGenoData,
+         file  = filteredSelGenoFile,
+         row.names = TRUE,
+         sep   = "\t",
+         quote = FALSE,
+         )
+}
 
 ## if (!is.null(genoDataMissing)) {
 ##   write.table(genoData,

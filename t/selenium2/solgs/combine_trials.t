@@ -204,14 +204,18 @@ $d->while_logged_in_as("submitter", sub {
 	sleep(5);
 	$d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
 	sleep(5);
+   
 
 	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
+      $d->find_element_ok('Genotype data', 'partial_link_text',  'download selection pop genotype data');
+    sleep(3);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(90);
     $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
+
     $d->driver->go_back();
     sleep(15);
 	$d->driver->go_back();
@@ -249,6 +253,7 @@ $d->while_logged_in_as("submitter", sub {
 	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
+
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(90);
     $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
@@ -299,10 +304,10 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
     $d->driver->go_back();
     sleep(5);
-	# $d->driver->go_back();
-	# sleep(5);
-	# $d->driver->go_back();
-    # sleep(5);
+	
+    $d->driver->refresh();
+    sleep(3);
+    
 	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to model page')->click();
     sleep(5);
 	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to training pop page')->click();

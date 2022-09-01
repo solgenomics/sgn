@@ -568,7 +568,7 @@ sub output_files {
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-
+     
     my $selection_pop_id = $c->stash->{selection_pop_id};
 
 
@@ -577,28 +577,31 @@ sub output_files {
     if ($selection_pop_id)
     {
         $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c,$training_pop_id, $selection_pop_id, $trait_id);
+        $c->controller('solGS::Files')->filtered_selection_genotype_file($c);
     }
 
     my $file_list = join ("\t",
-                          $c->stash->{rrblup_training_gebvs_file},
-                          $c->stash->{marker_effects_file},
-                          $c->stash->{validation_file},
-                          $c->stash->{model_phenodata_file},
-                          $c->stash->{model_genodata_file},
-                          $c->stash->{trait_raw_phenodata_file},
-                          $c->stash->{selected_traits_gebv_file},
-                          $c->stash->{variance_components_file},
-			  $c->stash->{relationship_matrix_table_file},
-			  $c->stash->{relationship_matrix_adjusted_table_file},
-			  $c->stash->{inbreeding_coefficients_file},
-			  $c->stash->{average_kinship_file},
-			  $c->stash->{relationship_matrix_json_file},
-			  $c->stash->{relationship_matrix_adjusted_json_file},
-			  $c->stash->{filtered_training_genotype_file},
-                          $c->stash->{rrblup_selection_gebvs_file}
+                        $c->stash->{rrblup_training_gebvs_file},
+                        $c->stash->{marker_effects_file},
+                        $c->stash->{validation_file},
+                        $c->stash->{model_phenodata_file},
+                        $c->stash->{model_genodata_file},
+                        $c->stash->{trait_raw_phenodata_file},
+                        $c->stash->{selected_traits_gebv_file},
+                        $c->stash->{variance_components_file},
+			            $c->stash->{relationship_matrix_table_file},
+			            $c->stash->{relationship_matrix_adjusted_table_file},
+                        $c->stash->{inbreeding_coefficients_file},
+                        $c->stash->{average_kinship_file},
+                        $c->stash->{relationship_matrix_json_file},
+                        $c->stash->{relationship_matrix_adjusted_json_file},
+                        $c->stash->{filtered_training_genotype_file},
+                        $c->stash->{filtered_selection_genotype_file},
+                        $c->stash->{rrblup_selection_gebvs_file}
         );
 
     my $name = "output_files_${trait}_${training_pop_id}";
+    $name .= "_${selection_pop_id}" if $selection_pop_id;
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, {binmode => ':utf8'}, $file_list);
