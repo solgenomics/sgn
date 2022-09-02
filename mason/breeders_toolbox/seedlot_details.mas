@@ -31,6 +31,7 @@ $maintenance_enabled => undef
 <table class="table table-bordered table-hover">
 <tr><td><b>Breeding Program</b></td><td><div id="seedlot_breeding_program_div">[LOADING...]</div></td></tr>
 <tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
+<tr><td><b>Seedlot Description</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $seedlot_description %></a></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
 <tr><td><b>Box Name</b></td><td><% $box_name %></td></tr>
@@ -128,6 +129,12 @@ $maintenance_enabled => undef
                                                 </div>
                                             </div>
                                             <div class="form-group">
+                                                <label class="col-sm-3 control-label">Seedlot Description: </label>
+                                                <div class="col-sm-9" >
+                                                    <input class="form-control" id="transaction_new_seedlot_description" placeholder="Optional">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
                                                 <label class="col-sm-3 control-label">Breeding Program: </label>
                                                 <div class="col-sm-9" >
                                                     <div id="transaction_new_seedlot_breeding_program_div"></div>
@@ -218,7 +225,7 @@ $maintenance_enabled => undef
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Transaction Description: </label>
                                                 <div class="col-sm-9" >
-                                                    <input class="form-control" id="transaction_new_seedlot_description" placeholder="Optional">
+                                                    <input class="form-control" id="transaction_new_seedlot_transaction_description" placeholder="Optional">
                                                 </div>
                                             </div>
                                         </div>
