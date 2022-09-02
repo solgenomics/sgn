@@ -1137,6 +1137,150 @@ sub check_wishlist_accessions_POST : Args(0) {
 }
 
 
+sub get_wishlist_form_info : Path('/ajax/cross/get_wishlist_form_info') : ActionClass('REST') { }
+
+sub get_wishlist_form_info_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    if (!$c->user){
+        $c->stash->{rest}->{error} = "You must be logged in to edit a cross wishlist.";
+        $c->detach();
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $site_name = $c->config->{project_name};
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+
+    my $ona_form_id = $c->req->param('form_id') || '0';
+    my $ona_form_name = $c->req->param('form_name') || '';
+    my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
+    my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
+
+    print STDERR "FORM ID =".Dumper($ona_form_id)."\n";
+    print STDERR "FORM NAME =".Dumper($ona_form_name)."\n";
+
+    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists can be separated by location
+    my $is_test_form;
+    if ($ona_form_name eq $test_ona_form_name){
+        $is_test_form = 1;
+    }
+
+    my $odk_ona_tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
+    my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
+    my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
+    my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
+    my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
+    my $cross_wihlist_ona_id;
+    my $germplasm_info_ona_id;
+
+    my $ua = LWP::UserAgent->new(
+        ssl_opts => { verify_hostname => 0 }
+    );
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
+    my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+    my $server_endpoint = "https://api.ona.io/api/v1/data/$ona_form_id";
+    print STDERR $server_endpoint."\n";
+    my $resp = $ua->get($server_endpoint);
+
+    my $server_endpoint2 = "https://api.ona.io/api/v1/metadata?xform=".$ona_form_id;
+    my $resp2 = $ua->get($server_endpoint2);
+    if ($resp2->is_success) {
+        my $message2 = $resp2->decoded_content;
+        my $message_hash2 = decode_json $message2;
+        print STDERR "MESSAGE HASH 2 =".Dumper($message_hash2)."\n";
+
+        foreach my $t (@$message_hash2) {
+            if (index($t->{data_value}, 'cross_wishlist') != -1) {
+                my $cross_wishlist_file_name = $t->{data_value};
+
+                $cross_wishlist_file_name =~ s/.csv//;
+                my $wishlist_file_name_loc = $cross_wishlist_file_name;
+                $wishlist_file_name_loc =~ s/cross_wishlist_//;
+                print STDERR Dumper $wishlist_file_name_loc;
+                if ($separate_crosswishlist_by_location){
+#                    if ($female_location_name eq $wishlist_file_name_loc) {
+                        getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+                        $cross_wihlist_ona_id = $t->{id};
+#                    }
+                } else {
+                    getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+                    $cross_wihlist_ona_id = $t->{id};
+                }
+            }
+            if (index($t->{data_value}, 'germplasm_info') != -1) {
+                my $germplasm_info_file_name = $t->{data_value};
+
+                $germplasm_info_file_name =~ s/.csv//;
+                my $germplasm_info_file_name_loc = $germplasm_info_file_name;
+                $germplasm_info_file_name_loc =~ s/germplasm_info_//;
+                print STDERR Dumper $germplasm_info_file_name_loc;
+
+                if ($separate_crosswishlist_by_location){
+#                    if ($female_location_name eq $germplasm_info_file_name_loc) {
+                        getstore($t->{media_url}, $germplasm_info_temp_file_path);
+                        $germplasm_info_ona_id = $t->{id};
+#                    }
+                } else {
+                    getstore($t->{media_url}, $germplasm_info_temp_file_path);
+                    $germplasm_info_ona_id = $t->{id};
+                }
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+    return;
+
+
+
+    my @previous_file_lines;
+    my %previous_file_lookup;
+    my $old_header_row;
+    my @old_header_row_array;
+    if ($cross_wihlist_ona_id){
+        print STDERR "Previous cross_wishlist temp file $cross_wishlist_temp_file_path\n";
+        open(my $fh, '<', $cross_wishlist_temp_file_path)
+            or die "Could not open file '$cross_wishlist_temp_file_path' $!";
+        $old_header_row = <$fh>;
+        @old_header_row_array = split ',', $old_header_row;
+        while ( my $row = <$fh> ){
+            chomp $row;
+            push @previous_file_lines, $row;
+            my @previous_file_line_contents = split ',', $row;
+            my $previous_female_obs_unit_id = $previous_file_line_contents[2];
+            $previous_female_obs_unit_id =~ s/"//g;
+            $previous_file_lookup{$previous_female_obs_unit_id} = \@previous_file_line_contents;
+        }
+    }
+    #print STDERR Dumper \@previous_file_lines;
+
+    my @previous_germplasm_info_lines;
+    my %seen_info_obs_units;
+    if ($germplasm_info_ona_id){
+        print STDERR "PREVIOUS germplasm_info temp file $germplasm_info_temp_file_path\n";
+        open(my $fh, '<', $germplasm_info_temp_file_path)
+            or die "Could not open file '$germplasm_info_temp_file_path' $!";
+        my $header_row = <$fh>;
+        while ( my $row = <$fh> ){
+            chomp $row;
+            push @previous_germplasm_info_lines, $row;
+            my @previous_file_line_contents = split ',', $row;
+            my $previous_obs_unit_id = $previous_file_line_contents[2];
+            $previous_obs_unit_id =~ s/"//g;
+            $seen_info_obs_units{$previous_obs_unit_id}++;
+        }
+    }
+}
+
+
+
+
 ###
 1;#
 ###

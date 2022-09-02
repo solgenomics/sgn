@@ -29,7 +29,7 @@
                         </form>
                     </div>
                     <center>
-                        <button class="btn btn-primary" id="get_wishlist_form_female_parent" >Retrieve Female Parents from Selected Form</button>
+                        <button class="btn btn-primary" id="get_wishlist_form_info_button" >Retrieve Wishlist Information</button>
                     </center>
                 </div>
             </div>
@@ -93,9 +93,44 @@ jQuery(document).ready(function($){
         },
         error: function(response){
             jQuery("#working_modal").modal("hide");
-            alert("Error retrieving available ODK crossing forms");
+            alert("Error retrieving available ODK wishlist forms");
         }
     });
+
+    jQuery('#get_wishlist_form_info_button').click(function(){
+
+        jQuery.ajax({
+            url: '/ajax/cross/get_wishlist_form_info',
+            method: 'POST',
+            data: {
+                'form_id': jQuery('#edit_cross_wishlist_availabe_odk_crossing_forms').val(),
+                'form_name': jQuery("#edit_cross_wishlist_availabe_odk_crossing_forms option:selected").text()
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_msg').html('Retrieving cross wishlist information from ONA ... Please wait...');
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_msg').html('');
+                jQuery('#working_modal').modal('hide');
+//                if (response.error) {
+//                    jQuery('#edit_cross_wishlist_response_div').html(response.error);
+//                }
+//                if (response.success){
+//                    jQuery('#edit_cross_wishlist_response_div').html(response.success);
+//                }
+//                jQuery('#edit_cross_wishlist_response_dialog').modal('show');
+            },
+//            error: function(response) {
+//                jQuery('#working_msg').html('');
+//                jQuery('#working_modal').modal('hide');
+//                alert("An error occurred retrieving cross wishlist information");
+//            }
+        });
+    });
+
 
 
 
