@@ -30,6 +30,17 @@ sub download_training_pop_data :Path('/solgs/download/training/pop/data') Args(0
 }
 
 
+sub download_selection_pop_data :Path('/solgs/download/selection/pop/data') Args(0) {
+	my ($self, $c) = @_;
+
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+	my $geno_file = $self->download_selection_pop_filtered_geno_data_file($c);
+	$c->stash->{rest}{selection_pop_filtered_geno_file} = $geno_file;
+
+}
+
 sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) {
 	my ($self, $c) = @_;
 
@@ -182,6 +193,16 @@ sub download_raw_geno_data_file {
 
 }
 
+sub download_selection_pop_filtered_geno_data_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Files')->filtered_selection_genotype_file($c);
+	my $file = $c->stash->{filtered_selection_genotype_file};
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+
+	return $file;
+
+}
 
 sub download_raw_pheno_data_file {
 	my ($self, $c) = @_;

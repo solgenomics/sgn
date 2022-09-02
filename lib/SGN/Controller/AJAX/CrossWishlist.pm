@@ -269,6 +269,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $male_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $male_trial_id, experiment_type=>'field_layout' });
     my $male_design_layout = $male_trial_layout->get_design();
 
+    my $odk_ona_tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
     my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
     my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');

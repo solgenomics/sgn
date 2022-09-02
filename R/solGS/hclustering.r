@@ -21,7 +21,7 @@ library(ggplot2)
 library(ape)
 library(ggtree)
 library(treeio)
-library(R2D3)
+library(R2D3) #install_github("jamesthomson/R2D3")
 
 allArgs <- commandArgs()
 

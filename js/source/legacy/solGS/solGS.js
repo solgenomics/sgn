@@ -47,12 +47,14 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
+     var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
-    if (!args) {
-      args = { training_traits_ids: trainingTraitsIds };
-    } else if (!args["training_traits_ids"]) {
-      args["training_traits_ids"] = trainingTraitsIds;
+     if (trainingTraitsIds) {
+      if (!args) {
+        args = { training_traits_ids: trainingTraitsIds };
+      } else {
+        args["training_traits_ids"] = trainingTraitsIds;
+      }
     }
 
     args["analysis_page"] = page;
@@ -213,7 +215,7 @@ solGS.submitJob = {
 
   getTraitsSelectionId: function (page, args) {
     var traitIds = args.training_traits_ids;
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     jQuery.ajax({
       dataType: "json",
@@ -289,7 +291,7 @@ solGS.submitJob = {
 
   wrapTraitsForm: function () {
     var popId = jQuery("#population_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     var formId = ' id="traits_selection_form"';
 
@@ -529,6 +531,11 @@ solGS.submitJob = {
       }
     }
 
+    // var protocolId = args.genotyping_protocol_id;
+    // if (!protocolId) {
+    //   protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+    // }
+
     console.log('calling geno protocols')
     var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
     console.log('got  protocols ' + protocols.genotyping_protocol_id)
@@ -670,7 +677,7 @@ jQuery(document).ready(function () {
 
     var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
     var popId = jQuery("#training_pop_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     if (traitIds.length) {
       var page;
@@ -857,20 +864,26 @@ solGS.getModelArgs = function () {
   return args;
 };
 
-solGS.getSelectionPredictionArgs = function () {
+solGS.getSelectionPopArgs = function () {
   var args = this.getModelArgs();
   var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
- 
-  args["selection_pop_id"] = jQuery("#selection_pop_id").val();
-  args["selection_pop_genotyping_protocol_id"] = protocols.selection_pop_genotyping_protocol_id;
-  
+  var selPopGenoProtocolId = protocols.selection_pop_genotyping_protocol_id;
+  var selPopId =  jQuery('#selection_pop_id').val();
+
+  if (selPopGenoProtocolId) {
+    args["selection_pop_genotyping_protocol_id"] = selPopGenoProtocolId;
+    args["selection_pop_id"] = selPopId;
+  }
+
   return args;
 };
 
 solGS.getTrainingPopArgs = function () {
+  var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+  var protocolId = protocols.genotyping_protocol_id;
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
-    genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
+    genotyping_protocol_id: protocolId,
   };
 
   return args;
@@ -904,7 +917,7 @@ solGS.getPopulationDetails = function () {
     dataSetType = "single population";
   }
 
-  var protocolId = jQuery("#genotyping_protocol_id").val();
+  var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
   return {
     training_pop_id: trainingPopId,
     population_name: trainingPopName,
@@ -920,7 +933,11 @@ solGS.getPopulationDetails = function () {
 solGS.showMessage = function (divId, msg) {
   divId = divId.match(/#/) ? divId : "#" + divId;
 
-  jQuery(divId).html(msg).show();
+  jQuery(divId)
+    .html(msg)
+    .show()
+    .delay(4000)
+    .fadeOut('slow');
 };
 
 solGS.checkPageType = function () {

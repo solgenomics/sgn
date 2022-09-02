@@ -65,7 +65,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->get('/solgs', 'solgs home page');
     sleep(4);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -81,7 +81,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(90);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -176,15 +176,17 @@ $d->while_logged_in_as("submitter", sub {
     sleep(8);
     $d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
     sleep(5);
-
+    
 	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
     sleep(2);
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download selection pop genotype data');
+    sleep(3);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(120);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
-
+    
     $d->driver->go_back();
     sleep(15);
 
@@ -281,13 +283,10 @@ $d->while_logged_in_as("submitter", sub {
 	$d->driver->go_back();
 	sleep(15);
 
-    # # $d->get_ok('/solgs', 'homepage');
-    # $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
-    # sleep(2);
-    # $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->driver->refresh();
+    sleep(3);
 
-
-    $d->find_element_ok('Kasese solgs trial', 'partial_link_text', 'back to model page')->click();
+      $d->find_element_ok('Kasese solgs trial', 'partial_link_text', 'back to model page')->click();
     sleep(5);
 	$d->find_element_ok('Kasese solgs trial', 'partial_link_text', 'back to training pop page')->click();
 	sleep(5);

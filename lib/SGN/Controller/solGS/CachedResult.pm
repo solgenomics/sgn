@@ -30,7 +30,8 @@ __PACKAGE__->config(
 sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
     my ($self, $c) = @_;
 
-    my $analysis_page = $c->req->param('page');
+    my $req_page = $c->req->param('page');
+    my $args     = $c->req->param('arguments');
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);

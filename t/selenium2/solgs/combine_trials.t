@@ -62,7 +62,7 @@ print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
@@ -93,7 +93,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(3);
@@ -116,7 +116,7 @@ $d->while_logged_in_as("submitter", sub {
 # $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
    # sleep(4);
 
-    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');#->click();
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
     sleep(3);
@@ -204,14 +204,18 @@ $d->while_logged_in_as("submitter", sub {
 	sleep(5);
 	$d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
 	sleep(5);
+   
 
 	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
+      $d->find_element_ok('Genotype data', 'partial_link_text',  'download selection pop genotype data');
+    sleep(3);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(90);
     $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
+
     $d->driver->go_back();
     sleep(15);
 	$d->driver->go_back();
@@ -249,6 +253,7 @@ $d->while_logged_in_as("submitter", sub {
 	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
+
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(90);
     $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
@@ -299,10 +304,10 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
     $d->driver->go_back();
     sleep(5);
-	# $d->driver->go_back();
-	# sleep(5);
-	# $d->driver->go_back();
-    # sleep(5);
+	
+    $d->driver->refresh();
+    sleep(3);
+    
 	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to model page')->click();
     sleep(5);
 	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to training pop page')->click();

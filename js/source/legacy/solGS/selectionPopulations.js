@@ -15,6 +15,7 @@ function checkSelectionPopulations() {
   var trainingTraitsIds = solGS.getTrainingTraitsIds();
   var protocolId = jQuery("#genotyping_protocol_id").val();
   var selPopProtocolId = jQuery("#genotyping_protocol #selection_pop_genotyping_protocol_id").val();
+  
   console.log("checkselpops protocol id " + selPopProtocolId);
   if (!selPopProtocolId) {
     var sessionData = solGS.genotypingProtocol.getSessionGenoProtocol();

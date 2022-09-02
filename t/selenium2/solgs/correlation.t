@@ -63,7 +63,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->get('/solgs', 'solgs home page');
     sleep(3);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -79,7 +79,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(80);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -186,7 +186,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(20);
+    sleep(80);
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
@@ -198,7 +198,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get('/solgs');
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
@@ -229,7 +229,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(3);
@@ -344,11 +344,11 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(70);
+    sleep(80);
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
-   
+   sleep(1);
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
-    sleep(5);
+    sleep(2);
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "> 0")]', 'xpath', 'check corr plot')->click();
     sleep(5);
 
