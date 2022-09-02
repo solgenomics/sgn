@@ -370,6 +370,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $selection_pop_name = $c->stash->{'selection_pop_name'};
     my $training_pop_id    = $c->stash->{'training_pop_id'};
     my $protocol_id = $c->stash->{'genotyping_protocol_id'};
+    my $sel_pop_protocol_id = $c->stash->{'selection_pop_genotyping_protocol_id'};
 
     my $referer = $c->req->referer;
 
