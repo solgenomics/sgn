@@ -7,43 +7,25 @@ use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file/;
+use JSON;
 use Math::Round::Var;
 use Statistics::Descriptive;
 
 
 BEGIN { extends 'Catalyst::Controller' }
 
+sub download_validation :Path('/solgs/download/model/validation') Args() {
+    my ($self, $c) = @_;
 
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-sub download_validation :Path('/solgs/download/validation/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;
+	my $validation_file = $self->download_validation_file($c);
 
-    $c->stash->{training_pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    $c->controller('solGS::Files')->validation_file($c);
-    my $val_file = $c->stash->{validation_file};
-
-    if (-s $val_file)
-    {
-	my @raw = read_file($val_file);
-
-	$self->cross_validation_stat($c, $pop_id, $trait_abbr);
-	my $cv_stat = $c->stash->{cross_validation_stat};
-
-	my @summary = join("\n", map { $_->[0] . "\t" . $_->[1] }  @$cv_stat);
-
-	my @all = (@raw, "\n ---- Summary --- \n", @summary);
-	$c->res->content_type("text/plain");
-        $c->res->body(join('', @all));
-    }
-    else
-    {
-	croak "No cross validation file was found or it is empty.";
-    }
+	my $ret = {'validation_file' => $validation_file};
+	$ret = to_json($ret);
+	$c->res->content_type('application/json');
+    $c->res->body($ret);
 
 }
 
@@ -51,11 +33,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
 sub get_model_accuracy_value {
     my ($self, $c, $model_id, $trait_abbr) = @_;
 
-    $c->stash->{training_pop_id} = $model_id;
-    $c->stash->{trait_abbr} = $trait_abbr;
-
-    $self->cross_validation_stat($c, $model_id, $trait_abbr);
-    my $cv_stat = $c->stash->{cross_validation_stat};
+    my $cv_stat = $self->cross_validation_stat($c, $model_id, $trait_abbr);
 
     my ($accuracy) = grep{ $_->[0] eq 'Mean accuracy'} @$cv_stat;
 
@@ -74,9 +52,9 @@ sub get_cross_validations {
     my $file = $c->stash->{validation_file};
 
     my $cvs = $c->controller('solGS::Utils')->read_file_data($file);
-    my @raw_cvs = grep { $_->[0] ne 'Average'} @$cvs;
-
-    $c->stash->{cross_validations} =  \@raw_cvs;
+    my @raw_cvs = grep { $_->[0] =~ /CV Fold/i } @$cvs;
+  
+    return \@raw_cvs;
 }
 
 
@@ -95,21 +73,37 @@ sub model_accuracy_report {
     }
     else
     {
-	my $model_id = $c->stash->{training_pop_id};
-	my $trait_abbr = $c->stash->{trait_abbr};
+        my $model_id = $c->stash->{training_pop_id};
+        my $trait_abbr = $c->stash->{trait_abbr};
 
-	$self->cross_validation_stat($c, $model_id, $trait_abbr);
-	$c->stash->{accuracy_report} = $c->stash->{cross_validation_stat};
+        $c->stash->{accuracy_report} = $self->cross_validation_stat($c, $model_id, $trait_abbr);
     }
 
 }
 
+sub append_val_summary_stat {
+    my ($self, $c, $val_file) = @_;
+
+    my $model_id = $c->stash->{training_pop_id};
+    my $trait_abbr = $c->stash->{trait_abbr};
+    my $summary_stat = $self->cross_validation_stat($c, $model_id, $trait_abbr);
+    my $summary_txt  = "\n----summary statistics----\n";
+    $summary_stat = join("\n", map { $_->[0] . "\t" . $_->[1] }  @$summary_stat);
+    $summary_txt .= $summary_stat;
+
+    my $val_txt = read_file($val_file, {binmode=>'utf8'});
+    if ($val_txt !~ /summary statistics/) {
+        write_file($val_file, 
+            {append => 1, binmode => 'utf8'}, 
+            $summary_txt
+        );
+    }
+}
 
 sub cross_validation_stat {
     my ($self, $c, $model_id, $trait_abbr) = @_;
 
-    $self->get_cross_validations($c, $model_id, $trait_abbr);
-    my $cv_data = $c->stash->{cross_validations};
+    my $cv_data = $self->get_cross_validations($c, $model_id, $trait_abbr);
 
     my @data = map {$_->[1] =~ s/\s+//r } @$cv_data;
 
@@ -143,7 +137,7 @@ sub cross_validation_stat {
 	['Mean accuracy',  $mean]
 	);
 
-    $c->stash->{cross_validation_stat} = \@desc_stat;
+    return \@desc_stat;
 
 }
 
@@ -153,7 +147,7 @@ sub create_model_summary {
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $tr_abbr = $c->stash->{trait_abbr};
 
     my $path = $c->req->path;
@@ -191,6 +185,17 @@ sub create_model_summary {
 
 }
 
+sub download_validation_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+	
+	my $file = $c->controller('solGS::Files')->validation_file($c);
+    $self->append_val_summary_stat($c, $file);
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+
+	return $file;
+}
 
 
 sub begin : Private {

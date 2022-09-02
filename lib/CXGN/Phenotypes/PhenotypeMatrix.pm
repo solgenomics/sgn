@@ -264,7 +264,7 @@ sub get_phenotype_matrix {
         }
     } else {
         $data = $phenotypes_search->search();
-#        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
+        #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;

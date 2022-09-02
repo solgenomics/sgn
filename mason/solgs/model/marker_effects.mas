@@ -15,7 +15,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $top_marker_effects
-$marker_effects_download_url =>''
 
 </%args>
 
@@ -23,7 +22,7 @@ $marker_effects_download_url =>''
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 1, 
-  title       => "Marker Effects" 
+  title       => "Marker effects" 
 &>
  
 <i>Top 10 markers</i>:
@@ -37,8 +36,7 @@ $marker_effects_download_url =>''
   __align      => 'll',
 &>
 
-<br />
-
-[ <% $marker_effects_download_url %> ]
-
+<div id="marker_effects_download"></div>
+<div id="marker_effcts_download_message"  class="message"></div>
 </&>
+

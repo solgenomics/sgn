@@ -71,27 +71,18 @@ sub create_parents_file_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $dbh = $c->dbc->dbh;
 
+    my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $female_list = CXGN::List->new({dbh => $dbh, list_id => $female_list_id});
-    my $female_elements = $female_list->retrieve_elements_with_ids($female_list_id);
+    my $female_elements = $female_list->retrieve_elements($female_list_id);
+    my @female_names = @$female_elements;
 
     my $male_list = CXGN::List->new({dbh => $dbh, list_id => $male_list_id});
-    my $male_elements = $male_list->retrieve_elements_with_ids($male_list_id);
-
-    my @all_rows;
-    my @female_accessions;
-    my @male_accessions;
-    foreach my $female (@$female_elements){
-        push @female_accessions, $female->[1];
-        push @all_rows, [$female->[0], '0', $female->[1]]
-    }
-    foreach my $male (@$male_elements){
-        push @male_accessions, $male->[1];
-        push @all_rows, [$male->[0], '1', $male->[1]]
-    }
+    my $male_elements = $male_list->retrieve_elements($male_list_id);
+    my @male_names = @$male_elements;
 
     my $list_error_message;
     my $female_validator = CXGN::List::Validate->new();
-    my @female_accessions_missing = @{$female_validator->validate($schema,'uniquenames',\@female_accessions)->{'missing'}};
+    my @female_accessions_missing = @{$female_validator->validate($schema,'uniquenames',\@female_names)->{'missing'}};
     if (scalar(@female_accessions_missing) > 0) {
         $list_error_message = "The following female parents did not pass validation: ".join("\n", @female_accessions_missing);
         $c->stash->{rest} = { error => $list_error_message };
@@ -99,11 +90,24 @@ sub create_parents_file_POST : Args(0) {
     }
 
     my $male_validator = CXGN::List::Validate->new();
-    my @male_accessions_missing = @{$male_validator->validate($schema,'uniquenames',\@male_accessions)->{'missing'}};
+    my @male_accessions_missing = @{$male_validator->validate($schema,'uniquenames',\@male_names)->{'missing'}};
     if (scalar(@male_accessions_missing) > 0) {
         $list_error_message = "The following male parents did not pass validation: ".join("\n", @male_accessions_missing);
         $c->stash->{rest} = { error => $list_error_message };
         $c->detach();
+    }
+
+    my @all_rows;
+    foreach my $female_name (@female_names) {
+        my $female_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $female_name, 'type_id' => $accession_type_id });
+        my $female_id = $female_rs->stock_id();
+        push @all_rows, [$female_id, '0', $female_name];
+    }
+
+    foreach my $male_name (@male_names) {
+        my $male_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $male_name, 'type_id' => $accession_type_id });
+        my $male_id = $male_rs->stock_id();
+        push @all_rows, [$male_id, '1', $male_name];
     }
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');

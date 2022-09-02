@@ -300,6 +300,8 @@ has 'cross_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'family_name_cvterm_id' => (isa => 'Int', is => 'rw');
 
+has 'facility_identifier_cvterm_id' => (isa => 'Int', is => 'rw');
+
 sub BUILD {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema();
@@ -383,6 +385,8 @@ sub BUILD {
     $self->set_cross_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id());
 
     $self->set_family_name_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id());
+
+    $self->set_facility_identifier_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'facility_identifier', 'stock_property')->cvterm_id());
 
 }
 
@@ -602,6 +606,11 @@ sub store {
             }
             my $additional_info = $design{$key}->{additional_info} ? encode_json $design{$key}->{additional_info} : undef;
 
+            my $facility_identifier;
+            if ($design{$key}->{facility_identifier}) {
+                $facility_identifier = $design{$key}->{facility_identifier};
+            }
+
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
             if ($stock_data{$stock_name}) {
                 $stock_id_checked = $stock_data{$stock_name}[0];
@@ -672,6 +681,9 @@ sub store {
                 }
                 if ($additional_info) {
                     push @plot_stock_props, { type_id => $additional_info_type_id, value => $additional_info };
+                }
+                if ($facility_identifier) {
+                    push @plot_stock_props, { type_id => $self->get_facility_identifier_cvterm_id, value => $facility_identifier };
                 }
 
                 my @plot_subjects;

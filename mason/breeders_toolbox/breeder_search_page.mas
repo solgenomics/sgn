@@ -396,7 +396,7 @@ $dataset_id => undef
             <tr>
               <td>
                 <span>Trait Name Contains</span>
-                <input placeholder="" type="text" class="wizard-download-phenotypes-name form-control">
+                <input placeholder="e.g. plant height" type="text" class="wizard-download-phenotypes-name form-control">
               </td>
               <td>
                 <span>Min Value</span>

@@ -11,6 +11,7 @@ use CXGN::People::Person;
 use CXGN::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::CreatePlateOrder;
+use CXGN::Genotype::StoreGenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -34,25 +35,17 @@ sub generate_genotype_trial_POST : Args(0) {
     my $plate_info = decode_json $c->req->param("plate_data");
     #print STDERR Dumper $plate_info;
 
-    if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
+    if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{genotyping_project_id} || !$plate_info->{name} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
         $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 
-    if ( $plate_info->{genotyping_facility} eq 'igd' && $plate_info->{genotyping_facility_submit} eq 'yes' && $plate_info->{blank_well} eq ''){
+    my $genotyping_project_id = $plate_info->{genotyping_project_id};
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $genotyping_project_id });
+    my $genotyping_facility = $trial->get_genotyping_facility();
+
+    if ( $genotyping_facility eq 'igd' && $plate_info->{genotyping_facility_submit} eq 'yes' && $plate_info->{blank_well} eq ''){
         $c->stash->{rest} = { error => "To submit to Cornell IGD you need to provide the blank well!" };
-        $c->detach();
-    }
-
-    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $plate_info->{location} } );
-    if (!$location) {
-        $c->stash->{rest} = { error => "Unknown location" };
-        $c->detach();
-    }
-
-    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $plate_info->{breeding_program} });
-    if (!$breeding_program) {
-        $c->stash->{rest} = { error => "Unknown breeding program" };
         $c->detach();
     }
 
@@ -91,6 +84,7 @@ sub generate_genotype_trial_POST : Args(0) {
         $_->{acquisition_date} = $plate_info->{well_date};
         $_->{notes} = $plate_info->{well_notes};
         $_->{ncbi_taxonomy_id} = $plate_info->{ncbi_taxonomy_id};
+        $_->{facility_identifier} = 'NA';
     }
     #print STDERR Dumper($design);
 
@@ -110,6 +104,13 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
     my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
     my $upload_coordinate_custom = $c->req->upload('genotyping_trial_layout_upload_coordinate_template');
+    my $facility_identifiers= $c->req->param('upload_include_facility_identifiers');
+    my $include_facility_identifiers;
+    if ($facility_identifiers){
+        $include_facility_identifiers = 1;
+    }
+
+
     if ($upload_xls && $upload_coordinate){
         $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
         return;
@@ -221,7 +222,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     );
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, facility_identifiers_included => $include_facility_identifiers);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse(\%parse_args);
 
@@ -235,7 +236,6 @@ sub parse_genotype_trial_file_POST : Args(0) {
         else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
-
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
                 $return_error=$return_error.$error_string."<br>";
             }
@@ -264,7 +264,8 @@ sub parse_genotype_trial_file_POST : Args(0) {
             extraction => $val->{extraction},
             acquisition_date => $val->{date},
             notes => $val->{notes},
-            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id}
+            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id},
+            facility_identifier => $val->{facility_identifier}
         };
     }
 
@@ -309,22 +310,10 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("plate_data");
-    #print STDERR Dumper $plate_info;
+#    print STDERR "PLATE INFO =".Dumper($plate_info)."\n";
 
-    if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
+    if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{genotyping_project_id} || !$plate_info->{name} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
         $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
-        $c->detach();
-    }
-
-    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $plate_info->{location} } );
-    if (!$location) {
-        $c->stash->{rest} = { error => "Unknown location" };
-        $c->detach();
-    }
-
-    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $plate_info->{breeding_program} });
-    if (!$breeding_program) {
-        $c->stash->{rest} = { error => "Unknown breeding program" };
         $c->detach();
     }
 
@@ -347,6 +336,28 @@ sub store_genotype_trial_POST : Args(0) {
     my @field_trial_ids = keys %field_trial_ids;
     #print STDERR Dumper \@field_trial_ids;
 
+
+    my $genotyping_project_id = $plate_info->{genotyping_project_id};
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $genotyping_project_id });
+    my $location_data = $trial->get_location();
+    my $location_id = $location_data->[0];
+    my $location_name = $location_data->[1];
+
+    my $description;
+    my $plate_description = $plate_info->{description};
+    if ($plate_description) {
+        $description = $plate_description;
+    } else {
+        $description = $trial->get_description();
+    }
+
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
+    my $breeding_program_id = $breeding_program_data->[0]->[0];
+    my $breeding_program_name = $breeding_program_data->[0]->[1];
+    my $genotyping_facility = $trial->get_genotyping_facility();
+    my $plate_year = $trial->get_year();
+
     print STDERR "Creating the genotyping plate...\n";
 
     my $message;
@@ -357,18 +368,18 @@ sub store_genotype_trial_POST : Args(0) {
             dbh => $c->dbc->dbh(),
             owner_id => $user_id,
             operator => $user_name,
-            trial_year => $plate_info->{year},
-            trial_location => $location->description(),
-            program => $breeding_program->name(),
-            trial_description => $plate_info->{description},
+            trial_year => $plate_year,
+            trial_location => $location_name,
+            program => $breeding_program_name,
+            trial_description => $description,
             design_type => 'genotyping_plate',
             design => $plate_info->{design},
             trial_name => $plate_info->{name},
             is_genotyping => 1,
             genotyping_user_id => $user_id,
-            genotyping_project_name => $plate_info->{project_name},
+            genotyping_project_id => $genotyping_project_id,
             genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
-            genotyping_facility => $plate_info->{genotyping_facility},
+            genotyping_facility => $genotyping_facility,
             genotyping_plate_format => $plate_info->{plate_format},
             genotyping_plate_sample_type => $plate_info->{sample_type},
             genotyping_trial_from_field_trial => \@field_trial_ids,
@@ -611,5 +622,6 @@ sub store_plate_order_POST : Args(0) {
     };
 
 }
+
 
 1;

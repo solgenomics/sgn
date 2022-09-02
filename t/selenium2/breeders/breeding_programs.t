@@ -1,20 +1,22 @@
 use lib 't/lib';
 
-use Test::More;
+use Test::More 'tests' => 10;
 
 use SGN::Test::WWW::WebDriver;
 
 
 my $t = SGN::Test::WWW::WebDriver->new();
 
-$t->while_logged_in_as("curator", sub { 
+$t->while_logged_in_as("curator", sub {
+    sleep(2);
+
     $t->get_ok('/breeders/manage_programs');
     
     my $new_bp_link = $t->find_element_ok('new_breeding_program_link', 'id', 'new breeding program link');
 
     $new_bp_link->click();
 
-    sleep(2);
+    sleep(5);
 
     my $breeding_program_name_input = $t->find_element_ok('new_breeding_program_name', 'id', 'find add breeding program name input');
 
@@ -28,8 +30,6 @@ $t->while_logged_in_as("curator", sub {
 
     $ok_button->click();
 
-    print STDERR "\n\nCLICKED OK... so far so good...\n\n";
-
     sleep(2);
 
     $t->driver->accept_alert();
@@ -41,8 +41,6 @@ $t->while_logged_in_as("curator", sub {
     sleep(2);
 
     ok($t->driver->get_page_source() =~ m/WEBTEST/, "breeding program addition successful");
-
-#    print STDERR $t->driver->get_page_source();
 
     sleep(2);
 
@@ -59,13 +57,11 @@ $t->while_logged_in_as("curator", sub {
     sleep(2);
 
     $t->get_ok('/breeders/manage_programs');
-    
-#    print STDERR "Marker 4\n";
 
     sleep(2);
 
     ok($t->driver->get_page_source() !~ m/WEBTEST/, "breeding program deletion successful");
-
-    done_testing();
-
 });
+
+$t->driver()->close();
+done_testing();

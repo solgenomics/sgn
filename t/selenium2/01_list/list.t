@@ -2,7 +2,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More;
+use Test::More 'tests' => 69;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
 use CXGN::List;
@@ -68,21 +68,22 @@ $d->while_logged_in_as("submitter", sub {
 
     #my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n", 'trials'=>"test\ntest_trial\ntest_genotyping_project\n", 'traits'=>"fresh shoot weight|CO_334:0000016\ndry matter content|CO_334:0000092\nharvest index|CO_334:0000015\n");
 
-    my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n",
-    		  #'traits'=>"fresh shoot weight|CO_334:0000016\ndry matter content|CO_334:0000092\nharvest index|CO_334:0000015\n"
-        );
+    my %test_lists = (
+        'accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n",
+        'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n",
+        'locations'=>"test_location\nCornell Biotech\n",
+        #'traits'=>"fresh shoot weight|CO_334:0000016\ndry matter content|CO_334:0000092\nharvest index|CO_334:0000015\n"
+    );
 
     foreach my $list_type ( keys %test_lists ) {
 
         print STDERR "NOW TESTING $list_type...\n";
-
-        sleep(3);
-        $d->find_element_ok("view_list_update_list_name", "id", "view list dialog test");
-
         sleep(1);
 
         $d->find_element_ok("add_list_input", "id", "find add list input");
         sleep(1);
+
+
         $d->find_element_ok("add_list_input", "id", "find add list input test")->send_keys($list_type);
         sleep(1);
         $d->find_element_ok("add_list_button", "id", "find add list button test")->click();
@@ -97,24 +98,26 @@ $d->while_logged_in_as("submitter", sub {
 
         $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
         sleep(1);
-        $d->find_element_ok("type_select", "id", "validate list select")->send_keys($list_type);
+        $d->find_element_ok("type_select", "id", "validate list select")->click();
+        sleep(1);
+        $d->find_element_ok("//select[\@id='type_select']/option[\@name='$list_type']", 'xpath', "Select '$list_type' as value for list type")->click();
         sleep(1);
         $d->find_element_ok("list_item_dialog_validate", "id", "submit list validate")->click();
 
         sleep(1);
         my $alert_text = $d->driver->get_alert_text;
         if ($alert_text eq 'This list passed validation.'){
-           $d->accept_alert_ok();
+            $d->accept_alert_ok();
         } else {
-           print STDERR "\n\n<ERROR>: list not validated: ".$list_type."\n\n";
-           $d->accept_alert_ok();
+            print STDERR "\n\n<ERROR>: list not validated: ".$list_type."\n\n";
+            $d->accept_alert_ok();
         }
         sleep(1);
 
         $d->find_element_ok("close_list_item_dialog", "id", "find close list dialog button")->click();
         sleep(1);
         $d->find_element_ok("view_list_".$list_type, "id", "view accession list dialog test");
-            sleep(1);
+        sleep(1);
     }
 
     $d->find_element_ok("view_public_lists_button", "id", "find public list button")->click();
@@ -213,9 +216,10 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
 
     $d->logout_ok();
-    
+
 });
 
+$d->driver->close();
 done_testing();
 
-$d->driver->close();
+

@@ -31,7 +31,7 @@ sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
     my ($self, $c) = @_;
 
     my $req_page = $c->req->param('page');
-    my $args     = $c->req->param('args');
+    my $args     = $c->req->param('arguments');
 
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
@@ -476,7 +476,7 @@ sub check_selection_pop_all_traits_output {
 sub check_combined_trials_training_data {
     my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
     $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);

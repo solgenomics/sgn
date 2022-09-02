@@ -158,7 +158,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
 
-        if (!is.na(predictedTraits) & length(predictedTraits) > 1) {
+        if (!is.na(predictedTraits) && length(predictedTraits) > 1) {
             clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>%
                 select(c(germplasmName, predictedTraits))
@@ -166,7 +166,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
         }
     }
 
-    clusterData <- clusterData[, apply(clusterData, 2, var) != 0 ]
+    clusterData <- clusterData[, apply(clusterData, 2, function(x) var(x, na.rm=TRUE)) != 0]
     clusterDataNotScaled <- na.omit(clusterData)
     clusterData <- scale(clusterDataNotScaled, center = TRUE, scale = TRUE)
     clusterData <- round(clusterData, 3)
@@ -230,7 +230,7 @@ clusteredData <- clusteredData %>%
 # print(paste('size: ', '\n', '\n', round(kMeansOut$size, 2)))
 # print(paste('centers: ','\n', round(kMeansOut$centers, 2)))
 
-if (length(elbowPlotFile) & !file.info(elbowPlotFile)$size) {
+if (length(elbowPlotFile) && !file.info(elbowPlotFile)$size) {
     message("running elbow method...")
     png(elbowPlotFile)
     print(fviz_nbclust(clusterData, k.max = 20, FUNcluster = kmeans, method = "wss"))
@@ -281,7 +281,7 @@ if (length(kResultFile)) {
         )
 }
 
-if (length(clusterMeansFile)) {
+if (length(clusterMeansFile) && !is.null(clusterMeans)) {
     fwrite(clusterMeans, file = clusterMeansFile, sep = "\t", row.names = FALSE,
         quote = FALSE, )
 }

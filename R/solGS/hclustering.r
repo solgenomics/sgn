@@ -21,7 +21,7 @@ library(ggplot2)
 library(ape)
 library(ggtree)
 library(treeio)
-library(R2D3)
+library(R2D3) #install_github("jamesthomson/R2D3")
 
 allArgs <- commandArgs()
 
@@ -161,7 +161,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
 
-        if (!is.na(predictedTraits) & length(predictedTraits) > 1) {
+        if (!is.na(predictedTraits) && length(predictedTraits) > 1) {
             clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>% select(c(germplasmName, predictedTraits))
             clusterData <- column_to_rownames(clusterData, var = "germplasmName")

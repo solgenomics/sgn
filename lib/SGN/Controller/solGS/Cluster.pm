@@ -705,18 +705,11 @@ sub cluster_sindex_input_files {
 
 }
 
-sub cluster_input_files {
-    my ( $self, $c ) = @_;
 
-    my $file_id      = $c->stash->{file_id};
-    my $tmp_dir      = $c->stash->{cluster_temp_dir};
+sub cluster_data_input_files {
+    my ($self, $c) = @_;
+
     my $data_type    = $c->stash->{data_type};
-    my $cluster_type = $c->stash->{cluster_type};
-
-    my $name = "cluster_input_files_${file_id}";
-    my $tempfile =
-      $c->controller('solGS::Files')->create_tempfile( $tmp_dir, $name );
-
     my $files;
 
     if ( $data_type =~ /genotype/i ) {
@@ -736,6 +729,24 @@ sub cluster_input_files {
         $self->cluster_sindex_input_files($c);
         $files .= "\t" . $c->stash->{cluster_sindex_input_files};
     }
+
+    return $files;
+
+}
+
+
+sub cluster_input_files {
+    my ( $self, $c ) = @_;
+
+    my $file_id      = $c->stash->{file_id};
+    my $tmp_dir      = $c->stash->{cluster_temp_dir};
+    my $cluster_type = $c->stash->{cluster_type};
+
+    my $name = "cluster_input_files_${file_id}";
+    my $tempfile =
+      $c->controller('solGS::Files')->create_tempfile( $tmp_dir, $name );
+
+    my $files = $self->cluster_data_input_files($c);
 
     $self->cluster_options_file($c);
     my $cluster_opts_file = $c->stash->{"${cluster_type}_options_file"};
@@ -766,7 +777,7 @@ sub save_cluster_opts {
 
     if ($traits_ids) {
         foreach my $trait_id (@$traits_ids) {
-            $c->controller('solGS::solGS')->get_trait_details( $c, $trait_id );
+            $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
             push @traits_abbrs, $c->stash->{trait_abbr};
         }
 

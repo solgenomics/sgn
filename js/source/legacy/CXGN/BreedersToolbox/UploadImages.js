@@ -27,8 +27,8 @@ jQuery( document ).ready( function() {
                 return;
             }
             verifyImageFiles(fileData, unitType, transformType).then(function(result) {
-                // console.log("result is "+JSON.stringify(result));
                 reportVerifyResult(result);
+                jQuery('#working_modal').modal("hide");
             });
 
         } else { // verify associated phenotypes format
@@ -45,10 +45,9 @@ jQuery( document ).ready( function() {
             }
             submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_verify/spreadsheet").done(function(result) {
                 reportVerifyResult(result);
+                jQuery('#working_modal').modal("hide");
             });
         }
-
-        jQuery('#working_modal').modal("hide");
     });
 
 
@@ -115,9 +114,8 @@ jQuery( document ).ready( function() {
 
             submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_store/spreadsheet").done(function(result) {
                 reportStoreResult(result);
+                jQuery('#working_modal').modal("hide");
             });
-            jQuery('#progress_modal').modal('hide');
-            jQuery('#working_modal').modal("hide");
         }
     });
 });
@@ -147,13 +145,13 @@ function showImagePreview(imageFiles) {
 
 
 function reportVerifyResult(result) {
-    if (result.success) {
+    if (result.success && result.success.length > 0) {
         jQuery('#upload_images_submit_store').attr('disabled', false);
         jQuery('#upload_images_status').html(
             formatMessage(result.success, "success")
         );
     }
-    if (result.error) {
+    if (result.error && result.error.length > 0) {
         jQuery('#upload_images_submit_store').attr('disabled', true);
         jQuery('#upload_images_status').html(
             formatMessage(result.error, "error")
@@ -164,16 +162,17 @@ function reportVerifyResult(result) {
 
 function reportStoreResult(result) {
     // console.log("result is: "+JSON.stringify(result));
-    if (result.success.length) {
-        jQuery('#upload_images_status').append(
+    if (result.success && result.success.length > 0) {
+        jQuery('#upload_images_status').html(
             formatMessage(result.success, 'success')
         );
     }
-    if (result.error.length) {
-        jQuery('#upload_images_status').append(
+    if (result.error && result.error.length > 0) {
+        jQuery('#upload_images_status').html(
             formatMessage(result.error, 'error')
         );
     }
+    jQuery('#working_modal').modal("hide");
 }
 
 

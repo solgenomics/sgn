@@ -29,7 +29,7 @@ $design_types => ()
                                 <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="next_step_upload_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "File Formatting" &>
@@ -49,7 +49,7 @@ $design_types => ()
                                                     <a id="upload_single_trial_design_format_info">Single trial spreadsheet</a>
                                                 </p>
                                             </&>
-                                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                            <button id="next_step_file_formatting_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                         </center>
                                     </div>
 
@@ -328,7 +328,7 @@ $design_types => ()
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
+                                <button id="next_step_trial_information_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
@@ -711,8 +711,8 @@ $design_types => ()
                     <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, purpose, unique number, and location.)</li>
                     <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
                     <li>location (The name of the location where the trial was held, must exist in the database.)</li>
-                    <li>year (The year the trial was held.)</li>
-                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design) Augmented (Augmented Design), MAD (Modified Augmented Design), Westcott (Westcott Design), Lattice (Lattice Design))</li>
+                    <li>year (The year the trial was held.)</li>                    
+                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
                     <li>plot_name (Must be unique across entire database. It is often a concatenation of the trial name and the plot number.)</li>
                     <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>

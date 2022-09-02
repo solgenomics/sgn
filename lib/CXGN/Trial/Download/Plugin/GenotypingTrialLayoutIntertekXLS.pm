@@ -40,11 +40,11 @@ use Spreadsheet::WriteExcel;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 
-sub verify { 
+sub verify {
     return 1;
-} 
+}
 
-sub download { 
+sub download {
     my $self = shift;
 
     my @trial_ids;
@@ -75,7 +75,7 @@ sub download {
         no warnings 'uninitialized';
         foreach my $key (sort keys %$design){
             my $val = $design->{$key};
-            my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
+            my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction}.' Facility Identifier: '.$val->{facility_identifier};
             my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
             $ws->write($row_count, 0, $sample_name);
             $ws->write($row_count, 1, $trial_name);

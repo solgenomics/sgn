@@ -40,8 +40,6 @@ $selection_markers_cnt => ''
 $model_page_url => ''
 $owner => ''
 $protocol_url => ''
-$top_blups
-$blups_download_url
 $combined_populations => ''
 $combo_pops_id => ''
 $genotyping_protocol_id
@@ -103,12 +101,7 @@ $data_set_type => ''
 
 <& /solgs/tools/pca/analysis.mas &>
 
-<& /solgs/model/gebvs.mas,
-   top_blups         => $top_blups,
-  blups_download_url => $blups_download_url,
-
-&>
-
+<& /solgs/model/gebvs.mas &>
 
 <& /solgs/tools/genetic_gain/genetic_gain.mas,
    trait_id         => $trait_id,

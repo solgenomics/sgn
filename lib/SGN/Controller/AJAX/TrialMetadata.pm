@@ -31,6 +31,7 @@ use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
 use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
+use CXGN::BreedersToolbox::SoilData;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -3022,7 +3023,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
-    
+
     $c->stash->{rest} = {success => 1};
 }
 
@@ -4852,6 +4853,131 @@ sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') 
     my $activity_info = $trial_status_obj->get_trial_activities();
 
     $c->stash->{rest} = { data => $activity_info };
+}
+
+sub update_trial_design_type : Chained('trial') PathPart('update_trial_design_type') : ActionClass('REST'){ }
+
+sub update_trial_design_type_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_design_type = $c->req->param("trial_design_type");
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $curator     = $c->user()->check_roles('curator') if $user_id;
+
+    if (!$curator == 1) {
+        $c->stash->{rest} = {error_string => "You must be curator to change experimental design type." };
+        return;
+    }
+
+    my $trial = $c->stash->{trial};
+
+    $trial->set_design_type($trial_design_type);
+
+    $c->stash->{rest} = {success => 1 };
+
+    return;
+
+}
+
+
+sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trial_id = $c->stash->{trial_id};
+
+    my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id });
+    my $soil_data = $soil_data_obj->get_all_soil_data();
+    my @soil_data_list = @$soil_data;
+    my @formatted_soil_data;
+    foreach my $info_ref (@soil_data_list) {
+        my @all_soil_data = ();
+        my @info = @$info_ref;
+        my $trial_id = pop @info;
+        my $soil_data_details = pop @info;
+        my $order_ref = pop @info;
+        my @data_type_order = @$order_ref;
+        foreach my $type(@data_type_order) {
+            my $soil_data = $soil_data_details->{$type};
+            my $soil_data_string = $type.":"." ".$soil_data;
+            push @all_soil_data, $soil_data_string;
+        }
+        my $soil_data_details_string = join("<br>", @all_soil_data);
+        push @info, ($soil_data_details_string, "<a href='/breeders/trial/$trial_id/download/soil_data?format=soil_data_xls&dataLevel=soil_data&prop_id=$info[0]'>Download</a>");
+        push @formatted_soil_data, {
+            trial_id => $trial_id,
+            prop_id => $info[0],
+            description => $info[1],
+            date => $info[2],
+            gps => $info[3],
+            type_of_sampling => $info[4],
+            soil_data => $info[5],
+            download_link => $info[6]
+        };
+    }
+
+    $c->stash->{rest} = { data => \@formatted_soil_data };
+}
+
+
+sub delete_soil_data : Chained('trial') PathPart('delete_soil_data') : ActionClass('REST'){ }
+
+sub delete_soil_data_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $prop_id = $c->req->param("prop_id");
+    my $trial_id = $c->stash->{trial_id};
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to delete soil data!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to delete soil data!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = {error=>'Only a curator can delete soil data'};
+        $c->detach();
+    }
+
+    my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id, prop_id => $prop_id });
+    my $error = $soil_data_obj->delete_soil_data();
+
+    print STDERR "ERROR = $error\n";
+
+    if ($error) {
+	    $c->stash->{rest} = { error => "An error occurred attempting to delete soil data. ($@)"};
+	    return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
 }
 
 
