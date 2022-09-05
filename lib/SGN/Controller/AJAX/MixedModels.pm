@@ -308,7 +308,7 @@ sub result_file_to_hash {
     chomp(@lines);
 
     my $header_line = shift(@lines);
-    my ($accession_header, @trait_cols) = split /\t/, $header_line;
+    my ($accession_header, @value_cols) = split /\t/, $header_line;
 
     my $now = DateTime->now();
     my $timestamp = $now->ymd()."T".$now->hms();
@@ -319,24 +319,40 @@ sub result_file_to_hash {
     my @accession_names;
     my %analysis_data;
 
-    my $html = qq | <style> th, td { padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
+    my $html = qq | <style> th, td {padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
 
+    $html .= "<br><tr>";
+    for (my $m=0; $m<@value_cols; $m++) {
+      $html .= "<th scope=\"col\">".($value_cols[$m])."</th>";
+    }
+    $html .= "</tr><tr>";
     foreach my $line (@lines) {
-	my ($accession_name, @values) = split /\t/, $line;
-	push @accession_names, $accession_name;
-	$html .= "<tr><td>".join("</td><td>", $accession_name, @values)."</td></tr>\n";
-	for(my $n=0; $n<@values; $n++) {
-	    print STDERR "Building hash for accession $accession_name and trait $trait_cols[$n]\n";
-	    $analysis_data{$accession_name}->{$trait_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
+	      my ($accession_name, @values) = split /\t/, $line;
+	      push @accession_names, $accession_name;
 
-	}
+        #$html .= "<tr><td>".join("</td><td>", $accession_name)."</td>";
+
+        for (my $k=0; $k<@value_cols; $k++) {
+          #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
+          $html .= "<td>".($values[$k])."</td>";
+        }
+
+	      for(my $n=0; $n<@values; $n++) {
+	         #print STDERR "Building hash for trait $accession_name and value $value_cols[$n]\n";
+	          $analysis_data{$accession_name}->{$value_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
+
+
+
+	      }
+        $html .= "</tr>"
+
 
     }
     $html .= "</table>";
 
-    print STDERR "Analysis data formatted: ".Dumper(\%analysis_data);
+    #print STDERR "Analysis data formatted: ".Dumper(\%analysis_data);
 
-    return (\%analysis_data, $html, \@accession_names, \@trait_cols);
+    return (\%analysis_data, $html, \@accession_names, \@value_cols);
 }
 
 
