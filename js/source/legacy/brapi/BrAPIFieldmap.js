@@ -2740,7 +2740,7 @@
 	    let nodes = [];
 	    this.plots.features.forEach((plot)=>{
 	      let params = {
-	        observationUnitPosition: {geoCoordinates: plot},
+	        observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: 'plot'}},
 	        observationUnitDbId: plot.properties.observationUnitDbId
 	      };
 	      // XXX Using internal brapijs method for now
