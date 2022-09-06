@@ -43,12 +43,8 @@ $genotyping_plate_ids => undef
                             <label class="col-sm-3 control-label">Genotyping Plates: </label>
       	                    <div class="col-sm-9" >
                                 <div id="select_genotyping_plate_for_project">
-% if ($genotyping_plate_ids) {
                                     <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
                                     <input type="hidden" id="html_select_plate_for_project" name="html_select_plate_for_project" value="<% $trial_id %>" />
-% } else {
-  [Loading...]
-% }
                                 </div>
                             </div>
                         </div>
@@ -91,6 +87,10 @@ jQuery(document).ready(function() {
     jQuery('#add_existing_genotyping_plate_link').click(function(){
         jQuery('#add_existing_plate_to_project_dialog').modal("show");
     });
+
+    var breeding_program_id = <% $breeding_program_id %>;
+    get_select_box('projects', 'select_genotyping_plate_for_project', { 'name' : 'html_select_plate_for_project', 'id' : 'html_select_plate_for_project', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_genotyping_trials': 1, 'multiple': true });
+
 
 });
 
