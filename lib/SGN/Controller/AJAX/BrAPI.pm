@@ -277,11 +277,13 @@ sub _authenticate_user {
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
         #print STDERR $user_id." : ".$user_type." : ".$expired;
 
-        if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
-            my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
+        if (!exists($server_permission{$wildcard})){
+        		if(!$user_id || $expired || !$user_type || !exists($server_permission{$user_type})) {
+		            my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
-            _standard_response_construction($c, $brapi_package_result, 401);
-        }
+		            _standard_response_construction($c, $brapi_package_result, 401);
+		        }
+		    }
     }
 
     return (1, $user_id, $user_type, $user_pref, $expired);
