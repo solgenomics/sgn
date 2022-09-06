@@ -1,0 +1,98 @@
+<%args>
+
+$breeding_program_id => undef
+$breeding_program_name => undef
+$trial_id => undef
+$trial_name => undef
+$genotyping_plate_ids => undef
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
+
+<div class="modal fade" id="add_existing_plate_to_project_dialog" name="add_existing_plate_to_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addPlatesToProjectDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPlatesToProjectDialog">Add/Move Existing Genotyping Plate to this Project</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="add_existing_plates_dialog_form" name="add_existing_plates_dialog_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9" >
+                                <div id="genotyping_plate_breeding_program_div">
+                                    <input type="text" class="form-control" value="<% $breeding_program_name %>" disabled/>
+                                    <input type="hidden" id="genotyping_plate_breeding_program_id" name="genotyping_plate_breeding_program_id" value="<% $breeding_program_id %>" />
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Genotyping Project: </label>
+                            <div class="col-sm-9" >
+                                <div id="genotyping_project_div">
+                                    <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
+                                    <input type="hidden" id="genotyping_project_id" name="genotyping_project_id" value="<% $trial_id %>" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Genotyping Plates: </label>
+      	                    <div class="col-sm-9" >
+                                <div id="select_genotyping_plate_for_project">
+% if ($genotyping_plate_ids) {
+                                    <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
+                                    <input type="hidden" id="html_select_plate_for_project" name="html_select_plate_for_project" value="<% $trial_id %>" />
+% } else {
+  [Loading...]
+% }
+                                </div>
+                            </div>
+                        </div>
+                    </form><br/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="add_plate_to_project" id="add_plate_to_project" title="Save genotyping plate to a project">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_plate_to_project_success_dialog_message" name="add_plate_to_project_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addPlateToProjectSuccessDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPlateToProjectSuccessDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The genotyping plate was add to the genotyping project successfully
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_add_plate_to_project_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script defer="defer">
+jQuery(document).ready(function() {
+
+    jQuery('#add_existing_genotyping_plate_link').click(function(){
+        jQuery('#add_existing_plate_to_project_dialog').modal("show");
+    });
+
+});
+
+
+</script>
