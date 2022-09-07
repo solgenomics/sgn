@@ -200,8 +200,8 @@ sub validate {
             $parse_result{'error'}= "Chemical formula is required!";
             return \%parse_result;
         }
-        if (!$putative_metabolite_identification_synonyms){
-            $parse_result{'error'}= "Putative metabolite identification synonyms is required!";
+        if (!$putative_metabolite_identification){
+            $parse_result{'error'}= "Putative metabolite identification is required!";
             return \%parse_result;
         }
         if (!$mass_to_charge){

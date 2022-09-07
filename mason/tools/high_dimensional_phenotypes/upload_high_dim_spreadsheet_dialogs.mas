@@ -711,8 +711,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                 <li><strong>pubchem_id (optional)</strong>: Standard formula (e.g., https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:75854) identifier for the metabolite.</li>
                 <li><strong>smiles_id (optional)</strong>: Standard identifier (eg., Oc1ccc(O)c(O)c1) for the metabolite.</li>
                 <li><strong>chemical_formula (required)</strong>: Chemical formula of the metabolite (e.g., C6H6O3).</li>
-                <li><strong>putative_metabolite_identification (optional)</strong>: e.g., Phenylalanine, sucrose, avenanthramide.</li>
-                <li><strong>putative_metabolite_identification_synonyms (required)</strong>: Metabolite synonyms, alternate names of any of the above.</li>
+                <li><strong>putative_metabolite_identification (required)</strong>: e.g., Phenylalanine, sucrose, avenanthramide.</li>
+                <li><strong>putative_metabolite_identification_synonyms (optional)</strong>: Metabolite synonyms, alternate names of any of the above.</li>
                 <li><strong>mass_to_charge (required)</strong>: M/Z ratio, standard from output, should be a number.</li>
                 <li><strong>retention_time (required)</strong>: Retention time, also standard from machine output; users should confirm that unit is 'seconds'.</li>
                 <li><strong>charge (optional)</strong>: Could be negative or positive.</li>
