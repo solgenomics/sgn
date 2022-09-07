@@ -114,7 +114,7 @@ sub factors :Path('/ajax/gcpc/factors') Args(0) {
 
     # only use if factor has multiple levels, start from appropriate hardcoded list
     #
-    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber|;
+    my @factors = qw | studyYear studyDesign plantingDate locationName replicate rowNumber colNumber|;
     foreach my $factor (@factors) {
 	if ($pf->distinct_levels_for_factor($factor) > 1) {
     print STDERR "Processing factor $factor\n";
@@ -127,6 +127,8 @@ sub factors :Path('/ajax/gcpc/factors') Args(0) {
 
     }
     unshift @factor_select, "<b style=\"font-size:15px\">Select fixed and random factors to be included in the model</b></br>";
+    push @factor_select, "<h4 style=\"padding-left: 10px\">germplasmName</h4> \&emsp\;
+                          <input type = radio name=\"random\" value=\"random\" checked> random </input> \&emsp\;";
 
     print STDERR "FACTORS: ".Dumper(\@factors);
     print STDERR "FACTOR_SELECT: ".Dumper(\@factor_select);
@@ -416,7 +418,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     copy($pheno_filepath.".clean.out", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$basename);
 
     my $download_url = '/documents/tempfiles/gcpc_files/'.$basename;
-    my $download_link = "<a href=\"$download_url\">Download Results</a>";
+    my $download_link = "<a href=\"$download_url\" download>Download Results</a>";
 
     $c->stash->{rest} = {
 	data => \@data,
