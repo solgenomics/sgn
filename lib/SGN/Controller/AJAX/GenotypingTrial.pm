@@ -624,4 +624,23 @@ sub store_plate_order_POST : Args(0) {
 }
 
 
+sub set_project_for_genotyping_plate : Path('/ajax/breeders/set_project_for_genotyping_plate') ActionClass('REST') {}
+sub set_project_for_genotyping_plate_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    print STDERR "GENOTYPING PROJECT ID =".Dumper($genotyping_project_id)."\n";
+    print STDERR "GENOTYPING PLATE ID =".Dumper($genotyping_plate_id)."\n";
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {success => 1};
+
+}
+
+
 1;

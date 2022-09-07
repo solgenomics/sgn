@@ -35,7 +35,6 @@ $genotyping_plate_ids => undef
                             <div class="col-sm-9" >
                                 <div id="genotyping_project_div">
                                     <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
-                                    <input type="hidden" id="genotyping_project_id" name="genotyping_project_id" value="<% $trial_id %>" />
                                 </div>
                             </div>
                         </div>
@@ -53,7 +52,7 @@ $genotyping_plate_ids => undef
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="add_plate_to_project" id="add_plate_to_project" title="Save genotyping plate to a project">Save</button>
+                <button type="button" class="btn btn-primary" name="set_project_for_genotyping_plate" id="set_project_for_genotyping_plate" title="Save genotyping plate to a project">Save</button>
             </div>
         </div>
     </div>
@@ -88,9 +87,37 @@ jQuery(document).ready(function() {
         jQuery('#add_existing_plate_to_project_dialog').modal("show");
     });
 
-    var breeding_program_id = <% $breeding_program_id %>;
+    var breeding_program_id = "<% $breeding_program_id %>";
     get_select_box('projects', 'select_genotyping_plate_for_project', { 'name' : 'html_select_plate_for_project', 'id' : 'html_select_plate_for_project', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_genotyping_trials': 1, 'multiple': true });
 
+    jQuery('#set_project_for_genotyping_plate').click( function() {
+        var plate_ids = jQuery('#html_select_plate_for_project').val();
+        var genotyping_project_id = "<% $trial_id %>";
+
+        if ( jQuery.isArray(plate_ids) ) {
+            var errors = 0;
+            jQuery.each(plate_ids, function(index, value) {
+                console.log(value);
+                jQuery.ajax({
+                    url: '/ajax/breeders/set_project_for_genotyping_plate',
+                    timeout: 3000000,
+                    dataType: "json",
+                    type: 'POST',
+                    data:{
+                        'genotyping_project_id': genotyping_project_id,
+                        'genotyping_plate_id': value,
+                    },
+                    success: function(response) {
+
+                    },
+                    error: function(response) {
+                        errors = 1;
+                        alert('An error occurred trying to associate a genotyping plate to the genotyping project.');
+                    }
+                });
+            });
+        }
+    });
 
 });
 
