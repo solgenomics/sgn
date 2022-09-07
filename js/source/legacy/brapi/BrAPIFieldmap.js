@@ -2122,6 +2122,7 @@
 	const DEFAULT_OPTS = {
 	  brapi_auth: null,
 	  brapi_pageSize: 1000,
+	  brapi_levelName: 'plot',
 	  defaultPos: [0, 0],
 	  defaultZoom: 2,
 	  normalZoom: 16,
@@ -2272,9 +2273,9 @@
 	      let sourceTarget = e.sourceTarget;
 	      let ou = this.plot_map[sourceTarget.feature.properties.observationUnitDbId];
 	      get_oup_rel(ou).forEach((levels)=>{ 
-	      	if(levels.levelName == 'replicate'){ ou.replicate = levels.levelCode;}
-	  		else if(levels.levelName == 'block'){ ou.blockNumber = levels.levelCode;}
-	  		else if(levels.levelName == 'plot'){ ou.plotNumber = levels.levelCode;}});
+	          if(levels.levelName == 'replicate'){ ou.replicate = levels.levelCode;}
+	        else if(levels.levelName == 'block'){ ou.blockNumber = levels.levelCode;}
+	        else if(levels.levelName == 'plot'){ ou.plotNumber = levels.levelCode;}});
 	      this.info.html(`<div style="padding: 5px"><div>Germplasm: ${ou.germplasmName}</div>
        <div>Replicate: ${ou.replicate}</div>
        <div>    Block: ${ou.blockNumber}</div>
@@ -2393,7 +2394,7 @@
 	        }));
 	        if (!data.plots_shaped) {
 	          // rotate to original position
-				this.plots = turf.transformRotate(this.plots, -this.rotation);
+	          this.plots = turf.transformRotate(this.plots, -this.rotation);
 	        }
 	        this.fitBounds(this.plots);
 	      });
@@ -2414,7 +2415,7 @@
 	      brapi.search_observationunits({
 	        "studyDbIds":[studyDbId],
 	        'pageSize':this.opts.brapi_pageSize,
-	        'observationUnitLevelName' : 'plot'
+	        'observationLevels' : [{ "levelName" : this.opts.brapi_levelName }]
 	      })
 	        .each(ou=>{
 	          ou.X = parseFloat(ou.X);
@@ -2570,9 +2571,9 @@
 	      let plotLength = this.opts.plotLength/1000,
 	        plotWidth = this.opts.plotWidth/1000;
 	      const cols = Object.keys(plot_XY_groups).length,
-	      rows =  Object.values(plot_XY_groups).reduce((acc, col)=>{
-	        Object.keys(col).forEach((row, i)=>{
-	          if (!row) return;
+	        rows =  Object.values(plot_XY_groups).reduce((acc, col)=>{
+	          Object.keys(col).forEach((row, i)=>{
+	            if (!row) return;
 	            acc[i] = acc[i]+1 || 1;
 	          });
 	          return acc;
@@ -2740,7 +2741,7 @@
 	    let nodes = [];
 	    this.plots.features.forEach((plot)=>{
 	      let params = {
-	        observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: 'plot'}},
+	        observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: this.opts.brapi_levelName }},
 	        observationUnitDbId: plot.properties.observationUnitDbId
 	      };
 	      // XXX Using internal brapijs method for now
