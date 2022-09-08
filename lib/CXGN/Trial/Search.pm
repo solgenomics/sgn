@@ -322,11 +322,6 @@ sub search {
         push @where_clause, "phenotype.cvalue_id in ($sql)";
         $trait_join = " JOIN nd_experiment_project ON(study.project_id=nd_experiment_project.project_id) JOIN nd_experiment AS trial_experiment ON(trial_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_stock ON(trial_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock AS obs_unit ON(nd_experiment_stock.stock_id=obs_unit.stock_id) JOIN nd_experiment_stock AS nd_experiment_stock_obs ON(nd_experiment_stock_obs.stock_id=obs_unit.stock_id) JOIN nd_experiment AS phenotype_experiment ON(nd_experiment_stock_obs.nd_experiment_id=phenotype_experiment.nd_experiment_id AND phenotype_experiment.type_id=$phenotyping_experiment_cvterm_id) JOIN nd_experiment_phenotype ON(nd_experiment_phenotype.nd_experiment_id=phenotype_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) ";
     }
-    print( "<><><><><><><><><><><><><><><><><><><><><><>\n");
-    print( Dumper( $externalReferenceSources ));
-    print( Dumper( $externalReferenceIds->[0] ));
-    print( Dumper( $externalReferenceIds ));
-    print( "././/./././././././././././././././././././././/./././././\n");
 
     my @refSource_whereClause = ();
     foreach my $refSource (@$externalReferenceSources){
@@ -337,6 +332,7 @@ sub search {
         push @where_clause, "( $refSource_whereClause_str )";
     }
 
+    # see  https://plant-breeding-api.readthedocs.io/en/latest/docs/best_practices/Search_Services.html#request-and-response-rules
     my @refId_whereClause = ();
     foreach my $refId (@$externalReferenceIds){
         push @refId_whereClause, "'$refId' = ANY(xref.xrefIds)"
@@ -372,7 +368,7 @@ sub search {
         LEFT JOIN projectprop AS sampling_facility ON(study.project_id=sampling_facility.project_id AND sampling_facility.type_id=$sampling_facility_cvterm_id)
         LEFT JOIN projectprop AS sampling_facility_sample_type ON(study.project_id=sampling_facility_sample_type.project_id AND sampling_facility_sample_type.type_id=$sampling_facility_sample_type_cvterm_id)
         LEFT JOIN projectprop AS project_additional_info ON(study.project_id=project_additional_info.project_id AND project_additional_info.type_id=$additional_info_cvterm_id)
-         left join (
+        LEFT JOIN (
                 select a.project_id, array_agg(referenceId) as xrefIds, array_agg(referenceSource) as xrefSources, jsonb_agg(jsonb_build_object('referenceSource', a.referenceSource, 'referenceId', a.referenceId)) as xrefjson
                     from (
                         select name as referenceSource, dbxref.accession as referenceId, pd.project_id
