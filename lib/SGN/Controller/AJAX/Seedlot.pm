@@ -397,7 +397,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $amount = $c->req->param("seedlot_amount");
     my $weight = $c->req->param("seedlot_weight");
     my $timestamp = $c->req->param("seedlot_timestamp");
-    my $description = $c->req->param("seedlot_transaction_description");
+    my $seedlot_description = $c->req->param("seedlot_description");
+    my $transaction_description = $c->req->param("seedlot_transaction_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
     if (!$weight && !$amount){
@@ -426,6 +427,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     eval {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
+        $sl->description($seedlot_description);
         $sl->location_code($location_code);
         $sl->box_name($box_name);
         $sl->accession_stock_id($accession_id);
@@ -433,7 +435,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->organization_name($organization);
         $sl->population_name($population_name);
         $sl->breeding_program_id($breeding_program_id);
-	$sl->quality($seedlot_quality);
+	    $sl->quality($seedlot_quality);
         my $return = $sl->store();
         my $seedlot_id = $return->{seedlot_id};
 
@@ -448,7 +450,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
             $transaction->weight_gram($weight);
         }
         $transaction->timestamp($timestamp);
-        $transaction->description($description);
+        $transaction->description($transaction_description);
         $transaction->operator($operator);
         $transaction->store();
 
@@ -1018,7 +1020,8 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             my $amount = $c->req->param('to_new_seedlot_amount');
             my $weight = $c->req->param('to_new_seedlot_weight');
             my $timestamp = $c->req->param('to_new_seedlot_timestamp');
-            my $description = $c->req->param('to_new_seedlot_description');
+            my $transaction_description = $c->req->param('to_new_seedlot_description');
+            my $seedlot_description = $c->req->param('to_new_seedlot_description');
 
             my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
             my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -1078,7 +1081,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->amount($amount);
             $transaction->weight_gram($weight);
             $transaction->timestamp($timestamp);
-            $transaction->description($description);
+            $transaction->description($transaction_description);
             $transaction->operator($operator);
             $transaction->store();
 

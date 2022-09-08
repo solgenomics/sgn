@@ -24,7 +24,7 @@ $cross_uniquename => ''
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Seedlot Description: </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_description" placeholder="Required">
+                        <input class="form-control" id="seedlot_description" placeholder="Optional">
                     </div>
                 </div>
                 <div class="form-group">
