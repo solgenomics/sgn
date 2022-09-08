@@ -41,7 +41,6 @@ has 'genotyping_plate_list' => (
 );
 
 
-
 sub BUILD {
 
     my $self = shift;
@@ -62,6 +61,38 @@ sub BUILD {
     }
 
     $self->genotyping_plate_list(\@plate_list);
+
+}
+
+
+sub associate_genotyping_plate {
+    my $self = shift;
+    my $genotyping_plate_list = $self->genotyping_plate_list();
+    my @genotyping_plates = @$genotyping_plate_list;
+
+    my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+
+    foreach my $plate_id (@genotyping_plates) {
+        my $relationship_rs = $schema->resultset("Project::ProjectRelationship")->find ({
+#            object_project_id => $self->project_id(),
+            subject_project_id => $plate_id,
+            type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+        });
+
+        if (!$relationship_rs) {
+            $relationship_rs = $schema->resultset('Project::ProjectRelationship')->create({
+        		object_project_id => $self->project_id(),
+        		subject_project_id => $plate_id,
+        		type_id => $genotype_project_relationship_cvterm->cvterm_id()
+            });
+
+            $relationship_rs->insert();
+        } else {
+            $relationship_rs->object_project_id($self->project_id());
+            $relationship_rs->update();
+        }
+
+    }
 
 }
 
