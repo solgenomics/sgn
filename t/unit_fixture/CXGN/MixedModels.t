@@ -3,6 +3,7 @@ use strict;
 use Test::More qw | no_plan |;
 use File::Slurp;
 use File::Temp qw | tempfile |;
+use File::Basename qw | basename dirname |;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::MixedModels;
@@ -30,7 +31,7 @@ $ds->years( [ "2014", "2015" ]);
 $ds->store();
 
 
-my $dsf = CXGN::Dataset::File->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema(), sp_dataset_id => $ds->sp_dataset_id(), file_name => $tempfile, quotes => 0 });
+my $dsf = CXGN::Dataset::File->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema(), sp_dataset_id => $ds->sp_dataset_id(), quotes => 0 });
 
 $dsf->file_name($tempfile);
 $dsf->retrieve_phenotypes();
@@ -38,13 +39,16 @@ $dsf->retrieve_phenotypes();
 ok( -e $tempfile."_phenotype.txt", "phenotype file exists test");
 
 my $pheno_tempfile = $tempfile."_phenotype.txt";
-print STDERR "file size: ". `ls -al $pheno_tempfile`;
+
+my $file_size =  `ls -al $pheno_tempfile`;
+print STDERR "file size: $file_size\n";
+ok($file_size =~ /167672/, 'phenotype file size test');
 
 my $mm = CXGN::MixedModels->new();
 
 $mm->tempfile($pheno_tempfile);
 
-is($mm->engine(), "lme4", "engine test if engine not set");
+is($mm->engine(), "lme4", "test engine default setting");
 
 foreach my $engine ("lme4", "sommer") { 
 
@@ -58,6 +62,8 @@ foreach my $engine ("lme4", "sommer") {
 
     my ($model_string, $error) = $mm->generate_model();
 
+    print STDERR "MODEL STRING: $model_string ERROR: $error\n";
+
     if ($engine eq "lme4") { 
 	is($model_string, "replicate + (1|germplasmName)", "model string test for BLUPs");
     }
@@ -65,7 +71,7 @@ foreach my $engine ("lme4", "sommer") {
 	print STDERR "MODEL STRING: $model_string\n";
     }
     
-    $mm->run_model("Slurm", "localhost", "/tmp");
+    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
 
     print STDERR "Using tempfile base ".$mm->tempfile()."\n";
 
@@ -74,6 +80,8 @@ foreach my $engine ("lme4", "sommer") {
     ok( -e $mm->tempfile().".BLUPs", "check existence of BLUPs result file");
 
     is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 413, "check number of lines in adjustedBLUEs file...");
+
+}
 
 my $SYSTEM_MODE = `echo \$SYSTEM`;
 
@@ -141,18 +149,18 @@ if ($SYSTEM_MODE !~ /GITACTION/) {
     is(scalar(my @a = read_file($mm->tempfile() . ".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
 
     # cleanup for next test :-)
-    unlink($mm->tempfile() . ".adjustedBLUEs");
-    unlink($mm->tempfile() . ".BLUEs");
+    #unlink($mm->tempfile() . ".adjustedBLUEs");
+    #unlink($mm->tempfile() . ".BLUEs");
 }
 ### END: GITACTION PROBLEM
 
 # cleanup for next test :-)
 #
-unlink($mm->tempfile().".params");
-unlink($mm->tempfile().".adjustedBLUPs");
-unlink($mm->tempfile().".BLUPs");
+#unlink($mm->tempfile().".params");
+#unlink($mm->tempfile().".adjustedBLUPs");
+#unlink($mm->tempfile().".BLUPs");
 
-$ds->delete();
+#$ds->delete();
 
 # phew, we're done!
 #
