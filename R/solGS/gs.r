@@ -297,11 +297,20 @@ phenoTraitMarker[, 1]      <- NULL
 #impute missing data in prediction data
 selectionDataMissing <- c()
 if (length(selectionData) != 0) {
+  
   #purge markers unique to both populations
   commonMarkers       <- intersect(names(data.frame(genoDataFilteredObs)), names(selectionData))
-  selectionData      <- subset(selectionData, select = commonMarkers)
-  genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
+  message("count common markers: ", length(commonMarkers), ' common markers ', commonMarkers)
+  message("common markers ", commonMarkers)
 
+  if (length(commonMarkers) == 0) {
+  stop("The training model genotype dataset and selection population dataset share no common markers.")
+}
+  selectionData      <- subset(selectionData, select = commonMarkers)
+    message("count selection pop markers count after filtering for common markers: ", length(names(selectionData)))
+  genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
+ message("count training model markers count after filtering for common markers: ", length(names(genoDataFilteredObs)))
+ 
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
     selectionData <- na.roughfix(selectionData)
