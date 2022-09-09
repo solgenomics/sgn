@@ -24,7 +24,7 @@ solGS.download = {
   },
 
   getSelectionPopRawDataFiles: function () {
-    var args = solGS.getSelectionPopArgs();
+    var args = solGS.getSelectionPredictionArgs();
     args = JSON.stringify(args);
 
     var popDataReq = jQuery.ajax({
