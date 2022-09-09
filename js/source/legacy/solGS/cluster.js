@@ -999,71 +999,6 @@ jQuery.fn.doesExist = function () {
   return jQuery(this).length > 0;
 };
 
-<<<<<<< HEAD
-jQuery(document).ready(function () {
-  var url = document.URL;
-
-  if (url.match(/cluster\/analysis/)) {
-    var list = new CXGN.List();
-
-    var listMenu = list.listSelect(
-      "cluster_genotypes",
-      ["accessions", "plots", "trials"],
-      undefined,
-      undefined,
-      undefined
-    );
-
-    var dType = ["accessions", "trials"];
-
-    var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-    if (listMenu.match(/option/) != null) {
-      jQuery("#cluster_genotypes_list").append(listMenu);
-      jQuery("#cluster_genotypes_list_select").append(dMenu);
-
-      var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
-      var clusterPopId = clusterArgs.cluster_pop_id;
-      if (clusterPopId) {
-        solGS.cluster.runClusterAnalysis(clusterArgs);
-      }
-    } else {
-      jQuery("#cluster_genotypes_list").append(
-        "<select><option>no lists found - Log in</option></select>"
-      );
-    }
-  }
-||||||| 990959931
-jQuery(document).ready(function() {
-
-	var url = document.URL;
-
-	if (url.match(/cluster\/analysis/)) {
-
-		var list = new CXGN.List();
-
-		var listMenu = list.listSelect("cluster_genotypes", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
-
-		var dType = ['accessions', 'trials'];
-
-		var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-		if (listMenu.match(/option/) != null) {
-			jQuery("#cluster_genotypes_list").append(listMenu);
-			jQuery("#cluster_genotypes_list_select").append(dMenu);
-
-			var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
-			var clusterPopId = clusterArgs.cluster_pop_id;
-			if (clusterPopId) {
-				solGS.cluster.runClusterAnalysis(clusterArgs);
-			}
-
-		} else {
-			jQuery("#cluster_genotypes_list").append("<select><option>no lists found - Log in</option></select>");
-		}
-	}
-
-=======
 jQuery(document).ready(function() {
 
 	var url = location.pathname;
@@ -1094,7 +1029,6 @@ jQuery(document).ready(function() {
 		}
 	}
 
->>>>>>> master
 });
 
 jQuery(document).ready(function () {
@@ -1127,67 +1061,6 @@ jQuery(document).ready(function () {
   });
 });
 
-<<<<<<< HEAD
-jQuery(document).ready(function () {
-  var url = document.URL;
-
-  if (url.match(/cluster\/analysis/)) {
-    jQuery("<option>", {
-      value: "",
-      selected: true,
-    }).prependTo("#cluster_genotypes_list_select");
-
-    jQuery("#cluster_genotypes_list_select").change(function () {
-      var selectId = jQuery(this).find("option:selected").val();
-      var selectName = jQuery(this).find("option:selected").text();
-      var dataStr = jQuery(this).find("option:selected").attr("name");
-
-      if (dataStr == undefined) {
-        dataStr = "list";
-      }
-
-      if (selectId) {
-        jQuery("#cluster_go_btn").click(function () {
-          solGS.cluster.loadClusterGenotypesList(selectId, selectName, dataStr);
-        });
-      }
-    });
-
-    //checkClusterResult();
-  }
-||||||| 990959931
-
-jQuery(document).ready(function() {
-
-	var url = document.URL;
-
-	if (url.match(/cluster\/analysis/)) {
-
-		jQuery("<option>", {
-			value: '',
-			selected: true
-		}).prependTo("#cluster_genotypes_list_select");
-
-		jQuery("#cluster_genotypes_list_select").change(function() {
-			var selectId = jQuery(this).find("option:selected").val();
-			var selectName = jQuery(this).find("option:selected").text();
-			var dataStr = jQuery(this).find("option:selected").attr('name');
-
-			if (dataStr == undefined) {
-				dataStr = 'list';
-			}
-
-			if (selectId) {
-				jQuery("#cluster_go_btn").click(function() {
-					solGS.cluster.loadClusterGenotypesList(selectId, selectName, dataStr);
-
-				});
-			}
-		});
-
-		//checkClusterResult();
-	}
-=======
 
 jQuery(document).ready(function() {
 
@@ -1219,134 +1092,8 @@ jQuery(document).ready(function() {
 
 		//checkClusterResult();
 	}
->>>>>>> master
 });
 
-<<<<<<< HEAD
-jQuery(document).ready(function () {
-  //  jQuery(document).click(function(event){
-  //     alert("You've clicked: " + event.target.nodeName + ", id: " + event.target.id);
-  // });
-
-  jQuery("#run_cluster").click(function () {
-    var dataStr = jQuery("#data_structure").val();
-    var selectId;
-    var selectName;
-    if (dataStr == "dataset") {
-      selectId = jQuery("#dataset_id").val();
-    } else if (dataStr == "list") {
-      selectId = jQuery("#list_id").val();
-    }
-
-    if (!dataStr) {
-      var popType = jQuery("#cluster_selected_population_type").val();
-
-      if (popType == "list") {
-        dataStr = "list";
-      } else if (popType == "dataset") {
-        dataStr = "dataset";
-      }
-    }
-
-    if (selectId == undefined) {
-      selectId = jQuery("#cluster_selected_population_id").val();
-    }
-
-    if (document.URL.match(/breeders\/trial\//)) {
-      selectId = jQuery("#trial_id").val();
-      selectName = jQuery("#trial_name").val();
-    }
-
-    if (selectName == undefined) {
-      selectName = jQuery("#cluster_selected_population_name").val();
-    }
-
-    var clusterOptsId = "cluster_options";
-    var clusterPopId = solGS.cluster.getClusterPopId(selectId, dataStr);
-    var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
-
-    // if (clusterOpts.selection_proportion) {
-    //     selectId = selectName;
-    // }
-
-    var clusterArgs = {
-      select_id: selectId,
-      select_name: selectName,
-      data_structure: dataStr,
-      cluster_pop_id: clusterPopId,
-      cluster_type: clusterOpts.cluster_type,
-      data_type: clusterOpts.data_type,
-      k_number: clusterOpts.k_number,
-      selection_proportion: clusterOpts.selection_proportion,
-    };
-
-    solGS.cluster.clusterResult(clusterArgs);
-  });
-||||||| 990959931
-
-jQuery(document).ready(function() {
-
-
-	//  jQuery(document).click(function(event){
-	//     alert("You've clicked: " + event.target.nodeName + ", id: " + event.target.id);
-	// });
-
-	jQuery("#run_cluster").click(function() {
-		var dataStr = jQuery('#data_structure').val();
-		var selectId;
-		var selectName;
-		if (dataStr == 'dataset') {
-			selectId = jQuery('#dataset_id').val();
-		} else if (dataStr == 'list') {
-			selectId = jQuery('#list_id').val();
-		}
-
-		if (!dataStr) {
-			var popType = jQuery("#cluster_selected_population_type").val();
-
-			if (popType == 'list') {
-				dataStr = 'list';
-			} else if (popType == 'dataset') {
-				dataStr = 'dataset';
-			}
-		}
-
-		if (selectId == undefined) {
-			selectId = jQuery("#cluster_selected_population_id").val();
-		}
-
-		if (document.URL.match(/breeders\/trial\//)) {
-			selectId = jQuery("#trial_id").val();
-			selectName = jQuery("#trial_name").val();
-		}
-
-		if (selectName == undefined) {
-			selectName = jQuery("#cluster_selected_population_name").val();
-		}
-
-		var clusterOptsId = 'cluster_options';
-		var clusterPopId = solGS.cluster.getClusterPopId(selectId, dataStr);
-		var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
-
-		// if (clusterOpts.selection_proportion) {
-		//     selectId = selectName;
-		// }
-
-		var clusterArgs = {
-			'select_id': selectId,
-			'select_name': selectName,
-			'data_structure': dataStr,
-			'cluster_pop_id': clusterPopId,
-			'cluster_type': clusterOpts.cluster_type,
-			'data_type': clusterOpts.data_type,
-			'k_number': clusterOpts.k_number,
-			'selection_proportion': clusterOpts.selection_proportion
-		};
-
-		solGS.cluster.clusterResult(clusterArgs);
-	});
-
-=======
 
 jQuery(document).ready(function() {
 
@@ -1410,88 +1157,8 @@ jQuery(document).ready(function() {
 		solGS.cluster.clusterResult(clusterArgs);
 	});
 
->>>>>>> master
 });
 
-<<<<<<< HEAD
-jQuery(document).ready(function () {
-  var page = document.URL;
-
-  if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)) {
-    setTimeout(function () {
-      solGS.cluster.listClusterPopulations();
-    }, 5000);
-
-    var dataTypeOpts = solGS.cluster.getDataTypeOpts();
-
-    dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts);
-    var clusterTypeOpts = solGS.cluster.createClusterTypeSelect();
-
-    jQuery(document).ready(checkClusterPop);
-
-    function checkClusterPop() {
-      if (jQuery("#cluster_div #cluster_select_a_population_div").is(":visible")) {
-        jQuery("#cluster_div #cluster_options #cluster_data_type_opts").html(dataTypeOpts);
-        jQuery("#cluster_div #cluster_options #cluster_type_opts").html(clusterTypeOpts);
-        jQuery("#cluster_div #cluster_options").show();
-      } else {
-        setTimeout(checkClusterPop, 6000);
-      }
-    }
-  } else {
-    if (!page.match(/cluster\/analysis/)) {
-      var dataTypeOpts = solGS.cluster.getDataTypeOpts();
-      dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts);
-      var clusterTypeOpts = solGS.cluster.createClusterTypeSelect();
-
-      jQuery("#cluster_div #cluster_options #cluster_data_type_opts").html(dataTypeOpts);
-      jQuery("#cluster_div #cluster_options #cluster_type_opts").html(clusterTypeOpts);
-      jQuery("#cluster_div #cluster_options").show();
-    }
-  }
-});
-||||||| 990959931
-
-jQuery(document).ready(function() {
-	var page = document.URL;
-
-	if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)) {
-
-		setTimeout(function() {
-			solGS.cluster.listClusterPopulations()
-		}, 5000);
-
-		var dataTypeOpts = solGS.cluster.getDataTypeOpts();
-
-		dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts);
-		var clusterTypeOpts = solGS.cluster.createClusterTypeSelect();
-
-		jQuery(document).ready(checkClusterPop);
-
-		function checkClusterPop() {
-			if (jQuery('#cluster_div #cluster_select_a_population_div').is(':visible')) {
-				jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
-				jQuery('#cluster_div #cluster_options #cluster_type_opts').html(clusterTypeOpts);
-				jQuery('#cluster_div #cluster_options').show();
-			} else {
-				setTimeout(checkClusterPop, 6000);
-			}
-		}
-	} else {
-
-		if (!page.match(/cluster\/analysis/)) {
-			var dataTypeOpts = solGS.cluster.getDataTypeOpts();
-			dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts);
-			var clusterTypeOpts = solGS.cluster.createClusterTypeSelect();
-
-			jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
-			jQuery('#cluster_div #cluster_options #cluster_type_opts').html(clusterTypeOpts);
-			jQuery("#cluster_div #cluster_options").show();
-		}
-
-	}
-});
-=======
 
 jQuery(document).ready(function() {
 	var page = location.pathname;
@@ -1532,4 +1199,3 @@ jQuery(document).ready(function() {
 
 	}
 });
->>>>>>> master
