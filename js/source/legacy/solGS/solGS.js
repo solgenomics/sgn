@@ -61,6 +61,7 @@ solGS.submitJob = {
 
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
+
     jQuery.ajax({
       type: "POST",
       dataType: "json",
@@ -267,7 +268,7 @@ solGS.submitJob = {
       var listTypePages =
         "solgs/selection/\\w+_\\d+/model/\\w+_\\d+/" + "|solgs/selection/\\d+/model/\\w+_\\d+/";
 
-      if (page.match(/listTypePages/)) {
+      if (page.match(listTypePages)) {
         loadGenotypesListTypeSelectionPop(args);
       } else {
         window.location = page;
@@ -535,10 +536,9 @@ solGS.submitJob = {
     // if (!protocolId) {
     //   protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
     // }
-
-    console.log('calling geno protocols')
+var urlProtocol = urlStr[9];
     var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
-    console.log('got  protocols ' + protocols.genotyping_protocol_id)
+
     args["training_pop_desc"] = jQuery("#training_pop_desc").val();
     args["selection_pop_desc"] = jQuery("#selection_pop_desc").val();
     args["genotyping_protocol_id"] = protocols.genotyping_protocol_id;
@@ -864,7 +864,7 @@ solGS.getModelArgs = function () {
   return args;
 };
 
-solGS.getSelectionPopArgs = function () {
+solGS.getSelectionPredictionArgs = function () {
   var args = this.getModelArgs();
   var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
   var selPopGenoProtocolId = protocols.selection_pop_genotyping_protocol_id;
