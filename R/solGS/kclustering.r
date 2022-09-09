@@ -158,7 +158,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
 
-        if (!is.na(predictedTraits) & length(predictedTraits) > 1) {
+        if (!is.na(predictedTraits) && length(predictedTraits) > 1) {
             clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>%
                 select(c(germplasmName, predictedTraits))
@@ -230,7 +230,7 @@ clusteredData <- clusteredData %>%
 # print(paste('size: ', '\n', '\n', round(kMeansOut$size, 2)))
 # print(paste('centers: ','\n', round(kMeansOut$centers, 2)))
 
-if (length(elbowPlotFile) & !file.info(elbowPlotFile)$size) {
+if (length(elbowPlotFile) && !file.info(elbowPlotFile)$size) {
     message("running elbow method...")
     png(elbowPlotFile)
     print(fviz_nbclust(clusterData, k.max = 20, FUNcluster = kmeans, method = "wss"))

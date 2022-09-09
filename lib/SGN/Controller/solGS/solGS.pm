@@ -372,10 +372,6 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		$model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
 		$c->stash->{model_page_url} = $model_page;
 
-		my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
-		$gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
-
-		$c->stash->{blups_download_url} = $gebvs_download;
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
     }
@@ -394,7 +390,7 @@ sub build_single_trait_model {
 }
 
 
-sub trait :Path('/solgs/trait') Args() {
+sub trait :Path('/solgs/trait') Args(5) {
     my ($self, $c, $trait_id, $key, $pop_id, $gp, $protocol_id) = @_;
 
     if ($pop_id =~ /dataset/)
@@ -406,9 +402,8 @@ sub trait :Path('/solgs/trait') Args() {
 	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
     }
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $protocol_id = $c->stash->{genotyping_protocol_id};
-
+    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
 
@@ -469,7 +464,6 @@ sub gs_modeling_files {
     $self->input_files($c);
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
-    $c->controller('solGS::Download')->training_prediction_download_urls($c);
     $self->top_markers($c, $c->stash->{marker_effects_file});
     $self->model_parameters($c);
 
@@ -566,6 +560,7 @@ sub output_files {
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller("solGS::Files")->model_phenodata_file($c);
+    $c->controller("solGS::Files")->model_genodata_file($c);
     $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
@@ -573,7 +568,7 @@ sub output_files {
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-
+     
     my $selection_pop_id = $c->stash->{selection_pop_id};
 
 
@@ -582,27 +577,31 @@ sub output_files {
     if ($selection_pop_id)
     {
         $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c,$training_pop_id, $selection_pop_id, $trait_id);
+        $c->controller('solGS::Files')->filtered_selection_genotype_file($c);
     }
 
     my $file_list = join ("\t",
-                          $c->stash->{rrblup_training_gebvs_file},
-                          $c->stash->{marker_effects_file},
-                          $c->stash->{validation_file},
-                          $c->stash->{model_phenodata_file},
-                          $c->stash->{trait_raw_phenodata_file},
-                          $c->stash->{selected_traits_gebv_file},
-                          $c->stash->{variance_components_file},
-			  $c->stash->{relationship_matrix_table_file},
-			  $c->stash->{relationship_matrix_adjusted_table_file},
-			  $c->stash->{inbreeding_coefficients_file},
-			  $c->stash->{average_kinship_file},
-			  $c->stash->{relationship_matrix_json_file},
-			  $c->stash->{relationship_matrix_adjusted_json_file},
-			  $c->stash->{filtered_training_genotype_file},
-                          $c->stash->{rrblup_selection_gebvs_file}
+                        $c->stash->{rrblup_training_gebvs_file},
+                        $c->stash->{marker_effects_file},
+                        $c->stash->{validation_file},
+                        $c->stash->{model_phenodata_file},
+                        $c->stash->{model_genodata_file},
+                        $c->stash->{trait_raw_phenodata_file},
+                        $c->stash->{selected_traits_gebv_file},
+                        $c->stash->{variance_components_file},
+			            $c->stash->{relationship_matrix_table_file},
+			            $c->stash->{relationship_matrix_adjusted_table_file},
+                        $c->stash->{inbreeding_coefficients_file},
+                        $c->stash->{average_kinship_file},
+                        $c->stash->{relationship_matrix_json_file},
+                        $c->stash->{relationship_matrix_adjusted_json_file},
+                        $c->stash->{filtered_training_genotype_file},
+                        $c->stash->{filtered_selection_genotype_file},
+                        $c->stash->{rrblup_selection_gebvs_file}
         );
 
     my $name = "output_files_${trait}_${training_pop_id}";
+    $name .= "_${selection_pop_id}" if $selection_pop_id;
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, {binmode => ':utf8'}, $file_list);
@@ -661,7 +660,6 @@ sub predict_selection_pop_multi_traits {
     my @unpredicted_traits;
     foreach my $trait_id (@{$c->stash->{training_traits_ids}})
     {
-	# my $identifier = $training_pop_id .'_' . $selection_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id,  $trait_id);
 
 	push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
@@ -866,9 +864,6 @@ sub model_parameters {
     $c->stash->{model_parameters} = $params;
 
 }
-
-
-
 
 
 sub selection_population_predicted_traits :Path('/solgs/selection/population/predicted/traits/') Args(0) {

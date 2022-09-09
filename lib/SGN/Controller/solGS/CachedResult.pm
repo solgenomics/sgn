@@ -31,7 +31,7 @@ sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
     my ($self, $c) = @_;
 
     my $req_page = $c->req->param('page');
-    my $args     = $c->req->param('args');
+    my $args     = $c->req->param('arguments');
 
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 

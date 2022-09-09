@@ -12,6 +12,7 @@ $trial_description
 $folder_name
 $folder_id
 $identifier_prefix
+$trial_owner
 </%args>
 
 
@@ -120,6 +121,18 @@ $identifier_prefix
                 </td>
             </tr>
 
+            <tr>
+                <td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%  print "$trial_owner";
+% } else {
+%  print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
         </table>
 
     </div>
@@ -129,4 +142,4 @@ $identifier_prefix
         </div>
     </div>
 </div>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_new_crosses_link">Upload New Crosses</button><a href="/breeders/trial/<% $trial_id %>/download/layout?format=crossing_experiment_xls&dataLevel=cross" class="btn btn-sm btn-default">Download Crosses in this Crossing Experiment</a>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_new_crosses_link">Upload New Crosses</button><a href="/breeders/trial/<% $trial_id %>/download/crosses?format=crossing_experiment_xls&dataLevel=cross" class="btn btn-sm btn-default">Download Crosses in this Crossing Experiment</a>

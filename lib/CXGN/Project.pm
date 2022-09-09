@@ -2641,7 +2641,7 @@ sub obsolete_additional_uploaded_file {
     # check ownership of that image
     my $q = "SELECT metadata.md_metadata.create_person_id, metadata.md_metadata.metadata_id, metadata.md_files.file_id FROM metadata.md_metadata join metadata.md_files using(metadata_id) where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
 
-    my $dbh = $self->bcs_schema->storage()->dbh(); 
+    my $dbh = $self->bcs_schema->storage()->dbh();
     my $h = $dbh->prepare($q);
 
     $h->execute($file_id, $user_id);
@@ -2655,19 +2655,19 @@ sub obsolete_additional_uploaded_file {
 	else {
 	    push @errors, "Only the owner of the uploaded file, or a curator, can delete this file.";
 	}
-	
+
     }
     else {
 	push @errors, "No such file currently exists.";
     }
- 
+
     if (@errors >0) {
 	return { errors => \@errors };
     }
 
     return { success => 1 };
-    
-		
+
+
 
 }
 
@@ -5095,6 +5095,12 @@ sub delete_empty_crossing_experiment {
 	return 'Cannot delete crossing experiment with associated crosses.';
     }
 
+    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {$self->bcs_schema->storage->dbh()},{on_connect_do => ['SET search_path TO public,phenome;']});
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+    if ($project_owner_row) {
+        $project_owner_row->delete();
+    }
+
     eval {
 	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
 	$row->delete();
@@ -5181,13 +5187,13 @@ sub delete_genotyping_plate_from_field_trial_linkage {
     } else {
         push @errors, "Project relationship does not exists or has more than 1 occurrence.";
     }
- 
+
     if (@errors >0) {
     return { errors => \@errors };
     }
 
     return { success => 1 };
-        
+
 
 }
 

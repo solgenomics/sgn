@@ -145,7 +145,7 @@ solGS.cluster = {
 	},
 
 	clusterTypeSelectId: function(rowId) {
-		if (document.URL.match(/cluster\/analysis/) && rowId) {
+		if (location.pathname.match(/cluster\/analysis/) && rowId) {
 			return `cluster_type_select_${rowId}`;
 		} else {
 			return 'cluster_type_select';
@@ -154,7 +154,7 @@ solGS.cluster = {
 	},
 
 	clusterDataTypeSelectId: function(rowId) {
-		if (document.URL.match(/cluster\/analysis/) && rowId) {
+		if (location.pathname.match(/cluster\/analysis/) && rowId) {
 			return `cluster_data_type_select_${rowId}`;
 		} else {
 			return 'cluster_data_type_select';
@@ -163,7 +163,7 @@ solGS.cluster = {
 	},
 
 	clusterKnumSelectId: function(rowId) {
-		if (document.URL.match(/cluster\/analysis/) && rowId) {
+		if (location.pathname.match(/cluster\/analysis/) && rowId) {
 			return `k_number_input_${rowId}`;
 		} else {
 			return 'k_number_input';
@@ -172,7 +172,7 @@ solGS.cluster = {
 	},
 
 	clusterSelPropSelectId: function(rowId) {
-		if (document.URL.match(/cluster\/analysis/) && rowId) {
+		if (location.pathname.match(/cluster\/analysis/) && rowId) {
 			return `selection_proportion_input_${rowId}`;
 		} else {
 			return 'selection_proportion_input';
@@ -181,7 +181,7 @@ solGS.cluster = {
 	},
 
 	clusterRunClusterId: function(rowId) {
-		if (document.URL.match(/cluster\/analysis/) && rowId) {
+		if (location.pathname.match(/cluster\/analysis/) && rowId) {
 			return `run_cluster_${rowId}`;
 		} else {
 			return 'run_cluster';
@@ -214,7 +214,7 @@ solGS.cluster = {
 		}
 
 		var dataTypeOpts = [];
-		var page = document.URL;
+		var page = location.pathname;
 		if (page.match(/cluster\/analysis/)) {
 
 			if (dataStr.match(/list/)) {
@@ -358,7 +358,7 @@ solGS.cluster = {
 		var popType;
 		var popName;
 
-		var page = document.URL;
+		var page = location.pathname;
 		if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\/|breeders\//)) {
 			popId = popDetails.training_pop_id;
 			popName = popDetails.training_pop_name;
@@ -391,7 +391,7 @@ solGS.cluster = {
 		};
 
 		var message = this.validateClusterParams(validateArgs);
-		var url = document.URL;
+		var url = location.pathname;
 
 		if (message != undefined) {
 
@@ -459,7 +459,7 @@ solGS.cluster = {
 
 			var page;
 			var fileId = clusterPopId;
-			if (document.URL.match(/cluster\/analysis/)) {
+			if (location.pathname.match(/cluster\/analysis/)) {
 				page = '/cluster/analysis/' + clusterPopId + '/ct/' + clusterType + '/dt/' + dataType + '/k/' + kNumber;
 				if (dataType.match(/genotype/i)) {
 					page = page + '/gp/' + protocolId;
@@ -467,15 +467,15 @@ solGS.cluster = {
 			} else {
 
 				traitsCode = jQuery('#training_traits_code').val();
-				if (popType.match(/selection/) && document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)) {
+				if (popType.match(/selection/) && location.pathname.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)) {
 					popDetails['selection_pop_id'] = clusterPopId;
 					fileId = popDetails.training_pop_id + '-' + clusterPopId;
 				}
 				if (sIndexName) {
-					page = '/cluster/analysis/' + fileId + '/ct/' + clusterType + '/dt/' + sIndexName + '/kn/' + kNumber;
+					page = '/cluster/analysis/' + fileId + '/ct/' + clusterType + '/dt/' + sIndexName + '/k/' + kNumber;
 
 				} else {
-					page = '/cluster/analysis/' + fileId + '/ct/' + clusterType + '/dt/' + dataType + '/kn/' + kNumber;
+					page = '/cluster/analysis/' + fileId + '/ct/' + clusterType + '/dt/' + dataType + '/k/' + kNumber;
 
 					if (traitsCode) {
 						page = page + '/traits/' + traitsCode;
@@ -530,7 +530,7 @@ solGS.cluster = {
 			dataType: 'json',
 			data: {
 				'page': page,
-				'args': args
+				'arguments': args
 			},
 			url: '/solgs/check/cached/result/',
 			success: function(res) {
@@ -846,7 +846,7 @@ solGS.cluster = {
 
 	clusteringOptions: function(clusterPopId) {
 
-		var url = document.URL;
+		var url = location.pathname;
 
 		// if(url.match(/cluster\/analysis/)) {
 		//     selectId = this.selectRowId(selectId);
@@ -999,7 +999,7 @@ jQuery.fn.doesExist = function() {
 
 jQuery(document).ready(function() {
 
-	var url = document.URL;
+	var url = location.pathname;
 
 	if (url.match(/cluster\/analysis/)) {
 
@@ -1018,7 +1018,8 @@ jQuery(document).ready(function() {
 			var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
 			var clusterPopId = clusterArgs.cluster_pop_id;
 			if (clusterPopId) {
-				solGS.cluster.runClusterAnalysis(clusterArgs);
+				
+				solGS.cluster.checkCachedCluster(url, clusterArgs);
 			}
 
 		} else {
@@ -1065,7 +1066,7 @@ jQuery(document).ready(function() {
 
 jQuery(document).ready(function() {
 
-	var url = document.URL;
+	var url = location.pathname;
 
 	if (url.match(/cluster\/analysis/)) {
 
@@ -1127,7 +1128,7 @@ jQuery(document).ready(function() {
 			selectId = jQuery("#cluster_selected_population_id").val();
 		}
 
-		if (document.URL.match(/breeders\/trial\//)) {
+		if (location.pathname.match(/breeders\/trial\//)) {
 			selectId = jQuery("#trial_id").val();
 			selectName = jQuery("#trial_name").val();
 		}
@@ -1162,7 +1163,7 @@ jQuery(document).ready(function() {
 
 
 jQuery(document).ready(function() {
-	var page = document.URL;
+	var page = location.pathname;
 
 	if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)) {
 
