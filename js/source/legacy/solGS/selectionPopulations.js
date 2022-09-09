@@ -86,8 +86,9 @@ function checkSelectionPopulationRelevance(popName) {
   var dataSetType;
 
   var traitId = jQuery("#trait_id").val();
-  var protocolId = jQuery("#genotyping_protocol_id").val();
-  var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+  var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+  var protocolId = protocols.genotyping_protocol_id;
+  var selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
 
   if (!selPopProtocolId) {
     selPopProtocolId = protocolId;
@@ -110,10 +111,11 @@ function checkSelectionPopulationRelevance(popName) {
     selection_pop_genotyping_protocol_id: selPopProtocolId,
   };
 
+  popData = JSON.stringify(popData);
   jQuery.ajax({
     type: "POST",
     dataType: "json",
-    data: popData,
+    data: {'arguments': popData},
     url: "/solgs/check/selection/population/relevance/",
     success: function (response) {
       var selectionPopId = response.selection_pop_id;
