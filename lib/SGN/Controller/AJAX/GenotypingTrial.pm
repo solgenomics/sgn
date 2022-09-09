@@ -629,7 +629,8 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
-    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $genotyping_plate_id = decode_json $c->req->param("genotyping_plate_ids");
+
     print STDERR "GENOTYPING PROJECT ID =".Dumper($genotyping_project_id)."\n";
     print STDERR "GENOTYPING PLATE ID =".Dumper($genotyping_plate_id)."\n";
 

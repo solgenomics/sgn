@@ -92,31 +92,42 @@ jQuery(document).ready(function() {
 
     jQuery('#set_project_for_genotyping_plate').click( function() {
         var plate_ids = jQuery('#html_select_plate_for_project').val();
+
+        if (!plate_ids) {
+            alert ("Please select at least one genotyping plate");
+            return;
+        }
+
         var genotyping_project_id = "<% $trial_id %>";
 
-        if ( jQuery.isArray(plate_ids) ) {
-            var errors = 0;
-            jQuery.each(plate_ids, function(index, value) {
-                console.log(value);
-                jQuery.ajax({
-                    url: '/ajax/breeders/set_project_for_genotyping_plate',
-                    timeout: 3000000,
-                    dataType: "json",
-                    type: 'POST',
-                    data:{
-                        'genotyping_project_id': genotyping_project_id,
-                        'genotyping_plate_id': value,
-                    },
-                    success: function(response) {
+        jQuery.ajax({
+            url: '/ajax/breeders/set_project_for_genotyping_plate',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'genotyping_project_id': genotyping_project_id,
+                'genotyping_plate_ids': JSON.stringify(plate_ids),
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The genotyping plate(s) were added to this project.");
+                    jQuery('#add_existing_plate_to_project_dialog').modal('hide');
+//                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding genotyping plate(s) to this project');
+            }
 
-                    },
-                    error: function(response) {
-                        errors = 1;
-                        alert('An error occurred trying to associate a genotyping plate to the genotyping project.');
-                    }
-                });
-            });
-        }
+        });
     });
 
 });

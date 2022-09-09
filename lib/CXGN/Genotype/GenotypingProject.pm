@@ -67,6 +67,7 @@ sub BUILD {
 
 sub associate_genotyping_plate {
     my $self = shift;
+    my $schema = $self->bcs_schema();
     my $genotyping_plate_list = $self->genotyping_plate_list();
     my @genotyping_plates = @$genotyping_plate_list;
 
@@ -83,7 +84,7 @@ sub associate_genotyping_plate {
             $relationship_rs = $schema->resultset('Project::ProjectRelationship')->create({
         		object_project_id => $self->project_id(),
         		subject_project_id => $plate_id,
-        		type_id => $genotype_project_relationship_cvterm->cvterm_id()
+        		type_id => $genotyping_project_relationship_cvterm->cvterm_id()
             });
 
             $relationship_rs->insert();
