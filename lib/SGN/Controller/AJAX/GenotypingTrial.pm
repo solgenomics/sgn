@@ -628,19 +628,29 @@ sub set_project_for_genotyping_plate : Path('/ajax/breeders/set_project_for_geno
 sub set_project_for_genotyping_plate_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
-    my $genotyping_plate_id = decode_json $c->req->param("genotyping_plate_ids");
-
-    print STDERR "GENOTYPING PROJECT ID =".Dumper($genotyping_project_id)."\n";
-    print STDERR "GENOTYPING PLATE ID =".Dumper($genotyping_plate_id)."\n";
+    my $genotyping_plate_ids = decode_json $c->req->param("genotyping_plate_ids");
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
         $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
         $c->detach();
     }
 
-    $c->stash->{rest} = {success => 1};
+    my $genotyping_project_obj = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $schema,
+        project_id => $genotyping_project_id,
+        new_genotyping_plate_list => $genotyping_plate_ids
+    });
 
+    $genotyping_project_obj->associate_genotyping_plate();
+
+    if (!$genotyping_project_obj->associate_genotyping_plate()){
+        $c->stash->{rest} = {error_string => "Error adding genotyping plate to this project",};
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1};
 }
 
 

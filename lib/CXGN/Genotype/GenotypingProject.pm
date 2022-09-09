@@ -22,6 +22,7 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
 use CXGN::Trial::Search;
+use Try::Tiny;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -36,6 +37,11 @@ has 'project_id' => (
 );
 
 has 'genotyping_plate_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'new_genotyping_plate_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
@@ -68,32 +74,53 @@ sub BUILD {
 sub associate_genotyping_plate {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my $genotyping_plate_list = $self->genotyping_plate_list();
-    my @genotyping_plates = @$genotyping_plate_list;
+    my $genotyping_project_id = $self->project_id();
+    my $new_genotyping_plate_list = $self->new_genotyping_plate_list();
+    my @new_genotyping_plates = @$new_genotyping_plate_list;
+    print STDERR "GENOTYPING PROJECT ID =".Dumper($genotyping_project_id)."\n";
+    print STDERR "GENOTYPING PLATES =".Dumper(\@new_genotyping_plates)."\n";
 
-    my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+    my $transaction_error;
 
-    foreach my $plate_id (@genotyping_plates) {
-        my $relationship_rs = $schema->resultset("Project::ProjectRelationship")->find ({
-#            object_project_id => $self->project_id(),
-            subject_project_id => $plate_id,
-            type_id => $genotyping_project_relationship_cvterm->cvterm_id()
-        });
+    my $coderef = sub {
 
-        if (!$relationship_rs) {
-            $relationship_rs = $schema->resultset('Project::ProjectRelationship')->create({
-        		object_project_id => $self->project_id(),
-        		subject_project_id => $plate_id,
-        		type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+        my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+
+        foreach my $plate_id (@new_genotyping_plates) {
+            my $relationship_rs = $schema->resultset("Project::ProjectRelationship")->find ({
+                object_project_id => $self->project_id(),
+                subject_project_id => $plate_id,
+                type_id => $genotyping_project_relationship_cvterm->cvterm_id()
             });
 
-            $relationship_rs->insert();
-        } else {
-            $relationship_rs->object_project_id($self->project_id());
-            $relationship_rs->update();
-        }
+            if (!$relationship_rs) {
+                $relationship_rs = $schema->resultset('Project::ProjectRelationship')->create({
+        		    object_project_id => $genotyping_project_id,
+        		    subject_project_id => $plate_id,
+        		    type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+                });
+                $relationship_rs->insert();
+            }
+#else {
+#                $relationship_rs->object_project_id($genotyping_project_id);
+#                $relationship_rs->update();
+#            }
 
+        }
+    };
+
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        $transaction_error =  $_;
+    };
+
+    if ($transaction_error) {
+        print STDERR "Transaction error associating genotyping plate: $transaction_error\n";
+        return;
     }
+
+    return 1;
 
 }
 

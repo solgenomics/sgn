@@ -116,7 +116,7 @@ jQuery(document).ready(function() {
                 if (response.success == 1) {
                     alert("The genotyping plate(s) were added to this project.");
                     jQuery('#add_existing_plate_to_project_dialog').modal('hide');
-//                    location.reload();
+                    location.reload();
                 }
                 if (response.error) {
                     alert(response.error);
