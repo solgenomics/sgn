@@ -308,13 +308,16 @@ sub run_model {
     }
     close($F);
 
+    # clean phenotype file so that trait names are R compatible
+    #
+    my $clean_tempfile = $self->clean_file($self->tempfile());
+    
     # run r script to create model
     #
-
-    my $cmd = "R CMD BATCH  '--args datafile=\"".$self->tempfile()."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
+    my $cmd = "R CMD BATCH  '--args datafile=\"".$clean_tempfile."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
     print STDERR "running R command $cmd...\n";
 
-    print STDERR "running R command ".$self->tempfile()."...\n";
+    print STDERR "running R command $clean_tempfile...\n";
 
     my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
 
@@ -350,7 +353,38 @@ sub make_R_variable_name {
     return $name;
 }
 
+sub clean_file {
+    my $self = shift;
+    my $file = shift;
+    
+    open(my $PF, "<", $file) || die "Can't open pheno file ".$file."_phenotype.txt";
+    open(my $CLEAN, ">", $file.".clean") || die "Can't open ".$file.".clean for writing";
 
+    my $header = <$PF>;
+    chomp($header);
+
+    my @fields = split /\t/, $header;
+
+    my @file_traits = @fields[ 39 .. @fields-1 ];
+    my @other_headers = @fields[ 0 .. 38 ];
+
+    print STDERR "FIELDS: ".Dumper(\@file_traits);
+
+    foreach my $t (@file_traits) {
+	$t = make_R_variable_name($t);
+    }
+
+    print STDERR "FILE TRAITS: ".Dumper(\@file_traits);
+
+    my @new_header = (@other_headers, @file_traits);
+    print $CLEAN join("\t", @new_header)."\n";
+
+    while(<$PF>) {
+	print $CLEAN $_;
+    }
+
+    return $file.".clean";
+}
 
 
 

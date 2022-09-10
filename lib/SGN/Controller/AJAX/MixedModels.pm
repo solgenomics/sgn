@@ -104,34 +104,8 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     $ds->retrieve_phenotypes();
 
-
-    open(my $PF, "<", $temppath."_phenotype.txt") || die "Can't open pheno file $temppath"."_phenotype.txt";
-    open(my $CLEAN, ">", $temppath."_phenotype.txt.clean") || die "Can't open pheno_filepath clean for writing";
-
-    my $header = <$PF>;
-    chomp($header);
-
-    my @fields = split /\t/, $header;
-
-    my @file_traits = @fields[ 39 .. @fields-1 ];
-    my @other_headers = @fields[ 0 .. 38 ];
-
-    print STDERR "FIELDS: ".Dumper(\@file_traits);
-
-    foreach my $t (@file_traits) {
-	$t = make_R_trait_name($t);
-    }
-
-    print STDERR "FILE TRAITS: ".Dumper(\@file_traits);
-
-    my @new_header = (@other_headers, @file_traits);
-    print $CLEAN join("\t", @new_header)."\n";
-
-    while(<$PF>) {
-	print $CLEAN $_;
-    }
-
-
+    # Note: file is cleaned by run_model function in CXGN::MixedModel
+    
     my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt.clean" });
 
     my @factor_select;
@@ -227,10 +201,10 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $accession_names;
 
     my $adjusted_blups_html;
-   my $adjusted_blups_data;
+    my $adjusted_blups_data;
 
-  my $adjusted_blues_html;
-   my $adjusted_blues_data;
+    my $adjusted_blues_html;
+    my $adjusted_blues_data;
 
     my $traits;
 
