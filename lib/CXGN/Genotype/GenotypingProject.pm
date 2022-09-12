@@ -77,7 +77,6 @@ sub associate_genotyping_plate {
     my $genotyping_project_id = $self->project_id();
     my $new_genotyping_plate_list = $self->new_genotyping_plate_list();
     my @new_genotyping_plates = @$new_genotyping_plate_list;
-    print STDERR "GENOTYPING PROJECT ID =".Dumper($genotyping_project_id)."\n";
     print STDERR "GENOTYPING PLATES =".Dumper(\@new_genotyping_plates)."\n";
 
     my $transaction_error;
@@ -88,12 +87,15 @@ sub associate_genotyping_plate {
 
         foreach my $plate_id (@new_genotyping_plates) {
             my $relationship_rs = $schema->resultset("Project::ProjectRelationship")->find ({
-                object_project_id => $self->project_id(),
                 subject_project_id => $plate_id,
                 type_id => $genotyping_project_relationship_cvterm->cvterm_id()
             });
 
-            if (!$relationship_rs) {
+            if($relationship_rs){
+                print STDERR "UPDATING...."."\n";
+                $relationship_rs->object_project_id($genotyping_project_id);
+                $relationship_rs->update();
+            } else {
                 $relationship_rs = $schema->resultset('Project::ProjectRelationship')->create({
         		    object_project_id => $genotyping_project_id,
         		    subject_project_id => $plate_id,
@@ -101,11 +103,6 @@ sub associate_genotyping_plate {
                 });
                 $relationship_rs->insert();
             }
-#else {
-#                $relationship_rs->object_project_id($genotyping_project_id);
-#                $relationship_rs->update();
-#            }
-
         }
     };
 
