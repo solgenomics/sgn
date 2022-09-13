@@ -787,9 +787,6 @@ jQuery(document).ready( function() {
         if (changed_dim_rows * changed_dim_cols < num_real_plots) {
             jQuery('#working_modal').modal("hide");
             alert('Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.');
-        } else if (!filler_accession_name && changed_dim_rows * changed_dim_cols > num_real_plots) {
-            jQuery('#working_modal').modal("hide");
-            alert('Please select an accession for filler plots.');
         } else if (filler_accession_name) {
             jQuery("#change_dimensions_dialog").modal("hide");
             new jQuery.ajax({
@@ -804,7 +801,7 @@ jQuery(document).ready( function() {
                     if (response.error) {
                         alert(response.error)
                     } else if (response.success) {
-                        FieldMap.meta_data.filler_accession_id = response.success;           
+                        FieldMap.meta_data.filler_accession_id = response.success;
                         FieldMap.meta_data.filler_accession_name = filler_accession_name;
                         FieldMap.meta_data.num_rows = changed_dim_rows;
                         FieldMap.meta_data.num_cols = changed_dim_cols;
@@ -818,6 +815,8 @@ jQuery(document).ready( function() {
                 }
             });
         } else {
+            FieldMap.meta_data.filler_accession_id = undefined;
+            FieldMap.meta_data.filler_accession_name = undefined;
             FieldMap.meta_data.num_rows = changed_dim_rows;
             FieldMap.meta_data.num_cols = changed_dim_cols;
             jQuery('#working_modal').modal("hide");
@@ -967,7 +966,7 @@ jQuery(document).ready( function() {
     function submit_fieldmap_metadata() {
         jQuery('#working_modal').modal("show");  
         let filler_plot_object = FieldMap.format_brapi_post_object();
-        var stringifiedPostData = JSON.stringify(filler_plot_object);         
+        var stringifiedPostData = JSON.stringify(filler_plot_object);
         if (FieldMap.meta_data.post) {
             new jQuery.ajax({
                 type: 'POST',
