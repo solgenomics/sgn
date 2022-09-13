@@ -87,8 +87,9 @@ jQuery(document).ready(function() {
         jQuery('#add_existing_plate_to_project_dialog').modal("show");
     });
 
+    var genotyping_project_id = "<% $trial_id %>";
     var breeding_program_id = "<% $breeding_program_id %>";
-    get_select_box('projects', 'select_genotyping_plate_for_project', { 'name' : 'html_select_plate_for_project', 'id' : 'html_select_plate_for_project', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_genotyping_trials': 1, 'multiple': true });
+    get_select_box('projects', 'select_genotyping_plate_for_project', { 'name' : 'html_select_plate_for_project', 'id' : 'html_select_plate_for_project', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_genotyping_trials': 1, 'multiple': true, 'excluded_plates_in_project_id': genotyping_project_id });
 
     jQuery('#set_project_for_genotyping_plate').click( function() {
         var plate_ids = jQuery('#html_select_plate_for_project').val();
@@ -97,8 +98,6 @@ jQuery(document).ready(function() {
             alert ("Please select at least one genotyping plate");
             return;
         }
-
-        var genotyping_project_id = "<% $trial_id %>";
 
         jQuery.ajax({
             url: '/ajax/breeders/set_project_for_genotyping_plate',

@@ -643,9 +643,9 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
         new_genotyping_plate_list => $genotyping_plate_ids
     });
 
-    $genotyping_project_obj->associate_genotyping_plate();
+    $genotyping_project_obj->set_project_for_genotyping_plate();
 
-    if (!$genotyping_project_obj->associate_genotyping_plate()){
+    if (!$genotyping_project_obj->set_project_for_genotyping_plate()){
         $c->stash->{rest} = {error_string => "Error adding genotyping plate to this project",};
         return;
     }

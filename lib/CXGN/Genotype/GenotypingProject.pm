@@ -71,14 +71,19 @@ sub BUILD {
 }
 
 
-sub associate_genotyping_plate {
+sub get_genotyping_plate_ids {
+    my $self = shift;
+    my $plate_list = $self->genotyping_plate_list();
+    return $plate_list;
+}
+
+
+sub set_project_for_genotyping_plate {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $genotyping_project_id = $self->project_id();
     my $new_genotyping_plate_list = $self->new_genotyping_plate_list();
     my @new_genotyping_plates = @$new_genotyping_plate_list;
-    print STDERR "GENOTYPING PLATES =".Dumper(\@new_genotyping_plates)."\n";
-
     my $transaction_error;
 
     my $coderef = sub {
