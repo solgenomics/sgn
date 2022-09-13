@@ -481,14 +481,14 @@ $data_level => 'plot'
             </div>
             <div class="modal-body">
                 <div style="text-align: center;" class="container-fluid">
-
-                    <p3> Field Plot layout submitted successfully!</p3>
-
+                    <p> Field Plot layout submitted successfully!</p>
+                </div>
+                <div>
+                    <p><strong>NOTE:</strong> It may take a few minutes for the database to update and the changes to be reflected on the website.</p>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="close_fp_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-
             </div>
         </div>
     </div>
@@ -909,10 +909,6 @@ jQuery(document).ready( function() {
         });
         
     });
-
-    jQuery('#close_fp_success_dialog').click(function() {
-        location.reload();
-    })
 
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
