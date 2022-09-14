@@ -78,7 +78,7 @@
 <div id="gcpc_results_download_link"></div>
 
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-      <div> <p> Plant Sex info: 1= Male flower, 2=female flower, 3= Monoecious male (m>f) and 4= Monoecious female(f>m)</p> </div>
+      <div> <p> Plant Sex info: 1= Male, 2=Female, 3= Monoecious male (m>f) and 4= Monoecious female(f>m)</p> </div>
       <table id="gcpc_output">
 	<thead>
 	  <tr><th>Cross #</th><th>Parent 1</th><th>Parent 2</th><th>Cross Predicted Merit</th><th>Parent1 Sex</th><th>Parent2 Sex</th></tr>
