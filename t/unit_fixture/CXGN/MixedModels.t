@@ -54,7 +54,7 @@ foreach my $engine ("lme4", "sommer") {
 
     $mm->engine($engine);
     
-    $mm->dependent_variables( [ "dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012" ] );
+    $mm->dependent_variables( [ "dry matter content percentage|CO_334:0000092" ]); #, "fresh root weight|CO_334:0000012" ] );
 
     $mm->fixed_factors( [ "replicate" ]  );
 
@@ -71,7 +71,7 @@ foreach my $engine ("lme4", "sommer") {
 	print STDERR "MODEL STRING: $model_string\n";
     }
     
-    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
+    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile) );
 
     print STDERR "Using tempfile base ".$mm->tempfile()."\n";
 
@@ -79,41 +79,13 @@ foreach my $engine ("lme4", "sommer") {
     ok( -e $mm->tempfile().".adjustedBLUPs", "check existence of adjustedBLUPs result file");
     ok( -e $mm->tempfile().".BLUPs", "check existence of BLUPs result file");
 
-    is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 413, "check number of lines in adjustedBLUEs file...");
+    #    is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 413, "check number of lines in adjustedBLUEs file...");
 
 }
 
 my $SYSTEM_MODE = `echo \$SYSTEM`;
 
-# <<<<<<< HEAD
-#     $mm->fixed_factors( [ "germplasmName" ]  );
 
-#     $mm->random_factors( [ "replicate" ] );
-
-#     my $model_string = $mm->generate_model();
-
-#     print STDERR "MODEL STRING = $model_string\n";
-
-#     is("germplasmName + (1|replicate)", $model_string, "model string test for BLUEs");
-
-#     $mm->run_model("Slurm", "localhost", "/tmp");
-
-#     sleep(10);
-
-#     ok( -e $mm->tempfile().".adjustedBLUEs", "check existence of adjustedBLUEs result file");
-#     ok( -e $mm->tempfile().".BLUEs", "check existence of BLUEs result file");
-#     is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
-
-# }
-
-# =======
-print STDERR "SYSTEM_MODE = $SYSTEM_MODE";
-
-### ERROR ON GITACTION EXPLANATION
-# Fixed factors removed because of problems caused by gitaction workflow.
-# There is a problem with function
-
-# lsmeans(mixmodel, "germplasmName") in line 114 of mixed_models.R
 # from package "emmeans"
 
 # # An error caused by it - is captured in matrix structure build for the base package,
@@ -128,39 +100,36 @@ print STDERR "SYSTEM_MODE = $SYSTEM_MODE";
 ### END OF ERROR ON GITACTION EXPLANATION
 
 ### START: GITACTION PROBLEM
-if ($SYSTEM_MODE !~ /GITACTION/) {
+if ($SYSTEM_MODE !~ /GITACTION/) {	
 
+    $mm->engine('lme4');
+    $mm->dependent_variables( [ "fresh root weight|CO_334:0000012" ] );	
+    
     $mm->fixed_factors([ "germplasmName" ]);
-
+    
     $mm->random_factors([ "replicate" ]);
 
-    my $model_string = $mm->generate_model();
+    my ($model_string, $error) = $mm->generate_model();
 
     print STDERR "MODEL STRING = $model_string\n";
 
-    is("germplasmName + (1|replicate)", $model_string, "model string test for BLUEs");
+    is($model_string, "germplasmName + (1|replicate)", "model string test for BLUEs");
 
-    $mm->run_model("Slurm", "localhost", "/tmp");
+    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
 
-    sleep(10);
+    sleep(2);
 
-    ok(-e $mm->tempfile() . ".adjustedBLUEs", "check existence of adjustedBLUEs result file");
-    ok(-e $mm->tempfile() . ".BLUEs", "check existence of BLUEs result file");
-    is(scalar(my @a = read_file($mm->tempfile() . ".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
+    ok(-e $mm->tempfile() . ".adjustedBLUPs", "check existence of adjustedBLUEs result file");
+    ok(-e $mm->tempfile() . ".BLUPs", "check existence of BLUEs result file");
+    #    is(scalar(my @a = read_file($mm->tempfile() . ".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
 
     # cleanup for next test :-)
-    #unlink($mm->tempfile() . ".adjustedBLUEs");
-    #unlink($mm->tempfile() . ".BLUEs");
+    unlink($mm->tempfile() . ".adjustedBLUEs");
+    unlink($mm->tempfile() . ".BLUEs");
 }
 ### END: GITACTION PROBLEM
 
-# cleanup for next test :-)
-#
-#unlink($mm->tempfile().".params");
-#unlink($mm->tempfile().".adjustedBLUPs");
-#unlink($mm->tempfile().".BLUPs");
-
-#$ds->delete();
+$ds->delete();
 
 # phew, we're done!
 #

@@ -26,6 +26,7 @@ use Moose;
 use Data::Dumper;
 use File::Slurp qw| slurp |;
 use File::Basename;
+use File::Copy;
 use CXGN::Tools::Run;
 use CXGN::Phenotypes::File;
 
@@ -201,7 +202,8 @@ sub generate_model_sommer {
     my $self = shift;
 
     my $tempfile = $self->tempfile();
-    my $dependent_variables = $self->dependent_variables();
+    my @dependent_variables_cleaned = map { make_R_variable_name($_) } @{$self->dependent_variables()};
+    my $dependent_variables = \@dependent_variables_cleaned;
     my $fixed_factors = $self->fixed_factors();
     my $fixed_factors_interaction = $self->fixed_factors_interaction();
     my $random_factors_interaction = $self->random_factors_interaction();
@@ -223,7 +225,9 @@ sub generate_model_sommer {
 	if (scalar(@$fixed_factors) == 0) { $mmer_fixed_factors = "1"; }
 	else { $mmer_fixed_factors = join(" + ", @$fixed_factors); }
 
-	$mmer_fixed_factors = $dependent_variables->[0] ." ~ ". $mmer_fixed_factors;
+	print STDERR "DEPENDENT VARIABLES: ".Dumper($dependent_variables);
+	
+	$mmer_fixed_factors = make_R_variable_name($dependent_variables->[0]) ." ~ ". $mmer_fixed_factors;
 
 	if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
 	else { $mmer_random_factors = join("+", @$random_factors);}
@@ -383,7 +387,10 @@ sub clean_file {
 	print $CLEAN $_;
     }
 
-    return $file.".clean";
+    move($file, $file.".before_clean");
+    move($file.".clean", $file);
+    
+    return $file;
 }
 
 

@@ -106,7 +106,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 
     # Note: file is cleaned by run_model function in CXGN::MixedModel
     
-    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt.clean" });
+    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 
     my @factor_select;
 
