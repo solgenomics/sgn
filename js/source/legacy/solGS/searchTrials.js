@@ -89,17 +89,17 @@ function searchAllTrials(url, result) {
 function listAllTrials (trials)  {
 
     if (trials) {
-	var tableId = 'all_trials_table';
-	var divId   = 'all_trials_div';
+	var tableId = '#all_trials_table';
+	var allTrialsDivId   = '#all_trials_div';
 
 	var tableDetails = {
-	    'divId'  : divId,
+	    'divId'  : allTrialsDivId,
 	    'tableId': tableId,
 	    'data'   : trials
 	};
 
 	jQuery('#searched_trials_div').empty();
-	jQuery('#all_trials_div').empty();
+	jQuery(allTrialsDivId).empty();
 
 	displayTrainingPopulations(tableDetails);
 
@@ -112,25 +112,26 @@ function listAllTrials (trials)  {
 
 function checkTrainingPopulation (popIds) {
 
-    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
-	var args = {'population_ids': popIds, 'genotyping_protocol_id': protocolId };
-	args = JSON.stringify(args);
-		jQuery.ajax({
+
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+	var resultDivId   = '#searched_trials_div';
+	var tableId = '#searched_trials_table';
+	var msgDiv = '#searched_trials_message';
+
+    jQuery.ajax({
         type: 'POST',
         dataType: 'json',
         url: '/solgs/check/training/population',
         data: {'arguments': args},
         success: function(response) {
             if (response.is_training_population) {
-			jQuery("#searched_trials_message").hide();
-			jQuery("#searched_trials_div").show();
+			jQuery(msgDiv).hide();
+			jQuery(resultDivId).show();
 
-			var divId   = 'searched_trials_div';
-			var tableId = 'searched_trials_table';
 			var data    = response.training_pop_data;
 
 			var tableDetails = {
-			    'divId'  : divId,
+			    'divId'  : resultDivId,
 			    'tableId': tableId,
 			    'data'   : data
 			};
@@ -139,27 +140,16 @@ function checkTrainingPopulation (popIds) {
                 jQuery('#done_selecting_div').show();
 
             } else {
-		jQuery("#searched_trials_message").html('<p> Population ' + popId + ' can not be used as a training population.');
-		jQuery("#search_all_training_pops").show();
+				var msg =  ('<p> Population ' + popIds + ' can not be used as a training population. It has no phenotype or/and genotype data.');
 
-		// jQuery("#searched_trials_message")
-		// 	.delay(4000)
-		// 	.fadeOut('slow', function () {
-		// 	    searchAllTrials('/solgs/search/trials');
-		// 	});
+				solGS.showMessage(msgDiv, msg);
+				jQuery("#search_all_training_pops").show();
 	    }
 	},
-	error: function(response) {
-            jQuery("#searched_trials_message")
-		.html('Error occured checking for if trial can be used as training population.');
-
-	    jQuery("#searched_trials_message")
-		.delay(4000)
-		.fadeOut('slow', function () {
-		    // searchAllTrials('/solgs/search/trials');
-		});
-        }
-
+	error: function() {
+		var msg = 'Error occured checking for if trial can be used as training population.';
+		solGS.showMessage(msgDiv, msg);
+	}
     });
 
 }
@@ -221,9 +211,9 @@ jQuery(document).ready( function () {
 
 
 function checkPopulationExists (name) {
-    jQuery("#searched_trials_message")
-	.html("Checking if trial or training population " + name + " exists...please wait...")
-	.show();
+	var msgDiv = "#searched_trials_message";
+	var msg = "Checking if trial or training population " + name + " exists...please wait...";
+	solGS.showMessage(msgDiv, msg);
 
 	jQuery("#all_trials_div").empty();
 
@@ -238,38 +228,27 @@ function checkPopulationExists (name) {
 
 		    checkTrainingPopulation(res.population_ids);
 
-		    jQuery('#searched_trials_message').html(
-			'<p>Checking if the trial or population can be used <br />'
-			    + 'as a training population...please wait...</p>');
-
+			msg = '<p>Checking if the trial or population can be used <br />'
+			+ 'as a training population...please wait...</p>';
+			solGS.showMessage(msgDiv, msg);
 		} else {
-		    jQuery('#searched_trials_message')
-			.html('<p>' + name + ' is not in the database.</p>');
-
-		    jQuery("#searched_trials_message")
-			.delay(4000)
-			.fadeOut('slow', function () {
-			   // searchAllTrials('/solgs/search/trials');
-			});
+			msg = '<p>' + name + ' is not in the database.</p>';
+		   	solGS.showMessage(msgDiv, msg);
 		}
 	    },
 	    error: function(res) {
-		jQuery("#searched_trials_message")
-		    .html('Error occured checking if the training population exists.');
-
-		jQuery("#searched_trials_message")
-		    .delay(4000)
-		    .fadeOut('slow', function () {
-			// searchAllTrials('/solgs/search/trials');
-		    });
-            }
+			msg = 'Error occured checking if the training population exists.';
+			solGS.showMessage(msgDiv, msg);
+		}
 	});
 
 }
 
 
 function createTrialsTable (tableId) {
+	console.log(`create trials table tableid ${tableId}`)
 
+	tableId = tableId.replace("#", '')
     var table = '<table id="' + tableId +  '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
     table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>More details</th>';
@@ -290,17 +269,17 @@ function displayTrainingPopulations (tableDetails) {
 
     if (data) {
 
-	var tableRows = jQuery('#' + tableId + ' tr').length;
+	var tableRows = jQuery(tableId + ' tr').length;
 
 	if (tableRows > 1) {
-	    jQuery('#' + tableId).dataTable().fnAddData(data);
+	    jQuery( tableId).dataTable().fnAddData(data);
 	} else {
 
 	    var table = createTrialsTable(tableId);
 
-	    jQuery('#' + divId).html(table).show();
+	    jQuery(divId).html(table).show();
 
-	    jQuery('#' + tableId).dataTable({
+	    jQuery(tableId).dataTable({
                     'order'        : [[0, "desc"],  [2, "desc"], [3, "desc"]],
 		    'searching'    : true,
 		    'ordering'     : true,
