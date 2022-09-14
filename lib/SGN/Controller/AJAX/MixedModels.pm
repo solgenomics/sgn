@@ -143,7 +143,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 	dependent_variable => $trait_html,
 
 	factors => \@factor_select,
-	tempfile => $tempfile."_phenotype.txt.clean",
+	tempfile => $tempfile."_phenotype.txt",
      };
 
     if (!@factor_select) {
