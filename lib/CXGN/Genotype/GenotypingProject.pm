@@ -23,6 +23,7 @@ use Data::Dumper;
 use JSON;
 use CXGN::Trial::Search;
 use Try::Tiny;
+use CXGN::Trial;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -36,13 +37,23 @@ has 'project_id' => (
     required => 1,
 );
 
+has 'project_facility' => (isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
+has 'project_and_plate_relationship_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
 has 'genotyping_plate_list' => (
-    isa => 'ArrayRef[Str]|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
 has 'new_genotyping_plate_list' => (
-    isa => 'ArrayRef[Str]|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -53,10 +64,14 @@ sub BUILD {
     my $schema = $self->bcs_schema();
     my $genotyping_project_id = $self->project_id();
 
+    my $genotyping_project = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $genotyping_project_id });
+    my $project_facility = $genotyping_project->get_genotyping_facility();
+
     my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+    my $project_and_plate_relationship_cvterm_id = $genotyping_project_relationship_cvterm->cvterm_id();
     my $relationships_rs = $schema->resultset("Project::ProjectRelationship")->search ({
         object_project_id => $genotyping_project_id,
-        type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+        type_id => $project_and_plate_relationship_cvterm_id
     });
 
     my @plate_list;
@@ -65,7 +80,8 @@ sub BUILD {
     	    push @plate_list, $each_relationship->subject_project_id();
         }
     }
-
+    $self->project_facility($project_facility);
+    $self->project_and_plate_relationship_cvterm_id($project_and_plate_relationship_cvterm_id);
     $self->genotyping_plate_list(\@plate_list);
 
 }
@@ -75,6 +91,31 @@ sub get_genotyping_plate_ids {
     my $self = shift;
     my $plate_list = $self->genotyping_plate_list();
     return $plate_list;
+}
+
+
+sub validate_relationship {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $new_plate_ids = $self->new_genotyping_plate_list();
+    my $genotyping_project_id = $self->project_id();
+    my $project_facility = $self->project_facility();
+    my @plate_ids = @$new_plate_ids;
+    my @genotyping_plate_errors;
+
+    foreach my $plate_id (@plate_ids) {
+        my $genotyping_plate = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
+        my $plate_facility = $genotyping_plate->get_genotyping_facility();
+
+        if ($plate_facility && $project_facility) {
+            if ($plate_facility ne $project_facility) {
+                my $genotyping_plate_name = $genotyping_plate->get_name();
+                push @genotyping_plate_errors, $genotyping_plate_name;
+            }
+        }
+    }
+
+    return {error_messages => \@genotyping_plate_errors}
 }
 
 
@@ -88,12 +129,10 @@ sub set_project_for_genotyping_plate {
 
     my $coderef = sub {
 
-        my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
-
         foreach my $plate_id (@new_genotyping_plates) {
             my $relationship_rs = $schema->resultset("Project::ProjectRelationship")->find ({
                 subject_project_id => $plate_id,
-                type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+                type_id => $self->project_and_plate_relationship_cvterm_id()
             });
 
             if($relationship_rs){
@@ -104,7 +143,7 @@ sub set_project_for_genotyping_plate {
                 $relationship_rs = $schema->resultset('Project::ProjectRelationship')->create({
         		    object_project_id => $genotyping_project_id,
         		    subject_project_id => $plate_id,
-        		    type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+        		    type_id => $self->project_and_plate_relationship_cvterm_id()
                 });
                 $relationship_rs->insert();
             }

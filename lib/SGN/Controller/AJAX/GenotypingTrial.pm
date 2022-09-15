@@ -643,10 +643,17 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
         new_genotyping_plate_list => $genotyping_plate_ids
     });
 
+    my $errors = $genotyping_project_obj->validate_relationship();
+    if (scalar(@{$errors->{error_messages}}) > 0){
+        my $error_string = join ', ', @{$errors->{error_messages}};
+        $c->stash->{rest} = { error => "Error: $error_string and this preoject are associated with different genotyping facilities."};
+        $c->detach();
+    }
+
     $genotyping_project_obj->set_project_for_genotyping_plate();
 
     if (!$genotyping_project_obj->set_project_for_genotyping_plate()){
-        $c->stash->{rest} = {error_string => "Error adding genotyping plate to this project",};
+        $c->stash->{rest} = {error => "Error adding genotyping plate to this project",};
         return;
     }
 
