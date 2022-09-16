@@ -58,27 +58,49 @@ $genotyping_plate_ids => undef
     </div>
 </div>
 
-<div class="modal fade" id="add_plate_to_project_success_dialog_message" name="add_plate_to_project_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addPlateToProjectSuccessDialog">
+<div class="modal fade" id="move_plate_to_project_success_dialog" name="move_plate_to_project_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="movePlateToProjectSuccessDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addPlateToProjectSuccessDialog">Success</h4>
+                <h4 class="modal-title" id="movePlateToProjectSuccessDialog">Success</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The genotyping plate was add to the genotyping project successfully
+                        The genotyping plates were added successfully
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_add_plate_to_project_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_move_plate_to_project_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="move_plate_to_project_error_dialog" name="move_plate_to_project_error_dialog" tabindex="-1" role="dialog" aria-labelledby="movePlateToProjectErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="movePlateToProjectErrorDialog">Move Genotyping Plate to Project Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script defer="defer">
 jQuery(document).ready(function() {
@@ -115,12 +137,13 @@ jQuery(document).ready(function() {
 
                 if (response.success == 1) {
                     jQuery('#add_existing_plate_to_project_dialog').modal('hide');
-                    alert("The genotyping plate(s) were added to this project.");
-                    location.reload();
+                    jQuery('#move_plate_to_project_success_dialog').modal("show");
                 }
                 if (response.error) {
-                    jQuery('#add_existing_plate_to_project_dialog').modal('hide');
-                    alert(response.error);
+                    jQuery('#move_plate_to_project_error_dialog tbody').html('');
+                    jQuery('#move_plate_to_project_error_dialog tbody').append(response.error);
+                    jQuery('#move_plate_to_project_error_dialog').modal("show");
+                    return;
                 }
             },
             error: function(response){
@@ -131,6 +154,11 @@ jQuery(document).ready(function() {
 
         });
     });
+
+    jQuery('#close_move_plate_to_project_success_dialog').click(function(){
+        location.reload();
+    });
+
 
 });
 
