@@ -603,7 +603,12 @@ export function init() {
                         html += `<strong>Plot Number:</strong> ${plot.observationUnitPosition.observationLevel.levelCode}<br />
                             <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
                             <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />
-                            <strong>Accession Name:</strong> ${plot.germplasmName}`
+                            <strong>Accession Name:</strong> ${plot.germplasmName}`;
+                        if ( local_this.heatmap_selected ) {
+                            let v = heatmap_object[trait_name][plot.observationUnitDbId].val;
+                            v = Math.round((parseFloat(v) + Number.EPSILON) * 100) / 100
+                            html += `<br /><strong>Trait Value:</strong> ${v}`;
+                        }
                     }
                 }
                 return html;
