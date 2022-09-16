@@ -438,7 +438,7 @@ is($project_id_before_moving, $genotyping_project_id);
 my $add_genotyping_project_2 = CXGN::Genotype::StoreGenotypingProject->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    project_name => 'test_genotyping_project_2',
+    project_name => 'test_genotyping_project_3',
     breeding_program_id => $breeding_program_id,
     project_facility => 'igd',
     data_type => 'snp',
@@ -449,7 +449,7 @@ my $add_genotyping_project_2 = CXGN::Genotype::StoreGenotypingProject->new({
 });
 ok(my $store_return_2 = $add_genotyping_project_2->store_genotyping_project(), "store genotyping project");
 
-my $gp_rs_2 = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_2'});
+my $gp_rs_2 = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_3'});
 my $genotyping_project_id_2 = $gp_rs_2->project_id();
 my @genotyping_plate_ids = ($genotyping_trial_id);
 
