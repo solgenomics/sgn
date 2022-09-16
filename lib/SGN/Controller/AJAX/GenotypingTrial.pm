@@ -633,7 +633,7 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
     my $genotyping_plate_ids = decode_json $c->req->param("genotyping_plate_ids");
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
+        $c->stash->{rest} = { error => 'You do not have the required privileges to move genotyping plates to this project.' };
         $c->detach();
     }
 
@@ -646,7 +646,7 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
     my $errors = $genotyping_project_obj->validate_relationship();
     if (scalar(@{$errors->{error_messages}}) > 0){
         my $error_string = join ', ', @{$errors->{error_messages}};
-        $c->stash->{rest} = { error => "Error: $error_string and this preoject are associated with different genotyping facilities."};
+        $c->stash->{rest} = { error => "Error: $error_string and this project are associated with different genotyping facilities."};
         $c->detach();
     }
 
