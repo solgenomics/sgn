@@ -107,7 +107,7 @@ sub validate_relationship {
         my $genotyping_plate = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
         my $plate_facility = $genotyping_plate->get_genotyping_facility();
 
-        if ($plate_facility && $project_facility) {
+        if (($plate_facility ne 'None') && ($project_facility ne 'None')) {
             if ($plate_facility ne $project_facility) {
                 my $genotyping_plate_name = $genotyping_plate->get_name();
                 push @genotyping_plate_errors, $genotyping_plate_name;
