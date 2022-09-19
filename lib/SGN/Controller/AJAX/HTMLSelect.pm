@@ -39,6 +39,7 @@ use Image::Size;
 use Math::Round;
 use URI::Encode qw(uri_encode uri_decode);
 use Array::Utils qw(:all);
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -232,6 +233,17 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
     my $get_genotyping_projects = $c->req->param("get_genotyping_projects");
     my $include_analyses = $c->req->param("include_analyses");
+    my $excluded_plates_in_project_id = $c->req->param("excluded_plates_in_project_id");
+
+    my @genotyping_plate_ids;
+    if ($excluded_plates_in_project_id) {
+        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $excluded_plates_in_project_id
+        });
+        my $genotyping_plates = $plate_info->get_genotyping_plate_ids();
+        @genotyping_plate_ids = @$genotyping_plates;
+    }
 
     my $projects;
     if (!$breeding_program_id && !$breeding_program_name) {
@@ -265,9 +277,19 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
             }
         }
         if ($get_genotyping_trials){
+            my @all_projects;
             if ($genotyping_trials && scalar(@$genotyping_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$genotyping_trials;
-                push @projects, @trials;
+                push @all_projects, @trials;
+            }
+            if ($excluded_plates_in_project_id && scalar(@genotyping_plate_ids)>0) {
+                print STDERR "SUBSTRACTING..."."\n";
+                foreach my $project (@all_projects) {
+                    next if ($project->[0] ~~ @genotyping_plate_ids);
+                    push @projects, $project;
+                }
+            } else {
+                @projects = @all_projects;
             }
         }
         if ($include_analyses) {
