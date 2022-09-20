@@ -444,53 +444,67 @@ sub observationunits_update {
         }
 
         #Update: accession
-        if (! defined $accession_id && ! defined $accession_name) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
-        }
-        my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
-        if ($germplasm_search_result->{error}) {
-            return $germplasm_search_result->{error};
-        } else {
-            $accession_name = $germplasm_search_result->{name};
-        }
+        # if (! defined $accession_id && ! defined $accession_name) {
+        #     return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
+        # }
+        # my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
+        # if ($germplasm_search_result->{error}) {
+        #     return $germplasm_search_result->{error};
+        # } else {
+        #     $accession_name = $germplasm_search_result->{name};
+        # }
 
-        my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate('MaterializedViewTable',
-        {
-            bcs_schema=>$schema,
-            data_level=>'all',
-            plot_list=>[$observation_unit_db_id],
-        });
-        my ($data, $unique_traits) = $phenotypes_search->search();
-        my $old_accession;
-        my $old_accession_id;
-        foreach my $obs_unit (@$data){
-            $old_accession = $obs_unit->{germplasm_uniquename};
-            $old_accession_id = $obs_unit->{germplasm_stock_id};
-        }
-
-        #update accession
-        my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-        if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
-            my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-                bcs_schema => $schema,
-                trial_id => $study_ids_arrayref,
-                # new_accession => $accession_name,
-                # old_accession => $old_accession,
-                # old_plot_id => $observation_unit_db_id,
-                # old_plot_name => $observationUnit_name,
-                experiment_type => 'field_layout'
+        if(defined $accession_id){
+            my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate('MaterializedViewTable',
+            {
+                bcs_schema=>$schema,
+                data_level=>'all',
+                plot_list=>[$observation_unit_db_id],
             });
-
-            my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-            if ($return_error) { 
-                print STDERR Dumper $return_error;
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+            my ($data, $unique_traits) = $phenotypes_search->search();
+            my $old_accession;
+            my $old_accession_id;
+            foreach my $obs_unit (@$data){
+                $old_accession = $obs_unit->{germplasm_uniquename};
+                $old_accession_id = $obs_unit->{germplasm_stock_id};
             }
 
-            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
-            if ($replace_return_error) {
-                print STDERR Dumper $replace_return_error;
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+            if($accession_id ne $old_accession_id){
+                if (! defined $accession_id && ! defined $accession_name) {
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
+                }
+                my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
+                if ($germplasm_search_result->{error}) {
+                    return $germplasm_search_result->{error};
+                } else {
+                    $accession_name = $germplasm_search_result->{name};
+                }
+
+                #update accession
+                my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+                if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
+                    my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+                        bcs_schema => $schema,
+                        trial_id => $study_ids_arrayref,
+                        # new_accession => $accession_name,
+                        # old_accession => $old_accession,
+                        # old_plot_id => $observation_unit_db_id,
+                        # old_plot_name => $observationUnit_name,
+                        experiment_type => 'field_layout'
+                    });
+
+                    my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+                    if ($return_error) { 
+                        print STDERR Dumper $return_error;
+                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+                    }
+
+                    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
+                    if ($replace_return_error) {
+                        print STDERR Dumper $replace_return_error;
+                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+                    }
+                }
             }
         }
 

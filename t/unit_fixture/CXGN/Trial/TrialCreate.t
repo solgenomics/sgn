@@ -22,6 +22,7 @@ BEGIN {use_ok('CXGN::TrialStatus');}
 BEGIN {use_ok('CXGN::Genotype::StoreGenotypingProject');}
 BEGIN {use_ok('CXGN::Trial');}
 BEGIN {use_ok('CXGN::BreedersToolbox::Projects');}
+BEGIN {use_ok('CXGN::Genotype::GenotypingProject');}
 
 ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
@@ -423,6 +424,50 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$save->{'trial_id'}.'
 my $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 is(scalar(keys %{$response->{design}}), 11);
+
+#test moving genotyping plate to another project
+my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+
+my $relationship_rs_1 = $chado_schema->resultset("Project::ProjectRelationship")->find ({
+    subject_project_id => $genotyping_trial_id,
+    type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+});
+my $project_id_before_moving = $relationship_rs_1->object_project_id();
+is($project_id_before_moving, $genotyping_project_id);
+
+my $add_genotyping_project_2 = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema => $chado_schema,
+    dbh => $dbh,
+    project_name => 'test_genotyping_project_3',
+    breeding_program_id => $breeding_program_id,
+    project_facility => 'igd',
+    data_type => 'snp',
+    year => '2022',
+    project_description => 'genotyping project for test',
+    nd_geolocation_id => $location_id,
+    owner_id => 41
+});
+ok(my $store_return_2 = $add_genotyping_project_2->store_genotyping_project(), "store genotyping project");
+
+my $gp_rs_2 = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_3'});
+my $genotyping_project_id_2 = $gp_rs_2->project_id();
+my @genotyping_plate_ids = ($genotyping_trial_id);
+
+my $genotyping_project_obj = CXGN::Genotype::GenotypingProject->new({
+    bcs_schema => $chado_schema,
+    project_id => $genotyping_project_id_2,
+    new_genotyping_plate_list => \@genotyping_plate_ids
+});
+
+ok(my $new_associated_project =$genotyping_project_obj->set_project_for_genotyping_plate(), "move plate to new project");
+
+my $relationship_rs_2 = $chado_schema->resultset("Project::ProjectRelationship")->find ({
+    subject_project_id => $genotyping_trial_id,
+    type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+});
+my $project_id_after_moving = $relationship_rs_2->object_project_id();
+is($project_id_after_moving, $genotyping_project_id_2);
+
 
 #create westcott trial design_type
 

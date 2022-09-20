@@ -624,4 +624,41 @@ sub store_plate_order_POST : Args(0) {
 }
 
 
+sub set_project_for_genotyping_plate : Path('/ajax/breeders/set_project_for_genotyping_plate') ActionClass('REST') {}
+sub set_project_for_genotyping_plate_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_ids = decode_json $c->req->param("genotyping_plate_ids");
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => 'You do not have the required privileges to move genotyping plates to this project.' };
+        $c->detach();
+    }
+
+    my $genotyping_project_obj = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $schema,
+        project_id => $genotyping_project_id,
+        new_genotyping_plate_list => $genotyping_plate_ids
+    });
+
+    my $errors = $genotyping_project_obj->validate_relationship();
+    if (scalar(@{$errors->{error_messages}}) > 0){
+        my $error_string = join ', ', @{$errors->{error_messages}};
+        $c->stash->{rest} = { error => "Error: $error_string and this project are associated with different genotyping facilities."};
+        $c->detach();
+    }
+
+    $genotyping_project_obj->set_project_for_genotyping_plate();
+
+    if (!$genotyping_project_obj->set_project_for_genotyping_plate()){
+        $c->stash->{rest} = {error => "Error adding genotyping plate to this project",};
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1};
+}
+
+
 1;
