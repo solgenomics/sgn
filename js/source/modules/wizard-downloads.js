@@ -92,7 +92,6 @@ export function WizardDownloads(main_id,wizard){
             marker_set_list_id: marker_set_list_id,
             include_duplicate_genotypes: include_duplicate_genotypes,
         });
-        // window.open(url,'_blank');
       });
     main.selectAll(".wizard-download-genetic-relationship-matrix")
       .attr("disabled",!!accessions.length&&protocols.length<=1?null:true)
@@ -118,7 +117,6 @@ export function WizardDownloads(main_id,wizard){
             marker_filter: marker_filter,
             individuals_filter: individuals_filter,
         });
-        // window.open(url,'_blank');
       });
     main.selectAll(".wizard-download-gwas")
         .attr("disabled",!!traits.length&&accessions.length&&protocols.length<=1?null:true)
@@ -146,7 +144,6 @@ export function WizardDownloads(main_id,wizard){
             download_format: download_format,
             traits_are_repeated_measurements: repeated_measurements,
           });
-          // window.open(url,'_blank');
       });
     // Download Trial Metadata
     var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
@@ -163,7 +160,6 @@ export function WizardDownloads(main_id,wizard){
             format: format,
             dataLevel: 'metadata'
         });
-        // window.open(url,'_blank');
       });
 
     // Download Trial Phenotypes
@@ -222,7 +218,6 @@ export function WizardDownloads(main_id,wizard){
             exclude_phenotype_outlier: outliers,
             include_pedigree_parents: 0,
         });
-        // window.open(url,'_blank');
       });
 });
 
