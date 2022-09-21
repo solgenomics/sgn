@@ -88,7 +88,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(15);
  
-    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');#->click();
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
     sleep(3);
@@ -138,19 +138,17 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('Marker effects', 'partial_link_text', 'expand marker effects')->click();
     sleep(2);
-    $d->find_element_ok('Download marker', 'partial_link_text',  'download marker effects');#->click();
+    $d->find_element_ok('Download marker', 'partial_link_text',  'download marker effects');
     sleep(3);
 
     my $download = $d->find_element('Download data', 'partial_link_text', 'download model data section');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $download);
     sleep(2);
-    $d->find_element_ok('Genotype data', 'partial_link_text',  'download model genotype data');#->click();
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download model genotype data');
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download model phenotype data');
     sleep(3);
-    # $d->driver->go_back();
-    # sleep(5);
-
+   
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
