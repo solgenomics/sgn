@@ -86,7 +86,7 @@ sub download_marker_effects :Path('/solgs/download/model/marker/effects') Args(0
     
 }
 
-sub download_marker_effects :Path('/solgs/download/traits/acronym') Args(0) {
+sub download_traits_acronym :Path('/solgs/download/traits/acronym') Args(0) {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
