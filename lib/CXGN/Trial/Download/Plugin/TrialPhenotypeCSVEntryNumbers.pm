@@ -193,7 +193,7 @@ sub download {
                 my $entry_number = $trial_entry_numbers{$trial_id}{$stock_id};
                 splice(@$columns, $ENTRY_NUMBER_COLUMN, 0, $entry_number);
             }
-            print $F join ',', map { qq!"$_"! } @$columns;
+            print $F join ',', map { $_ =~ s/"/""/g; qq!"$_"! } @$columns;
             print $F "\n";
         }
     close($F);

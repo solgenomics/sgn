@@ -8,10 +8,11 @@ jobs:
   test_breedbase:
     runs-on: ubuntu-latest
     container:
-      image: breedbase/breedbase:v0.49
+      image: breedbase/breedbase:v0.46
       env:
         HOME: /root
         MODE: 'TESTING'
+        SYSTEM: 'GITACTION'
         PGPASSWORD: postgres
         SGN_TEST_SERVER: http://test_breedbase:3010
         SGN_REMOTE_SERVER_ADDR: selenium
@@ -62,6 +63,26 @@ jobs:
 
       - name: Run unit_mech tests
         run: /entrypoint.sh --nopatch t/unit_mech 2>/dev/null
-#
-      - name: Run selenium tests
-        run: /entrypoint.sh --nopatch t/selenium2 2>/dev/null
+
+      # selenium tests for a moment as separate folders - will change once full solgs are ready 
+      # but anyway, it will is still fully functional for tests purpose
+      - name: Run selenium tests 01_list
+        run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
+
+      - name: Run selenium tests 02_trial
+        run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
+
+      - name: Run selenium tests breeders
+        run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
+
+      - name: Run selenium tests onto
+        run: /entrypoint.sh --nopatch t/selenium2/onto 2>/dev/null
+
+      - name: Run selenium tests search
+        run: /entrypoint.sh --nopatch t/selenium2/search 2>/dev/null
+
+      - name: Run selenium tests stock
+        run: /entrypoint.sh --nopatch t/selenium2/stock 2>/dev/null
+
+      - name: Run selenium tests tools
+        run: /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null

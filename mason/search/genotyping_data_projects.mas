@@ -10,17 +10,18 @@
     <div class="panel panel-default">
         <div class="panel-body">
             <table id="genotyping_data_project_search_results" width="100%" class="table table-hover table-striped">
-            <thead>
-              <tr>
-                  <th>Genotyping Data Project Name</th>
-                  <th>Description</th>
-                  <th>Breeding program</th>
-                  <th>Folder</th>
-                  <th>Year</th>
-                  <th>Location</th>
-                  <th>Genotyping Facility</th>
-            </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th>Genotyping Data Project Name</th>
+                        <th>Data Type</th>
+                        <th>Description</th>
+                        <th>Breeding program</th>
+                        <th>Folder</th>
+                        <th>Year</th>
+                        <th>Location</th>
+                        <th>Genotyping Facility</th>
+                    </tr>
+                </thead>
             </table>
         </div>
     </div>
