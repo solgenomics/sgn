@@ -203,7 +203,7 @@ solGS.pca = {
 				'|solgs/traits/all/population/';
 
 			var page = '/pca/analysis/' + pcaPopId;
-			if (document.URL.match(solgsPages)) {
+			if (location.pathname.match(solgsPages)) {
 				page = page + '/trait/' + traitId;
 			}
 
@@ -225,7 +225,7 @@ solGS.pca = {
 			dataType: 'json',
 			data: {
 				'page': page,
-				'args': args
+				'arguments': args
 			},
 			url: '/solgs/check/cached/result/',
 			success: function(res) {
@@ -842,7 +842,7 @@ solGS.pca = {
 
 jQuery(document).ready(function() {
 
-	var url = document.URL;
+	var url = location.pathname;
 
 	if (url.match(/pca\/analysis/)) {
 
@@ -864,7 +864,7 @@ jQuery(document).ready(function() {
 				if (pcaArgs.data_structure && !pcaPopId.match(/list|dataset/)) {
 					pcaArgs['pca_pop_id'] = pcaArgs.data_structure + '_' + pcaPopId;
 				}
-				solGS.pca.runPcaAnalysis(pcaArgs);
+				solGS.pca.checkCachedPca(url, pcaArgs);
 			}
 
 		} else {
@@ -885,7 +885,7 @@ jQuery(document).ready(function() {
 
 jQuery(document).ready(function() {
 
-	var url = document.URL;
+	var url = location.pathname;
 
 	if (url.match(/solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//)) {
 		jQuery('#pca_data_type_select').html('<option selected="genotype">Genotype</option>');
@@ -896,7 +896,7 @@ jQuery(document).ready(function() {
 
 jQuery(document).ready(function() {
 
-	var url = document.URL;
+	var url = location.pathname;
 
 	if (url.match(/pca\/analysis/)) {
 

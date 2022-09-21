@@ -49,6 +49,7 @@ use CXGN::BreederSearch;
 use YAML;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
+use CXGN::BreedersToolbox::SoilData;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1295,5 +1296,140 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     }
 
 }
+
+
+sub upload_soil_data : Path('/ajax/trial/upload_soil_data') : ActionClass('REST') { }
+
+sub upload_soil_data_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $trial_id = $c->req->param('soil_data_trial_id');
+    my $description = $c->req->param('soil_data_description');
+    my $soil_data_date = $c->req->param('changed');
+    my $soil_data_gps = $c->req->param('soil_data_gps');
+    my $type_of_sampling = $c->req->param('type_of_sampling');
+
+    my $upload = $c->req->upload('soil_data_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "soil_data_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_id;
+    my $user_name;
+    my $error;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload soil data!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload soil data!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload soil data'};
+        $c->detach();
+    }
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="soil data upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('SoilDataXLS');
+    $parsed_data = $parser->parse();
+    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    } else {
+        my $soil_data_details = $parsed_data->{'soil_data_details'};
+        my $data_type_order = $parsed_data->{'data_type_order'};
+
+        my $soil_data = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $chado_schema });
+        $soil_data->parent_id($trial_id);
+        $soil_data->description($description);
+        $soil_data->date($soil_data_date);
+        $soil_data->gps($soil_data_gps);
+        $soil_data->type_of_sampling($type_of_sampling);
+        $soil_data->data_type_order($data_type_order);
+        $soil_data->soil_data_details($soil_data_details);
+
+        my $soil_data_prop_id = $soil_data->store();
+        print STDERR "PROJECTPROP ID =".Dumper($soil_data_prop_id)."\n";
+    }
+
+    $c->stash->{rest} = {success => "1"};
+
+}
+
 
 1;

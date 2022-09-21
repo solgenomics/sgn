@@ -6,11 +6,7 @@ $training_pop_desc =>''
 $show_data => 1;
 $accuracy_report
 $model_parameters
-$top_blups
-$blups_download_url
-$marker_effects_download_url
 $top_marker_effects
-$validation_download_url
 $trait_abbr
 $trait_name
 
@@ -37,7 +33,7 @@ $training_pop_url
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "statistics/simple_statistics"] &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.genotypingProtocol", "statistics/simple_statistics"] &>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
@@ -100,12 +96,9 @@ $training_pop_url
 
 <& /solgs/model/accuracy.mas,
    accuracy_report        => $accuracy_report,
-  validation_download_url => $validation_download_url
 &>
 
 <& /solgs/model/gebvs.mas,
-   top_blups          => $top_blups,
-   blups_download_url => $blups_download_url,
    pop_id             => $training_pop_id,
   trait_id            => $trait_id
   &>
@@ -123,7 +116,6 @@ $training_pop_url
 
 <& /solgs/model/marker_effects.mas,
    top_marker_effects          => $top_marker_effects,
-   marker_effects_download_url => $marker_effects_download_url
 &>
 
 <& selection_populations.mas,
@@ -135,6 +127,8 @@ $training_pop_url
    selection_pop_name     => $selection_pop_name,
     list_of_prediction_pops => $list_of_prediction_pops,
 &>
+
+<& /solgs/population/download.mas &>
 
 %}
 % else

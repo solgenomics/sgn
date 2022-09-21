@@ -41,11 +41,11 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use Text::CSV;
 
-sub verify { 
+sub verify {
     return 1;
-} 
+}
 
-sub download { 
+sub download {
     my $self = shift;
 
     print STDERR "DATALEVEL ".$self->data_level."\n";
@@ -85,7 +85,8 @@ sub download {
             my $volume = $val->{volume} || 'NA';
             my $dna_person = $val->{dna_person} || 'NA';
             my $extraction = $val->{extraction} || 'NA';
-            my $comments = 'Notes: '.$notes.' AcquisitionDate: '.$acquisition_date.' Concentration: '.$concentration.' Volume: '.$volume.' Person: '.$dna_person.' Extraction: '.$extraction;
+            my $facility_identifier = $val->{facility_identifier} || 'NA';
+            my $comments = 'Notes: '.$notes.' AcquisitionDate: '.$acquisition_date.' Concentration: '.$concentration.' Volume: '.$volume.' Person: '.$dna_person.' Extraction: '.$extraction.' Facility Identifier: '.$facility_identifier;
             my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
 
             $h->execute($val->{species});
