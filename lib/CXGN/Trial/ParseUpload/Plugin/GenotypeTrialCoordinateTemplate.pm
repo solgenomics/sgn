@@ -60,26 +60,44 @@ sub _validate_with_plugin {
         }
     }
 
+    my $value_header = $columns[0];
+    $value_header =~ s/^\s+|\s+$//g;
+    my $column_header = $columns[1];
+    $column_header =~ s/^\s+|\s+$//g;
+    my $row_header = $columns[2];
+    $row_header =~ s/^\s+|\s+$//g;
+    my $identification_header = $columns[3];
+    $identification_header =~ s/^\s+|\s+$//g;
+    my $person_header = $columns[4];
+    $person_header =~ s/^\s+|\s+$//g;
+    my $date_header = $columns[5];
+    $date_header =~ s/^\s+|\s+$//g;
+    my $facility_identifier_header;
     if ($include_facility_identifiers) {
-        if ($columns[0] ne "Value" ||
-            $columns[1] ne "Column" ||
-            $columns[2] ne "Row" ||
-            $columns[3] ne "Identification" ||
-            $columns[4] ne "Person" ||
-            $columns[5] ne "Date" ||
-            $columns[6] ne "Facility Identifier") {
+        $facility_identifier_header = $columns[6];
+        $facility_identifier_header =~ s/^\s+|\s+$//g;
+    }
+
+    if ($include_facility_identifiers) {
+        if ($value_header ne "Value" ||
+            $column_header ne "Column" ||
+            $row_header ne "Row" ||
+            $identification_header ne "Identification" ||
+            $person_header ne "Person" ||
+            $date_header ne "Date" ||
+            $facility_identifier_header ne "Facility Identifier") {
             push @error_messages, 'File contents incorrect. Header row must contain: "Value","Column","Row","Identification","Person","Date", Facility Identifier';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
         }
     } else {
-        if ($columns[0] ne "Value" ||
-            $columns[1] ne "Column" ||
-            $columns[2] ne "Row" ||
-            $columns[3] ne "Identification" ||
-            $columns[4] ne "Person" ||
-            $columns[5] ne "Date" ) {
+        if ($value_header ne "Value" ||
+            $column_header ne "Column" ||
+            $row_header ne "Row" ||
+            $identification_header ne "Identification" ||
+            $person_header ne "Person" ||
+            $date_header ne "Date" ) {
             push @error_messages, 'File contents incorrect. Header row must contain: "Value","Column","Row","Identification","Person","Date"';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);

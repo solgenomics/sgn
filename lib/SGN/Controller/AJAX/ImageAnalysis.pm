@@ -363,15 +363,18 @@ sub get_activity_data : Path('/ajax/image_analysis/activity') Args(0) {
   my $c = shift;
 
   my @activity;
-  if ($c->config->{image_analysis_log}) {
-    my $logfile = $c->config->{image_analysis_log};
-    my @file_data = read_file($logfile, chomp => 1);
-    foreach my $line (@file_data) {
-        my @values = split("\t", $line);
-        my @ts_parts = split(" ", $values[0]);
-        push @activity, { date => $ts_parts[0]};
+  my $logfile = $c->config->{image_analysis_log};
+  if (-e $logfile) {
+        my @file_data = read_file($logfile, chomp => 1);
+        foreach my $line (@file_data) {
+            my @values = split("\t", $line);
+            my @ts_parts = split(" ", $values[0]);
+            push @activity, { date => $ts_parts[0]};
+        }
+    } else {
+        $c->stash->{rest} = {error=>'No activity log set up.'};
+        $c->detach();
     }
-  }
 
   my $json = JSON->new();
   $c->stash->{rest} = { activity => $json->encode(\@activity)};

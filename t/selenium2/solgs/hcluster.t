@@ -62,9 +62,9 @@ print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
 `rm -r $cache_dir`;
-
+#`rm -r $log_dir`;
 $d->while_logged_in_as("submitter", sub {
-
+    sleep(1);
     $d->get_ok('/cluster/analysis', 'cluster home page');
     sleep(1);
     $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select clones list')->click();
@@ -89,7 +89,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $plots_list_name . '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $plots_list_name . '"]', 'xpath', 'select plots list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -111,7 +111,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -122,7 +122,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(200);
 
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, 600);", $sel_pops);
@@ -134,7 +134,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -145,7 +145,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(5);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(90);
+    sleep(200);
 
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
@@ -155,7 +155,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -166,7 +166,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(120);
+    sleep(200);
 
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
@@ -176,7 +176,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -187,7 +187,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(200);
 
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
@@ -215,7 +215,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-phenotype"]', 'xpath', 'plot displayed')->click();
     sleep(5);
 
@@ -236,16 +236,15 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(2);
-
 
    `rm -r $cache_dir`;
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -258,11 +257,11 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(80);
+    sleep(130);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -311,15 +310,15 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'list sl pop')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'accessions list sl pop')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'accessions list sl pop job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('clones list dmc-frw sel pred');
+    $d->find_element_ok('analysis_name', 'id', 'accessions list sl pop analysis name')->send_keys('clones list dmc-frw sel pred');
     sleep(2);
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
@@ -328,22 +327,25 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
+
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'list sel pred')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'dataset accessions job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('dataset clones sel pred');
+    $d->find_element_ok('analysis_name', 'id', 'dataset accessions job analysis  name')->send_keys('dataset clones sel pred');
     sleep(2);
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(15);
+    sleep(3);
+
+
 
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -200);", $sel_pops);
@@ -375,7 +377,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-' . $accessions_list_id . '-traits-1971973596-gebv"]', 'xpath', 'check hierarchical plot')->click();
     sleep(3);
 
@@ -387,10 +389,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('list_type_selection_pops_list_select', 'id', 'select clones list menu')->click();
     sleep(5);
+
     my $dataset = $d->find_element_ok('//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
     $dataset->click();
     sleep(5);
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'GO select dataset sel popp')->click();
      sleep(15);
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -406,7 +409,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(180);
+
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
@@ -441,7 +445,7 @@ $d->while_logged_in_as("submitter", sub {
    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-' . $accessions_dt_id . '-traits-1971973596-gebv"]', 'xpath', 'check hierarchical plot')->click();
     sleep(3);
 
@@ -504,7 +508,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-traits-1971973596-gebv"]', 'xpath', 'check hierarchical plot')->click();
 
     $d->driver->refresh();
@@ -522,7 +526,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(60);
+    sleep(130);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -561,7 +565,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-141-traits-1971973596-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
@@ -617,7 +621,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(100);
+    sleep(130);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
@@ -663,7 +667,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(120);
+    sleep(130);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
@@ -701,7 +705,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(60);
+    sleep(130);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -725,7 +729,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(120);
+    sleep(130);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
@@ -742,7 +746,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(60);
+    sleep(130);
     #
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -784,7 +788,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-141-traits-1971973596-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
@@ -813,7 +817,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-70666-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
@@ -823,13 +827,13 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('nacrri');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
@@ -857,13 +861,13 @@ $d->while_logged_in_as("submitter", sub {
    #  #sleep(5);
    #
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('nacrri');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(3);
@@ -939,15 +943,20 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
+########
+ #$d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
+  #sleep(5);
+########
+
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'accessions dataset queue')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('combo dataset clones sel pred');
+    $d->find_element_ok('analysis_name', 'id', 'accessions dataset analysis name')->send_keys('combo dataset clones sel pred');
     sleep(2);
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
@@ -970,7 +979,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-2804608595-traits-1971973596-phenotype"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
@@ -991,7 +1000,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-2804608595-traits-1971973596-gebv"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
@@ -1012,7 +1021,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-2804608595-traits-1971973596-genotype-gp-1"]', 'xpath', 'plot')->click();
     sleep(5);
 
@@ -1056,9 +1065,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-     ## $d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
-    ## sleep(5);
-
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
     sleep(5);
@@ -1085,7 +1091,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-2804608595-' . $accessions_dt_id . '-traits-1971973596-gebv"]', 'xpath', 'check hierarchical plot')->click();
     sleep(3);
 
@@ -1119,7 +1125,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(80);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-2804608595-' . $accessions_list_id . '-traits-1971973596-gebv"]', 'xpath', 'check hierarchical plot')->click();
     sleep(3);
 
@@ -1140,13 +1146,13 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-2804608595-141-traits-1971973596-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
     $d->driver->refresh();
     sleep(3);
-# #
+
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
@@ -1185,7 +1191,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(130);
     $d->find_element_ok('//img[@id="hierarchical-plot-2804608595-70741-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
