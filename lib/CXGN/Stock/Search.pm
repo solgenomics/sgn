@@ -241,6 +241,16 @@ has 'display_pedigree' => (
 	default => 0
 );
 
+has 'external_ref_id_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'external_ref_source_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 sub search {
     my $self = shift;
     print STDERR "CXGN::Stock::Search search start\n";
@@ -267,6 +277,8 @@ sub search {
     my @species_array = $self->species_list ? @{$self->species_list} : ();
     my @crop_name_array = $self->crop_name_list ? @{$self->crop_name_list} : ();
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
+    my @external_ref_id_array = $self->external_ref_id_list ? @{$self->external_ref_id_list} : ();
+    my @external_ref_source_array = $self->external_ref_source_list ? @{$self->external_ref_source_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
 
@@ -505,6 +517,38 @@ sub search {
     }
     if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
+    }
+
+    if(scalar(@external_ref_id_array) > 0 || scalar(@external_ref_source_array) > 0) {
+        my $stock_xref_search_sql = "select stock_id
+            from (select sxref.stock_id as stock_id, array_agg(d.accession) as ids, array_agg(d2.name) as sources
+                  from stock_dbxref sxref
+                           join dbxref d on sxref.dbxref_id = d.dbxref_id
+                           join db d2 on d.db_id = d2.db_id
+                  group by sxref.stock_id) stock_xref
+            where ";
+
+        my @xref_search_ands;
+        if(scalar(@external_ref_id_array)>0) {
+            push @xref_search_ands, "ids @> '{\"" . join('","', @external_ref_id_array) . "\"}'";
+        }
+        if(scalar(@external_ref_source_array)>0) {
+            push @xref_search_ands, "sources @> '{\"" . join('","', @external_ref_source_array) . "\"}'";
+        }
+
+        $stock_xref_search_sql = $stock_xref_search_sql . join(" and ", @xref_search_ands);
+
+        my $h = $schema->storage->dbh()->prepare($stock_xref_search_sql);
+        $h->execute();
+
+        my @stockxref_filtered_stock_ids;
+        while (my $stock_id = $h->fetchrow_array()) {
+            push @stockxref_filtered_stock_ids, $stock_id;
+        }
+
+        if (scalar(@stockxref_filtered_stock_ids)>0){
+            $search_query->{'me.stock_id'} = {'in'=>\@stockxref_filtered_stock_ids};
+        }
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search(
