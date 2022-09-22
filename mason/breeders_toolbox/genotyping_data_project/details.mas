@@ -8,6 +8,7 @@ $year
 $trial_description
 $identifier_prefix
 $genotyping_facility
+$genotype_data_type
 </%args>
 
 <div class="row">
@@ -91,6 +92,19 @@ $genotyping_facility
                     </div>
                 </td>
             </tr>
+
+            <tr><td><b>Data Type</b></td>
+                <td>
+                    <div id="trial_data_type">
+% if ($genotype_data_type) {
+%  print "$genotype_data_type";
+% } else {
+%      print "<span class='text-danger'>[No Data Type]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
         </table>
 
     </div>

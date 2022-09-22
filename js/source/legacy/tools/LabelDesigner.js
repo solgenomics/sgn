@@ -585,9 +585,9 @@ $(document).ready(function($) {
         var labels_to_download = design.labels_to_download;
         if (label_count < 1000 || (labels_to_download && labels_to_download < 1000)) {
             downloadLabels(design, download_type);
-        } else if (label_count > 1000) {
+        } else if (label_count >= 1000) {
             //show warning with editable inputs for start and end
-            var message = "You are trying to download "+label_count+ " labels ("+label_count+" "+jQuery('#label_designer_data_level :selected').text()+"s x "+design.copies_per_plot+" copy(ies) each). Due to slow speeds it is not recommended to download more than 1000 labels at a time. Please use the input boxes below to download your labels in batches.";
+            var message = "You are trying to download "+label_count+ " labels ("+label_count+" "+jQuery('#label_designer_data_level :selected').text()+" x "+design.copies_per_plot+" copy(ies) each). Downloading this many at a time may result in slow speeds. Please use the input boxes below to control how many are downloaded at a time.";
             $("#batch_download_message").text(message);
             $("#d3-batch-download-submit").val(download_type);
             $('#batchDownloadModal').modal('show');

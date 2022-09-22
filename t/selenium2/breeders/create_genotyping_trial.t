@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 37;
+use Test::More 'tests' => 47;
 
 use Data::Dumper;
 use SGN::Test::WWW::WebDriver;
@@ -18,6 +18,49 @@ $t->while_logged_in_as("submitter", sub {
 	$t->get_ok('/breeders/genotyping');
 	sleep(2);
 
+	# CREATE PROJECT FIRST
+	$t->find_element_ok("create_genotyping_project_link", "name", "find create genotyping project link abd click")->click();
+	sleep(1);
+
+	# SCREEN 1 /Intro/
+	$t->find_element_ok('next_step_add_new_genotyping_project', 'id', 'Next step from Into Screen find and click')->click();
+	sleep(2);
+
+	# SCREEN 2 /Genotyping Project/
+	my $project_name = "NEXTGENCASSAVA";
+	$t->find_element_ok('new_genotyping_project_name', 'id', 'find "genotyping project name" and click')->send_keys($project_name);
+	sleep(1);
+
+	$t->find_element_ok('genotyping_project_facility_select', 'id', 'find "genotyping project facility select" and click')->click();
+	sleep(1);
+	$t->find_element_ok('//select[@id="genotyping_project_facility_select"]/option[@value="None"]', 'xpath', 'Select "None" as value for genotyping project facility')->click();
+
+	$t->find_element_ok('data_type', 'id', 'find "genotyping project data_type" and click')->click();
+	sleep(1);
+	$t->find_element_ok('//select[@id="data_type"]/option[@value="snp"]', 'xpath', 'Select "snp" as value for genotyping data type')->click();
+
+	$t->find_element_ok('genotyping_project_breeding_program_select', 'id', 'find "genotyping breeding program select" and click')->click();
+	sleep(1);
+	$t->find_element_ok('//select[@id="genotyping_project_breeding_program_select"]/option[@title="test"]', 'xpath', 'Select "Breedbase" as title for genotyping data type')->click();
+
+	$t->find_element_ok('genotyping_project_year_select', 'id', 'find "genotyping project year" select and click')->click();
+	sleep(1);
+	$t->find_element_ok('//select[@id="genotyping_project_year_select"]/option[@title="2018"]', 'xpath', 'Select "2018" as value of project year')->click();
+
+	$t->find_element_ok('genotyping_project_location_select', 'id', 'find "genotyping project location" select and click')->click();
+	sleep(1);
+	$t->find_element_ok('//select[@id="genotyping_project_location_select"]/option[@title="test_location"]', 'xpath', 'Select "test_location" as value of project location')->click();
+
+	$t->find_element_ok('genotyping_project_description', 'id', 'find "genotyping project description" and fill')->send_keys("Selenium test genotyping project description");
+
+	$t->find_element_ok('add_new_genotyping_project_submit', 'id', 'New genotyping project submit button find and click')->click();
+	sleep(4);
+
+	$t->find_element_ok('add_new_genotyping_project_close_modal', 'id', 'New genotyping project close modal button find and click')->click();
+	sleep(1);
+
+
+	# CREATE TRIAL
 	$t->find_element_ok("create_genotyping_trial_link", "name", "find create genotyping trial link abd click")->click();
 	sleep(1);
 
@@ -25,12 +68,15 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('next_step_intro_button', 'id', 'go to next screen - Intro')->click();
 	sleep(1);
 
-	# SCREEN 2 /Basic Plate Info/
-	$t->find_element_ok('genotyping_trial_facility_select', 'id', 'find "genotyping trial facility select" and click')->click();
+	# SCREEN 2 /Genotyping Project/
+	$t->find_element_ok('next_step_creating_genotyping_plates', 'id', 'go to next screen - Genotyping Project')->click();
 	sleep(1);
-	$t->find_element_ok('//select[@id="genotyping_trial_facility_select"]/option[@value="None"]', 'xpath', 'Select "None" as value for genotyping trial facility')->click();
 
-	$t->find_element_ok('genotyping_project_name', 'id', 'find "genotyping project name" and click')->send_keys("NEXTGENCASSAVA");
+	# SCREEN 3 /Basic Plate Info/
+	$t->find_element_ok('plate_genotyping_project_id', 'id', 'find "genotyping trial facility select" and click')->click();
+	sleep(1);
+
+	$t->find_element_ok("//select[\@id=\"plate_genotyping_project_id\"]/option[\@title='$project_name']", 'xpath', "Select $project_name as value for genotyping project facility")->click();
 
 	$t->find_element_ok('genotyping_trial_name', 'id', 'find "genotyping trial name" and click')->send_keys("2018TestPlate02");
 
@@ -42,40 +88,29 @@ $t->while_logged_in_as("submitter", sub {
 	sleep(1);
 	$t->find_element_ok('//select[@id="genotyping_trial_plate_sample_type"]/option[@value="DNA"]', 'xpath', 'Select "DNA" as value for plate sample type')->click();
 
-	$t->find_element_ok('breeding_program_select', 'id', 'find "genotyping breeding program" select and click')->click();
-	sleep(1);
-	$t->find_element_ok('//select[@id="breeding_program_select"]/option[@title="test"]', 'xpath', 'Select "test" as value of breeding program')->click();
-
-	$t->find_element_ok('location_select', 'id', 'find "genotyping trial location" select and click')->click();
-	sleep(1);
-	$t->find_element_ok('//select[@id="location_select"]/option[@title="test_location"]', 'xpath', 'Select "test_location" as value of trial location')->click();
-
-	$t->find_element_ok('year_select', 'id', 'find "genotyping trial year" select and click')->click();
-	sleep(1);
-	$t->find_element_ok('//select[@id="year_select"]/option[@title="2018"]', 'xpath', 'Select "2018" as value of trial year')->click();
 
 	$t->find_element_ok('genotyping_trial_description', 'id', 'find "genotyping trial description" and fill')->send_keys("Selenium test plate description");
-
 	$t->find_element_ok('plate_info_intro_button', 'id', 'go to next screen - Basic Plate Info')->click();
 
+	# SCREEN 4 /Well Info/
 	$t->find_element_ok('genotyping_trial_well_input_option', 'id', 'find "genotyping trial well input" select and click')->click();
 	sleep(1);
 	$t->find_element_ok('//select[@id="genotyping_trial_well_input_option"]/option[@value="xls"]', 'xpath', 'Select "xls" as value of trial well input formal (Excel)')->click();
+	sleep(2);
 
 	my $file_upload = $t->find_element_ok("genotyping_trial_layout_upload", "id", "find trial file upload button");
 	my $filename = $f->config->{basepath}."/t/data/genotype_trial_upload/NEW_CASSAVA_GS_74Template.xls";
 	my $remote_filename = $t->driver()->upload_file($filename);
 	$file_upload->send_keys($filename);
 
-	# SCREEN 3 /Well Info/
 	$t->find_element_ok('well_info_intro_button', 'id', 'go to next screen - Well Info')->click();
 	sleep(1);
 
-	# SCREEN 4 /Trial Linkage/
+	# SCREEN 5 /Trial Linkage/
 	$t->find_element_ok('trial_linkage_intro_button', 'id', 'go to next screen - Well Info')->click();
 	sleep(1);
 
-	# SCREEN 5 /Confirm/
+	# SCREEN 6 /Confirm/
 	$t->find_element_ok('add_geno_trial_submit', 'id', 'find "submit genotyping trial" and click')->click();
 	sleep(40);
 
@@ -83,6 +118,7 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('close_trial_button', 'id', 'find "close trial button" and click')->click();
 	sleep(3);
 
+	# CHECK RESULTS
 	$t->find_element_ok("refresh_genotyping_trial_jstree_html_trialtree_button", "id", "find and click 'refresh genotyping trial jstree'")->click();
 	sleep(5);
 

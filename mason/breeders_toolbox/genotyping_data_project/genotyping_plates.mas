@@ -1,0 +1,29 @@
+<%args>
+$trial_id
+</%args>
+
+<div style="overflow:scroll">
+    <table id="genotyping_plates_in_genotyping_project_table" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Plate Name</th>
+                <th>Description</th>
+                <th>Folder</th>
+                <th>Format</th>
+                <th>Sample Type</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+   var genotyping_plates_table = jQuery('#genotyping_plates_in_genotyping_project_table').DataTable({
+       'ordering'  : false,
+       'ajax': '/ajax/genotyping_project/genotyping_plates?genotyping_project_id=<% $trial_id %>',
+   });
+});
+
+</script>

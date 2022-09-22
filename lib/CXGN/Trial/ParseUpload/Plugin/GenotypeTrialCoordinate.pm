@@ -56,36 +56,64 @@ sub _validate_with_plugin {
         }
     }
 
+    my $date_header = $columns[0];
+    $date_header =~ s/^\s+|\s+$//g;
+    my $plate_id_header = $columns[1];
+    $plate_id_header =~ s/^\s+|\s+$//g;
+    my $plate_name_header = $columns[2];
+    $plate_name_header =~ s/^\s+|\s+$//g;
+    my $sample_id_header = $columns[3];
+    $sample_id_header =~ s/^\s+|\s+$//g;
+    my $well_A01_header = $columns[4];
+    $well_A01_header =~ s/^\s+|\s+$//g;
+    my $well_01A_header = $columns[5];
+    $well_01A_header =~ s/^\s+|\s+$//g;
+    my $tissue_id_header = $columns[6];
+    $tissue_id_header =~ s/^\s+|\s+$//g;
+    my $dna_person_header = $columns[7];
+    $dna_person_header =~ s/^\s+|\s+$//g;
+    my $notes_header = $columns[8];
+    $notes_header =~ s/^\s+|\s+$//g;
+    my $tissue_type_header = $columns[9];
+    $tissue_type_header =~ s/^\s+|\s+$//g;
+    my $extraction_header = $columns[10];
+    $extraction_header =~ s/^\s+|\s+$//g;
+    my $facility_identifier_header;
     if ($include_facility_identifiers) {
-        if ( $columns[0] ne "date" ||
-            $columns[1] ne "plate_id" ||
-            $columns[2] ne "plate_name" ||
-            $columns[3] ne "sample_id" ||
-            $columns[4] ne "well_A01" ||
-            $columns[5] ne "well_01A" ||
-            $columns[6] ne "tissue_id" ||
-            $columns[7] ne "dna_person" ||
-            $columns[8] ne "notes" ||
-            $columns[9] ne "tissue_type" ||
-            $columns[10] ne "extraction" ||
-            $columns[11] ne "facility_identifier") {
+        $facility_identifier_header = $columns[11];
+        $facility_identifier_header =~ s/^\s+|\s+$//g;
+    }
+
+    if ($include_facility_identifiers) {
+        if ( $date_header ne "date" ||
+            $plate_id_header ne "plate_id" ||
+            $plate_name_header ne "plate_name" ||
+            $sample_id_header ne "sample_id" ||
+            $well_A01_header ne "well_A01" ||
+            $well_01A_header ne "well_01A" ||
+            $tissue_id_header ne "tissue_id" ||
+            $dna_person_header ne "dna_person" ||
+            $notes_header ne "notes" ||
+            $tissue_type_header ne "tissue_type" ||
+            $extraction_header ne "extraction" ||
+            $facility_identifier_header ne "facility_identifier") {
             push @error_messages, 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
         }
     } else {
-            if ( $columns[0] ne "date" ||
-                $columns[1] ne "plate_id" ||
-                $columns[2] ne "plate_name" ||
-                $columns[3] ne "sample_id" ||
-                $columns[4] ne "well_A01" ||
-                $columns[5] ne "well_01A" ||
-                $columns[6] ne "tissue_id" ||
-                $columns[7] ne "dna_person" ||
-                $columns[8] ne "notes" ||
-                $columns[9] ne "tissue_type" ||
-                $columns[10] ne "extraction" ) {
+            if ( $date_header ne "date" ||
+                $plate_id_header ne "plate_id" ||
+                $plate_name_header ne "plate_name" ||
+                $sample_id_header ne "sample_id" ||
+                $well_A01_header ne "well_A01" ||
+                $well_01A_header ne "well_01A" ||
+                $tissue_id_header ne "tissue_id" ||
+                $dna_person_header ne "dna_person" ||
+                $notes_header ne "notes" ||
+                $tissue_type_header ne "tissue_type" ||
+                $extraction_header ne "extraction" ) {
                 push @error_messages, 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
                 $errors{'error_messages'} = \@error_messages;
                 $self->_set_parse_errors(\%errors);

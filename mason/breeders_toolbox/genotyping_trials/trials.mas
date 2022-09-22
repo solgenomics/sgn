@@ -15,3 +15,4 @@ $facilities => ()
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas, facilities => $facilities &>
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities => $facilities &>
 <& /breeders_toolbox/genotyping_trials/genotyping_trial_tree.mas &>
+<& /breeders_toolbox/genotyping_data_project/create_genotyping_project_dialog.mas, facilities => $facilities &> 
