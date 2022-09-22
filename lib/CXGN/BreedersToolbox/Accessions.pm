@@ -160,6 +160,7 @@ sub get_possible_seedlots {
         push @{$seedlot_hash{$sl->{source_stocks}->[0]->[1]}}, {
             breeding_program_id => $sl->{breeding_program_id},
             program => $sl->{breeding_program_name},
+            description => [$sl->{seedlot_stock_description}, $sl->{seedlot_stock_id}],
             seedlot => [$sl->{seedlot_stock_uniquename}, $sl->{seedlot_stock_id}],
             contents => [$sl->{source_stocks}->[0]->[1], $sl->{source_stocks}->[0]->[0]],
             location => $sl->{location},

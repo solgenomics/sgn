@@ -10,11 +10,11 @@ $content_cross_name
 $organization_name
 $population_name
 $timestamp
+$description => undef
 $box_name=>undef
 $quality => undef
 $owners_string => undef
 $maintenance_enabled => undef
-$seedlot_description => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -32,7 +32,7 @@ $seedlot_description => undef
 <table class="table table-bordered table-hover">
 <tr><td><b>Breeding Program</b></td><td><div id="seedlot_breeding_program_div">[LOADING...]</div></td></tr>
 <tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
-<tr><td><b>Seedlot Description</b></td><td><% $seedlot_description %></td></tr>
+<tr><td><b>Seedlot Description</b></td><td><% $description %></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
 <tr><td><b>Box Name</b></td><td><% $box_name %></td></tr>
@@ -63,7 +63,7 @@ $seedlot_description => undef
     <& /page/page_title.mas, title => 'Maintenance Events' &>
 
     <&| /page/info_section.mas, title=>"Events Table",  collapsible=>1, collapsed=>0, subtitle=>"[<a href='/breeders/seedlot/maintenance/record?seedlot_name=$uniquename' id='add_seedlot_maintenance_button' >Record Maintenance</a>]" &>
-        <& /breeders_toolbox/seedlot_maintenance/table.mas, seedlot_id => $seedlot_id, seedlot_name => $uniquename &>
+        <& /breeders_toolbox/seedlot_maintenance/table.mas, seedlot_id => $seedlot_id, seedlot_name => $uniquename, seedlot_description => $description &>
     </&>
 % }
 
@@ -310,7 +310,7 @@ $seedlot_description => undef
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Seedlot Description: </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" type="text" id="edit_seedlot_details_description" value="LOADING..."/>
+                        <input class="form-control" type="text" id="edit_seedlot_details_description" placeholder="Optional"/>
                     </div>
                 </div>
                 <div class="form-group">
@@ -439,7 +439,7 @@ $seedlot_description => undef
                 jQuery('#seedlot_location_code_div').html(response.location_code);
                 jQuery('#seedlot_breeding_program_div').html(response.breeding_program);
                 jQuery('#edit_seedlot_details_uniquename').val(response.uniquename);
-                jQuery('#edit_seedlot_details_description').val(response.seedlot_description);
+                jQuery('#edit_seedlot_details_description').val(response.description);
                 jQuery('#edit_seedlot_details_breeding_program').val(response.breeding_program);
                 jQuery('#edit_seedlot_details_organization').val(response.organization_name);
                 jQuery('#edit_seedlot_details_population').val(response.population_name);
@@ -474,6 +474,7 @@ $seedlot_description => undef
         var to_existing_seedlot_id_array;
         var to_existing_seedlot_id;
         var to_new_seedlot_name;
+        var to_new_seedlot_description;
         var to_new_seedlot_breeding_program_id;
         var to_new_seedlot_location_name;
         var to_new_seedlot_box_name;
@@ -485,7 +486,6 @@ $seedlot_description => undef
         var to_new_seedlot_population_name;
         var to_new_seedlot_organization;
         var to_new_seedlot_timestamp;
-        var to_new_seedlot_description;
 
         if (factor == 1){
             from_existing_seedlot_id_array = jQuery('#seedlot_transaction_seedlot_id').val();
@@ -675,7 +675,7 @@ $seedlot_description => undef
 
     jQuery('#edit_seedlot_details_button').click(function(){
         var uniquename = jQuery('#edit_seedlot_details_uniquename').val();
-        var seedlot_description = jQuery('#edit_seedlot_details_description').val();
+        var description = jQuery('#edit_seedlot_details_description').val();
         var breeding_program = jQuery('#edit_seedlot_details_breeding_program').val();
         var organization = jQuery('#edit_seedlot_details_organization').val();
         var population = jQuery('#edit_seedlot_details_population').val();
@@ -701,7 +701,7 @@ $seedlot_description => undef
                 url: '/ajax/breeders/seedlot/<% $seedlot_id %>/edit',
                 data: {
                     'uniquename':uniquename,
-                    'seedlot_description':seedlot_description,
+                    'description':description,
                     'breeding_program':breeding_program,
                     'organization':organization,
                     'population':population,
