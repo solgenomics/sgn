@@ -1,0 +1,285 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'moment_min', 'daterangepicker' ] &>
+
+<div class="modal fade" id="upload_soil_data_dialog" name="upload_soil_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSoilDataDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSoilDataDialog">Upload Soil Data for this Trial </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_soil_data_form" name="upload_soil_data_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Soil data for trial: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" name="trial_soil_data" id="trial_soil_data" disabled value="<% $trial_name %>">
+                                <input name="soil_data_trial_id" id="soil_data_trial_id" type="hidden" value="<% $trial_id %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Description:</label>
+                            <div class="col-sm-8">
+                                <input class="form-control" type="text" id="soil_data_description" name="soil_data_description" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Sampling Date:</label>
+                            <div class="col-sm-8">
+                                <input class="form-control" id="soil_data_date" name="soil_data_date" title="data_date" type="text"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">GPS (optional):</label>
+                            <div class="col-sm-8">
+                                <input class="form-control" type="text" id="soil_data_gps" name="soil_data_gps" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Type of Sampling:</label>
+                            <div class="col-sm-8">
+                                <input class="form-control" type="text" id="type_of_sampling" name="type_of_sampling" />
+                            </div>
+                        </div>
+                        <div class="well well-sm">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <&| /page/explanation.mas, title=>'Template information' &>
+                                        <p>
+                                            <b>File format information</b>
+                                            <br>
+                                            <a id="soil_data_spreadsheet_format">Spreadsheet format</a>
+                                        </p>
+                                    </&>
+                                </div>
+                                <div class="col-sm-8">
+                                    <br/>
+                                    <div class="panel panel-default">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label class="col-sm-6 control-label">Select an XLS File: </label>
+                                                <div class="col-sm-6">
+                                                    <input type="file" name="soil_data_upload_file" id="soil_data_upload_file" encoding="multipart/form-data" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="soil_data_submit" id="soil_data_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_soil_data_error_display" name="upload_soil_data_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadSoilDataErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSoilDataErrorDialog">Upload Soil Data File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_soil_data_spreadsheet_format_dialog" name="upload_soil_data_spreadsheet_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSoilDataFormatDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSoilDataFormatDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Soil data may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>soil_data_type</td>
+                                <td>soil_data_value</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Example:
+                    </b>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>soil_data_type</td>
+                                <td>soil_data_value</td>
+                            </tr>
+                            <tr>
+                                <td>pH (CaCl2)</td>
+                                <td>5.500</td>
+                            </tr>
+                            <tr>
+                                <td>Ca (cmolc/dm³)</td>
+                                <td>3.500</td>
+                            </tr>
+                            <tr>
+                                <td>Zn (mg/dm³)</td>
+                                <td>3.200</td>
+                            </tr>
+                            <tr>
+                                <td>Organic matter (%)</td>
+                                <td>3.500</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="soil_data_saved_dialog_message" name="soil_data_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby=soilDataSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="soilDataSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Soil data were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_soil_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("#trial_upload_soil_data_button").click(function(){
+
+        var soil_data_date_element = jQuery("#soil_data_date");
+        set_daterangepicker_default (soil_data_date_element);
+        jQuery('input[title="data_date"]').daterangepicker(
+            {"singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+            },
+            function(start){
+                soil_data_date_element.val(start.format('YYYY-MMM-DD'));
+                highlight_changed_details(soil_data_date_element);
+            }
+        );
+
+        jQuery("#soil_data_spreadsheet_format").click(function(){
+            jQuery("#upload_soil_data_spreadsheet_format_dialog").modal("show");
+        });
+
+        jQuery("#upload_soil_data_dialog").modal("show");
+    });
+
+    jQuery("#soil_data_submit").click(function(){
+
+        var soil_data_description = jQuery("#soil_data_description").val();
+        if ( soil_data_description === ''){
+            alert("Please provide description");
+            return;
+        }
+
+        var soil_data_date = jQuery("#soil_data_date").val();
+        if ( soil_data_date === ''){
+            alert("Please select a date");
+            return;
+        }
+
+        var type_of_sampling = jQuery("#type_of_sampling").val();
+        if ( type_of_sampling === ''){
+            alert("Please indicate type of sampling");
+            return;
+        }
+
+        var uploadFile = jQuery("#soil_data_upload_file").val();
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery('#upload_soil_data_form').attr("action", "/ajax/trial/upload_soil_data");
+
+        jQuery("#upload_soil_data_form").submit();
+        jQuery("#upload_soil_data_dialog").modal("hide");
+    });
+
+    jQuery('#upload_soil_data_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string){
+                jQuery("#upload_soil_data_error_display tbody").html('');
+                jQuery("#upload_soil_data_error_display tbody").append(response.error_string);
+                jQuery("#upload_soil_data_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#soil_data_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_soil_data_saved_dialog").click(function(){
+        location.reload();
+    });
+
+
+
+});
+
+</script>

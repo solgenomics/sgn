@@ -11,7 +11,7 @@ solGS.kinship = {
 
 	getKinshipPopDetails: function() {
 
-		var page = document.URL;
+		var page = location.pathname;
 		var popId;
 		var kishipUrlArgs;
 		var dataStr;
@@ -186,7 +186,7 @@ solGS.kinship = {
 			dataType: 'json',
 			data: {
 				'page': page,
-				'args': args
+				'arguments': args
 			},
 			url: '/solgs/check/cached/result/',
 			success: function(response) {
@@ -413,7 +413,7 @@ solGS.kinship = {
 jQuery(document).ready(function() {
 
 	jQuery("#run_kinship").click(function() {
-		var url = document.URL;
+		var url = location.pathname;
 
 		var popId;
 		var popName;
@@ -466,8 +466,8 @@ jQuery(document).ready(function() {
 			if (args.data_structure) {
 				args['kinship_pop_id'] = args.data_structure + '_' + args.kinship_pop_id;
 			}
-
-			solGS.kinship.getKinshipResult(args);
+			
+			solGS.kinship.checkCachedKinship(url, args);
 		}
 	}
 
@@ -476,7 +476,7 @@ jQuery(document).ready(function() {
 
 jQuery(document).ready(function() {
 
-	var url = document.URL;
+	var url = location.pathname;
 
 	if (url.match(/kinship\/analysis/)) {
 

@@ -343,7 +343,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	    $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
 	    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 	    $c->controller('solGS::solGS')->top_blups($c,  $c->stash->{rrblup_training_gebvs_file});
-	    $c->controller('solGS::Download')->training_prediction_download_urls($c);
+	    # $c->controller('solGS::Download')->training_prediction_download_urls($c);
 	    $c->controller('solGS::Files')->marker_effects_file($c);
 	    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
 	    $c->controller('solGS::solGS')->model_parameters($c);
@@ -432,10 +432,10 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
 
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
-
-	my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
-	$gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
-	$c->stash->{blups_download_url} = $gebvs_download;
+    # my $training_pop_name = $c->stash->{training_pop_name};
+    # my $model_link = "$training_pop_name -- $trait_abbr";
+    # $model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
+    # $c->stash->{model_page_url} = $model_page;
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 

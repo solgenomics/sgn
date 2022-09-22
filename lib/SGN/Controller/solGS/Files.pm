@@ -70,7 +70,7 @@ sub model_phenodata_file {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-    my $id =   "${pop_id}-${trait_abbr}-${protocol_id}";
+    my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     if ($trait_abbr)
     {
 	no warnings 'uninitialized';
@@ -84,6 +84,30 @@ sub model_phenodata_file {
 	$self->cache_file($c, $cache_data);
     }
 }
+
+
+sub model_genodata_file {
+    my ($self, $c) = @_;
+
+    my $pop_id        = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} ;
+    my $trait_abbr    = $c->stash->{trait_abbr};
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+
+    my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
+    if ($trait_abbr)
+    {
+	no warnings 'uninitialized';
+
+	my $cache_data = {key       => 'model_genodata_' . $id,
+			  file      => 'model_genodata_' .  $id . '.txt',
+			  stash_key => 'model_genodata_file',
+			  cache_dir => $c->stash->{solgs_cache_dir}
+	};
+
+	$self->cache_file($c, $cache_data);
+    }
+}
+
 
 sub trait_raw_phenodata_file {
     my ($self, $c) = @_;
@@ -108,6 +132,7 @@ sub trait_raw_phenodata_file {
 
 
 
+
 sub model_info_file {
     my ($self, $c) = @_;
 
@@ -128,6 +153,9 @@ sub model_info_file {
 }
 
 
+
+
+
 sub filtered_training_genotype_file {
     my ($self, $c, $pop_id, $protocol_id) = @_;
 
@@ -137,7 +165,7 @@ sub filtered_training_genotype_file {
     my $file_id = "${pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id,
-                       file      => 'filtered_genotype_data_' . $file_id . '.txt',
+                       file      => 'filtered_training_genotype_data_' . $file_id . '.txt',
                        stash_key => 'filtered_training_genotype_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -149,13 +177,13 @@ sub filtered_training_genotype_file {
 sub filtered_selection_genotype_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{selection_pop_id};
-
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id = $c->stash->{selection_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $file_id = "${pop_id}-GP-${protocol_id}";
+    my $file_id = "${tr_pop_id}-${sel_pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id,
-                       file      => 'filtered_genotype_data_' . $file_id . '.txt',
+                       file      => 'filtered_selection_genotype_data_' . $file_id . '.txt',
                        stash_key => 'filtered_selection_genotype_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -539,7 +567,7 @@ sub phenotype_metadata_file {
 
 
 sub rrblup_training_gebvs_file {
-    my ($self, $c, $identifier, $trait_id) = @_;
+    my ($self, $c, $identifier, $trait_id, $protocol_id) = @_;
 
     $identifier = $c->stash->{pop_id} || $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} if !$identifier;
     $trait_id  = $c->stash->{trait_id} if !$trait_id;
@@ -547,7 +575,7 @@ sub rrblup_training_gebvs_file {
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
 
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     my $file_id = "$identifier-${trait_abbr}-GP-${protocol_id}";
 
     my $cache_data = {key       => 'rrblup_training_gebvs_' . $file_id,
@@ -562,12 +590,12 @@ sub rrblup_training_gebvs_file {
 
 
 sub rrblup_selection_gebvs_file {
-    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id) = @_;
+    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
 
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
 
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     my $file_id = "${training_pop_id}_${selection_pop_id}-${trait_abbr}-GP-${protocol_id}";
 
     my $cache_data = {key  => 'rrblup_selection_gebvs_' . $file_id,
