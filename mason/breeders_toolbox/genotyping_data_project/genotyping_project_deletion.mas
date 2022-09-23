@@ -1,0 +1,37 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table table-hover table-bordered" id="genotyping_plate_deletion_table">
+                </table>
+            </div>
+        </div>
+        <button class="btn btn-default" id="delete_all_genotyping_plates" role="button">Delete all genotyping plates in this project</button><br/><br/>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'delete_genotyping_project_section', title => 'Delete Genotyping Project', subtitle => '<font color="red">Deletion cannot be undone. You cannot delete the project if the project still has genotyping plates or genotyping data</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-default" id="delete_genotyping_project" role="button">Delete Genotyping Project</button><br/><br/>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+
+});
+</script>
