@@ -334,7 +334,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $plot_uniquename = $c->req->param("seedlot_plot_uniquename");
     my $origin_seedlot_uniquename = $c->req->param("origin_seedlot_uniquename");
     my $seedlot_quality = $c->req->param("seedlot_quality");
-    my $seedlot_description = $c->req->param("seedlot_description");
+    my $description = $c->req->param("seedlot_description");
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
@@ -431,7 +431,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     eval {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
-        $sl->description($seedlot_description);
+        $sl->description($description);
         $sl->location_code($location_code);
         $sl->box_name($box_name);
         $sl->accession_stock_id($accession_id);
@@ -608,6 +608,7 @@ sub upload_seedlots_POST : Args(0) {
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
+            $sl-description($val->{description});
             $sl->accession_stock_id($val->{accession_stock_id});
             $sl->cross_stock_id($val->{cross_stock_id});
             $sl->organization_name($organization);
@@ -818,6 +819,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
+            $sl->description($val->{description});
 
 	    print STDERR "QUALITY: $val->{quality}\n";
 	    $sl->quality($val->{quality});
@@ -1025,7 +1027,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             my $weight = $c->req->param('to_new_seedlot_weight');
             my $timestamp = $c->req->param('to_new_seedlot_timestamp');
             my $transaction_description = $c->req->param('to_new_seedlot_transaction_description');
-            my $seedlot_description = $c->req->param('to_new_seedlot_description');
+            my $description = $c->req->param('to_new_seedlot_description');
 
             my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
             my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -1065,6 +1067,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
             $sl->box_name($box_name);
+            $sl->description($description);
             $sl->accession_stock_id($accession_id);
             $sl->cross_stock_id($cross_id);
             $sl->organization_name($organization);
