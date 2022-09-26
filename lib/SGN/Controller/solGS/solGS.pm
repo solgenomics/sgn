@@ -568,7 +568,7 @@ sub output_files {
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-     
+    $c->controller('solGS::Files')->analysis_report_file($c);
     my $selection_pop_id = $c->stash->{selection_pop_id};
 
 
@@ -597,7 +597,8 @@ sub output_files {
                         $c->stash->{relationship_matrix_adjusted_json_file},
                         $c->stash->{filtered_training_genotype_file},
                         $c->stash->{filtered_selection_genotype_file},
-                        $c->stash->{rrblup_selection_gebvs_file}
+                        $c->stash->{rrblup_selection_gebvs_file},
+                         $c->stash->{analysis_report_file}
         );
 
     my $name = "output_files_${trait}_${training_pop_id}";
