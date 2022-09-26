@@ -73,7 +73,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 	die "Do not know what engine $engine is!\n";
     }
 
-    print STDERR "MODEL: $model\n";
+    print STDERR "MODEL: Dumper $model\n";
 
     $c->stash->{rest} = {
 	error => $error,
@@ -105,7 +105,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     $ds->retrieve_phenotypes();
 
     # Note: file is cleaned by run_model function in CXGN::MixedModel
-    
+
     my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 
     my @factor_select;

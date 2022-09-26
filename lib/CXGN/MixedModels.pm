@@ -211,6 +211,8 @@ sub generate_model_sommer {
     my $random_factors = $self->random_factors();
 
     print STDERR "FIXED FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors);
+    print STDERR "FIXED InteractionFACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors_interaction);
+    print STDERR "RANDOM InteractionFACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($random_factors_interaction);
 
     my $error;
 
@@ -226,7 +228,7 @@ sub generate_model_sommer {
 	else { $mmer_fixed_factors = join(" + ", @$fixed_factors); }
 
 	print STDERR "DEPENDENT VARIABLES: ".Dumper($dependent_variables);
-	
+
 	$mmer_fixed_factors = make_R_variable_name($dependent_variables->[0]) ." ~ ". $mmer_fixed_factors;
 
 	if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
@@ -234,12 +236,21 @@ sub generate_model_sommer {
 
 	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = ""; }
 
-	elsif (scalar(@$fixed_factors_interaction) != 2) { $error = "Works only with one interaction for now! :-(";}
-	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
-	else { $mmer_fixed_factors_interaction = " + ". join(":", @$fixed_factors_interaction);}
+  else {
 
-	$mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction;
+      foreach my $interaction(@$fixed_factors_interaction){
+
+
+	       if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
+	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
+
+	       else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
+       }
     }
+
+	   $mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction;
+   }
+    #location:genotype
 
     print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
     print STDERR "mmer_random_factors = $mmer_random_factors\n";
@@ -315,7 +326,7 @@ sub run_model {
     # clean phenotype file so that trait names are R compatible
     #
     my $clean_tempfile = $self->clean_file($self->tempfile());
-    
+
     # run r script to create model
     #
     my $cmd = "R CMD BATCH  '--args datafile=\"".$clean_tempfile."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
@@ -360,7 +371,7 @@ sub make_R_variable_name {
 sub clean_file {
     my $self = shift;
     my $file = shift;
-    
+
     open(my $PF, "<", $file) || die "Can't open pheno file ".$file."_phenotype.txt";
     open(my $CLEAN, ">", $file.".clean") || die "Can't open ".$file.".clean for writing";
 
@@ -389,7 +400,7 @@ sub clean_file {
 
     move($file, $file.".before_clean");
     move($file.".clean", $file);
-    
+
     return $file;
 }
 
