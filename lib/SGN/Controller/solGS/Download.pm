@@ -21,14 +21,23 @@ sub download_training_pop_data :Path('/solgs/download/training/pop/data') Args(0
 	my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-	my $geno_file = $self->download_raw_geno_data_file($c);
-	my $pheno_file = $self->download_raw_pheno_data_file($c);
-
-	$c->stash->{rest}{training_pop_raw_geno_file} = $geno_file;
-	$c->stash->{rest}{training_pop_raw_pheno_file} = $pheno_file;
+	$c->stash->{rest}{training_pop_raw_geno_file} = $self->download_raw_geno_data_file($c);
+	$c->stash->{rest}{training_pop_raw_pheno_file} = $self->download_raw_pheno_data_file($c);
+	$c->stash->{rest}{traits_acronym_file} = $self->download_traits_acronym_file($c);
 
 }
 
+
+sub download_selection_pop_data :Path('/solgs/download/selection/pop/data') Args(0) {
+	my ($self, $c) = @_;
+
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+	my $geno_file = $self->download_selection_pop_filtered_geno_data_file($c);
+	$c->stash->{rest}{selection_pop_filtered_geno_file} = $geno_file;
+
+}
 
 sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) {
 	my ($self, $c) = @_;
@@ -74,6 +83,17 @@ sub download_marker_effects :Path('/solgs/download/model/marker/effects') Args(0
 
 	my $marker_effects_file = $self->download_marker_effects_file($c);
 	$c->stash->{rest}{marker_effects_file} = $marker_effects_file;
+    
+}
+
+sub download_traits_acronym :Path('/solgs/download/traits/acronym') Args(0) {
+    my ($self, $c) = @_;
+
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+	my $acronyms_file = $self->download_traits_acronym_file($c);
+	$c->stash->{rest}{traits_acronym_file} = $acronyms_file;
     
 }
 
@@ -156,6 +176,16 @@ sub download_raw_geno_data_file {
 
 }
 
+sub download_selection_pop_filtered_geno_data_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Files')->filtered_selection_genotype_file($c);
+	my $file = $c->stash->{filtered_selection_genotype_file};
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+
+	return $file;
+
+}
 
 sub download_raw_pheno_data_file {
 	my ($self, $c) = @_;
@@ -241,6 +271,17 @@ sub download_marker_effects_file {
 	return $file;
 }
 
+sub download_traits_acronym_file {
+	my ($self, $c) = @_;
+
+
+	 $c->controller('solGS::Files')->traits_acronym_file($c, $c->stash->{training_pop_id});
+    my $file = $c->stash->{traits_acronym_file};
+
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+
+	return $file;
+}
 
 sub begin : Private {
     my ($self, $c) = @_;

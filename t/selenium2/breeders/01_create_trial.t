@@ -82,7 +82,7 @@ $t->while_logged_in_as("submitter", sub {
 
 	$t->find_element_ok('crbd_list_of_checks_section_list_select', 'id', "find accessions to include select")->click();
 	sleep(1);
-	$t->find_element_ok('//select[@id="crbd_list_of_checks_section_list_select"]//option[contains(@value, "4")]', "xpath", "find checks for list")->click();
+	$t->find_element_ok('//select[@id="crbd_list_of_checks_section_list_select"]//option[@value ="4"]', "xpath", "find checks for list")->click();
 	sleep(1);
 
 	$t->find_element_ok('next_step_design_information_button', 'id', 'go to next screen - Design Information')->click();
@@ -117,14 +117,14 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('increment', 'id', "find plot number increment input")->send_keys("2");
 
 	$t->find_element_ok('new_trial_submit', 'id', 'go to next screen - Custom plot naming')->click();
-	sleep(10);
+	sleep(20);
 
 	# SCREEN 7 /Review design/
 	$t->find_element_ok('redo_trial_layout_button', 'id', "find redo randomization and click button")->click();
-	sleep(10);
+	sleep(20);
 
 	$t->find_element_ok('new_trial_confirm_submit', 'id', "find new trial confirm and submit")->click();
-	sleep(10);
+	sleep(20);
 
 	# Very strange, but the only way to catch the complete trial button. Standard selectors without an extended XPath solution don't work.
 	$t->find_element_ok('create_trial_success_complete_button', 'id', "find success button after trial upload to database");

@@ -70,7 +70,7 @@ sub model_phenodata_file {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-    my $id =   "${pop_id}-${trait_abbr}-${protocol_id}";
+    my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     if ($trait_abbr)
     {
 	no warnings 'uninitialized';
@@ -93,7 +93,7 @@ sub model_genodata_file {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-    my $id =   "${pop_id}-${trait_abbr}-${protocol_id}";
+    my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     if ($trait_abbr)
     {
 	no warnings 'uninitialized';
@@ -165,7 +165,7 @@ sub filtered_training_genotype_file {
     my $file_id = "${pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id,
-                       file      => 'filtered_genotype_data_' . $file_id . '.txt',
+                       file      => 'filtered_training_genotype_data_' . $file_id . '.txt',
                        stash_key => 'filtered_training_genotype_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -177,13 +177,13 @@ sub filtered_training_genotype_file {
 sub filtered_selection_genotype_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{selection_pop_id};
-
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id = $c->stash->{selection_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $file_id = "${pop_id}-GP-${protocol_id}";
+    my $file_id = "${tr_pop_id}-${sel_pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id,
-                       file      => 'filtered_genotype_data_' . $file_id . '.txt',
+                       file      => 'filtered_selection_genotype_data_' . $file_id . '.txt',
                        stash_key => 'filtered_selection_genotype_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };

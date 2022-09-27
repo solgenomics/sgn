@@ -10,6 +10,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $include_facility_identifiers = $self->get_facility_identifiers_included();
     my %errors;
     my @error_messages;
     my %missing_accessions;
@@ -19,7 +20,6 @@ sub _validate_with_plugin {
     my %seen_plot_names;
     my %seen_accession_names;
     my %seen_seedlot_names;
-
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
     if ( !$excel_obj ) {
@@ -60,6 +60,7 @@ sub _validate_with_plugin {
     my $concentration_head;
     my $volume_head;
     my $is_blank_head;
+    my $facility_identifier_head;
 
     if ($worksheet->get_cell(0,0)) {
         $date_head  = $worksheet->get_cell(0,0)->value();
@@ -102,6 +103,11 @@ sub _validate_with_plugin {
     }
     if ($worksheet->get_cell(0,13)) {
         $is_blank_head = $worksheet->get_cell(0,13)->value();
+    }
+    if ($include_facility_identifiers){
+        if ($worksheet->get_cell(0,14)) {
+            $facility_identifier_head = $worksheet->get_cell(0,14)->value();
+        }
     }
 
     if (!$date_head || $date_head ne 'date' ) {
@@ -146,6 +152,11 @@ sub _validate_with_plugin {
     if (!$is_blank_head || $is_blank_head ne 'is_blank') {
         push @error_messages, "Cell N1: is_blank is missing from the header.";
     }
+    if ($include_facility_identifiers) {
+        if (!$facility_identifier_head || $facility_identifier_head ne 'facility_identifier') {
+            push @error_messages, "Cell O1: facility_identifier is missing from the header.";
+        }
+    }
 
     my %seen_sample_ids;
     my %seen_source_observation_unit_names;
@@ -166,6 +177,7 @@ sub _validate_with_plugin {
         my $concentration;
         my $volume;
         my $is_blank;
+        my $facility_identifier;
 
         if ($worksheet->get_cell($row,0)) {
             $date  = $worksheet->get_cell($row,0)->value();
@@ -208,6 +220,11 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,13)) {
             $is_blank = $worksheet->get_cell($row,13)->value();
+        }
+        if ($include_facility_identifiers) {
+            if ($worksheet->get_cell($row,14)) {
+                $facility_identifier = $worksheet->get_cell($row,14)->value();
+            }
         }
 
         #skip blank lines
@@ -273,6 +290,12 @@ sub _validate_with_plugin {
             push @error_messages, "Cell E$row_name: column tissue type and must be either stem, leaf, or root";
         }
 
+        if ($include_facility_identifiers) {
+            if (!$facility_identifier || ($facility_identifier eq '')) {
+                push @error_messages, "Cell O$row_name: facility_identifier is misssing";
+            }
+        }
+
     }
 
     my @sample_ids = keys %seen_sample_ids;
@@ -320,6 +343,7 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $include_facility_identifiers = $self->get_facility_identifiers_included();
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
@@ -350,6 +374,7 @@ sub _parse_with_plugin {
         my $concentration;
         my $volume;
         my $is_blank;
+        my $facility_identifier;
 
         if ($worksheet->get_cell($row,0)) {
             $date  = $worksheet->get_cell($row,0)->value();
@@ -393,6 +418,12 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,13)) {
             $is_blank = $worksheet->get_cell($row,13)->value();
         }
+        if ($include_facility_identifiers) {
+            if ($worksheet->get_cell($row,14)) {
+                $facility_identifier = $worksheet->get_cell($row,14)->value();
+                $facility_identifier =~ s/^\s+|\s+$//g;
+            }
+        }
 
         #skip blank lines
         if (!$date && !$sample_id && !$well_A01 && !$source_observation_unit_name) {
@@ -425,6 +456,12 @@ sub _parse_with_plugin {
         } else {
             $design{$key}->{is_blank} = 0;
         }
+        if ($include_facility_identifiers) {
+            $design{$key}->{facility_identifier} = $facility_identifier;
+        } else {
+            $design{$key}->{facility_identifier} = 'NA';
+        }
+
     }
 
     #print STDERR Dumper \%design;

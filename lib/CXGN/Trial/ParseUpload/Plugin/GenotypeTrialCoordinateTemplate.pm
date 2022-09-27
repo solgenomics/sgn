@@ -13,7 +13,7 @@ sub _validate_with_plugin {
     my $args = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-
+    my $include_facility_identifiers = $self->get_facility_identifiers_included();
     my $delimiter = ',';
     my @error_messages;
     my %errors;
@@ -44,23 +44,65 @@ sub _validate_with_plugin {
     }
 
     my $num_cols = scalar(@columns);
-    if ($num_cols != 6){
-        push @error_messages, 'Header row must contain: "Value","Column","Row","Identification","Person","Date"';
-        $errors{'error_messages'} = \@error_messages;
-        $self->_set_parse_errors(\%errors);
-        return;
+    if ($include_facility_identifiers) {
+        if ($num_cols != 7){
+            push @error_messages, 'Header row must contain: "Value","Column","Row","Identification","Person","Date", "Facility Identifier"';
+            $errors{'error_messages'} = \@error_messages;
+            $self->_set_parse_errors(\%errors);
+            return;
+        }
+    } else {
+        if ($num_cols != 6){
+            push @error_messages, 'Header row must contain: "Value","Column","Row","Identification","Person","Date"';
+            $errors{'error_messages'} = \@error_messages;
+            $self->_set_parse_errors(\%errors);
+            return;
+        }
     }
 
-    if ( $columns[0] ne "Value" &&
-        $columns[1] ne "Column" &&
-        $columns[2] ne "Row" &&
-        $columns[3] ne "Identification" &&
-        $columns[4] ne "Person" &&
-        $columns[5] ne "Date" ) {
+    my $value_header = $columns[0];
+    $value_header =~ s/^\s+|\s+$//g;
+    my $column_header = $columns[1];
+    $column_header =~ s/^\s+|\s+$//g;
+    my $row_header = $columns[2];
+    $row_header =~ s/^\s+|\s+$//g;
+    my $identification_header = $columns[3];
+    $identification_header =~ s/^\s+|\s+$//g;
+    my $person_header = $columns[4];
+    $person_header =~ s/^\s+|\s+$//g;
+    my $date_header = $columns[5];
+    $date_header =~ s/^\s+|\s+$//g;
+    my $facility_identifier_header;
+    if ($include_facility_identifiers) {
+        $facility_identifier_header = $columns[6];
+        $facility_identifier_header =~ s/^\s+|\s+$//g;
+    }
+
+    if ($include_facility_identifiers) {
+        if ($value_header ne "Value" ||
+            $column_header ne "Column" ||
+            $row_header ne "Row" ||
+            $identification_header ne "Identification" ||
+            $person_header ne "Person" ||
+            $date_header ne "Date" ||
+            $facility_identifier_header ne "Facility Identifier") {
+            push @error_messages, 'File contents incorrect. Header row must contain: "Value","Column","Row","Identification","Person","Date", Facility Identifier';
+            $errors{'error_messages'} = \@error_messages;
+            $self->_set_parse_errors(\%errors);
+            return;
+        }
+    } else {
+        if ($value_header ne "Value" ||
+            $column_header ne "Column" ||
+            $row_header ne "Row" ||
+            $identification_header ne "Identification" ||
+            $person_header ne "Person" ||
+            $date_header ne "Date" ) {
             push @error_messages, 'File contents incorrect. Header row must contain: "Value","Column","Row","Identification","Person","Date"';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
+        }
     }
 
     my %seen_sample_ids;
@@ -109,6 +151,12 @@ sub _validate_with_plugin {
             push @error_messages, 'The sixth column must contain Date on row: '.$row;
         } elsif (!$columns[5] =~ m/(\d{4})-(\d{2})-(\d{2})/) {
             push @error_messages, "Date must be YYYY-MM-DD format";
+        }
+
+        if ($include_facility_identifiers) {
+            if (!$columns[6] || $columns[6] eq ''){
+                push @error_messages, 'The seventh column must contain Facility Identifier on row: '.$row;
+            }
         }
 
         $columns[1] = sprintf("%02d", $columns[1]);
@@ -165,6 +213,7 @@ sub _parse_with_plugin {
     my $args = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $include_facility_identifiers = $self->get_facility_identifiers_included();
     my $delimiter = ',';
     my %parse_result;
     my @error_messages;
@@ -219,6 +268,11 @@ sub _parse_with_plugin {
         my $notes = $columns[3];
         my $dna_person = $columns[4];
         my $date = $columns[5];
+        my $facility_identifier;
+        if ($include_facility_identifiers) {
+            $facility_identifier = $columns[6];
+            $facility_identifier =~ s/^\s+|\s+$//g;
+        }
         $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $col_number = sprintf("%02d", $col_number);
 
@@ -254,6 +308,11 @@ sub _parse_with_plugin {
         $design{$key}->{extraction} = 'NA';
         $design{$key}->{concentration} = 'NA';
         $design{$key}->{volume} = 'NA';
+        if ($include_facility_identifiers) {
+            $design{$key}->{facility_identifier} = $facility_identifier;
+        } else {
+            $design{$key}->{facility_identifier} = 'NA';
+        }
     }
 
     #print STDERR Dumper \%design;

@@ -94,7 +94,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->driver()->upload_file($filename);
 
     $upload_input->send_keys($filename);
-    sleep(1);
+    sleep(3);
 
     my $upload_pedigrees = $t->find_element_ok("upload_pedigrees_dialog_submit", "id", "submit upload pedigrees file ");
     $upload_pedigrees->click();

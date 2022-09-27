@@ -3,6 +3,7 @@ use strict;
 
 use lib 't/lib';
 
+use File::Spec::Functions qw / catfile catdir/;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -18,6 +19,12 @@ my $solgs_data = SGN::Test::solGSData->new(
         'plots_list_subset'      => 60
     }
 );
+
+my $cache_dir = $solgs_data->site_cluster_shared_dir();
+my $protocol_dir = $solgs_data->default_protocol_dir();
+my $cluster_dir =  catdir($protocol_dir, 'cluster');
+my $log_dir = catdir($protocol_dir, 'log');
+
 my $accessions_list = $solgs_data->load_accessions_list();
 
 # my $accessions_list = $solgs_data->get_list_details('accessions');
@@ -67,7 +74,8 @@ print STDERR
   "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
-`rm -r /tmp/localhost/`;
+`rm -r $cache_dir`;
+# `rm -r /tmp/localhost/GBSApeKIgenotypingv4/log/`;
 
 $d->while_logged_in_as(
     "submitter",
@@ -198,7 +206,7 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(150);
+        sleep(200);
 
         my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
             'xpath', 'scroll up' );
@@ -300,7 +308,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(150);
+        sleep(200);
 
         $d->driver->go_back();
         sleep(5);
@@ -380,7 +388,7 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(140);
+        sleep(200);
 
         my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
             'xpath', 'scroll up' );
@@ -533,12 +541,13 @@ $d->while_logged_in_as(
         sleep(2);
 
         ############## solGS #####################
-        `rm -r /tmp/localhost/`;
+        `rm -r $cache_dir`;
+
         $d->get_ok( '/solgs', 'solgs homepage' );
         sleep(4);
 
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -561,7 +570,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -588,7 +597,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(300);
+        sleep(200);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(5);
@@ -602,12 +611,12 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'runGS', 'id', 'build multi models' )->click();
         sleep(10);
 
-        # #
-##############################################################
-# $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
-#
-# sleep(15);
-#####################################################################
+#         # #
+# ##############################################################
+# # $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
+# #
+# # sleep(15);
+# #####################################################################
 
         $d->find_element_ok( 'population_search_entry', 'id',
             'population search form' )->send_keys('trial2 NaCRRI');
@@ -691,10 +700,10 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(300);
+        sleep(200);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
-        sleep(350);
+        sleep(5);
 
         my $sel_pops =
           $d->find_element( 'Predict', 'partial_link_text', 'scroll up' );
@@ -769,7 +778,7 @@ $d->while_logged_in_as(
             'check k-means plot'
         )->click();
         sleep(3);
-####126######
+
         $d->driver->refresh();
         sleep(3);
 
@@ -1144,7 +1153,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id',
             'no job queueing -- trial2 NaCRRI  geno cluster' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
 '//img[@id="k-means-plot-139-141-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'check trial2 NaCRRI  geno k-means plot'
@@ -1194,13 +1203,13 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        `rm -r /tmp/localhost/GBSApeKIgenotypingv4/cluster/`;
-        sleep(3);
-        `rm -r /tmp/localhost/GBSApeKIgenotypingv4/log/`;
-        sleep(5);
+    `rm -r $cluster_dir`;
+    sleep(3);
+    `rm -r $log_dir`;
+    sleep(5);
 
-# $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
-# sleep(15);
+# # $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
+# # sleep(15);
 
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -1245,7 +1254,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(3);
@@ -1335,7 +1344,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(3);
@@ -1522,10 +1531,10 @@ $d->while_logged_in_as(
         sleep(3);
 
 #########################
-        `rm -r /tmp/localhost/GBSApeKIgenotypingv4/cluster/`;
-        sleep(5);
-        `rm -r /tmp/localhost/GBSApeKIgenotypingv4/log/`;
-        sleep(5);
+   `rm -r $cluster_dir`;
+    sleep(3);
+    `rm -r $log_dir`;
+    sleep(5);
 ########################################
 
         my $clustering =
@@ -1562,7 +1571,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id',
             'wait to finish clustering trial2 NaCRRI genotype' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
 '//img[@id="k-means-plot-139-141-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot'
@@ -1572,10 +1581,10 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-#    #  #######    #
-#    #  $d->get_ok('/solgs/trait/70666/population/139/gp/1', 'open model page');
-#    #  sleep(5);
-#    #
+# #    #  #######    #
+# #    #  $d->get_ok('/solgs/trait/70666/population/139/gp/1', 'open model page');
+# #    #  sleep(5);
+# #    #
 
         my $clustering =
           $d->find_element( 'Models summary', 'partial_link_text',
@@ -1615,20 +1624,20 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id',
             'wait to finish clustering in single trial model page' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-70666-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot' )->click();
         sleep(5);
 
-#    #  #$d->get_ok('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'open combined trials model page');
-#    # # sleep(2);
-#    #
+# #    #  #$d->get_ok('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'open combined trials model page');
+# #    # # sleep(2);
+# #    #
 
         $d->get_ok( '/solgs', 'solgs home page' );
         sleep(2);
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(2);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -1637,7 +1646,7 @@ $d->while_logged_in_as(
             'population search form' )->clear();
         sleep(2);
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('nacrri');
+            'population search form' )->send_keys('trial2 nacrri');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -1671,20 +1680,16 @@ $d->while_logged_in_as(
           ->click();
         sleep(10);
 
-#    #  #$d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
-#    #  #sleep(5);
-#    #
-
-        ####################
-#  #$d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
-#    #  #sleep(5);
-#    #
-        ##################
+#         ####################
+# #  #$d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
+# #    #  #sleep(5);
+# #    #
+#         ##################
         $d->get_ok( '/solgs', 'solgs homepage' );
         sleep(2);
 
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('Kasese');
+            'population search form' )->send_keys('Kasese solgs trial');
         sleep(2);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -1693,7 +1698,7 @@ $d->while_logged_in_as(
             'population search form' )->clear();
         sleep(2);
         $d->find_element_ok( 'population_search_entry', 'id',
-            'population search form' )->send_keys('nacrri');
+            'population search form' )->send_keys('trial2 nacrri');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
@@ -1741,10 +1746,10 @@ $d->while_logged_in_as(
           ->click();
         sleep(15);
 
-# ###########################
-# # $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
-#  # sleep(5);
-#   ############################
+# # ###########################
+# # # $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
+# #  # sleep(5);
+# #   ############################
 
         $d->find_element_ok(
             '//table[@id="population_traits_list"]/tbody/tr[1]/td/input',
@@ -1758,9 +1763,6 @@ $d->while_logged_in_as(
             ' go to combined trials multi models page' )->click();
         sleep(10);
 
-#     #  $d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
-#     # sleep(5);
-#
         $d->find_element_ok( 'population_search_entry', 'id',
             'combo trials models sel population search form' )
           ->send_keys('trial2 NaCRRI');
@@ -1835,7 +1837,7 @@ $d->while_logged_in_as(
         $d->find_element_ok(
 '//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]',
             'xpath',
-            'click list sel pred'
+            'click accessions dataset sel pred'
         )->click();
         sleep(5);
         $d->find_element_ok( 'queue_job', 'id',
@@ -1885,7 +1887,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
 '//img[@id="k-means-plot-2804608595-traits-1971973596-phenotype-k-4"]',
             'xpath', 'check k-means plot'
@@ -1925,7 +1927,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing -- GEBV' )
           ->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
             '//img[@id="k-means-plot-2804608595-traits-1971973596-gebv-k-4"]',
             'xpath', 'check k-means plot' )->click();
@@ -1968,7 +1970,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing-- Genotype' )
           ->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
 '//img[@id="k-means-plot-2804608595-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'plot'
@@ -2046,7 +2048,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(5);
 
-        ## $d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
+        # #$d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
         ## sleep(5);
 
         my $sel_pops =
@@ -2103,7 +2105,7 @@ $d->while_logged_in_as(
             'xpath', 'run GEBV cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
             '//img[@id="k-means-plot-2804608595-'
               . $accessions_dt_id
@@ -2220,7 +2222,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
 '//img[@id="k-means-plot-2804608595-141-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot'
@@ -2312,7 +2314,7 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(160);
+        sleep(200);
         $d->find_element_ok(
             '//img[@id="k-means-plot-2804608595-70741-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot' )->click();

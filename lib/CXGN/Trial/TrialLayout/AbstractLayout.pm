@@ -97,7 +97,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout... ($args->{trial_id})\n";
+    # print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout... ($args->{trial_id})\n";
 
     $self->_build_cvterm_hash();
 }
@@ -307,9 +307,10 @@ sub _get_design_from_trial {
     my $trial_has_plants = $project->projectprops->find({ 'type_id' => $self->cvterm_id('project_has_plant_entries') });
 
     my $design = decode_json $trial_layout_json->value if ($trial_layout_json);
+
     if (keys(%$design)) {
-        	    print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
-	    #print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
+        # print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
+	    # print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
 
 	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
 	    if ($trial_has_plants){
@@ -438,6 +439,7 @@ sub retrieve_plot_info {
     my $well_acquisition_date_prop = $stockprop_hash{$self->cvterm_id('acquisition date')} ? join ',', @{$stockprop_hash{$self->cvterm_id('acquisition date')}} : undef;
     my $well_notes_prop = $stockprop_hash{$self->cvterm_id('notes')} ? join ',', @{$stockprop_hash{$self->cvterm_id('notes')}} : undef;
     my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$self->cvterm_id('ncbi_taxonomy_id')} ? join ',', @{$stockprop_hash{$self->cvterm_id('ncbi_taxonomy_id')}} : undef;
+    my $well_facility_identifier_prop = $stockprop_hash{$self->cvterm_id('facility_identifier')} ? join ',', @{$stockprop_hash{$self->cvterm_id('facility_identifier')}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$self->cvterm_id('plot_geo_json')} ? $stockprop_hash{$self->cvterm_id('plot_geo_json')}->[0] : undef;
 
     #print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
@@ -445,7 +447,7 @@ sub retrieve_plot_info {
 
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
 	{ 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_primary_stock_type_ids() } },
-	{ 'join' => 'object' } 
+	{ 'join' => 'object' }
 	);
 
     # was: $plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $analysis_of_cvterm_id
@@ -557,6 +559,9 @@ sub retrieve_plot_info {
 	}
     if ($well_ncbi_taxonomy_id_prop){
 	$design_info{"ncbi_taxonomy_id"} = $well_ncbi_taxonomy_id_prop;
+    }
+    if ($well_facility_identifier_prop){
+	$design_info{"facility_identifier"} = $well_facility_identifier_prop;
     }
     if ($replicate_number_prop) {
 	$design_info{"rep_number"}=$replicate_number_prop;

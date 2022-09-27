@@ -15,34 +15,34 @@ sub BUILD {
     $self->set_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($self->get_bcs_schema(), 'genotyping_layout', 'experiment_type')->cvterm_id());
     $self->set_stock_type_id($self->get_tissue_sample_cvterm_id);
     $self->set_stock_relationship_type_id($self->get_tissue_sample_of_cvterm_id);
-    
-    $self->set_source_stock_types( 
-	[ 
-	  $self->get_accession_cvterm_id, 
-	  $self->get_plot_cvterm_id, 
-	  $self->get_plant_cvterm_id, 
-	  $self->get_tissue_sample_cvterm_id 
+
+    $self->set_source_stock_types(
+	[
+	  $self->get_accession_cvterm_id,
+	  $self->get_plot_cvterm_id,
+	  $self->get_plant_cvterm_id,
+	  $self->get_tissue_sample_cvterm_id
 	]
 	);
 
-    $self->set_valid_properties( 
-	[
-	 'stock_name',
-	 'plot_name',
-	 'row_number',
-	 'col_number',
-	 'is_blank',
-	 'plot_number',
-	 'extraction',
-	 'dna_person',
-	 'concentration',
-	 'volume',
-	 'tissue_type',
-	 'notes',
-	 'acquisition_date',
-	 'ncbi_taxonomy_id'
-	 
-	]);
+    $self->set_valid_properties(
+    [
+     'stock_name',
+     'plot_name',
+     'row_number',
+     'col_number',
+     'is_blank',
+     'plot_number',
+     'extraction',
+     'dna_person',
+     'concentration',
+     'volume',
+     'tissue_type',
+     'notes',
+     'acquisition_date',
+     'ncbi_taxonomy_id',
+     'facility_identifier'
+    ]);
 }
 
 
@@ -53,7 +53,7 @@ sub validate_design {
 
     my $chado_schema = $self->get_bcs_schema();
     my $design_type = $self->get_design_type();
-    my %design = %{$self->get_design}; 
+    my %design = %{$self->get_design};
     my $error = '';
 
    if ($design_type ne 'genotyping_plate') {
@@ -62,12 +62,12 @@ sub validate_design {
     }
 
     my @valid_properties = @{$self->get_valid_properties()};
-       
+
     #plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
 
-    
+
     my %allowed_properties = map {$_ => 1} @valid_properties;
-    
+
     my %seen_stock_names;
     my %seen_accession_names;
     foreach my $stock (keys %design){

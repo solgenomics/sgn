@@ -47,25 +47,23 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-    var trainingTraitsIds = jQuery("#training_traits_ids").val();
+     var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
-    if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-
-      if (args === undefined) {
+     if (trainingTraitsIds) {
+      if (!args) {
         args = { training_traits_ids: trainingTraitsIds };
       } else {
         args["training_traits_ids"] = trainingTraitsIds;
       }
     }
-
+    
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
 
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: { page: page, args: args },
+      data: { page: page, arguments: args },
       url: "/solgs/check/cached/result/",
       success: function (response) {
         if (response.cached) {
@@ -215,7 +213,7 @@ solGS.submitJob = {
 
   getTraitsSelectionId: function (page, args) {
     var traitIds = args.training_traits_ids;
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     jQuery.ajax({
       dataType: "json",
@@ -291,7 +289,7 @@ solGS.submitJob = {
 
   wrapTraitsForm: function () {
     var popId = jQuery("#population_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     var formId = ' id="traits_selection_form"';
 
@@ -383,25 +381,32 @@ solGS.submitJob = {
   validateAnalysisInput: function (analysisProfile) {
     var analysisName = jQuery("#analysis_name").val();
 
-    var checkName = solGS.submitJob.checkAnalysisName(analysisName);
+    if (!analysisName) {
+      jQuery("#form-feedback-analysis-name").text(
+        "Analysis name is blank. Please give a name."
+      );
+    } else {
 
-    checkName.done(function (res) {
-      if (res.analysis_exists) {
-        jQuery("#analysis_name").css("border", "solid #FF0000");
+      var checkName = solGS.submitJob.checkAnalysisName(analysisName);
 
-        jQuery("#form-feedback-analysis-name").text(
-          "The same name exists or you have not provided a name. Please give a new name."
-        );
-      } else {
-        var email = jQuery("#user_email").val();
-        var emailPass = solGS.submitJob.checkEmail(email);
+      checkName.done(function (res) {
+        if (res.analysis_exists) {
+          jQuery("#analysis_name").css("border", "solid #FF0000");
 
-        if (emailPass) {
-          jQuery("#email-form").dialog("close");
-          solGS.submitJob.saveAnalysisProfile(analysisProfile);
+          jQuery("#form-feedback-analysis-name").text(
+            "The same name exists for another analysis. Please give a new name."
+          );
+        } else {
+          var email = jQuery("#user_email").val();
+          var emailPass = solGS.submitJob.checkEmail(email);
+
+          if (emailPass) {
+            jQuery("#email-form").dialog("close");
+            solGS.submitJob.saveAnalysisProfile(analysisProfile);
+          }
         }
-      }
-    });
+      });
+  }
 
     checkName.fail(function (res) {
       var message =
@@ -418,7 +423,7 @@ solGS.submitJob = {
     if (!email.match(emailRegex)) {
       jQuery("#user_email").css("border", "solid #FF0000");
 
-      jQuery("#form-feedback-user-email").text("Please fill in a proper email.");
+      jQuery("#form-feedback-user-email").text("Please provide a proper email address.");
 
       emailPass = 0;
     } else {
@@ -532,7 +537,7 @@ solGS.submitJob = {
 
     var protocolId = args.genotyping_protocol_id;
     if (!protocolId) {
-      protocolId = jQuery("#genotyping_protocol_id").val();
+      protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
     }
 
     var popDesc = jQuery("#training_pop_desc").val();
@@ -674,7 +679,7 @@ jQuery(document).ready(function () {
 
     var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
     var popId = jQuery("#training_pop_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     if (traitIds.length) {
       var page;
@@ -793,9 +798,24 @@ solGS.getTrainingTraitsIds = function () {
 solGS.getModelArgs = function () {
   var args = this.getTrainingPopArgs();
   var trainingTraitsIds = this.getTrainingTraitsIds();
-  console.log("training traits ids: " + trainingTraitsIds);
   if (trainingTraitsIds) {
     args["training_traits_ids"] = trainingTraitsIds;
+  }
+
+  return args;
+};
+
+solGS.getSelectionPopArgs = function () {
+  var args = this.getModelArgs();
+  var selPopGenoProtocolId = jQuery('#selection_pop_genotyping_protocol_id').val();
+  var selPopId =  jQuery('#selection_pop_id').val();
+
+  if (!selPopGenoProtocolId ) {
+    selPopGenoProtocolId = jQuery('#genotyping_protocol_id').val();
+  }
+  if (selPopGenoProtocolId) {
+    args["selection_pop_genotyping_protocol_id"] = selPopGenoProtocolId;
+    args["selection_pop_id"] = selPopId;
   }
 
   return args;
@@ -838,7 +858,7 @@ solGS.getPopulationDetails = function () {
     dataSetType = "single population";
   }
 
-  var protocolId = jQuery("#genotyping_protocol_id").val();
+  var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
   return {
     training_pop_id: trainingPopId,
     population_name: trainingPopName,
@@ -854,7 +874,11 @@ solGS.getPopulationDetails = function () {
 solGS.showMessage = function (divId, msg) {
   divId = divId.match(/#/) ? divId : "#" + divId;
 
-  jQuery(divId).html(msg).show();
+  jQuery(divId)
+    .html(msg)
+    .show()
+    .delay(4000)
+    .fadeOut('slow');
 };
 
 solGS.checkPageType = function () {
