@@ -35,7 +35,7 @@ if ($user && $user->check_roles("curator")) {
         print "<tr><td><b><a href=\"/breeders/program/$bp->[0]\" >$bp->[1]</a></b></td><td>$bp->[2]</td>";
 
   	if ($delete_flag) {
-	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a></td></tr>";
+	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0],'$bp->[1]')\" ><font color=\"red\">X</font></a></td></tr>";
 	} else {
 	  print "</tr>";
 	}
@@ -137,8 +137,8 @@ jQuery(document).ready(function() {
 
 
 
-function delete_breeding_program(program_id) {
-   if (confirm("Delete breeding program? The associated trials will not be deleted, but be listed under 'Other'")) {
+function delete_breeding_program(program_id, program_name) {
+   if (confirm("Delete breeding program "+program_name+"? The associated trials will not be deleted, but be listed under 'Other'")) {
       jQuery.ajax( {
         url: '/breeders/program/delete/'+program_id,
         error: function(response) {

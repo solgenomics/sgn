@@ -502,7 +502,6 @@ sub store_breeding_program {
     	    });
 
     	$row->insert();
-        $project_id = $row->project_id();
 
     	my $prop_row = $schema->resultset("Project::Projectprop")->create(
     	    {
