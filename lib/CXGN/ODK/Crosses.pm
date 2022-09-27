@@ -866,8 +866,9 @@ sub save_ona_cross_info {
             if ($musa_cross_info{$info_type}) {
                 my %info_hash = %{$musa_cross_info{$info_type}};
                 foreach my $cross_name_key (keys %info_hash){
+                    my $valid_cross_name = $schema->resultset("Stock::Stock")->find({uniquename => $cross_name_key});
                     my $value = $info_hash{$cross_name_key};
-                    if ($cross_name_key && $info_type && $value) {
+                    if ($valid_cross_name && $info_type && $value) {
                         my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
                             chado_schema => $schema,
                             cross_name => $cross_name_key,
