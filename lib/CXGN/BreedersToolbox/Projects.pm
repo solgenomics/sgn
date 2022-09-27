@@ -48,7 +48,7 @@ sub get_breeding_programs {
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops', order_by => { -asc => 'name'}}  );
 
     my @projects;
     while (my $row = $rs->next()) {
