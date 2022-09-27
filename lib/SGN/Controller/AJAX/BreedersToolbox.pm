@@ -47,27 +47,22 @@ sub store_breeding_program :Path('/breeders/program/store') Args(0) {
     my $desc = $c->req->param("desc");
 
     if (!($c->user() || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
+        $c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
     }
 
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-    my $program = $p->store_breeding_program(
+    my $p = CXGN::BreedersToolbox::Projects->new( {
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
         id => $id,
         name => $name,
         description => $desc,
-    );
+    });
+
+    my $program = $p->store_breeding_program();
 
     print STDERR "Program is ".Dumper($program)."\n";
 
     $c->stash->{rest} = $program;
 
-    # if ($new_program->{'error'}) {
-	# $c->stash->{rest} = { error => $error };
-    # }
-    # else {
-	# $c->stash->{rest} =  { success => "The new breeding program $name was created.", id => };
-    # }
 }
 
 sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
@@ -76,12 +71,12 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
     my $program_id = shift;
 
     if ($c->user && ($c->user->check_roles("curator"))) {
-	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-	$p->delete_breeding_program($program_id);
-	$c->stash->{rest} = [ 1 ];
+    	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+    	$p->delete_breeding_program($program_id);
+    	$c->stash->{rest} = [ 1 ];
     }
     else {
-	$c->stash->{rest} = { error => "You don't have sufficient privileges to delete breeding programs." };
+        $c->stash->{rest} = { error => "You need to be logged in with curator privileges to delete a breeding program." };
     }
 }
 

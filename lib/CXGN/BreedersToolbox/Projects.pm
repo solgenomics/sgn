@@ -3,6 +3,7 @@ package CXGN::BreedersToolbox::Projects;
 
 use Moose;
 use Data::Dumper;
+use Try::Tiny;
 use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
@@ -469,9 +470,10 @@ sub get_accessions_by_breeding_program {
 sub store_breeding_program {
     my $self = shift;
     my $schema = $self->schema();
+    my $error;
 
     my $id = $self->id();
-    my $name = _trim($self->name());
+    my $name = $self->name();
     my $description = $self->description();
 
     my $type_id = $self->get_breeding_program_cvterm_id();
@@ -480,51 +482,84 @@ sub store_breeding_program {
         return { error => "Cannot save a breeding program with an undefined name. A name is required." };
     }
 
-    my $rs = $schema->resultset("Project::Project")->search({ name => $name });
-    if ($rs->count() > 0) {
+    my $existing_name_rs = $schema->resultset("Project::Project")->search({ name => $name });
+    if (!$id && $existing_name_rs->count() > 0) {
         return { error => "A breeding program with name '$name' already exists." };
     }
 
     # Add new program if no id supplied
     if (!$id) {
-        eval {
+        try {
+            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+            my $error = $role->add_sp_role($name);
+            if ($error){
+                die $error;
+            }
 
-    		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
-    		my $error = $role->add_sp_role($name);
-    		if ($error){
-    			die $error;
-    		}
+            my $row = $schema->resultset("Project::Project")->create(
+                {
+                name => $name,
+                description => $description,
+                });
 
-    	my $row = $schema->resultset("Project::Project")->create(
-    	    {
-    		name => $name,
-    		description => $description,
-    	    });
+            $row->insert();
+            $id = $row->project_id();
 
-    	$row->insert();
+            my $prop_row = $schema->resultset("Project::Projectprop")->create(
+                {
+                type_id => $type_id,
+                project_id => $id,
 
-    	my $prop_row = $schema->resultset("Project::Projectprop")->create(
-    	    {
-    		type_id => $type_id,
-    		project_id => $row->project_id(),
-
-    	    });
-    	$prop_row->insert();
-
+                });
+            $prop_row->insert();
+        }
+        catch {
+            $error =  $_;
         };
+
+        if ($error) {
+            print STDERR "Error creating program $name: $error\n";
+            return { error => $error };
+        } else {
+            print STDERR "Breeding program $name was added successfully with description $description and id $id\n";
+            return { success => "Breeding program $name was added successfully with description $description\n", id => $id };
+        }
     }
     # Edit existing program if id supplied
     elsif ($id) {
+        try {
+            my $old_program = $schema->resultset("Project::Project")->search({ project_id => $id });
+            my $old_name = $old_program->first->name();
 
+            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+            my $error = $role->update_sp_role($name,$old_name);
+            if ($error){
+                die $error;
+            }
+
+            my $row = $schema->resultset("Project::Project")->update_or_create(
+                {
+                project_id=>$id,
+                name => $name,
+                description => $description,
+                });
+
+            $row->insert();
+            $id = $row->project_id();
+
+        }
+        catch {
+            $error =  $_;
+        };
+
+        if ($error) {
+            print STDERR "Error editing program $name: $error\n";
+            return { error => $error };
+        } else {
+            print STDERR "Breeding program $name was updated successfully with description $description and id $id\n";
+            return { success => "Breeding program $name was updated successfully with description $description\n", id => $id };
+        }
     }
-
-    if ($@) {
-        return { error => "An error occurred while adding or editing a breeding program. ($@)" };
-    } else {
-        print STDERR "The breeding program $name was stored with description $description and id $id\n";
-        return { success => "The breeding program $name was stored with description $description.", id => $id };
-    }
-
 }
 
 sub delete_breeding_program {
