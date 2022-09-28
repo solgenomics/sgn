@@ -302,7 +302,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
 </&>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Graphical Filtering on Phenotype Performance</h4>", info_section_subtitle => 'Graphically filter an accessions average performance for combinations of traits', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Graphical Filtering on Phenotype Performance</h4>", info_section_subtitle => 'Graphically filter accessions by average performance for a combination of traits', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
 
 
 </div>
