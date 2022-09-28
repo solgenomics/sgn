@@ -47,7 +47,6 @@ traitAbbr  <- modelInfo["trait_abbr", 1]
 modelId    <- modelInfo["model_id", 1]
 protocolId <- modelInfo["protocol_id", 1]
 
-message('class ', class(traitAbbr))
 message('trait_id ', traitId)
 message('trait_abbr ', traitAbbr)
 message('protocol_id ', protocolId)
@@ -87,6 +86,8 @@ modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
 message('model input trait geno file ', modelPhenoFile)
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
+analysisReportFile <- grep("report_file", outputFiles, value = TRUE)
+
 filteredTrainingGenoFile       <- grep("filtered_training_genotype_data", outputFiles, value = TRUE)
 filteredSelGenoFile       <- grep("filtered_selection_genotype_data", outputFiles, value = TRUE)
 formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
@@ -106,6 +107,9 @@ filteredTrainingGenoData <- c()
 formattedPhenoData <- c()
 phenoData          <- c()
 genoData           <- c()
+maf <- 0.01
+markerFilter <- 0.6
+cloneFilter <- 0.8
 
 if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
     filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,
@@ -126,7 +130,7 @@ if (is.null(filteredTrainingGenoData)) {
     genoData <- column_to_rownames(genoData, 'V1')
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
-    genoData <- filterGenoData(genoData, maf=0.01)
+    genoData <- filterGenoData(genoData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter)
     genoData <- roundAlleleDosage(genoData)
 
     filteredTrainingGenoData   <- genoData
@@ -259,11 +263,10 @@ if (length(selectionFile) != 0) {
    
     selectionData <- column_to_rownames(selectionData, 'V1')
     selectionData <- convertToNumeric(selectionData)
-    selectionData <- filterGenoData(selectionData, maf=0.01)
+    selectionData <- filterGenoData(selectionData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter)
     selectionData <- roundAlleleDosage(selectionData)
     filteredPredGenoData <- selectionData
 }
-
 
 #impute genotype values for obs with missing values,
 genoDataMissing <- c()
@@ -284,10 +287,10 @@ commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
 commonObs           <- data.frame(commonObs)
 rownames(commonObs) <- commonObs[, 1]
 
-#include in the genotype dataset only phenotyped lines
+#remove genotyped lines without phenotype data
 genoDataFilteredObs <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
 
-#drop phenotyped lines without genotype data
+#remove phenotyped lines without genotype data
 phenoTrait <- phenoTrait[(phenoTrait$genotypes %in% rownames(commonObs)), ]
 
 phenoTraitMarker           <- data.frame(phenoTrait)
