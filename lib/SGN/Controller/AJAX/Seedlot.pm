@@ -96,7 +96,6 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             breeding_program_name => $sl->{breeding_program_name},
             seedlot_stock_id => $sl->{seedlot_stock_id},
             seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
-            seedlot_stock_description => $sl->{seedlot_stock_description},
             contents_html => $contents_html,
             location => $sl->{location},
             location_id => $sl->{location_id},
@@ -608,7 +607,6 @@ sub upload_seedlots_POST : Args(0) {
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
-            $sl-description($val->{description});
             $sl->accession_stock_id($val->{accession_stock_id});
             $sl->cross_stock_id($val->{cross_stock_id});
             $sl->organization_name($organization);
