@@ -253,7 +253,12 @@ is_deeply(\@all_years, [
           '2014'
         ], 'get all years');
 
-my $new_bp_error = $p->new_breeding_program('test_new_bp', 'test_new_bp_desc');
+my $new_bp = CXGN::BreedersToolbox::Projects->new({
+    schema=>$schema,
+    name => 'test_new_bp',
+    description => 'test_new_bp_desc',
+});
+my $new_bp_error = $new_bp->store_breeding_program();
 print STDERR Dumper $new_bp_error;
 ok($new_bp_error->{success});
 
