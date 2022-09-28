@@ -606,7 +606,7 @@ sub upload_seedlots_POST : Args(0) {
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
-	    $sl->quality($val->{quality});
+	          $sl->quality($val->{quality});
             $sl->check_name_exists(0); #already validated
             my $return = $sl->store();
             if ( defined $return->{error} ) {
