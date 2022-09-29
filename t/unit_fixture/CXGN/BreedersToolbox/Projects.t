@@ -255,8 +255,8 @@ is_deeply(\@all_years, [
 
 my $new_bp = CXGN::BreedersToolbox::Projects->new({
     schema=>$schema,
-    name => 'test_new_bp',
-    description => 'test_new_bp_desc',
+    name => 'test_new_bp_to_edit',
+    description => 'test_new_bp_desc_to_edit',
 });
 my $new_bp_result = $new_bp->store_breeding_program();
 print STDERR Dumper $new_bp_result;
@@ -265,8 +265,8 @@ ok($new_bp_result->{success});
 my $edit_bp = CXGN::BreedersToolbox::Projects->new({
     schema=>$schema,
     id => $new_bp_result->{id},
-    name => 'test_new_bp_edited',
-    description => 'test_new_bp_desc_edited',
+    name => 'test_new_bp',
+    description => 'test_new_bp_desc',
 });
 my $edit_bp_result = $edit_bp->store_breeding_program();
 print STDERR Dumper $edit_bp_result;
@@ -291,7 +291,7 @@ is_deeply($gt_protocols, [
           ]
         ], 'get gt protocols');
 
-my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_new_bp_edited'})->project_id();
+my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_new_bp'})->project_id();
 ok($p->delete_breeding_program($trial_id));
 
 done_testing;
