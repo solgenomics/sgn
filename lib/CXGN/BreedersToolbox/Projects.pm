@@ -570,30 +570,30 @@ sub delete_breeding_program {
 
     # check if this project entry is of type 'breeding program'
     my $prop = $self->schema->resultset("Project::Projectprop")->search({
-	type_id => $type_id,
-	project_id => $project_id,
-	});
+        type_id => $type_id,
+        project_id => $project_id,
+    });
 
     if ($prop->count() == 0) {
-	return 0; # wrong type, return 0.
+        return 0; # wrong type, return 0.
     }
 
     $prop->delete();
 
     my $rs = $self->schema->resultset("Project::Project")->search({
-	project_id => $project_id,
-	});
+        project_id => $project_id,
+    });
 
     if ($rs->count() > 0) {
-	my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search({
-	    object_project_id => $project_id,
-	});
+        my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search({
+            object_project_id => $project_id,
+        });
 
-	if ($pprs->count()>0) {
-	    $pprs->delete();
-	}
-	$rs->delete();
-	return 1;
+        if ($pprs->count()>0) {
+            $pprs->delete();
+        }
+        $rs->delete();
+        return 1;
     }
     return 0;
 }
@@ -606,10 +606,10 @@ sub get_breeding_program_with_trial {
 
     my $breeding_projects = [];
     if (my $row = $rs->next()) {
-	my $prs = $self->schema->resultset("Project::Project")->search( { project_id => $row->object_project_id() } );
-	while (my $b = $prs->next()) {
-	    push @$breeding_projects, [ $b->project_id(), $b->name(), $b->description() ];
-	}
+        my $prs = $self->schema->resultset("Project::Project")->search( { project_id => $row->object_project_id() } );
+        while (my $b = $prs->next()) {
+            push @$breeding_projects, [ $b->project_id(), $b->name(), $b->description() ];
+        }
     }
 
 

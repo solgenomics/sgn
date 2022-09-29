@@ -291,7 +291,7 @@ is_deeply($gt_protocols, [
           ]
         ], 'get gt protocols');
 
-my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_new_bp'})->project_id();
-ok($p->delete_breeding_program($trial_id));
+my $program_id = $schema->resultset('Project::Project')->find({name=>'test_new_bp'})->project_id();
+ok($p->delete_breeding_program($program_id));
 
 done_testing;
