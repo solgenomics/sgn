@@ -187,7 +187,7 @@ sub store {
 		my $desc = $params->{objective} || undef;
 
 		my $p = CXGN::BreedersToolbox::Projects->new({
-            schema => $schema
+            schema => $schema,
             name => $name,
             description => $desc,
         });
