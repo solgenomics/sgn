@@ -22,6 +22,12 @@ $cross_uniquename => ''
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Seedlot Description: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_description" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Breeding Program: </label>
                     <div class="col-sm-9" >
                         <div id="seedlot_breeding_program_div"></div>
@@ -137,9 +143,9 @@ $cross_uniquename => ''
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Description: </label>
+                    <label class="col-sm-3 control-label">Transaction Description: </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_description" placeholder="Optional">
+                        <input class="form-control" id="seedlot_transaction_description" placeholder="Optional">
                     </div>
                 </div>
             </form>
@@ -172,6 +178,7 @@ jQuery(document).ready(function(){
 
     jQuery('#create_new_seedlot_button').click( function() {
         var name = jQuery('#seedlot_name').val();
+        var seedlot_description = jQuery('#seedlot_description').val();
         var location = jQuery('#seedlot_location').val();
         var box_name = jQuery('#seedlot_box_name').val();
         var accession_uniquename = jQuery('#seedlot_accession_uniquename').val();
@@ -181,7 +188,7 @@ jQuery(document).ready(function(){
         var amount = jQuery('#seedlot_amount').val();
         var weight = jQuery('#seedlot_weight').val();
         var timestamp = jQuery('#seedlot_timestamp').val();
-        var description = jQuery('#seedlot_description').val();
+        var transaction_description = jQuery('#seedlot_transaction_description').val();
         var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
         var seedlot_quality = jQuery('#seedlot_quality').val();
 
@@ -202,6 +209,7 @@ jQuery(document).ready(function(){
                 url: '/ajax/breeders/seedlot-create',
                 data : {
                     'seedlot_name' : name,
+                    'seedlot_description': seedlot_description,
                     'seedlot_location': location,
                     'seedlot_box_name':box_name,
                     'seedlot_accession_uniquename': accession_uniquename,
@@ -211,7 +219,7 @@ jQuery(document).ready(function(){
                     'seedlot_amount':amount,
                     'seedlot_weight':weight,
                     'seedlot_timestamp':timestamp,
-                    'seedlot_description':description,
+                    'seedlot_transaction_description':transaction_description,
                     'seedlot_breeding_program_id':breeding_program_id,
                     'seedlot_quality' : seedlot_quality
 
