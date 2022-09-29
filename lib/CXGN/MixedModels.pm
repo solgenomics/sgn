@@ -221,6 +221,7 @@ sub generate_model_sommer {
     my $mmer_fixed_factors = "";
     my $mmer_random_factors = "";
     my $mmer_fixed_factors_interaction = "";
+    my $mmer_variable_slope_intersects ="";
 
     if (scalar(@$dependent_variables) > 1) { die "Works only with one trait for now! :-("; }
     if (scalar(@$dependent_variables) > 0) {
@@ -230,6 +231,7 @@ sub generate_model_sommer {
 	print STDERR "DEPENDENT VARIABLES: ".Dumper($dependent_variables);
 
 	$mmer_fixed_factors = make_R_variable_name($dependent_variables->[0]) ." ~ ". $mmer_fixed_factors;
+
 
 	if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
 	else { $mmer_random_factors = join("+", @$random_factors);}
@@ -248,7 +250,22 @@ sub generate_model_sommer {
        }
     }
 
-	   $mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction;
+  if (scalar(@$variable_slop_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
+
+  else {
+
+        foreach my $intersects(@$variable_slop_intersects){
+
+
+  	       if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
+  	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
+
+  	       else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
+         }
+      }
+
+
+	   $mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction." ".$mmer_variable_slope_intersects;
    }
     #location:genotype
 
