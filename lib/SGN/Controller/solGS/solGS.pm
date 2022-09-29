@@ -473,16 +473,23 @@ sub gs_modeling_files {
 sub save_model_info_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
-    my $trait_id = $c->stash->{trait_id};
-    my $trait_abbr = $c->stash->{trait_abbr};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $protocol_url = $c->req->base . 'breeders_toolbox/protocol/' . $protocol_id;
+
+    my %info_table = (
+        'model_id' => $c->stash->{training_pop_id},
+        'protocol_id' => $protocol_id,
+        'protocol_url' => $protocol_url,
+        'trait_abbr' => $c->stash->{trait_abbr},
+        'trait_name' => $c->stash->{trait_name},
+        'trait_id' => $c->stash->{trait_id},
+    );
 
     my $info = 'Name' . "\t" . 'Value' . "\n";
-    $info .= 'protocol_id' . "\t" . $protocol_id . "\n";
-    $info .= 'model_id' . "\t" . $pop_id . "\n";
-    $info .= 'trait_abbr' . "\t" . $trait_abbr . "\n";
-    $info .= 'trait_id' . "\t" . $trait_id . "\n";
+
+    while (my ($key, $val ) =  each (%info_table)) {
+        $info .= $key . "\t" . $val . "\n";
+    } 
 
     my $file = $c->controller('solGS::Files')->model_info_file($c);
     write_file($file, {binmode => ':utf8'}, $info);
@@ -569,8 +576,8 @@ sub output_files {
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
     $c->controller('solGS::Files')->analysis_report_file($c);
+    
     my $selection_pop_id = $c->stash->{selection_pop_id};
-
 
     no warnings 'uninitialized';
 
