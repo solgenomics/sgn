@@ -148,7 +148,7 @@ sub detail {
 	}
     my $names = join ',', @sp_person_names;
     my $person_id = join ',',  @sp_persons;
-    
+
 	%result = (
 		programDbId=>qq|$id|,
 		programName=>$name,
@@ -186,16 +186,20 @@ sub store {
 		my $name = $params->{programName} || undef;
 		my $desc = $params->{objective} || undef;
 
-		my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+		my $p = CXGN::BreedersToolbox::Projects->new({
+            schema => $schema
+            name => $name,
+            description => $desc,
+        });
 
-		my $new_program = $p->new_breeding_program($name, $desc);
+		my $new_program = $p->store_breeding_program();
 
 		print STDERR "New program is ".Dumper($new_program)."\n";
 
 		push @program_ids, $new_program;
 
 	}
-	
+
 	my %result;
 	my $count = scalar @program_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
@@ -237,7 +241,7 @@ sub update {
 	$row->insert();
 	my $project_id = $row->project_id();
 	push @program_ids, $project_id;
-	
+
 	my %result;
 	my $count = scalar @program_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
