@@ -250,11 +250,11 @@ sub generate_model_sommer {
        }
     }
 
-  if (scalar(@$variable_slop_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
+  if (scalar(@$variable_slope_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
 
   else {
 
-        foreach my $intersects(@$variable_slop_intersects){
+        foreach my $intersects(@$variable_slope_intersects){
 
 
   	       if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
