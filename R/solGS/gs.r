@@ -46,10 +46,13 @@ traitId    <- modelInfo["trait_id", 1]
 traitAbbr  <- modelInfo["trait_abbr", 1]
 modelId    <- modelInfo["model_id", 1]
 protocolId <- modelInfo["protocol_id", 1]
+protocolPage <- modelInfo["protocol_url", 1]
 
 message('trait_id ', traitId)
 message('trait_abbr ', traitAbbr)
 message('protocol_id ', protocolId)
+message('protocol detail page ', protocolPage)
+
 message('model_id ', modelId)
 
 datasetInfoFile <- grep("dataset_info", inputFiles, value = TRUE)
@@ -110,6 +113,9 @@ genoData           <- c()
 maf <- 0.01
 markerFilter <- 0.6
 cloneFilter <- 0.8
+message("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  were removed")
+message("Markers with greater or equal to ", markerFilter * 100, "% missing values were removed")
+message("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  were removed")
 
 if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
     filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,
