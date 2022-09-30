@@ -1,5 +1,5 @@
 
-# Tests functions in SGN::Controller::AJAX::Locations. These are the functions called when retrieving, uploading, storing, or deleting accessions.
+# Tests functions in SGN::Controller::AJAX::Locations. These are the functions called when retrieving, uploading, storing, or deleting locations.
 
 use strict;
 use warnings;
@@ -60,13 +60,13 @@ ok($response->{'nd_geolocation_id'});
 my $new_geolocation_id = $response->{'nd_geolocation_id'};
 
 # add new breeding program
-$mech->post_ok('http://localhost:3010/breeders/program/new', [
+$mech->post_ok('http://localhost:3010/breeders/program/store', [
     "name"=> 'test2',
     "desc"=> "added for Locations.t",
 ]);
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
-$expected_response = "The new breeding program test2 was created.";
+$expected_response = "Breeding program test2 was added successfully with description added for Locations.t\n";
 is_deeply($response->{'success'}, $expected_response, 'adding a breeding program');
 my $new_program_id = $response->{'id'};
 
