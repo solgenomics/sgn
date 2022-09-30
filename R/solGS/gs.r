@@ -6,12 +6,12 @@
 # Isaak Y Tecle (iyt2@cornell.edu)
 
 options(echo = FALSE)
-
+options(warn = -1)
+suppressWarnings(suppressPackageStartupMessages({
 library(methods)
 library(rrBLUP)
 library(plyr)
 library(stringr)
-#library(lme4)
 library(randomForest)
 library(parallel)
 library(genoDataFilter)
@@ -22,6 +22,7 @@ library(tibble)
 library(rlang)
 library(jsonlite)
 library(data.table)
+  }))
 
 
 allArgs <- commandArgs()
@@ -289,15 +290,18 @@ if (sum(is.na(genoData)) > 0) {
 
 #extract observation lines with both
 #phenotype and genotype data only.
+message("After removing missing values and calculating averages, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.")
 commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
 commonObs           <- data.frame(commonObs)
 rownames(commonObs) <- commonObs[, 1]
-
+message(length(rownames(commonObs)), " individuals have both phenotype and genotype data.")
 #remove genotyped lines without phenotype data
 genoDataFilteredObs <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
+message("After removing individuals without phenotype data, this genotype dataset has ", length(rownames(genoDataFilteredObs)), " individuals.")
 
 #remove phenotyped lines without genotype data
 phenoTrait <- phenoTrait[(phenoTrait$genotypes %in% rownames(commonObs)), ]
+message("After removing individuals without genotype data, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.")
 
 phenoTraitMarker           <- data.frame(phenoTrait)
 rownames(phenoTraitMarker) <- phenoTraitMarker[, 1]
