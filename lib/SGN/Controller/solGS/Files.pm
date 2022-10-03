@@ -29,7 +29,7 @@ sub marker_effects_file {
     my $data_set_type = $c->stash->{data_set_type};
 
     my   $cache_data = {key    => 'marker_effects_' . $file_id,
-                      file      => 'marker_effects_' . $file_id . '.txt',
+                      file      => 'marker_effects_' . $file_id,
                       stash_key => 'marker_effects_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
        };
@@ -76,7 +76,7 @@ sub model_phenodata_file {
 	no warnings 'uninitialized';
 
 	my $cache_data = {key       => 'model_phenodata_' . $id,
-			  file      => 'model_phenodata_' .  $id . '.txt',
+			  file      => 'model_phenodata_' .  $id,
 			  stash_key => 'model_phenodata_file',
 			  cache_dir => $c->stash->{solgs_cache_dir}
 	};
@@ -99,7 +99,7 @@ sub model_genodata_file {
 	no warnings 'uninitialized';
 
 	my $cache_data = {key       => 'model_genodata_' . $id,
-			  file      => 'model_genodata_' .  $id . '.txt',
+			  file      => 'model_genodata_' .  $id,
 			  stash_key => 'model_genodata_file',
 			  cache_dir => $c->stash->{solgs_cache_dir}
 	};
@@ -121,7 +121,7 @@ sub trait_raw_phenodata_file {
 	no warnings 'uninitialized';
 
 	my $cache_data = {key       => 'trait_raw_phenodata_' . $id,
-			  file      => 'trait_raw_phenodata_' .  $id . '.txt',
+			  file      => 'trait_raw_phenodata_' .  $id,
 			  stash_key => 'trait_raw_phenodata_file',
 			  cache_dir => $c->stash->{solgs_cache_dir}
 	};
@@ -144,7 +144,7 @@ sub model_info_file {
     my $file_id  = "${trait_id}-${pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'model_info_file_' . $file_id,
-                       file      => 'model_info_file_' . $file_id . '.txt',
+                       file      => 'model_info_file_' . $file_id,
                        stash_key => 'model_info_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -165,7 +165,7 @@ sub filtered_training_genotype_file {
     my $file_id = "${pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id,
-                       file      => 'filtered_training_genotype_data_' . $file_id . '.txt',
+                       file      => 'filtered_training_genotype_data_' . $file_id,
                        stash_key => 'filtered_training_genotype_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -183,7 +183,7 @@ sub filtered_selection_genotype_file {
     my $file_id = "${tr_pop_id}-${sel_pop_id}-GP-${protocol_id}";
 
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id,
-                       file      => 'filtered_selection_genotype_data_' . $file_id . '.txt',
+                       file      => 'filtered_selection_genotype_data_' . $file_id,
                        stash_key => 'filtered_selection_genotype_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -199,7 +199,7 @@ sub formatted_phenotype_file {
     $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id,
-                       file      => 'formatted_phenotype_data_' . $pop_id . '.txt',
+                       file      => 'formatted_phenotype_data_' . $pop_id,
                        stash_key => 'formatted_phenotype_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -230,7 +230,7 @@ sub phenotype_file_name {
     }
 
     my $cache_data = { key       => 'phenotype_data_' . $pop_id,
-		       file      => 'phenotype_data_' . $pop_id . '.txt',
+		       file      => 'phenotype_data_' . $pop_id,
 		       stash_key => 'phenotype_file_name',
 		       cache_dir => $dir
     };
@@ -252,7 +252,7 @@ sub analysis_error_file {
     my $name = "${type}_error_${file_id}";
 
     my $cache_data = { key       => $name,
-		       file      => $name . '.txt',
+		       file      => $name,
 		       cache_dir => $cache_dir,
 		       stash_key => "${type}_error_file",
     };
@@ -269,10 +269,19 @@ sub analysis_report_file {
     my $cache_dir = $c->stash->{cache_dir} || $c->stash->{solgs_cache_dir};
     my $file_id   = $c->stash->{file_id};
 
+    if (!$file_id) 
+    {
+        my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
+        my $trait_abbr = $c->stash->{trait_abbr};
+        my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+        $file_id  = "${pop_id}-${trait_abbr}-GP-${protocol_id}";
+    }
+
     my	$name = "${type}_report_${file_id}";
 
     my $cache_data = { key       => $name,
-		       file      => $name . '.txt',
+		       file      => $name,
 		       cache_dir => $cache_dir,
 		       stash_key => "${type}_report_file",
     };
@@ -307,7 +316,7 @@ sub genotype_file_name {
     my $file_id = $pop_id . '-GP-' . $protocol_id;
 
     my $cache_data = { key       => 'genotype_data_' . $file_id,
-		       file      => 'genotype_data_' . $file_id . '.txt',
+		       file      => 'genotype_data_' . $file_id,
 		       stash_key => 'genotype_file_name',
 		       cache_dir => $dir
     };
@@ -329,7 +338,7 @@ sub relationship_matrix_file {
     no warnings 'uninitialized';
 
     my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
-		      file      => 'relationship_matrix_table_' . $file_id . '.txt',
+		      file      => 'relationship_matrix_table_' . $file_id,
 		      stash_key => 'relationship_matrix_table_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
     };
@@ -337,7 +346,7 @@ sub relationship_matrix_file {
     $self->cache_file($c, $cache_data);
 
    $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
-		      file      => 'relationship_matrix_json_' . $file_id . '.txt',
+		      file      => 'relationship_matrix_json_' . $file_id,
 		      stash_key => 'relationship_matrix_json_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
     };
@@ -368,7 +377,7 @@ sub relationship_matrix_adjusted_file {
     no warnings 'uninitialized';
 
     my $cache_data = {key    => 'relationship_matrix_adjusted_table_' . $file_id ,
-		      file      => 'relationship_matrix_adjusted_table_' . $file_id . '.txt',
+		      file      => 'relationship_matrix_adjusted_table_' . $file_id,
 		      stash_key => 'relationship_matrix_adjusted_table_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
     };
@@ -376,7 +385,7 @@ sub relationship_matrix_adjusted_file {
     $self->cache_file($c, $cache_data);
 
     $cache_data = {key    => 'relationship_matrix_adjusted_json_' . $file_id ,
-		      file      => 'relationship_matrix_adjusted_json_' . $file_id . '.txt',
+		      file      => 'relationship_matrix_adjusted_json_' . $file_id,
 		      stash_key => 'relationship_matrix_adjusted_json_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
     };
@@ -398,7 +407,7 @@ sub average_kinship_file {
     no warnings 'uninitialized';
 
     my $cache_data = {key    => 'average_kinship_file' . $file_id ,
-		      file      => 'average_kinship_file_' . $file_id . '.txt',
+		      file      => 'average_kinship_file_' . $file_id,
 		      stash_key => 'average_kinship_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
     };
@@ -419,7 +428,7 @@ sub inbreeding_coefficients_file {
     no warnings 'uninitialized';
 
     my $cache_data = {key    => 'inbreeding_coefficients' . $file_id ,
-		      file      => 'inbreeding_coefficients_' . $file_id . '.txt',
+		      file      => 'inbreeding_coefficients_' . $file_id,
 		      stash_key => 'inbreeding_coefficients_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
     };
@@ -446,7 +455,7 @@ sub validation_file {
 
     my $cache_data = {
 	key       => 'cross_validation_' . $file_id,
-	file      => 'cross_validation_' . $file_id . '.txt',
+	file      => 'cross_validation_' . $file_id,
 	stash_key => 'validation_file',
 	cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -462,7 +471,7 @@ sub combined_gebvs_file {
 
     my $cache_data = {
 	key       => 'selected_traits_gebv_' . $pop_id . '_' . $identifier,
-	file      => 'selected_traits_gebv_' . $pop_id . '_' . $identifier . '.txt',
+	file      => 'selected_traits_gebv_' . $pop_id . '_' . $identifier,
 	stash_key => 'selected_traits_gebv_file',
 	cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -492,7 +501,7 @@ sub all_traits_file {
     $pop_id = $c->stash->{pop_id} ||  $c->stash->{training_pop_id} if !$pop_id;
 
     my $cache_data = {key       => 'all_traits_pop' . $pop_id,
-                      file      => 'all_traits_pop_' . $pop_id . '.txt',
+                      file      => 'all_traits_pop_' . $pop_id,
                       stash_key => 'all_traits_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -508,7 +517,7 @@ sub traits_list_file {
     $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_list_pop' . $pop_id,
-                      file      => 'traits_list_pop_' . $pop_id . '.txt',
+                      file      => 'traits_list_pop_' . $pop_id,
                       stash_key => 'traits_list_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -556,7 +565,7 @@ sub phenotype_metadata_file {
     my ($self, $c) = @_;
 
     my $cache_data = {key       => 'phenotype_metadata',
-                      file      => 'phenotype_metadata' . '.txt',
+                      file      => 'phenotype_metadata',
                       stash_key => 'phenotype_metadata_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -579,7 +588,7 @@ sub rrblup_training_gebvs_file {
     my $file_id = "$identifier-${trait_abbr}-GP-${protocol_id}";
 
     my $cache_data = {key       => 'rrblup_training_gebvs_' . $file_id,
-                      file      => 'rrblup_training_gebvs_' . $file_id  . '.txt',
+                      file      => 'rrblup_training_gebvs_' . $file_id ,
                       stash_key => 'rrblup_training_gebvs_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -599,7 +608,7 @@ sub rrblup_selection_gebvs_file {
     my $file_id = "${training_pop_id}_${selection_pop_id}-${trait_abbr}-GP-${protocol_id}";
 
     my $cache_data = {key  => 'rrblup_selection_gebvs_' . $file_id,
-                      file      => 'rrblup_selection_gebvs_' . $file_id . '.txt',
+                      file      => 'rrblup_selection_gebvs_' . $file_id,
                       stash_key => 'rrblup_selection_gebvs_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -616,7 +625,7 @@ sub list_of_prediction_pops_file {
     my $file_id = $training_pop_id . '-GP-' . $protocol_id;
 
     my $cache_data = {key       => 'list_of_prediction_pops_' . $file_id,
-                      file      => 'list_of_prediction_pops_' . $file_id . '.txt',
+                      file      => 'list_of_prediction_pops_' . $file_id,
                       stash_key => 'list_of_prediction_pops_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -634,7 +643,7 @@ sub first_stock_genotype_file {
     my $file_id = $pop_id . '-GP-' . $protocol_id;
 
     my $cache_data = {key       => 'first_stock_genotype_file_'. $file_id,
-                      file      => 'first_stock_genotype_file_' . $file_id . '.txt',
+                      file      => 'first_stock_genotype_file_' . $file_id,
                       stash_key => 'first_stock_genotype_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -672,7 +681,7 @@ sub traits_acronym_file {
     my ($self, $c, $pop_id) = @_;
 
     my $cache_data = {key       => 'traits_acronym_pop' . $pop_id,
-                      file      => 'traits_acronym_pop_' . $pop_id . '.txt',
+                      file      => 'traits_acronym_pop_' . $pop_id,
                       stash_key => 'traits_acronym_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -708,10 +717,17 @@ sub cache_file {
 
     no warnings 'uninitialized';
 
-    unless (-s $file > 1)
-    {
+    unless (-s $file)
+    { 
         $file = catfile($cache_dir, $cache_data->{file});
+        my $ext = $cache_data->{ext};
+        if ($ext) {
+            if ($ext !~ /^\./) { $ext = '.' . $ext}
+        } else {
+            $ext = '.txt';
+        }
 
+        $file = $file . $ext;
         write_file($file, {binmode => ':utf8'});
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }
