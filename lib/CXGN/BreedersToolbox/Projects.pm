@@ -3,6 +3,7 @@ package CXGN::BreedersToolbox::Projects;
 
 use Moose;
 use Data::Dumper;
+use Try::Tiny;
 use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
@@ -12,6 +13,21 @@ has 'schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
 		);
+
+has 'id' => (
+	isa => 'Maybe[Int]',
+	is => 'rw',
+);
+
+has 'name' => (
+    isa => 'Str',
+	is => 'rw',
+);
+
+has 'description' => (
+    isa => 'Maybe[Str]',
+	is => 'rw',
+);
 
 
 sub trial_exists {
@@ -32,7 +48,7 @@ sub get_breeding_programs {
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops', order_by => { -asc => 'name'}}  );
 
     my @projects;
     while (my $row = $rs->next()) {
@@ -319,7 +335,7 @@ sub get_all_locations_by_breeding_program {
      return \@locations;
 }
 
-# this was modified to return a Perl datastructure, not JSON, as 
+# this was modified to return a Perl datastructure, not JSON, as
 # it is fed into other Perl data structures that are being converted
 # to JSON, which results in illegal JSON. The code that calls this
 # function was adapted to the change.
@@ -451,58 +467,99 @@ sub get_accessions_by_breeding_program {
 
 }
 
-sub new_breeding_program {
-    my $self= shift;
-    my $name = shift;
-    my $description = shift;
+sub store_breeding_program {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $error;
+
+    my $id = $self->id();
+    my $name = $self->name();
+    my $description = $self->description();
 
     my $type_id = $self->get_breeding_program_cvterm_id();
 
-    my $rs = $self->schema()->resultset("Project::Project")->search(
-	{
-	    name => $name,
-	});
-    if ($rs->count() > 0) {
-	return { error => "A breeding program with name '$name' already exists." };
-
-    }
-    my $project_id;
-    eval {
-
-		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
-		my $error = $role->add_sp_role($name);
-		if ($error){
-			die $error;
-		}
-
-	my $row = $self->schema()->resultset("Project::Project")->create(
-	    {
-		name => $name,
-		description => $description,
-	    });
-
-	$row->insert();
-    $project_id = $row->project_id();
-
-	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
-	    {
-		type_id => $type_id,
-		project_id => $row->project_id(),
-
-	    });
-	$prop_row->insert();
-
-    };
-
-
-
-    if ($@) {
-        return { error => "An error occurred while generating a new breeding program. ($@)" };
-    } else {
-        print STDERR "The new breeding program $name was created with id $project_id\n";
-        return { success => "The new breeding program $name was created.", id => $project_id };
+    if (!$name) {
+        return { error => "Cannot save a breeding program with an undefined name. A name is required." };
     }
 
+    my $existing_name_rs = $schema->resultset("Project::Project")->search({ name => $name });
+    if (!$id && $existing_name_rs->count() > 0) {
+        return { error => "A breeding program with name '$name' already exists." };
+    }
+
+    # Add new program if no id supplied
+    if (!$id) {
+        try {
+            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+            my $error = $role->add_sp_role($name);
+            if ($error){
+                die $error;
+            }
+
+            my $row = $schema->resultset("Project::Project")->create(
+                {
+                name => $name,
+                description => $description,
+                });
+
+            $row->insert();
+            $id = $row->project_id();
+
+            my $prop_row = $schema->resultset("Project::Projectprop")->create(
+                {
+                type_id => $type_id,
+                project_id => $id,
+
+                });
+            $prop_row->insert();
+        }
+        catch {
+            $error =  $_;
+        };
+
+        if ($error) {
+            print STDERR "Error creating program $name: $error\n";
+            return { error => $error };
+        } else {
+            print STDERR "Breeding program $name was added successfully with description $description and id $id\n";
+            return { success => "Breeding program $name was added successfully with description $description\n", id => $id };
+        }
+    }
+    # Edit existing program if id supplied
+    elsif ($id) {
+        try {
+            my $old_program = $schema->resultset("Project::Project")->search({ project_id => $id });
+            my $old_name = $old_program->first->name();
+
+            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+            my $error = $role->update_sp_role($name,$old_name);
+            if ($error){
+                die $error;
+            }
+
+            my $row = $schema->resultset("Project::Project")->update_or_create(
+                {
+                project_id=>$id,
+                name => $name,
+                description => $description,
+                });
+
+            $row->insert();
+            $id = $row->project_id();
+
+        }
+        catch {
+            $error =  $_;
+        };
+
+        if ($error) {
+            print STDERR "Error editing program $name: $error\n";
+            return { error => $error };
+        } else {
+            print STDERR "Breeding program $name was updated successfully with description $description and id $id\n";
+            return { success => "Breeding program $name was updated successfully with description $description\n", id => $id };
+        }
+    }
 }
 
 sub delete_breeding_program {
@@ -513,30 +570,30 @@ sub delete_breeding_program {
 
     # check if this project entry is of type 'breeding program'
     my $prop = $self->schema->resultset("Project::Projectprop")->search({
-	type_id => $type_id,
-	project_id => $project_id,
-	});
+        type_id => $type_id,
+        project_id => $project_id,
+    });
 
     if ($prop->count() == 0) {
-	return 0; # wrong type, return 0.
+        return 0; # wrong type, return 0.
     }
 
     $prop->delete();
 
     my $rs = $self->schema->resultset("Project::Project")->search({
-	project_id => $project_id,
-	});
+        project_id => $project_id,
+    });
 
     if ($rs->count() > 0) {
-	my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search({
-	    object_project_id => $project_id,
-	});
+        my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search({
+            object_project_id => $project_id,
+        });
 
-	if ($pprs->count()>0) {
-	    $pprs->delete();
-	}
-	$rs->delete();
-	return 1;
+        if ($pprs->count()>0) {
+            $pprs->delete();
+        }
+        $rs->delete();
+        return 1;
     }
     return 0;
 }
@@ -549,10 +606,10 @@ sub get_breeding_program_with_trial {
 
     my $breeding_projects = [];
     if (my $row = $rs->next()) {
-	my $prs = $self->schema->resultset("Project::Project")->search( { project_id => $row->object_project_id() } );
-	while (my $b = $prs->next()) {
-	    push @$breeding_projects, [ $b->project_id(), $b->name(), $b->description() ];
-	}
+        my $prs = $self->schema->resultset("Project::Project")->search( { project_id => $row->object_project_id() } );
+        while (my $b = $prs->next()) {
+            push @$breeding_projects, [ $b->project_id(), $b->name(), $b->description() ];
+        }
     }
 
 

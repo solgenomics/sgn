@@ -118,6 +118,9 @@ function checkTrainingPopulation (popIds) {
 	var tableId = '#searched_trials_table';
 	var msgDiv = '#searched_trials_message';
 
+  var args = {'population_ids': popIds, 'genotyping_protocol_id': protocolId };
+	args = JSON.stringify(args);
+
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',

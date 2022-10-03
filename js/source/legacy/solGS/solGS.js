@@ -381,25 +381,32 @@ solGS.submitJob = {
   validateAnalysisInput: function (analysisProfile) {
     var analysisName = jQuery("#analysis_name").val();
 
-    var checkName = solGS.submitJob.checkAnalysisName(analysisName);
+    if (!analysisName) {
+      jQuery("#form-feedback-analysis-name").text(
+        "Analysis name is blank. Please give a name."
+      );
+    } else {
 
-    checkName.done(function (res) {
-      if (res.analysis_exists) {
-        jQuery("#analysis_name").css("border", "solid #FF0000");
+      var checkName = solGS.submitJob.checkAnalysisName(analysisName);
 
-        jQuery("#form-feedback-analysis-name").text(
-          "The same name exists or you have not provided a name. Please give a new name."
-        );
-      } else {
-        var email = jQuery("#user_email").val();
-        var emailPass = solGS.submitJob.checkEmail(email);
+      checkName.done(function (res) {
+        if (res.analysis_exists) {
+          jQuery("#analysis_name").css("border", "solid #FF0000");
 
-        if (emailPass) {
-          jQuery("#email-form").dialog("close");
-          solGS.submitJob.saveAnalysisProfile(analysisProfile);
+          jQuery("#form-feedback-analysis-name").text(
+            "The same name exists for another analysis. Please give a new name."
+          );
+        } else {
+          var email = jQuery("#user_email").val();
+          var emailPass = solGS.submitJob.checkEmail(email);
+
+          if (emailPass) {
+            jQuery("#email-form").dialog("close");
+            solGS.submitJob.saveAnalysisProfile(analysisProfile);
+          }
         }
-      }
-    });
+      });
+  }
 
     checkName.fail(function (res) {
       var message =
@@ -416,7 +423,7 @@ solGS.submitJob = {
     if (!email.match(emailRegex)) {
       jQuery("#user_email").css("border", "solid #FF0000");
 
-      jQuery("#form-feedback-user-email").text("Please fill in a proper email.");
+      jQuery("#form-feedback-user-email").text("Please provide a proper email address.");
 
       emailPass = 0;
     } else {

@@ -10,7 +10,7 @@ use CXGN::Onto;
 use Data::Dumper;
 use JSON::XS;
 
-sub seedlots :Path('/breeders/seedlots') :Args(0) { 
+sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
@@ -18,7 +18,7 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
     my $user_role;
-    if ($c->user() && $c->user()->check_roles("curator")) { 
+    if ($c->user() && $c->user()->check_roles("curator")) {
 	$user_role = "curator";
     }
 
@@ -45,7 +45,7 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     $c->stash->{template} = '/breeders_toolbox/seedlots.mas';
 }
 
-sub seedlot_detail :Path('/breeders/seedlot') Args(1) { 
+sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $self = shift;
     my $c = shift;
     my $seedlot_id = shift;
@@ -94,6 +94,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{current_count} = $sl->get_current_count_property();
     $c->stash->{current_weight} = $sl->get_current_weight_property();
     $c->stash->{quality} = $sl->quality();
+    $c->stash->{description} = $sl->description();
     $c->stash->{owners_string} = $owners_string;
     $c->stash->{timestamp} = localtime();
     $c->stash->{maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
@@ -125,7 +126,7 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
 
     # Make sure the user is logged in
     if (!$c->user()) {
-        my $url = '/' . $c->req->path;	
+        my $url = '/' . $c->req->path;
         $c->res->redirect("/user/login?goto_url=$url");
         return;
     }
@@ -157,7 +158,7 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
     if ( $info_event_cvterms_str && $info_event_cvterms_str ne '' ) {
         @info_event_cvterms = split(',', $info_event_cvterms_str);
     }
-        
+
     $c->stash->{ontology} = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
     $c->stash->{info_event_cvterms} = \@info_event_cvterms;
     $c->stash->{operator} = $c->user()->get_object()->get_username();
