@@ -50,6 +50,8 @@ $mm->tempfile($pheno_tempfile);
 
 is($mm->engine(), "lme4", "test engine default setting");
 
+my $SYSTEM_MODE = $ENV{SYSTEM};
+
 foreach my $engine ("lme4", "sommer") { 
 
     $mm->engine($engine);
@@ -75,15 +77,18 @@ foreach my $engine ("lme4", "sommer") {
 
     print STDERR "Using tempfile base ".$mm->tempfile()."\n";
 
-    ok( -e $mm->tempfile().".params", "check existence of parmams file");
-    ok( -e $mm->tempfile().".adjustedBLUPs", "check existence of adjustedBLUPs result file");
-    ok( -e $mm->tempfile().".BLUPs", "check existence of BLUPs result file");
-
+  SKIP: { 
+      skip "Skip if run under git", 3 unless $SYSTEM_MODE ne "GITACTION";
+      
+      ok( -e $mm->tempfile().".params", "check existence of parmams file");
+      ok( -e $mm->tempfile().".adjustedBLUPs", "check existence of adjustedBLUPs result file");
+      ok( -e $mm->tempfile().".BLUPs", "check existence of BLUPs result file");
+    };
     #    is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 413, "check number of lines in adjustedBLUEs file...");
 
 }
 
-my $SYSTEM_MODE = `echo \$SYSTEM`;
+
 
 
 # from package "emmeans"
@@ -99,35 +104,33 @@ my $SYSTEM_MODE = `echo \$SYSTEM`;
 # It makes no sense to try repair error which is not an error but very specific problem with gitaction workflow environment
 ### END OF ERROR ON GITACTION EXPLANATION
 
-### START: GITACTION PROBLEM
-if ($SYSTEM_MODE !~ /GITACTION/) {	
-
-    $mm->engine('lme4');
-    $mm->dependent_variables( [ "fresh root weight|CO_334:0000012" ] );	
+$mm->engine('lme4');
+$mm->dependent_variables( [ "fresh root weight|CO_334:0000012" ] );	
+    	
+$mm->fixed_factors([ "germplasmName" ]);
     
-    $mm->fixed_factors([ "germplasmName" ]);
-    
-    $mm->random_factors([ "replicate" ]);
+$mm->random_factors([ "replicate" ]);
 
-    my ($model_string, $error) = $mm->generate_model();
+my ($model_string, $error) = $mm->generate_model();
 
-    print STDERR "MODEL STRING = $model_string\n";
+print STDERR "MODEL STRING = $model_string\n";
 
-    is($model_string, "germplasmName + (1|replicate)", "model string test for BLUEs");
+is($model_string, "germplasmName + (1|replicate)", "model string test for BLUEs");
 
-    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
+$mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
 
-    sleep(2);
+sleep(2);
 
-    ok(-e $mm->tempfile() . ".adjustedBLUPs", "check existence of adjustedBLUEs result file");
-    ok(-e $mm->tempfile() . ".BLUPs", "check existence of BLUEs result file");
-    #    is(scalar(my @a = read_file($mm->tempfile() . ".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
+ SKIP: { 
+     skip "Skip if run under git", 2 unless $SYSTEM_MODE ne "GITACTION"; 
+     ok( -e $mm->tempfile() . ".adjustedBLUPs", "check existence of adjustedBLUEs result file");
+     ok( -e $mm->tempfile() . ".BLUPs", "check existence of BLUEs result file");
+     #    is(scalar(my @a = read_file($mm->tempfile() . ".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
+};
 
-    # cleanup for next test :-)
-    unlink($mm->tempfile() . ".adjustedBLUEs");
-    unlink($mm->tempfile() . ".BLUEs");
-}
-### END: GITACTION PROBLEM
+# cleanup for next test :-)
+unlink($mm->tempfile() . ".adjustedBLUEs");
+unlink($mm->tempfile() . ".BLUEs");
 
 $ds->delete();
 
