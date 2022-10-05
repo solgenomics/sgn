@@ -266,6 +266,7 @@ sub analysis_report_file {
     my ($self, $c) = @_;
 
     my $type      = $c->stash->{analysis_type};
+    $type =~ s/\s+_//g;
     my $cache_dir = $c->stash->{cache_dir} || $c->stash->{solgs_cache_dir};
     my $file_id   = $c->stash->{file_id};
 
@@ -283,7 +284,7 @@ sub analysis_report_file {
     my $cache_data = { key       => $name,
 		       file      => $name,
 		       cache_dir => $cache_dir,
-		       stash_key => "${type}_report_file",
+		       stash_key => "analysis_report_file",
     };
 
     $self->cache_file($c, $cache_data);
