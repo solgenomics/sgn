@@ -96,9 +96,7 @@ sub create_anova_phenodata_file {
     my ($self, $c)  = @_;
 
     $c->stash->{pop_id} = $c->stash->{trial_id};
-
-    $c->controller('solGS::Files')->phenotype_file_name($c, $c->stash->{pop_id});
-    my $pheno_file = $c->stash->{phenotype_file_name};
+    my $pheno_file = $self->trial_phenotype_file($c); 
 
     if (!-s $pheno_file)
     {
@@ -125,6 +123,13 @@ sub create_anova_phenodata_file {
 
 }
 
+sub trial_phenotoype_file {
+    my ($self, $c) = @_;
+
+    $c->controller('solGS::Files')->phenotype_file_name($c, $c->stash->{trial_id});
+   return $c->stash->{phenotype_file_name};
+
+}
 
 sub check_trial_design {
     my ($self, $c) = @_;
@@ -493,11 +498,7 @@ sub create_anova_phenotype_data_query_jobs {
 sub copy_pheno_file_to_anova_dir {
     my ($self, $c) = @_;
 
-    my $trial_id = $c->stash->{trial_id};
-
-    $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
-    my $pheno_file = $c->stash->{phenotype_file_name};
-
+    my $pheno_file = $self->trial_phenotype_file($c); 
     my $anova_cache = $c->stash->{anova_cache_dir};
 
     $c->controller('solGS::Files')->copy_file($pheno_file, $anova_cache);
@@ -514,8 +515,7 @@ sub anova_input_files {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
-    my $pheno_file = $c->stash->{phenotype_file_name};
+    my $pheno_file = $self->trial_phenotype_file($c); 
 
     $self->anova_traits_file($c);
     my $traits_file = $c->stash->{anova_traits_file};
