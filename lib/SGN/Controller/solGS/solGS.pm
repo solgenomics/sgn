@@ -562,7 +562,7 @@ sub output_files {
 
     my $trait    = $c->stash->{trait_abbr};
     my $trait_id = $c->stash->{trait_id};
-
+    $c->stash->{cache_dir} =  $c->stash->{solgs_cache_dir};
     $c->controller('solGS::Files')->marker_effects_file($c);
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->validation_file($c);
