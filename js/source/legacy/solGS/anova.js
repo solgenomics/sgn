@@ -116,7 +116,8 @@ function queryPhenoData(traitId) {
         },
         error: function(response) {
             showMessage("Error occured running the ANOVA.");
-	    jQuery("#run_anova").show();
+			jQuery("#anova_canvas .multi-spinner-container").hide();
+	    	jQuery("#run_anova").show();
         }
     });
 }
