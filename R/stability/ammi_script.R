@@ -29,16 +29,17 @@ cat(colnames(pheno),"\n")
 for (i in 1:ncol(pheno)){
 	a = noquote(colnames(pheno[i]))
 	b = study_trait
+	cat("COL: ", a, " vs study_trait: ", b,"\n")
 	if (a==b){
 		print(a)
 		col = i
 		i = ncol(pheno)
+		break
 	}else{
 		cat("working ",i,"\n")
 		i=i+1
 	}
 }
-
 
 env <-as.factor(pheno$locationName)
 gen <-as.factor(pheno$germplasmName)
@@ -50,6 +51,7 @@ message2<-""
 locations <- unique(pheno$locationDbId)
 acc <- unique(pheno$germplasmDbId)
 subGen <- unique(subset(pheno, select=c(germplasmDbId, germplasmName)))
+
 
 if (! length(locations)>1){
 	
@@ -74,12 +76,23 @@ if (! length(locations)>1){
 	cat("Starting stability analysis...","\n")
 }
 
+cat("create model", "\n")
+summary(pheno)
+summary(env)
+summary(gen)
+summary(rep)
 model<- with(pheno,AMMI(env, gen, rep, pheno[,col], console=FALSE))
 
+cat("marker 1", "\n")
 anova <-format(round(model$ANOVA, 3))
+cat("marker 2", "\n")
 analysis <- model$analysis
+cat("marker 3", "\n")
 anova
+cat("marker 4", "\n")
 analysis
+
+cat("DONE WITH MODEL", "\n")
 
 png(AMMIFile, height=130, width=800)
 p<-tableGrob(anova)
@@ -88,7 +101,8 @@ dev.off()
 
 
 if(method=="ammi"){
-	
+
+	cat("running ammi", "\n")
 	# Biplot and Triplot 
 	png(figure1_file_name,height=400)
 	plot(model, first=0,second=1, number=TRUE, xlab = study_trait)
