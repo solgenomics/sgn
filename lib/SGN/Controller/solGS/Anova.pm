@@ -263,18 +263,13 @@ sub check_anova_output {
     if (-s $html_file) {
 
 	my $html_table = read_file($html_file, {binmode => ':utf8'});
-
 	$self->prep_download_files($c);
-	my $anova_table_file = $c->stash->{download_anova};
-	my $model_file       = $c->stash->{download_model};
-	my $means_file       = $c->stash->{download_means};
-	my $diagnostics_file = $c->stash->{download_diagnostics};
-
-	$c->stash->{rest}{anova_html_table}         =  $html_table;
-	$c->stash->{rest}{anova_table_file}         =  $anova_table_file;
-	$c->stash->{rest}{anova_model_file}         =  $model_file;
-	$c->stash->{rest}{adj_means_file}           =  $means_file;
-	$c->stash->{rest}{anova_diagnostics_file}   =  $diagnostics_file;
+	
+	$c->stash->{rest}{anova_html_table}           =  read_file($html_file, {binmode => ':utf8'});
+	$c->stash->{rest}{anova_table_file}              =  $c->stash->{download_anova};
+	$c->stash->{rest}{anova_model_file}            =  $c->stash->{download_model};
+	$c->stash->{rest}{adj_means_file}                 =  $c->stash->{download_means};
+	$c->stash->{rest}{anova_diagnostics_file}   =  $c->stash->{download_diagnostics};
 
 	return 1;
 
