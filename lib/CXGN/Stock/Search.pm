@@ -537,18 +537,7 @@ sub search {
         }
 
         $stock_xref_search_sql = $stock_xref_search_sql . join(" and ", @xref_search_ands);
-
-        my $h = $schema->storage->dbh()->prepare($stock_xref_search_sql);
-        $h->execute();
-
-        my @stockxref_filtered_stock_ids;
-        while (my $stock_id = $h->fetchrow_array()) {
-            push @stockxref_filtered_stock_ids, $stock_id;
-        }
-
-        if (scalar(@stockxref_filtered_stock_ids)>0){
-            $search_query->{'me.stock_id'} = {'in'=>\@stockxref_filtered_stock_ids};
-        }
+        $search_query->{'me.stock_id'} = {'in'=>\$stock_xref_search_sql};
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search(
