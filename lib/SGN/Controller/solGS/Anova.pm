@@ -123,7 +123,7 @@ sub create_anova_phenodata_file {
 
 }
 
-sub trial_phenotoype_file {
+sub trial_phenotype_file {
     my ($self, $c) = @_;
 
     $c->controller('solGS::Files')->phenotype_file_name($c, $c->stash->{trial_id});
@@ -294,11 +294,6 @@ sub check_anova_output {
 sub prep_download_files {
   my ($self, $c) = @_;
 
-  my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'anova');
-  my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
-
-  mkpath ([$base_tmp_dir], 0, 0755);
-
   $self->anova_table_file($c);
   my $anova_txt_file  = $c->stash->{anova_table_txt_file};
   my $anova_html_file = $c->stash->{anova_table_html_file};
@@ -315,26 +310,12 @@ sub prep_download_files {
   $self->anova_error_file($c);
   my $error_file = $c->stash->{anova_error_file};
 
-  $c->controller('solGS::Files')->copy_file($anova_txt_file, $base_tmp_dir);
-  $c->controller('solGS::Files')->copy_file($model_file, $base_tmp_dir);
-  $c->controller('solGS::Files')->copy_file($means_file, $base_tmp_dir);
-  $c->controller('solGS::Files')->copy_file($diagnostics_file, $base_tmp_dir);
-  $c->controller('solGS::Files')->copy_file($error_file, $base_tmp_dir);
-
-  $anova_txt_file = fileparse($anova_txt_file);
-  $anova_txt_file = catfile($tmp_dir, $anova_txt_file);
-
-  $model_file = fileparse($model_file);
-  $model_file = catfile($tmp_dir, $model_file);
-
-  $means_file = fileparse($means_file);
-  $means_file = catfile($tmp_dir, $means_file);
-
-  $diagnostics_file = fileparse($diagnostics_file);
-  $diagnostics_file = catfile($tmp_dir, $diagnostics_file);
-
-  $error_file = fileparse($error_file);
-  $error_file = catfile($tmp_dir, $error_file);
+my $dir = 'anova';
+$anova_txt_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $anova_txt_file, $dir);
+$model_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $model_file, $dir);
+$means_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $means_file, $dir);
+$diagnostics_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $diagnostics_file, $dir);
+$error_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $error_file, $dir);
 
   $c->stash->{download_anova}       = $anova_txt_file;
   $c->stash->{download_model}       = $model_file;
@@ -501,10 +482,7 @@ sub copy_pheno_file_to_anova_dir {
     my $pheno_file = $self->trial_phenotype_file($c); 
     my $anova_cache = $c->stash->{anova_cache_dir};
 
-    $c->controller('solGS::Files')->copy_file($pheno_file, $anova_cache);
-
-    my $file = basename($pheno_file);
-    $c->stash->{phenotype_file} = catfile($anova_cache, $file);
+    $c->stash->{phenotype_file}= $c->controller('solGS::Files')->copy_file($pheno_file, $anova_cache);
 
 }
 
