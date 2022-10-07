@@ -120,11 +120,11 @@ sub create_anova_phenodata_file {
     
     if (!-s $pheno_file)
     {
-	$self->anova_query_jobs_file($c);
-	my $queries =$c->stash->{anova_query_jobs_file};
+        $self->anova_query_jobs_file($c);
+        my $queries =$c->stash->{anova_query_jobs_file};
 
-	$c->stash->{dependent_jobs} = $queries;
-	$c->controller('solGS::AsyncJob')->run_async($c);
+        $c->stash->{dependent_jobs} = $queries;
+        $c->controller('solGS::AsyncJob')->run_async($c);
     }
 
     if (!-s $pheno_file)
@@ -260,7 +260,6 @@ sub check_anova_output {
 
     if (-s $html_file) 
     {
-
         my $html_table = read_file($html_file, {binmode => ':utf8'});
         $self->prep_download_files($c);
         
