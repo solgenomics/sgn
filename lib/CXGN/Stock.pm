@@ -491,6 +491,8 @@ sub BUILD {
     }
     if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
+#	my $organism = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() });
+#	$self->organism($organism);
         $self->name($stock->name);
         $self->uniquename($stock->uniquename);
         $self->description($stock->description() || '');
@@ -666,7 +668,7 @@ sub store {
 
  Usage: $self->exists_in_database()
  Desc:  check if the uniquename exists in the stock table
- Ret:
+ Ret: Error message if the stock name exists in the database
  Args:
  Side Effects:
  Example:
@@ -684,7 +686,7 @@ sub exists_in_database {
         schema => $schema,
         stock_name => $uniquename,
     });
-    my $s = $stock_lookup->get_stock($self->type_id, $self->organism_id );
+    my $s = $stock_lookup->get_stock_exact($self->type_id, $self->organism_id );
 
     # loading new stock - $stock_id is undef
     #
