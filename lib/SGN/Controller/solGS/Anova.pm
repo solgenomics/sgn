@@ -87,49 +87,15 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
-    print STDERR "\anova_analysis: args: $args\n";
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
+	
+    my $anova_result = $self->check_anova_output($c);
 
-    # my $trial_id = $c->req->param('trial_id');
-    # my $traits   = $c->req->param('traits[]');
-
-    # $c->stash->{trial_id} = $trial_id;
-
-    # my $json = JSON->new();
-    # $traits  = $json->decode($traits);
-
-    # foreach my $tr (@$traits)
-    # {
-	# foreach my $k (keys %$tr)
-	# {
-	#     $c->stash->{$k} = $tr->{$k};
-
-
-	#     # my $tr_test = $tr->{$k};
-	#     # my $trait_id = $c->stash->{trait_id};
-	#     # print STDERR "\nanova_analysis k $k -- tr test: $tr_test -- trait_id: $trait_id\n";
-	#     # if ($k =~ /trait_abbr/)
-	#     # {
-	#     # 	#$tr->{$k} = undef;
-	#     # 	if (!$tr->{$k})
-	#     # 	{
-
-	#     # 	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
-	#     # 	    my $trait_abbr = $c->stash->{trait_abbr};
-	#     # 	    print STDERR "\nanova analysis : trait id: $trait_id -- tr abbr: $trait_abbr\n";
-	#     # 	}
-	#     # }
-
-	# }
-
-	    my $anova_result = $self->check_anova_output($c);
-
-        unless ($anova_result)
-        {
-            $self->run_anova($c);
-            $anova_result = $self->check_anova_output($c);
-        }
-    # }
+    unless ($anova_result)
+    {
+        $self->run_anova($c);
+        $anova_result = $self->check_anova_output($c);
+    }
 }
 
 sub anova_traits {
@@ -250,19 +216,8 @@ sub get_traits_abbrs {
     $c->stash->{pop_id} = $trial_id;
     $c->controller('solGS::Trait')->get_all_traits($c, $trial_id);
     $c->controller('solGS::Files')->all_traits_file($c, $trial_id);
-    my $traits_file = $c->stash->{all_traits_file};
+    # my $traits_file = $c->stash->{all_traits_file};
 
-    # my @traits = read_file($traits_file, {binmode => ':utf8'});
-
-    # # my @traits_abbrs;
-
-    # # foreach my $id (($trait_id)) {
-	# my ($tr) = grep(/$trait_id/, @traits);
-	# chomp($tr);
-	# my $abbr = (split('\t', $tr))[2] if $tr;
-	# my $id_abbr = {'trait_id' => $trait_id, 'trait_abbr' => $abbr};
-	# # push @traits_abbrs, $id_abbr;
-    # # }
     $c->controller('solGs::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
@@ -303,27 +258,30 @@ sub check_anova_output {
     $self->anova_table_file($c);
     my $html_file = $c->stash->{anova_table_html_file};
 
-    if (-s $html_file) {
+    if (-s $html_file) 
+    {
 
-	my $html_table = read_file($html_file, {binmode => ':utf8'});
-	$self->prep_download_files($c);
-	
-	$c->stash->{rest}{anova_html_table}           =  read_file($html_file, {binmode => ':utf8'});
-	$c->stash->{rest}{anova_table_file}              =  $c->stash->{download_anova};
-	$c->stash->{rest}{anova_model_file}            =  $c->stash->{download_model};
-	$c->stash->{rest}{adj_means_file}                 =  $c->stash->{download_means};
-	$c->stash->{rest}{anova_diagnostics_file}   =  $c->stash->{download_diagnostics};
+        my $html_table = read_file($html_file, {binmode => ':utf8'});
+        $self->prep_download_files($c);
+        
+        $c->stash->{rest}{anova_html_table}           =  read_file($html_file, {binmode => ':utf8'});
+        $c->stash->{rest}{anova_table_file}              =  $c->stash->{download_anova};
+        $c->stash->{rest}{anova_model_file}            =  $c->stash->{download_model};
+        $c->stash->{rest}{adj_means_file}                 =  $c->stash->{download_means};
+        $c->stash->{rest}{anova_diagnostics_file}   =  $c->stash->{download_diagnostics};
 
-	return 1;
+        return 1;
 
-    } else {
-	$self->anova_error_file($c);
-	my $error_file = $c->stash->{anova_error_file};
+    } 
+    else 
+    {
+        $self->anova_error_file($c);
+        my $error_file = $c->stash->{anova_error_file};
 
-	my $error = read_file($error_file, {binmode => ':utf8'});
-	$c->stash->{rest}{Error} = $error;
+        my $error = read_file($error_file, {binmode => ':utf8'});
+        $c->stash->{rest}{Error} = $error;
 
-	return 0;
+        return 0;
     }
 
 }

@@ -138,16 +138,12 @@ function showMessage (msg) {
 function runAnovaAnalysis(traits) {
 
     var trialId = getTrialId();
-console.log(`run anovaanalysis traits: ${traits}`)
     var captions       = jQuery('#anova_table table').find('caption').text();
     var analyzedTraits = captions.replace(/ANOVA result:/g, ' ');
 
-    // for (var i = 0; i < traits.length; i++) {
 	var traitAbbr = traits.trait_abbr;
-	console.log(`run anovaanalysis trait abbr: ${traitAbbr}`)
 
 	if (analyzedTraits.match(traitAbbr) == null) {
-	    // var anovaTraits = JSON.stringify(traits);
 		var args = JSON.stringify({'trial_id': trialId, 'trait_id': traits.trait_id});
 
 	    jQuery.ajax({
@@ -165,7 +161,6 @@ console.log(`run anovaanalysis traits: ${traits}`)
 		    } else {
 			var anovaTable = response.anova_html_table;
 		   	if (anovaTable) {
-			   // jQuery("#anova_table").prepend('<div style="margin-top: 20px">' + anovaTable + '</div>').show();
 			    var anovaFile = response.anova_table_file;
 			    var modelFile = response.anova_model_file;
 			    var meansFile = response.adj_means_file;
@@ -175,7 +170,6 @@ console.log(`run anovaanalysis traits: ${traits}`)
 			    var fileNameModel = modelFile.split('/').pop();
 			    var fileNameMeans = meansFile.split('/').pop();
 			    var fileNameDiagnostics = diagnosticsFile.split('/').pop()
-			    console.log(`anova file: ${anovaFile} filenameanova ${fileNameAnova}`)
 			    anovaFile = "<a href=\"" + anovaFile +  "\" download=" + fileNameAnova + ">[Anova table]</a>";
 			    modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">[Model summary]</a>";
 			    meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">[Adjusted means]</a>";
@@ -219,7 +213,6 @@ console.log(`run anovaanalysis traits: ${traits}`)
 	    jQuery("#run_anova").show();
 	    clearTraitSelection();
 	}
-    // }
 
 }
 
