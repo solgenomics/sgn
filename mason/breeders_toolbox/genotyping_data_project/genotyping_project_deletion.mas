@@ -2,8 +2,9 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
+
 
 <&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate(s)', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
@@ -41,4 +42,33 @@ jQuery(document).ready(function(){
         ]
     });
 });
+
+function deletePlate(plate_id){
+
+    var confirmation = confirm('Are you sure you want to delete this genotyping plate? The deletion cannot be undone.');
+
+    if (confirmation) {
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+plate_id+'/delete/layout',
+            beforeSend: function(){
+                jQuery('#working_modal').modal("show");
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    jQuery('#working_modal').modal("hide");
+                    alert('The genotyping plate has been deleted.');
+                    location.reload();
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal("hide");
+                alert("An error occurred.");
+            }
+        });
+    }
+}
+
 </script>
