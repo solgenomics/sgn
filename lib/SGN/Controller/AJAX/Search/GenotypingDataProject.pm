@@ -106,5 +106,29 @@ sub genotyping_project_plates_GET : Args(0) {
 }
 
 
+sub genotyping_project_plate_names : Path('/ajax/genotyping_project/plate_names') : ActionClass('REST') { }
+
+sub genotyping_project_plate_names_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $genotyping_project_id = $c->req->param('genotyping_project_id');
+
+    my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $bcs_schema,
+        project_id => $genotyping_project_id
+    });
+    my ($data, $total_count) = $plate_info->get_plate_info();
+    my @plates;
+    foreach  my $plate(@$data){
+        my $plate_id = $plate->{trial_id};
+        my $plate_name = $plate->{trial_name};
+        push @plates, {plate_name => $plate_name, plate_id => $plate_id};
+    }
+
+    $c->stash->{rest} = { data => \@plates };
+
+}
+
 
 1;

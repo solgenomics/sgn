@@ -5,7 +5,7 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate(s)', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -32,6 +32,13 @@ $trial_id
 
 jQuery(document).ready(function(){
 
-
+    var plate_deletion_table = jQuery('#genotyping_plate_deletion_table').DataTable({
+        'autoWidth': false,
+        'ajax': '/ajax/genotyping_project/plate_names?genotyping_project_id=<% $trial_id %>',
+        'columns': [
+            { title: "Plate Names", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders_toolbox/trial/"+row.plate_id+"'>"+row.plate_name+"</a>"; } },
+            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deletePlate("+row.plate_id+")'>Delete</a>"; } },
+        ]
+    });
 });
 </script>
