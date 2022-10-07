@@ -16,17 +16,21 @@ use Moose;
 use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
-use File::Slurp qw /write_file read_file/;
-use JSON;
-use CXGN::Trial;
-use File::Copy;
-use File::Basename;
-use File::Spec::Functions;
-use File::Path qw / mkpath  /;
-use URI::FromHash 'uri';
 
-use Scalar::Util qw /weaken reftype/;
-use Storable qw/ nstore retrieve /;
+
+use CXGN::Trial;
+use Data::Dumper;
+use File::Basename;
+use File::Copy;
+use File::Slurp qw /write_file read_file/;
+use File::Spec::Functions;
+use File::Path qw /mkpath/;
+use JSON;
+use List::Util qw/any uniq uniqint all/;
+use List::MoreUtils qw/firstidx/;
+use Scalar::Util qw /weaken reftype looks_like_number/;
+use Storable qw/nstore retrieve/;
+use URI::FromHash 'uri';
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -73,6 +77,8 @@ sub anova_phenotype_data :Path('/anova/phenotype/data/') Args(0) {
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{traits_ids} = \@traits_ids;
 
+    $c->controller('solGS::Trait')->get_trait_details($c, $traits_ids[0]);
+
     $self->create_anova_phenodata_file($c);
     $self->get_traits_abbrs($c);
 
@@ -96,8 +102,9 @@ sub create_anova_phenodata_file {
     my ($self, $c)  = @_;
 
     $c->stash->{pop_id} = $c->stash->{trial_id};
-    my $pheno_file = $self->trial_phenotype_file($c); 
 
+    my $pheno_file = $self->trial_phenotype_file($c); 
+    
     if (!-s $pheno_file)
     {
 	$self->anova_query_jobs_file($c);
@@ -109,16 +116,23 @@ sub create_anova_phenodata_file {
 
     if (!-s $pheno_file)
     {
-	$c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
+	    $c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
     }
     else
     {
-	$c->stash->{rest}{'success'} = 'Success.';
+        my $categorical = $self->check_categorical_dependent_variable($c);
+        if ($categorical) 
+        {
+            $c->stash->{rest}{'Error'} = "The trait data is not all numeric. Some or all ofthe trait values are text. ";
+        } else 
+        {
+	        $c->stash->{rest}{'success'} = 'Success.';
+        }
     }
 
     if (@{$c->error})
     {
-	$c->stash->{rest}{'Error'} = 'There was error querying for the phenotype data.';
+	    $c->stash->{rest}{'Error'} = 'There was error querying for the phenotype data.';
     }
 
 }
@@ -127,7 +141,7 @@ sub trial_phenotype_file {
     my ($self, $c) = @_;
 
     $c->controller('solGS::Files')->phenotype_file_name($c, $c->stash->{trial_id});
-   return $c->stash->{phenotype_file_name};
+    return $c->stash->{phenotype_file_name};
 
 }
 
@@ -254,6 +268,27 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
 }
 
 
+sub check_categorical_dependent_variable  {
+    my ($self, $c) = @_;
+
+    my $pheno_file = $self->trial_phenotype_file($c, $c->stash->{trial_id}); 
+    my $header = (read_file($pheno_file, {binmode => ':utf8'}))[0];
+    my @headers = split(/\t/, $header);
+
+    my $trait_abbr = $c->stash->{trait_abbr};
+    my $trait_idx = firstidx{$_ eq $trait_abbr} @headers;
+    my $trait_col = $trait_idx +1;
+
+    my $trait_values = `cut -f $trait_col $pheno_file 2>&1`;
+    $trait_values =~ s/$trait_abbr|\n//g;
+    my @trait_values = split(/\t/, $trait_values);
+    my $categorical = all {$_ =~ /[A-Za-z]/} @trait_values;
+    
+    return $categorical;;
+
+}
+
+
 sub check_anova_output {
     my ($self, $c) = @_;
 
@@ -287,36 +322,36 @@ sub check_anova_output {
 
 
 sub prep_download_files {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
 
-  $self->anova_table_file($c);
-  my $anova_txt_file  = $c->stash->{anova_table_txt_file};
-  my $anova_html_file = $c->stash->{anova_table_html_file};
+    $self->anova_table_file($c);
+    my $anova_txt_file  = $c->stash->{anova_table_txt_file};
+    my $anova_html_file = $c->stash->{anova_table_html_file};
 
-  $self->anova_model_file($c);
-  my $model_file = $c->stash->{anova_model_file};
+    $self->anova_model_file($c);
+    my $model_file = $c->stash->{anova_model_file};
 
-  $self->adj_means_file($c);
-  my $means_file = $c->stash->{adj_means_file};
+    $self->adj_means_file($c);
+    my $means_file = $c->stash->{adj_means_file};
 
-  $self->anova_diagnostics_file($c);
-  my $diagnostics_file = $c->stash->{anova_diagnostics_file};
+    $self->anova_diagnostics_file($c);
+    my $diagnostics_file = $c->stash->{anova_diagnostics_file};
 
-  $self->anova_error_file($c);
-  my $error_file = $c->stash->{anova_error_file};
+    $self->anova_error_file($c);
+    my $error_file = $c->stash->{anova_error_file};
 
-my $dir = 'anova';
-$anova_txt_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $anova_txt_file, $dir);
-$model_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $model_file, $dir);
-$means_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $means_file, $dir);
-$diagnostics_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $diagnostics_file, $dir);
-$error_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $error_file, $dir);
+    my $dir = 'anova';
+    $anova_txt_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $anova_txt_file, $dir);
+    $model_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $model_file, $dir);
+    $means_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $means_file, $dir);
+    $diagnostics_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $diagnostics_file, $dir);
+    $error_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $error_file, $dir);
 
-  $c->stash->{download_anova}       = $anova_txt_file;
-  $c->stash->{download_model}       = $model_file;
-  $c->stash->{download_means}       = $means_file;
-  $c->stash->{download_diagnostics} = $diagnostics_file;
-  $c->stash->{download_error}       = $error_file;
+    $c->stash->{download_anova}       = $anova_txt_file;
+    $c->stash->{download_model}       = $model_file;
+    $c->stash->{download_means}       = $means_file;
+    $c->stash->{download_diagnostics} = $diagnostics_file;
+    $c->stash->{download_error}       = $error_file;
 
 }
 
@@ -325,6 +360,9 @@ sub run_anova {
 
     $self->anova_query_jobs_file($c);
     $c->stash->{prerequisite_jobs} = $c->stash->{anova_query_jobs_file};
+
+    $self->check_categorical_dependent_variable($c);
+
 
     $self->anova_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{anova_r_jobs_file};
@@ -510,14 +548,6 @@ sub anova_input_files {
     $c->stash->{anova_input_files} = $tempfile;
 
 }
-
-
-# sub anova_pheno_file {
-#     my ($self, $c) = @_;
-
-#     $self->create_anova_phenodata_file($c);
-
-# }
 
 
 sub anova_traits_file {
