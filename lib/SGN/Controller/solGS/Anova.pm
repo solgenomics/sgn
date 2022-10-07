@@ -136,7 +136,7 @@ sub create_anova_phenodata_file {
         my $categorical = $self->check_categorical_dependent_variable($c);
         if ($categorical) 
         {
-            $c->stash->{rest}{'Error'} = "The trait data is not all numeric. Some or all ofthe trait values are text. ";
+            $c->stash->{rest}{'Error'} = "The trait data is not all numeric. Some or all of the trait values are text. ";
         } else 
         {
 	        $c->stash->{rest}{'success'} = 'Success.';
