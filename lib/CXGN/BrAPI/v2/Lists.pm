@@ -20,14 +20,10 @@ sub search {
     my $names_arrayref = $params->{listName} || ($params->{listNames} || ());
     my $list_ids_arrayref = $params->{listDbId} || ($params->{listDbIds} || ());
     my $list_source_arrayref = $params->{listSource} || ($params->{listSources} || ());
-    my $reference_ids_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $reference_ids_arrayref = $params->{externalReferenceId} || $params->{externalReferenceID} || ($params->{externalReferenceIds} || $params->{externalReferenceIDs} || ());
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 	my $list_owner_array_refs = $params->{listOwnerPersonDbIds};
 	my $user_id = $list_owner_array_refs->[0];
-
-    if (($reference_ids_arrayref && scalar(@$reference_ids_arrayref)>0) || ($reference_sources_arrayref && scalar(@$reference_sources_arrayref)>0) ){
-        push @$status, { 'error' => 'The following search parameters are not implemented: externalReferenceID, externalReferenceSources' };
-    }
 
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -73,10 +69,29 @@ sub search {
 
 		#Get external references
 		my @references;
+		my $match_found = $reference_ids_arrayref || $reference_sources_arrayref ? 0 : 1;
+		my %externalRefIdMap = map { $_ => 1 } @$reference_ids_arrayref;
+		my %externalRefSourceMap = map { $_ => 1 } @$reference_sources_arrayref;
 		if (%$reference_result{$id}){
 			foreach (@{%$reference_result{$id}}){
 				push @references, $_;
+
+				if(!$match_found) {
+					my $source_found = %externalRefSourceMap ? 0 : 1;
+					my $id_found = %externalRefIdMap ? 0 : 1;
+					if (!$id_found) {
+						$id_found = %externalRefIdMap{$_->{referenceID}} ? 1 : 0;
+					}
+					if (!$source_found) {
+						$source_found = %externalRefSourceMap{$_->{referenceSource}} ? 1 : 0;
+					}
+					$match_found = $id_found && $source_found;
+				}
 			}
+		}
+
+		if(!$match_found) {
+			next;
 		}
 
 		if ($counter >= $start_index && $counter <= $end_index) {
