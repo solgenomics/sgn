@@ -26,10 +26,12 @@ function checkDesign () {
 
     var trialId = getTrialId();
 
+	var args = JSON.stringify({'trial_id': trialId})
+	
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: {'trial_id': trialId},
+	data: {'arguments': args},
         url: '/anova/check/design/',
         success: function(response) {
 
@@ -97,11 +99,12 @@ function anovaAlert(msg) {
 function queryPhenoData(traitId) {
 
     var trialId = getTrialId();
+	var args = JSON.stringify({'trial_id': trialId, 'trait_id': traitId});
 
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: {'trial_id': trialId, 'traits_ids': [traitId]},
+	data: {'arguments': args},
         url: '/anova/phenotype/data/',
         success: function(response) {
 
@@ -111,6 +114,7 @@ function queryPhenoData(traitId) {
 		jQuery("#anova_canvas .multi-spinner-container").hide();
 	    } else {
 		var traitsAbbrs = response.traits_abbrs;
+		traitsAbbrs = JSON.parse(traitsAbbrs);
 		runAnovaAnalysis(traitsAbbrs);
 	    }
         },
@@ -134,20 +138,22 @@ function showMessage (msg) {
 function runAnovaAnalysis(traits) {
 
     var trialId = getTrialId();
-
+console.log(`run anovaanalysis traits: ${traits}`)
     var captions       = jQuery('#anova_table table').find('caption').text();
     var analyzedTraits = captions.replace(/ANOVA result:/g, ' ');
 
-    for (var i = 0; i < traits.length; i++) {
-	var traitAbbr = traits[i].trait_abbr;
+    // for (var i = 0; i < traits.length; i++) {
+	var traitAbbr = traits.trait_abbr;
+	console.log(`run anovaanalysis trait abbr: ${traitAbbr}`)
 
 	if (analyzedTraits.match(traitAbbr) == null) {
-	    var anovaTraits = JSON.stringify(traits);
+	    // var anovaTraits = JSON.stringify(traits);
+		var args = JSON.stringify({'trial_id': trialId, 'trait_id': traits.trait_id});
 
 	    jQuery.ajax({
 		type: 'POST',
 		dataType: 'json',
-		data: {'trial_id': trialId, 'traits': [anovaTraits]},
+		data: {'arguments': args},
 		url: '/anova/analysis/',
 		success: function(response) {
 
@@ -213,7 +219,7 @@ function runAnovaAnalysis(traits) {
 	    jQuery("#run_anova").show();
 	    clearTraitSelection();
 	}
-    }
+    // }
 
 }
 
@@ -221,11 +227,11 @@ function runAnovaAnalysis(traits) {
 function listAnovaTraits ()  {
 
     var trialId = getTrialId();
-
+	var args = JSON.stringify({'trial_id': trialId});
      jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: {'trial_id': trialId},
+	data: {'arguments': args},
         url: '/anova/traits/list/',
          success: function(response) {
 	     var traits = response.anova_traits;

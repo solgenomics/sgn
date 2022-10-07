@@ -47,7 +47,8 @@ __PACKAGE__->config(
 sub anova_check_design :Path('/anova/check/design/') Args(0) {
     my ($self, $c) = @_;
 
-    $c->stash->{trial_id} = $c->req->param('trial_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
     $self->check_trial_design($c);
 
@@ -57,9 +58,8 @@ sub anova_check_design :Path('/anova/check/design/') Args(0) {
 sub anova_traits_list :Path('/anova/traits/list/') Args(0) {
     my ($self, $c) = @_;
 
-    my $trial_id = $c->req->param('trial_id');
-
-    $c->stash->{trial_id} = $trial_id;
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
     $self->anova_traits($c);
 
@@ -69,21 +69,68 @@ sub anova_traits_list :Path('/anova/traits/list/') Args(0) {
 sub anova_phenotype_data :Path('/anova/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
 
-    my $trial_id = $c->req->param('trial_id');
-    my @traits_ids   = $c->req->param('traits_ids[]');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trait_id  = $c->stash->{trait_id};
+
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $c->stash->{rest}{trial_id} = $trial_id;
-
-    $c->stash->{trial_id} = $trial_id;
-    $c->stash->{traits_ids} = \@traits_ids;
-
-    $c->controller('solGS::Trait')->get_trait_details($c, $traits_ids[0]);
-
     $self->create_anova_phenodata_file($c);
     $self->get_traits_abbrs($c);
 
 }
 
+sub anova_analyis :Path('/anova/analysis/') Args(0) {
+    my ($self, $c) = @_;
+
+    my $args = $c->req->param('arguments');
+    print STDERR "\anova_analysis: args: $args\n";
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+    # my $trial_id = $c->req->param('trial_id');
+    # my $traits   = $c->req->param('traits[]');
+
+    # $c->stash->{trial_id} = $trial_id;
+
+    # my $json = JSON->new();
+    # $traits  = $json->decode($traits);
+
+    # foreach my $tr (@$traits)
+    # {
+	# foreach my $k (keys %$tr)
+	# {
+	#     $c->stash->{$k} = $tr->{$k};
+
+
+	#     # my $tr_test = $tr->{$k};
+	#     # my $trait_id = $c->stash->{trait_id};
+	#     # print STDERR "\nanova_analysis k $k -- tr test: $tr_test -- trait_id: $trait_id\n";
+	#     # if ($k =~ /trait_abbr/)
+	#     # {
+	#     # 	#$tr->{$k} = undef;
+	#     # 	if (!$tr->{$k})
+	#     # 	{
+
+	#     # 	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
+	#     # 	    my $trait_abbr = $c->stash->{trait_abbr};
+	#     # 	    print STDERR "\nanova analysis : trait id: $trait_id -- tr abbr: $trait_abbr\n";
+	#     # 	}
+	#     # }
+
+	# }
+
+	    my $anova_result = $self->check_anova_output($c);
+
+        unless ($anova_result)
+        {
+            $self->run_anova($c);
+            $anova_result = $self->check_anova_output($c);
+        }
+    # }
+}
 
 sub anova_traits {
      my ($self, $c) = @_;
@@ -198,73 +245,32 @@ sub get_traits_abbrs {
     my ($self, $c) = @_;
 
     my $trial_id = $c->stash->{trial_id};
-    my $traits_ids = $c->stash->{traits_ids};
+    my $trait_id = $c->stash->{trait_id};
 
     $c->stash->{pop_id} = $trial_id;
     $c->controller('solGS::Trait')->get_all_traits($c, $trial_id);
     $c->controller('solGS::Files')->all_traits_file($c, $trial_id);
     my $traits_file = $c->stash->{all_traits_file};
 
-    my @traits = read_file($traits_file, {binmode => ':utf8'});
+    # my @traits = read_file($traits_file, {binmode => ':utf8'});
 
-    my @traits_abbrs;
+    # # my @traits_abbrs;
 
-    foreach my $id (@$traits_ids) {
-	my ($tr) = grep(/$id/, @traits);
-	chomp($tr);
-	my $abbr = (split('\t', $tr))[2] if $tr;
-	my $id_abbr = {'trait_id' => $id, 'trait_abbr' => $abbr};
-	push @traits_abbrs, $id_abbr;
-    }
+    # # foreach my $id (($trait_id)) {
+	# my ($tr) = grep(/$trait_id/, @traits);
+	# chomp($tr);
+	# my $abbr = (split('\t', $tr))[2] if $tr;
+	# my $id_abbr = {'trait_id' => $trait_id, 'trait_abbr' => $abbr};
+	# # push @traits_abbrs, $id_abbr;
+    # # }
+    $c->controller('solGs::Trait')->get_trait_details($c, $trait_id);
+    my $trait_abbr = $c->stash->{trait_abbr};
 
-   $c->stash->{rest}{traits_abbrs} = \@traits_abbrs;
-
-}
-
-
-sub anova_analyis :Path('/anova/analysis/') Args(0) {
-    my ($self, $c) = @_;
-
-    my $trial_id = $c->req->param('trial_id');
-    my $traits   = $c->req->param('traits[]');
-
-    $c->stash->{trial_id} = $trial_id;
-
+    my $id_abbr = {'trait_id' => $trait_id, 'trait_abbr' => $trait_abbr};
     my $json = JSON->new();
-    $traits  = $json->decode($traits);
+    my $traits_abbrs = $json->encode($id_abbr);
+   $c->stash->{rest}{traits_abbrs} = $traits_abbrs;
 
-    foreach my $tr (@$traits)
-    {
-	foreach my $k (keys %$tr)
-	{
-	    $c->stash->{$k} = $tr->{$k};
-
-
-	    # my $tr_test = $tr->{$k};
-	    # my $trait_id = $c->stash->{trait_id};
-	    # print STDERR "\nanova_analysis k $k -- tr test: $tr_test -- trait_id: $trait_id\n";
-	    # if ($k =~ /trait_abbr/)
-	    # {
-	    # 	#$tr->{$k} = undef;
-	    # 	if (!$tr->{$k})
-	    # 	{
-
-	    # 	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
-	    # 	    my $trait_abbr = $c->stash->{trait_abbr};
-	    # 	    print STDERR "\nanova analysis : trait id: $trait_id -- tr abbr: $trait_abbr\n";
-	    # 	}
-	    # }
-
-	}
-
-	my $anova_result = $self->check_anova_output($c);
-
-	unless ($anova_result)
-	{
-	    $self->run_anova($c);
-	    $anova_result = $self->check_anova_output($c);
-	}
-    }
 }
 
 
@@ -275,7 +281,9 @@ sub check_categorical_dependent_variable  {
     my $header = (read_file($pheno_file, {binmode => ':utf8'}))[0];
     my @headers = split(/\t/, $header);
 
+    $c->controller('solGs::Trait')->get_trait_details($c, $c->stash->{trait_id});
     my $trait_abbr = $c->stash->{trait_abbr};
+
     my $trait_idx = firstidx{$_ eq $trait_abbr} @headers;
     my $trait_col = $trait_idx +1;
 
@@ -665,7 +673,7 @@ sub anova_model_file {
 sub anova_error_file {
     my ($self, $c) = @_;
 
-    $c->stash->{file_id} = $c->stash->{trait_id} . '_' . $c->stash->{trial_id};
+    $c->stash->{file_id} = $c->stash->{trial_id} . '_' . $c->stash->{trait_id};
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
     $c->stash->{analysis_type} = 'anova';
 
