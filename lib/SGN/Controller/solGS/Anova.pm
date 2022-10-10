@@ -113,12 +113,10 @@ sub anova_traits {
 
 sub create_anova_phenodata_file {
     my ($self, $c)  = @_;
+   
+    my $cached = $c->controller('solGS::CachedResult')->check_cached_phenotype_data($c, $c->stash->{trial_id});
 
-    $c->stash->{pop_id} = $c->stash->{trial_id};
-
-    my $pheno_file = $self->trial_phenotype_file($c); 
-    
-    if (!-s $pheno_file)
+    if (!$cached)
     {
         $self->anova_query_jobs_file($c);
         my $queries =$c->stash->{anova_query_jobs_file};
@@ -127,6 +125,7 @@ sub create_anova_phenodata_file {
         $c->controller('solGS::AsyncJob')->run_async($c);
     }
 
+    my $pheno_file = $self->trial_phenotype_file($c); 
     if (!-s $pheno_file)
     {
 	    $c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
@@ -236,7 +235,7 @@ sub check_categorical_dependent_variable  {
     my $header = (read_file($pheno_file, {binmode => ':utf8'}))[0];
     my @headers = split(/\t/, $header);
 
-    $c->controller('solGs::Trait')->get_trait_details($c, $c->stash->{trait_id});
+    $c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $trait_idx = firstidx{$_ eq $trait_abbr} @headers;
@@ -245,6 +244,7 @@ sub check_categorical_dependent_variable  {
     my $trait_values = `cut -f $trait_col $pheno_file 2>&1`;
     $trait_values =~ s/$trait_abbr|\n//g;
     my @trait_values = split(/\t/, $trait_values);
+    
     my $categorical = all {$_ =~ /[A-Za-z]/} @trait_values;
     
     return $categorical;;
@@ -460,7 +460,6 @@ sub create_anova_phenotype_data_query_jobs {
     my ($self, $c) = @_;
 
     my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
-
     $c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
     my $jobs = $c->stash->{cluster_phenotype_query_job_args};
 
