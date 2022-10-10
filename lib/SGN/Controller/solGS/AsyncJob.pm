@@ -295,7 +295,7 @@ sub genotype_trial_query_args {
 sub phenotype_trial_query_args {
     my ($self, $c, $pop_id) = @_;
 
-    $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $pop_id = $c->stash->{training_pop_id} || $c->stash->{trial_id} if !$pop_id;
 
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
