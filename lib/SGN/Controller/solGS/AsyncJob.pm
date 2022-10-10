@@ -204,9 +204,9 @@ sub get_cluster_phenotype_query_job_args {
 
     foreach my $trial_id (@$trials)
     {
-	$c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
+    my $cached = $c->controller('solGS::CachedResult')->check_cached_phenotype_data($c, $c->stash->{trial_id});
 
-	if (!-s $c->stash->{phenotype_file_name})
+	if (!$cached)
 	{
 	    my $args = $self->phenotype_trial_query_args($c, $trial_id);
 
