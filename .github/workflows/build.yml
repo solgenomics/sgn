@@ -105,9 +105,9 @@ jobs:
           ref: 'master'
           submodules: 'recursive'
 
-#       - name: Get the submodules
-#         working-directory: ./breedbase_dockerfile
-#         run: git submodule update --init --recursive --remote
+      - name: Get the submodules
+        working-directory: ./breedbase_dockerfile
+        run: git submodule update --init --recursive --remote
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
