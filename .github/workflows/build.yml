@@ -97,7 +97,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Get breedbase_dockerfile
-        if: steps.extract_branch.outputs.branch != 'develop'
+        if: steps.extract_branch.outputs.branch == 'master'
         uses: actions/checkout@master
         with:
           repository: Breeding-Insight/breedbase_dockerfile
