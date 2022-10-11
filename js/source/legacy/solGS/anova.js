@@ -7,33 +7,22 @@
 var solGS = solGS || function solGS() {};
 
 solGS.anova = {
+	msgDiv: '#anova_message',
+	runDiv: '#run_anova',
+
 	checkTrialDesign: function () {
 
 		var trialId = this.getTrialId();
-
 		var args = JSON.stringify({'trial_id': trialId})
 		
-		jQuery.ajax({
+		var trialDesign = jQuery.ajax({
 			type: 'POST',
 			dataType: 'json',
 			data: {'arguments': args},
 			url: '/anova/check/design/',
-			success: function(response) {
-
-			if (response.Error) {
-			solGS.anova.showMessage(response.Error);
-			jQuery("#run_anova").hide();
-			} else {
-
-				solGS.anova.listAnovaTraits();
-			}
-			},
-			error: function() {
-				solGS.anova.showMessage("Error occured running the ANOVA.");
-				jQuery("#run_anova").show();
-			}
 		});
 
+		return trialDesign;
 	},
 
 
@@ -44,16 +33,16 @@ solGS.anova = {
 		jQuery(jobSubmit).appendTo('body');
 
 			jQuery('#anova_msg')
-			.dialog({
-			modal  : true,
-			title  : 'Alert',
-			buttons: {
-				OK: {
-				click: function () {
-					jQuery(this).dialog('close');
-				},
-				class: 'btn btn-success',
-				text : 'OK',
+				.dialog({
+					modal  : true,
+					title  : 'Alert',
+					buttons: {
+						OK: {
+						click: function () {
+						jQuery(this).dialog('close');
+						},
+						class: 'btn btn-success',
+						text : 'OK',
 				},
 			}
 			});
@@ -65,37 +54,20 @@ solGS.anova = {
 		var trialId = this.getTrialId();
 		var args = JSON.stringify({'trial_id': trialId, 'trait_id': traitId});
 
-		jQuery.ajax({
+		var phenoData = jQuery.ajax({
 			type: 'POST',
 			dataType: 'json',
-		data: {'arguments': args},
+			data: {'arguments': args},
 			url: '/anova/phenotype/data/',
-			success: function(response) {
-
-			if (response.Error) {
-				solGS.anova.showMessage(response.Error);
-			jQuery("#run_anova").show();
-			jQuery("#anova_canvas .multi-spinner-container").hide();
-			} else {
-			var traitsAbbrs = response.traits_abbrs;
-			traitsAbbrs = JSON.parse(traitsAbbrs);
-			solGS.anova.runAnovaAnalysis(traitsAbbrs);
-			}
-			},
-			error: function() {
-				solGS.anova.showMessage("Error occured running the ANOVA.");
-				jQuery("#anova_canvas .multi-spinner-container").hide();
-				jQuery("#run_anova").show();
-			}
 		});
+
+		return phenoData;
 	},
 
 
 	showMessage: function (msg) {
-		jQuery("#anova_message")
-			.css({"padding-left": '0px'})
+		jQuery(this.msgDiv)
 			.html(msg);
-
 	},
 
 
@@ -110,71 +82,17 @@ solGS.anova = {
 		if (analyzedTraits.match(traitAbbr) == null) {
 			var args = JSON.stringify({'trial_id': trialId, 'trait_id': traits.trait_id});
 
-			jQuery.ajax({
-			type: 'POST',
-			dataType: 'json',
-			data: {'arguments': args},
-			url: '/anova/analysis/',
-			success: function(response) {
+			var anovaAnalysis = jQuery.ajax({
+				type: 'POST',
+				dataType: 'json',
+				data: {'arguments': args},
+				url: '/anova/analysis/',
+			 });
 
-				if(response.Error) {
-				jQuery("#anova_canvas .multi-spinner-container").hide();
-				jQuery("#anova_message").empty();
-				solGS.anova.showMessage(response.Error);
-				jQuery("#run_anova").show();
-				} else {
-				var anovaTable = response.anova_html_table;
-				if (anovaTable) {
-					var anovaFile = response.anova_table_file;
-					var modelFile = response.anova_model_file;
-					var meansFile = response.adj_means_file;
-					var diagnosticsFile = response.anova_diagnostics_file;
-
-					var fileNameAnova = anovaFile.split('/').pop();
-					var fileNameModel = modelFile.split('/').pop();
-					var fileNameMeans = meansFile.split('/').pop();
-					var fileNameDiagnostics = diagnosticsFile.split('/').pop()
-					anovaFile = "<a href=\"" + anovaFile +  "\" download=" + fileNameAnova + ">[Anova table]</a>";
-					modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">[Model summary]</a>";
-					meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">[Adjusted means]</a>";
-
-					diagnosticsFile = "<a href=\"" + diagnosticsFile
-					+  "\" download=" + fileNameDiagnostics + ">[Model diagnostics]</a>";
-
-					jQuery("#anova_table")
-					.prepend('<div style="margin-top: 20px">' + anovaTable + '</div>'
-						+ '<br /> <strong>Download:</strong> '
-						+ anovaFile + ' | '
-						+ modelFile + ' | '
-						+ diagnosticsFile + ' | '
-						+ meansFile)
-					.show();
-
-					jQuery("#anova_canvas .multi-spinner-container").hide();
-					jQuery("#anova_message").empty();
-
-					jQuery("#run_anova").show();
-				}  else {
-					jQuery("#anova_canvas .multi-spinner-container").hide();
-					solGS.anova.showMessage("There is no anova output for this dataset.");
-					jQuery("#run_anova").show();
-
-				}
-				}
-				solGS.anova.clearTraitSelection();
-			},
-			error: function() {
-				jQuery("#anova_canvas .multi-spinner-container").hide();
-				solGS.anova.showMessage("Error occured running the anova analysis.");
-				jQuery("#run_anova").show();
-				solGS.anova.clearTraitSelection();
-
-			}
-
-			});
+			 return anovaAnalysis;
 		} else {
-			jQuery("#anova_message").empty();
-			jQuery("#run_anova").show();
+			jQuery(this.msgDiv).empty();
+			jQuery(this.runDiv).show();
 			solGS.anova.clearTraitSelection();
 		}
 
@@ -185,29 +103,15 @@ solGS.anova = {
 
 		var trialId = this.getTrialId();
 		var args = JSON.stringify({'trial_id': trialId});
-		jQuery.ajax({
+		
+		var anovaTraits = jQuery.ajax({
 			type: 'POST',
 			dataType: 'json',
-		data: {'arguments': args},
+			data: {'arguments': args},
 			url: '/anova/traits/list/',
-			success: function(response) {
-			var traits = response.anova_traits;
-
-			if (traits.length) {
-				solGS.anova.formatAnovaTraits(traits);
-				jQuery("#run_anova").show();
-			} else {
-				solGS.anova.showMessage('This trial has no phenotyped traits.');
-				jQuery("#run_anova").hide();
-			}
-			},
-			error: function() {
-				solGS.anova.showMessage("Error occured listing anova traits.");
-				jQuery("#run_anova").hide();
-			}
 		});
 
-
+		return anovaTraits;
 	},
 
 	formatAnovaTraits: function (traits) {
@@ -261,8 +165,6 @@ solGS.anova = {
 				jQuery(".anova_dropdown dd ul").hide();
 
 			e.preventDefault();
-
-
 		});
 
 	},
@@ -295,24 +197,124 @@ jQuery(document).ready( function() {
     var url = document.URL;
 
     if (url.match(/\/breeders_toolbox\/trial|breeders\/trial|\/solgs\/population\//)) {
-		solGS.anova.checkTrialDesign();
+		solGS.anova.checkTrialDesign().done(function (designRes){
+		if (designRes.Error) {
+				solGS.anova.showMessage(designRes.Error);
+				jQuery(solGS.anova.runDiv).hide();
+		} else {
+			solGS.anova.listAnovaTraits().done(function (traitsRes){
+				var traits = traitsRes.anova_traits;
+
+				if (traits.length) {
+					solGS.anova.formatAnovaTraits(traits);
+					jQuery(solGS.anova.runDiv).show();
+				} else {
+					solGS.anova.showMessage('This trial has no phenotyped traits.');
+					jQuery(solGS.anova.runDiv).hide();
+				}
+			});
+
+			solGS.anova.listAnovaTraits().fail(function (){
+				solGS.anova.showMessage("Error occured listing anova traits.");
+				jQuery(solGS.anova.runDiv).hide();
+			});
+		}	
+		});
+
+		solGS.anova.checkTrialDesign().fail( function () {
+			solGS.anova.showMessage("Error occured running the ANOVA.");
+			jQuery(solGS.anova.runDiv).show();
+		})
     }
 });
 
 jQuery(document).ready(function () {
-    jQuery(document).on("click", "#run_anova", function() {
+    jQuery(document).on("click", solGS.anova.runDiv, function() {
+		
 
-	var traitId = jQuery("#anova_selected_trait_id").val();
+		var traitId = jQuery("#anova_selected_trait_id").val();
 
-	if (traitId) {
+		if (traitId) {	
+			jQuery(solGS.anova.runDiv).hide();
+			solGS.anova.showMessage('Please wait...Querying the database for trait data...');
+			jQuery("#anova_canvas .multi-spinner-container").show();
 
-	    solGS.anova.queryPhenoData(traitId);
+			solGS.anova.queryPhenoData(traitId).done(function (queryRes) {	
+				if (queryRes.Error) {
+					solGS.anova.showMessage(queryRes.Error);
+					jQuery(solGS.anova.runDiv).show();
+					jQuery("#anova_canvas .multi-spinner-container").hide();
+				} else {
+						var traitsAbbrs = queryRes.traits_abbrs;
+						traitsAbbrs = JSON.parse(traitsAbbrs);
+						solGS.anova.showMessage('Validated trait data...Now running ANOVA...');
+	
+						solGS.anova.runAnovaAnalysis(traitsAbbrs).done(function (analysisRes) {
 
-	    jQuery("#run_anova").hide();
-	    jQuery("#anova_canvas .multi-spinner-container").show();
-	    solGS.anova.showMessage("Running ANOVA...please wait.");
+							if (analysisRes.Error) {
+								jQuery("#anova_canvas .multi-spinner-container").hide();
+								 jQuery(solGS.anova.msgDiv).empty();
+								solGS.anova.showMessage(analysisRes.Error);
+								jQuery(solGS.anova.runDiv).show();
+							} else {
+								jQuery("#anova_canvas .multi-spinner-container").hide();
+								jQuery(solGS.anova.msgDiv).empty();
+								jQuery(solGS.anova.runDiv).show();
+
+								var anovaTable = analysisRes.anova_html_table;
+								if (anovaTable) {
+									var anovaFile = analysisRes.anova_table_file;
+									var modelFile = analysisRes.anova_model_file;
+									var meansFile = analysisRes.adj_means_file;
+									var diagnosticsFile = analysisRes.anova_diagnostics_file;
+
+									var fileNameAnova = anovaFile.split('/').pop();
+									var fileNameModel = modelFile.split('/').pop();
+									var fileNameMeans = meansFile.split('/').pop();
+									var fileNameDiagnostics = diagnosticsFile.split('/').pop()
+									anovaFile = "<a href=\"" + anovaFile +  "\" download=" + fileNameAnova + ">Anova table</a>";
+									modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">Model summary</a>";
+									meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">Adjusted means</a>";
+
+									diagnosticsFile = "<a href=\"" + diagnosticsFile
+									+  "\" download=" + fileNameDiagnostics + ">Model diagnostics</a>";
+
+									jQuery("#anova_table")
+									.prepend('<div style="margin-top: 20px">' + anovaTable + '</div>'
+										+ '<br /> <strong>Download:</strong> '
+										+ anovaFile + ' | '
+										+ modelFile + ' | '
+										+ diagnosticsFile + ' | '
+										+ meansFile)
+									.show();
+
+							}  else {
+								jQuery("#anova_canvas .multi-spinner-container").hide();
+								solGS.anova.showMessage("There is no anova output for this dataset.");
+								jQuery(solGS.anova.runDiv).show();
+							}
+						}
+					});
+
+					solGS.anova.runAnovaAnalysis(traitsAbbrs).fail(function () {
+						jQuery("#anova_canvas .multi-spinner-container").hide();
+						solGS.anova.showMessage("Error occured running the anova analysis.");
+						jQuery(solGS.anova.runDiv).show();
+					});
+
+				}
+
+				solGS.anova.queryPhenoData(traitId).fail(function () {
+					solGS.anova.showMessage("Error occured querying the trial data.");
+					jQuery("#anova_canvas .multi-spinner-container").hide();
+					jQuery(solGS.anova.runDiv).show();
+				})
+
+				solGS.anova.clearTraitSelection();
+
+			});
 	} else {
-	    var msg = 'You need to select a trait first.'
+	    var msg = 'Please select a trait.'
 	    solGS.anova.anovaAlert(msg);
 	}
     });
