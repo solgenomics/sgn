@@ -94,7 +94,7 @@ jobs:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
           ref: ${{ steps.extract_branch.outputs.branch }}
-          submodules: 'recursive'
+#           submodules: 'recursive'
 
       - name: Get breedbase_dockerfile
         if: steps.extract_branch.outputs.branch == 'master'
@@ -107,7 +107,7 @@ jobs:
 
       - name: Get the submodules
         working-directory: ./breedbase_dockerfile
-        run: git submodule update --recursive --remote
+        run: git submodule update --init --recursive --remote
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
