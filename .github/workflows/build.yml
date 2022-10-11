@@ -87,7 +87,14 @@ jobs:
           ref: 'develop'
           submodules: 'recursive'
           
-#       TODO: add support for future and release branches
+      - name: Get breedbase_dockerfile
+        if: startsWith(steps.extract_branch.outputs.branch, 'release/')
+        uses: actions/checkout@master
+        with:
+          repository: Breeding-Insight/breedbase_dockerfile
+          path: breedbase_dockerfile
+          ref: steps.extract_branch.outputs.branch
+          submodules: 'recursive'
 
       - name: Get breedbase_dockerfile
         if: steps.extract_branch.outputs.branch != 'develop'
