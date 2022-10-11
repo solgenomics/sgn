@@ -434,22 +434,23 @@ is_deeply(\@all_project_types, [
           'Screen House',
           'Seed Multiplication',
           'Seedling Nursery',
+          'Sensory Trial',
           'Specialty Trial',
           'Uniform Yield Trial',
           'Variety Release Trial',
           'crossing_block_trial',
           'crossing_trial',
           'genetic_gain_trial',
+          'genotyping_project',
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
-	      'heterosis_trial',
-	      	      'misc_trial',
-	      'phenotyping_trial',
-
+	        'heterosis_trial',
+	      	'misc_trial',
+	        'phenotyping_trial',
           'pollinating_trial',
           'storage_trial'
-        ], "check get_all_project_types");
+      ], "check get_all_project_types");
 
 
 my $stock_count_rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { } );
@@ -473,7 +474,7 @@ my $td = CXGN::Trial::TrialDesign->new(
 
 my $number_of_plots = $number_of_reps * scalar(@$stock_list);
 # print STDERR "\n\n before calculating design! \n\n";
-  
+
 $td->calculate_design();
 # print STDERR "\n\nGot passed calculating design! \n\n";
 

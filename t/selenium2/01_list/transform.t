@@ -72,6 +72,6 @@ $d->while_logged_in_as('submitter', sub {
 
 });
 
+$d->driver->close();
 done_testing();
 
-$d->driver->close();

@@ -9,6 +9,7 @@ use SGN::Test::WWW::WebDriver;
 my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->get_ok('/tools/blast');
+sleep(5);
 
 #my $example = $t->find_element_ok('input_example', 'id', 'find input example link');
 #$example->click();
@@ -27,12 +28,13 @@ $input_box->send_keys($test_sequence);
 my $submit = $t->find_element_ok('submit_blast_button', 'id', 'find blast submit button');
 $submit->click();
 
-sleep(10);
+sleep(15);
 
 my $elem = $t->driver->find_element('SGN_output', 'id')->get_attribute('innerHTML');
 ok(lc($elem) =~ m/query[:\s]*1[\s]*aattcggcaccagtaaattttcccaaaggtttcaaaaatgaaaatttt/, "find aligned seq");
 
-done_testing();
 $t->driver->close();
+done_testing();
+
 
 

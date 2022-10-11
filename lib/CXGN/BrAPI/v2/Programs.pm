@@ -225,30 +225,30 @@ sub store {
 		my $desc = $params->{objective} || 'N/A'; # needs an objective due to db constraints
 		my $external_references = $params->{externalReferences};
 
-		my $p = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+		my $p = CXGN::BreedersToolbox::Projects->new({
+			schema              => $schema,
+			name                => $name,
+			description         => $desc,
+			external_references => $external_references,
+        });
 
-		my $rs = $schema->resultset("Project::Project")->search(
-			{
-				name => $name,
-			});
-		if ($rs->count() > 0) {
-			my $err_msg = "A breeding program with name '$name' already exists.";
-			warn $err_msg;
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_msg, 409);
-		}
-
-		my $new_program = $p->new_breeding_program($name, $desc, $external_references);
+		my $new_program = $p->store_breeding_program();
 
 		if ($new_program->{'error'}) {
 			warn $new_program->{'error'};
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, $new_program->{'error'}, 500);
+
+			my $code = 500;
+			if($new_program->('nameExists') == 1) {
+				$code = 409;
+			}
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $new_program->{'error'}, $code);
 		}
 
 		print STDERR "New program is " . Dumper($new_program) . "\n";
 		push @program_ids, $new_program;
 
 	}
-	
+
 	my %result;
 	my $count = scalar @program_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
@@ -288,7 +288,7 @@ sub update {
 	$row->insert();
 	my $project_id = $row->project_id();
 	push @program_ids, $project_id;
-	
+
 	my %result;
 	my $count = scalar @program_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);

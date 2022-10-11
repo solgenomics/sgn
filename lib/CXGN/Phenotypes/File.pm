@@ -40,9 +40,9 @@ sub BUILD {
 
     if ($self->remove_quotes()) {
 	foreach my $k (@keys) { 
-	    print STDERR "Removing quotes from $k...";
+	    #print STDERR "Removing quotes from $k...";
 	    $k=~ s/^\"(.*)\"$/$1/;
-	    print STDERR "Now $k...\n";
+	    #print STDERR "Now $k...\n";
 	}
     }
     
@@ -55,9 +55,9 @@ sub BUILD {
 	my @fields = split /\t/, $lines[$i];
 	for(my $n=0; $n <@keys; $n++) {
 	    if ($self->remove_quotes()) {
-		print STDERR "Removing quotes from $fields[$n]...";
+		#print STDERR "Removing quotes from $fields[$n]...";
 		$fields[$n]=~ s/^\"(.*)\"$/$1/;
-		print STDERR "Now $fields[$n]...\n"; 
+		#print STDERR "Now $fields[$n]...\n"; 
 	    }
 	    
 	    if (exists($fields[$n]) && defined($fields[$n])) {

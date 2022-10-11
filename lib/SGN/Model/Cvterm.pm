@@ -316,4 +316,37 @@ sub get_components_from_trait {
     return \@component_cvterm_ids;
 }
 
+
+=head2 get_cv_names_from_db_name
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_cv_names_from_db_name {
+    my $self = shift;
+    my $schema = shift;
+    my $db_name = shift;
+
+    
+    my $q = "select distinct(cv.name) from db join dbxref using(db_id) join cvterm using(dbxref_id) join cv using(cv_id) where db.name=?";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($db_name);
+    
+    my @cv_names;
+
+    while (my $cvn = $h->fetchrow_array()) { 
+	push @cv_names, $cvn;
+    }
+
+    return @cv_names;
+
+}
+    
+
 1;
