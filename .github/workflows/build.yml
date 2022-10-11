@@ -113,7 +113,7 @@ jobs:
         working-directory: ./breedbase_dockerfile/cxgn/sgn
         run: |
           git fetch
-          git switch ${{steps.extract_branch.outputs.branch}}
+          git checkout ${{steps.extract_branch.outputs.branch}}
 
       - name: Debug sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
