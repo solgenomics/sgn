@@ -109,11 +109,16 @@ jobs:
 #         working-directory: ./breedbase_dockerfile
 #         run: git submodule update --init --recursive --remote
 
+      - name: List sgn branches
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: |
+          git branch
+
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
         run: |
           git fetch
-          git switch ${{ github.sha }}
+          git switch ${GITHUB_SHA}
 
       - name: Debug sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
