@@ -73,8 +73,8 @@ function PedigreeViewer(server,auth,version,urlFunc){
         
         function load_nodes(stock_ids,callback){
             var germplasm = brapijs.data(stock_ids);
-            var pedigrees = germplasm.germplasm_pedigree(function(d){return {'germplasmDbId':d}});
-            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d}},"map");
+            var pedigrees = germplasm.germplasm_pedigree(function(d){return {'germplasmDbId':d,'pageSize':1000}});
+            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d,'pageSize':1000}},"map");
             pedigrees.join(progenies,germplasm).filter(function(ped_pro_germId){
                 if (ped_pro_germId[0]===null || ped_pro_germId[1]===null) {
                     console.log("Failed to load progeny or pedigree for "+ped_pro_germId[2]);
@@ -84,27 +84,46 @@ function PedigreeViewer(server,auth,version,urlFunc){
             }).map(function(ped_pro_germId){
                 var mother = null, 
                     father = null;
-                if(ped_pro_germId[0].parent1Type=="FEMALE"){
-                    mother = ped_pro_germId[0].parent1DbId;
+
+                if(version=='v1.3'){
+                    if(ped_pro_germId[0].parent1Type=="FEMALE"){
+                        mother = ped_pro_germId[0].parent1DbId;
+                    }
+                    if(ped_pro_germId[0].parent1Type=="MALE"){
+                        father = ped_pro_germId[0].parent1DbId;
+                    }
+                    if(ped_pro_germId[0].parent2Type=="FEMALE"){
+                        mother = ped_pro_germId[0].parent2DbId;
+                    }
+                    if(ped_pro_germId[0].parent2Type=="MALE"){
+                        father = ped_pro_germId[0].parent2DbId;
+                    }
+                    return {
+                        'id':ped_pro_germId[2],
+                        'mother_id':mother,
+                        'father_id':father,
+                        'name':ped_pro_germId[1].defaultDisplayName,
+                        'children':ped_pro_germId[1].progeny.filter(Boolean).map(function(d){
+                            return d.germplasmDbId;
+                        })
+                    };
+                } else {
+                    var i = ped_pro_germId[0].parents.map(function(e) { return e.parentType; }).indexOf('FEMALE');
+                    var j = ped_pro_germId[0].parents.map(function(e) { return e.parentType; }).indexOf('MALE');
+
+                    if(i>=0) mother = ped_pro_germId[0].parents[i].germplasmDbId;
+                    if(j>=0) father = ped_pro_germId[0].parents[j].germplasmDbId;
+
+                    return {
+                        'id':ped_pro_germId[2],
+                        'mother_id':mother,
+                        'father_id':father,
+                        'name':ped_pro_germId[1].germplasmName,
+                        'children':ped_pro_germId[1].progeny.filter(Boolean).map(function(d){
+                            return d.germplasmDbId;
+                        })
+                    };
                 }
-                if(ped_pro_germId[0].parent1Type=="MALE"){
-                    father = ped_pro_germId[0].parent1DbId;
-                }
-                if(ped_pro_germId[0].parent2Type=="FEMALE"){
-                    mother = ped_pro_germId[0].parent2DbId;
-                }
-                if(ped_pro_germId[0].parent2Type=="MALE"){
-                    father = ped_pro_germId[0].parent2DbId;
-                }
-                return {
-                    'id':ped_pro_germId[2],
-                    'mother_id':mother,
-                    'father_id':father,
-                    'name':ped_pro_germId[1].defaultDisplayName,
-                    'children':ped_pro_germId[1].progeny.filter(Boolean).map(function(d){
-                        return d.germplasmDbId;
-                    })
-                };
             }).each(function(node){
                 loaded_nodes[node.id] = node;
             }).all(callback);
@@ -394,7 +413,7 @@ function PedigreeViewer(server,auth,version,urlFunc){
             allNodes.filter(function(d){return d.type=="node-group"})
               .style("cursor", "pointer")
               .on("click",function(d){
-                layout.pdgtree.excludeFromGrouping(d.value.slice(0,10).map(function(d){return d.id;}));
+                layout.pdgtree.excludeFromGrouping(d.value.slice(0,20).map(function(d){return d.id;}));
                 drawTree(d3.transition().duration(700).ease(d3.easeLinear));
             });
             var oldNodes = nodes.exit().remove();

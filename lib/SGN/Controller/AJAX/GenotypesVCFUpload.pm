@@ -30,6 +30,7 @@ use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
 use File::Basename qw | basename dirname|;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -46,6 +47,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $transpose_vcf_for_loading = 1;
     my @error_status;
     my @success_status;
@@ -81,12 +83,44 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->detach();
     }
 
+    my $project_id = $c->req->param('upload_genotype_project_id') || undef;
+    my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
+    my $organism_species = $c->req->param('upload_genotypes_species_name_input');
+    my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
+    my $project_name = $c->req->param('upload_genotype_vcf_project_name');
+    my $location_id = $c->req->param('upload_genotype_location_select');
+    my $year = $c->req->param('upload_genotype_year_select');
+    my $breeding_program_id = $c->req->param('upload_genotype_breeding_program_select');
+    my $obs_type = $c->req->param('upload_genotype_vcf_observation_type');
+    my $genotyping_facility = $c->req->param('upload_genotype_vcf_facility_select');
+    my $description = $c->req->param('upload_genotype_vcf_project_description');
+    my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
+    my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
+    my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
+    my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
+    my $add_accessions;
+    if ($add_new_accessions){
+        $add_accessions = 1;
+        $obs_type = 'accession';
+    }
+    my $include_igd_numbers;
+    if ($contains_igd){
+        $include_igd_numbers = 1;
+    }
+    my $include_lab_numbers;
+    my $accept_warnings_input = $c->req->param('upload_genotype_accept_warnings');
+    my $accept_warnings;
+    if ($accept_warnings_input){
+        $accept_warnings = 1;
+    }
+
     #archive uploaded file
     my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
     my $upload_tassel_hdf5 = $c->req->upload('upload_genotype_tassel_hdf5_file_input');
     my $upload_transposed_vcf = $c->req->upload('upload_genotype_transposed_vcf_file_input');
     my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
     my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
+    my $upload_ssr_data = $c->req->upload('upload_genotype_ssr_file_input');
 
     if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
         $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
@@ -122,11 +156,12 @@ sub upload_genotype_verify_POST : Args(0) {
             my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
             my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
 
-            open (my $Fout, ">", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
-            open (my $F, "<", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+            open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+            open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
             my @outline;
             my $lastcol;
             while (<$F>) {
+		$_ =~ s/\r//g;
                 if ($_ =~ m/^\##/) {
                     print $Fout $_;
                 } else {
@@ -191,11 +226,12 @@ sub upload_genotype_verify_POST : Args(0) {
 
         my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/fileXXXX');
 
-        open (my $Fout, ">", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
-        open (my $F, "<", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+        open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+        open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
         my @outline;
         my $lastcol;
         while (<$F>) {
+	    $_ =~ s/\r//g;
             if ($_ =~ m/^\##/) {
                 print $Fout $_;
             } else {
@@ -233,6 +269,10 @@ sub upload_genotype_verify_POST : Args(0) {
         $subdirectory = "genotype_intertek_upload";
         $parser_plugin = 'IntertekCSV';
 
+        if ($obs_type eq 'accession') {
+            $include_lab_numbers = 1;
+        }
+
         my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
         my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();
 
@@ -256,6 +296,13 @@ sub upload_genotype_verify_POST : Args(0) {
         unlink $upload_inteterk_marker_info_tempfile;
     }
 
+    if ($upload_ssr_data) {
+        $upload_original_name = $upload_ssr_data->filename();
+        $upload_tempfile = $upload_ssr_data->tempname;
+        $subdirectory = "ssr_data_upload";
+        $parser_plugin = 'SSRExcel';
+    }
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -274,41 +321,6 @@ sub upload_genotype_verify_POST : Args(0) {
         push @success_status, "File $upload_original_name saved in archive.";
     }
     unlink $upload_tempfile;
-
-    my $project_id = $c->req->param('upload_genotype_project_id') || undef;
-    my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
-    my $organism_species = $c->req->param('upload_genotypes_species_name_input');
-    my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
-    my $project_name = $c->req->param('upload_genotype_vcf_project_name');
-    my $location_id = $c->req->param('upload_genotype_location_select');
-    my $year = $c->req->param('upload_genotype_year_select');
-    my $breeding_program_id = $c->req->param('upload_genotype_breeding_program_select');
-    my $obs_type = $c->req->param('upload_genotype_vcf_observation_type');
-    my $genotyping_facility = $c->req->param('upload_genotype_vcf_facility_select');
-    my $description = $c->req->param('upload_genotype_vcf_project_description');
-    my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
-    my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
-    my $contains_lab_numbers = $c->req->param('upload_genotype_vcf_include_lab_numbers');
-    my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
-    my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
-    my $add_accessions;
-    if ($add_new_accessions){
-        $add_accessions = 1;
-        $obs_type = 'accession';
-    }
-    my $include_igd_numbers;
-    if ($contains_igd){
-        $include_igd_numbers = 1;
-    }
-    my $include_lab_numbers;
-    if ($contains_lab_numbers){
-        $include_lab_numbers = 1;
-    }
-    my $accept_warnings_input = $c->req->param('upload_genotype_accept_warnings');
-    my $accept_warnings;
-    if ($accept_warnings_input){
-        $accept_warnings = 1;
-    }
 
     #if protocol_id provided, a new one will not be created
     if ($protocol_id){
@@ -345,7 +357,7 @@ sub upload_genotype_verify_POST : Args(0) {
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
         igd_numbers_included => $include_igd_numbers,
-        lab_numbers_included => $include_lab_numbers
+        # lab_numbers_included => $include_lab_numbers
     });
     $parser->load_plugin($parser_plugin);
 
@@ -458,7 +470,7 @@ sub upload_genotype_verify_POST : Args(0) {
             $store_genotypes->store_identifiers();
         }
 
-        print STDERR "Done loading first line, moving on...\n";    
+        print STDERR "Done loading first line, moving on...\n";
 
         my $continue_iterate = 1;
         while ($continue_iterate == 1) {
@@ -549,15 +561,87 @@ sub upload_genotype_verify_POST : Args(0) {
         $store_genotypes->store_metadata();
         $store_genotypes->store_identifiers();
         $return = $store_genotypes->store_genotypeprop_table();
-    }
-    else {
+
+    } elsif ($parser_plugin eq 'SSRExcel') {
+        my $parsed_data = $parser->parse();
+        print STDERR "SSR PARSED DATA =".Dumper($parsed_data)."\n";
+        my $parse_errors;
+        if (!$parsed_data) {
+            my $return_error = '';
+            if (!$parser->has_parse_errors() ){
+                $return_error = "Could not get parsing errors";
+                $c->stash->{rest} = {error_string => $return_error,};
+            } else {
+                $parse_errors = $parser->get_parse_errors();
+                #print STDERR Dumper $parse_errors;
+                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                    $return_error=$return_error.$error_string."<br>";
+                }
+            }
+            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
+            $c->detach();
+        }
+
+        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+        my $genotype_info = $parsed_data->{genotypes_info};
+
+        my @protocol_id_list;
+        push @protocol_id_list, $protocol_id;
+        my $genotypes_search = CXGN::Genotype::Search->new({
+        	bcs_schema=>$schema,
+        	people_schema=>$people_schema,
+        	protocol_id_list=>\@protocol_id_list,
+        });
+        my $result = $genotypes_search->get_pcr_genotype_info();
+        my $protocol_marker_names = $result->{'marker_names'};
+        my $previous_protocol_marker_names = decode_json $protocol_marker_names;
+
+        my %protocolprop_info;
+        $protocolprop_info{'sample_observation_unit_type_name'} = 'accession';
+        $protocolprop_info{'marker_names'} = $previous_protocol_marker_names;
+
+        $store_args->{genotype_info} = $genotype_info;
+        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
+        $store_args->{protocol_info} = \%protocolprop_info;
+        $store_args->{observation_unit_type_name} = 'accession';
+        $store_args->{genotyping_data_type} = 'ssr';
+
+        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+        my $verified_errors = $store_genotypes->validate();
+        if (scalar(@{$verified_errors->{error_messages}}) > 0){
+            my $error_string = join ', ', @{$verified_errors->{error_messages}};
+            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+            $c->detach();
+        }
+        if (scalar(@{$verified_errors->{warning_messages}}) > 0){
+            #print STDERR Dumper $verified_errors->{warning_messages};
+            my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+            if (!$accept_warnings){
+                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+                $c->detach();
+            }
+        }
+
+        $store_genotypes->store_metadata();
+        $return = $store_genotypes->store_identifiers();
+
+    } else {
         print STDERR "Parser plugin $parser_plugin not recognized!\n";
         $c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
         $c->detach();
     }
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    my $basepath = $c->config->{basepath};
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$dbname, } );
+    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
+
+    # Rebuild and refresh the materialized_markerview table
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
 
     $c->stash->{rest} = $return;
 }

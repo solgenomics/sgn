@@ -35,9 +35,8 @@ $facilities => ();
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'Genotyping Plates', collapsible=>1, collapsed=>0, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Add/Upload Genotyping Plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_genotyping_data_link">Upload Genotyping Data (VCF or Intertek Format)</button>' &>
+    <&| /page/info_section.mas, title=>'Genotyping Plates', collapsible=>1, collapsed=>0, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_project_link">Add Genotyping Project</button><button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Add/Upload Genotyping Plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_genotyping_data_link">Upload Genotyping Data</button>' &>
         <& /breeders_toolbox/genotyping_trials/trials.mas, trials_by_breeding_project=>$genotyping_trials_by_breeding_project, locations=>$locations,  breeding_programs=>$breeding_programs, facilities=>$facilities &>
     </&>
 
 </div>
-

@@ -11,6 +11,8 @@ use Moose;
 use MooseX::FollowPBP;
 use Try::Tiny;
 use Data::Dumper;
+use CXGN::Stock;
+use JSON;
 
 =head1 ACCESSORS
 
@@ -61,11 +63,11 @@ has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolo
 
 =head2 set_design_type(), get_design_type(), has_design_type()
 
-The type of the design. CBSD, etc. Required.
+The type of the design. CBSD, etc. Optional.
 
 =cut
 
-has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
+has 'design_type' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_design_type', required => 0);
 
 =head2 set_design(), get_design(), has_design()
 
@@ -163,6 +165,14 @@ An name for an operator performing the action.
 =cut
 
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
+
+=head2 set_owner_id(), get_owner_id()
+
+An owner id
+
+=cut
+
+has 'owner_id' => (isa => 'Int', is => 'rw', required => 0);
 
 =head2 set_source_stock_types(), get_source_stock_types()
 
@@ -290,6 +300,8 @@ has 'cross_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'family_name_cvterm_id' => (isa => 'Int', is => 'rw');
 
+has 'facility_identifier_cvterm_id' => (isa => 'Int', is => 'rw');
+
 sub BUILD {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema();
@@ -374,6 +386,8 @@ sub BUILD {
 
     $self->set_family_name_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id());
 
+    $self->set_facility_identifier_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'facility_identifier', 'stock_property')->cvterm_id());
+
 }
 
 sub validate_design {
@@ -393,6 +407,7 @@ sub store {
     my $nd_experiment_type_id = $self->get_nd_experiment_type_id();
     my $stock_type_id = $self->get_stock_type_id();
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
+    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
 
     my @source_stock_types = @{$self->get_source_stock_types()};
 
@@ -589,6 +604,12 @@ sub store {
             if ($design{$key}->{ncbi_taxonomy_id}) {
                 $ncbi_taxonomy_id = $design{$key}->{ncbi_taxonomy_id};
             }
+            my $additional_info = $design{$key}->{additional_info} ? encode_json $design{$key}->{additional_info} : undef;
+
+            my $facility_identifier;
+            if ($design{$key}->{facility_identifier}) {
+                $facility_identifier = $design{$key}->{facility_identifier};
+            }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
             if ($stock_data{$stock_name}) {
@@ -657,6 +678,12 @@ sub store {
                 }
                 if ($ncbi_taxonomy_id) {
                     push @plot_stock_props, { type_id => $self->get_ncbi_taxonomy_id_cvterm_id, value => $ncbi_taxonomy_id };
+                }
+                if ($additional_info) {
+                    push @plot_stock_props, { type_id => $additional_info_type_id, value => $additional_info };
+                }
+                if ($facility_identifier) {
+                    push @plot_stock_props, { type_id => $self->get_facility_identifier_cvterm_id, value => $facility_identifier };
                 }
 
                 my @plot_subjects;
@@ -746,7 +773,7 @@ sub store {
                 );
 
 		#print STDERR "STOCK TYPE ID NOW: $stock_type_id\n";
-                my $plot = $stock_rs->create({
+                my $plot_params = {
                     organism_id => $organism_id_checked,
                     name       => $plot_name,
                     uniquename => $plot_name,
@@ -755,9 +782,21 @@ sub store {
                     stock_relationship_subjects => \@plot_subjects,
                     stock_relationship_objects => \@plot_objects,
                     nd_experiment_stocks => \@plot_nd_experiment_stocks,
-                });
+                };
+                my $plot;
+                if (! defined $plant_names || scalar $plant_names eq 0) {
+                    $plot = $stock_rs->create($plot_params);
+                } else {
+                    $plot = $stock_rs->find_or_create($plot_params);
+                }
                 $new_plot_id = $plot->stock_id();
                 $new_stock_ids_hash{$plot_name} = $new_plot_id;
+
+                my %design = %{$self->get_design()};
+                my $sp_person_id = $self->get_owner_id;
+                my $username = $self->get_operator;
+                my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$new_plot_id});
+                $stock->associate_owner($sp_person_id,$sp_person_id,$username,"");
 
                 if ($seedlot_stock_id && $seedlot_name){
                     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
@@ -803,6 +842,9 @@ sub store {
                     if ($col_number) {
                         push @plant_stock_props, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                     }
+                    if ($additional_info) {
+                        push @plant_stock_props, { type_id => $additional_info_type_id, value => $additional_info };
+                    }
 
                     my @plant_objects = (
                         { type_id => $self->get_plant_of_cvterm_id, subject_id => $new_plot_id }
@@ -813,6 +855,7 @@ sub store {
                     my @plant_nd_experiment_stocks = (
                         { type_id => $self->get_nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
                     );
+
 
                     my $plant = $stock_rs->create({
                         organism_id => $organism_id_checked,
@@ -826,6 +869,12 @@ sub store {
                     });
                     $new_stock_ids_hash{$plant_name} = $plant->stock_id();
                     $plant_index_number++;
+                }
+
+                # Set the study to have plant entries
+                if (scalar @$plant_names > 0) {
+                    my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+                    $study->create_projectprops({ 'project_has_plant_entries' => 1 });
                 }
             }
             #Create subplot entry if given. Currently this is for the splitplot trial creation.
@@ -890,11 +939,12 @@ sub store {
             print STDERR "Saving treatments\n";
             my %treatments_hash = %{$design{'treatments'}};
 
-            foreach my $treatment_name(keys %treatments_hash){
+            foreach my $treatment_name (sort keys %treatments_hash) {
                 my $stock_names;
                 my $management_factor_type;
                 my $management_factor_year;
                 my $management_factor_date;
+                my $management_factor_description = '';
 #                my %info_hashes = %{$treatments_hash{$treatment_name}};
                 my $info_value = $treatments_hash{$treatment_name};
                 my $info_type = ref($info_value);
@@ -904,6 +954,7 @@ sub store {
                     $management_factor_type = $info_hashes{'new_treatment_type'};
                     $management_factor_year = $info_hashes{'new_treatment_year'};
                     $management_factor_date = $info_hashes{'new_treatment_date'};
+                    $management_factor_description = $info_hashes{'new_treatment_description'} || 'No description';
                 } else {
                     $stock_names = $treatments_hash{$treatment_name};
                 }
@@ -968,7 +1019,7 @@ sub store {
                 my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
                 my $treatment_project = $chado_schema->resultset('Project::Project')->create({
                     name => $project_treatment_name,
-                    description => '',
+                    description => $management_factor_description,
                     projectprops => \@treatment_project_props,
                     project_relationship_subject_projects => \@treatment_relationships,
                     nd_experiment_projects => \@treatment_nd_experiment_project

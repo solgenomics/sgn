@@ -1,0 +1,26 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/model/save_gebvs.mas - save gebvs
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+
+ <& /util/import_javascript.mas, classes => ["solGS.analysisSave"] &>
+ <div id="gebvs_output">
+ 		 <button id="save_gebvs" class="btn btn-success">Save GEBVs</button>	
+		<& /solgs/spinner.mas &>
+		<div id="gebvs_save_message" class="message"" style="display:none"></div>
+</div>
+<br />

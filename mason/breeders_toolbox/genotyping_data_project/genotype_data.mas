@@ -2,22 +2,23 @@
 $trial_id
 </%args>
 
-<table id="genotyping_data_project_genotype_data" width="100%" class="table table-hover table-striped">
-<thead>
-  <tr>
-      <th>Protocol</th>
-      <th>Sample Name</th>
-      <th>Sample Type</th>
-      <th>Accession Name</th>
-      <th>Synonyms</th>
-      <th>Description</th>
-      <th>Number of Marker Scores</th>
-      <th>IGD Number</th>
-      <th>Download</th>
-</tr>
-</thead>
-</table>
-
+<div style="overflow:scroll">
+    <table id="genotyping_data_project_genotype_data" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Protocol</th>
+                <th>Sample Name</th>
+                <th>Sample Type</th>
+                <th>Accession Name</th>
+                <th>Synonyms</th>
+                <th>Description</th>
+                <th>Number of Marker Scores</th>
+                <th>IGD Number</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+    </table>
+</div>
 
 <script>
 
@@ -33,4 +34,3 @@ jQuery(document).ready(function () {
 });
 
 </script>
-

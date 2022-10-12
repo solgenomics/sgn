@@ -1,11 +1,11 @@
 <%args>
 
+$pop_id => ''
 $training_pop_id
+$training_pop_name
+$training_pop_desc
 $show_data => 1;
-$traits_form => ''
-$all_traits_file
-$project_name
-$project_desc
+$training_pop_traits_details =>''
 $stocks_no
 $markers_no
 $traits_no
@@ -19,29 +19,34 @@ $genotyping_protocol_id
 <%perl>
 
 #my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
- 
+
+if ($pop_id && !$training_pop_id) {
+$training_pop_id = $pop_id;
+}
+
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
+<& /util/import_javascript.mas, classes => ['solGS.solGS', 'solGS.genotypingProtocol'] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <br />
 <br />
 
-<& /page/page_title.mas, 
-   title => "Select one or more traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+<& /page/page_title.mas,
+   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
 &>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Training population summary",
   &>
 
  <& population/summary.mas,
-    project_id   => $training_pop_id,
-    project_name => $project_name,
-    project_desc => $project_desc,
+    training_pop_id   => $training_pop_id,
+    training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
@@ -53,54 +58,53 @@ $genotyping_protocol_id
 
 % if ($show_data) {
 % if ($markers_no > 1) {
- 
 
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Train model"
 &>
-       
-<& population/select_traits.mas, 
+
+<& population/traits_list.mas,
    training_pop_id    => $training_pop_id,
-  traits_form        => $traits_form,
-  all_traits_file    => $all_traits_file,
+  training_pop_traits_details => $training_pop_traits_details,
   genotyping_protocol_id => $genotyping_protocol_id,
 &>
 
+
 </&>
 
-     
-  <& population/correlation.mas, 
-     training_pop_id  => $training_pop_id,
+
+  <& /solgs/tools/correlation/correlation.mas,
+     corre_pop_id  => $training_pop_id,
   &>
 
 % if ($training_pop_id !~ /list|dataset/) {
 
-    <& /solgs/anova/analysis.mas,
+    <& /solgs/tools/anova/analysis.mas,
    training_pop_id => $training_pop_id,
   &>
 
 
-  <& /tools/heritability/heritability.mas, 
+  <& /tools/heritability/heritability.mas,
      pop_id  => $training_pop_id,
     &>
 
 %}
-    
-  <& population/acronym.mas,
-   acronym => $acronym,
-    &>
 
+  <& /solgs/population/trait_acronyms.mas &>
+  <& /solgs/population/download.mas &>
+  
 %} else {
 
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Genotype Data"
 &>
 
-  <div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+  <div id="traits_list_message"  class="message">
     <p>There is no genotype data for this population.</p>
   </div>
 
@@ -108,9 +112,9 @@ $genotyping_protocol_id
 %}
 %} else {
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Data Accessibility",
   &>
 
@@ -119,7 +123,10 @@ $genotyping_protocol_id
 </&>
 %}
 
+ <& /solgs/population/hidden_input.mas,
+      training_pop_id  => $training_pop_id,
+     training_pop_name => $training_pop_name,
+     training_pop_desc => $training_pop_desc,
+     genotyping_protocol_id => $genotyping_protocol_id,
 
-<input type="hidden" id="population_id" value="<% $training_pop_id %>" />
-<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
-
+   &>

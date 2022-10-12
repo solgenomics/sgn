@@ -7,6 +7,8 @@ $editable_stock_props_definitions => {}
 $programs
 $locations
 $crossing_trials
+$maintenance_enabled => undef
+$user_role => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -17,7 +19,7 @@ $crossing_trials
 }
 </style>
 
-  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses' ] &>
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses', 'jqueryui' ] &>
 
 <&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>1 &>
     <div class="well well-sm">
@@ -45,7 +47,13 @@ $crossing_trials
     </div>
 </&>
 
-<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="add_seedlot_button">Add New Seedlot</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_bulk_upload">Upload Seedlots</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>'&>
+<%perl>
+    my $maintenance_button = $maintenance_enabled ? ' <button onclick="location.href=\'/breeders/seedlot/maintenance\'" class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_record_maintenance">Seedlot Maintenance</button>' : '';
+    my $seedlot_subtitle = !!$c->user()
+        ? '<div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Create Seedlot(s)&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="add_seedlot_button">Add New Seedlot</a></li><li><a href="#" name="seedlot_bulk_upload">Upload Seedlots</a></li><li><a href="#" name="create_seedlots_trial_button">Create Seedlots from Trial</a></li></ul></div> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>' . $maintenance_button
+        : "Login to add or upload seedlots";
+</%perl>
+<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => $seedlot_subtitle &>
 
 <br/>
 
@@ -93,6 +101,12 @@ $crossing_trials
             <label class="col-sm-3 control-label">Location: </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_location" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Box Name: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_box_name" type="text" />
             </div>
         </div>
         <div class="form-group form-group-sm">
@@ -157,14 +171,14 @@ $crossing_trials
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
-<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
-<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
-<& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
+<& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
+<& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
+<& /breeders_toolbox/cross/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
+<& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
+<& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
 
 <script>
 jQuery(document).ready(function(){
-
-
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({
        source: '/ajax/stock/seedlot_name_autocomplete',
 });
@@ -180,7 +194,7 @@ jQuery(document).ready(function(){
             'ordering'  : false,
             'processing': true,
             'serverSide': true,
-	   
+
             'lengthMenu': [10,20,50,100,1000],
 
 	      columns: [
@@ -196,7 +210,7 @@ jQuery(document).ready(function(){
             { title: "Quality", "data": "seedlot_quality" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
-	    
+
             'ajax': { 'url': '/ajax/breeders/seedlots',
                   'data': function(d) {
                      d.seedlot_name  = jQuery('#search_seedlot_form_seedlot_name').val();
@@ -204,6 +218,7 @@ jQuery(document).ready(function(){
                      d.minimum_count   = jQuery('#search_seedlot_form_minimum_count').val();
                      d.minimum_weight   = jQuery('#search_seedlot_form_minimum_weight').val();
                      d.location     = jQuery('#search_seedlot_form_location').val();
+                     d.box_name = jQuery('#search_seedlot_form_box_name').val();
                      d.contents_accession = jQuery('#search_seedlot_form_contents_accession').val();
                      d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();
                      d.exact_accession = jQuery('#exact_accession').is(":checked") ? 1 : 0;
@@ -211,10 +226,10 @@ jQuery(document).ready(function(){
                      d.quality = jQuery('#search_seedlot_form_quality').val();
                      d.only_good_quality = jQuery('#search_seedlot_form_only_good_quality_checkbox').is(":checked") ? 1 : 0;
 
- 
+
                 }
           },
-       
+
 	"fnInitComplete": function(oSettings, json) {
             if (!isLoggedIn()) {
                 jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h4>Please login to use lists!</h4></div>");
@@ -229,12 +244,12 @@ jQuery(document).ready(function(){
                     listType: 'seedlots',
                     listName: 'seedlots'
 		});
-		
+
             }
 	}});
        seedlots_table.draw();
    });
- 
+
     //jQuery('#submit_seedlot_search').click( function() {
     //    seedlots_table.search("available_seedlots_table").draw();
     //});

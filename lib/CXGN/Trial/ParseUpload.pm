@@ -14,6 +14,12 @@ has 'chado_schema' => (
     required => 1
 );
 
+has 'trial_id' => (
+  is => 'ro',
+  isa => 'Str',
+  required => 0
+);
+
 has 'filename' => (
     is => 'ro',
     isa => 'Str',
@@ -50,6 +56,13 @@ has 'trial_stock_type' => (
     required => 0,
     default => 'accession'
 );
+
+has 'facility_identifiers_included' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0,
+);
+
 
 sub parse {
   my $self = shift;

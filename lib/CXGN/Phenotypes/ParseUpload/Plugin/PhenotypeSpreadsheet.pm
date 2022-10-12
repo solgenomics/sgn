@@ -269,6 +269,8 @@ sub parse {
     }
 
     my $num_col_before_traits = $num_fixed_col + $num_predef_col;
+    print STDERR Dumper $num_col_before_traits;
+    my %composed_trait_name_map;
 
     for my $row ( 7 .. $row_max ) {
         my $plot_name;
@@ -285,23 +287,41 @@ sub parse {
                             $trait_name = $worksheet->get_cell(6,$col)->value();
                             if (defined($trait_name)) {
                                 if ($trait_name ne ''){
+				    if ($num_predef_col > 0) {
+					my @component_cvterm_names = ($trait_name);
+					for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
+					    if ($worksheet->get_cell($row,$predef_col)){
+						my $component_term = $worksheet->get_cell($row, $predef_col)->value();
+						push @component_cvterm_names, $component_term;
+					    }
+				        }
+					my $trait_name_composed = join "\|\|", @component_cvterm_names;
+					if (exists($composed_trait_name_map{$trait_name_composed})) {
+					    $trait_name = $composed_trait_name_map{$trait_name_composed};
+					}
+					else {
+					    my @component_cvterm_ids;
+					    foreach my $component_term (@component_cvterm_names) {
+						my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
+						push @component_cvterm_ids, $component_cvterm_id;
+					    }
+					    my $trait_name_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids);
+					    $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_name_cvterm_id, $composable_cvterm_format);
+					    print STDERR Dumper $trait_name_composed;
+					    if (!$trait_name) {
+						my $term_check = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name_composed, 'postcomposed_terms');
+						$trait_name = $term_check ? $term_check->name() : undef;
+					    }
+					    if (!$trait_name) {
+						my $term_check = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name_composed, 'composed_trait');
+						$trait_name = $term_check ? $term_check->name() : undef;
+					    }
+					    $composed_trait_name_map{$trait_name_composed} = $trait_name;
+					}
+				    }
 
-                                    if ($num_predef_col > 0) {
-                                        my @component_cvterm_ids;
-                                        for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
-                                            if ($worksheet->get_cell($row,$predef_col)){
-                                                my $component_term = $worksheet->get_cell($row, $predef_col)->value();
-                                                #print STDERR $component_term."\n";
-                                                my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
-                                                push @component_cvterm_ids, $component_cvterm_id;
-                                            }
-                                        }
-                                        my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
-                                        push @component_cvterm_ids, $trait_cvterm_id;
-                                        my $trait_name_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids);
-                                        $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_name_cvterm_id, $composable_cvterm_format);
-                                    }
-
+				    print STDERR Dumper $trait_name;
+				    if (!$trait_name){ die; }
                                     $traits_seen{$trait_name} = 1;
                                     my $value_string = '';
 

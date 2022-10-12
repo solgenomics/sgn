@@ -154,6 +154,8 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
 
     my @filter_input;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{nirs}->{device_id};
+        my $comments = $o->{nirs}->{comments};
         my $spectras = $o->{nirs}->{spectra};
         foreach my $spectra (@$spectras) {
             push @filter_input, {
@@ -166,13 +168,13 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
 
     my $nirs_dir = $c->tempfiles_subdir('/nirs_files');
     my $tempfile_string = $c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
-    my $filter_json_filepath = $c->config->{basepath}."/".$tempfile_string."_input_json";
-    my $output_csv_filepath = $c->config->{basepath}."/".$tempfile_string."_output.csv";
-    my $output_raw_csv_filepath = $c->config->{basepath}."/".$tempfile_string."_output_raw.csv";
-    my $output_outliers_filepath = $c->config->{basepath}."/".$tempfile_string."_output_outliers.csv";
+    my $filter_json_filepath = $c->config->{basepath}.$tempfile_string."_input_json";
+    my $output_csv_filepath = $c->config->{basepath}.$tempfile_string."_output.csv";
+    my $output_raw_csv_filepath = $c->config->{basepath}.$tempfile_string."_output_raw.csv";
+    my $output_outliers_filepath = $c->config->{basepath}.$tempfile_string."_output_outliers.csv";
 
     my $output_plot_filepath_string = $tempfile_string."_output_plot.png";
-    my $output_plot_filepath = $c->config->{basepath}."/".$output_plot_filepath_string;
+    my $output_plot_filepath = $c->config->{basepath}.$output_plot_filepath_string;
 
     my $json = JSON->new->utf8->canonical();
     my $filter_data_input_json = $json->encode(\@filter_input);
@@ -363,6 +365,8 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
 
     my @filter_input;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{nirs}->{device_id};
+        my $comments = $o->{nirs}->{comments};
         my $spectras = $o->{nirs}->{spectra};
         foreach my $spectra (@$spectras) {
             push @filter_input, {
@@ -471,10 +475,14 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
 
     my %parsed_data_agg_coalesced;
     while (my ($stock_name, $o) = each %parsed_data_agg) {
-       my $spectras = $o->{nirs}->{spectra};
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{protocol_id} = $protocol_id;
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $protocol_device_type;
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+        my $device_id = $o->{nirs}->{device_id};
+        my $comments = $o->{nirs}->{comments};
+        my $spectras = $o->{nirs}->{spectra};
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{protocol_id} = $protocol_id;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $protocol_device_type;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_id} = $device_id;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{comments} = $comments;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
     }
 
     ## Set metadata
@@ -487,6 +495,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
+    # print STDERR Dumper \%parsed_data_agg_coalesced;
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
@@ -547,7 +556,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my @error_status;
     my @warning_status;
 
-    my $parser = CXGN::Phenotypes::ParseUpload->new(); 
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $validate_type = "highdimensionalphenotypes spreadsheet transcriptomics";
     my $metadata_file_type = "transcriptomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
@@ -868,9 +877,13 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
 
     my %parsed_data_agg_coalesced;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{transcriptomics}->{device_id};
+        my $comments = $o->{transcriptomics}->{comments};
         my $spectras = $o->{transcriptomics}->{transcripts};
         $parsed_data_agg_coalesced{$stock_name}->{transcriptomics} = $spectras->[0];
         $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{protocol_id} = $protocol_id;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{device_id} = $device_id;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{comments} = $comments;
     }
 
     ## Set metadata
@@ -899,7 +912,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
-    
+
     });
 
     my $warning_status;
@@ -953,17 +966,33 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
     my $protocol_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_desc');
+
     my $protocol_equipment_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_type');
+    my $protocol_target = $c->req->param('upload_metabolomics_spreadsheet_protocol_target');
+    my $protocol_sample_collection = $c->req->param('upload_metabolomics_spreadsheet_protocol_sample_collection_protocol');
+    my $protocol_sample_extraction = $c->req->param('upload_metabolomics_spreadsheet_protocol_sample_extraction_protocol');
+    my $protocol_rawdata_transformation = $c->req->param('upload_metabolomics_spreadsheet_protocol_rawdata_transformation_protocol');
+    my $protocol_metabolite_identification = $c->req->param('upload_metabolomics_spreadsheet_protocol_metabolite_identification_protocol');
+
     my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
     my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
     my $protocol_phenotype_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_type');
     my $protocol_phenotype_units = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_units');
     my $protocol_chromatography_system_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_system_brand');
     my $protocol_chromatography_column_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_brand');
+
+    my $protocol_chromatography_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_type');
+    my $protocol_chromatography_autosampler_model = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_AutoSampler_Model');
+    my $protocol_chromatography_column_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_type');
+    my $protocol_chromatography_protocol = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_protocol');
+    my $protocol_mass_spectrometry_protocol = $c->req->param('upload_metabolomics_spreadsheet_protocol_mass_spectrometry_protocol');
+
     my $protocol_ms_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_brand');
-    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_type');
-    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_instrument_type');
-    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ion_mode');
+    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_mass_analyzer');
+    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_scan_polarity');
+    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_ion_source');
+    my $protocol_ms_scan_mz_range = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_scan_MZ_Range');
+    my $protocol_publication = $c->req->param('upload_metabolomics_spreadsheet_protocol_publication');
 
     if ($protocol_id && $protocol_name) {
         $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
@@ -973,11 +1002,11 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         $c->stash->{rest} = {error => ["Please give a protocol name and description, or select a previous protocol!"]};
         $c->detach();
     }
-    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc || !$protocol_phenotype_type || !$protocol_phenotype_units)) {
+    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc || !$protocol_phenotype_type || !$protocol_phenotype_units || !$protocol_target || !$protocol_sample_collection || !$protocol_sample_extraction || !$protocol_rawdata_transformation || !$protocol_metabolite_identification)) {
         $c->stash->{rest} = {error => ["Please give all protocol equipment descriptions, or select a previous protocol!"]};
         $c->detach();
     }
-    if (!$protocol_id && $protocol_equipment_type eq 'MS' && (!$protocol_chromatography_system_brand || !$protocol_chromatography_column_brand || !$protocol_ms_brand || !$protocol_ms_type || !$protocol_ms_instrument_type || !$protocol_ms_ion_mode)) {
+    if (!$protocol_id && $protocol_equipment_type eq 'MS' && (!$protocol_chromatography_system_brand || !$protocol_chromatography_column_brand || !$protocol_ms_brand || !$protocol_ms_type || !$protocol_ms_instrument_type || !$protocol_ms_ion_mode || !$protocol_chromatography_type || !$protocol_chromatography_column_type || !$protocol_chromatography_protocol || !$protocol_mass_spectrometry_protocol || !$protocol_ms_scan_mz_range)) {
         $c->stash->{rest} = {error => ["If defining a MS protocol please give all information fields!"]};
         $c->detach();
     }
@@ -1145,17 +1174,33 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
     my $protocol_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_desc');
+
     my $protocol_equipment_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_type');
+    my $protocol_target = $c->req->param('upload_metabolomics_spreadsheet_protocol_target');
+    my $protocol_sample_collection = $c->req->param('upload_metabolomics_spreadsheet_protocol_sample_collection_protocol');
+    my $protocol_sample_extraction = $c->req->param('upload_metabolomics_spreadsheet_protocol_sample_extraction_protocol');
+    my $protocol_rawdata_transformation = $c->req->param('upload_metabolomics_spreadsheet_protocol_rawdata_transformation_protocol');
+    my $protocol_metabolite_identification = $c->req->param('upload_metabolomics_spreadsheet_protocol_metabolite_identification_protocol');
+
     my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
     my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
     my $protocol_phenotype_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_type');
     my $protocol_phenotype_units = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_units');
     my $protocol_chromatography_system_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_system_brand');
     my $protocol_chromatography_column_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_brand');
+
+    my $protocol_chromatography_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_type');
+    my $protocol_chromatography_autosampler_model = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_AutoSampler_Model');
+    my $protocol_chromatography_column_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_type');
+    my $protocol_chromatography_protocol = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_protocol');
+    my $protocol_mass_spectrometry_protocol = $c->req->param('upload_metabolomics_spreadsheet_protocol_mass_spectrometry_protocol');
+
     my $protocol_ms_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_brand');
-    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_type');
-    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_instrument_type');
-    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ion_mode');
+    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_mass_analyzer');
+    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_scan_polarity');
+    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_ion_source');
+    my $protocol_ms_scan_mz_range = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_scan_MZ_Range');
+    my $protocol_publication = $c->req->param('upload_metabolomics_spreadsheet_protocol_publication');
 
     if ($protocol_id && $protocol_name) {
         $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
@@ -1165,11 +1210,11 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         $c->stash->{rest} = {error => ["Please give a protocol name and description, or select a previous protocol!"]};
         $c->detach();
     }
-    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc || !$protocol_phenotype_type || !$protocol_phenotype_units)) {
+    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc || !$protocol_phenotype_type || !$protocol_phenotype_units || !$protocol_target || !$protocol_sample_collection || !$protocol_sample_extraction || !$protocol_rawdata_transformation || !$protocol_metabolite_identification)) {
         $c->stash->{rest} = {error => ["Please give all protocol equipment descriptions, or select a previous protocol!"]};
         $c->detach();
     }
-    if (!$protocol_id && $protocol_equipment_type eq 'MS' && (!$protocol_chromatography_system_brand || !$protocol_chromatography_column_brand || !$protocol_ms_brand || !$protocol_ms_type || !$protocol_ms_instrument_type || !$protocol_ms_ion_mode)) {
+    if (!$protocol_id && $protocol_equipment_type eq 'MS' && (!$protocol_chromatography_system_brand || !$protocol_chromatography_column_brand || !$protocol_ms_brand || !$protocol_ms_type || !$protocol_ms_instrument_type || !$protocol_ms_ion_mode || !$protocol_chromatography_type || !$protocol_chromatography_column_type || !$protocol_chromatography_protocol || !$protocol_mass_spectrometry_protocol || !$protocol_ms_scan_mz_range)) {
         $c->stash->{rest} = {error => ["If defining a MS protocol please give all information fields!"]};
         $c->detach();
     }
@@ -1271,27 +1316,24 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         }
     }
 
-    my $protocol_equipment_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_type');
-    my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
-    my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
-    my $protocol_phenotype_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_type');
-    my $protocol_phenotype_units = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_units');
-    my $protocol_chromatography_system_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_system_brand');
-    my $protocol_chromatography_column_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_brand');
-    my $protocol_ms_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_brand');
-    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_type');
-    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_instrument_type');
-    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ion_mode');
-
     if (!$protocol_id) {
         my %metabolomics_protocol_prop = (
             header_column_names => \@metabolites,
             header_column_details => %metabolites_details,
             equipment_type => $protocol_equipment_type,
+
+            target => $protocol_target,
+            sample_collection_description => $protocol_sample_collection,
+            sample_extraction_description => $protocol_sample_extraction,
+            rawdata_transformation_descripson => $protocol_rawdata_transformation,
+            metabolite_identification_description => $protocol_metabolite_identification,
+
             equipment_description => $protocol_equipment_desc,
             data_process_description => $protocol_data_process_desc,
             phenotype_type => $protocol_phenotype_type,
-            phenotype_units => $protocol_phenotype_units
+            phenotype_units => $protocol_phenotype_units,
+
+            protocol_publication => $protocol_publication
         );
         if ($protocol_equipment_type eq 'MS') {
             $metabolomics_protocol_prop{chromatography_system_brand} = $protocol_chromatography_system_brand;
@@ -1300,6 +1342,13 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
             $metabolomics_protocol_prop{ms_type} = $protocol_ms_type;
             $metabolomics_protocol_prop{ms_instrument_type} = $protocol_ms_instrument_type;
             $metabolomics_protocol_prop{ms_ion_mode} = $protocol_ms_ion_mode;
+
+            $metabolomics_protocol_prop{chromatography_type} = $protocol_chromatography_type;
+            $metabolomics_protocol_prop{chromatography_autosampler_model} = $protocol_chromatography_autosampler_model;
+            $metabolomics_protocol_prop{chromatography_column_type} = $protocol_chromatography_column_type;
+            $metabolomics_protocol_prop{chromatography_protocol_description} = $protocol_chromatography_protocol;
+            $metabolomics_protocol_prop{mass_spectrometry_protocol_description} = $protocol_mass_spectrometry_protocol;
+            $metabolomics_protocol_prop{ms_scan_mz_range} = $protocol_ms_scan_mz_range;
         }
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
@@ -1316,9 +1365,13 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
 
     my %parsed_data_agg;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{metabolomics}->{device_id};
+        my $comments = $o->{metabolomics}->{comments};
         my $spectras = $o->{metabolomics}->{metabolites};
         $parsed_data_agg{$stock_name}->{metabolomics} = $spectras->[0];
         $parsed_data_agg{$stock_name}->{metabolomics}->{protocol_id} = $protocol_id;
+        $parsed_data_agg{$stock_name}->{metabolomics}->{device_id} = $device_id;
+        $parsed_data_agg{$stock_name}->{metabolomics}->{comments} = $comments;
     }
 
     ## Set metadata
@@ -1398,25 +1451,30 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
     });
-    my $accession_ids = $ds->accessions();
-    my $plot_ids = $ds->plots();
-    my $plant_ids = $ds->plants();
 
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
-        query_associated_stocks=>$query_associated_stocks,
-        accession_list=>$accession_ids,
-        plot_list=>$plot_ids,
-        plant_list=>$plant_ids
-    });
-    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    my $high_dimensional_phenotype_identifier_list = [];
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $ds->retrieve_high_dimensional_phenotypes(
+        $nd_protocol_id,
+        $high_dimensional_phenotype_type,
+        $query_associated_stocks,
+        $high_dimensional_phenotype_identifier_list
+    );
+
+    if ($data_matrix->{error}) {
+        $c->stash->{rest} = {error => $data_matrix->{error}};
+        $c->detach();
+    }
+
     # print STDERR Dumper $data_matrix;
     # print STDERR Dumper $identifier_metadata;
     # print STDERR Dumper $identifier_names;
+
+    if ($data_matrix->{error}) {
+        $c->stash->{rest} = {error => $data_matrix->{error}};
+        $c->detach();
+    }
 
     my $dir = $c->tempfiles_subdir('/high_dimensional_phenotypes_download');
     my $download_file_link = $c->tempfile( TEMPLATE => 'high_dimensional_phenotypes_download/downloadXXXX');
@@ -1559,11 +1617,8 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0)
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
     });
-    my $accession_ids = $ds->accessions();
-    my $plot_ids = $ds->plots();
-    my $plant_ids = $ds->plants();
 
     my $dir = $c->tempfiles_subdir('/high_dimensional_phenotypes_relationship_matrix_download');
     my $temp_data_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'high_dimensional_phenotypes_relationship_matrix_download/downloadXXXX');
@@ -1571,18 +1626,13 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0)
     $download_file_link .= '.csv';
     my $download_file_tempfile = $c->config->{basepath}."/".$download_file_link;
 
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesRelationshipMatrix->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        temporary_data_file=>$temp_data_file,
-        relationship_matrix_file=>$download_file_tempfile,
-        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
-        query_associated_stocks=>$query_associated_stocks,
-        accession_list=>$accession_ids,
-        plot_list=>$plot_ids,
-        plant_list=>$plant_ids
-    });
-    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $ds->retrieve_high_dimensional_phenotypes_relationship_matrix(
+        $nd_protocol_id,
+        $high_dimensional_phenotype_type,
+        $query_associated_stocks,
+        $temp_data_file,
+        $download_file_tempfile
+    );
     # print STDERR Dumper $relationship_matrix_data;
     # print STDERR Dumper $data_matrix;
     # print STDERR Dumper $identifier_metadata;

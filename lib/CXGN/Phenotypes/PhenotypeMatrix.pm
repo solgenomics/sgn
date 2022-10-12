@@ -12,6 +12,8 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     data_level=>$data_level,
     trait_list=>$trait_list,
     trial_list=>$trial_list,
+    program_list=>$self->program_list,
+    folder_list=>$self->folder_list,
     year_list=>$year_list,
     location_list=>$location_list,
     accession_list=>$accession_list,
@@ -64,6 +66,16 @@ has 'data_level' => (
 );
 
 has 'trial_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'program_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'folder_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -149,6 +161,7 @@ has 'offset' => (
 sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
+    my $include_timestamp = $self->include_timestamp;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -159,13 +172,15 @@ sub get_phenotype_matrix {
             data_level=>$self->data_level,
             trait_list=>$self->trait_list,
             trial_list=>$self->trial_list,
+            program_list=>$self->program_list,
+            folder_list=>$self->folder_list,
             year_list=>$self->year_list,
             location_list=>$self->location_list,
             accession_list=>$self->accession_list,
             plot_list=>$self->plot_list,
             plant_list=>$self->plant_list,
             subplot_list=>$self->subplot_list,
-            include_timestamp=>$self->include_timestamp,
+            include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
@@ -201,7 +216,7 @@ sub get_phenotype_matrix {
 
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
-            my $synonyms = $obs_unit->{synonyms};
+            my $synonyms = $obs_unit->{germplasm_synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
             my $available_germplasm_seedlots = $obs_unit->{available_germplasm_seedlots};
             my %available_germplasm_seedlots_uniquenames;
@@ -225,9 +240,21 @@ sub get_phenotype_matrix {
             }
 
             my $observations = $obs_unit->{observations};
+#            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
+            my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             foreach (@$observations){
-                $trait_observations{$_->{trait_name}} = $_->{value};
+                my $collect_date = $_->{collect_date};
+                my $timestamp = $_->{timestamp};
+                if ($include_timestamp && $timestamp) {
+                    $trait_observations{$_->{trait_name}} = "$_->{value},$timestamp";
+                }
+                elsif ($include_timestamp && $collect_date) {
+                    $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
+                }
+                else {
+                    $trait_observations{$_->{trait_name}} = $_->{value};
+                }
             }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
@@ -237,11 +264,10 @@ sub get_phenotype_matrix {
         }
     } else {
         $data = $phenotypes_search->search();
-        #print STDERR Dumper $data;
+        #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
-        my $include_timestamp = $self->include_timestamp;
 
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
@@ -265,16 +291,17 @@ sub get_phenotype_matrix {
                 } else {
                     $obsunit_data{$obsunit_id}->{$cvterm} = $value;
                 }
+                $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
 
                 my $synonyms = $d->{synonyms};
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
                 my $entry_type = $d->{is_a_control} ? 'check' : 'test';
 
-		my $trial_name = $d->{trial_name};
-		my $trial_desc = $d->{trial_description};
+                my $trial_name = $d->{trial_name};
+                my $trial_desc = $d->{trial_description};
 
-		$trial_name =~ s/\s+$//g;
-		$trial_desc =~ s/\s+$//g;
+                $trial_name =~ s/\s+$//g;
+                $trial_desc =~ s/\s+$//g;
 
                 $obsunit_data{$obsunit_id}->{metadata} = [
                     $d->{year},
@@ -320,6 +347,7 @@ sub get_phenotype_matrix {
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
         }
+        push @line, 'notes';
         push @info, \@line;
 
         foreach my $p (@unique_obsunit_list) {
@@ -328,6 +356,7 @@ sub get_phenotype_matrix {
             foreach my $trait (@sorted_traits) {
                 push @line, $obsunit_data{$p}->{$trait};
             }
+            push @line,  $obsunit_data{$p}->{'notes'};
             push @info, \@line;
         }
     }

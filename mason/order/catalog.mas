@@ -1,0 +1,288 @@
+<%args>
+
+$check_vendor_role
+$ordering_service_name => undef
+$additional_order_info => undef
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<& /page/page_title.mas, title => "Catalog" &>
+
+% if ($check_vendor_role == 1) {
+    <&| /page/info_section.mas, title => 'Manage Catalog', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <button id="upload_catalog_items_button" class="btn btn-primary">Upload Catalog Items</button>
+                    <button id="add_catalog_item_button" class="btn btn-primary">Add a Catalog Item</button>
+                </div>
+            </div>
+        </div>
+    </&>
+% }
+
+<&| /page/info_section.mas, title => 'Catalog Items', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "catalog_items_table" class="table table-hover table-striped">
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button id="your_cart_button" type="button" class="btn btn-primary btn-sm">
+                    <span class="glyphicon glyphicon-shopping-cart"></span> Your Cart
+                </button>
+            </div>
+        </div>
+        <td>
+            <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
+        </td>
+    </div>
+</&>
+
+<div class="modal fade" id="cart_item_dialog" name="cart_item_dialog" tabindex="-1" role="dialog" aria-labelledby="cartItemDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartItemDialog">Your Cart</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="cart_items_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_cart_item_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_order" type="button" class="btn btn-primary" >Submit Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cart_message_dialog" name="cart_message_dialog" tabindex="-1" role="dialog" aria-labelledby="cartMessageDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartMessageDialog">Your Cart</h4>
+            </div>
+            <div class="modal-body" style="text-align:center">
+                <div class="container-fluid">
+                    <p>
+                        You do not have any item in your cart
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_cart_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="order_response_dialog" name="order_response_dialog" tabindex="-1" role="dialog" aria-labelledby="orderResponseDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="orderResponseDialog">Your Order</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="ordering_response_div"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_order_response_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_item_detail_dialog" name="add_item_detail_dialog" tabindex="-1" role="dialog" aria-labelledby="addItemDetailDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addItemDetailDialog">Add Item Details</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="add_item_detail_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_add_item_detail_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_item_button" type="button" class="btn btn-primary" >Add Item</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<& /order/upload_catalog_items_dialog.mas &>
+<& /order/add_catalog_item_dialog.mas &>
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var ordering_service_name = "<% $ordering_service_name %>";
+    var additional_order_info = "<% $additional_order_info %>";
+
+    jQuery('#catalog_items_table').DataTable( {
+        'autoWidth': false,
+        'order': false,
+        'search':'applied',
+        'ajax': '/ajax/catalog/items',
+        columns: [
+            { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
+            { title: "Type", "data": "item_type" },
+            { title: "Category", "data": "category" },
+            { title: "Description", "data": "description" },
+            { title: "Material Source", "data": "material_source" },
+            { title: "Breeding Program", "data": "breeding_program" },
+            { title: "Availability", "data": "availability" },
+            { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+        ],
+    });
+
+    var lo = new CXGN.List();
+    var list_id;
+    var myCart = lo.availableLists('catalog_items')
+    if (myCart.length > 0) {
+        list_id = myCart[0][0];
+    }
+
+    jQuery('#your_cart_button').click(function(){
+        if (!list_id) {
+            jQuery('#cart_message_dialog').modal('show');
+        } else {
+            jQuery('#cart_item_dialog').modal('show');
+            showListItems('cart_items', list_id);
+        }
+    });
+
+    jQuery('#add_item_button').click(function(){
+        var item_name = jQuery('#cart_item_name').val();
+        var item_quantity = jQuery('#item_quantity').val();
+        if (!item_quantity) {
+            item_quantity = '1';
+        }
+        if (ordering_service_name == 'ONA') {
+            var item_additional_info = jQuery('#item_additional_info').val();
+            if (!item_additional_info) {
+                alert("Please select additional info");
+                return;
+            }
+        }
+        var item_comments = jQuery('#item_comments').val();
+
+        if (!item_comments && !item_additional_info) {
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity;
+        } else if ((!item_comments) && (item_additional_info)) {
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info;
+        } else if ((item_comments) && (!item_additional_info)) {
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Comments:' + ' ' + item_comments;
+        } else if (item_comments && item_additional_info) {
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info + ',' + ' ' + 'Comments:' + ' ' + item_comments;
+        }
+
+        var lo = new CXGN.List();
+
+        var myCart = lo.availableLists('catalog_items')
+        if (myCart.length > 0) {
+            var list_id = myCart[0][0];
+            var itemAdded = lo.addToList(list_id, item_string);
+        } else if (myCart.length == 0) {
+            var list_id = lo.newList('your_cart');
+            var itemAdded = lo.addToList(list_id, item_string);
+            lo.setListType(list_id, 'catalog_items');
+        } else {
+            alert ('Error retrieving your cart')
+        }
+        if (itemAdded) {
+            jQuery('#add_item_detail_dialog').modal('hide');
+            alert("Saved " + item_name + " in your cart");
+            location.reload();
+        }
+
+    });
+
+
+    jQuery('#submit_order').click( function() {
+
+        jQuery.ajax({
+            url: '/ajax/order/submit',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'list_id' : list_id,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success) {
+                    jQuery.ajax( {
+                        url: '/list/delete',
+                        async: false,
+                        data: { 'list_id': list_id }
+                    });
+
+                    jQuery('#ordering_response_div').html(response.success);
+
+                    jQuery('#order_response_dialog').modal('show');
+                    jQuery('#cart_item_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving your order');
+            }
+
+        });
+    });
+
+    jQuery("#dismiss_order_response_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+function addToCart(item_name, additional_order_info, ordering_service_name){
+    var additional_info = additional_order_info.split(",");
+    var html = '';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
+    if (ordering_service_name == 'ONA') {
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Info: </label><div class="col-sm-9" ><select class="form-control" id="item_additional_info" name="item_additional_info"><option disabled value="" selected hidden>Please select a required clone stage</option>';
+        if (additional_info) {
+            for (var i=0; i<additional_info.length; i++) {
+                html = html + '<option value='+additional_info[i]+'>'+additional_info[i]+'</option>';
+            }
+        }
+        html = html + '</select></div></div>';
+    }
+    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
+
+    jQuery('#add_item_detail_div').html(html);
+    jQuery('#add_item_detail_dialog').modal('show');
+
+}
+
+
+</script>

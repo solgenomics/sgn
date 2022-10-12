@@ -75,7 +75,7 @@ notice that the info in the markers and markers_array keys are identical, just i
 }
 
 genotype_info shold be a hashref with the following (though the inner object keys are whatever is in the VCF format):
-notice that the top level keys are all the sample names, and the next keys are marker names. 
+notice that the top level keys are all the sample names, and the next keys are marker names.
 {
     'samplename1' => {
         'marker1' => {
@@ -147,10 +147,10 @@ $store_genotypes->store_metadata();
 $store_genotypes->store_identifiers();
 $return = $store_genotypes->store_genotypeprop_table();
 
- # if genotypes are loaded consecutively, as in the transposed 
+ # if genotypes are loaded consecutively, as in the transposed
  # file, each genotype can be loaded as follows:
  #
-foreach $genotype (@genotypes) { 
+foreach $genotype (@genotypes) {
     $store_genotypes->genotype_info($genotype);
     $store_genotypes->observation_unit_uniquenames(\@observation_unit_uniquenames);
     my $return = $store_genotypes->store_identifiers();
@@ -262,6 +262,7 @@ use JSON;
 use CXGN::Trial;
 use Text::CSV;
 use Hash::Case::Preserve;
+use Array::Utils qw(:all);
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -433,18 +434,18 @@ has 'genotyping_facility_cvterm' => (
     isa => 'Ref',
     is => 'rw',
     );
-    
+
 has 'snp_genotypingprop_cvterm_id' => (
     isa => 'Int',
     is => 'rw',
     );
 
-    
+
 has 'snp_genotype_id' => (
     isa => 'Int',
     is => 'rw',
     );
-    
+
 has 'population_stock_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
@@ -464,7 +465,7 @@ has 'population_cvterm_id' => (
     isa => 'Int',
     is => 'rw',
     );
-    
+
 has 'md_file_id' => (
     isa => 'Int',
     is => 'rw',
@@ -508,7 +509,18 @@ has 'project_year_cvterm' => (
 has 'marker_by_marker_storage' => (
     isa => 'Bool|Undef',
     is => 'rw'
-); 
+);
+
+has 'pcr_marker_genotyping_type_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
+has 'genotyping_data_type' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 
 sub BUILD {
     my $self = shift;
@@ -524,6 +536,7 @@ sub validate {
     my $genotype_info = $self->genotype_info;
     my $include_igd_numbers = $self->igd_numbers_included;
     my $include_lab_numbers = $self->lab_numbers_included;
+    my $genotyping_data_type = $self->genotyping_data_type;
     my @error_messages;
     my @warning_messages;
 
@@ -544,6 +557,8 @@ sub validate {
     $self->snp_genotype_id($snp_genotype_id);
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
+    my $pcr_marker_genotypeprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
+    $self->pcr_marker_genotyping_type_id($pcr_marker_genotypeprop_cvterm_id);
 
     my $snp_genotypingprop_cvterm_id;
     if ($self->archived_file_type eq 'genotype_vcf'){
@@ -589,6 +604,8 @@ sub validate {
         $self->stock_type_id($stock_type_id);
     } elsif ($stock_type eq 'stocks'){
         @missing_stocks = @{$validator->validate($schema,'stocks',\@observation_unit_uniquenames_stripped)->{'missing'}};
+    } elsif ($stock_type eq 'tissue_sample_or_accession'){
+        @missing_stocks = @{$validator->validate($schema,'tissue_samples_or_accessions',\@observation_unit_uniquenames_stripped)->{'missing'}};
     } elsif ($stock_type eq 'accession'){
         @missing_stocks = @{$validator->validate($schema,'accessions',\@observation_unit_uniquenames_stripped)->{'missing'}};
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
@@ -627,68 +644,97 @@ sub validate {
     }
 
     #check if protocol_info is correct
-    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers}}) {
-        while (my ($marker_name, $marker_info) = each %{$protocol_info_chrom}) {
-            if (!$marker_name || !$marker_info){
-                push @error_messages, "No genotype info provided";
-            }
-            foreach (keys %$marker_info){
-                if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
-                    push @error_messages, "protocol_info key not recognized: $_";
+    if ($genotyping_data_type ne 'ssr') {
+        while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers}}) {
+            while (my ($marker_name, $marker_info) = each %{$protocol_info_chrom}) {
+                if (!$marker_name || !$marker_info){
+                    push @error_messages, "No genotype info provided";
+                }
+                foreach (keys %$marker_info){
+                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
+                        push @error_messages, "protocol_info key not recognized: $_";
+                    }
+                }
+                if(!exists($marker_info->{'name'})){
+                    push @error_messages, "protocol_info missing name key";
+                }
+                if(!exists($marker_info->{'chrom'})){
+                    push @error_messages, "protocol_info missing chrom key";
+                }
+                if(!exists($marker_info->{'pos'})){
+                    push @error_messages, "protocol_info missing pos key";
+                }
+                if(!exists($marker_info->{'ref'})){
+                    push @error_messages, "protocol_info missing ref key";
+                }
+                if(!exists($marker_info->{'alt'})){
+                    push @error_messages, "protocol_info missing alt key";
+                }
+                if(!exists($marker_info->{'qual'})){
+                    push @error_messages, "protocol_info missing qual key";
+                }
+                if(!exists($marker_info->{'filter'})){
+                    push @error_messages, "protocol_info missing filter key";
+                }
+                if(!exists($marker_info->{'info'})){
+                    push @error_messages, "protocol_info missing info key";
+                }
+                if(!exists($marker_info->{'format'})){
+                    push @error_messages, "protocol_info missing format key";
                 }
             }
-            if(!exists($marker_info->{'name'})){
-                push @error_messages, "protocol_info missing name key";
-            }
-            if(!exists($marker_info->{'chrom'})){
-                push @error_messages, "protocol_info missing chrom key";
-            }
-            if(!exists($marker_info->{'pos'})){
-                push @error_messages, "protocol_info missing pos key";
-            }
-            if(!exists($marker_info->{'ref'})){
-                push @error_messages, "protocol_info missing ref key";
-            }
-            if(!exists($marker_info->{'alt'})){
-                push @error_messages, "protocol_info missing alt key";
-            }
-            if(!exists($marker_info->{'qual'})){
-                push @error_messages, "protocol_info missing qual key";
-            }
-            if(!exists($marker_info->{'filter'})){
-                push @error_messages, "protocol_info missing filter key";
-            }
-            if(!exists($marker_info->{'info'})){
-                push @error_messages, "protocol_info missing info key";
-            }
-            if(!exists($marker_info->{'format'})){
-                push @error_messages, "protocol_info missing format key";
+        }
+        if (scalar(@{$protocol_info->{marker_names}}) == 0){
+            push @error_messages, "No marker info in file";
+        }
+        while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers_array}}) {
+            if (scalar(@{$protocol_info_chrom}) == 0){
+                push @error_messages, "No marker info in markers_array file";
             }
         }
     }
-    if (scalar(@{$protocol_info->{marker_names}}) == 0){
-        push @error_messages, "No marker info in file";
-    }
-    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers_array}}) {
-        if (scalar(@{$protocol_info_chrom}) == 0){
-            push @error_messages, "No marker info in markers_array file";
+
+    if ($genotyping_data_type eq 'ssr') {
+        my @stock_keys = keys %{$genotype_info};
+        my @marker_keys = sort keys %{$genotype_info->{$stock_keys[0]}};
+#        print STDERR "MARKER KEYS =".Dumper(\@marker_keys)."\n";
+
+        my $protocol_marker_names = $protocol_info->{'marker_names'};
+        my @protocol_marker_array =  sort @$protocol_marker_names;
+#        print STDERR "PROTOCOL MARKER ARRAY =".Dumper(\@protocol_marker_array)."\n";
+
+        my @diff_markers = array_diff(@marker_keys, @protocol_marker_array);
+        print STDERR "DIFF MARKERS =".Dumper(\@diff_markers)."\n";
+
+        if (scalar(@diff_markers) > 0) {
+            my $mismatch_markers = join(",", @diff_markers);
+            push @error_messages, "Markers in SSR genotyping data and the selected protocol are not the same. Mismatch markers: $mismatch_markers";
         }
     }
 
     #check if genotype_info is correct
     #print STDERR Dumper($genotype_info);
-    
+
     while (my ($observation_unit_name, $marker_result) = each %$genotype_info){
         if (!$observation_unit_name || !$marker_result){
             push @error_messages, "No geno info in genotype_info";
         }
     }
 
+    my $genotype_cvterm_id;
+
+    if ($genotyping_data_type eq 'ssr') {
+        $genotype_cvterm_id = $pcr_marker_genotypeprop_cvterm_id;
+    } else {
+        $genotype_cvterm_id = $snp_genotype_id;
+    }
+
     my $previous_genotypes_search_params = {
         'me.uniquename' => {-in => \@observation_unit_uniquenames_stripped},
         'nd_experiment.type_id' => $geno_cvterm_id,
-        'genotype.type_id' => $snp_genotype_id
+        'genotype.type_id' => $genotype_cvterm_id
     };
+
     if ($stock_type_id) {
         $previous_genotypes_search_params->{'me.type_id'} = $stock_type_id;
     }
@@ -736,23 +782,28 @@ sub store_metadata {
     my $stock_type = $self->observation_unit_type_name;
     my $organism_id = $self->organism_id;
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
+    my $genotyping_data_type = $self->genotyping_data_type;
+
     $dbh->do('SET search_path TO public,sgn');
 
     my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     $self->population_cvterm_id($population_cvterm_id);
-    
+
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
     $self->igd_number_cvterm_id($igd_number_cvterm_id);
-    
+
     my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     $self->snp_vcf_cvterm_id($snp_vcf_cvterm_id);
-    
+
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
-    
+
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     $self->snp_genotype_id($snp_genotype_id);
-    
+
+    my $pcr_marker_genotyping_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
+    $self->pcr_marker_genotyping_type_id($pcr_marker_genotyping_type_id);
+
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     $self->vcf_map_details_id($vcf_map_details_id);
 
@@ -764,13 +815,13 @@ sub store_metadata {
 
     my $population_members_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
     $self->population_members_id($population_members_id);
-    
+
     my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
     $self->design_cvterm($design_cvterm);
-    
+
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property');
     $self->project_year_cvterm($project_year_cvterm);
-    
+
     my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
     $self->genotyping_facility_cvterm($genotyping_facility_cvterm);
 
@@ -789,7 +840,11 @@ sub store_metadata {
         $project_id = $project->project_id();
         $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
         $project->create_projectprops( { $self->genotyping_facility_cvterm()->name() => $genotype_facility } );
-        $project->create_projectprops( { $self->design_cvterm->name() => 'genotype_data_project' } );
+        if ($genotyping_data_type eq 'ssr') {
+            $project->create_projectprops( { $self->design_cvterm->name() => 'pcr_genotype_data_project' } );
+        } else {
+            $project->create_projectprops( { $self->design_cvterm->name() => 'genotype_data_project' } );
+        }
 
         my $t = CXGN::Trial->new({
             bcs_schema => $schema,
@@ -814,7 +869,7 @@ sub store_metadata {
         $population_stock_id = $population_stock->stock_id();
     }
     $self->population_stock_id($population_stock_id);
-    
+
     #When protocol_id provided, a new protocol is not created
     my $protocol_id;
     my $protocol_row_check = $schema->resultset("NaturalDiversity::NdProtocol")->find({
@@ -855,6 +910,7 @@ sub store_metadata {
             $chr_count++;
         }
         print STDERR Dumper \%chromosomes;
+        $new_protocol_info->{chromosomes} = \%chromosomes;
 
         delete($new_protocol_info->{markers});
         delete($new_protocol_info->{markers_array});
@@ -865,9 +921,7 @@ sub store_metadata {
         $h_protocolprop->execute($protocol_id, $vcf_map_details_id, 0, $nd_protocol_json_string);
 
         foreach  my $chr_name (sort keys %unique_chromosomes) {
-            print STDERR "Chromosome: $chr_name\n";
-            $new_protocol_info->{chromosomes} = $chr_name;
-
+#            print STDERR "Chromosome: $chr_name\n";
             my $rank = $chromosomes{$chr_name}->{rank};
             my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
             my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers_array->{$chr_name};
@@ -897,7 +951,7 @@ sub store_metadata {
 
     while (my ($stock_id, $uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
         $stock_lookup{$uniquename} = { stock_id => $stock_id };
-        if ($type_id && $type_id == $self->synonym_type_id()) {
+        if ($type_id && $self->synonym_type_id() && ($type_id == $self->synonym_type_id())) {
             $stock_lookup{$synonym} = { stock_id => $stock_id };
         }
     }
@@ -921,7 +975,7 @@ sub store_metadata {
         }
     }
     $self->stock_lookup(\%stock_lookup);
-    print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
+#    print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
 
     print STDERR "Generating md_file entry...\n";
     #create relationship between nd_experiment and originating archived file
@@ -947,6 +1001,7 @@ sub store_identifiers {
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
     my $temp_file_sql_copy = $self->temp_file_sql_copy;
+    my $genotyping_data_type = $self->genotyping_data_type;
 
     my $csv = Text::CSV->new({ binary => 1, auto_diag => 1, eol => "\n"});
     open(my $fh, ">>", $temp_file_sql_copy) or die "Failed to open file $temp_file_sql_copy: $!";
@@ -974,7 +1029,7 @@ sub store_identifiers {
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames();
     foreach (@$observation_unit_uniquenames) {
         $_ =~ s/^\s+|\s+$//g;
-
+#        print STDERR "EACH NAME =".Dumper($_)."\n";
         my $observation_unit_name_with_accession_name;
         my $observation_unit_name;
         my $accession_name;
@@ -991,12 +1046,14 @@ sub store_identifiers {
         } else {
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
         }
+#        print STDERR "OBSERVATION UNIT NAME =".Dumper($observation_unit_name)."\n";
         #print STDERR "SAVING GENOTYPEPROP FOR $observation_unit_name \n";
         my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
         my $stock_id = $stock_lookup_obj->{stock_id};
         my $genotype_id = $stock_lookup_obj->{genotype_id};
-
+#        print STDERR "STOCK ID =".Dumper($stock_id)."\n";
         my $genotypeprop_json = $genotypeprop_observation_units->{$_};
+#        print STDERR "GENOTYPEPROP JSON =".Dumper($genotypeprop_json)."\n";
         if ($genotypeprop_json) {
 
             if ($self->accession_population_name){
@@ -1016,12 +1073,21 @@ sub store_identifiers {
                     nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
                 });
                 my $nd_experiment_id = $experiment->nd_experiment_id();
+                my $genotype_description;
+                my $genotype_type_id;
+                if ($genotyping_data_type eq 'ssr') {
+                    $genotype_description = "SSR genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
+                    $genotype_type_id = $self->pcr_marker_genotyping_type_id();
+                } else {
+                    $genotype_description = "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
+                    $genotype_type_id = $self->snp_genotype_id();
+                }
 
                 my $genotype = $genotype_schema->create({
                     name        => $observation_unit_name . "|" . $nd_experiment_id,
                     uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
-                    description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
-                    type_id     => $self->snp_genotype_id(),
+                    description => $genotype_description,
+                    type_id     => $genotype_type_id,
                 });
                 $genotype_id = $genotype->genotype_id();
                 my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype_id } );
@@ -1037,34 +1103,41 @@ sub store_identifiers {
             }
 
             my $chromosome_counter = 0;
-            foreach my $chromosome (sort keys %$genotypeprop_json) {
-                my $genotypeprop_id = $stock_lookup_obj->{chrom}->{$chromosome_counter};
 
-                my $chrom_genotypeprop = $genotypeprop_json->{$chromosome};
+            if ($genotyping_data_type eq 'ssr') {
+                my $json_string = encode_json $genotypeprop_json;
+                $h_new_genotypeprop->execute($genotype_id, $self->pcr_marker_genotyping_type_id(), $chromosome_counter, $json_string);
+                my $genotypeprop_id = $h_new_genotypeprop->fetchrow_array();
+#                print STDERR "GENOTYPEPROP ID =".Dumper($genotypeprop_id)."\n";
+            } else {
+                foreach my $chromosome (sort keys %$genotypeprop_json) {
+                    my $genotypeprop_id = $stock_lookup_obj->{chrom}->{$chromosome_counter};
 
-                if (!$genotypeprop_id) {
+                    my $chrom_genotypeprop = $genotypeprop_json->{$chromosome};
 
-                    $chrom_genotypeprop->{CHROM} = $chromosome;
+                    if ( (!$genotypeprop_id && $self->marker_by_marker_storage) || !$self->marker_by_marker_storage ) {
 
-                    my $json_string = encode_json $chrom_genotypeprop;
-                    if ($self->marker_by_marker_storage) { #Used when standard VCF is being stored (NOTE VCF is transpoed prior to parsing by default now), where genotype scores are appended into jsonb.
-                        $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $chromosome_counter, $json_string);
-                        my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
-                        $self->stock_lookup()->{$observation_unit_name}->{chrom}->{$chromosome_counter} = $genotypeprop_id;
+                        $chrom_genotypeprop->{CHROM} = $chromosome;
+
+                        my $json_string = encode_json $chrom_genotypeprop;
+                        if ($self->marker_by_marker_storage) { #Used when standard VCF is being stored (NOTE VCF is transpoed prior to parsing by default now), where genotype scores are appended into jsonb.
+                            $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $chromosome_counter, $json_string);
+                            my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
+                            $self->stock_lookup()->{$observation_unit_name}->{chrom}->{$chromosome_counter} = $genotypeprop_id;
+                        }
+                        else { #Used when transpoed VCF is being stored, or when Intertek files being stored
+                            $csv->print($fh, [ $genotype_id, $self->snp_genotypingprop_cvterm_id(), $chromosome_counter, $json_string ]);
+                        }
                     }
-                    else { #Used when transpoed VCF is being stored, or when Intertek files being stored
-                        $csv->print($fh, [ $genotype_id, $self->snp_genotypingprop_cvterm_id(), $chromosome_counter, $json_string ]);
+                    else { #When storing standard VCF, when genotype scores are appended into jsonb one by one. NOTE VCF is transposed by default now prior to parsing, but NOT transposing is relevant for instances where transposing requires too much memory.
+                        while (my ($m, $v) = each %$chrom_genotypeprop) {
+                            my $v_string = encode_json $v;
+                            $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
+                        }
                     }
 
+                    $chromosome_counter++;
                 }
-                else { #When storing standard VCF, when genotype scores are appended into jsonb one by one. NOTE VCF is transposed by default now prior to parsing, but NOT transposing is relevant for instances where transposing requires too much memory.
-                    while (my ($m, $v) = each %$chrom_genotypeprop) {
-                        my $v_string = encode_json $v;
-                        $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
-                    }
-                }
-
-                $chromosome_counter++;
             }
         }
     }

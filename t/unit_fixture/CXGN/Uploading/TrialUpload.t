@@ -14,6 +14,8 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::List;
 use CXGN::Trial::TrialDesign;
+use CXGN::BreedersToolbox::Projects;
+use CXGN::Genotype::StoreGenotypingProject;
 use DateTime;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
@@ -90,7 +92,7 @@ $parsed_data = $parser->parse();
 ok($parsed_data, "Check if parse validate excel file works");
 ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
-print STDERR Dumper $parsed_data;
+#print STDERR Dumper $parsed_data;
 
 my $parsed_data_check = {
 	'1' => {
@@ -189,11 +191,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -279,7 +281,7 @@ $parser->load_plugin('ParseIGDFile');
 my $meta = $parser->parse();
 ok($meta, "Check if parse validate excel file works");
 
-#print STDERR Dumper $meta;
+print STDERR "CHECK =".Dumper($meta)."\n";
 
 my $parsed_data_check = {
           'blank_well' => 'F05',
@@ -335,7 +337,7 @@ my $design;
 $td->calculate_design();
 $design = $td->get_design();
 
-print STDERR Dumper $design;
+#print STDERR Dumper $design;
 
 my $igd_design_check = {
           'A05' => {
@@ -390,24 +392,58 @@ my $igd_design_check = {
 
 is_deeply($design, $igd_design_check, "check igd design");
 
+#genotyping project for igd
+my $chado_schema = $c->bcs_schema;
+my $location_rs = $chado_schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
+my $location_id = $location_rs->first->nd_geolocation_id;
+
+my $bp_rs = $chado_schema->resultset('Project::Project')->find({name => 'test'});
+my $breeding_program_id = $bp_rs->project_id();
+
+my $add_genotyping_project = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema => $chado_schema,
+	dbh => $c->dbh(),
+    project_name => 'test_genotyping_project_2',
+    breeding_program_id => $breeding_program_id,
+    project_facility => 'igd',
+    data_type => 'snp',
+    year => '2022',
+    project_description => 'genotyping project for test',
+    nd_geolocation_id => $location_id,
+    owner_id => 41
+});
+ok(my $store_return = $add_genotyping_project->store_genotyping_project(), "store genotyping project");
+
+my $gp_rs = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_2'});
+my $genotyping_project_id = $gp_rs->project_id();
+my $trial = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $genotyping_project_id });
+my $location_data = $trial->get_location();
+my $location_name = $location_data->[1];
+my $description = $trial->get_description();
+my $genotyping_facility = $trial->get_genotyping_facility();
+my $plate_year = $trial->get_year();
+
+my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $chado_schema });
+my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
+my $breeding_program_name = $breeding_program_data->[0]->[1];
 
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
-	chado_schema => $c->bcs_schema,
-     	dbh => $c->dbh(),
-     	user_name => 'janedoe', #not implemented
-     	trial_year => '2016',
-	trial_location => 'test_location',
-	program => 'test',
+	chado_schema => $chado_schema,
+ 	dbh => $c->dbh(),
+	owner_id => 41,
+ 	trial_year => $plate_year,
+	trial_location => $location_name,
+	program => $breeding_program_name,
 	trial_description => "Test Genotyping Plate Upload",
 	design_type => 'genotyping_plate',
 	design => $design,
 	trial_name => "test_genotyping_trial_upload",
 	is_genotyping => 1,
 	genotyping_user_id => $meta->{user_id} || "unknown",
-	genotyping_project_name => $meta->{project_name} || "unknown",
+	genotyping_project_id => $genotyping_project_id,
     genotyping_facility_submitted => 'no',
-    genotyping_facility => 'igd',
+    genotyping_facility => $genotyping_facility,
     genotyping_plate_format => '96',
     genotyping_plate_sample_type => 'DNA',
 	operator => "janedoe"
@@ -426,7 +462,7 @@ ok($project_desc == "Test Genotyping Plate Upload", "check that trial_create rea
 $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
 my $post2_project_diff = $post_project_count - $pre_project_count;
 print STDERR "Project: ".$post2_project_diff."\n";
-ok($post2_project_diff == 2, "check project table after upload igd trial");
+ok($post2_project_diff == 3, "check project table after upload igd trial");
 
 $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post2_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
@@ -441,12 +477,12 @@ ok($post2_nd_experiment_proj_diff == 2, "check ndexperimentproject table after u
 $post_nd_experimentprop_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({})->count();
 my $post2_nd_experimentprop_diff = $post_nd_experimentprop_count - $pre_nd_experimentprop_count;
 print STDERR "NdExperimentprop: ".$post2_nd_experimentprop_diff."\n";
-ok($post2_nd_experimentprop_diff == 2, "check ndexperimentprop table after upload igd trial");
+ok($post2_nd_experimentprop_diff == 1, "check ndexperimentprop table after upload igd trial");
 
 $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post2_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post2_project_prop_diff."\n";
-ok($post2_project_prop_diff == 11, "check projectprop table after upload igd trial");
+ok($post2_project_prop_diff == 15, "check projectprop table after adding genotyping project and uploading igd trial");
 
 $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post2_stock_diff = $post_stock_count - $pre_stock_count;
@@ -471,7 +507,7 @@ ok($post2_nd_experiment_stock_diff == 14, "check ndexperimentstock table after u
 $post_project_relationship_count = $c->bcs_schema->resultset('Project::ProjectRelationship')->search({})->count();
 my $post2_project_relationship_diff = $post_project_relationship_count - $pre_project_relationship_count;
 print STDERR "ProjectRelationship: ".$post2_project_relationship_diff."\n";
-ok($post2_project_relationship_diff == 2, "check projectrelationship table after upload igd trial");
+ok($post2_project_relationship_diff == 4, "check projectrelationship table after adding genotyping project and uploading igd trial");
 
 
 #############################
@@ -512,7 +548,7 @@ $parsed_data = $parser->parse();
 ok($parsed_data, "Check if parse validate excel file works");
 ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
-print STDERR Dumper $parsed_data;
+#print STDERR Dumper $parsed_data;
 
 my $parsed_data_check = {
           '7' => {
@@ -635,11 +671,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_with_seedlot_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -660,7 +696,7 @@ ok($project_desc == "Trial Upload Test", "check that trial_create really worked"
 my $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
 my $post1_project_diff = $post_project_count - $pre_project_count;
 print STDERR "Project: ".$post1_project_diff."\n";
-ok($post1_project_diff == 3, "check project table after third upload excel trial");
+ok($post1_project_diff == 4, "check project table after third upload excel trial");
 
 my $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post1_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
@@ -675,12 +711,12 @@ ok($post1_nd_experiment_proj_diff == 3, "check ndexperimentproject table after u
 my $post_nd_experimentprop_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({})->count();
 my $post1_nd_experimentprop_diff = $post_nd_experimentprop_count - $pre_nd_experimentprop_count;
 print STDERR "NdExperimentprop: ".$post1_nd_experimentprop_diff."\n";
-ok($post1_nd_experimentprop_diff == 2, "check ndexperimentprop table after upload excel trial");
+ok($post1_nd_experimentprop_diff == 1, "check ndexperimentprop table after upload excel trial");
 
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 15, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 19, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -705,8 +741,7 @@ ok($post1_nd_experiment_stock_diff == 22, "check ndexperimentstock table after u
 my $post_project_relationship_count = $c->bcs_schema->resultset('Project::ProjectRelationship')->search({})->count();
 my $post1_project_relationship_diff = $post_project_relationship_count - $pre_project_relationship_count;
 print STDERR "ProjectRelationship: ".$post1_project_relationship_diff."\n";
-ok($post1_project_relationship_diff == 3, "check projectrelationship table after upload excel trial");
-
+ok($post1_project_relationship_diff == 5, "check projectrelationship table after upload excel trial");
 
 
 my $mech = Test::WWW::Mechanize->new;
@@ -728,65 +763,66 @@ $response = $ua->post(
         ]
     );
 
-#print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
-          'success' => '1',
-          'design' => {
-                        'A01' => {
-                                   'concentration' => '5',
-                                   'acquisition_date' => '2018/02/16',
-                                   'dna_person' => 'nmorales',
-                                   'volume' => '10',
-                                   'col_number' => '1',
-                                   'plot_name' => '2018TestPlate02_A01',
-                                   'ncbi_taxonomy_id' => '9001',
-                                   'stock_name' => 'KASESE_TP2013_885',
-                                   'notes' => 'test well A01',
-                                   'is_blank' => 0,
-                                   'extraction' => 'CTAB',
-                                   'plot_number' => 'A01',
-                                   'row_number' => 'A',
-                                   'tissue_type' => 'leaf'
-                                 },
-                        'A03' => {
-                                   'notes' => 'test well A03',
-                                   'is_blank' => 0,
-                                   'stock_name' => 'KASESE_TP2013_1671',
-                                   'ncbi_taxonomy_id' => '9001',
-                                   'plot_name' => '2018TestPlate02_A03',
-                                   'tissue_type' => 'leaf',
-                                   'row_number' => 'A',
-                                   'plot_number' => 'A03',
-                                   'extraction' => 'CTAB',
-                                   'volume' => '10',
-                                   'dna_person' => 'nmorales',
-                                   'concentration' => '5',
-                                   'acquisition_date' => '2018/02/16',
-                                   'col_number' => '3'
-                                 },
-                        'A02' => {
-                                   'extraction' => undef,
-                                   'plot_number' => 'A02',
-                                   'row_number' => 'A',
-                                   'tissue_type' => 'stem',
-                                   'stock_name' => 'BLANK',
-                                   'notes' => 'test blank',
-                                   'is_blank' => 1,
-                                   'ncbi_taxonomy_id' => undef,
-                                   'plot_name' => '2018TestPlate02_A02',
-                                   'col_number' => '2',
-                                   'volume' => undef,
-                                   'acquisition_date' => '2018/02/16',
-                                   'concentration' => undef,
-                                   'dna_person' => 'nmorales'
-                                 }
-                      }
-        });
+    'success' => '1',
+    'design' => {
+        'A01' => {
+            'concentration' => '5',
+            'acquisition_date' => '2018/02/16',
+            'dna_person' => 'nmorales',
+            'volume' => '10',
+            'col_number' => '1',
+            'plot_name' => '2018TestPlate02_A01',
+            'ncbi_taxonomy_id' => '9001',
+            'stock_name' => 'KASESE_TP2013_885',
+            'notes' => 'test well A01',
+            'is_blank' => 0,
+            'extraction' => 'CTAB',
+            'plot_number' => 'A01',
+            'row_number' => 'A',
+            'tissue_type' => 'leaf',
+            'facility_identifier' => 'NA'
+        },
+        'A03' => {
+            'notes' => 'test well A03',
+            'is_blank' => 0,
+            'stock_name' => 'KASESE_TP2013_1671',
+            'ncbi_taxonomy_id' => '9001',
+            'plot_name' => '2018TestPlate02_A03',
+            'tissue_type' => 'leaf',
+            'row_number' => 'A',
+            'plot_number' => 'A03',
+            'extraction' => 'CTAB',
+            'volume' => '10',
+            'dna_person' => 'nmorales',
+            'concentration' => '5',
+            'acquisition_date' => '2018/02/16',
+            'col_number' => '3',
+            'facility_identifier' => 'NA'
+        },
+        'A02' => {
+            'extraction' => undef,
+            'plot_number' => 'A02',
+            'row_number' => 'A',
+            'tissue_type' => 'stem',
+            'stock_name' => 'BLANK',
+            'notes' => 'test blank',
+            'is_blank' => 1,
+            'ncbi_taxonomy_id' => undef,
+            'plot_name' => '2018TestPlate02_A02',
+            'col_number' => '2',
+            'volume' => undef,
+            'acquisition_date' => '2018/02/16',
+            'concentration' => undef,
+            'dna_person' => 'nmorales',
+            'facility_identifier' => 'NA'
+        }
+    }
+});
 
 my $project = $c->bcs_schema()->resultset("Project::Project")->find( { name => 'test' } );
 my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => 'test_location' } );
@@ -794,20 +830,16 @@ my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->f
 my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'yes',
-    project_name => 'NextGenCassava',
-    description => 'test geno trial upload',
-    location => $location->nd_geolocation_id,
-    year => '2018',
     name => 'test_genotype_upload_trial1',
-    breeding_program => $project->project_id,
-    genotyping_facility => 'igd',
+    genotyping_project_id => $genotyping_project_id,
     sample_type => 'DNA',
     plate_format => '96'
 };
 
+
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 
 ok($response->{trial_id});
 
@@ -828,111 +860,111 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
-          'success' => '1',
-          'design' => {
-                        'B12' => {
-                                   'notes' => 'newplate',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 1,
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'B12',
-                                   'volume' => 'NA',
-                                   'tissue_type' => 'leaf',
-                                   'plot_name' => '18DNA00101_B12',
-                                   'extraction' => 'NA',
-                                   'row_number' => 'B',
-                                   'col_number' => '12',
-                                   'acquisition_date' => '8/23/2018',
-                                   'stock_name' => 'BLANK'
-                                 },
-                        'A01' => {
-                                   'stock_name' => 'KASESE_TP2013_1671',
-                                   'acquisition_date' => '8/23/2018',
-                                   'col_number' => '01',
-                                   'row_number' => 'A',
-                                   'extraction' => 'NA',
-                                   'plot_name' => '18DNA00101_A01',
-                                   'tissue_type' => 'leaf',
-                                   'plot_number' => 'A01',
-                                   'volume' => 'NA',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 0,
-                                   'concentration' => 'NA',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate'
-                                 },
-                        'B01' => {
-                                   'plot_name' => '18DNA00101_B01',
-                                   'extraction' => 'NA',
-                                   'row_number' => 'B',
-                                   'col_number' => '01',
-                                   'stock_name' => 'KASESE_TP2013_1671',
-                                   'acquisition_date' => '8/23/2018',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 0,
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'B01',
-                                   'volume' => 'NA',
-                                   'tissue_type' => 'leaf'
-                                 },
-                        'C01' => {
-                                   'col_number' => '01',
-                                   'acquisition_date' => '8/23/2018',
-                                   'stock_name' => 'KASESE_TP2013_885',
-                                   'extraction' => 'NA',
-                                   'row_number' => 'C',
-                                   'plot_name' => '18DNA00101_C01',
-                                   'tissue_type' => 'leaf',
-                                   'is_blank' => 0,
-                                   'dna_person' => 'gbauchet',
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'C01',
-                                   'volume' => 'NA',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate'
-                                 },
-                        'D01' => {
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'notes' => 'newplate',
-                                   'plot_number' => 'D01',
-                                   'volume' => 'NA',
-                                   'dna_person' => 'gbauchet',
-                                   'is_blank' => 0,
-                                   'concentration' => 'NA',
-                                   'tissue_type' => 'leaf',
-                                   'plot_name' => '18DNA00101_D01',
-                                   'row_number' => 'D',
-                                   'extraction' => 'NA',
-                                   'acquisition_date' => '8/23/2018',
-                                   'stock_name' => 'KASESE_TP2013_885',
-                                   'col_number' => '01'
-                                 }
-                      }
-        }, 'test upload parse of coordinate genotyping plate');
+    'success' => '1',
+    'design' => {
+        'B12' => {
+            'notes' => 'newplate',
+            'ncbi_taxonomy_id' => 'NA',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 1,
+            'concentration' => 'NA',
+            'plot_number' => 'B12',
+            'volume' => 'NA',
+            'tissue_type' => 'leaf',
+            'plot_name' => '18DNA00101_B12',
+            'extraction' => 'NA',
+            'row_number' => 'B',
+            'col_number' => '12',
+            'acquisition_date' => '8/23/2018',
+            'stock_name' => 'BLANK',
+            'facility_identifier' => 'NA'
+        },
+        'A01' => {
+            'stock_name' => 'KASESE_TP2013_1671',
+            'acquisition_date' => '8/23/2018',
+            'col_number' => '01',
+            'row_number' => 'A',
+            'extraction' => 'NA',
+            'plot_name' => '18DNA00101_A01',
+            'tissue_type' => 'leaf',
+            'plot_number' => 'A01',
+            'volume' => 'NA',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 0,
+            'concentration' => 'NA',
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'facility_identifier' => 'NA'
+        },
+        'B01' => {
+            'plot_name' => '18DNA00101_B01',
+            'extraction' => 'NA',
+            'row_number' => 'B',
+            'col_number' => '01',
+            'stock_name' => 'KASESE_TP2013_1671',
+            'acquisition_date' => '8/23/2018',
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 0,
+            'concentration' => 'NA',
+            'plot_number' => 'B01',
+            'volume' => 'NA',
+            'tissue_type' => 'leaf',
+            'facility_identifier' => 'NA'
+        },
+        'C01' => {
+            'col_number' => '01',
+            'acquisition_date' => '8/23/2018',
+            'stock_name' => 'KASESE_TP2013_885',
+            'extraction' => 'NA',
+            'row_number' => 'C',
+            'plot_name' => '18DNA00101_C01',
+            'tissue_type' => 'leaf',
+            'is_blank' => 0,
+            'dna_person' => 'gbauchet',
+            'concentration' => 'NA',
+            'plot_number' => 'C01',
+            'volume' => 'NA',
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'facility_identifier' => 'NA'
+        },
+        'D01' => {
+            'ncbi_taxonomy_id' => 'NA',
+            'notes' => 'newplate',
+            'plot_number' => 'D01',
+            'volume' => 'NA',
+            'dna_person' => 'gbauchet',
+            'is_blank' => 0,
+            'concentration' => 'NA',
+            'tissue_type' => 'leaf',
+            'plot_name' => '18DNA00101_D01',
+            'row_number' => 'D',
+            'extraction' => 'NA',
+            'acquisition_date' => '8/23/2018',
+            'stock_name' => 'KASESE_TP2013_885',
+            'col_number' => '01',
+            'facility_identifier' => 'NA'
+        }
+    }
+}, 'test upload parse of coordinate genotyping plate');
 
 my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'no',
-    project_name => 'NextGenCassava',
-    description => 'test geno trial upload coordinate template',
-    location => $location->nd_geolocation_id,
-    year => '2018',
     name => 'test_genotype_upload_coordinate_trial101',
-    breeding_program => $project->project_id,
-    genotyping_facility => 'igd',
+    genotyping_project_id => $genotyping_project_id,
     sample_type => 'DNA',
     plate_format => '96'
 };
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 
 ok($response->{trial_id});
 
@@ -953,134 +985,135 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
-          'design' => {
-                        'B01' => {
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 0,
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_B01',
-                                   'col_number' => '01',
-                                   'notes' => '',
-                                   'extraction' => 'CTAB',
-                                   'tissue_type' => 'leaf',
-                                   'volume' => 'NA',
-                                   'concentration' => 'NA',
-                                   'stock_name' => 'test_accession1',
-                                   'plot_number' => 'B01',
-                                   'row_number' => 'B',
-                                   'dna_person' => 'Trevor_Rife'
-                                 },
-                        'B04' => {
-                                   'tissue_type' => 'leaf',
-                                   'extraction' => 'CTAB',
-                                   'notes' => '',
-                                   'col_number' => '04',
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_B04',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 1,
-                                   'row_number' => 'B',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'plot_number' => 'B04',
-                                   'stock_name' => 'BLANK',
-                                   'concentration' => 'NA',
-                                   'volume' => 'NA'
-                                 },
-                        'C01' => {
-                                   'is_blank' => 0,
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'plot_name' => '18DNA00001_C01',
-                                   'acquisition_date' => '2018-02-06',
-                                   'notes' => '',
-                                   'col_number' => '01',
-                                   'extraction' => 'CTAB',
-                                   'tissue_type' => 'leaf',
-                                   'volume' => 'NA',
-                                   'concentration' => 'NA',
-                                   'stock_name' => 'test_accession2',
-                                   'plot_number' => 'C01',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'C'
-                                 },
-                        'C04' => {
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 1,
-                                   'plot_name' => '18DNA00001_C04',
-                                   'acquisition_date' => '2018-02-06',
-                                   'notes' => '',
-                                   'col_number' => '04',
-                                   'tissue_type' => 'leaf',
-                                   'extraction' => 'CTAB',
-                                   'volume' => 'NA',
-                                   'stock_name' => 'BLANK',
-                                   'concentration' => 'NA',
-                                   'plot_number' => 'C04',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'C'
-                                 },
-                        'A01' => {
-                                   'is_blank' => 0,
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_A01',
-                                   'notes' => '',
-                                   'col_number' => '01',
-                                   'extraction' => 'CTAB',
-                                   'tissue_type' => 'leaf',
-                                   'volume' => 'NA',
-                                   'concentration' => 'NA',
-                                   'stock_name' => 'test_accession1',
-                                   'plot_number' => 'A01',
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'A'
-                                 },
-                        'D01' => {
-                                   'dna_person' => 'Trevor_Rife',
-                                   'row_number' => 'D',
-                                   'plot_number' => 'D01',
-                                   'stock_name' => 'test_accession2',
-                                   'concentration' => 'NA',
-                                   'volume' => 'NA',
-                                   'tissue_type' => 'leaf',
-                                   'extraction' => 'CTAB',
-                                   'col_number' => '01',
-                                   'notes' => '',
-                                   'acquisition_date' => '2018-02-06',
-                                   'plot_name' => '18DNA00001_D01',
-                                   'ncbi_taxonomy_id' => 'NA',
-                                   'is_blank' => 0
-                                 }
-                      },
-          'success' => '1'
-      }, 'test upload parse of coordinate genotyping plate');
+    'design' => {
+        'B01' => {
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 0,
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_B01',
+            'col_number' => '01',
+            'notes' => '',
+            'extraction' => 'CTAB',
+            'tissue_type' => 'leaf',
+            'volume' => 'NA',
+            'concentration' => 'NA',
+            'stock_name' => 'test_accession1',
+            'plot_number' => 'B01',
+            'row_number' => 'B',
+            'dna_person' => 'Trevor_Rife',
+            'facility_identifier' => 'NA'
+        },
+        'B04' => {
+            'tissue_type' => 'leaf',
+            'extraction' => 'CTAB',
+            'notes' => '',
+            'col_number' => '04',
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_B04',
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 1,
+            'row_number' => 'B',
+            'dna_person' => 'Trevor_Rife',
+            'plot_number' => 'B04',
+            'stock_name' => 'BLANK',
+            'concentration' => 'NA',
+            'volume' => 'NA',
+            'facility_identifier' => 'NA'
+        },
+        'C01' => {
+            'is_blank' => 0,
+            'ncbi_taxonomy_id' => 'NA',
+            'plot_name' => '18DNA00001_C01',
+            'acquisition_date' => '2018-02-06',
+            'notes' => '',
+            'col_number' => '01',
+            'extraction' => 'CTAB',
+            'tissue_type' => 'leaf',
+            'volume' => 'NA',
+            'concentration' => 'NA',
+            'stock_name' => 'test_accession2',
+            'plot_number' => 'C01',
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'C',
+            'facility_identifier' => 'NA'
+        },
+        'C04' => {
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 1,
+            'plot_name' => '18DNA00001_C04',
+            'acquisition_date' => '2018-02-06',
+            'notes' => '',
+            'col_number' => '04',
+            'tissue_type' => 'leaf',
+            'extraction' => 'CTAB',
+            'volume' => 'NA',
+            'stock_name' => 'BLANK',
+            'concentration' => 'NA',
+            'plot_number' => 'C04',
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'C',
+            'facility_identifier' => 'NA'
+        },
+        'A01' => {
+            'is_blank' => 0,
+            'ncbi_taxonomy_id' => 'NA',
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_A01',
+            'notes' => '',
+            'col_number' => '01',
+            'extraction' => 'CTAB',
+            'tissue_type' => 'leaf',
+            'volume' => 'NA',
+            'concentration' => 'NA',
+            'stock_name' => 'test_accession1',
+            'plot_number' => 'A01',
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'A',
+            'facility_identifier' => 'NA'
+        },
+        'D01' => {
+            'dna_person' => 'Trevor_Rife',
+            'row_number' => 'D',
+            'plot_number' => 'D01',
+            'stock_name' => 'test_accession2',
+            'concentration' => 'NA',
+            'volume' => 'NA',
+            'tissue_type' => 'leaf',
+            'extraction' => 'CTAB',
+            'col_number' => '01',
+            'notes' => '',
+            'acquisition_date' => '2018-02-06',
+            'plot_name' => '18DNA00001_D01',
+            'ncbi_taxonomy_id' => 'NA',
+            'is_blank' => 0,
+            'facility_identifier' => 'NA'
+        }
+    },
+    'success' => '1'
+}, 'test upload parse of coordinate genotyping plate');
 
 my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'no',
-    project_name => 'NextGenCassava',
-    description => 'test geno trial upload coordinate',
-    location => $location->nd_geolocation_id,
-    year => '2018',
     name => 'test_genotype_upload_coordinate_trial1',
-    breeding_program => $project->project_id,
-    genotyping_facility => 'igd',
+    genotyping_project_id => $genotyping_project_id,
     sample_type => 'DNA',
     plate_format => '96'
 };
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR "RESPONSE: ".Dumper $response;
+#print STDERR "RESPONSE: ".Dumper $response;
 
 ok($response->{trial_id});
 my $geno_trial_id = $response->{trial_id};
 $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=intertekxls&dataLevel=plate");
 my $intertek_download = $mech->content;
 my $contents = ReadData $intertek_download;
-print STDERR Dumper $contents;
+#print STDERR Dumper $contents;
 is($contents->[0]->{'type'}, 'xls', "check that type of file is correct #1");
 is($contents->[0]->{'sheets'}, '1', "check that type of file is correct #2");
 
@@ -1088,7 +1121,7 @@ my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 7, "check number of col in created file.");
 
-print STDERR Dumper $columns;
+#print STDERR Dumper $columns;
 is_deeply($columns, [
           [],
           [
@@ -1144,27 +1177,212 @@ is_deeply($columns, [
           [
             undef,
             'Comments',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB'
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA'
           ]
         ], 'test intertek genotyping plate download');
 
 $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=dartseqcsv&dataLevel=plate");
 my $intertek_download = $mech->content;
-print STDERR Dumper $intertek_download;
+#print STDERR Dumper $intertek_download;
 my @intertek_download = split "\n", $intertek_download;
-print STDERR Dumper \@intertek_download;
+#print STDERR Dumper \@intertek_download;
 
 is_deeply(\@intertek_download, [
           'PlateID,Row,Column,Organism,Species,Genotype,Tissue,Comments',
-          'test_genotype_upload_coordinate_trial1,A,01,tomato,"Solanum lycopersicum",18DNA00001_A01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
-          'test_genotype_upload_coordinate_trial1,B,01,tomato,"Solanum lycopersicum",18DNA00001_B01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
-          'test_genotype_upload_coordinate_trial1,C,01,tomato,"Solanum lycopersicum",18DNA00001_C01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
-          'test_genotype_upload_coordinate_trial1,D,01,tomato,"Solanum lycopersicum",18DNA00001_D01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"'
+          'test_genotype_upload_coordinate_trial1,A,01,tomato,"Solanum lycopersicum",18DNA00001_A01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"',
+          'test_genotype_upload_coordinate_trial1,B,01,tomato,"Solanum lycopersicum",18DNA00001_B01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"',
+          'test_genotype_upload_coordinate_trial1,C,01,tomato,"Solanum lycopersicum",18DNA00001_C01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"',
+          'test_genotype_upload_coordinate_trial1,D,01,tomato,"Solanum lycopersicum",18DNA00001_D01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"'
         ]);
+
+
+#Upload trial with management factors
+
+my $file_name_with_managementfactors = 't/data/trial/trial_layout_example_with_management_factor.xls';
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $file_name_with_managementfactors,
+  subdirectory => 'temp_trial_upload',
+  archive_path => '/tmp',
+  archive_filename => 'trial_layout_example_with_management_factor.xls',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $management_factor_archived_filename_with_path = $uploader->archive();
+my $md5_management_factor = $uploader->get_md5($management_factor_archived_filename_with_path);
+ok($management_factor_archived_filename_with_path);
+ok($md5_management_factor);
+
+$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $management_factor_archived_filename_with_path);
+$parser->load_plugin('TrialExcelFormat');
+$parsed_data = $parser->parse();
+ok($parsed_data, "Check if parse validate excel file works");
+ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+
+#print STDERR Dumper $parsed_data;
+
+my $parsed_data_check_with_management_factor = {
+          '7' => {
+                   'plot_number' => '7',
+                   'col_number' => '2',
+                   'block_number' => '2',
+                   'rep_number' => '1',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession4',
+                   'row_number' => '3',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name7'
+                 },
+          '5' => {
+                   'col_number' => '2',
+                   'plot_number' => '5',
+                   'rep_number' => '1',
+                   'block_number' => '2',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession3',
+                   'row_number' => '1',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name5'
+                 },
+          '3' => {
+                   'block_number' => '1',
+                   'rep_number' => '1',
+                   'plot_number' => '3',
+                   'col_number' => '1',
+                   'range_number' => '1',
+                   'plot_name' => 'trial_management_factor_plot_name3',
+                   'row_number' => '3',
+                   'stock_name' => 'test_accession2',
+                   'is_a_control' => 0
+                 },
+          '4' => {
+                   'stock_name' => 'test_accession2',
+                   'is_a_control' => 0,
+                   'row_number' => '4',
+                   'plot_name' => 'trial_management_factor_plot_name4',
+                   'range_number' => '1',
+                   'col_number' => '1',
+                   'plot_number' => '4',
+                   'block_number' => '1',
+                   'rep_number' => '2'
+                 },
+          '8' => {
+                   'rep_number' => '2',
+                   'block_number' => '2',
+                   'plot_number' => '8',
+                   'col_number' => '2',
+                   'row_number' => '4',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name8',
+                   'stock_name' => 'test_accession4',
+                   'is_a_control' => 0
+                 },
+          '1' => {
+                   'block_number' => '1',
+                   'rep_number' => '1',
+                   'plot_number' => '1',
+                   'col_number' => '1',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession1',
+                   'plot_name' => 'trial_management_factor_plot_name1',
+                   'range_number' => '1',
+                   'row_number' => '1'
+                 },
+          '2' => {
+                   'plot_name' => 'trial_management_factor_plot_name2',
+                   'range_number' => '1',
+                   'row_number' => '2',
+                   'stock_name' => 'test_accession1',
+                   'is_a_control' => 0,
+                   'plot_number' => '2',
+                   'col_number' => '1',
+                   'block_number' => '1',
+                   'rep_number' => '2'
+                 },
+                 'treatments' => {
+                                   'manage_factor2' => {
+                                                         'new_treatment_stocks' => [
+                                                                                     'trial_management_factor_plot_name3',
+                                                                                     'trial_management_factor_plot_name4',
+                                                                                     'trial_management_factor_plot_name5'
+                                                                                   ]
+                                                       },
+                                   'fert_factor1' => {
+                                                       'new_treatment_stocks' => [
+                                                                                   'trial_management_factor_plot_name1',
+                                                                                   'trial_management_factor_plot_name2',
+                                                                                   'trial_management_factor_plot_name3',
+                                                                                   'trial_management_factor_plot_name6',
+                                                                                   'trial_management_factor_plot_name7',
+                                                                                   'trial_management_factor_plot_name8'
+                                                                                 ]
+                                                     }
+                                 },
+          '6' => {
+                   'row_number' => '2',
+                   'range_number' => '2',
+                   'plot_name' => 'trial_management_factor_plot_name6',
+                   'stock_name' => 'test_accession3',
+                   'is_a_control' => 0,
+                   'plot_number' => '6',
+                   'col_number' => '2',
+                   'rep_number' => '2',
+                   'block_number' => '2'
+                 }
+        };
+
+is_deeply($parsed_data, $parsed_data_check_with_management_factor, 'check trial excel parse data' );
+
+my $trial_create_with_management_factor = CXGN::Trial::TrialCreate
+    ->new({
+	   chado_schema => $c->bcs_schema(),
+	   dbh => $c->dbh(),
+	   trial_year => "2016",
+	   trial_description => "Trial Upload Test with Management Factors",
+	   trial_location => "test_location",
+	   trial_name => "Trial_upload_test_with_management_factor",
+	   design_type => "RCBD",
+	   design => $parsed_data,
+	   program => "test",
+	   upload_trial_file => $management_factor_archived_filename_with_path,
+	   operator => "janedoe",
+       owner_id => 41
+	  });
+
+my $save_with_management_factor = $trial_create_with_management_factor->save_trial();
+
+ok($save_with_management_factor->{'trial_id'}, "check that trial_create worked with management factor");
+my $project_name_with_management_factor = $c->bcs_schema()->resultset('Project::Project')->find({project_id => $save_with_management_factor->{'trial_id'}})->name();
+ok($project_name_with_management_factor == "Trial_upload_test_with_management_factor", "check that trial_create really worked");
+
+my $trial_with_management_factor = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $save_with_management_factor->{'trial_id'} });
+my $management_factors = $trial_with_management_factor->get_treatments();
+#print STDERR Dumper $management_factors;
+is(scalar(@$management_factors), 2);
+
+my $trial_management_factor1 = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $management_factors->[0]->[0] } );
+my $management_factor_name1 = $trial_management_factor1->name();
+#print STDERR Dumper $management_factor_name1;
+is($management_factor_name1, "Trial_upload_test_with_management_factor_fert_factor1");
+my $management_factor_plots1 = $trial_management_factor1->get_plots();
+#print STDERR Dumper $management_factor_plots1;
+is(scalar(@$management_factor_plots1), 6);
+
+my $trial_management_factor2 = CXGN::Trial->new( { bcs_schema => $c->bcs_schema, trial_id => $management_factors->[1]->[0] } );
+my $management_factor_name2 = $trial_management_factor2->name();
+#print STDERR Dumper $management_factor_name2;
+is($management_factor_name2, "Trial_upload_test_with_management_factor_manage_factor2");
+my $management_factor_plots2 = $trial_management_factor2->get_plots();
+#print STDERR Dumper $management_factor_plots2;
+is(scalar(@$management_factor_plots2), 3);
 
 done_testing();

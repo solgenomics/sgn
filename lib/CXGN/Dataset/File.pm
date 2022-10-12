@@ -14,6 +14,11 @@ has 'file_name' => ( isa => 'Str',
 		     default => '/tmp/dataset_file',
     );
 
+has 'quotes' => ( isa => 'Bool',
+		  is => 'rw',
+		  default => 1,
+    );
+
 override('retrieve_genotypes',
 	sub {
 	    my $self = shift;
@@ -27,21 +32,35 @@ override('retrieve_genotypes',
 		my $basepath_config	= shift;
 		my $forbid_cache = shift;
 
-		my $accessions_list_ref = $self->accessions();
+		my $accessions_list_ref = $self->retrieve_accessions();
 		my $genotypeprop_hash_select = shift || ['DS'];
 		my $protocolprop_top_key_select = shift || [];
 		my $protocolprop_marker_hash_select = shift || [];
 		my $return_only_first_genotypeprop_for_stock = shift || 1;
 
-#		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
-		my @accessions_list = @$accessions_list_ref;
-		my $genotypes_search = CXGN::Genotype::Search->new(
-			bcs_schema => $self->schema(),
-            people_schema => $self->people_schema(),
+	    #		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
+
+	    my @accession_ids;
+	    foreach (@$accessions_list_ref) {
+		push @accession_ids, $_->[0];
+	    }
+
+	    my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
+	    my @protocols;
+	    foreach my $p (@$genotyping_protocol_ref) {
+		push @protocols, $p->[0];
+		
+	    }
+    
+	    
+	    my @accessions_list = @$accessions_list_ref;
+	    my $genotypes_search = CXGN::Genotype::Search->new(
+		bcs_schema => $self->schema(),
+		people_schema => $self->people_schema(),
         	cache_root=>$cache_root_dir,
-			accession_list => $accessions_list_ref,
+			accession_list => \@accession_ids,
 			trial_list => $self->trials(),
-			protocol_id_list => [$protocol_id],
+			protocol_id_list => \@protocols,
 			genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
 			protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
 			protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
@@ -119,19 +138,28 @@ override('retrieve_phenotypes',
 	     my $phenotype_string = "";
 	     my $s;
 	     foreach my $line (@$phenotypes) {
-		 $s = "";
-	         my $num_col = scalar(@{$line});
-		 for (my $j = 0; $j < $num_col; $j++) {
-                     if (@$line[$j]) {
-		         if ($s eq "") {
-	                    $s .= "\"@$line[$j]\"";
-		         } else {
-		            $s .= "\t\"@$line[$j]\"";
-			 }
-                     } else {
-                         $s .= "\t";
-                     }
-                 }			 
+		 if ($self->quotes()) {
+		     no warnings; # turn off warnings, otherwise there are a lot of undefined warnings.
+		     $s = join("\t", map { "\"$_\"" } @$line);
+		 }
+		 else {
+		     no warnings;
+		     $s = join("\t", @$line);
+		 }
+		 # $s = "";
+	         # my $num_col = scalar(@{$line});
+		 # for (my $j = 0; $j < $num_col; $j++) {
+                 #     if (@$line[$j]) {
+		 #         if ($s eq "") {
+	         #            $s .= "\"@$line[$j]\"";
+		 #         } else {
+		 #            $s .= "\t\"@$line[$j]\"";
+		 # 	 }
+                 #     } else {
+                 #         $s .= "\t";
+                 #     }
+                 # }		
+		 
 		 $s =~ s/\n//g;
 		 $s =~ s/\r//g;
 		 $phenotype_string .= $s."\n";

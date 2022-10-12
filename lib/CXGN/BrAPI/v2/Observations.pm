@@ -9,6 +9,7 @@ use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileRequest;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::TimeUtils;
 use utf8;
 use JSON;
 
@@ -38,13 +39,18 @@ sub search {
     # observationUnitLevelName
     # observationUnitLevelOrder
     # observationUnitLevelCode
-    my $trial_ids;
-    if ($study_ids_arrayref || $trial_ids_arrayref){
-        $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
+    my @trial_ids;
+    if ($study_ids_arrayref){ 
+        push @trial_ids, @$study_ids_arrayref;
     }
+    if ($trial_ids_arrayref){ 
+        push @trial_ids, @$trial_ids_arrayref;
+    }
+    my $trial_ids = \@trial_ids;
 
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
+    my $limit;
+    if (!$trial_ids) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
+    my $offset; # = $page_size*$page;
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -87,7 +93,7 @@ sub search {
 
                 if ($counter >= $start_index && $counter <= $end_index) {
                     push @data_window, {
-                        additionalInfo=>undef,
+                        additionalInfo=>$_->{additional_info},
                         externalReferences=>undef,
                         germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
                         germplasmName => $obs_unit->{germplasm_uniquename},
@@ -96,11 +102,11 @@ sub search {
                         observationDbId => $observation_id,
                         observationVariableDbId => qq|$_->{trait_id}|,
                         observationVariableName => $_->{trait_name},
-                        observationTimeStamp => $obs_timestamp,
+                        observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                         season => \@season,
                         collector => $_->{operator},
                         studyDbId => qq|$obs_unit->{trial_id}|,
-                        uploadedBy=>undef,
+                        uploadedBy=> $_->{operator},
                         value => qq|$_->{value}|,
                     };
                 }
@@ -144,8 +150,8 @@ sub detail {
         $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
     }
 
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
+    my $limit;
+    my $offset;
 
     my ($data, $unique_traits)  = _search_observation_id(
             $self->bcs_schema,
@@ -182,7 +188,7 @@ sub detail {
             if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
 
             push @data_window, {
-                additionalInfo=>undef,
+                additionalInfo=>$_->{additional_info},,
                 externalReferences=>undef,
                 germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
                 germplasmName => $obs_unit->{germplasm_uniquename},
@@ -191,20 +197,19 @@ sub detail {
                 observationDbId => qq|$_->{phenotype_id}|,
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimeStamp => $obs_timestamp,
+                observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                 season => \@season,
                 collector => $_->{operator},
                 studyDbId => qq|$obs_unit->{trial_id}|,
-                uploadedBy=>undef,
+                uploadedBy=> $_->{operator},
                 value => qq|$_->{value}|,
             };
         }
     }
 
-    my %result = (data=>\@data_window);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(@data_window, $pagination, \@data_files, $status, 'Observations result constructed');
 }
 
 sub observations_store {
@@ -218,6 +223,7 @@ sub observations_store {
     my $dbh = $self->bcs_schema()->storage()->dbh();
 
     my $observations = $params->{observations};
+    my $overwrite_values = $params->{overwrite} ? $params->{overwrite} : 0;
     my $user_id = $params->{user_id};
     my $user_type = $params->{user_type};
     my $archive_path = $c->config->{archive_path};
@@ -231,11 +237,20 @@ sub observations_store {
     my %result;
 
     #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
+    if (!$user_id) {
+        print STDERR 'Must provide user_id to upload phenotypes! Please contact us!';
+        push @$status, {'403' => 'Permission Denied. Must provide user_id.'};
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must provide user_id to upload phenotypes! Please contact us!', 403);
+    }
+
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
         push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!', 403);
     }
+
+    my $p = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->find({sp_person_id=>$user_id});
+    my $user_name = $p->username;
 
     ## Validate request structure and parse data
     my $timestamp_included = 1;
@@ -247,13 +262,13 @@ sub observations_store {
     if (!$validated_request || $validated_request->{'error'}) {
         my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
         print STDERR $parse_error;
-        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($validated_request->{'success'}) {
         push @$status, {'info' => $validated_request->{'success'} };
     }
 
 
-    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_id, undef, undef);
+    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_name, undef, undef);
     my %parsed_data;
     my @units;
     my @variables;
@@ -261,7 +276,7 @@ sub observations_store {
     if (!$parsed_request || $parsed_request->{'error'}) {
         my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
         print STDERR $parse_error;
-        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($parsed_request->{'success'}) {
         push @$status, {'info' => $parsed_request->{'success'} };
         #define units (observationUnits) and variables (observationVariables) from parsed request
@@ -286,7 +301,7 @@ sub observations_store {
     my $archive_error_message = $response->{error_message};
     my $archive_success_message = $response->{success_message};
     if ($archive_error_message){
-        return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message);
+        return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message, 500);
     }
     if ($archive_success_message){
         push @$status, {'info' => $archive_success_message };
@@ -300,6 +315,7 @@ sub observations_store {
     my $timestamp = $time->ymd()."_".$time->hms();
     $phenotype_metadata{'archived_file'} = $file;
     $phenotype_metadata{'archived_file_type'} = 'brapi observations';
+    $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
     ## Store observations and return details for response
@@ -319,19 +335,29 @@ sub observations_store {
         values_hash=>\%parsed_data,
         has_timestamps=>1,
         metadata_hash=>\%phenotype_metadata,
+        overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
     );
+    my ($verified_warning, $verified_error) = $store_observations->verify();
+
+    if ($verified_error) {
+        print STDERR "Error: $verified_error\n";
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
+    }
+    if ($verified_warning) {
+        print STDERR "\nWarning: $verified_warning\n";
+    }
 
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request could not be processed correctly.", 500);
     }
     if ($stored_observation_success) {
         #if no error refresh matviews 
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
         print STDERR "Success: $stored_observation_success\n";
         # result need to be updated with v2 format
@@ -365,8 +391,6 @@ sub _search_observation_id {
     my $trait_contains;
     my $trait_list;
    
-
-    my $include_timestamp = $include_timestamp;
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
@@ -546,6 +570,14 @@ sub _search_observation_id {
                     }
                 }
             }
+            #get additional info
+            my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+            my $rs = $schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $additional_info_type_id, phenotype_id => $pheno_id });
+            if ($rs->count() > 0){
+                my $additional_info_json = $rs->first()->value();
+                $o->{additional_info}  = $additional_info_json ? decode_json($additional_info_json) : undef;
+            }
+
             push @return_observations, $o;
         }
 

@@ -1,4 +1,4 @@
-import "../legacy/d3/d3v4Min.js";
+import "../legacy/d3/d3v5Min.js";
 import "../legacy/CXGN/Dataset.js";
 
 /**
@@ -6,14 +6,35 @@ import "../legacy/CXGN/Dataset.js";
  *
  * @class
  * @classdesc links to a wizard and manages showing relavant related data
- * @param  {type} main_id div to draw within 
- * @param  {type} wizard wizard to link to 
+ * @param  {type} main_id div to draw within
+ * @param  {type} wizard wizard to link to
  * @returns {Object}
- */ 
+ */
+
+function openWindowWithPost(url, data) {
+  var form = document.createElement("form");
+  form.target = "_blank";
+  form.method = "POST";
+  form.action = url;
+  form.style.display = "none";
+
+  for (var key in data) {
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = data[key];
+    form.appendChild(input);
+  }
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+}
+
 export function WizardDownloads(main_id,wizard){
   var main = d3.select(main_id);
   var datasets = new CXGN.Dataset();
-  
+
   var categories = [];
   var selections = {};
   var operations = {};
@@ -21,7 +42,7 @@ export function WizardDownloads(main_id,wizard){
     categories = c;
     selections = s;
     operations = o;
-    
+
     // Genotype downloads
     var accessions = categories.indexOf("accessions")!=-1?
       selections["accessions"]:
@@ -50,9 +71,27 @@ export function WizardDownloads(main_id,wizard){
         var end_position = d3.select(".wizard-download-genotypes-end-position").node().value;
         var download_format = d3.select(".wizard-download-genotypes-format").node().value;
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
+        var include_duplicate_genotypes = d3.select(".wizard-download-genotypes-duplicates-include").property("checked");
         var marker_set_list_id = d3.select(".wizard-download-genotypes-marker-set-list-id").node().value;
-        var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}&marker_set_list_id=${marker_set_list_id}`;
-        window.open(url,'_blank');
+        if(chromosome_number && marker_set_list_id) {
+            alert(`Please indicate either chromosome or markerset, not both.`);
+            d3.select(this).attr("disabled",null);
+            return;
+        }
+        var url = document.location.origin+'/breeders/download_gbs_action';
+        openWindowWithPost(url, {
+            ids: accession_ids.join(","),
+            protocol_id: protocol_id,
+            format: accession_ids,
+            chromosome_number: chromosome_number,
+            start_position: start_position,
+            end_position: end_position,
+            trial_ids: trial_ids.join(","),
+            download_format: download_format,
+            compute_from_parents: compute_from_parents,
+            marker_set_list_id: marker_set_list_id,
+            include_duplicate_genotypes: include_duplicate_genotypes,
+        });
       });
     main.selectAll(".wizard-download-genetic-relationship-matrix")
       .attr("disabled",!!accessions.length&&protocols.length<=1?null:true)
@@ -66,8 +105,18 @@ export function WizardDownloads(main_id,wizard){
         var marker_filter = d3.select(".wizard-download-genotypes-grm-marker-filter").node().value;
         var individuals_filter = d3.select(".wizard-download-genotypes-grm-individuals-filter").node().value;
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
-        var url = document.location.origin+`/breeders/download_grm_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}&minor_allele_frequency=${maf}&marker_filter=${marker_filter}&individuals_filter=${individuals_filter}`;
-        window.open(url,'_blank');
+        var url = document.location.origin+'/breeders/download_grm_action';
+        openWindowWithPost(url, {
+            ids: accession_ids.join(","),
+            protocol_id: protocol_id,
+            format: accession_ids,
+            trial_ids: trial_ids.join(","),
+            download_format: download_format,
+            compute_from_parents: compute_from_parents,
+            minor_allele_frequency: maf,
+            marker_filter: marker_filter,
+            individuals_filter: individuals_filter,
+        });
       });
     main.selectAll(".wizard-download-gwas")
         .attr("disabled",!!traits.length&&accessions.length&&protocols.length<=1?null:true)
@@ -82,8 +131,19 @@ export function WizardDownloads(main_id,wizard){
           var download_format = d3.select(".wizard-download-genotypes-gwas-format").node().value;
           var repeated_measurements = d3.select(".wizard-download-genotypes-gwas-repeated-measurements").node().value;
           var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
-          var url = document.location.origin+`/breeders/download_gwas_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trait_ids=${trait_ids.join(",")}&compute_from_parents=${compute_from_parents}&minor_allele_frequency=${maf}&marker_filter=${marker_filter}&individuals_filter=${individuals_filter}&download_format=${download_format}&traits_are_repeated_measurements=${repeated_measurements}`;
-          window.open(url,'_blank');
+          var url = document.location.origin+'/breeders/download_gwas_action';
+          openWindowWithPost(url, {
+            ids: accession_ids.join(","),
+            protocol_id: protocol_id,
+            format: accession_ids,
+            trait_ids: trait_ids.join(","),
+            compute_from_parents: compute_from_parents,
+            minor_allele_frequency: maf,
+            marker_filter: marker_filter,
+            individuals_filter: individuals_filter,
+            download_format: download_format,
+            traits_are_repeated_measurements: repeated_measurements,
+          });
       });
     // Download Trial Metadata
     var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
@@ -94,10 +154,14 @@ export function WizardDownloads(main_id,wizard){
       .on("click",()=>{
         var t_ids = JSON.stringify(trials.map(d=>d.id));
         var format = d3.select(".wizard-download-tmetadata-format").node().value;
-        var url = document.location.origin+`/breeders/trials/phenotype/download?trial_list=${t_ids}&format=${format}&dataLevel=metadata`;
-        window.open(url,'_blank');
+        var url = document.location.origin+'/breeders/trials/phenotype/download';
+        openWindowWithPost(url, {
+            trial_list: t_ids,
+            format: format,
+            dataLevel: 'metadata'
+        });
       });
-      
+
     // Download Trial Phenotypes
     var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
     var traits = categories.indexOf("traits")!=-1 ? selections["traits"] : [];
@@ -106,8 +170,8 @@ export function WizardDownloads(main_id,wizard){
     var plants = categories.indexOf("plants")!=-1 ? selections["plants"] : [];
     var locations = categories.indexOf("locations")!=-1 ? selections["locations"] : [];
     var years = categories.indexOf("years")!=-1 ? selections["years"] : [];
-    
-    
+
+
     main.selectAll(".wizard-download-phenotypes-info")
       .attr("value",`${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-phenotypes")
@@ -121,26 +185,41 @@ export function WizardDownloads(main_id,wizard){
         var plant_ids = JSON.stringify(plants.map(d=>d.id));
         var location_ids = JSON.stringify(locations.map(d=>d.id));
         var year_ids = JSON.stringify(years.map(d=>d.id));
-        
+
+        var speed = d3.select(".wizard-download-phenotypes-speed").node().value;
         var format = d3.select(".wizard-download-phenotypes-format").node().value;
         var level = d3.select(".wizard-download-phenotypes-level").node().value;
         var timestamp = d3.selectAll('.wizard-download-phenotypes-timestamp').property('checked')?1:0;
+        var entry_numbers = d3.selectAll('.wizard-download-phenotypes-entry-numbers').property('checked')?1:0;
         var outliers = d3.selectAll('.wizard-download-phenotypes-outliers').property('checked')?1:0;
         var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
         var min = d3.select(".wizard-download-phenotypes-min").node().value;
         var max = d3.select(".wizard-download-phenotypes-max").node().value;
-        
-        var url = document.location.origin+
-        `/breeders/trials/phenotype/download?trial_list=${trial_ids}`+
-        `&format=${format}&trait_list=${trait_ids}&trait_component_list=${comp_ids}`+
-        `&accession_list=${accession_ids}&plot_list=${plot_ids}&plant_list=${plant_ids}&location_list=${location_ids}`+
-        `&year_list=${year_ids}&dataLevel=${level}&phenotype_min_value=${min}&phenotype_max_value=${max}`+
-        `&timestamp=${timestamp}&trait_contains=${names}`+
-        `&include_row_and_column_numbers=1&exclude_phenotype_outlier=${outliers}`+
-        `&include_pedigree_parents=0`;
-        window.open(url,'_blank');
+
+        var url = document.location.origin+'/breeders/trials/phenotype/download';
+        openWindowWithPost(url, {
+            trial_list: trial_ids,
+            speed: speed,
+            format: format,
+            trait_list: trait_ids,
+            trait_component_list: comp_ids,
+            accession_list: accession_ids,
+            plot_list: plot_ids,
+            plant_list: plant_ids,
+            location_list: location_ids,
+            year_list: year_ids,
+            dataLevel: level,
+            phenotype_min_value: min,
+            phenotype_max_value: max,
+            timestamp: timestamp,
+            entry_numbers: entry_numbers,
+            trait_contains: names,
+            include_row_and_column_numbers: 1,
+            exclude_phenotype_outlier: outliers,
+            include_pedigree_parents: 0,
+        });
       });
 });
-  
-  
+
+
 }

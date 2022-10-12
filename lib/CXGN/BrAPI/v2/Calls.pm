@@ -56,8 +56,6 @@ sub search {
 
     my @data_files;
     my %result;
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
@@ -69,8 +67,6 @@ sub search {
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
         protocol_id_list=>\@protocol_ids,
-        limit=>$limit,
-        offset=>$offset,
     });
     my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 0);
     

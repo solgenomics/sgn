@@ -88,6 +88,9 @@ sub old_direct_search : Path('/search/direct_search.pl') {
     my ( $self, $c ) = @_;
 
     my $term = $c->req->param('search');
+
+    $term =~ s/[{}\n\r;'"]//g;
+    
     # map the old direct_search param to the new scheme
     $term = {
         cvterm_name => 'qtl',

@@ -24,7 +24,6 @@ library(jsonlite)
 library(data.table)
 
 
-
 allArgs <- commandArgs()
 
 
@@ -57,11 +56,11 @@ message('model_id ', modelId)
 datasetInfoFile <- grep("dataset_info", inputFiles, value = TRUE)
 datasetInfo     <- c()
 
-if (length(datasetInfoFile) != 0 ) { 
-    datasetInfo <- scan(datasetInfoFile, what = "character")    
-    datasetInfo <- paste(datasetInfo, collapse = " ")   
-  } else {   
-    datasetInfo <- c('single population')  
+if (length(datasetInfoFile) != 0 ) {
+    datasetInfo <- scan(datasetInfoFile, what = "character")
+    datasetInfo <- paste(datasetInfo, collapse = " ")
+  } else {
+    datasetInfo <- c('single population')
   }
 
 #validationTrait <- paste("validation", trait, sep = "_")
@@ -84,8 +83,12 @@ markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 #traitPhenoFile <- paste("trait_phenotype_data", traitId, sep = "_")
 modelPhenoFile <- grep('model_phenodata', outputFiles, value = TRUE)
 message('model input trait pheno file ', modelPhenoFile)
+modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
+message('model input trait geno file ', modelPhenoFile)
+traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
-filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, value = TRUE)
+filteredTrainingGenoFile       <- grep("filtered_training_genotype_data", outputFiles, value = TRUE)
+filteredSelGenoFile       <- grep("filtered_selection_genotype_data", outputFiles, value = TRUE)
 formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
 
 genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
@@ -98,41 +101,37 @@ if (file.info(genoFile)$size == 0) {
   stop("genotype data file is empty.")
 }
 
-readFilteredGenoData <- c()
-filteredGenoData <- c()
+readfilteredTrainingGenoData <- c()
+filteredTrainingGenoData <- c()
 formattedPhenoData <- c()
 phenoData          <- c()
 genoData           <- c()
 
-if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
-    filteredGenoData     <- fread(filteredGenoFile,
+if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
+    filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,
                                   na.strings = c("NA", "", "--", "-"),
                                   header = TRUE)
 
-    genoData <-  data.frame(filteredGenoData)
-    genoData <- column_to_rownames(genoData, 'V1') 
-    readFilteredGenoData <- 1
+    genoData <-  data.frame(filteredTrainingGenoData)
+    genoData <- column_to_rownames(genoData, 'V1')
+    readfilteredTrainingGenoData <- 1
 }
 
-
-if (is.null(filteredGenoData)) {
+if (is.null(filteredTrainingGenoData)) {
     genoData <- fread(genoFile,
                       na.strings = c("NA", "", "--", "-"),
                       header = TRUE)
-    
     genoData <- unique(genoData, by='V1')
     genoData <- data.frame(genoData)
-    genoData <- column_to_rownames(genoData, 'V1')    
-   
+    genoData <- column_to_rownames(genoData, 'V1')
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
     genoData <- filterGenoData(genoData, maf=0.01)
     genoData <- roundAlleleDosage(genoData)
-    
-    filteredGenoData   <- genoData
-    
-}
 
+    filteredTrainingGenoData   <- genoData
+
+}
 genoData <- genoData[order(row.names(genoData)), ]
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
@@ -144,10 +143,10 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
 } else {
 
     if (datasetInfo == 'combined populations') {
-        
+
          phenoFile <- grep("model_phenodata", inputFiles, value = TRUE)
     } else {
-    
+
         phenoFile <- grep("\\/phenotype_data", inputFiles, value = TRUE)
     }
 
@@ -163,53 +162,57 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
                                   sep = "\t",
                                   na.strings = c("NA", "", "--", "-", "."),
                                   header = TRUE))
+
+
 }
 
 phenoTrait <- c()
+traitRawPhenoData <- c()
 
 if (datasetInfo == 'combined populations') {
-  
+
    if (!is.null(formattedPhenoData)) {
       phenoTrait <- subset(formattedPhenoData, select = traitAbbr)
       phenoTrait <- na.omit(phenoTrait)
-   
+
   } else {
-        
+
       if (any(grepl('Average', names(phenoData)))) {
-          phenoTrait <- phenoData %>% select(V1, Average) %>% data.frame        
+          phenoTrait <- phenoData %>% select(V1, Average) %>% data.frame
       } else {
           phenoTrait <- phenoData
       }
-          
+
       colnames(phenoTrait)  <- c('genotypes', traitAbbr)
-  }   
+  }
  } else {
 
      if (!is.null(formattedPhenoData)) {
          phenoTrait <- subset(formattedPhenoData, select = c('V1', traitAbbr))
          phenoTrait <- as.data.frame(phenoTrait)
          phenoTrait <- na.omit(phenoTrait)
-         print(head(phenoTrait))
          colnames(phenoTrait)[1] <- 'genotypes'
-         
+
      } else if (length(grep('list', phenoFile)) != 0) {
  message('phenoTrait traitAbbr ', traitAbbr)
          phenoTrait <- averageTrait(phenoData, traitAbbr)
-         
+
      } else {
-         print(head(phenoTrait))
-          print(head(phenoData))
          message('phenoTrait trait_abbr ', traitAbbr)
-         print(class(traitAbbr))
-         print(traitAbbr)
          phenoTrait <- getAdjMeans(phenoData,
                                    traitName = traitAbbr,
                                    calcAverages = TRUE)
      }
+
+     keepMetaCols <- c('observationUnitName', 'germplasmName', 'studyDbId', 'locationName',
+                    'studyYear', 'replicate', 'blockNumber', traitAbbr)
+
+      traitRawPhenoData <- phenoData %>%
+                                          select(all_of(keepMetaCols))
+
+
 }
 
-print('phenoTrait')
-print(head(phenoTrait))
 meanType <- names(phenoTrait)[2]
 names(phenoTrait)  <- c('genotypes', traitAbbr)
 
@@ -223,7 +226,7 @@ if (length(selectionTempFile) !=0 ) {
   selectionAllFiles <- scan(selectionTempFile, what = "character")
 
   selectionFile <- grep("\\/genotype_data", selectionAllFiles, value = TRUE)
-  
+
   #filteredPredGenoFile   <- grep("filtered_genotype_data_",  selectionAllFiles, value = TRUE)
 }
 
@@ -240,22 +243,24 @@ filteredPredGenoData     <- c()
 ##   selectionData           <- data.frame(selectionData)
 ##   rownames(selectionData) <- selectionData[, 1]
 ##   selectionData[, 1]      <- NULL
-    
+
 ## } else
+
 if (length(selectionFile) != 0) {
-    
+
     selectionData <- fread(selectionFile,
                            header = TRUE,
                            na.strings = c("NA", "", "--", "-"))
 
-    selectionData <- unique(selectionData, by='V1')
-    selectionData <- data.frame(selectionData)
-    selectionData <- column_to_rownames(selectionData, 'V1')      
+  selectionData <- data.frame(selectionData)
    
+
+    selectionData <- unique(selectionData, by='V1')
+   
+    selectionData <- column_to_rownames(selectionData, 'V1')
     selectionData <- convertToNumeric(selectionData)
     selectionData <- filterGenoData(selectionData, maf=0.01)
-    selectionData <- roundAlleleDosage(selectionData)  
-
+    selectionData <- roundAlleleDosage(selectionData)
     filteredPredGenoData <- selectionData
 }
 
@@ -296,17 +301,16 @@ if (length(selectionData) != 0) {
   commonMarkers       <- intersect(names(data.frame(genoDataFilteredObs)), names(selectionData))
   selectionData      <- subset(selectionData, select = commonMarkers)
   genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
-  
+
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
     selectionData <- na.roughfix(selectionData)
     selectionData <- data.frame(selectionData)
   }
 }
-
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoDataFilteredObs[1, ], value = TRUE)
-if(length(genoTrCode) != 0) {
+if(length(genoTrCode)) {
   genoData            <- genoData - 1
   genoDataFilteredObs <- genoDataFilteredObs - 1
 }
@@ -345,20 +349,19 @@ if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
       relationshipMatrix <- data.frame(fread(relationshipMatrixFile,
       			 header = TRUE))
-			 
+
       rownames(relationshipMatrix) <- relationshipMatrix[, 1]
       relationshipMatrix[, 1]      <- NULL
       colnames(relationshipMatrix) <- rownames(relationshipMatrix)
       relationshipMatrix           <- data.matrix(relationshipMatrix)
-      
+
   } else {
     relationshipMatrix           <- A.mat(genoData)
-    diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
-    
+  diag(relationshipMatrix)     <- diag(relationshipMatrix) %>% replace(., . < 1, 1)
+relationshipMatrix <- relationshipMatrix %>% replace(., . < 0, 0)
+
     inbreeding <- diag(relationshipMatrix)
     inbreeding <- inbreeding - 1
-   
-    inbreeding <- inbreeding %>% replace(., . < 0, 0)
     inbreeding <- data.frame(inbreeding)
 
     inbreeding <- inbreeding %>%
@@ -382,8 +385,6 @@ traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationship
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
 
-#relationshipMatrixFiltered <- relationshipMatrixFiltered + 1e-3
-
 nCores <- detectCores()
 
 if (nCores > 1) {
@@ -391,7 +392,6 @@ if (nCores > 1) {
 } else {
   nCores <- 1
 }
-
 
 if (length(selectionData) == 0) {
 
@@ -409,45 +409,47 @@ if (length(selectionData) == 0) {
   trGEBVSE  <- data.frame(round(trGEBVSE, 2))
 
   trGEBV <- data.frame(round(trGEBV, 2))
-  
+
   colnames(trGEBVSE) <- c('SE')
   colnames(trGEBV) <- traitAbbr
-   
+
   trGEBVSE <- rownames_to_column(trGEBVSE, var="genotypes")
   trGEBV   <- rownames_to_column(trGEBV, var="genotypes")
-  
+
   trGEBVSE <- full_join(trGEBV, trGEBVSE)
-  
-  trGEBVSE <-  trGEBVSE %>% arrange_(.dots= paste0('desc(', traitAbbr, ')'))                                
- 
+
+  trGEBVSE <-  trGEBVSE %>% arrange_(.dots= paste0('desc(', traitAbbr, ')'))
+
   trGEBVSE <- column_to_rownames(trGEBVSE, var="genotypes")
-  
+
   trGEBV <- trGEBV %>% arrange_(.dots = paste0('desc(', traitAbbr, ')'))
   trGEBV <- column_to_rownames(trGEBV, var="genotypes")
-   
+
   phenoTraitMarker    <- data.matrix(phenoTraitMarker)
   genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
 
   markerEffects <- mixed.solve(y = phenoTraitMarker,
                                Z = genoDataFilteredObs
                                )
-  
+
   ordered.markerEffects <- data.matrix(markerEffects$u)
   ordered.markerEffects <- data.matrix(ordered.markerEffects [order (-ordered.markerEffects[, 1]), ])
   ordered.markerEffects <- round(ordered.markerEffects, 5)
 
   colnames(ordered.markerEffects) <- c("Marker Effects")
-  ordered.markerEffects <- data.frame(ordered.markerEffects) 
+  ordered.markerEffects <- data.frame(ordered.markerEffects)
 
 
-  modelPhenoData   <- data.frame(round(phenoTraitMarker, 2))   
+  modelPhenoData   <- data.frame(round(phenoTraitMarker, 2))
 
   heritability  <- round((trModel$Vg/(trModel$Ve + trModel$Vg)), 2)
+  additiveVar <- round(trModel$Vg, 2)
+  errorVar <- round(trModel$Ve, 2)
 
   cat("\n", file = varianceComponentsFile,  append = FALSE)
-  cat('Additive genetic variance',  trModel$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat('Additive genetic variance', additiveVar , file = varianceComponentsFile, sep = '\t', append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
-  cat('Error variance', trModel$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
+  cat('Error variance', errorVar, file = varianceComponentsFile, sep = "\t", append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('SNP heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
 
@@ -464,7 +466,7 @@ if (length(selectionData) == 0) {
 
           allGebvs <- merge(combinedGebvs, trGEBV,
                             by = 0,
-                            all = TRUE                     
+                            all = TRUE
                             )
 
           rownames(allGebvs) <- allGebvs[,1]
@@ -482,21 +484,22 @@ if (length(selectionData) == 0) {
       }
 
       set.seed(4567)
-      
+
+    
       k <- 10
       times <- 2
       cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
 
       for ( r in 1:times) {
           re <- paste0('Rep', r)
-          
+
           for (i in 1:k) {
               fo <- ifelse(i < 10, 'Fold0', 'Fold')
-              
+
               trFoRe <- paste0(fo, i, '.', re)
               trG <- cvFolds[[trFoRe]]
               slG <- as.numeric(rownames(phenoTrait[-trG,]))
-              
+
               kblup <- paste("rKblup", i, sep = ".")
 
               result <- kin.blup(data  = phenoTrait[trG,],
@@ -506,49 +509,49 @@ if (length(selectionData) == 0) {
                                  n.core = nCores,
                                  PEV    = TRUE
                                  )
-              
+
               assign(kblup, result)
-              
+
                                         #calculate cross-validation accuracy
               valBlups   <- result$g
-              
+
               valBlups   <- data.frame(valBlups)
-              
-              slG <- slG[which(slG <= nrow(phenoTrait))]   
-              
+
+              slG <- slG[which(slG <= nrow(phenoTrait))]
+
               slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
-              rownames(slGDf) <- slGDf[, 1]     
+              rownames(slGDf) <- slGDf[, 1]
               slGDf[, 1] <- NULL
-              
+
               valBlups <-  rownames_to_column(valBlups, var="genotypes")
               slGDf    <-  rownames_to_column(slGDf, var="genotypes")
-              
-              valCorData <- inner_join(slGDf, valBlups, by="genotypes")    
+
+              valCorData <- inner_join(slGDf, valBlups, by="genotypes")
               valCorData$genotypes <- NULL
-              
-              accuracy   <- try(cor(valCorData))  
+
+              accuracy   <- try(cor(valCorData))
               validation <- paste("validation", trFoRe, sep = ".")
               cvTest <- paste("CV", trFoRe, sep = " ")
 
-              if ( class(accuracy) != "try-error")
+              if (inherits(accuracy, 'try-error') == FALSE)
               {
                   accuracy <- round(accuracy[1,2], digits = 3)
                   accuracy <- data.matrix(accuracy)
-                  
+
                   colnames(accuracy) <- c("correlation")
                   rownames(accuracy) <- cvTest
 
                   assign(validation, accuracy)
-                  
+
                   if (!is.na(accuracy[1,1])) {
                       validationAll <- rbind(validationAll, accuracy)
-                  }    
+                  }
               }
           }
-      }    
+      }
 
       validationAll <- data.frame(validationAll[order(-validationAll[, 1]), ])
-      colnames(validationAll) <- c('Correlation')     
+      colnames(validationAll) <- c('Correlation')
   }
 }
 
@@ -556,11 +559,13 @@ selectionPopResult <- c()
 selectionPopGEBVs  <- c()
 selectionPopGEBVSE <- c()
 
+#selection pop geno data after  cleaning up and removing unique markers to selection pop
+filteredSelGenoData <- selectionData
 if (length(selectionData) != 0) {
-    
+
     genoDataTrSl <- rbind(genoDataFilteredObs, selectionData)
     rTrSl <- A.mat(genoDataTrSl)
-    
+
     selectionPopResult <- kin.blup(data   = phenoTrait,
                                     geno   = 'genotypes',
                                     pheno  = traitAbbr,
@@ -568,28 +573,28 @@ if (length(selectionData) != 0) {
                                     n.core = nCores,
                                     PEV    = TRUE
                                     )
-    
+
     selectionPopGEBVs <- round(data.frame(selectionPopResult$g), 2)
     colnames(selectionPopGEBVs) <- traitAbbr
     selectionPopGEBVs <- rownames_to_column(selectionPopGEBVs, var="genotypes")
-       
+
     selectionPopPEV <- selectionPopResult$PEV
     selectionPopSE  <- sqrt(selectionPopPEV)
     selectionPopSE  <- data.frame(round(selectionPopSE, 2))
     colnames(selectionPopSE) <- 'SE'
     genotypesSl     <- rownames(selectionData)
-    
+
     selectionPopSE <- rownames_to_column(selectionPopSE, var="genotypes")
     selectionPopSE <-  selectionPopSE %>% filter(genotypes %in% genotypesSl)
-   
+
     selectionPopGEBVs <-  selectionPopGEBVs %>% filter(genotypes %in% genotypesSl)
-      
+
     selectionPopGEBVSE <- inner_join(selectionPopGEBVs, selectionPopSE, by="genotypes")
-   
-    sortVar <- parse_quosure(traitAbbr)
-    selectionPopGEBVs <- selectionPopGEBVs %>% arrange(desc((!!sortVar)))    
+
+    sortVar <- parse_expr(traitAbbr)
+    selectionPopGEBVs <- selectionPopGEBVs %>% arrange(desc((!!sortVar)))
     selectionPopGEBVs <- column_to_rownames(selectionPopGEBVs, var="genotypes")
- 
+
     selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange(desc((!!sortVar)))
     selectionPopGEBVSE <- column_to_rownames(selectionPopGEBVSE, var="genotypes")
 }
@@ -651,12 +656,12 @@ if (length(combinedGebvsFile) != 0 ) {
 }
 
 
-if (!is.null(modelPhenoData) & length(modelPhenoFile) != 0) {
+if (!is.null(modelPhenoData) && length(modelPhenoFile) != 0) {
 
     if (!is.null(meanType)) {
         colnames(modelPhenoData) <- meanType
     }
- 
+
     fwrite(modelPhenoData,
            file  = modelPhenoFile,
            row.names = TRUE,
@@ -665,10 +670,32 @@ if (!is.null(modelPhenoData) & length(modelPhenoFile) != 0) {
            )
 }
 
+if (!is.null(genoDataFilteredObs) && length(modelGenoFile) != 0) {
 
-if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
-  fwrite(filteredGenoData,
-         file  = filteredGenoFile,
+    fwrite(genoDataFilteredObs,
+           file  = modelGenoFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
+}
+
+if (!is.null(traitRawPhenoData) && length(traitRawPhenoFile) != 0) {
+
+    fwrite(traitRawPhenoData,
+           file  = traitRawPhenoFile,
+           row.names = FALSE,
+           sep   = "\t",
+           na = 'NA',
+           quote = FALSE,
+           )
+}
+
+message('filteredTrainingGenoFile: ', filteredTrainingGenoFile)
+
+if (!is.null(filteredTrainingGenoData) && file.info(filteredTrainingGenoFile)$size == 0) {
+  fwrite(filteredTrainingGenoData,
+         file  = filteredTrainingGenoFile,
          row.names = TRUE,
          sep   = "\t",
          quote = FALSE,
@@ -676,14 +703,14 @@ if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
 
 }
 
-## if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
-##   fwrite(filteredPredGenoData,
-##          file  = filteredPredGenoFile,
-##          row.names = TRUE,
-##          sep   = "\t",
-##          quote = FALSE,
-##          )
-## }
+if (length(filteredSelGenoFile) != 0 && file.info(filteredSelGenoFile)$size == 0) {
+  fwrite(filteredSelGenoData,
+         file  = filteredSelGenoFile,
+         row.names = TRUE,
+         sep   = "\t",
+         quote = FALSE,
+         )
+}
 
 ## if (!is.null(genoDataMissing)) {
 ##   write.table(genoData,
@@ -706,29 +733,29 @@ if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
 
 
 if (file.info(relationshipMatrixFile)$size == 0) {
-  
+
   fwrite(relationshipMatrix,
          file  = relationshipMatrixFile,
          row.names = TRUE,
          sep   = "\t",
          quote = FALSE,
-         )   
+         )
 }
 
 if (file.info(relationshipMatrixJsonFile)$size == 0) {
 
     relationshipMatrixJson <- relationshipMatrix
     relationshipMatrixJson[upper.tri(relationshipMatrixJson)] <- NA
- 
-    
+
+
     relationshipMatrixJson <- data.frame(relationshipMatrixJson)
-  
+
     relationshipMatrixList <- list(labels = names(relationshipMatrixJson),
                                        values = relationshipMatrixJson)
 
     relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)
 
-    
+
     write(relationshipMatrixJson,
                     file  = relationshipMatrixJsonFile,
                     )
@@ -743,7 +770,7 @@ if (file.info(traitRelationshipMatrixFile)$size == 0) {
     diag(traitRelationshipMatrix) <- inbre
 
     traitRelationshipMatrix <- data.frame(traitRelationshipMatrix) %>% replace(., . < 0, 0)
-    
+
     fwrite(traitRelationshipMatrix,
            file  = traitRelationshipMatrixFile,
            row.names = TRUE,
@@ -755,14 +782,14 @@ if (file.info(traitRelationshipMatrixFile)$size == 0) {
 
         traitRelationshipMatrixJson <- traitRelationshipMatrix
         traitRelationshipMatrixJson[upper.tri(traitRelationshipMatrixJson)] <- NA
-        
+
         traitRelationshipMatrixJson <- data.frame(traitRelationshipMatrixJson)
-        
+
         traitRelationshipMatrixList <- list(labels = names(traitRelationshipMatrixJson),
                                             values = traitRelationshipMatrixJson)
 
         traitRelationshipMatrixJson <- jsonlite::toJSON(traitRelationshipMatrixList)
-        
+
         write(traitRelationshipMatrixJson,
               file  = traitRelationshipMatrixJsonFile,
               )
@@ -771,7 +798,7 @@ if (file.info(traitRelationshipMatrixFile)$size == 0) {
 
 
 if (file.info(inbreedingFile)$size == 0) {
-  
+
   fwrite(inbreeding,
          file  = inbreedingFile,
          row.names = TRUE,
@@ -784,14 +811,14 @@ if (file.info(inbreedingFile)$size == 0) {
 if (file.info(aveKinshipFile)$size == 0) {
 
     aveKinship <- data.frame(apply(traitRelationshipMatrix, 1, mean))
-  
+
     aveKinship<- aveKinship %>%
-        rownames_to_column('genotypes') %>%     
+        rownames_to_column('genotypes') %>%
         rename(Mean_kinship = contains('traitRe')) %>%
         arrange(Mean_kinship) %>%
         mutate_at('Mean_kinship', round, 3) %>%
-        column_to_rownames('genotypes')  
-    
+        column_to_rownames('genotypes')
+
     fwrite(aveKinship,
            file  = aveKinshipFile,
            row.names = TRUE,

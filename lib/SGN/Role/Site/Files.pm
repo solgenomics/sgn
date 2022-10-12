@@ -230,7 +230,7 @@ sub _default_temp_base {
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
-    eval { mkpath( "$tempdir" ); };
+    eval { mkpath( readlink($tempdir) || $tempdir ); };
 
     if ($@) { 
 	print STDERR "the following error occurred while attempting to generate $tempdir : $@ (may be ok)\n";
@@ -326,10 +326,10 @@ sub uri_for_file {
 
 =head2 site_cluster_shared_dir
 
- Usage:        my $dir = $c->site_cluster_shared_dir();
- Desc:         returns the site-specific subdir that is cluster shareable.
- Ret:          ditto
- Args:         none
+ Usage:      my $dir = $c->site_cluster_shared_dir();
+ Desc:        based on the hostname, formulates  the site-specific subdir that is cluster shareable.
+ Ret:          the absolute path to site-specific subdir in the cluster shareable dir.
+ Args:       none
  Side Effects: none
  Example:       
 
@@ -338,12 +338,13 @@ sub uri_for_file {
 sub site_cluster_shared_dir { 
     my $self = shift;
 
-    my $host = $self->req->base;
+    my $cluster_dir = $self->config->{cluster_shared_tempdir};
+    my $host = $self->config->{main_production_site_url}; 
     $host    =~ s/(https?)|(:\d+)|\/|://g;
     $host    =~ s/(www\.)//;
-    $host    = File::Spec->catdir($self->config->{cluster_shared_tempdir}, $host);
-   
-    return $host;
+    my $host_dir    = File::Spec->catdir($cluster_dir, $host);
+
+    return $host_dir;
 
 }
 

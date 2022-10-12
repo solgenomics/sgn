@@ -1,4 +1,4 @@
-/** 
+/**
 * search trials
 *
 * @author Isaak Y Tecle <iyt2@cornell.edu>
@@ -8,10 +8,10 @@
 
 
 
-jQuery(document).ready(function(){ 
- 
+jQuery(document).ready(function(){
+
     var url = window.location.pathname;
-    
+
     if (url.match(/solgs\/search\/trials\/trait\//) != null) {
 	var traitId = jQuery("input[name='trait_id']").val();
 
@@ -20,183 +20,190 @@ jQuery(document).ready(function(){
 	jQuery('#genotyping_protocol_id').val(protocolId);
 
 	url = '/solgs/search/result/populations/' + traitId + '/gp/' + protocolId;
-	searchAllTrials(url);   
+	searchAllTrials(url);
     } else {
 	url = '/solgs/search/trials/';
     }
 
-  //  searchAllTrials(url);               
+  //  searchAllTrials(url);
 });
 
 
 function searchAllTrials(url, result) {
-    
+
     jQuery("#all_trials_search_message").html('Searching for GS trials..').show();
-    
+
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
         url: url,
         data: {'show_result': result},
         cache: true,
-        success: function(res) { 
+        success: function(res) {
 
             jQuery("#all_trials_search_message").hide();
-  
+
             listAllTrials(res.trials)
             var pagination = res.pagination;
-       
-            jQuery("#all_trials_search_message").hide(); 
+
+            jQuery("#all_trials_search_message").hide();
 	   jQuery("#all_trials_div").append(pagination);
         },
-        error: function() {               
-            jQuery("#all_trials_search_message").html('Error occured fetching the first set of GS trials.').show();          
+        error: function() {
+            jQuery("#all_trials_search_message").html('Error occured fetching the first set of GS trials.').show();
         }
 
     });
-    
-  
-    jQuery("#all_trials_div").on('click', "div.paginate_nav a", function(e) { 
+
+
+    jQuery("#all_trials_div").on('click', "div.paginate_nav a", function(e) {
         var page = jQuery(this).attr('href');
-       
+
         jQuery("#all_trials_div").empty();
-    
-        jQuery("#all_trials_search_message").html('Searching for more GS trials..').show(); 
- 
+
+        jQuery("#all_trials_search_message").html('Searching for more GS trials..').show();
+
         if (page) {
-            jQuery.ajax({ 
+            jQuery.ajax({
                 type: 'POST',
                 dataType: "json",
                 url: page,
-                success: function(res) {                                                                                 
+                success: function(res) {
 		    listAllTrials(res.trials)
                     var pagination = res.pagination;
-                    jQuery("#all_trials_search_message").hide(); 
+                    jQuery("#all_trials_search_message").hide();
 		    jQuery("#all_trials_div").append(pagination);
-                },               
+                },
                 error: function() {
                     jQuery("#all_trials_search_message").html('Error occured fetching the next set of GS trials.').show();
-                }                    
-            });                
+                }
+            });
         }
 
         return false;
-    });                
+    });
 
 }
 
 
 function listAllTrials (trials)  {
-   
+
     if (trials) {
-	var tableId = 'all_trials_table';
-	var divId   = 'all_trials_div';
+	var tableId = '#all_trials_table';
+	var allTrialsDivId   = '#all_trials_div';
 
 	var tableDetails = {
-	    'divId'  : divId, 
-	    'tableId': tableId, 
+	    'divId'  : allTrialsDivId,
+	    'tableId': tableId,
 	    'data'   : trials
 	};
 
 	jQuery('#searched_trials_div').empty();
-	jQuery('#all_trials_div').empty();
+	jQuery(allTrialsDivId).empty();
 
 	displayTrainingPopulations(tableDetails);
 
     } else {
-	jQuery("#all_trials_search_message").html('No trials to show.').show();	
+	jQuery("#all_trials_search_message").html('No trials to show.').show();
     }
 
 }
 
 
-function checkTrainingPopulation (popId) {
+function checkTrainingPopulation (popIds) {
 
-    var protocolId = jQuery('#genotyping_protocol_id').val();
-    
-    jQuery.ajax({
+	var resultDivId   = '#searched_trials_div';
+	var tableId = '#searched_trials_table';
+	var msgDiv = '#searched_trials_message';
+	var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+
+	var args = {'population_ids': popIds, 'genotyping_protocol_id': protocolId };
+	args = JSON.stringify(args);
+	
+    jQuery.ajax({ 
         type: 'POST',
         dataType: 'json',
-        url: '/solgs/check/training/population/' + popId + '/gp/' + protocolId,
+        url: '/solgs/check/training/population',
+        data: {'arguments': args},
         success: function(response) {
             if (response.is_training_population) {
-		jQuery("#searched_trials_message").hide();
-		jQuery("#searched_trials_div").show();
-	
-		var divId   = 'searched_trials_div';
-		var tableId = 'searched_trials_table'; 
-		var data    = response.training_pop_data;
-	
-		var tableDetails = {
-		    'divId'  : divId, 
-		    'tableId': tableId, 
-		    'data'   : data
-		};
-		
-		displayTrainingPopulations(tableDetails);	
+			jQuery(msgDiv).hide();
+			jQuery(resultDivId).show();
+
+			var data    = response.training_pop_data;
+
+			var tableDetails = {
+			    'divId'  : resultDivId,
+			    'tableId': tableId,
+			    'data'   : data
+			};
+
+			displayTrainingPopulations(tableDetails);
                 jQuery('#done_selecting_div').show();
-	
+
             } else {
-		jQuery("#searched_trials_message").html('<p> Population ' + popId + ' can not be used as a training population.');
-		jQuery("#search_all_training_pops").show();
-		
-		jQuery("#searched_trials_message")
-			.delay(4000)
-			.fadeOut('slow', function () {
-			    searchAllTrials('/solgs/search/trials');   
-			});
+				var msg =  ('<p> Population ' + popIds + ' can not be used as a training population. It has no phenotype or/and genotype data.');
+
+				solGS.showMessage(msgDiv, msg);
+				jQuery("#search_all_training_pops").show();
 	    }
 	},
-	error: function(response) {
-            jQuery("#searched_trials_message")
-		.html('Error occured checking for if trial can be used as training population.');
-
-	    jQuery("#searched_trials_message")
-		.delay(4000)
-		.fadeOut('slow', function () {
-		    // searchAllTrials('/solgs/search/trials');   
-		});		 
-        }   
-	
+	error: function() {
+		var msg = 'Error occured checking for if trial can be used as training population.';
+		solGS.showMessage(msgDiv, msg);
+	}
     });
-    
+
 }
 
 
 jQuery(document).ready( function () {
-    
+
     jQuery('#population_search_entry').keyup(function(e) {
-     	
-	if(e.keycode == 13) {	    
+
+	jQuery("#population_search_entry")
+		.css('border', 'solid #96d3ec');
+
+	jQuery("#form-feedback-search-trials")
+	    .empty();
+
+	if(e.keycode == 13) {
+
      	    jQuery('#search_training_pop').click();
     	}
     });
 
     jQuery('#search_training_pop').on('click', function () {
-	
-	jQuery("#searched_trials_message").hide();
 
 	var entry = jQuery('#population_search_entry').val();
+	jQuery("#searched_trials_message").hide();
 
 	if (entry) {
+
 	    checkPopulationExists(entry);
+	} else {
+	    jQuery("#population_search_entry")
+		.css('border', 'solid #FF0000');
+
+	    jQuery("#form-feedback-search-trials")
+		.text('Please enter trial name.');
 	}
     });
-          
+
 });
 
 
 jQuery(document).ready( function () {
-    
+
     jQuery('#search_all_training_pops').on('click', function () {
-	
+
 	jQuery("#searched_trials_div").empty();
 	jQuery("#all_trials_div").empty();
 	var url = '/solgs/search/trials';
         var result = 'all';
 	searchAllTrials(url, result);
     });
-          
+
 });
 
 
@@ -206,10 +213,10 @@ jQuery(document).ready( function () {
 
 
 function checkPopulationExists (name) {
-    jQuery("#searched_trials_message")
-	.html("Checking if trial or training population " + name + " exists...please wait...")
-	.show();
-    
+	var msgDiv = "#searched_trials_message";
+	var msg = "Checking if trial or training population " + name + " exists...please wait...";
+	solGS.showMessage(msgDiv, msg);
+
 	jQuery("#all_trials_div").empty();
 
 	jQuery.ajax({
@@ -218,46 +225,35 @@ function checkPopulationExists (name) {
 	    data: {'name': name},
             url: '/solgs/check/population/exists/',
             success: function(res) {
-            
-		if (res.population_id) {
-		   
-		    checkTrainingPopulation(res.population_id);
-		    
-		    jQuery('#searched_trials_message').html(
-			'<p>Checking if the trial or population can be used <br />' 
-			    + 'as a training population...please wait...</p>');	
 
-		} else { 		
-		    jQuery('#searched_trials_message')
-			.html('<p>' + name + ' is not in the database.</p>');
-		    
-		    jQuery("#searched_trials_message")
-			.delay(4000)
-			.fadeOut('slow', function () {
-			   // searchAllTrials('/solgs/search/trials');   
-			});		   		    
+		if (res.population_ids) {
+
+		    checkTrainingPopulation(res.population_ids);
+
+			msg = '<p>Checking if the trial or population can be used <br />'
+			+ 'as a training population...please wait...</p>';
+			solGS.showMessage(msgDiv, msg);
+		} else {
+			msg = '<p>' + name + ' is not in the database.</p>';
+		   	solGS.showMessage(msgDiv, msg);
 		}
 	    },
 	    error: function(res) {
-		jQuery("#searched_trials_message")
-		    .html('Error occured checking if the training population exists.');
-		
-		jQuery("#searched_trials_message")
-		    .delay(4000)
-		    .fadeOut('slow', function () {
-			// searchAllTrials('/solgs/search/trials');   
-		    });		 
-            }
+			msg = 'Error occured checking if the training population exists.';
+			solGS.showMessage(msgDiv, msg);
+		}
 	});
-	   
+
 }
 
 
 function createTrialsTable (tableId) {
-    
+	console.log(`create trials table tableid ${tableId}`)
+
+	tableId = tableId.replace("#", '')
     var table = '<table id="' + tableId +  '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>'; 
+    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>More details</th>';
    // table    += '<th id="color_tip" title="You can combine Trials with matching color."><span class="glyphicon glyphicon-question-sign"></span></th>';
     table    += '</tr></thead>';
     table    += '</table>';
@@ -268,25 +264,25 @@ function createTrialsTable (tableId) {
 
 
 function displayTrainingPopulations (tableDetails) {
-  
+
     var divId   = tableDetails.divId;
     var tableId = tableDetails.tableId;
     var data    = tableDetails.data;
 
     if (data) {
 
-	var tableRows = jQuery('#' + tableId + ' tr').length;
+	var tableRows = jQuery(tableId + ' tr').length;
 
 	if (tableRows > 1) {
-	    jQuery('#' + tableId).dataTable().fnAddData(data);	
+	    jQuery( tableId).dataTable().fnAddData(data);
 	} else {
-	    
+
 	    var table = createTrialsTable(tableId);
-	   
-	    jQuery('#' + divId).html(table).show();
-	   
-	    jQuery('#' + tableId).dataTable({
-                    'order'        : [[1, "desc"], [4, "desc"]],
+
+	    jQuery(divId).html(table).show();
+
+	    jQuery(tableId).dataTable({
+                    'order'        : [[0, "desc"],  [2, "desc"], [3, "desc"]],
 		    'searching'    : true,
 		    'ordering'     : true,
 		    'processing'   : true,
@@ -300,5 +296,5 @@ function displayTrainingPopulations (tableDetails) {
 	    });
 	}
     }
-   
+
 }

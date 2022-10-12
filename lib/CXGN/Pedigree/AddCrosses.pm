@@ -87,17 +87,10 @@ has 'crossing_trial_id' => (
     required => 1,
 );
 
-has 'archived_filename' => (
-    isa => 'Str',
+has 'file_id' => (
+    isa => 'Int',
     is => 'rw',
-    predicate => 'has_archived_filename',
-    required => 0,
-);
-
-has 'archived_file_type' => (
-    isa => 'Str',
-    is => 'rw',
-    predicate => 'has_archived_file_type',
+    predicate => 'has_file_id',
     required => 0,
 );
 
@@ -146,6 +139,8 @@ sub add_crosses {
 		my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project location', 'project_property')->cvterm_id();
 		my $geolocation_rs = $chado_schema->resultset("Project::Projectprop")->find({project_id => $crossing_trial_id, type_id => $project_location_cvterm_id});
 
+        my $cross_identifier_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_identifier', 'stock_property');
+
         @crosses = @{$self->get_crosses()};
         foreach my $pedigree (@crosses) {
             my $experiment;
@@ -159,7 +154,6 @@ sub add_crosses {
             my $cross_type = $pedigree->get_cross_type();
             my $cross_name = $pedigree->get_name();
 			my $cross_combination = $pedigree->get_cross_combination();
-            my $crossing_trial_id;
             my $female_plot_name;
             my $male_plot_name;
             my $female_plot;
@@ -325,6 +319,29 @@ sub add_crosses {
                 project_id => $self->get_crossing_trial_id,
             });
 
+            my $identifier_female_id;
+            my $identifier_male_id;
+            if ($female_plant){
+                $identifier_female_id = $female_plant->stock_id();
+            } elsif ($female_plot){
+                $identifier_female_id = $female_plot->stock_id();
+            } else {
+                $identifier_female_id = $female_parent->stock_id();
+            }
+
+            if ($male_plant){
+                $identifier_male_id = $male_plant->stock_id();
+            } elsif ($male_plot){
+                $identifier_male_id = $male_plot->stock_id();
+            } elsif ($male_parent) {
+                $identifier_male_id = $male_parent->stock_id();
+            } else {
+                $identifier_male_id = 'NA'
+            }
+
+            my $cross_identifier = $crossing_trial_id.'_'.$identifier_female_id.'_'.$identifier_male_id;
+            $cross_stock->create_stockprops({$cross_identifier_cvterm->name() => $cross_identifier});
+            print STDERR "CROSS IDENTIFIER =".Dumper($cross_identifier)."\n";
         }
 
     };
@@ -349,27 +366,10 @@ sub add_crosses {
         });
     }
 
-    #link nd_experiments to uploaded file
-	my $archived_filename_with_path = $self->get_archived_filename;
-    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
-    if ($archived_filename_with_path) {
-        print STDERR "Generating md_file entry for cross file...\n";
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $owner_id});
-        $md_row->insert();
-        my $upload_file = CXGN::UploadFile->new();
-        my $md5 = $upload_file->get_md5($archived_filename_with_path);
-        my $md5checksum = $md5->hexdigest();
-        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => $self->get_archived_file_type,
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-
-        my $file_id = $file_row->file_id();
-        print STDERR "FILE ID =".Dumper($file_id)."\n";
-
+    #link nd_experiments to file_id
+    my $file_id = $self->get_file_id;
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    if ($file_id) {
         foreach my $nd_experiment_id (keys %nd_experiments) {
             my $nd_experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
                 nd_experiment_id => $nd_experiment_id,

@@ -28,22 +28,23 @@ sub get_terms {
       my $self = shift;
       my $cv_id = shift;
 
-      my $query = "SELECT cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+      my $query = "SELECT distinct(cvterm_id), dbxref.accession, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
                   FROM cvterm
                   JOIN dbxref USING(dbxref_id)
                   JOIN db USING(db_id)
-                  LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
-                  LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
-                  WHERE cv_id = ? AND is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
-                  GROUP BY 1,2
-                  ORDER BY 2,1";
+                  JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+                  WHERE cv_id = ? AND is_obsolete = ?
+                  GROUP BY 1,2,3
+                  ORDER BY 3";
 
       my $h = $self->schema->storage->dbh->prepare($query);
-      $h->execute($cv_id);
+      $h->execute($cv_id, '0');
 
       my @results;
-      while (my ($id, $name) = $h->fetchrow_array()) {
-        push @results, [$id, $name];
+      while (my ($id, $accession, $name) = $h->fetchrow_array()) {
+	  if ($accession +0 != 0) {
+	      push @results, [$id, $name];
+	  }
       }
 
       return @results;
@@ -228,7 +229,7 @@ sub store_ontology_identifier {
         $schema->txn_do($coderef);
     } catch {
         return {
-            error => $@
+            error => $_
         };
     };
 }
@@ -306,7 +307,7 @@ sub store_observation_variable_trait_method_scale {
         $parent_observation_variable_cvterm_sth->execute();
         my ($parent_observation_variable_cvterm_id, $parent_observation_variable_cvterm_name) = $parent_observation_variable_cvterm_sth->fetchrow_array();
 
-        my $new_term_observation_variable_dbxref = $schema->resultset("General::Dbxref")->create({
+        my $new_term_observation_variable_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
             db_id => $selected_observation_variable_db_id,
             accession => $observation_variable_new_accession
         });
@@ -477,9 +478,51 @@ sub store_observation_variable_trait_method_scale {
         $schema->txn_do($coderef);
     } catch {
         return {
-            error => $@
+            error => $_
         };
     };
+}
+
+
+#
+# Recursively get the children (and all granchildren, etc) of the specified cvterm
+# ARGS:
+#   - cvterm_id = id of the root cvterm
+# RETURNS: an arrayref of hashes of the children of the cvterm, with the following keys:
+#   - cvterm_id = id of the child cvterm
+#   - name = name of the child cvterm
+#   - definition = definition of the child cvterm
+#   - children = children of the child cvterm
+#   - accession = dbxref accession of the child cvterm
+# 
+sub get_children {
+    my $self = shift;
+    my $cvterm_id = shift;
+    my $schema = $self->schema();
+
+    my @children;
+    my $cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+    if ( defined $cvterm ) {
+        my $cvterm_rs = $cvterm->children();
+        while (my $r = $cvterm_rs->next()) {
+            my $child = $r->subject();
+            if ( !$child->is_obsolete() ) {
+                my $gc = $self->get_children($child->cvterm_id);
+                my $dbxref_rs = $schema->resultset('General::Dbxref')->find({ dbxref_id => $child->dbxref_id() });
+                my %c = (
+                    cvterm_id => $child->cvterm_id(),
+                    name => $child->name(),
+                    definition => $child->definition(),
+                    children => scalar(@$gc) > 0 ? $gc : undef,
+                    accession => $dbxref_rs->accession()
+                );
+                push(@children, \%c);
+            }
+        }
+    }
+    
+    my @sorted =  sort { $a->{accession} <=> $b->{accession} } @children;
+    return \@sorted;
 }
 
 1;

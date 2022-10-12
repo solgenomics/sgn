@@ -21,7 +21,6 @@ use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
-use JSON::XS;
 use CXGN::Trial;
 
 
@@ -106,8 +105,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    my $json = JSON::XS->new();
-    my $locations = $json->decode($projects->get_all_locations_by_breeding_program());
+    my $locations = $projects->get_all_locations_by_breeding_program();
 
     #print STDERR "Locations are ".Dumper($locations)."\n";
 
@@ -278,16 +276,15 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
         }
     }
 
-    my $json = JSON::XS->new();
-    my $locations = $json->decode($crossingtrial->get_all_locations_by_breeding_program());
+    my $locations = $crossingtrial->get_all_locations_by_breeding_program();
+
+    my $odk_service = $c->config->{odk_crossing_data_service_name};
+
+    $c->stash->{odk_service} = $odk_service;
 
     $c->stash->{locations} = $locations;
 
     $c->stash->{programs} = \@breeding_programs;
-
-    #$c->stash->{locations} = $bp->get_all_locations($c);
-
-    #$c->stash->{programs} = $breeding_programs;
 
     $c->stash->{crossing_trials} = $crossing_trials;
 
@@ -342,18 +339,6 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
 
 }
 
-sub manage_sequence_metadata :Path("/breeders/sequence_metadata") Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    if (!$c->user()) {
-	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-	    return;
-    }
-
-    $c->stash->{template} = '/breeders_toolbox/manage_sequence_metadata.mas';
-}
-
 sub manage_upload :Path("/breeders/upload") Args(0) {
     my $self =shift;
     my $c = shift;
@@ -380,8 +365,6 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
 
-    my $json = JSON::XS->new();
-
     my $field_management_factors = $c->config->{management_factor_types};
     my @management_factor_types = split ',',$field_management_factors;
 
@@ -393,7 +376,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     $c->stash->{design_types} = \@design_types;
     $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{facilities} = \@facilities;
-    $c->stash->{geojson_locations} = $json->decode($projects->get_all_locations_by_breeding_program());
+    $c->stash->{geojson_locations} = $projects->get_all_locations_by_breeding_program();
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{timestamp} = localtime;
@@ -515,6 +498,7 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
     $c->stash->{filename} = $file_name;
     $c->stash->{template} = '/breeders_toolbox/view_file.mas';
 }
+
 
 sub make_cross_form :Path("/stock/cross/new") :Args(0) {
     my ($self, $c) = @_;
@@ -748,6 +732,12 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
 sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+    	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    	return;
+    }
+
     $c->stash->{dataset_id} = $c->req->param('dataset_id');
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
@@ -864,6 +854,12 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 sub manage_markers : Path("/breeders/markers") Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
 
     $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
 }

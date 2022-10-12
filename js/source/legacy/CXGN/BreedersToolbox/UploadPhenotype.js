@@ -3,7 +3,7 @@ jQuery( document ).ready( function() {
 
     //For Spreadsheet Upload
     jQuery('#upload_spreadsheet_phenotype_submit_verify').click( function() {
-        initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Verifying Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_verify/spreadsheet", jQuery('#upload_spreadsheet_phenotype_file_format').val(), jQuery("#upload_spreadsheet_phenotype_associated_images_file_input").val());
+        initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Verifying Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_verify/spreadsheet", jQuery('#upload_spreadsheet_phenotype_file_format').val());
     });
 
     jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
@@ -113,12 +113,8 @@ jQuery( document ).ready( function() {
 
 });
 
-function initializeUploadPhenotype(uploadFile, message, file_form, url, upload_format, image_zipfile) {
-    if (upload_format == 'associated_images' && image_zipfile === '') {
-        alert('Please select an image zipfile if you are using the Associated Images format');
-        return false;
-    }
-    else if (uploadFile === '') {
+function initializeUploadPhenotype(uploadFile, message, file_form, url, upload_format) {
+    if (uploadFile === '') {
         alert("Please select a file");
     }
     else {
@@ -185,7 +181,7 @@ function displayPhenotypeUploadVerifyResponse(response, upload_type) {
         if (warningarrayLength > 0) {
             message_text += "<li class='list-group-item list-group-item-warning'>";
             message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-            message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>Warnings notifying you that values already exist in the database can be disregarded if your data is indeed new.<hr>To overwrite previously stored values: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+            message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
             message_text += "</li>";
             for (var i = 0; i < warningarrayLength; i++) {
                 message_text += "<li class='list-group-item list-group-item-warning'>";

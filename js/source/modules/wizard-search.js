@@ -1,4 +1,4 @@
-import "../legacy/d3/d3v4Min.js";
+import "../legacy/d3/d3v5Min.js";
 
 
 const list_prefix = "__LIST__";
@@ -285,7 +285,9 @@ export function Wizard(main_id,col_number){
       var search_txt = s ? s.property("value").replace(/\s+/g, "").toLowerCase() : undefined;
       d.items.forEach(i=>{
           var val = i.name.replace(/\s+/g, "").toLowerCase();
-          i.selected = search_txt ? val.indexOf(search_txt) != -1 : true;
+          if (!i.selected) {
+              i.selected = search_txt ? val.indexOf(search_txt) != -1 : true;
+          }
       });
       reflow(d.index,true);
   })
@@ -504,12 +506,13 @@ export function Wizard(main_id,col_number){
 
   function set_lists(list_dict){
     list_dict = list_dict || {};
-    var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k]}));
+    var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k].name,type:list_dict[k].type}));
     lists = lists.sort((a,b)=>a.name.toLowerCase() < b.name.toLowerCase() ? -1 : b.name.toLowerCase() < a.name.toLowerCase() ? 1 : 0);
     var opts = allCols.selectAll(".wizard-lists-group").selectAll("option")
       .data(lists);
     opts.enter().append("option").merge(opts)
       .attr("value",d=>list_prefix+d.id)
+      .attr("data-type",d=>d.type)
       .text(d=>d.name);
   }
 

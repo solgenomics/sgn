@@ -1,4 +1,4 @@
-import "../legacy/d3/d3v4Min.js";
+import "../legacy/d3/d3v5Min.js";
 import "../legacy/CXGN/Dataset.js";
 
 /**
@@ -126,6 +126,9 @@ export function WizardDatasets(main_id,wizard){
         alert(`Dataset ${name} created with\: ${details}`);
         load_datasets();
         d3.select(this).attr("disabled",null);
+        if ( DSP_ENABLED ) {
+          returnToSource();
+        }
       })
     }
   });

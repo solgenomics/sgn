@@ -1,0 +1,224 @@
+<%args>
+$item_id
+$item_name
+$species
+$item_type
+$category
+$description
+$material_source
+$breeding_program
+$program_id
+$availability
+$contact_person_username
+$item_prop_id
+</%args>
+
+<div class="modal fade" id="edit_catalog_details_dialog" tabindex="-1" role="dialog" aria-labelledby="editCatalogDetailsDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editCatalogDetailsDialog">Edit Catalog Item Details</h4>
+            </div>
+            <div class="modal-body" id="catalog_details_edit_body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_name">Item Name: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_item_name" type="text" value="<%$item_name%>" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_species">Species: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_item_species" type="text" value="<%$species%>" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_type">Item Type: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_item_type" value="<%$item_type%>">
+                                        <option value="single item">single item</option>
+                                        <option value="set of items">set of items</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_category">Item Category: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_item_category" value="<%$category%>">
+                                        <option value="released variety">released variety</option>
+                                        <option value="pathogen assay ">pathogen assay</option>
+                                        <option value="control">control</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_description">Description: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="edit_item_description" rows="3" maxlength="250"><% $description %></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_material_source">Material Source: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_item_material_source" value="<%$material_source%>">
+                                        <option value="OrderingSystemTest">OrderingSystemTest</option>
+                                        <option value="Sendusu">Sendusu</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_breeding_program">Breeding Program: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_item_breeding_program" value="<%$program_id%>"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_availability">Availability: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_item_availability" value="<%$availability%>">
+                                        <option value="in stock">in stock</option>
+                                        <option value="out of stock">out of stock</option>
+                                        <option value="available in 3 months">available in 3 months</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_contact_person">Contact Person Username: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_contact_person" type="text" value="<%$contact_person_username%>" />
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_item_details_cancel_button">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save_item_details">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="edit_catalog_saved_dialog_message" name="edit_catalog_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="editCatalogSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editCatalogSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The catalog info was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_edit_item_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var item_prop_id = <% $item_prop_id %>;
+
+    jQuery("#edit_catalog_item_link").click( function() {
+
+        jQuery('#edit_catalog_details_dialog').modal('show');
+
+        var default_bp = document.getElementById("edit_item_breeding_program").getAttribute("value");
+        get_select_box('breeding_programs', 'edit_item_breeding_program', { 'default' : default_bp });
+
+        var default_type = document.getElementById("edit_item_type").getAttribute("value");
+        jQuery('#edit_item_type option[value="'+default_type+'"]').prop("selected", true);
+
+        var default_category = document.getElementById("edit_item_category").getAttribute("value");
+        jQuery('#edit_item_category option[value="'+default_category+'"]').prop("selected", true);
+
+        var default_source = document.getElementById("edit_item_material_source").getAttribute("value");
+        jQuery('#edit_item_material_source option[value="'+default_source+'"]').prop("selected", true);
+
+        var default_availability = document.getElementById("edit_item_availability").getAttribute("value");
+        jQuery('#edit_item_availability option[value="'+default_availability+'"]').prop("selected", true);
+
+    });
+
+    jQuery('#save_item_details').click( function() {
+        var name = jQuery('#edit_item_name').val();
+        var type = jQuery('#edit_item_type').val();
+        var category = jQuery('#edit_item_category').val();
+        var description = jQuery('#edit_item_description').val();
+        var material_source = jQuery('#edit_item_material_source').val();
+        var breeding_program = jQuery('#edit_item_breeding_program').val();
+        var availability = jQuery('#edit_item_availability').val();
+        var contact_person = jQuery('#edit_contact_person').val();
+        jQuery.ajax({
+            url: '/ajax/catalog/add_item',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'item_name': name,
+                'item_type': type,
+                'item_category': category,
+                'item_description': description,
+                'item_material_source': material_source,
+                'item_breeding_program': breeding_program,
+                'item_availability': availability,
+                'contact_person': contact_person,
+                'item_prop_id': item_prop_id
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#edit_catalog_details_dialog').modal('hide');
+                    jQuery('#edit_catalog_saved_dialog_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding item');
+            }
+        });
+    });
+
+    jQuery("#dismiss_edit_item_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>

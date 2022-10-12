@@ -8,6 +8,7 @@ $genotyping_facility_submitted => undef
 $genotyping_plate_format => undef
 $genotyping_plate_sample_type => undef
 $genotyping_raw_data_link => undef
+$trial_description
 </%args>
 
 <div class="modal fade" id="edit_genotyping_trial_details_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsEditDialog">
@@ -15,13 +16,13 @@ $genotyping_raw_data_link => undef
     <div class="modal-content ui-front">
         <div class="modal-header texkkt-center">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="genotypingTrialDetailsEditDialog">Edit Trial Details</h4>
+            <h4 class="modal-title" id="genotypingTrialDetailsEditDialog">Edit Genotyping Plate Details</h4>
         </div>
         <div class="modal-body" id="genotyping_trial_details_edit_body">
             <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_name">Trial Name: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_name">Genotyping Plate Name: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input class="form-control col-sm-8" id="edit_genotyping_trial_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_genotyping_trial_name_status"/>
@@ -61,6 +62,15 @@ $genotyping_raw_data_link => undef
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_description">Description: </label>
+                    <div class="col-sm-8">
+                        <div class="input-group">
+                            <textarea class="form-control" id="edit_genotyping_plate_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
+                        </div>
+                    </div>
+                </div>
+                <!--
+                <div class="form-group">
                     <label class="col-sm-3 control-label" for="edit_genotyping_facility_submitted">Submitted to Genotyping Facility: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
@@ -76,6 +86,7 @@ $genotyping_raw_data_link => undef
                       </div>
                     </div>
                 </div>
+                -->
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="edit_genotyping_raw_data_link">Raw Data Link: </label>
                     <div class="col-sm-8">

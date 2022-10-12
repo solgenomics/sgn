@@ -177,7 +177,7 @@ sub get_trials_by_breeding_program {
                 if ($propvalue eq "treatment") {
                     $projects_that_are_treatment_trials{$id} = 1;
                 }
-                if ($propvalue eq "genotype_data_project") {
+                if (($propvalue eq "genotype_data_project") || ($propvalue eq "pcr_genotype_data_project")) {
                     $projects_that_are_genotyping_data_projects{$id} = 1;
                 }
                 if ($propvalue eq "drone_run") {
@@ -283,7 +283,10 @@ sub get_all_locations {
  }
 
 
- sub get_all_locations_by_breeding_program {
+# the following function was changed to return a Perl data
+# structure. The code that calls this function were adapted.
+#
+sub get_all_locations_by_breeding_program {
      my $self = shift;
 
     my $q = "SELECT geo.description,
@@ -309,14 +312,19 @@ sub get_all_locations {
              }
          });
      }
-     
-     my $json = JSON->new();
-     $json->canonical(); # output sorted JSON
-     return $json->encode(\@locations);
+
+     #my $json = JSON->new();
+     #$json->canonical(); # output sorted JSON
+     #return $json->encode(\@locations);
+     return \@locations;
 }
 
-
-sub get_location_geojson {
+# this was modified to return a Perl datastructure, not JSON, as 
+# it is fed into other Perl data structures that are being converted
+# to JSON, which results in illegal JSON. The code that calls this
+# function was adapted to the change.
+#
+sub get_location_geojson_data {
     my $self = shift;
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
@@ -385,9 +393,12 @@ sub get_location_geojson {
             }
         });
     }
-    my $json = JSON->new();
-    $json->canonical(); # output sorted JSON
-    return $json->encode(\@locations);
+
+    #print STDERR "LOCATIONS: ".Dumper(\@locations);
+    #my $json = JSON->new();
+    #$json->canonical(); # output sorted JSON
+    #return $json->encode(\@locations);
+    return \@locations;
 }
 
 sub get_locations {

@@ -20,7 +20,11 @@ $field_trial_is_planned_to_be_genotyped
 $field_trial_is_planned_to_cross
 $trial_stock_type
 $trial_stock_count
+$trial_owner
+$latest_trial_activity => undef
+
 </%args>
+
 
 <div class="row">
     <div class="col-sm-8">
@@ -92,7 +96,7 @@ $trial_stock_count
                     </div>
                 </td>
             </tr>
-	    
+
 	    <tr>
                 <td><b>Number of Stocks in This Trial</b></td>
                 <td>
@@ -165,6 +169,31 @@ $trial_stock_count
                     <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
                 </td>
             </tr>
+
+	    <tr><td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%  print "$trial_owner";
+% } else {
+%  print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Latest Trial Activity</b></td>
+                <td>
+                        <div id="latest_trial_activity">
+% if ($latest_trial_activity) {
+%  print "<span class='text-success'>$latest_trial_activity</span>";
+% } else {
+%  print "<span class='text-danger'>[No Record]</span>";
+% }
+                        </div>
+                    </td>
+                </tr>
 
         </table>
 

@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /population/sumary.mas - displays project metadata.
 
@@ -14,9 +14,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$project_id =>''
-$project_name
-$project_desc
+$training_pop_id =>''
+$training_pop_name
+$training_pop_desc =>''
 $stocks_no
 $markers_no
 $protocol_url
@@ -25,22 +25,22 @@ $owner=>''
 
 </%args>
 
-% if (!$owner) {$owner = 'NextGen Cassava Project'; } 
+% if (!$owner) {$owner = 'NextGen Cassava Project'; }
 
 <table class="table">
   <tr>
     <td>
       <& /page/columnar_table.mas,
-         data         => [['Name', $project_name],
-                          ['Description', $project_desc],
+         data         => [['Name', $training_pop_name],
+                          ['Description', $training_pop_desc],
                           ['Owner', $owner],
                          ],
          __alt_freq   => 0,
-         __align      => "l",  
+         __align      => "l",
         &>
-    </td>    
+    </td>
     <td>
-      <& /page/columnar_table.mas,        
+      <& /page/columnar_table.mas,
          data       => [['No. of lines', $stocks_no],
                         ['No. of markers', $markers_no],
 			['Genotyping version', $protocol_url],
@@ -51,8 +51,3 @@ $owner=>''
     </td>
   </tr>
 </table>
-    
-
- 
-
-

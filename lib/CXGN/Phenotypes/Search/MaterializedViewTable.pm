@@ -49,7 +49,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
-use JSON;
+use JSON::XS;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -109,6 +109,11 @@ has 'location_list' => (
 
 has 'year_list' => (
     isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'observation_unit_names_list' => (
+    isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
 
@@ -223,6 +228,13 @@ sub search {
     } else {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample' OR observationunit_type_name = 'analysis_instance')"; #plots AND plants AND subplots AND tissue_samples AND analysis_instance
     }
+    if ($self->observation_unit_names_list && scalar(@{$self->observation_unit_names_list})>0) {
+        my @arrayref;
+        for my $name (@{$self->observation_unit_names_list}) {push @arrayref, lc $name;}
+        my $sql = join ("','" , @arrayref);
+        my $ou_name_sql = "'" . $sql . "'";
+        push @where_clause, "LOWER(observationunit_uniquename) in ($ou_name_sql)";
+    }
 
     my %trait_list_check;
     my $filter_trait_ids;
@@ -278,7 +290,7 @@ sub search {
 
     my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
 
-    print STDERR "QUERY: $q\n\n";
+    # print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
@@ -298,10 +310,10 @@ sub search {
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
         my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
-        my $observations = decode_json $observations;
-        my $treatments = decode_json $treatments;
-        my $available_germplasm_seedlots = decode_json $available_germplasm_seedlots;
-        my $seedlot_transaction = $seedlot_transaction ? decode_json $seedlot_transaction : {};
+        my $observations = JSON::XS->new->decode($observations);
+        my $treatments = JSON::XS->new->decode($treatments);
+        my $available_germplasm_seedlots = JSON::XS->new->decode($available_germplasm_seedlots);
+        my $seedlot_transaction = $seedlot_transaction ? JSON::XS->new->decode($seedlot_transaction) : {};
 
         my %ordered_observations;
         foreach (@$observations){
@@ -357,7 +369,7 @@ sub search {
         }
 
         no warnings 'uninitialized';
-        
+
         if ($notes) { $notes =~ s/\R//g; }
         if ($trial_description) { $trial_description =~ s/\R//g; }
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };

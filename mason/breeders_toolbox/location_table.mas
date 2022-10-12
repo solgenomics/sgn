@@ -40,8 +40,13 @@ jQuery(document).ready(function() {
     	},
     	success: function(response) {
             var export_message = 'Location data from ' + window.location.href;
-            locationJSON = JSON.parse(response.data);
+            locationJSON = response.data;
             // console.log("Data is "+JSON.stringify(locationJSON, null, 2));
+
+            // Remove [Computataion] location from response
+            locationJSON = locationJSON.filter(function(loc) {
+                return loc.properties.Name !== '[Computation]';
+            });
 
             var table = jQuery('#location_table').DataTable( {
                 data: locationJSON,

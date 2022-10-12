@@ -141,13 +141,20 @@ sub _validate_with_plugin {
     my $number_observation_units = scalar(@observation_unit_names);
     print STDERR "Number observation units: $number_observation_units...\n";
 
+    my $stock_type = $self->get_observation_unit_type_name;
     my @observation_units_names_trim;
     # Separates sample name from lab id
     foreach (@observation_unit_names) {
-        my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
-        $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
-        my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-        push @observation_units_names_trim, $observation_unit_name;
+        if ($stock_type eq 'accession'){
+            my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
+            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+            push @observation_units_names_trim, $observation_unit_name;
+        }
+        else {
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
+            push @observation_units_names_trim, $observation_unit_name;
+        }
     }
     my $observation_unit_names = \@observation_units_names_trim;
 
@@ -155,7 +162,6 @@ sub _validate_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     # Validate that the sample names are in the database already
-    my $stock_type = $self->get_observation_unit_type_name;
     my @missing_stocks;
     my $validator = CXGN::List::Validate->new();
     if ($stock_type eq 'tissue_sample'){
@@ -328,21 +334,21 @@ sub _parse_with_plugin {
                     my @gt_vcf_genotype;
                     my @ref_calls;
                     my @alt_calls;
-                    my $gt_dosage = 0;
+                    my $gt_dosage_alt = 0;
                     foreach my $a (@alleles){
                         if ($a eq $ref) {
                             push @gt_vcf_genotype, 0;
                             push @ref_calls, $a;
-                            $gt_dosage++;
                         }
                         elsif ($a eq $alt) {
                             push @gt_vcf_genotype, 1;
                             push @alt_calls, $a;
+                            $gt_dosage_alt++;
                         }
                         elsif ($a eq '?' || $a eq 'Uncallable') {
-                            $gt_dosage = 'NA';
-                            push @gt_vcf_genotype, 'NA';
-                            push @alt_calls, 'NA';
+                            $gt_dosage_alt = 'NA';
+                            push @gt_vcf_genotype, './.';
+                            push @alt_calls, './.';
                         } else {
                             push @error_messages, "Allele Call Does Not Match Ref or Alt for Sample: $sample_id_with_lab_id Marker: $marker_name Alt: $alt Ref: $ref Allele: $a";
                         }
@@ -354,7 +360,7 @@ sub _parse_with_plugin {
                     $genotype_obj = {
                         'GT' => $vcf_gt_genotype_string,
                         'NT' => $vcf_genotype_string,
-                        'DS' => "$gt_dosage"
+                        'DS' => "$gt_dosage_alt"
                     };
                 } else {
                     die "There should always be a ref and alt according to validation above\n";

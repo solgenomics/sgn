@@ -41,6 +41,7 @@ use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
+use CXGN::List;
 use JSON;
 use Spreadsheet::ParseExcel;
 use Tie::UrlEncoder; our(%urlencode);
@@ -268,6 +269,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $male_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $male_trial_id, experiment_type=>'field_layout' });
     my $male_design_layout = $male_trial_layout->get_design();
 
+    my $odk_ona_tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
     my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
     my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
@@ -721,6 +723,15 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         $archive_name = 'cross_wishlist_'.$site_name.'.csv';
     }
 
+    my $file_type;
+    if ($is_test_form) {
+        $file_type = 'cross_wishlist_test_'.$ona_form_id;
+    } elsif ($separate_crosswishlist_by_location) {
+        $file_type = 'cross_wishlist_'.$female_location_name.'_'.$ona_form_id;
+    } else {
+        $file_type = 'cross_wishlist_'.$ona_form_id;
+    }
+
     my $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path2,
@@ -733,6 +744,18 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     });
     my $uploaded_file = $uploader->archive();
     my $md5 = $uploader->get_md5($uploaded_file);
+#    print STDERR "WISHLIST UPLOADED FILE =".Dumper($uploaded_file)."\n";
+
+    my $wishlist_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $wishlist_md_row->insert();
+    my $wishlist_md5checksum = $md5->hexdigest();
+    my $wishlist_file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($uploaded_file),
+        dirname => dirname($uploaded_file),
+        filetype => $file_type,
+        md5checksum => $wishlist_md5checksum,
+        metadata_id => $wishlist_md_row->metadata_id(),
+    });
 
     my ($file_path3, $uri3) = $c->tempfile( TEMPLATE => "download/cross_wishlist_accession_info_XXXXX");
     $file_path3 .= '.csv';
@@ -773,6 +796,17 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     });
     my $germplasm_info_uploaded_file = $uploader->archive();
     my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
+#    print STDERR "GERMPLASM INFO UPLOADED FILE =".Dumper($germplasm_info_uploaded_file)."\n";
+    my $germplasm_info_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $germplasm_info_md_row->insert();
+    my $germplasm_info_md5checksum = $germplasm_info_md5->hexdigest();
+    my $germplasm_info_file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($germplasm_info_uploaded_file),
+        dirname => dirname($germplasm_info_uploaded_file),
+        filetype => $file_type,
+        md5checksum => $germplasm_info_md5checksum,
+        metadata_id => $germplasm_info_md_row->metadata_id(),
+    });
 
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
@@ -872,7 +906,15 @@ sub list_cross_wishlists : Path('/ajax/cross/list_cross_wishlists') : ActionClas
 sub list_cross_wishlists_GET : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $q = "SELECT file_id, basename, dirname, filetype, comment, m.create_date, m.create_person_id, p.first_name, p.last_name FROM metadata.md_files JOIN metadata.md_metadata as m USING(metadata_id) JOIN sgn_people.sp_person as p ON(p.sp_person_id=m.create_person_id) WHERE filetype ilike 'cross_wishlist_%';";
+    my $q = "SELECT file_table.id, file_table.file_name, mdf.dirname, mdf.filetype, mdf.comment, mdmd.create_date, mdmd.create_person_id, p.first_name, p.last_name
+        FROM
+        (SELECT mf.file_id AS id,mf.basename AS file_name FROM metadata.md_files AS mf WHERE file_id IN (SELECT MAX(file_id) AS file_id FROM metadata.md_files
+        WHERE filetype ilike 'cross_wishlist_%' group by basename))
+        AS file_table
+        JOIN metadata.md_files as mdf ON (file_table.id = mdf.file_id)
+        JOIN metadata.md_metadata AS mdmd ON (mdf.metadata_id = mdmd.metadata_id)
+        JOIN sgn_people.sp_person as p ON(p.sp_person_id = mdmd.create_person_id);";
+
     my $h = $c->dbc->dbh->prepare($q);
     $h->execute();
     my @files;
@@ -1059,6 +1101,39 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $c->stash->{rest} = { selected_plot_ids => \@selected_plot_ids, cross_combinations => \@wishlist };
     }
 
+}
+
+
+sub check_wishlist_accessions : Path('/ajax/cross/check_wishlist_accessions') : ActionClass('REST') { }
+
+sub check_wishlist_accessions_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $female_trial_id = $c->req->param('female_trial_id');
+    my $female_list_id = $c->req->param('female_list_id');
+
+    my $female_list = CXGN::List->new( { dbh=>$dbh, list_id=>$female_list_id });
+    my $wishlist_female_accessions = $female_list->elements();
+
+    my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
+    my $design_layout = $female_trial_layout->get_design();
+    my %accessions_in_trial;
+    foreach my $hash_ref (values %$design_layout) {
+        my %plot_info_hash = %$hash_ref;
+        my $accession_name = $plot_info_hash{'accession_name'};
+        $accessions_in_trial{$accession_name}++;
+    }
+
+    my @accessions_not_in_trial = grep {not $accessions_in_trial{$_}} @$wishlist_female_accessions;
+    print STDERR "ACCESSIONS NOT IN TRIAL =".Dumper(\@accessions_not_in_trial)."\n";
+
+    if (scalar(@accessions_not_in_trial) > 0){
+        my $error = "The following female accessions are not in the provided female trial: ".join(',',@accessions_not_in_trial);
+        $c->stash->{rest} = {error_string => $error };
+    } else {
+        $c->stash->{rest}->{success => 1}
+    }
 }
 
 

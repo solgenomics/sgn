@@ -12,15 +12,16 @@ sub BUILD {
     my $self = shift;
 
     print STDERR "BUILD CXGN::Trial::TrialLayout::Genotyping...\n";
-    
-    $self->set_source_stock_types( [ "accession" ] );
+
+    $self->set_source_primary_stock_types( [ "accession" ] );
+    $self->set_source_stock_types( [ "accession", "plot", "plant", "tissue_sample", "subplot" ] );
     $self->set_relationship_types( [ "tissue_sample_of" ] );
     $self->set_target_stock_types( [ "tissue_sample" ] );
     $self->convert_source_stock_types_to_ids();
-    
+
         # probably better to lazy load the action design...
     #
-    
+
     $self->_lookup_trial_id();
 
 }
@@ -44,7 +45,7 @@ sub retrieve_plot_info {
      }
 
      if (! $plot_number) { print STDERR "NO PLOT NUMBER AVAILABLE!!!!\n"; }
-	      
+
      my $project = $self->get_project();
      my $genotyping_user_id;
      my $genotyping_project_name;
@@ -55,19 +56,31 @@ sub retrieve_plot_info {
 	 ->search_related("nd_experimentprops")
 	 ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
      $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
-     
-     my $genotyping_project_name_row = $project
-	 ->search_related("nd_experiment_projects")
-	 ->search_related("nd_experiment")
-	 ->search_related("nd_experimentprops")
-	 ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
-     
+
+#     my $genotyping_project_name_row = $project
+#	 ->search_related("nd_experiment_projects")
+#	 ->search_related("nd_experiment")
+#	 ->search_related("nd_experimentprops")
+#	 ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
+#     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
+
+    my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'genotyping_project_and_plate_relationship', 'project_relationship');
+    my $genotyping_project_plate_relationship = $self->get_schema()->resultset("Project::ProjectRelationship")->find ({
+        subject_project_id => $project->project_id(),
+        type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+    });
+    my $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
+    my $genotyping_project = $self->get_schema()->resultset("Project::Project")->find ({
+        project_id => $genotyping_project_id
+    });
+    my $genotyping_project_name = $genotyping_project->name();
+    print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
+
      $design->{$plot_number}->{genotyping_user_id} = $genotyping_user_id;
-     print STDERR "RETRIEVED: genotyping_user_id: $design->{genotyping_user_id}\n";
+     # print STDERR "RETRIEVED: genotyping_user_id: $design->{genotyping_user_id}\n";
      $design->{$plot_number}->{genotyping_project_name} = $genotyping_project_name;
-     print STDERR "RETRIEVED: genotyping_project_name: $design->{genotyping_project_name}\n";
-     
+     # print STDERR "RETRIEVED: genotyping_project_name: $design->{genotyping_project_name}\n";
+
      my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
 	 { 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },
 	 { 'join' => 'object' }
