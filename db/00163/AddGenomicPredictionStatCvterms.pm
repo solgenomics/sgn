@@ -59,8 +59,10 @@ sub patch {
 
 
     print STDERR "INSERTING Genomic Prediction statistics TERMS...\n";
-    
-    `perl ~/cxgn/Chado/chado/bin/gmod_load_cvterms.pl -H $self-dbhost -D $self->dbname -r postgres  -s SGNSTAT -d Pg  ~/cxgn/sgn/ontology/cxgn_statistics.obo`;
+    my $dbhost = $self->dbhost;
+    my $dbname = $self->dbname;
+
+    `perl ~/cxgn/Chado/chado/bin/gmod_load_cvterms.pl -H $dbhost -D $dbname -r postgres  -s SGNSTAT -d Pg  ~/cxgn/sgn/ontology/cxgn_statistics.obo`;
 
     print "\nYou're done!\n\n";
 
