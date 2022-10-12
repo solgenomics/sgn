@@ -18,7 +18,18 @@ $trial_id
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'delete_genotyping_project_section', title => 'Delete Genotyping Project', subtitle => '<font color="red">Deletion cannot be undone. You cannot delete the project if the project still has genotyping plates or genotyping data</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_protocol_section', title => 'Delete Genotyping Protocol(s)', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table table-hover table-bordered" id="genotyping_protocol_deletion_table">
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'delete_genotyping_project_section', title => 'Delete Genotyping Project', subtitle => '<font color="red">Deletion cannot be undone. Please delete genotyping plates and/or genotyping data first</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -70,6 +81,17 @@ jQuery(document).ready(function(){
             });
         }
     });
+
+    var protocol_deletion_table = jQuery('#genotyping_protocol_deletion_table').DataTable({
+        'autoWidth': false,
+        'ajax': '/ajax/genotyping_project/protocols?genotyping_project_id=<% $trial_id %>',
+
+        'columns': [
+            { title: "Protocol", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders_toolbox/protocol/"+row.protocol_id+"'>"+row.protocol_name+"</a>"; } },
+            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteProtocol("+row.protocol_id+")'>Delete</a>"; } },
+        ]
+    });
+
 
 });
 
