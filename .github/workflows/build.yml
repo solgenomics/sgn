@@ -112,8 +112,7 @@ jobs:
       - name: List sgn branches
         working-directory: ./breedbase_dockerfile/cxgn/sgn
         run: |
-          git fetch
-          git pull --rebase
+          git remote update
           git branch -r
           git branch
 
