@@ -113,7 +113,7 @@ jobs:
         working-directory: ./breedbase_dockerfile/cxgn/sgn
         run: |
           git fetch
-          git pull
+          git pull --rebase
           git branch -r
           git branch
 
