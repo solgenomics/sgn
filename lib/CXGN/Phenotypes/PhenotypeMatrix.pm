@@ -45,6 +45,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::SearchFactory;
+use CXGN::BreedersToolbox::Projects;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -214,6 +215,18 @@ sub get_phenotype_matrix {
         push @line, 'notes';
         push @info, \@line;
 
+        my @observationunit_ids = map { $_->{observationunit_stock_id} } @$data;
+
+        # retrieve treatments and add to header
+        my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
+        my ($treatment_info, $unique_treatments) = $project_object->get_treatments_by_observationunit_ids(\@observationunit_ids);
+        my @sorted_treatments = sort keys(%$unique_treatments);
+        foreach my $treatment (@sorted_treatments) {
+            push @line, $treatment;
+        }
+
+        push @info, \@line;
+
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{germplasm_synonyms};
@@ -260,6 +273,14 @@ sub get_phenotype_matrix {
                 push @line, $trait_observations{$trait};
             }
             push @line, $obs_unit->{notes};
+
+
+            # add treatment info
+            my %unit_treatments = %{$treatment_info->{$obs_unit->{observationunit_stock_id}}};
+            foreach my $treatment (@sorted_treatments) {
+                push @line, $unit_treatments{$treatment};
+            }
+
             push @info, \@line;
         }
     } else {
@@ -341,6 +362,11 @@ sub get_phenotype_matrix {
         #print STDERR Dumper \%plot_data;
         #print STDERR Dumper \%traits;
 
+        # retrieve treatments
+        my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
+        my ($treatment_info, $unique_treatments) = $project_object->get_treatments_by_observationunit_ids(\@unique_obsunit_list);
+        my @sorted_treatments = sort keys(%$unique_treatments);
+
         my @line = @metadata_headers;
 
         my @sorted_traits = sort keys(%traits);
@@ -348,6 +374,9 @@ sub get_phenotype_matrix {
             push @line, $trait;
         }
         push @line, 'notes';
+        foreach my $treatment (@sorted_treatments) {
+            push @line, $treatment;
+        }
         push @info, \@line;
 
         foreach my $p (@unique_obsunit_list) {
@@ -357,6 +386,11 @@ sub get_phenotype_matrix {
                 push @line, $obsunit_data{$p}->{$trait};
             }
             push @line,  $obsunit_data{$p}->{'notes'};
+            # add treatment info
+            my %unit_treatments = %{$treatment_info->{$p}};
+            foreach my $treatment (@sorted_treatments) {
+                push @line, $unit_treatments{$treatment};
+            }
             push @info, \@line;
         }
     }
