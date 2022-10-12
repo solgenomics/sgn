@@ -269,10 +269,10 @@ export function Wizard(main_id,col_number){
   });
 
   allCols.select('.wizard-union-toggle-min-type-percent').on("click", function(d) {
-    toggleMinType(this, d, "percent");
+    toggleMinType(this, d);
   });
   allCols.select('.wizard-union-toggle-min-type-count').on("click", function(d) {
-    toggleMinType(this, d, "count");
+    toggleMinType(this, d);
   });
 
   allCols.select('.wizard-union-toggle-min-value').on("input", function(d) {
@@ -578,9 +578,8 @@ export function Wizard(main_id,col_number){
    * Handle the selection of a min match type toggle button
    * @param {Element} el DOM element that was selected
    * @param {Object} d Data propagated from selected element
-   * @param {string} type Min match type selected ("percent", "count")
    */
-  function toggleMinType(el, d, type) {
+  function toggleMinType(el, d) {
     el = d3.select(el);
     var bg = el.select(function() { return this.parentNode; });
 
@@ -639,7 +638,9 @@ export function Wizard(main_id,col_number){
       v = v / 100;
     }
 
-    return v && v >= 0 && v <= 1 ? v : 0;
+    v = v && v < 0 ? 0 : v;
+    v = v && v > 1 ? 1 : v;
+    return v ? v : 0;
   }
 
 

@@ -97,15 +97,15 @@ sub metadata_query {
   my $dataref = shift;
   my $queryref = shift;
   my $h;
-  print STDERR "criteria_list=" . Dumper($criteria_list);
-  print STDERR "dataref=" . Dumper($dataref);
-  print STDERR "queryref=" . Dumper($queryref);
+  # print STDERR "criteria_list=" . Dumper($criteria_list);
+  # print STDERR "dataref=" . Dumper($dataref);
+  # print STDERR "queryref=" . Dumper($queryref);
 
   my $target_table = $criteria_list->[-1];
-  print STDERR "target_table=". $target_table . "\n";
+  # print STDERR "target_table=". $target_table . "\n";
   my $target = $target_table;
   $target =~ s/s$//;
-  print STDERR "target=$target\n";
+  # print STDERR "target=$target\n";
 
   my $select = "SELECT ".$target."_id, ".$target."_name ";
   my $group = "GROUP BY ".$target."_id, ".$target."_name ";
@@ -120,7 +120,7 @@ sub metadata_query {
 	  my @queries;
 	  foreach my $category (@$criteria_list) {
 
-      print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
+      # print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
 
       if ($dataref->{$criteria_list->[-1]}->{$category}) {
         my $query;
@@ -131,39 +131,28 @@ sub metadata_query {
         $criterion =~ s/s$//;
         my $match = $queryref->{$criteria_list->[-1]}->{$category};
 
-        print STDERR "... Match: $match\n";
+        # print STDERR "... Match: $match\n";
 
-        if ( $match == 1 ) {
-          my @parts;
-          my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});
-          foreach my $id (@ids) {
-            my $where = "WHERE ". $criterion. "_id IN (". $id .") ";
-            my $statement = $select . $from . $where . $group;
-            push @parts, $statement;
-          }
-          $query = join (" INTERSECT ", @parts);
-          print STDERR "... Query [All]: $query\n";
-          push @queries, $query;
-        }
-        else {
-          my $total = scalar(split(',', $dataref->{$criteria_list->[-1]}->{$category}));
-          my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
-          my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
-          $query = $inner_select . $from . $where . $group;
+        my $total = scalar(split(',', $dataref->{$criteria_list->[-1]}->{$category}));
+        my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
+        my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
+        $query = $inner_select . $from . $where . $group;
 
-          my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
-          $outer_query .= "FROM ($query) AS i ";
-          $outer_query .= "WHERE i.match >= " . $match;
+        my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
+        $outer_query .= "FROM ($query) AS i ";
+        $outer_query .= "WHERE i.match >= " . $match;
 
-          print STDERR "... Query [Any]: $outer_query\n";
-          push @queries, $outer_query;
-        }
+        my $outest_query = "SELECT j." . $target . "_id, j." . $target . "_name ";
+        $outest_query .= "FROM ($outer_query) AS j ";
+
+        # print STDERR "... Query: $outest_query\n";
+        push @queries, $outest_query;
       }
     }
     $full_query = join (" INTERSECT ", @queries);
   }
   $full_query .= " ORDER BY 2";
-  print STDERR "FULL QUERY: $full_query\n";
+  # print STDERR "FULL QUERY: $full_query\n";
   $h = $self->dbh->prepare($full_query);
   $h->execute();
 
