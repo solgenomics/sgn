@@ -369,8 +369,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     print STDERR "GENOFILE PATH = $geno_filepath\n";
     print STDERR "cache file path = ".$c->config->{cache_file_path}." CLUSTER SHARED TEMPDIR: ".$c->config->{cluster_shared_tempdir}."\n";
 
-
-    my $genotype_data_fh = $ds->retrieve_genotypes_vcf( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache, ['GT'], [], ['name', 'chrom', 'pos', 'alt', 'ref', 'format', 'filter', 'qual', 'info' ]);
+    my @accession_names = map { $_->[1] } @{$ds->retrieve_accessions()};
+    my $genotype_data_fh = $ds->retrieve_genotypes( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host},  $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache, \@accession_names);
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},

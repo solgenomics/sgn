@@ -38,6 +38,7 @@ write(paste('PLANT SEX CVTERM: ', userSexes), stderr())
 library(sommer)
 library(AGHmatrix)
 library(VariantAnnotation) # Bioconductor package
+library(tools)
 Rcpp::sourceCpp("/home/production/cxgn/QuantGenResources/CalcCrossMeans.cpp") # this is called CalcCrossMean.cpp on Github
 
 
@@ -176,20 +177,29 @@ userNCrosses <- 100 # for testing only
 #    monomorphic or biallelic sites which could be communicated through the GUI.
 #    It's also possible to filter them here.
 
-write(paste("READING VARIANT FILE ", genotypeFile), stderr())
-#  Import VCF with VariantAnnotation package and extract matrix of dosages
-myVCF <- readVcf(genotypeFile)
-#G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
-mat <- genotypeToSnpMatrix(myVCF)
-#G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
-G <- as(mat$genotypes, "numeric")
-G <- G[,colSums(is.na(G))<nrow(G)]
+if (file_ext(genotypeFile) == 'vcf') { 
+   write(paste("READING VARIANT FILE ", genotypeFile), stderr())
+   #  Import VCF with VariantAnnotation package and extract matrix of dosages
+   myVCF <- readVcf(genotypeFile)
+   #G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
+   mat <- genotypeToSnpMatrix(myVCF)
+   #G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
+   G <- as(mat$genotypes, "numeric")
+   G <- G[,colSums(is.na(G))<nrow(G)]
 
-#   TEST temporarily import the genotypes via HapMap:
-#source("R/hapMap2numeric.R") # replace and delete
-#G <- hapMap2numeric(genotypeFile) # replace and delete
+   #   TEST temporarily import the genotypes via HapMap:
+   #source("R/hapMap2numeric.R") # replace and delete
+   #G <- hapMap2numeric(genotypeFile) # replace and delete
 
+} else {
+   write(paste("READING DOSAGE FILE ", genotypeFile), stderr())
+     GF <- read.delim(genotypeFile)
+     G <- as.matrix(GF)
+}
 
+write("G Matrix start --------", stderr())
+write(G[1:5, 1:5], stderr())
+write("G Matrix end =========", stderr())
 
 
 
