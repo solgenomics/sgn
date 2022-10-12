@@ -112,7 +112,8 @@ jobs:
       - name: List sgn branches
         working-directory: ./breedbase_dockerfile/cxgn/sgn
         run: |
-          git fetch https://github.com/Breeding-Insight/sgn
+          git remote set-url origin https://github.com/Breeding-Insight/sgn
+          git fetch
           git branch -r
 
       - name: Checkout sgn branch
