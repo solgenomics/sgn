@@ -715,11 +715,11 @@ sub get_treatments_by_observationunit_ids {
         FROM project
         JOIN nd_experiment_project ndp USING(project_id)
         JOIN nd_experiment nde ON(ndp.nd_experiment_id = nde.nd_experiment_id AND nde.type_id = ?)
-        JOIN nd_experiment_stock nds ON(nds.nd_experiment_id = nde.nd_experiment_id AND nds.stock_id IN (?))
+        JOIN nd_experiment_stock nds ON(nds.nd_experiment_id = nde.nd_experiment_id AND nds.stock_id IN (@{[join',', ('?') x @$observationunit_ids]}))
     ";
 
     my $h = $self->schema()->storage()->dbh()->prepare($q);
-    $h->execute($treatment_experiment_cvterm_id, $observationunit_ids);
+    $h->execute($treatment_experiment_cvterm_id, @$observationunit_ids);
 
     my %treatment_info_hash;
     my %unique_treatment_hash;

@@ -387,7 +387,10 @@ sub get_phenotype_matrix {
             }
             push @line,  $obsunit_data{$p}->{'notes'};
             # add treatment info
-            my %unit_treatments = %{$treatment_info->{$p}};
+            my %unit_treatments;
+            if ($treatment_info->{$p}) {
+                %unit_treatments = %{$treatment_info->{$p}};
+            };
             foreach my $treatment (@sorted_treatments) {
                 push @line, $unit_treatments{$treatment};
             }
