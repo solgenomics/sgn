@@ -109,14 +109,12 @@ jobs:
         working-directory: ./breedbase_dockerfile
         run: git submodule update --init --recursive
 
-      - name: List sgn branches
+      - name: Set sgn origin
         working-directory: ./breedbase_dockerfile/cxgn/sgn
         run: |
           git remote rm origin
           git remote add origin git@github.com:Breeding-Insight/sgn.git
           git remote update
-          git branch -r
-          git branch
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
