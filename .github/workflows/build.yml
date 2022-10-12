@@ -112,6 +112,8 @@ jobs:
       - name: List sgn branches
         working-directory: ./breedbase_dockerfile/cxgn/sgn
         run: |
+          git remote rm origin
+          git remote add git@github.com:Breeding-Insight/sgn.git
           git remote update
           git branch -r
           git branch
