@@ -18,7 +18,7 @@ $trial_id
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'delete_protocol_section', title => 'Delete Genotyping Protocol(s)', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_protocol_section', title => 'Delete Genotyping Protocol(s) and All Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -122,5 +122,35 @@ function deletePlate(plate_id){
         });
     }
 }
+
+function deleteProtocol(protocol_id){
+
+    var confirmation = confirm('Are you sure you want to delete this genotyping protocol and all data? The deletion cannot be undone.');
+
+    if (confirmation) {
+        jQuery.ajax ({
+            url : '/ajax/genotyping_protocol/delete/'+protocol_id,
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                }
+                if (response.success) {
+                    alert('Genotyping protocol deleted!');
+                    window.location.replace("/search/genotyping_protocols");
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error deleting genotyping protocol!');
+            }
+        });
+    }
+}
+
 
 </script>
