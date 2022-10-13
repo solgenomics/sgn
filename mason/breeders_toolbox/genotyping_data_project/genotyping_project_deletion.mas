@@ -92,6 +92,32 @@ jQuery(document).ready(function(){
         ]
     });
 
+    jQuery('#delete_genotyping_project').click(function() {
+        var project_id = "<% $trial_id %>";
+        var confirmation = confirm("Are you sure you want to delete this genotyping project? The deletion cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/trial/'+project_id+'/delete/genotyping_project',
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Deletion was successful');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
 
 });
 

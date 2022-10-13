@@ -141,7 +141,7 @@ sub genotyping_project_protocols_GET : Args(0) {
     my $genotyping_project_id = $c->req->param('genotyping_project_id');
     my @project_list = ($genotyping_project_id);
     my $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema, undef, undef, undef, undef, undef ,\@project_list);
-    print STDERR "PROTOCOL SEARCH RESULT =".Dumper($protocol_search_result)."\n";
+#    print STDERR "PROTOCOL SEARCH RESULT =".Dumper($protocol_search_result)."\n";
     my @protocol_info;
     foreach my $protocol (@$protocol_search_result){
         my $protocol_id = $protocol->{protocol_id};
