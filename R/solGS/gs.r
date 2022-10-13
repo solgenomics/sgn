@@ -272,7 +272,7 @@ if (length(selectionFile) != 0) {
     selectionData <- convertToNumeric(selectionData)
     selectionData <- filterGenoData(selectionData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter)
     selectionData <- roundAlleleDosage(selectionData)
-    filteredPredGenoData <- selectionData
+
 }
 
 #impute genotype values for obs with missing values,

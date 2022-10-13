@@ -30,6 +30,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
 
     my $params = $c->req->params() || {};
     my $seedlot_name = $params->{seedlot_name} || '';
+    my $description = $params->{description};
     my $breeding_program = $params->{breeding_program} || '';
     my $location = $params->{location} || '';
     my $box_name = $params->{box_name} || '';
@@ -66,6 +67,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $offset,
         $limit,
         $seedlot_name,
+        $description,
         $breeding_program,
         $location,
         $minimum_count,
@@ -102,7 +104,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             owners_string => $sl->{owners_string},
             organization => $sl->{organization},
             box => $sl->{box},
-	    seedlot_quality => $sl->{seedlot_quality},
+	        seedlot_quality => $sl->{seedlot_quality},
         };
     }
 
@@ -131,6 +133,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
     $c->stash->{rest} = {
         success => 1,
         uniquename => $c->stash->{seedlot}->uniquename(),
+        description => $c->stash->{seedlot}->description(),
         seedlot_id => $c->stash->{seedlot}->seedlot_id(),
         current_count => $c->stash->{seedlot}->current_count(),
         current_weight => $c->stash->{seedlot}->current_weight(),
@@ -161,6 +164,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     my $saved_seedlot_name = $seedlot->uniquename;
     my $seedlot_name = $c->req->param('uniquename');
+    my $description = $c->req->param('description');
     my $breeding_program_name = $c->req->param('breeding_program');
     my $organization = $c->req->param('organization');
     my $population = $c->req->param('population');
@@ -182,7 +186,8 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
     if ($saved_seedlot_name ne $seedlot_name){
-        my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name, type_id=>$seedlot_cvterm_id});
+       #make sure the seedlot name is unique across the entire stock table
+        my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name }); #type_id=>$seedlot_cvterm_id});
         if ($previous_seedlot){
             $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
             $c->detach();
@@ -215,6 +220,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     $seedlot->name($seedlot_name);
     $seedlot->uniquename($seedlot_name);
+    $seedlot->description($description);
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);
     $seedlot->location_code($location);
@@ -328,13 +334,14 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $plot_uniquename = $c->req->param("seedlot_plot_uniquename");
     my $origin_seedlot_uniquename = $c->req->param("origin_seedlot_uniquename");
     my $seedlot_quality = $c->req->param("seedlot_quality");
+    my $description = $c->req->param("seedlot_description");
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $no_refresh = $c->req->param("no_refresh");
 
-    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename, type_id=>$seedlot_cvterm_id});
+    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename }); #type_id=>$seedlot_cvterm_id});
     if ($previous_seedlot){
         $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
         $c->detach();
@@ -395,7 +402,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $amount = $c->req->param("seedlot_amount");
     my $weight = $c->req->param("seedlot_weight");
     my $timestamp = $c->req->param("seedlot_timestamp");
-    my $description = $c->req->param("seedlot_description");
+    my $transaction_description = $c->req->param("seedlot_transaction_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
     if (!$weight && !$amount){
@@ -424,6 +431,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     eval {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
+        $sl->description($description);
         $sl->location_code($location_code);
         $sl->box_name($box_name);
         $sl->accession_stock_id($accession_id);
@@ -431,7 +439,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->organization_name($organization);
         $sl->population_name($population_name);
         $sl->breeding_program_id($breeding_program_id);
-	$sl->quality($seedlot_quality);
+	    $sl->quality($seedlot_quality);
         my $return = $sl->store();
         my $seedlot_id = $return->{seedlot_id};
 
@@ -446,7 +454,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
             $transaction->weight_gram($weight);
         }
         $transaction->timestamp($timestamp);
-        $transaction->description($description);
+        $transaction->description($transaction_description);
         $transaction->operator($operator);
         $transaction->store();
 
@@ -605,7 +613,7 @@ sub upload_seedlots_POST : Args(0) {
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
-	    $sl->quality($val->{quality});
+	          $sl->quality($val->{quality});
             $sl->check_name_exists(0); #already validated
             my $return = $sl->store();
             if ( defined $return->{error} ) {
@@ -810,6 +818,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
+            $sl->description($val->{description});
 
 	    print STDERR "QUALITY: $val->{quality}\n";
 	    $sl->quality($val->{quality});
@@ -1016,6 +1025,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             my $amount = $c->req->param('to_new_seedlot_amount');
             my $weight = $c->req->param('to_new_seedlot_weight');
             my $timestamp = $c->req->param('to_new_seedlot_timestamp');
+            my $transaction_description = $c->req->param('to_new_seedlot_transaction_description');
             my $description = $c->req->param('to_new_seedlot_description');
 
             my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -1056,6 +1066,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
             $sl->box_name($box_name);
+            $sl->description($description);
             $sl->accession_stock_id($accession_id);
             $sl->cross_stock_id($cross_id);
             $sl->organization_name($organization);
@@ -1076,7 +1087,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->amount($amount);
             $transaction->weight_gram($weight);
             $transaction->timestamp($timestamp);
-            $transaction->description($description);
+            $transaction->description($transaction_description);
             $transaction->operator($operator);
             $transaction->store();
 
