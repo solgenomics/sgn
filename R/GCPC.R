@@ -194,7 +194,11 @@ if (file_ext(genotypeFile) == 'vcf') {
 } else {
    write(paste("READING DOSAGE FILE ", genotypeFile), stderr())
      GF <- read.delim(genotypeFile)
-     G <- as.matrix(GF)
+     GT <- as.matrix(GF)
+     G <- G[-1,]	
+     G <- t(G)
+
+     
 }
 
 write("G Matrix start --------", stderr())
