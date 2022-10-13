@@ -213,7 +213,6 @@ sub get_phenotype_matrix {
             push @line, $trait;
         }
         push @line, 'notes';
-        push @info, \@line;
 
         my @observationunit_ids = map { $_->{observationunit_stock_id} } @$data;
 
@@ -276,7 +275,10 @@ sub get_phenotype_matrix {
 
 
             # add treatment info
-            my %unit_treatments = %{$treatment_info->{$obs_unit->{observationunit_stock_id}}};
+            my %unit_treatments;
+            if ($treatment_info->{$obs_unit->{observationunit_stock_id}}) {
+                %unit_treatments = %{$treatment_info->{$obs_unit->{observationunit_stock_id}}};
+            };
             foreach my $treatment (@sorted_treatments) {
                 push @line, $unit_treatments{$treatment};
             }
