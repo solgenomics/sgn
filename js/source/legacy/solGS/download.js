@@ -95,7 +95,7 @@ solGS.download = {
 
   createSelectionPopDownloadLinks: function (res) {
     var genoFile = res.selection_pop_filtered_geno_file;
-    
+
     var genoFileName = genoFile.split("/").pop();
     var genoFileLink =
       '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
@@ -263,7 +263,7 @@ jQuery(document).ready(function () {
         solGS.download.getSelectionPopRawDataFiles().done(function (res) {
           solGS.download.createSelectionPopDownloadLinks(res);
         });
-  
+
         solGS.download.getSelectionPopRawDataFiles().fail(function (res) {
           var errorMsg = "Error occured getting selection population genotype data files.";
           solGS.showMessage(downloadMsgDiv, errorMsg);

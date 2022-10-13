@@ -261,7 +261,7 @@ if (length(selectionFile) != 0) {
     selectionData <- convertToNumeric(selectionData)
     selectionData <- filterGenoData(selectionData, maf=0.01)
     selectionData <- roundAlleleDosage(selectionData)
-    filteredPredGenoData <- selectionData
+
 }
 
 
