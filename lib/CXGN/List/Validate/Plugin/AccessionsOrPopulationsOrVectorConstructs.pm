@@ -1,5 +1,5 @@
 
-package CXGN::List::Validate::Plugin::AccessionsOrPopulationsOrVectorConstruct;
+package CXGN::List::Validate::Plugin::AccessionsOrPopulationsOrVectorConstructs;
 
 use Moose;
 
