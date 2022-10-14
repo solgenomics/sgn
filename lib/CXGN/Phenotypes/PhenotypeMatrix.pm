@@ -214,14 +214,14 @@ sub get_phenotype_matrix {
         }
         push @line, 'notes';
 
+        # retrieve treatments and add treatment names to header
         my @observationunit_ids = map { $_->{observationunit_stock_id} } @$data;
-
-        # retrieve treatments and add to header
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-        my ($treatment_info, $unique_treatments) = $project_object->get_treatments_by_observationunit_ids(\@observationunit_ids);
-        my @sorted_treatments = sort keys(%$unique_treatments);
-        foreach my $treatment (@sorted_treatments) {
-            push @line, $treatment;
+        my $treatment_info = $project_object->get_treatments_by_observationunit_ids(\@observationunit_ids);
+        my $treatment_names = $treatment_info->{treatment_names};
+        my $treatment_details = $treatment_info->{treatment_details};
+        foreach my $name (@$treatment_names) {
+            push @line, $name;
         }
 
         push @info, \@line;
@@ -273,14 +273,13 @@ sub get_phenotype_matrix {
             }
             push @line, $obs_unit->{notes};
 
-
-            # add treatment info
+            # add treatment values to each obsunit line
             my %unit_treatments;
-            if ($treatment_info->{$obs_unit->{observationunit_stock_id}}) {
-                %unit_treatments = %{$treatment_info->{$obs_unit->{observationunit_stock_id}}};
+            if ($treatment_details->{$obs_unit->{observationunit_stock_id}}) {
+                %unit_treatments = %{$treatment_details->{$obs_unit->{observationunit_stock_id}}};
             };
-            foreach my $treatment (@sorted_treatments) {
-                push @line, $unit_treatments{$treatment};
+            foreach my $name (@$treatment_names) {
+                push @line, $unit_treatments{$name};
             }
 
             push @info, \@line;
@@ -366,8 +365,9 @@ sub get_phenotype_matrix {
 
         # retrieve treatments
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-        my ($treatment_info, $unique_treatments) = $project_object->get_treatments_by_observationunit_ids(\@unique_obsunit_list);
-        my @sorted_treatments = sort keys(%$unique_treatments);
+        my $treatment_info = $project_object->get_treatments_by_observationunit_ids(\@unique_obsunit_list);
+        my $treatment_names = $treatment_info->{treatment_names};
+        my $treatment_details = $treatment_info->{treatment_details};
 
         my @line = @metadata_headers;
 
@@ -376,9 +376,12 @@ sub get_phenotype_matrix {
             push @line, $trait;
         }
         push @line, 'notes';
-        foreach my $treatment (@sorted_treatments) {
-            push @line, $treatment;
+
+        # add treatment names to header
+        foreach my $name (@$treatment_names) {
+            push @line, $name;
         }
+
         push @info, \@line;
 
         foreach my $p (@unique_obsunit_list) {
@@ -388,13 +391,14 @@ sub get_phenotype_matrix {
                 push @line, $obsunit_data{$p}->{$trait};
             }
             push @line,  $obsunit_data{$p}->{'notes'};
-            # add treatment info
+
+            # add treatment values to each obsunit line
             my %unit_treatments;
-            if ($treatment_info->{$p}) {
-                %unit_treatments = %{$treatment_info->{$p}};
+            if ($treatment_details->{$p}) {
+                %unit_treatments = %{$treatment_details->{$p}};
             };
-            foreach my $treatment (@sorted_treatments) {
-                push @line, $unit_treatments{$treatment};
+            foreach my $name (@$treatment_names) {
+                push @line, $unit_treatments{$name};
             }
             push @info, \@line;
         }

@@ -721,15 +721,20 @@ sub get_treatments_by_observationunit_ids {
     my $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($treatment_experiment_cvterm_id, @$observationunit_ids);
 
-    my %treatment_info_hash;
-    my %unique_treatment_hash;
+    my %treatment_details;
+    my %unique_names;
     while (my @treatment_data = $h->fetchrow_array()) {
         my ($name, $id) = @treatment_data;
-        $unique_treatment_hash{$name} = 1;
-        $treatment_info_hash{$id}->{$name} = 1;
+        $unique_names{$name} = 1;
+        $treatment_details{$id}->{$name} = 1;
     }
 
-    return (\%treatment_info_hash, \%unique_treatment_hash);
+    my @treatment_names = sort keys(%unique_names);
+
+    return {
+        treatment_names => \@treatment_names,
+        treatment_details => \%treatment_details
+    };
 
 }
 
