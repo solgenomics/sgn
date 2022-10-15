@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::GenotypeTrialXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -14,7 +15,24 @@ sub _validate_with_plugin {
     my %errors;
     my @error_messages;
     my %missing_accessions;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, followed by any number of non-dots until the
+    # end of the line.
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+
+    my $parser;
+
+    print STDERR "\n filename $filename\n ";
+    print STDERR "\n line 25 in trial format.pm\n ";
+    print STDERR "extension: $extension";
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %seen_plot_names;
@@ -31,7 +49,7 @@ sub _validate_with_plugin {
 
     $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls or .xlsx) file";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -344,7 +362,23 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $include_facility_identifiers = $self->get_facility_identifiers_included();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, followed by any number of non-dots until the
+    # end of the line.
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+
+    my $parser;
+
+    print STDERR "\n line in trial format.pm / 371 \n ";
+    print STDERR "extension: $extension";
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %design;
