@@ -5219,7 +5219,7 @@ sub delete_empty_genotyping_project {
     }
 
     if ($self->genotyping_protocol_count() > 0) {
-        return 'Cannot delete genotyping project with associated genotyping protocols.';
+        return 'Cannot delete genotyping project with associated genotyping protocol.';
     }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {$self->bcs_schema->storage->dbh()},{on_connect_do => ['SET search_path TO public,phenome;']});
