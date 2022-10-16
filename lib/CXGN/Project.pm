@@ -5261,7 +5261,10 @@ sub genotyping_plate_count {
         project_id => $genotyping_project_id
     });
     my ($data, $total_count) = $plate_info->get_plate_info();
-    my $plate_count = scalar(@$data);
+    my $plate_count;
+    if ($data) {
+        $plate_count = scalar(@$data);
+    }
 
     return $plate_count;
 
@@ -5286,7 +5289,10 @@ sub genotyping_protocol_count {
     my @project_list = ($genotyping_project_id);
     my $protocol_search_result = CXGN::Genotype::Protocol::list($schema, undef, undef, undef, undef, undef ,\@project_list);
 
-    my $protocol_count = scalar(@$protocol_search_result);
+    my $protocol_count;
+    if ($protocol_search_result) {
+        $protocol_count = scalar(@$protocol_search_result);
+    }
 
     return $protocol_count;
 

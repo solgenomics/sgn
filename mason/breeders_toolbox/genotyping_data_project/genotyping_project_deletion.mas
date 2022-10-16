@@ -18,7 +18,7 @@ $trial_id
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'delete_protocol_section', title => 'Delete Genotyping Protocol(s) and All Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_protocol_section', title => 'Delete Genotyping Protocol and All Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
