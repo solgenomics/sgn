@@ -3,6 +3,7 @@ package CXGN::Location::ParseUpload::Plugin::LocationsExcelFormat;
 use Moose;
 use CXGN::Location;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
@@ -14,7 +15,18 @@ sub parse {
     my $self = shift;
     my $filename = shift;
     my $schema = shift;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $check = CXGN::Location->new({ bcs_schema => $schema });
     my (@errors, @rows, %parse_result);
 
