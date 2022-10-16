@@ -9,6 +9,8 @@ use SGN::Test::Fixture;
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
 
+# Test for both xlsx and xls file. First upload is done with xlsx file and stored in db. Then file with exactly the same content but in .xls format is uploaded to check if values will be duplicated.
+
 $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
@@ -29,7 +31,8 @@ $t->while_logged_in_as("submitter", sub {
 
     my $upload_input = $t->find_element_ok("upload_datacollector_phenotype_file_input", "id", "find file input");
 
-    my $filename = $f->config->{basepath}."/t/data/trial/data_collector_upload.xls";
+    # Test for .xlsx upload and store data
+    my $filename = $f->config->{basepath}."/t/data/trial/data_collector_upload.xlsx";
     $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
     sleep(1);
@@ -41,8 +44,8 @@ $t->while_logged_in_as("submitter", sub {
         "upload_phenotype_datacollector_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
-    ok($verify_status =~ /File data_collector_upload.xls saved in archive./, "Verify the positive validation");
-    ok($verify_status =~ /File valid: data_collector_upload.xls./, "Verify the positive validation");
+    ok($verify_status =~ /File data_collector_upload.xlsx saved in archive./, "Verify the positive validation");
+    ok($verify_status =~ /File valid: data_collector_upload.xlsx./, "Verify the positive validation");
     ok($verify_status =~ /File data successfully parsed./, "Verify the positive validation");
     ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify the positive validation");
 
@@ -75,6 +78,8 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok('//select[@id="upload_phenotype_datacollector_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of datacollector phenotype data level")->click();
 
     $upload_input = $t->find_element_ok("upload_datacollector_phenotype_file_input", "id", "find file input");
+
+    # Test for .xls upload and if data is correctly parsed to return duplication result from .xlsx file
     $filename = $f->config->{basepath}."/t/data/trial/data_collector_upload.xls";
     $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
