@@ -62,7 +62,7 @@ sub patch {
     my $dbhost = $self->dbhost;
     my $dbname = $self->dbname;
 
-    `perl ~/cxgn/Chado/chado/bin/gmod_load_cvterms.pl -H $dbhost -D $dbname -r postgres  -s SGNSTAT -d Pg  ~/cxgn/sgn/ontology/cxgn_statistics.obo`;
+    `perl ~/cxgn/chado_tools/chado/bin/gmod_load_cvterms.pl -H $dbhost -D $dbname -r postgres  -s SGNSTAT -d Pg  ~/cxgn/sgn/ontology/cxgn_statistics.obo`;
 
     print "\nYou're done!\n\n";
 
