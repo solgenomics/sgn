@@ -95,7 +95,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok("anova_dropdown", 'class', 'select a trait')->click();
     sleep(2);
     $d->find_element_ok('run_anova', 'id', 'run anova')->click();
-    sleep(160);
+    sleep(180);
     $d->find_element_ok('//div[contains(., "ANOVA result")]', 'xpath', 'anova result')->get_text();
     sleep(5);
 
