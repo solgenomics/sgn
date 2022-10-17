@@ -192,11 +192,17 @@ if (file_ext(genotypeFile) == 'vcf') {
    #G <- hapMap2numeric(genotypeFile) # replace and delete
 
 } else {
+
+  # accession_names     abc      abc2    abc3
+  # marker1                   0      0        2
+  # marker2                   1      0        0
+  # marker3                   0      0        0
+
    write(paste("READING DOSAGE FILE ", genotypeFile), stderr())
      GF <- read.delim(genotypeFile)
-     GT <- as.matrix(GF)
-     G <- G[-1,]	
-     G <- t(G)
+     GD <- GF[,-1]
+     GM <- as.matrix(GD)	
+     G <- t(GM)
 
      
 }
