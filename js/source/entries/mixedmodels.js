@@ -11,15 +11,22 @@ export function init(main_div){
 
     var dataset_id;
 
+    alert("WELCOME TO MIXED MODELS!");
     get_select_box("datasets", "mixed_model_dataset_select", {"checkbox_name":"mixed_model_dataset_select_checkbox"});
-    
+
     jQuery('#mixed_model_analysis_prepare_button').removeClass('active').addClass('inactive');
+
+    $(document).on('click', 'input[name=select_engine]',  function(e) {
+	//alert('clicked select engine!');
+	get_model_string();
+    });
+
 
     $(document).on('click', '#open_store_adjusted_blups_dialog_button',  function(e) {
 	$('#generic_save_analysis_dialog').modal("show");
 	$('#generic_save_analysis_model_properties').val(model_properties);
 	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
-	$('#generic_save_analysis_dataset_id').val( dataset_id );	
+	$('#generic_save_analysis_dataset_id').val( dataset_id );
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
@@ -39,7 +46,7 @@ export function init(main_div){
 	$('#generic_save_analysis_dialog').modal("show");
 	$('#generic_save_analysis_model_properties').val(model_properties);
 	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
-	$('#generic_save_analysis_dataset_id').val( dataset_id );	
+	$('#generic_save_analysis_dataset_id').val( dataset_id );
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
@@ -59,7 +66,7 @@ export function init(main_div){
 	$('#generic_save_analysis_dialog').modal("show");
 	$('#generic_save_analysis_model_properties').val(model_properties);
 	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
-	$('#generic_save_analysis_dataset_id').val( dataset_id );	
+	$('#generic_save_analysis_dataset_id').val( dataset_id );
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
@@ -78,7 +85,7 @@ export function init(main_div){
 	$('#generic_save_analysis_dialog').modal("show");
 	$('#generic_save_analysis_model_properties').val(model_properties);
 	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
-	$('#generic_save_analysis_dataset_id').val( dataset_id );	
+	$('#generic_save_analysis_dataset_id').val( dataset_id );
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
@@ -92,11 +99,11 @@ export function init(main_div){
 	$('#generic_save_analysis_model_training_data_file').val(input_file);
 	$('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
     });
-    
+
     $('#mixed_model_analysis_prepare_button').click( function() {
-	
+
 	dataset_id=get_dataset_id();
-	if (dataset_id != false) { 
+	if (dataset_id != false) {
             $.ajax({
                 url: '/ajax/mixedmodels/prepare',
                 data: { 'dataset_id' : get_dataset_id() },
@@ -107,16 +114,16 @@ export function init(main_div){
                     else {
                         $('#dependent_variable').html(r.dependent_variable);
                         var html = "";
-			
+
                         for (var n=0; n<r.factors.length; n++) {
                             html += "<div id=\"factor_"+n+"\" class=\"container factor\">"+r.factors[n]+"</div>";
                         }
                         $('#factors').html(html);
-			
+
                         for (var n=0; n<r.factors.length; n++) {
                             $('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
                         }
-			
+
                         $('#tempfile').html(r.tempfile);
 			//$('#workflow').
 
@@ -180,13 +187,13 @@ export function init(main_div){
 
     var factor_count;
     var accession_names;
-    
+
     var adjusted_blups_data;
     var blups_data;
 
     var adjusted_blues_data;
     var blues_data;
-    
+
     var traits;
     var stat_ontology_term;
 
@@ -255,10 +262,10 @@ export function init(main_div){
        if(trait_selected.length > 1 || trait_selected.length == 0){
 	   jQuery('#trait_histogram').html('Please select only one trait at a time to see the histogram!');
        } else {
-	   
+
 	   var trait = trait_selected[0];
-	   
-	   
+
+
 	   $.ajax( {
                url: '/ajax/mixedmodels/grabdata',
                data: { 'file' : tempfile },
@@ -282,23 +289,25 @@ export function init(main_div){
 			   }
 		       }
 		   };
-		   
+
 		   vegaEmbed("#trait_histogram", v);
                },
 
 
 	       error: function(e) { alert('error!'); }
 	   });
-	   
+
        }
-       
+
    });
 
     $('#run_mixed_model_button').click( function() {
         var model = $('#model_string').text();
 	var fixed_factors = parse_simple_factors("fixed_factors");
-	var random_factors = parse_simple_factors("random_factors");;
-	
+	//alert("FIXED FACTORS: "+fixed_factors);
+	var random_factors = parse_simple_factors("random_factors");
+	var engine = $('input[name="select_engine"]:checked').val();
+	//alert("Engine is "+engine);
 	var tempfile = $('#tempfile').text();
 
 	var dependent_variables = [];
@@ -316,7 +325,8 @@ export function init(main_div){
 		"tempfile" : tempfile,
 		"dependent_variables": dependent_variables,
 		"fixed_factors" : fixed_factors,
-		"random_factors" : random_factors
+		"random_factors" : random_factors,
+		"engine" : engine
 	    },
             "success": function(r) {
 		$('#working_modal').modal("hide");
@@ -325,7 +335,7 @@ export function init(main_div){
 		    if (r.method === 'random') {
 			$('#mixed_models_adjusted_blups_results_div').html(r.adjusted_blups_html);
 			$('#mixed_models_blups_results_div').html( r.blups_html );
-			
+
 			$('#adjusted_blups_tab_link').show();
 			$('#adjusted_blups_tab_link').addClass('active');
 			$('#blups_tab_link').show();
@@ -337,18 +347,18 @@ export function init(main_div){
 		    else {
 	 		$('#mixed_models_adjusted_blues_results_div').html(r.adjusted_blues_html);
 			$('#mixed_models_blues_results_div').html(r.blues_html);
-		
-			
+
+
 			$('#adjusted_blups_tab_link').removeClass('active');
 			$('#adjusted_blups_tab_link').hide();
 			$('#blups_tab_link').hide();
 
-			
+
 			$('#adjusted_blues_tab_link').tab('show');
 			$('#adjusted_blues_tab_link').addClass('active');
 			$('#blues_tab_link').show();
 		    }
-		    
+
 		    accession_names = JSON.stringify(r.accession_names);
 
 		    adjusted_blups_data = JSON.stringify(r.adjusted_blups_data);
@@ -359,11 +369,11 @@ export function init(main_div){
 		    traits = JSON.stringify(r.traits);
 		    input_file = r.input_file;
 		    result_summary = '{ "method" : "Breedbase mixed model analysis tool" }';
-		    
+
 		    var model_properties_data = { "properties" : { "traits" : traits  } } ;
 		    model_properties = JSON.stringify(model_properties_data);
-		    
-		    
+
+
 		}
             },
             "error": function(r) {
@@ -385,22 +395,26 @@ function get_dataset_id() {
     } else if (selected_datasets.length > 1){
         alert('Please select only one dataset!');
         return false;
-    } else {	
+    } else {
 	var dataset_id=selected_datasets[0];
 	return dataset_id;
     }
 }
 
 function extract_model_parameters() {
-    
+
     var fixed_factors = parse_simple_factors("fixed_factors");
-    
+
     var interaction_factors = parse_factor_collection("interaction_factor_collection_panel");
-    
+
     var variable_slope_intersects = parse_factor_collection("variable_slope_intersect_collection_panel");
-    
+
     var random_factors = parse_simple_factors("random_factors");
-    
+
+    var engine = jQuery('input[name=select_engine]:checked').val();
+
+    //alert("ENGINE IS NOW: "+engine);
+
         // var random_factors = $('#random_factors').text();
     // random_factors = random_factors.replace(/X /g, '","');
     // random_factors = random_factors.replace(/\s/g, '');
@@ -412,32 +426,32 @@ function extract_model_parameters() {
     // if (random_factors) {
     //     random_factors_json = JSON.parse(random_factors);
     // }
-    
+
     var dependent_variables = [];
     $('input[name=dependent_variable_select]:checked').each(function(){
 	dependent_variables.push(jQuery(this).val());
     });
-    
+
     var json =  {
 	'fixed_factors' : fixed_factors,
         'fixed_factors_interaction' : interaction_factors,
 	'variable_slope_intersects' : variable_slope_intersects,
 	'random_factors' : random_factors,
-	'dependent_variables' : dependent_variables
-	
+	'dependent_variables' : dependent_variables,
+	'engine' : engine
     };
     console.log(json);
     return json;
 }
 
 function parse_simple_factors(simple_div) {
-    
+
     var factors = $('#'+simple_div).children();
     var factor_list = new Array();
     for(var n=0; n<factors.length; n++) {
 	var factor_string = $(factors[n]).text();
 	factor_string = factor_string.replace(/X /g, '');
-	
+
 	if (factor_string) {
 	    factor_list.push(factor_string);
 	}
@@ -446,7 +460,7 @@ function parse_simple_factors(simple_div) {
 }
 
 function parse_factor_collection(collection_div) {
-    
+
     // Structure:
     // interaction_factors_collection panel
     //    interaction_factors_collection panel-header
@@ -459,29 +473,29 @@ function parse_factor_collection(collection_div) {
     //         factor_3 span X FACTOR_NAME3
     //         factor_4 span X FACTOR_NAME4
     //
-    
+
     var collection_divs = $('#'+collection_div).children();
 
     var collection = new Array();
     var grouped_factors = new Array();
-    
+
     for (var i=1; i< collection_divs.length; i++) { // skip interaction_factors_collection panel header
-	
+
 	    var $div = $(collection_divs[i]);
-	
+
 	var top_panels = $div.children();
-	
+
 	for (var n=0; n< top_panels.length; n++) {
-	    
+
 	    var panel_components = $(top_panels[n]).children();
 	    var $panel_body = $(panel_components[1]);
-	    
+
 	    var factors = $panel_body.children();
-	    
+
 	    for (var m=0; m<factors.length; m++) {
 		var $factor = $(factors[m]);
 		var label = $factor.text();
-		
+
 		// remove X closing box
 		label = label.substr(2);
 		grouped_factors.push(label);
@@ -490,23 +504,24 @@ function parse_factor_collection(collection_div) {
 	    grouped_factors = new Array();
 	}
     }
-    
+
     var fixed_factors_interaction_json;
     if (collection) {
 	//fixed_factors_interaction_collection = '[["'+fixed_factors_interaction_collection+'"]]';
     }
     return collection;
-    
+
 }
 
 function parse_random_factors() {
-    
-    
+
+
 }
 
 
 function get_model_string() {
     var params = extract_model_parameters();
+    //alert("PARAMS: "+JSON.stringify(params));
     $.ajax( {
 	url  : '/ajax/mixedmodels/modelstring',
 	method: 'POST',
@@ -519,17 +534,22 @@ function get_model_string() {
 		alert(error);
 	    }
 	    else {
-		//alert(r.model);
-		jQuery('#model_string').text(r.model);
+
+		console.log("ENGINE AGAIN: "+r.engine+" "+JSON.stringify(r));
+		if (r.engine == 'sommer') {
+		    jQuery('#model_string').text(r.model[0]+" , random = " + r.model[1]);
+		}
+                else {
+		    jQuery('#model_string').text(r.model);
+		}
 	    }
 	}
     });
 }
 
 function store_blup_file() {
-    
-    
-    
+
+
+
 
 }
-

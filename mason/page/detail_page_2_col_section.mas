@@ -50,6 +50,9 @@ $management_factor_type => undef
 $trial_stock_type => undef
 $trial_stock_count => undef
 $trial_owner => undef
+$phenotypes_fully_uploaded => undef
+$user_can_modify => undef
+$latest_trial_activity => undef
 
 #Specific to stock detail page
 $type_name => undef
@@ -84,6 +87,7 @@ $species_name => undef
 $create_date => undef
 $sample_observation_unit_type_name => undef
 $marker_type => undef
+$genotype_data_type => undef
 
 #Specific to drone run detail page
 $drone_run_date => undef
@@ -249,6 +253,13 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'trial_data_agreement_section'){
                                 <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
 % } #End trial_data_agreement_section
+% if ($info_section_id eq 'trial_status_section'){
+                                <& /breeders_toolbox/trial/trial_status.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_id => $folder_id, design_name => $design_name, has_plant_entries => $has_plant_entries, phenotypes_fully_uploaded => $phenotypes_fully_uploaded, user_can_modify => $user_can_modify, user_name => $user_name &>
+% } #End trial_status_section
+% if ($info_section_id eq 'trial_soil_data_section'){
+                                <& /breeders_toolbox/trial/trial_soil_data.mas, trial_id => $trial_id &>
+% } #End trial_soil_data_section
+
 
 % if ($info_section_id eq 'stock_additional_info_section'){
                                 <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
@@ -330,13 +341,13 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/tissue_samples/sampling_trials.mas &>
 % } #End manage_tissue_samples_sampling_trials
 % if ($info_section_id eq 'trial_details'){
-                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner &>
+                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
 % } #End trial_details
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
 % if ($info_section_id eq 'genotyping_data_project_details'){
-                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility &>
+                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
 % } #End genotyping_data_project_details
 % if ($info_section_id eq 'genotyping_data_project_protocols'){
                                 <& /breeders_toolbox/genotyping_data_project/protocols.mas, trial_id=>$trial_id &>
@@ -344,6 +355,12 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_data_project_data'){
                                 <& /breeders_toolbox/genotyping_data_project/genotype_data.mas, trial_id=>$trial_id &>
 % } #End genotyping_data_project_data
+% if ($info_section_id eq 'genotyping_project_plates'){
+                                <& /breeders_toolbox/genotyping_data_project/genotyping_plates.mas, trial_id=>$trial_id &>
+% } #End genotyping_project_plates
+% if ($info_section_id eq 'genotyping_project_deletion_section'){
+                                <& /breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas, trial_id=>$trial_id &>
+% } #End genotyping_project_deletion_section
 % if ($info_section_id eq 'identifier_generation_list'){
                                 <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
 % } #End identifier_generation_list
@@ -376,7 +393,7 @@ $analytics_protocol_result_summary => {}
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
-                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
+                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner &>
 % } #End crossingtrial_details
 
 % if ($info_section_id eq 'crosses_in_crossingtrial_section'){
@@ -422,6 +439,14 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'cross_search_section'){
                                 <& /search/cross/cross_search_section.mas &>
 %} #End cross_search_section
+
+% if ($info_section_id eq 'parent_search_section'){
+                                <& /search/cross/parent_search.mas &>
+%} #End parent_search_section
+
+% if ($info_section_id eq 'all_cross_entries_section'){
+                                <& /breeders_toolbox/cross/all_cross_entries.mas &>
+%} #End all_cross_entries_section
 
 % if ($info_section_id eq 'manage_nirs_main'){
                                 <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities=>$sampling_facilities &>

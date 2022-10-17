@@ -156,7 +156,8 @@ sub store_crossingproject {
                 year => $year,
                 project_description => $project_description,
                 crossingtrial_name => $crossingtrial_name,
-                nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
+                nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
+                owner_id => $user_id
             });
             my $store_return = $add_crossingtrial->save_crossingtrial();
             if ($store_return->{error}){

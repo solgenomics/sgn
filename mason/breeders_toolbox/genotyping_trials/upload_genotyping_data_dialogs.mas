@@ -46,7 +46,7 @@ $facilities
                                 </div>
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" id="upload_genotyping_data_type_check_button">Go to Next Step</button>
                                 </center>
                             </&>
 
@@ -937,6 +937,16 @@ jQuery(document).ready(function(){
     jQuery('#upload_genotyping_data_project_missing_button').click(function(){
         jQuery('#upload_genotyping_data_project_details').show();
         return false;
+    });
+
+    jQuery('#upload_genotyping_data_type_check_button').click(function(){
+        var data_type = jQuery('#genotype_data_type_select').val();
+        if (data_type == '') {
+            alert('Please select a data type');
+        } else {
+            Workflow.complete('#upload_genotyping_data_type_check_button');
+            Workflow.focus('#upload_genotypes_workflow', 2);
+        }
     });
 
     jQuery('#upload_genotyping_data_project_check_button').click(function(){

@@ -571,17 +571,13 @@ sub retrieve_genotypes {
     my $start_position = shift;
     my $end_position = shift;
     my $marker_name_list = shift || [];
+    # print STDERR "CXGN::Dataset retrieve_genotypes\n";
 
     my $accessions = $self->retrieve_accessions();
-
-    #print STDERR "ACCESSIONS: ".Dumper($accessions);
-
     my @accession_ids;
     foreach (@$accessions) {
         push @accession_ids, $_->[0];
     }
-
-    #print STDERR "ACCESSION IDS: ".Dumper(\@accession_ids);
 
     my $trials = $self->retrieve_trials();
     my @trial_ids;
@@ -589,14 +585,17 @@ sub retrieve_genotypes {
         push @trial_ids, $_->[0];
     }
 
-    my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
     my @protocols;
-    foreach my $p (@$genotyping_protocol_ref) {
-	push @protocols, $p->[0];
-
+    if (!$protocol_id) {
+        my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
+        foreach my $p (@$genotyping_protocol_ref) {
+            push @protocols, $p->[0];
+        }
+    } else {
+        @protocols = ($protocol_id);
     }
 
-    my $genotypes_search = CXGN::Genotype::Search->new(
+    my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema => $self->schema(),
         people_schema=>$self->people_schema,
         accession_list => \@accession_ids,
@@ -610,7 +609,7 @@ sub retrieve_genotypes {
         protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
         protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
         return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
-    );
+    });
     my ($total_count, $dataref) = $genotypes_search->get_genotype_info();
     return $dataref;
 }
@@ -664,6 +663,18 @@ retrieves phenotypes as a hashref representation
 sub retrieve_phenotypes_ref {
     my $self = shift;
 
+    my $plots = $self->retrieve_plots();
+    my @plot_ids;
+    foreach (@$plots) {
+        push @plot_ids, $_->[0];
+    }
+
+    my $plants = $self->retrieve_plants();
+    my @plant_ids;
+    foreach (@$plants) {
+        push @plant_ids, $_->[0];
+    }
+
     my $accessions = $self->retrieve_accessions();
     my @accession_ids;
     foreach (@$accessions) {
@@ -689,6 +700,8 @@ sub retrieve_phenotypes_ref {
             data_level=>$self->data_level(),
             trait_list=>\@trait_ids,
             trial_list=>\@trial_ids,
+            plot_list=>\@plot_ids,
+            plant_list=>\@plant_ids,
             accession_list=>\@accession_ids,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
         }
@@ -714,7 +727,6 @@ sub retrieve_high_dimensional_phenotypes {
     if (!$nd_protocol_id) {
         die "Must provide the protocol id!\n";
     }
-
     if (!$high_dimensional_phenotype_type) {
         die "Must provide the high dimensional phenotype type!\n";
     }
@@ -747,7 +759,6 @@ sub retrieve_high_dimensional_phenotypes {
         plot_list=>\@plot_ids,
         plant_list=>\@plant_ids,
     });
-
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata, $identifier_names);

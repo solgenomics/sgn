@@ -135,4 +135,5 @@ $response = decode_json $mech->content;
 
 is_deeply($response, {'recordsFiltered' => 1,'recordsTotal' => 1,'draw' => undef,'data' => [['<a href="/stock/38842/view">test_accession3</a>','accession','Solanum lycopersicum','test_accession3_synonym1','<a href="/solpeople/personal-info.pl?sp_person_id=41">Jane Doe</a>','organization_name_1']]}, 'test stock search 16');
 
+$f->clean_up_db();
 done_testing();

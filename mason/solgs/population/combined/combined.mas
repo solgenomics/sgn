@@ -34,7 +34,7 @@ $data_set_type => ''
 	if (!$training_pop_id) {$training_pop_id = $combo_pops_id;}
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.genotypingProtocol"] &>
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <br />
@@ -98,6 +98,7 @@ $data_set_type => ''
 &>
 
 <& /solgs/population/trait_acronyms.mas &>
+<& /solgs/population/download.mas &>
 
 %}
 % else

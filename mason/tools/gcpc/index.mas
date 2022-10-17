@@ -1,0 +1,393 @@
+
+<%doc>
+</%doc>
+
+<%args>
+
+</%args>
+
+<%perl>
+  use JSON::Any;
+
+
+</%perl>
+
+
+<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'CXGN.List', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.SelectionIndex' ] &>
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+<!-- temporarily comment out <& /page/page_title.mas, title=>"Genomic Prediction of Cross Performance (GCPC)" &> -->
+  <h2 style="text-align: center;font-size:20px;"> Genomic Prediction of Cross Performance (GCPC)</h2>
+ <br>
+
+ <b style="font-size:15px; color: #254117">Select a Genotyped Dataset</b>
+<br>
+
+    <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Available Datasets", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+      <input type="hidden" name="outformat" value="0" />
+
+
+      <div class="form-group form-inline">
+	<div id="dataset_select"></div>
+	<br>
+
+	<button class="btn btn-success" id="select_dataset" type="submit" name="select_dataset" value="select_dataset">Proceed to Factor Selection</button>
+	<br>
+	<br>
+
+      </div>
+
+      <div class="col" style="background-color:MintCream; padding: 10px 20px 25px" id="fixed_and_random_factors">
+        <div class="text-center">Factors will appear here..</div>
+
+      </div>
+
+      <br>
+      <br>
+      <br>
+      <br>
+
+      <div>
+
+      <div id="sin_list">
+      </div>
+      <i style="font-size:13px">This is a drop-down menu showing your pre-constructed selection indices. Select one and proceed to run the model.</i>
+      </div>
+
+      <center>
+	<div id="trait_histogram_plot">
+	</div>
+      </center>
+
+      <br>
+      <br>
+      <br>
+      <div style="text-align: center">
+	<button class="btn btn-success" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GCPC</button>
+      </div>
+      <br />
+
+      <div id="tempfile" style="display:none" >
+      </div>
+</&>
+
+
+<div id="gcpc_results_download_link"></div>
+
+<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+      <div> <p> Plant Sex info: 1= Male, 2=Female, 3= Monoecious male (m>f) and 4= Monoecious female(f>m)</p> </div>
+      <table id="gcpc_output">
+	<thead>
+	  <tr><th>Cross #</th><th>Parent 1</th><th>Parent 2</th><th>Cross Predicted Merit</th><th>Parent1 Sex</th><th>Parent2 Sex</th></tr>
+	</thead>
+
+      </table>
+
+  <center>
+
+  </center>
+  <br>
+
+</&>
+
+
+<script>
+
+
+jQuery(document).ready(function() {
+  if (isLoggedIn()) {
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
+  }
+  else {
+     alert('Login required!');
+     return;
+  }
+  $('#pheno_select').attr("disabled",true).html('');
+  jQuery('#dataset_select').click(function() {
+    $('#pheno_select').attr("disabled",true).html('');
+    $('#trait_histogram_plot').html('');
+    $('#stability_output').empty();
+  });
+  jQuery('#select_dataset').click(function() {
+    var dataset_id = get_dataset_id();
+    jQuery('#working_modal').modal('show');
+    $.ajax({
+      url: '/ajax/gcpc/factors',
+      data: {'dataset_id': dataset_id},
+      success: function(response) {
+        if (response.error) {
+        jQuery('#working_modal').modal('hide');
+          $('#dataset_select').val('ERROR');
+        }
+        else {
+        jQuery('#working_modal').modal('hide');
+	       jQuery('#fixed_and_random_factors').html(response.html);
+         //alert("factors successfully retrieved!");
+
+	}
+
+      },
+      error: function(response) {
+        alert("An error occurred, the service may be temporarily unavailable. Please try again later.");
+      }
+    });
+  });
+
+  var lo = new CXGN.List();
+  jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined));
+  jQuery('#sin_list_list_select').change(
+      function() {
+          load_sin();
+      });
+
+ //  jQuery('#method_btn').on('click', function() {
+ //   var method_id = jQuery('#select_method').val();
+ //   $.ajax({
+ //       url: '/ajax/Stability/get_method',
+ //       data: {'method_id': method_id  },
+ //     }); // end .ajax    // }; // end else statement
+ //  });
+
+
+  jQuery('#preview_trait_histogram_btn').on('click', function() {
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+    } else {
+      //alert("Inside trait preview");
+      var tempfile = jQuery('#tempfile').html();
+      var trait = jQuery('#pheno_select').val();
+      //alert(trait);
+      jQuery.ajax( {
+          url: '/ajax/gcpc/getdata',
+          data: { 'file' : tempfile },
+          success: function(r)  {
+          //alert("data grabbed "+JSON.stringify(r.data));
+          var v = {
+              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+              "width": 200,
+              "height": 100,
+              "padding": 5,
+              "data": { 'values': r.data },
+              "mark": "bar",
+              "encoding": {
+              "x": {
+                "bin": true,
+                "field": trait,
+                "type": "quantitative"
+              },
+              "y": {
+                "aggregate": "count",
+                "type": "quantitative"
+              }
+             }
+            };
+
+   //alert("embedding"+ JSON.stringify(v));
+            vegaEmbed("#trait_histogram_plot", v);
+            //alert("done");
+          },
+
+
+        error: function(e) { alert('error!'); }
+      });
+    };
+  });
+
+   //if (!jQuery('#sin_list_list_select').val()) {
+    //  alert("Please select a selection index.")
+    //  $('#gcpc_files').empty();
+    //} else {
+			      //if ($('#sin_list_list_select').val() != ""){
+        // var method_id = $('#select_method').val();
+
+
+  jQuery('#runGCPC').click( function () {
+      $('#gcpc_files').empty();
+          var factors = ["studyYear", "programName" , "studyName", "studyDesign" , "plantingDate", "locationName",  "replicate" , "rowNumber",  "colNumber" , "germplasmName"];
+          var factor_param = "";
+          for (var n=0; n<factors.length; n++) {
+          var value = jQuery('input[name="'+factors[n]+ '_factor"]:checked').val();
+          factor_param+='&amp;'+factors[n]+'_factor='+value;
+
+          }
+
+
+
+			      var sin_list_id = jQuery('#sin_list_list_select option:selected').val();
+			      //alert("SIN LIST ID "+sin_list_id);
+      if (! sin_list_id || sin_list_id == "") {
+          alert("Please select a selection index.")
+          $('#gcpc_files').empty();
+          return;
+      }
+        var dataset_id = get_dataset_id();
+        var method_id = 1;
+
+      jQuery('#working_modal').modal('show');
+      $.ajax({
+        'url': '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id+factor_param,
+        'method': "GET",
+	'timeout': 60000000,
+        'contentType': 'application/json'
+       }).done( function(data) {
+          if (data.message) {
+          jQuery('#working_modal').modal('hide');
+          alert(data.message);
+        }
+       if (data.error) {
+          jQuery('#working_modal').modal('hide');
+	  alert(data.error); return;
+      }
+
+      //alert('Download link = '+data.download_link);
+     if (data.download_link) {
+      jQuery('#gcpc_results_download_link').html(data.download_link);
+      }
+
+
+      //alert('JSON data retrieved: '+JSON.stringify(data));
+	jQuery('#working_modal').modal('hide');
+        jQuery('#gcpc_output').DataTable( {
+	     'destroy': true,
+             'timeout': 6000000,
+             'data' : data.data,
+
+             "order": [[ 3, "desc" ]]
+             //"columns": [
+             //   { "data": "Cross #" },
+             //   { "data": "Parent 1" },
+             //   { "data": "Parent 2" },
+             //   { "data": "Cross Predicted Merit" },
+	     //]
+
+        });
+     });
+  });
+
+function get_dataset_id() {
+      var selected_datasets = [];
+      jQuery('input[name="dataset_select_checkbox"]:checked').each(function() {
+          selected_datasets.push(jQuery(this).val());
+      });
+      if (selected_datasets.length < 1){
+          alert('Please select at least one dataset!');
+          return false;
+      } else if (selected_datasets.length > 1){
+          alert('Please select only one dataset!');
+          return false;
+      } else {
+    var dataset_id=selected_datasets[0];
+    return dataset_id;
+    }
+  }
+
+});
+
+
+
+
+
+
+
+
+</script>
+
+
+<!-- STYLE -->
+<style>
+
+.btn-success
+{
+  background-color: #68889E;
+  color:#FFF;
+  border-color: #2F3E48;
+}
+
+h1 {
+  display:none;
+}
+
+.seq_map {
+	color: #777777;
+	width: 700px;
+	position:relative;
+	overflow: auto;
+	align: left;
+}
+
+.blast_select_box {
+  width:300px;
+  margin-right:10px;
+}
+
+.blast_select_label {
+  width:100px;
+  margin-right:10px;
+  line-height: 32px;
+}
+
+.ui-dialog {
+	position:relative;
+}
+
+#region_square {
+	position:absolute;
+	vertical-align:middle;
+}
+.help_dialog {
+	color:blue;
+	cursor:pointer
+}
+#desc_dialog {
+	overflow: auto;
+	position: relative;
+}
+.help_box {
+	background-color:#EEEEFE;
+	border-color:#AAA;
+	border-width:2px;
+	border-style:solid;
+	border-radius:5px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+#sequence {
+  min-height: 80px;
+  max-height: 300px;
+/*  min-width: 700px;*/
+  max-width: 98%;
+}
+
+.download_tag {
+  display:none;
+}
+
+/* BLAST canvas Graph */
+
+.width-1000 {
+  width: 1000px;
+  text-align: center;
+}
+
+#sgn_blast_graph {
+  overflow:hidden;
+}
+
+#myCanvas {
+/*  border-style: solid;*/
+/*  border-width: 1px;*/
+/*  border-color: #ddd;*/
+/*  border-width:0px 1px 1px 1px;*/
+  height:450px;
+  width:1020px;
+  overflow:scroll;
+  overflow-x: hidden;
+}
+
+
+
+</style>

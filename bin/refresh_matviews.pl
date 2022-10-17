@@ -46,7 +46,7 @@ GetOptions(
 );
 
 
-unless ($mode =~ m/^(fullview|stockprop|phenotypes)$/ ) { die "Option -m must be fullview, stockprop, or phenotypes. -m  = $mode\n"; }
+unless ($mode =~ m/^(fullview|stockprop|phenotypes|all_but_genoview)$/ ) { die "Option -m must be fullview, stockprop, phenotypes, or all_but_genoview. -m  = $mode\n"; }
 
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
@@ -57,9 +57,12 @@ if ($mode eq 'stockprop'){
     $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
 }
 if ($mode eq 'phenotypes') {
-    $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table' or mv_name = 'materialized_phenoview' ";
 }
-
+if ($mode eq 'all_but_genoview') {
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop' or mv_name = 'materialized_phenoview' or mv_name= 'materialized_phenotype_jsonb_table' ";
+}
+    
 #set TRUE before the transaction begins
 my $state = 'TRUE';
 print STDERR "*Setting currently_refreshing = TRUE\n";
@@ -79,6 +82,9 @@ try {
     }
     if ($mode eq 'phenotypes') {
        @mv_names = ("materialized_phenoview", "materialized_phenotype_jsonb_table");
+    }
+    if ($mode eq 'all_but_genoview') {
+       @mv_names = ("materialized_stockprop", "materialized_phenoview", "materialized_phenotype_jsonb_table");
     }
 
     my $status = refresh_mvs($dbh, \@mv_names, $concurrent);

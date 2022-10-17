@@ -124,6 +124,7 @@ sub abbreviate_term {
     $term =~ s/-/_/g;
     $term =~ s/\%/percent/g;
     $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
+    $term =~ s/"|\://g;
 
     my @words = split(/\s/, $term);
 
@@ -146,7 +147,7 @@ sub abbreviate_term {
 	    elsif ($word =~/^[0-9]/)
 	    {
 		my $str_wrd = $word;
-		my @str = $str_wrd =~ /[\d+-\d+]/g;
+		my @str = $str_wrd =~ /[\d+\-\d+]/g;
 		my $str = join("", @str);
 		my @wrd = $word =~ /[A-Za-z]/g;
 		my $wrd = join("", @wrd);
@@ -218,7 +219,8 @@ sub clean_traits {
     $terms =~ s/(\|\w+:\d+)//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
-
+    $terms =~ s/"|\://g;
+    
     return $terms;
 }
 

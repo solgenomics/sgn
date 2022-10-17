@@ -10,6 +10,21 @@ use DateTime;
 use CXGN::People::Person;
 use CXGN::Contact;
 
+use File::Basename qw | basename dirname|;
+use File::Copy;
+use File::Slurp;
+use File::Spec::Functions;
+use Digest::MD5;
+use File::Path qw(make_path);
+use File::Spec::Functions qw / catfile catdir/;
+
+use LWP::UserAgent;
+use LWP::Simple;
+use HTML::Entities;
+use URI::Encode qw(uri_encode uri_decode);
+use Tie::UrlEncoder; our(%urlencode);
+
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -30,6 +45,7 @@ sub submit_order_POST : Args(0) {
     my $list_id = $c->req->param('list_id');
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $request_date = $time->ymd();
 #    print STDERR "LIST ID =".Dumper($list_id)."\n";
 
     if (!$c->user()) {
@@ -45,31 +61,78 @@ sub submit_order_POST : Args(0) {
     my $items = $list->elements();
 #    print STDERR "ITEMS =".Dumper($items)."\n";
     my $catalog_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
-    my $contact_person_id;
     my %group_by_contact_id;
+    my @all_new_rows;
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
-        my @ordered_item_split = split / /, $ordered_item;
+        my @ona_info = ();
+        my @ordered_item_split = split /,/, $ordered_item;
+        my $number_of_fields = @ordered_item_split;
         my $item_name = $ordered_item_split[0];
-        print STDERR "ITEM NAME =".Dumper($item_name)."\n";
         my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
         my $item_id = $item_rs->stock_id();
-#        print STDERR "ITEM ID =".Dumper($item_id)."\n";
         my $item_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $catalog_cvterm_id});
         my $item_info_string = $item_info_rs->value();
         my $item_info_hash = decode_json $item_info_string;
-        $contact_person_id = $item_info_hash->{'contact_person_id'};
+        my $contact_person_id = $item_info_hash->{'contact_person_id'};
         my $item_type = $item_info_hash->{'item_type'};
-        $group_by_contact_id{$contact_person_id}{$ordered_item} = $item_type;
+        my $item_source = $item_info_hash->{'material_source'};
+        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'item_type'} = $item_type;
+        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'material_source'} = $item_source;
+
+        my $quantity_string = $ordered_item_split[1];
+        my @quantity_info = split /:/, $quantity_string;
+        my $quantity = $quantity_info[1];
+        $quantity =~ s/^\s+|\s+$//g;
+        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
+
+        my $ona_additional_info;
+        if ($number_of_fields == 3) {
+            my $optional_field = $ordered_item_split[2];
+            my @optional_field_array = split /:/, $optional_field;
+            my $optional_title = $optional_field_array[0];
+            $optional_title =~ s/^\s+|\s+$//g;
+            print STDERR "OPTIONAL TITLE =".Dumper($optional_title)."\n";
+            my $optional_info = $optional_field_array[1];
+            $optional_info =~ s/^\s+|\s+$//g;
+            print STDERR "OPTIONAL INFO =".Dumper($optional_info)."\n";
+            if ($optional_title eq 'Comments') {
+                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $optional_info;
+            } elsif ($optional_title eq 'Additional Info') {
+                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $optional_info;
+                $ona_additional_info = $optional_info;
+                print STDERR "ONA ADDITIONAL INFO =".Dumper($ona_additional_info)."\n";
+            }
+        } elsif ($number_of_fields == 4) {
+            my $additional_info_field = $ordered_item_split[2];
+            my @additional_info_array = split /:/, $additional_info_field;
+            my $additional_info = $additional_info_array[1];
+            $additional_info =~ s/^\s+|\s+$//g;
+            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $additional_info;
+            $ona_additional_info = $additional_info;
+            my $comments_field = $ordered_item_split[3];
+            my @comments_array = split /:/, $comments_field;
+            my $comments = $comments_array[1];
+            $comments =~ s/^\s+|\s+$//g;
+            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $comments;
+        }
+
+        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
+        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
     }
 
+    my $ordering_service_name = $c->config->{ordering_service_name};
+    my $ordering_service_url = $c->config->{ordering_service_url};
+    my $ona_new_id;
+    my @item_list;
     my @contact_email_list;
     foreach my $contact_id (keys %group_by_contact_id) {
         my @history = ();
         my $history_info = {};
-        my $item_ref = $group_by_contact_id{$contact_id};
-        my $order_list = encode_json $item_ref;
-#        print STDERR "ORDER LIST =".Dumper($order_list)."\n";
+        my $item_ref = $group_by_contact_id{$contact_id}{'item_list'};
+        my %item_hashes = %{$item_ref};
+        my @item_list = map { { $_ => $item_hashes{$_} } } keys %item_hashes;
+
         my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
         $new_order->order_from_id($user_id);
         $new_order->order_to_id($contact_id);
@@ -86,7 +149,7 @@ sub submit_order_POST : Args(0) {
         push @history, $history_info;
 
         my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
-        $order_prop->clone_list($order_list);
+        $order_prop->clone_list(\@item_list);
         $order_prop->parent_id($order_id);
         $order_prop->history(\@history);
     	my $order_prop_id = $order_prop->store_sp_orderprop();
@@ -97,11 +160,179 @@ sub submit_order_POST : Args(0) {
             return;
         }
 
-        my $contact_person = CXGN::People::Person -> new($dbh, $contact_person_id);
+        my $contact_person = CXGN::People::Person -> new($dbh, $contact_id);
         my $contact_email = $contact_person->get_contact_email();
         push @contact_email_list, $contact_email;
+
+        if ($ordering_service_name eq 'ONA') {
+            my $each_contact_id_ona = $group_by_contact_id{$contact_id}{'ona'};
+            my $order_location;
+            foreach my $item (keys %{$each_contact_id_ona}) {
+                my @new_order_row = ();
+                my $ona_ref = $each_contact_id_ona->{$item};
+                $order_location = $ona_ref->[0];
+                @new_order_row = @$ona_ref;
+                splice @new_order_row, 1, 0, $order_id;
+                push @all_new_rows, [@new_order_row];
+            }
+
+            my $order_file_name = $order_location.'_orders.csv';
+            my $id_string;
+            my $form_id;
+            my $ua = LWP::UserAgent->new;
+            $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ordering_service_username}, $c->config->{ordering_service_password} );
+            my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+            my $server_endpoint_1 = "https://api.ona.io/api/v1/data";
+            my $resp = $ua->get($server_endpoint_1);
+
+            if ($resp->is_success) {
+                my $message = $resp->decoded_content;
+                my $all_info = decode_json $message;
+                foreach my $info (@$all_info) {
+                    my %info_hash = %{$info};
+                    if ($info_hash{'id_string'} eq $order_location) {
+                        $form_id = $info_hash{'id'};
+                    }
+                }
+            }
+
+            if ($form_id) {
+                my ($previous_order_temp_file, $previous_order_uri1) = $c->tempfile( TEMPLATE => 'download/previous_ona_order_infoXXXXX');
+                my $previous_order_temp_file_path = $previous_order_temp_file->filename;
+
+                my $order_ona_id;
+                my $server_endpoint_2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
+                my $resp_d = $ua->get($server_endpoint_2);
+                if ($resp_d->is_success) {
+                    my $message_d = $resp_d->decoded_content;
+                    my $message_hash_d = decode_json $message_d;
+                    foreach my $t (@$message_hash_d) {
+                        if ($t->{'data_value'} eq $order_file_name) {
+#                        print STDERR "DELETE INFO =".Dumper($t)."\n";
+                            getstore($t->{media_url}, $previous_order_temp_file_path);
+                            $order_ona_id = $t->{id};
+                        }
+                    }
+                }
+                my @previous_order_rows;
+                my @all_order_rows;
+                if ($order_ona_id) {
+                    open(my $fh, '<', $previous_order_temp_file_path)
+                    or die "Could not open file!";
+                    my $old_header_row = <$fh>;
+                    while ( my $row = <$fh> ){
+                        chomp $row;
+                        push @previous_order_rows, [split ',', $row];
+                    }
+                    push @all_order_rows, (@previous_order_rows);
+                }
+
+                push @all_order_rows, (@all_new_rows);
+
+                my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+                my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","additionalInfo","requestDate"';
+                my $template_file_name = $order_location.'_orders';
+                my $user_id = $c->user()->get_object()->get_sp_person_id();
+                my $user_name = $c->user()->get_object()->get_username();
+                my $time = DateTime->now();
+                my $timestamp = $time->ymd()."_".$time->hms();
+                my $subdirectory_name = "ona_order_info";
+                my $archived_file_name = catfile($user_id, $subdirectory_name,$template_file_name.".csv");
+                my $archive_path = $c->config->{archive_path};
+                my $file_destination =  catfile($archive_path, $archived_file_name);
+                my $dir = $c->tempfiles_subdir('/download');
+                my $rel_file = $c->tempfile( TEMPLATE => 'download/ona_order_infoXXXXX');
+                my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
+    #            print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
+                open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+
+                print $FILE $ona_header."\n";
+                my $order_row = 0;
+                foreach my $row (@all_order_rows) {
+                    my @row_array = ();
+                    @row_array = @$row;
+                    my $csv_format = join(',',@row_array);
+                    print $FILE $csv_format."\n";
+                    $order_row++;
+                }
+                close $FILE;
+
+                open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+                binmode $F;
+                my $md5 = Digest::MD5->new();
+                $md5->addfile($F);
+                close($F);
+
+                if (!-d $archive_path) {
+                    mkdir $archive_path;
+                }
+
+                if (! -d catfile($archive_path, $user_id)) {
+                    mkdir (catfile($archive_path, $user_id));
+                }
+
+                if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+                    mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+                }
+                my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+                    create_person_id => $user_id,
+                });
+                $md_row->insert();
+                my $file_row = $metadata_schema->resultset("MdFiles")->create({
+                    basename => basename($file_destination),
+                    dirname => dirname($file_destination),
+                    filetype => 'orders',
+                    md5checksum => $md5->hexdigest(),
+                    metadata_id => $md_row->metadata_id(),
+                });
+                $file_row->insert();
+                my $file_id = $file_row->file_id();
+
+                move($tempfile,$file_destination);
+                unlink $tempfile;
+                print STDERR "FILE ID =".Dumper($file_id)."\n";
+                print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+
+                if ($order_ona_id) {
+                    my $server_endpoint_3 = "https://api.ona.io/api/v1/metadata";
+                    my $delete_resp = $ua->delete(
+                        $server_endpoint_3."/$order_ona_id"
+                    );
+                    if ($delete_resp->is_success) {
+                        print STDERR "Deleted order file on ONA $order_ona_id.\n";
+                    } else {
+                        print STDERR "ERROR: Did not delete order file on ONA $order_ona_id.\n";
+                        #print STDERR Dumper $delete_resp;
+                    }
+                }
+
+                my $server_endpoint_4 = "https://api.ona.io/api/v1/metadata";
+                my $add_resp = $ua->post(
+                    $server_endpoint_4,
+                    Content_Type => 'form-data',
+                    Content => [
+                        data_file => [ $file_destination, $file_destination, Content_Type => 'text/plain', ],
+                        "xform"=>$form_id,
+                        "data_type"=>"media",
+                        "data_value"=>$file_destination
+                    ]
+                );
+
+                if ($add_resp->is_success) {
+                    my $message = $add_resp->decoded_content;
+                    my $message_hash = decode_json $message;
+                    $ona_new_id = $message_hash->{id};
+                    if (!$ona_new_id){
+                        $c->stash->{rest} = {error_string => "Error sending your order to BANANA ORDERING SYSTEM"};
+                        return;
+                    }
+                }
+            } else {
+                $c->stash->{rest} = {error_string => "BANANA ORDERING SYSTEM hasn't been set up for $order_location. Please contact admin."};
+                return;
+            }
+        }
     }
-#    print STDERR "EMAIL LIST =".Dumper(\@contact_email_list)."\n";
 
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
@@ -120,7 +351,11 @@ END_HEREDOC
         CXGN::Contact::send_email($subject,$body,$each_email);
     }
 
-    $c->stash->{rest} = {success => "1",};
+    if ($ona_new_id) {
+        $c->stash->{rest}->{success} .= 'Your order has been sent successfully to Banana Ordering System.';
+    } else {
+        $c->stash->{rest}->{success} .= 'Your order has been submitted successfully and the vendor has been notified.';
+    }
 
 }
 

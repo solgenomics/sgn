@@ -36,7 +36,7 @@ $for_analysis_page => undef
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" id="trial_set_phenotypes_fully_link">Phenotypes Fully Uploaded?</button>' &>
+            <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0 &>
 
                 <table class="table table-bordered" id="trial_phenotype_files_datatables" alt="">
                 </table>

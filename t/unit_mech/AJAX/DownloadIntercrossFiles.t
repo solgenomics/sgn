@@ -17,7 +17,7 @@ my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 my $dbh = $schema->storage->dbh;
 my $people_schema = $f->people_schema;
-
+my $phenome_schema = $f->phenome_schema;
 my $mech = Test::WWW::Mechanize->new;
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
@@ -53,14 +53,14 @@ $response = decode_json $mech->content;
 my $parents_rows = $response->{'data'};
 
 is_deeply($parents_rows, [
-    [1446,'0','UG120001'],
-    [1447,'0','UG120002'],
-    [1448,'0','UG120003'],
-    [1449,'0','UG120004'],
-    [1446,'1','UG120001'],
-    [1447,'1','UG120002'],
-    [1448,'1','UG120003'],
-    [1449,'1','UG120004']
+    [38878,'0','UG120001'],
+    [38879,'0','UG120002'],
+    [38880,'0','UG120003'],
+    [38881,'0','UG120004'],
+    [38878,'1','UG120001'],
+    [38879,'1','UG120002'],
+    [38880,'1','UG120003'],
+    [38881,'1','UG120004']
     ], 'intercross parents');
 
 #test creating intercross wishlist
@@ -79,8 +79,10 @@ is_deeply($wishlist_rows, [
     ], 'intercross wishlist');
 
 # remove crossing experiment after test
+my $project_owner_row = $phenome_schema->resultset('ProjectOwner')->find( { project_id=> $crossing_experiment_rs->project_id()});
+$project_owner_row->delete();
 my $delete_experiment = $crossing_experiment_rs->delete();
 my $delete_list = CXGN::List::delete_list($f->dbh(), $accession_list_id);
 
-
+$f->clean_up_db();
 done_testing();

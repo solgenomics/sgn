@@ -48,11 +48,12 @@ jQuery(document).ready(function ($) {
     var plate_data = new Object();
     jQuery('#add_geno_trial_submit').click(function () {
         plate_data = new Object();
-        plate_data.breeding_program = jQuery('#breeding_program_select').val();
-        plate_data.year = jQuery('#year_select').val();
-        plate_data.location = jQuery('#location_select').val();
+//        plate_data.breeding_program = jQuery('#breeding_program_select').val();
+//        plate_data.year = jQuery('#year_select').val();
+//        plate_data.location = jQuery('#location_select').val();
         plate_data.description = jQuery('#genotyping_trial_description').val();
-        plate_data.project_name = jQuery('#genotyping_project_name').val();
+//        plate_data.project_name = jQuery('#genotyping_project_name').val();
+        plate_data.genotyping_project_id = jQuery('#plate_genotyping_project_id').val();
         plate_data.name = jQuery('#genotyping_trial_name').val();
         plate_data.plate_format = jQuery('#genotyping_trial_plate_format').val();
         plate_data.sample_type = jQuery('#genotyping_trial_plate_sample_type').val();
@@ -65,8 +66,9 @@ jQuery(document).ready(function ($) {
         plate_data.well_volume = jQuery('#genotyping_well_volume').val();
         plate_data.well_tissue = jQuery('#genotyping_well_tissue').val();
         plate_data.well_notes = jQuery('#genotyping_well_notes').val();
-        plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
+//        plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
         plate_data.genotyping_facility_submit = jQuery('#genotyping_trial_facility_submit_select').val();
+        plate_data.include_facility_identifiers = jQuery('#upload_genotype_plate_include_facility_identifiers').val();
 
         if (plate_data.name == '') {
             alert("A name is required and it should be unique in the database. Please try again.");
@@ -365,7 +367,7 @@ jQuery(document).ready(function ($) {
                 url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html("Deleting genotyping experiment...<br />");
+                    jQuery('#working_msg').html("Deleting genotyping plate...<br />");
                 },
                 success: function(response) {
                     if (response.error) {
@@ -476,6 +478,11 @@ jQuery(document).ready(function ($) {
             }
         }
     });
+
+    jQuery('[name="create_genotyping_project_link"]').click(function() {
+        jQuery('#create_genotyping_project_dialog').modal("show");
+    });
+
 
 });
 

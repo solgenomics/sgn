@@ -204,9 +204,9 @@ sub get_cluster_phenotype_query_job_args {
 
     foreach my $trial_id (@$trials)
     {
-	$c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
+    my $cached = $c->controller('solGS::CachedResult')->check_cached_phenotype_data($c, $c->stash->{trial_id});
 
-	if (!-s $c->stash->{phenotype_file_name})
+	if (!$cached)
 	{
 	    my $args = $self->phenotype_trial_query_args($c, $trial_id);
 
@@ -295,7 +295,7 @@ sub genotype_trial_query_args {
 sub phenotype_trial_query_args {
     my ($self, $c, $pop_id) = @_;
 
-    $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $pop_id = $c->stash->{training_pop_id} || $c->stash->{trial_id} if !$pop_id;
 
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
@@ -691,7 +691,7 @@ sub modeling_jobs {
 	foreach my $trait_id (@$modeling_traits)
 	{
 	    $c->stash->{trait_id} = $trait_id;
-	    $c->controller('solGS::solGS')->get_trait_details($c);
+	    $c->controller('solGS::Trait')->get_trait_details($c);
 
 	    $c->controller('solGS::solGS')->input_files($c);
 	    $c->controller('solGS::solGS')->output_files($c);

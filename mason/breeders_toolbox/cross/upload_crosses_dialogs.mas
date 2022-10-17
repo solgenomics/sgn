@@ -34,17 +34,20 @@ $trial_name => undef
 
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
 
                         <&| /util/workflow.mas:step, title=> "Crossing experiment" &>
                             <& /page/page_title.mas, title=>"Select a crossing experiment for your crosses" &>
+                            <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label">If you are uploading an Intercross file and using auto-generated cross unique IDs, please use manage Intercross section</label></center>
+                            <br>
+                            <br>
                             <div id="manage_page_section_1" style="display:none">
                                 <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
                                 <center>
                                     <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a new crossing experiment, click here</button><br/><br/>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
+                                    <button id="next_step_crossing_trial_button" class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
                                 </center>
                             </div>
 
@@ -59,7 +62,7 @@ $trial_name => undef
                                     <br/><br/><br/><br/>
                                     <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                                 </center>
-                            </dvi>
+                            </div>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
                             <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
@@ -232,7 +235,7 @@ $trial_name => undef
                             </ul>
                             <br/>
                             <center>
-                            <button class="btn btn-primary" name="upload_crosses_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            <button  class="btn btn-primary" name="upload_crosses_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
                             </center>
                         </&>
 
@@ -241,7 +244,7 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button name="upload_crosses_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

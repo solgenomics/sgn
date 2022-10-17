@@ -140,6 +140,11 @@ sub upload_cross_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload crosses'};
+        $c->detach();
+    }
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -902,29 +907,30 @@ sub add_crossingtrial_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
-    print STDERR Dumper $c->req->params();
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
     my $breeding_program_id = $c->req->param('crossingtrial_program_id');
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
 
-    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
-    $geolocation_lookup->set_location_name($location);
-    if(!$geolocation_lookup->get_geolocation()){
-        $c->stash->{rest}={error => "Location not found"};
-        return;
-    }
-
     if (!$c->user()){
-        print STDERR "User not logged in... not adding a crossingtrial.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial."};
+        print STDERR "User not logged in... not adding a crossing experiment.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to add a crossing experiment."};
         return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
         print STDERR "User does not have sufficient privileges.\n";
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossing experiment." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+    $geolocation_lookup->set_location_name($location);
+    if(!$geolocation_lookup->get_geolocation()){
+        $c->stash->{rest}={error => "Location not found"};
         return;
     }
 
@@ -934,10 +940,11 @@ sub add_crossingtrial_POST :Args(0){
             chado_schema => $schema,
             dbh => $dbh,
             breeding_program_id => $breeding_program_id,
-            year => $c->req->param('year'),
-            project_description => $c->req->param('project_description'),
+            year => $year,
+            project_description => $project_description,
             crossingtrial_name => $crossingtrial_name,
-            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
+            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
+            owner_id => $user_id
         });
         my $store_return = $add_crossingtrial->save_crossingtrial();
         if ($store_return->{error}){
@@ -1693,7 +1700,6 @@ sub get_cross_additional_info :Path('/ajax/cross/additional_info') Args(1) {
     my $cross_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_additional_info', 'stock_property')->cvterm_id();
     my $cross_additional_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_additional_info_cvterm});
 

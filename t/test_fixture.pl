@@ -144,7 +144,9 @@ close($NEWCONF);
 
 #run fixture and db patches.
 if (! $nopatch) {
-    system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 145");
+    print STDERR "Running patches... ";
+    system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 157 > /dev/null");
+    print STDERR "Done\n";
 }
 
 # run the materialized views creation script

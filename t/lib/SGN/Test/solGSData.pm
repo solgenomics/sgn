@@ -56,9 +56,11 @@ package SGN::Test::solGSData;
 use Moose;
 
 use lib 't/lib';
+use SGN::Role::Site::Files;
 use SGN::Test::Fixture;
 use CXGN::List;
 use CXGN::Dataset;
+use File::Spec;
 
 has 'user_id' => (isa => 'Int',
     is => 'rw',
@@ -546,6 +548,33 @@ sub get_accessions_names {
 
 }
 
+sub site_cluster_shared_dir { 
+    my $self = shift;
+
+    my $tmp = $self->fixture->get_conf('cluster_shared_tempdir');
+    my $host = $self->fixture->get_conf('main_production_site_url');
+   
+    $host    =~ s/(https?)|(:\d+)|\/|://g;
+    $host    =~ s/(www\.)//;
+    my $host_dir    = File::Spec->catdir($tmp, $host);
+    
+    return $host_dir;
+
+}
+
+sub default_protocol_dir { 
+    my $self = shift;
+
+    my $host_dir = $self->site_cluster_shared_dir();
+
+    my $default_protocol = $self->fixture->get_conf('default_genotyping_protocol');
+    $default_protocol       = 'analysis-data' if ($default_protocol =~ /undefined/) || !$default_protocol;$default_protocol       =~ s/\s+//g;
+
+    my $geno_dir    = File::Spec->catdir($host_dir, $default_protocol);
+
+    return $geno_dir;
+
+}
 
 ###
 1;
