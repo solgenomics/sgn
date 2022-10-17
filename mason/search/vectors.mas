@@ -216,8 +216,7 @@ jQuery(document).ready(function () {
   var params = {};
   var matchtype = {};
   jQuery('#editable_stockprop_search_add').click( function(){
-      // console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
-      // console.log("Value is "+jQuery('#editable_stockprop_search_term').val());
+
       editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = {"matchtype": "contains"};
       console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
       _draw_editable_stockprops_search_fields();
@@ -234,10 +233,6 @@ jQuery(document).ready(function () {
                   });
 
   jQuery(document).on("change", 'select[name="editable_stockprop_matchtype"]', function(){
-
-  // jQuery(document).on("change", 'input[name="editable_stockprop_matchtype"]', function(){
-      //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
-      console.log("prop is "+jQuery(this).data('property'));
       editable_stockprops_search[jQuery(this).data('property')]["matchtype"] = jQuery(this).val();
       console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
   });
@@ -331,12 +326,7 @@ jQuery(document).ready(function () {
           editable_stockprops_search['<% $stockprop %>']["value"] = jQuery('#any_name').val();
 %  }
       }
-console.log("sale",editable_stockprops_search);
       _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
-
-  //    if(jQuery('#any_name').val()){
-  //      _load_stock_search_results('', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array, jQuery('#any_name').val());
-   //   }
  });
 
  jQuery('#stock_search_form').keypress( function( e ) {
