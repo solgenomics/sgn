@@ -90,7 +90,7 @@ modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
 message('model input trait geno file ', modelPhenoFile)
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
-analysisReportFile <- grep("report_file", outputFiles, value = TRUE)
+analysisReportFile <- grep("_report_", outputFiles, value = TRUE)
 
 filteredTrainingGenoFile       <- grep("filtered_training_genotype_data", outputFiles, value = TRUE)
 filteredSelGenoFile       <- grep("filtered_selection_genotype_data", outputFiles, value = TRUE)
@@ -114,9 +114,11 @@ genoData           <- c()
 maf <- 0.01
 markerFilter <- 0.6
 cloneFilter <- 0.8
-message("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  were removed")
-message("Markers with greater or equal to ", markerFilter * 100, "% missing values were removed")
-message("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  were removed")
+
+cat("\nThe following data filtering will be applied to the data set:\n", file = analysisReportFile, append = TRUE)
+cat(c("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  were removed"), "\n",  file = analysisReportFile, append = TRUE)
+cat(c("Markers with greater or equal to ", markerFilter * 100, "% missing values were removed"), "\n", file = analysisReportFile, append = TRUE)
+cat(c("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  were removed"), "\n", file = analysisReportFile, append = TRUE)
 
 if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
     filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,

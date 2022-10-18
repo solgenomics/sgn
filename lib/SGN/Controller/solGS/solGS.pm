@@ -605,7 +605,7 @@ sub output_files {
                         $c->stash->{filtered_training_genotype_file},
                         $c->stash->{filtered_selection_genotype_file},
                         $c->stash->{rrblup_selection_gebvs_file},
-                         $c->stash->{analysis_report_file}
+                        $c->stash->{analysis_report_file}
         );
 
     my $name = "output_files_${trait}_${training_pop_id}";
