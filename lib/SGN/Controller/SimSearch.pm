@@ -2,6 +2,8 @@
 package SGN::Controller::SimSearch;
 
 use Moose;
+use File::Temp "tempdir";
+use File::Basename;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -12,21 +14,60 @@ sub simsearch : Path('/tools/simsearch') {
     $c->stash->{template} = '/tools/simsearch/index.mas';
 }
 
-sub process_file : Path('/tools/simsearch/processfile') {
+sub upload_file : Path('/tools/simsearch/upload_file') {
     my $self = shift;
     my $c = shift;
 
+    my $tempdir = $c->tempfiles_subdir("simsearch");
+    my $tempfile = $c->tempfile( TEMPLATE => 'simsearch/simsearch-XXXXXX', UNLINK => 0 );
+
+    
     my $upload = $c->request->upload('upload_vcf_file');
 
     my $filename = $upload->filename();
-    $c->stash->{filename} = $filename;
-    $c->stash->{template} = '/tools/simsearch/process_file.mas';
+    
+    print STDERR "UPLOAD FILENAME: $filename\n";
 
+    my $tempname = $upload->tempname();
+    print STDERR "TEMPNAME: $tempname\n";
+    
+    $c->stash->{filename} = $tempfile;
+    $c->stash->{template} = '/tools/simsearch/upload_file.mas';
+
+    my $simsearch_datadir = $c->config->{simsearch_datadir};
+
+    print STDERR "SIMSEARCH DATADIR = $simsearch_datadir\n";
+
+    $upload->copy_to($tempfile);
+    
+    my @files = glob "$simsearch_datadir/*";
+
+    print STDERR "FILES: ".join(",",@files)."\n";
+
+    
+    
+    my $pulldown = "<select id=\"reference_file\" >\n";
+    foreach my $f (@files) {
+	$pulldown .= "<option>".basename($f)."</option>";
+    }
+    $pulldown .="</select>";
 
     # -i required input file -r reference file (with -i only, input is also used as reference)
     # need to add a pull down with current genotypes for each protocol
-    
-    my $cmd = "../gtsimsrch/src/simsearch -i $filename -o $filename.out";
+
+    $c->stash->{reference_files_menu} = $pulldown;
+
+}
+
+sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $filename = $c->config->{basepath}."/".$c->req->param("filename");
+    my $reference_file = $c->req->param("reference_file");
+
+    my $reference_file_path = $c->config->{simsearch_datadir}."/".$reference_file;
+    my $cmd = "../gtsimsrch/src/simsearch -i $filename -r $reference_file_path -o $filename.out";
 
     print STDERR "running command $cmd...\n";
     system($cmd);
@@ -45,7 +86,7 @@ sub process_file : Path('/tools/simsearch/processfile') {
     # (use gnuplot or R)
     
     
-    $c->body($results);
+    $c->res->body($results);
     
 }
 

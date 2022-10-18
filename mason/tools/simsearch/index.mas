@@ -4,7 +4,7 @@
 
 <h1>SimSearch</h1>
 
-<form action="/tools/simsearch/processfile" method="post" enctype="multipart/form-data">
+<form action="/tools/simsearch/upload_file" method="post" enctype="multipart/form-data">
 <input type="file" name="upload_vcf_file">Upload VCF file</input>
 
 <input type="submit">Upload</input>
