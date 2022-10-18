@@ -56,7 +56,6 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         phenome_schema=>$phenome_schema,
         match_type=>$params->{any_name_matchtype},
         match_name=>$params->{any_name},
-        stock_type_name=>$params->{stock_type},
         stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
         limit=>$limit,

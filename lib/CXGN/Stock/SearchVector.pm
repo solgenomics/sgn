@@ -250,8 +250,6 @@ sub search {
     my $matchtype = $self->match_type || 'contains';
     my $any_name = $self->match_name;
     my $organism_id = $self->organism_id;
-    my $stock_type_id = $self->stock_type_id;
-    my $stock_type_name = $self->stock_type_name;
     my $owner_first_name = $self->owner_first_name;
     my $owner_last_name = $self->owner_last_name;
     my $minimum_phenotype_value = $self->minimum_phenotype_value;
@@ -269,6 +267,9 @@ sub search {
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
+        
+    my $stock_type_name = 'vector_construct';
+    my $stock_type_id;
 print STDERR "\nstock_type_id:" . $stock_type_id;
 print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
 
