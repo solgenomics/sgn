@@ -266,7 +266,7 @@ sub analysis_report_file {
     my ($self, $c) = @_;
 
     my $type      = $c->stash->{analysis_type};
-    $type =~ s/\s+_//g;
+    $type =~ s/\s+/_/g;
     my $cache_dir = $c->stash->{cache_dir} || $c->stash->{solgs_cache_dir};
     my $file_id   = $c->stash->{file_id};
 
