@@ -54,4 +54,25 @@ sub disease_researchhighlights_kruse_2017 :Path('/disease/researchhighlights/kru
     $c->stash->{template} = '/disease/researchhighlights/kruse_2017.mas';
 }
 
+sub disease_researchhighlights_kruse_2017 :Path('/disease/researchhighlights/Accelerating_implementation_of_HLB-tolerant_hybrids_as_new_commercial_cultivars_for_fresh_and_processed_citrus') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/disease/researchhighlights/Accelerating_implementation_of_HLB-tolerant_hybrids_as_new_commercial_cultivars_for_fresh_and_processed_citrus.mas';
+}
+
+sub disease_researchhighlights_kruse_2017 :Path('/disease/researchhighlights/Developing_novel_biological_delivery_methods_for_therapeutic_agents_and_other_biomolecules_to_enhance_production_of_citrus') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/disease/researchhighlights/Developing_novel_biological_delivery_methods_for_therapeutic_agents_and_other_biomolecules_to_enhance_production_of_citrus.mas';
+}
+
+sub disease_researchhighlights_kruse_2017 :Path('/disease/researchhighlights/Development_of_antimicrobial_peptides_from_citrus_to_kill_the_CLas_bacterium_causing_HLB') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/disease/researchhighlights/Development_of_antimicrobial_peptides_from_citrus_to_kill_the_CLas_bacterium_causing_HLB.mas';
+}
+
 1;
