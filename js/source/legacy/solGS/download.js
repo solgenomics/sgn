@@ -128,9 +128,11 @@ solGS.download = {
   createModelInputDownloadLinks: function (res) {
     var genoFile = res.model_geno_data_file;
     var phenoFile = res.model_pheno_data_file;
+    var logFile = res.model_analysis_report_file;
 
     console.log("geno file: " + genoFile);
     console.log("pheno file: " + phenoFile);
+    console.log("log file: " + logFile);
 
     var genoFileName = genoFile.split("/").pop();
     var genoFileLink =
@@ -140,8 +142,11 @@ solGS.download = {
     var phenoFileLink =
       '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
+    var logFileName = logFile.split("/").pop();
+      var logFileLink =
+      '<a href="' + logFile + '" download=' + logFileName + '">' + "Analysis log" + "</a>";
     var downloadLinks =
-      " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink;
+      " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink  + " | " + logFileLink;
 
     jQuery("#model_input_data_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
