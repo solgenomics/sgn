@@ -313,7 +313,7 @@ sub get_crossing_data_cronjobs_GET {
     if ($crontab_file ne 'NULL') {
         open(my $fh, '< :encoding(UTF-8)', $crontab_file)
             or die "Could not open file '$crontab_file' $!";
-     
+
         while (my $row = <$fh>) {
             chomp $row;
             my @c = split 'export', $row;
@@ -534,23 +534,30 @@ sub get_crossing_saved_ona_forms_GET {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $dbh = $bcs_schema->storage->dbh;
+    my $production_server = $c->config->{production_server};
 
-    my $odk_ona_forms = _get_allowed_ONA_ODK_forms_from_lists($dbh);
+    my $odk_ona_forms = _get_allowed_ONA_ODK_forms_from_lists($dbh, $production_server);
     $c->stash->{rest} = {success => 1, odk_ona_forms => $odk_ona_forms};
 }
 
 sub _get_allowed_ONA_ODK_forms_from_lists {
     my $dbh = shift;
-    my $odk_ona_lists = CXGN::List::available_public_lists($dbh, 'odk_ona_forms');
-    my %odk_ona_forms_unique;
-    foreach (@$odk_ona_lists) {
-        my $list = CXGN::List->new({ dbh => $dbh, list_id => $_->[0] });
-        my $elements = $list->elements();
-        foreach (@$elements) {
-            $odk_ona_forms_unique{$_}++;
+    my $production_server = shift;
+    my @odk_ona_forms =();
+
+    if ($production_server == 1) {
+        my $odk_ona_lists = CXGN::List::available_public_lists($dbh, 'odk_ona_forms');
+        my %odk_ona_forms_unique;
+        foreach (@$odk_ona_lists) {
+            my $list = CXGN::List->new({ dbh => $dbh, list_id => $_->[0] });
+            my $elements = $list->elements();
+            foreach (@$elements) {
+                $odk_ona_forms_unique{$_}++;
+            }
         }
+        @odk_ona_forms = keys %odk_ona_forms_unique;
     }
-    my @odk_ona_forms = keys %odk_ona_forms_unique;
+
     return \@odk_ona_forms;
 }
 
