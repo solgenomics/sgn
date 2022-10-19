@@ -47,9 +47,12 @@ sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) 
 
 	my $geno_file = $self->download_model_geno_data_file($c);
 	my $pheno_file = $self->download_model_pheno_data_file($c);
+	my $log_file = $self->download_model_analysis_report_file($c);
 
 	$c->stash->{rest}{model_geno_data_file} = $geno_file;
 	$c->stash->{rest}{model_pheno_data_file} = $pheno_file;
+	$c->stash->{rest}{model_analysis_report_file} = $log_file;
+
 
 }
 
@@ -218,6 +221,23 @@ sub download_model_pheno_data_file {
 	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 	
 	my $file = $c->controller('solGS::Files')->model_phenodata_file($c);
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+
+	return $file;
+
+}
+
+sub download_model_analysis_report_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+
+	my $page = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
+	if ($page =~ /training model/) 
+	{
+		$c->stash->{analysis_type} = 'single model';
+	}
+	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
 	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
 
 	return $file;
