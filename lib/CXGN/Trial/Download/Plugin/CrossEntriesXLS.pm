@@ -16,6 +16,7 @@ This plugin module is loaded from CXGN::Trial::Download
 use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Cross;
 
 sub verify {
@@ -25,7 +26,17 @@ sub verify {
 sub download {
     my $self = shift;
 
-    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $ss;
+
+    if ($extension eq '.xlsx') {
+        $ss = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $ss = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws = $ss->add_worksheet();
 
     my @header = ('Cross Unique ID', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Female Genome Structure', 'Male Parent', 'Male Ploidy', 'Male Genome Structure', 'Pollination Date', "Number of Seeds", 'Number of Progenies', 'Crossing Experiment', 'Description', 'Location');
