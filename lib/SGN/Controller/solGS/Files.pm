@@ -11,6 +11,8 @@ use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use Cache::File;
 use CXGN::People::Person;
+use PDF::Create;
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -283,6 +285,7 @@ sub analysis_report_file {
 
     my $cache_data = { key       => $name,
 		       file      => $name,
+               ext => 'pdf',
 		       cache_dir => $cache_dir,
 		       stash_key => "analysis_report_file",
     };
@@ -752,6 +755,29 @@ sub copy_to_tempfiles_subdir {
 
 }
 
+sub convert_txt_pdf {
+    my ($self, $file, $title) = @_;
+
+    my $content = read_file($file, {binmode => ':utf8'});
+
+    $file =~ s/txt/pdf/;
+    my $pdf = PDF::Create->new(
+        'filename' => $file,
+        'Author' => 'solGS M Tool',
+        'Title' => $title || 'Analysis log',
+        'CreationDate' => [localtime]
+    );
+
+    my $root = $pdf->new_page('MediaBox' => $pdf->get_page_size('A4'));
+    my $page = $root->new_page;
+    my $font = $pdf->font('BaseFont' => 'Courier');
+
+    $page->printnl($content, $font);
+    $pdf->close;
+
+    return $file;
+
+}
 
 sub create_file_id {
     my ($self, $c) = @_;
