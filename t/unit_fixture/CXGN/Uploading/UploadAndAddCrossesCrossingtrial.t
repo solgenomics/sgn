@@ -620,7 +620,7 @@ for my $extension ("xls", "xlsx") {
 
     #test crossing experiment download
     my @cross_properties = ("Tag Number", "Pollination Date", "Number of Bags", "Number of Flowers", "Number of Fruits", "Number of Seeds");
-    my $tempfile = "/tmp/test_download_crossing_experiment.xls";
+    my $tempfile = "/tmp/test_download_crossing_experiment.$extension";
     my $format = 'CrossingExperimentXLS';
     my $create_spreadsheet = CXGN::Trial::Download->new({
         bcs_schema                => $f->bcs_schema,
