@@ -68,7 +68,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $dir = $c->tempfiles_subdir('download');
   my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/'.$format.'_'.$trial_id.'_'.'XXXXX');
-  my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
+  my $file_path = $c->config->{basepath}."/".$tempfile.".xlsx";
   close($fh);
   move($tempfile, $file_path);
   my $trial_stock_type = $c->req->param('trial_stock_type');
@@ -97,7 +97,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
   my $file_name = basename($file_path);
   print STDERR "file name= $file_name\n";
 
-  $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
+  $c->stash->{rest} = { filename => $urlencode{$tempfile.".xlsx"} };
 
 }
 
