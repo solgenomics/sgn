@@ -128,33 +128,6 @@ jQuery(document).ready(function ($) {
         $("#upload_trial_form").submit();
     }
 
-    function upload_multiple_trial_designs_file() {
-      $("#upload_multiple_trials_warning_messages").html('');
-      $("#upload_multiple_trials_error_messages").html('');
-      $("#upload_multiple_trials_success_messages").html('');
-
-      jQuery('#progress_msg').text('Preparing trials for upload');
-      jQuery('#progress_bar').css("width", "0%")
-      .attr("aria-valuenow", 0)
-      .text("0%");
-      jQuery('#progress_modal').modal('show');
-      // Parse file on client
-
-      // Validate all trial metadata and obsunit info
-
-      // Submit designs trial by trial
-
-          // store trial metadata via POST /brapi/v2/studies
-
-          // store obsunits via POST /brapi/v2/observationunits
-
-      // Return results
-
-      // $('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
-      // $("#upload_multiple_trial_designs_form").submit();
-  }
-
-
     function open_upload_trial_dialog() {
         $('#upload_trial_dialog').modal("show");
         //add a blank line to design method select dropdown that dissappears when dropdown is opened
@@ -374,3 +347,122 @@ jQuery(document).ready(function ($) {
     });
 
 });
+
+
+
+function upload_multiple_trial_designs_file() {
+  jQuery("#upload_multiple_trials_warning_messages").html('');
+  jQuery("#upload_multiple_trials_error_messages").html('');
+  jQuery("#upload_multiple_trials_success_messages").html('');
+
+  jQuery('#progress_msg').text('Preparing trials for upload');
+  jQuery('#progress_bar').css("width", "0%")
+  .attr("aria-valuenow", 0)
+  .text("0%");
+  jQuery('#progress_modal').modal('show');
+
+  // Parse file on client in uniqueTrials array and trialData array of objects
+  // containing trial metadata and layout details
+  var uploadFile = document.getElementById('multiple_trial_designs_upload_file').file;
+  var uniqueTrials = ; //parse upload file
+  var trialData = ; // parse upload file
+
+  // Validate trialData
+
+  loadAllTrials(uniqueTrials, trialData).done(function(result) {
+      // console.log("Result from promise is: "+JSON.stringify(result));
+      jQuery('#progress_modal').modal('hide');
+      reportStoreResult(result);
+  })
+  .fail(function(error) {
+      console.log(error);
+      jQuery('#upload_multiple_trials_status').append(
+          formatMessage(error, 'error')
+      );
+  });
+
+}
+
+function reportStoreResult(result) {
+    // console.log("result is: "+JSON.stringify(result));
+    if (result.success && result.success.length > 0) {
+        jQuery('#upload_multiple_trials_status').html(
+            formatMessage(result.success, 'success')
+        );
+    }
+    if (result.error && result.error.length > 0) {
+        jQuery('#upload_multiple_trials_status').html(
+            formatMessage(result.error, 'error')
+        );
+    }
+    jQuery('#working_modal').modal("hide");
+}
+
+function loadAllTrials(uniqueTrials, trialData){
+    return loadImagesSequentially(uniqueTrials, trialData, {"success":[],"error":[]} );
+}
+
+function loadTrialsSequentially(uniqueTrials, trialData, uploadStatus){
+
+    return loadSingleTrial(uniqueTrials, trialData).then(function(response) {
+        // console.log("load single image response is: " +JSON.stringify(response));
+
+        if (response.result) {
+            var msg = "Successfly uploaded trial "+response.result.data[0].studyName;
+            uploadStatus.success.push(msg);
+        } else {
+            // console.log("handling response errors: "+JSON.stringify(response.metadata.status));
+            response.metadata.status.forEach(function(msg) {
+              if (msg.messageType == "ERROR") { uploadStatus.error.push(msg.message); }
+            });
+            return uploadStatus;
+        }
+
+        trialData.shift();
+
+        if (trialData.length < 1) {
+            // console.log("We've shifted through and loaded all "+uniqueTrials.length+" trials");
+            return uploadStatus;
+        } else {
+            return loadTrialsSequentially(uniqueTrials, trialData, uploadStatus);
+        }
+
+    });
+
+}
+
+function loadSingleTrial(uniqueTrials, trialData, uploadStatus){
+
+    var currentTrial = uniqueTrials.length - trialData.length;
+    var total = uniqueTrials.length;
+    var file = uniqueTrials[currentTrial];
+    var trial = trialData[0];
+    var trialMetadata = trial.metadata;
+    var trialLayout = trial.layout;
+
+    currentTrial++;
+    jQuery('#progress_msg').html('<p class="form-group text-center">Working on trial '+currentTrial+' out of '+total+'</p>');
+    jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+trial.studyName+'</b></p>')
+    var progress = Math.round((currentTrial / total) * 100)
+    jQuery('#progress_bar').css("width", progress + "%")
+    .attr("aria-valuenow", progress)
+    .text(progress + "%");
+
+    return jQuery.ajax( {
+        url: "/brapi/v2/studies",
+        method: 'POST',
+        headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+        data: JSON.stringify([trialMetadata]),
+        contentType: "application/json; charset=utf-8"
+    }).success(function(response){
+        trialLayout.studyDbId = response.result.data[0].studyDbId;
+        jQuery.ajax( {
+            url: "/brapi/v2/observationunits",
+            method: 'POST',
+            async: false,
+            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+            data: JSON.stringify([trialLayout]),
+            contentType: "application/json; charset=utf-8"
+        });
+    });
+}
