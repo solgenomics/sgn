@@ -130,6 +130,9 @@ sub metadata_query {
         my $criterion = $category;
         $criterion =~ s/s$//;
         my $match = $queryref->{$criteria_list->[-1]}->{$category};
+        if ( !$match ) {
+          $match = 0;
+        }
 
         # print STDERR "... Match: $match\n";
 
