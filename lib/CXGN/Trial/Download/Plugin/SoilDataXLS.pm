@@ -16,6 +16,7 @@ This plugin module is loaded from CXGN::Trial::Download
 use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::BreedersToolbox::SoilData;
 
 sub verify {
@@ -28,7 +29,18 @@ sub download {
     my $trial_id = $self->trial_id;
     my $prop_id = $self->prop_id;
 #    print STDERR "PROP ID 2 =".Dumper($prop_id)."\n";
-    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $ss;
+
+    if ($extension eq '.xlsx') {
+        $ss = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $ss = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws = $ss->add_worksheet();
 
     my $trial = $schema->resultset("Project::Project")->find( { project_id => $trial_id });
