@@ -19,6 +19,10 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
+let uniqueTrials = {};
+let trialData = {};
+document.getElementById('multiple_trial_designs_upload_file').addEventListener("change", handleFileAsync, false);
+
     var trial_id;
     var plants_per_plot;
     var inherits_plot_treatments;
@@ -284,56 +288,6 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $('#upload_multiple_trial_designs_form').iframePostForm({
-        json: true,
-        post: function () {
-            var uploadedTrialLayoutFile = $("#multiple_trial_designs_upload_file").val();
-            $('#working_modal').modal("show");
-            if (uploadedTrialLayoutFile === '') {
-                $('#working_modal').modal("hide");
-                alert("No file selected");
-                return;
-            }
-        },
-        complete: function(response) {
-            console.log(response);
-            $('#working_modal').modal("hide");
-
-            if (response.warnings) {
-                warnings = response.warnings;
-                warning_html = "<li>"+warnings.join("</li><li>")+"</li>"
-                $("#upload_multiple_trials_warning_messages").show();
-                $("#upload_multiple_trials_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br>'+warning_html);
-                return;
-            }
-            if (response.errors) {
-                errors = response.errors;
-                if (Array.isArray(errors)) {
-                    error_html = "<li>"+errors.join("</li><li>")+"</li>";
-                } else {
-                    error_html = "<li>"+errors+"</li>";
-                }
-                $("#upload_multiple_trials_error_messages").show();
-                $("#upload_multiple_trials_error_messages").html('<b>Errors found. Fix the following problems and try again.</b><br><br>'+error_html);
-                return;
-            }
-            if (response.success) {
-                console.log("Success!!");
-                refreshTrailJsTree(0);
-                $("#upload_multiple_trials_success_messages").show();
-                $("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
-                $("#multiple_trial_designs_upload_submit").hide();
-                $("#upload_multiple_trials_success_button").show();
-                return;
-            }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            $("#upload_multiple_trials_error_messages").html("An error occurred while trying to upload this file. Please check the formatting and try again");
-            return;
-        }
-    });
-
     jQuery('#upload_multiple_trials_success_button').on('click', function(){
         //alert('Trial was saved in the database');
         jQuery('#upload_trial_dialog').modal('hide');
@@ -346,11 +300,23 @@ jQuery(document).ready(function ($) {
         location.reload();
     });
 
+    async function handleFileAsync(e) {
+      const file = e.target.files[0];
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+
+      console.log("converting to JSON");
+      console.log(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+      allData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      uniqueTrials = allData.uniqueTrials; //extract from upload file
+      trialData = allData.trialData; // extract from upload file
+    }
+
 });
 
+// Add function to parse multi-trial upload file with onchange event, and store parsed file data in JSON
 
-
-function upload_multiple_trial_designs_file() {
+function upload_multiple_trial_designs_file(trialJSON) {
   jQuery("#upload_multiple_trials_warning_messages").html('');
   jQuery("#upload_multiple_trials_error_messages").html('');
   jQuery("#upload_multiple_trials_success_messages").html('');
@@ -360,14 +326,6 @@ function upload_multiple_trial_designs_file() {
   .attr("aria-valuenow", 0)
   .text("0%");
   jQuery('#progress_modal').modal('show');
-
-  // Parse file on client in uniqueTrials array and trialData array of objects
-  // containing trial metadata and layout details
-  var uploadFile = document.getElementById('multiple_trial_designs_upload_file').file;
-  var uniqueTrials = ; //parse upload file
-  var trialData = ; // parse upload file
-
-  // Validate trialData
 
   loadAllTrials(uniqueTrials, trialData).done(function(result) {
       // console.log("Result from promise is: "+JSON.stringify(result));
