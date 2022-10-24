@@ -132,8 +132,26 @@ jQuery(document).ready(function ($) {
       $("#upload_multiple_trials_warning_messages").html('');
       $("#upload_multiple_trials_error_messages").html('');
       $("#upload_multiple_trials_success_messages").html('');
-      $('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
-      $("#upload_multiple_trial_designs_form").submit();
+
+      jQuery('#progress_msg').text('Preparing trials for upload');
+      jQuery('#progress_bar').css("width", "0%")
+      .attr("aria-valuenow", 0)
+      .text("0%");
+      jQuery('#progress_modal').modal('show');
+      // Parse file on client
+
+      // Validate all trial metadata and obsunit info
+
+      // Submit designs trial by trial
+
+          // store trial metadata via POST /brapi/v2/studies
+
+          // store obsunits via POST /brapi/v2/observationunits
+
+      // Return results
+
+      // $('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
+      // $("#upload_multiple_trial_designs_form").submit();
   }
 
 
@@ -198,7 +216,7 @@ jQuery(document).ready(function ($) {
     });
 
     $('#multiple_trial_designs_upload_submit').click(function () {
-      console.log("Registered click on multiple_trial_designs_upload_submit button");
+        console.log("Registered click on multiple_trial_designs_upload_submit button");
         upload_multiple_trial_designs_file();
     });
 
