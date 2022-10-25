@@ -407,6 +407,25 @@ function loadSingleTrial(uniqueTrials, trialData, uploadStatus){
     .text(progress + "%");
 
     return jQuery.ajax( {
+        /* structure of trialMetadata obj
+        [{
+            "endDate": harvest_date,
+            "startDate": planting_date,
+            "studyType": trial_type,
+            "studyName": trial_name,
+            "studyDescription": description,
+            "trialDbId": breeding_program, #convert from trialName to trialDbId
+            "locationDbId": location,  #convert from locationName to locationDbId
+            "seasons": ["year"],
+            "additionalInfo": {
+                "field_size": field_size,
+                "plot_width": plot_width,
+                "plot_length": plot_length
+            },
+            "experimentalDesign": {
+                "PUI": design_type
+            }
+        }] */
         url: "/brapi/v2/studies",
         method: 'POST',
         headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
@@ -415,6 +434,40 @@ function loadSingleTrial(uniqueTrials, trialData, uploadStatus){
     }).success(function(response){
         trialLayout.studyDbId = response.result.data[0].studyDbId;
         jQuery.ajax( {
+            /* structure of trialLayout obj
+            [{
+                "studyDbId": get from saved study,
+                "observationUnitName": plot_name,
+                "germplasmName": accession_name,
+                "programName": breeding_program,
+                "seedlotName": seedlot_name,
+                "observationUnitPosition": {
+                    "positionCoordinateX": row_number,
+                    "positionCoordinateY": col_number,
+                    "observationLevel": {
+                        "levelName": "plot",
+                        "levelCode": plot_number,
+                    },
+                    "observationLevelRelationships": {
+                            {
+                                "levelCode": block_number,
+                                "levelName": "block",
+                                "levelOrder": 1
+                            },
+                            {
+                                "levelCode": rep_number,
+                                "levelName": "replicate",
+                                "levelOrder": 1
+                            }
+                    },
+                },
+                "additionalInfo": {
+                    "control": is_a_control,
+                    "range": range_number,
+                    "num_seed_per_plot": num_seed_per_plot,
+                    "weight_gram_seed_per_plot": weight_gram_seed_per_plot,
+                }
+            }, {...}] */
             url: "/brapi/v2/observationunits",
             method: 'POST',
             async: false,
