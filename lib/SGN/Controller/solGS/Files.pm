@@ -285,7 +285,6 @@ sub analysis_report_file {
 
     my $cache_data = { key       => $name,
 		       file      => $name,
-               ext => 'pdf',
 		       cache_dir => $cache_dir,
 		       stash_key => "analysis_report_file",
     };
@@ -759,10 +758,11 @@ sub convert_txt_pdf {
     my ($self, $file, $title) = @_;
 
     my $content = read_file($file, {binmode => ':utf8'});
+    my $pdf_file = $file;
+    $pdf_file =~ s/txt/pdf/;
 
-    $file =~ s/txt/pdf/;
     my $pdf = PDF::Create->new(
-        'filename' => $file,
+        'filename' => $pdf_file,
         'Author' => 'solGS M Tool',
         'Title' => $title || 'Analysis log',
         'CreationDate' => [localtime]
@@ -775,7 +775,7 @@ sub convert_txt_pdf {
     $page->printnl($content, $font);
     $pdf->close;
 
-    return $file;
+    return $pdf_file;
 
 }
 

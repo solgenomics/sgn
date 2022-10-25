@@ -233,7 +233,11 @@ sub download_model_analysis_report_file {
 	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
 	my $page = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
-	$c->stash->{analysis_type} =  $page;
+
+	if ($page =~ /training model/)
+	{
+		$c->stash->{analysis_type} =  'single model';
+	}
 
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
 	$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
