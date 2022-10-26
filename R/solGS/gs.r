@@ -854,7 +854,7 @@ if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
          )
 }
 cat(varCompData, file = varianceComponentsFile)
-cat(logMsg, fill = TRUE,  file = analysisReportFile)
+cat(logMsg, fill = TRUE,  file = analysisReportFile, append=TRUE)
 
 message("Done.")
 
