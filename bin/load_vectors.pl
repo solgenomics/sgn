@@ -191,10 +191,14 @@ my $coderef= sub  {
 	#the stock belongs to the population:
         #add new stock_relationship
 	print "Accession $accession is member_of population $population_name \n";
-	$population->find_or_create_related('stock_relationship_objects', {
-	    type_id => $member_of->cvterm_id(),
-	    subject_id => $stock->stock_id(),
-					    } );
+
+	if ($population_name) { 
+	    $population->find_or_create_related('stock_relationship_objects', {
+		type_id => $member_of->cvterm_id(),
+		subject_id => $stock->stock_id(),
+						} );
+	}
+	
         if ($synonym_string) {print "Adding synonyms #" . scalar(@synonyms) . "\n"; }
 	foreach my $syn (@synonyms) {
 	    if ($syn && defined($syn) && ($syn ne $accession) ) {
