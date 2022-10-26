@@ -226,7 +226,7 @@ try {
     if (!$test) { print "Transaction succeeded! Commiting stocks and their properties! \n\n"; }
 }
 
-#catch {
+catch {
 #    # Transaction failed
 #    foreach my $value ( keys %seq ) {
 #         my $maxval= $seq{$value} || 0;
