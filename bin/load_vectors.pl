@@ -158,8 +158,9 @@ my $coderef= sub  {
 
 	print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
 
+	my $population;
 	if ($population_name) { 
-	    my $population = $stock_rs->find_or_create(
+	    $population = $stock_rs->find_or_create(
 		{
 		    'me.name'        => $population_name,
 			'me.uniquename'  => $population_name,
