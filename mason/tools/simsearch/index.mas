@@ -2,11 +2,17 @@
 <%args>
 </%args>
 
-<h1>SimSearch</h1>
+<& /page/page_title.mas, title => "SimSearch" &>
 
-<form action="/tools/simsearch/upload_file" method="post" enctype="multipart/form-data">
-<input type="file" name="upload_vcf_file">Upload VCF file</input>
+Upload a genotyping file to identify matches within the file or with other genotypic data in the database.
+<br />
+<br />
 
-<input type="submit">Upload</input>
+<form action="/tools/simsearch/upload_file" method="post" enctype="multipart/form-data" >
+<div class="form-group">
+<input type="file"  name="upload_vcf_file" />
+<br />
+<button class="btn btn-primary" type="submit" >Upload</button>
 
+</div>
 </form>
