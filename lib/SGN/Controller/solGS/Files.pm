@@ -56,7 +56,7 @@ sub variance_components_file {
 
 
     my $cache_data = {key    => 'variance_components_' . $file_id,
-		      file      => 'variance_components_' . $file_id. '.txt',
+		      file      => 'variance_components_' . $file_id,
 		      stash_key => 'variance_components_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
