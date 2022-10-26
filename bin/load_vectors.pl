@@ -157,15 +157,18 @@ my $coderef= sub  {
 	my @synonyms = split /\|/ , $synonym_string;
 
 	print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
-	my $population = $stock_rs->find_or_create(
-	    {
-		'me.name'        => $population_name,
-		'me.uniquename'  => $population_name,
-		'me.organism_id' => $organism_id,
-		type_id          => $population_cvterm->cvterm_id,
-	    },
-	    { join => 'type' }
-	    );
+
+	if ($population_name) { 
+	    my $population = $stock_rs->find_or_create(
+		{
+		    'me.name'        => $population_name,
+			'me.uniquename'  => $population_name,
+			'me.organism_id' => $organism_id,
+			type_id          => $population_cvterm->cvterm_id,
+		},
+		{ join => 'type' }
+		);
+	}
 	
 	print "Find or create stock for vector $accession\n";
 	my $stock = $schema->resultset("Stock::Stock")->find_or_create(
