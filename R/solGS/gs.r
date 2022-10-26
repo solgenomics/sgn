@@ -115,10 +115,11 @@ maf <- 0.01
 markerFilter <- 0.6
 cloneFilter <- 0.8
 
-cat("\nThe following data filtering will be applied to the data set:\n", file = analysisReportFile, append = TRUE)
-cat(c("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  were removed"), "\n",  file = analysisReportFile, append = TRUE)
-cat(c("Markers with greater or equal to ", markerFilter * 100, "% missing values were removed"), "\n", file = analysisReportFile, append = TRUE)
-cat(c("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  were removed"), "\n", file = analysisReportFile, append = TRUE)
+logMsg <- c("Data preprocessing\n\n")
+logMsg <- append(logMsg, "\nThe following data filtering will be applied to the data set:\n\n")
+logMsg <- append(logMsg, c("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  were removed.\n"))
+logMsg <- append(logMsg, c("\nMarkers with greater or equal to ", markerFilter * 100, "% missing values were removed.\n"))
+logMsg <- append(logMsg, c("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  were removed.\n") )
 
 if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
     filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,
@@ -292,18 +293,22 @@ if (sum(is.na(genoData)) > 0) {
 
 #extract observation lines with both
 #phenotype and genotype data only.
-message("After removing missing values and calculating averages, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.")
+
+logMsg <- append(logMsg, c("After calculating averages, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n") )
 commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
 commonObs           <- data.frame(commonObs)
 rownames(commonObs) <- commonObs[, 1]
-message(length(rownames(commonObs)), " individuals have both phenotype and genotype data.")
+
 #remove genotyped lines without phenotype data
 genoDataFilteredObs <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
 message("After removing individuals without phenotype data, this genotype dataset has ", length(rownames(genoDataFilteredObs)), " individuals.")
 
+logMsg <- append(logMsg, c("After removing individuals without phenotype data, this genotype dataset has ", length(rownames(genoDataFilteredObs)), " individuals.\n"))
+
 #remove phenotyped lines without genotype data
 phenoTrait <- phenoTrait[(phenoTrait$genotypes %in% rownames(commonObs)), ]
-message("After removing individuals without genotype data, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.")
+
+logMsg <- append(logMsg, c("After removing individuals without genotype data, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n" ))
 
 phenoTraitMarker           <- data.frame(phenoTrait)
 rownames(phenoTraitMarker) <- phenoTraitMarker[, 1]
@@ -461,12 +466,9 @@ if (length(selectionData) == 0) {
   additiveVar <- round(trModel$Vg, 2)
   errorVar <- round(trModel$Ve, 2)
 
-  cat("\n", file = varianceComponentsFile,  append = FALSE)
-  cat('Additive genetic variance', additiveVar , file = varianceComponentsFile, sep = '\t', append = TRUE)
-  cat("\n", file = varianceComponentsFile,  append = TRUE)
-  cat('Error variance', errorVar, file = varianceComponentsFile, sep = "\t", append = TRUE)
-  cat("\n", file = varianceComponentsFile,  append = TRUE)
-  cat('SNP heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
+ varCompData <- c("\nAdditive genetic variance\t", additiveVar)
+ varCompData <- append(varCompData, c("\nError variance\t", errorVar))
+  varCompData <- append(varCompData, c("\nSNP heritability (h)\t", heritability))
 
   combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
 
@@ -527,7 +529,7 @@ if (length(selectionData) == 0) {
 
               assign(kblup, result)
 
-                                        #calculate cross-validation accuracy
+              #calculate cross-validation accuracy
               valBlups   <- result$g
 
               valBlups   <- data.frame(valBlups)
@@ -851,6 +853,8 @@ if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
          quote = FALSE,
          )
 }
+cat(varCompData, file = varianceComponentsFile)
+cat(logMsg, fill = TRUE,  file = analysisReportFile)
 
 message("Done.")
 
