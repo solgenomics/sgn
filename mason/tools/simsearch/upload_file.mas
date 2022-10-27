@@ -1,0 +1,17 @@
+
+<%args>
+$filename => ""
+$reference_files_menu => ""
+</%args>
+
+<h1>Uploaded file <% $filename %></h1>
+
+<form action="/tools/simsearch/process_file" > 
+
+      <% $reference_files_menu %>
+
+      <input type="hidden" name="filename" value="<% $filename %>" />
+
+      <input type="submit" value="Run!!!" />
+
+</form>
