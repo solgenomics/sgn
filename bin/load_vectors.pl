@@ -142,7 +142,7 @@ my $syn_count;
 my $coderef= sub  {
     foreach my $accession (@rows ) {
 	#remove spaces from accession name 
-	$accession=~s/\s+//g;
+	#$accession=~s/\s+//g;
 	
 	my $species_name  =  $spreadsheet->value_at($accession, "species");
 	if (!$species) { 
