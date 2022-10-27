@@ -67,7 +67,14 @@ sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
     my $reference_file = $c->req->param("reference_file");
 
     my $reference_file_path = $c->config->{simsearch_datadir}."/".$reference_file;
-    my $cmd = "../gtsimsrch/src/simsearch -i $filename -r $reference_file_path -o $filename.out";
+    # do not specify -r option when there is no reference file
+    #
+    my $ref_option = "";
+    if ($reference_file_path) {
+	$ref_option = " -r $reference_file_path ";
+    }
+    
+    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
 
     print STDERR "running command $cmd...\n";
     system($cmd);
