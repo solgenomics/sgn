@@ -4,7 +4,7 @@
 
 <& /page/page_title.mas, title => "SimSearch" &>
 
-Upload a genotyping file to identify matches within the file or with other genotypic data in the database.
+Upload a genotyping file to identify matches within the file or with other genotypic data in the database. Please upload in vcf format. To compare with data in the database, the upload must correspond precisely to the genotyping protocols available in the database.
 <br />
 <br />
 
