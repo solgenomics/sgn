@@ -145,11 +145,16 @@ my $coderef= sub  {
 	#$accession=~s/\s+//g;
 	
 	my $species_name  =  $spreadsheet->value_at($accession, "species");
-	if (!$species) { 
+	if (!$species && $species_name) { 
 	    my $organism = $schema->resultset("Organism::Organism")->find( {
 		species => $species_name } );
-	    $organism_id = $organism->organism_id();
-	    warn "Species $species_name does not exist in the database! " if !$organism_id;
+
+	    if (!$organism_id) {
+		warn "Species $species_name does not exist in the database! " if !$organism_id;
+	    }
+	    else { 
+		$organism_id = $organism->organism_id();
+	    }
 	}
 	
 	my $population_name  =  $spreadsheet->value_at($accession, "population_name");
