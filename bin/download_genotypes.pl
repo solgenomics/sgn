@@ -94,15 +94,20 @@ if (!$protocol_exists) {
     die "\n\nGENOTYPING PROTOCOL $protocol_name does not exist in the database\n\n";
 }
 
-print STDERR "Getting genotype names... ";
-
-open(my $F, "< :encoding(UTF-8)", $in_file) || die "Can't open file $in_file\n";
 my @accession_names;
-while (<$F>) {
-    chomp;
-    push @accession_names, $_;
+if ($in_file) { 
+    print STDERR "Getting genotype names... ";
+    
+    
+    open(my $F, "< :encoding(UTF-8)", $in_file) || die "Can't open file $in_file\n";
+
+    while (<$F>) {
+	chomp;
+	push @accession_names, $_;
+    }
+    close($F);
 }
-close($F);
+
 
 my $s= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $p = CXGN::People::Schema->connect( sub { $dbh->get_actual_dbh() });
@@ -122,7 +127,9 @@ foreach my $a (@accession_names) {
 
 my $ds = CXGN::Dataset::File->new( { people_schema => $p, schema => $s } );
 
-$ds->accessions(\@accession_ids);
+if ($in_file) { 
+    $ds->accessions(\@accession_ids);
+}
 $ds->genotyping_protocols([ $protocol_id ]);
 
 if ($format eq "vcf") { 
