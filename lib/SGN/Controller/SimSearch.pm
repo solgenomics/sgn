@@ -19,7 +19,7 @@ sub upload_file : Path('/tools/simsearch/upload_file') {
     my $c = shift;
 
     my $tempdir = $c->tempfiles_subdir("simsearch");
-    my $tempfile = $c->tempfile( TEMPLATE => 'simsearch/simsearch-XXXXXX', UNLINK => 0 );
+    my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'simsearch/simsearch-XXXXXX', UNLINK => 0 );
 
     
     my $upload = $c->request->upload('upload_vcf_file');
@@ -55,7 +55,9 @@ sub upload_file : Path('/tools/simsearch/upload_file') {
     # -i required input file -r reference file (with -i only, input is also used as reference)
     # need to add a pull down with current genotypes for each protocol
 
+    print STDERR "COPIED TO $tempfile\n";
     $c->stash->{reference_files_menu} = $pulldown;
+    $c->stash->{filename} = basename($tempfile);
 
 }
 
@@ -63,14 +65,17 @@ sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $filename = $c->config->{basepath}."/".$c->req->param("filename");
+    
+    my $filename = $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/simsearch/".$c->req->param("filename");
+
+    print STDERR "READING FROM $filename\n";
     my $reference_file = $c->req->param("reference_file");
 
     my $reference_file_path = $c->config->{simsearch_datadir}."/".$reference_file;
     # do not specify -r option when there is no reference file
     #
     my $ref_option = "";
-    if ($reference_file_path) {
+    if ($reference_file) {
 	$ref_option = " -r $reference_file_path ";
     }
     
@@ -84,16 +89,26 @@ sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
 
     my $results;
     open(my $F , "<", $filename.".out.clusters") || die "Can't open file $filename.out";
-    while(<$F>) {
-	$results .= $_;
-    }
 
+    my @line;
+    my $html = "<table cellspacing=\"20\" cellpadding=\"20\" border=\"1\">";
+    my $group =1;
+    while(<$F>) {
+	if (/^#/) { next; }
+	@line = split /\s+/;
+	$html .= '<tr><td>'.$group.'</td><td>'. join('<br />', @line[4..@line-1])."</td></tr>\n";
+	$group++;
+    }
+    $html.="</table>\n";
+    close($F);
+    
     # plot the agmr score distribution histogram using the 6th column in $filename.out
     #
     # (use gnuplot or R)
+
+    $c->stash->{results} = $html;
+    $c->stash->{template} = '/tools/simsearch/results.mas';
     
-    
-    $c->res->body($results);
     
 }
 

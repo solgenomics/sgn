@@ -15,6 +15,7 @@ perl bin/download_genotypes.pl -h [dbhost] -d [dbname] -i [infile] -o [outfile] 
  -p genotyping protocol name
  -i path to infile
  -o path to output file
+ -f format [default vcf]
 
 =head2 OPTIONAL ARGUMENTS
 
@@ -47,9 +48,9 @@ use CXGN::DB::InsertDBH;
 use CXGN::Dataset::File;
 use CXGN::List;
 
-our ($opt_h, $opt_d, $opt_p, $opt_i, $opt_o, $opt_q, $opt_t, $opt_c, $opt_b);
+our ($opt_h, $opt_d, $opt_p, $opt_i, $opt_o, $opt_q, $opt_t, $opt_c, $opt_b, $opt_f);
 
-getopts("h:d:p:i:o:q:t:c:b:");
+getopts("h:d:p:i:o:q:t:c:b:f:");
 my $dbhost = $opt_h;
 my $dbname = $opt_d;
 my $in_file = $opt_i;
@@ -58,6 +59,7 @@ my $protocol_name = $opt_p;
 my $web_cluster_queue = $opt_q || '';
 my $cluster_shared_tempdir = $opt_t || '/tmp';
 my $cluster_host = $opt_c || 'localhost';
+my $format = $opt_f || "vcf";
 my $basepath = $opt_b || '/home/production/cxgn/sgn';
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
@@ -122,7 +124,15 @@ my $ds = CXGN::Dataset::File->new( { people_schema => $p, schema => $s } );
 
 $ds->accessions(\@accession_ids);
 $ds->genotyping_protocols([ $protocol_id ]);
-my $fh = $ds->retrieve_genotypes($protocol_id, $out_file, '/tmp', $cluster_shared_tempdir, 'Slurm', $cluster_host, $web_cluster_queue, $basepath, 1);
 
+if ($format eq "vcf") { 
+    my $fh = $ds->retrieve_genotypes_vcf($protocol_id, $out_file, '/tmp', $cluster_shared_tempdir, 'Slurm', $cluster_host, $web_cluster_queue, $basepath, 1);
+}
+elsif ($format eq "dosage") {
+    my $fh = $ds->retrieve_genotypes($protocol_id, $out_file, '/tmp', $cluster_shared_tempdir, 'Slurm', $cluster_host, $web_cluster_queue, $basepath, 1);
+}
+else {
+    print STDERR "Unknown format $format.\n";
+}
 
 print STDERR "Done.\n";
