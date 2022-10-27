@@ -19,7 +19,7 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
-let uniqueTrials = {};
+let uniqueTrials = [];
 let trialData = {};
 document.getElementById('multiple_trial_designs_upload_file').addEventListener("change", handleFileAsync, false);
 
@@ -194,7 +194,7 @@ document.getElementById('multiple_trial_designs_upload_file').addEventListener("
 
     $('#multiple_trial_designs_upload_submit').click(function () {
         console.log("Registered click on multiple_trial_designs_upload_submit button");
-        upload_multiple_trial_designs_file();
+        upload_multiple_trial_designs_file(uniqueTrials, trialData);
     });
 
     $("#upload_single_trial_design_format_info").click( function () {
@@ -304,19 +304,77 @@ document.getElementById('multiple_trial_designs_upload_file').addEventListener("
       const file = e.target.files[0];
       const data = await file.arrayBuffer();
       const wb = XLSX.read(data);
+      fileData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
-      console.log("converting to JSON");
-      console.log(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
-      allData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-      uniqueTrials = allData.uniqueTrials; //extract from upload file
-      trialData = allData.trialData; // extract from upload file
+      var allTrialNames = fileData.map(row => { return row.trial_name });
+      uniqueTrials = Array.from(new Set(allTrialNames));
+      uniqueTrialsCopy = uniqueTrials.map((x) => x);
+      // console.log(uniqueTrials);
+
+      fileData.forEach(function (row) {
+          // extract study parameters
+          if (row.trial_name == uniqueTrialsCopy[0]) {
+              trialData[row.trial_name] = {};
+              trialData[row.trial_name].layout = [];
+              trialData[row.trial_name].metadata = {
+                  "endDate": row.harvest_date,
+                  "startDate": row.planting_date,
+                  "studyType": row.trial_type,
+                  "studyName": row.trial_name,
+                  "studyDescription": row.description,
+                  "trialName": row.breeding_program, // convert from trialName to trialDbId
+                  "locationName": row.location,  //convert from locationName to locationDbId
+                  "seasons": [row.year],
+                  "additionalInfo": {
+                      "field_size": row.field_size,
+                      "plot_width": row.plot_width,
+                      "plot_length": row.plot_length
+                  },
+                  "experimentalDesign": {
+                      "PUI": row.design_type
+                  }
+              };
+              uniqueTrialsCopy.shift();
+          }
+          // extract observation unit data
+          trialData[row.trial_name].layout.push({
+              "observationUnitName": row.plot_name,
+              "germplasmName": row.accession_name,
+              "programName": row.breeding_program,
+              "seedlotName": row.seedlot_name,
+              "observationUnitPosition": {
+                  "positionCoordinateX": row.row_number,
+                  "positionCoordinateY": row.col_number,
+                  "observationLevel": {
+                      "levelName": "plot",
+                      "levelCode": row.plot_number,
+                  },
+                  "observationLevelRelationships": [
+                          {
+                              "levelCode": row.block_number,
+                              "levelName": "block",
+                              "levelOrder": 1
+                          },
+                          {
+                              "levelCode": row.rep_number,
+                              "levelName": "replicate",
+                              "levelOrder": 1
+                          }
+                  ],
+              },
+              "additionalInfo": {
+                  "control": row.is_a_control,
+                  "range": row.range_number,
+                  "num_seed_per_plot": row.num_seed_per_plot,
+                  "weight_gram_seed_per_plot": row.weight_gram_seed_per_plot
+              }
+          });
+      });
     }
-
 });
 
-// Add function to parse multi-trial upload file with onchange event, and store parsed file data in JSON
 
-function upload_multiple_trial_designs_file(trialJSON) {
+function upload_multiple_trial_designs_file(uniqueTrials, trialData) {
   jQuery("#upload_multiple_trials_warning_messages").html('');
   jQuery("#upload_multiple_trials_error_messages").html('');
   jQuery("#upload_multiple_trials_success_messages").html('');
@@ -341,6 +399,7 @@ function upload_multiple_trial_designs_file(trialJSON) {
 
 }
 
+
 function reportStoreResult(result) {
     // console.log("result is: "+JSON.stringify(result));
     if (result.success && result.success.length > 0) {
@@ -356,9 +415,27 @@ function reportStoreResult(result) {
     jQuery('#working_modal').modal("hide");
 }
 
-function loadAllTrials(uniqueTrials, trialData){
-    return loadImagesSequentially(uniqueTrials, trialData, {"success":[],"error":[]} );
+
+function formatMessage(messageDetails, messageType) {
+    var formattedMessage = "<hr><ul class='list-group'>";
+    var itemClass = messageType == "success" ? "list-group-item-success" : "list-group-item-danger";
+    var glyphicon = messageType == "success" ? "glyphicon glyphicon-ok" : "glyphicon glyphicon-remove";
+    messageDetails = Array.isArray(messageDetails) ? messageDetails : [messageDetails];
+
+    for (var i = 0; i < messageDetails.length; i++) {
+        formattedMessage += "<li class='list-group-item "+itemClass+"'>";
+        formattedMessage += "<span class='badge'><span class='"+glyphicon+"'></span></span>";
+        formattedMessage += messageDetails[i] + "</li>";
+    }
+    formattedMessage += "</ul>";
+    return formattedMessage;
 }
+
+
+function loadAllTrials(uniqueTrials, trialData){
+    return loadTrialsSequentially(uniqueTrials, trialData, {"success":[],"error":[]} );
+}
+
 
 function loadTrialsSequentially(uniqueTrials, trialData, uploadStatus){
 
@@ -389,85 +466,32 @@ function loadTrialsSequentially(uniqueTrials, trialData, uploadStatus){
 
 }
 
+
 function loadSingleTrial(uniqueTrials, trialData, uploadStatus){
 
-    var currentTrial = uniqueTrials.length - trialData.length;
-    var total = uniqueTrials.length;
-    var file = uniqueTrials[currentTrial];
-    var trial = trialData[0];
-    var trialMetadata = trial.metadata;
-    var trialLayout = trial.layout;
+    var currentTrialNum = uniqueTrials.length - Object.keys(trialData).length;
+    var totalNum = uniqueTrials.length;
+    // var currentTrial = uniqueTrials[currentTrialNum];
+    var currentTrial = uniqueTrials[0];
+    var trialMetadata = trialData[currentTrial].metadata;
+    var trialLayout = trialData[currentTrial].layout;
 
-    currentTrial++;
-    jQuery('#progress_msg').html('<p class="form-group text-center">Working on trial '+currentTrial+' out of '+total+'</p>');
-    jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+trial.studyName+'</b></p>')
-    var progress = Math.round((currentTrial / total) * 100)
+    currentTrialNum++;
+    jQuery('#progress_msg').html('<p class="form-group text-center">Working on trial '+currentTrialNum+' out of '+totalNum+'</p>');
+    jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+currentTrial+'</b></p>')
+    var progress = Math.round((currentTrialNum / totalNum) * 100)
     jQuery('#progress_bar').css("width", progress + "%")
     .attr("aria-valuenow", progress)
     .text(progress + "%");
 
     return jQuery.ajax( {
-        /* structure of trialMetadata obj
-        [{
-            "endDate": harvest_date,
-            "startDate": planting_date,
-            "studyType": trial_type,
-            "studyName": trial_name,
-            "studyDescription": description,
-            "trialDbId": breeding_program, #convert from trialName to trialDbId
-            "locationDbId": location,  #convert from locationName to locationDbId
-            "seasons": ["year"],
-            "additionalInfo": {
-                "field_size": field_size,
-                "plot_width": plot_width,
-                "plot_length": plot_length
-            },
-            "experimentalDesign": {
-                "PUI": design_type
-            }
-        }] */
         url: "/brapi/v2/studies",
         method: 'POST',
         headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
-        data: JSON.stringify([trialMetadata]),
-        contentType: "application/json; charset=utf-8"
+        data: trialMetadata,
     }).success(function(response){
         trialLayout.studyDbId = response.result.data[0].studyDbId;
         jQuery.ajax( {
-            /* structure of trialLayout obj
-            [{
-                "studyDbId": get from saved study,
-                "observationUnitName": plot_name,
-                "germplasmName": accession_name,
-                "programName": breeding_program,
-                "seedlotName": seedlot_name,
-                "observationUnitPosition": {
-                    "positionCoordinateX": row_number,
-                    "positionCoordinateY": col_number,
-                    "observationLevel": {
-                        "levelName": "plot",
-                        "levelCode": plot_number,
-                    },
-                    "observationLevelRelationships": {
-                            {
-                                "levelCode": block_number,
-                                "levelName": "block",
-                                "levelOrder": 1
-                            },
-                            {
-                                "levelCode": rep_number,
-                                "levelName": "replicate",
-                                "levelOrder": 1
-                            }
-                    },
-                },
-                "additionalInfo": {
-                    "control": is_a_control,
-                    "range": range_number,
-                    "num_seed_per_plot": num_seed_per_plot,
-                    "weight_gram_seed_per_plot": weight_gram_seed_per_plot,
-                }
-            }, {...}] */
             url: "/brapi/v2/observationunits",
             method: 'POST',
             async: false,
