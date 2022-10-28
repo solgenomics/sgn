@@ -5305,6 +5305,23 @@ sub nirs_matrix_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+
+sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST') { }
+
+sub pedigree_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Pedigree');
+	my $brapi_package_result = $brapi_module->search({
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        depth => $clean_inputs->{depth},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 #functions
 sub save_results {
     my $self = shift;
