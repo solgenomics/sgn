@@ -151,7 +151,8 @@ my $coderef= sub  {
 	    my $organism = $schema->resultset("Organism::Organism")->find( {
 		species => $species_name } );
 
-	    if (!$organism_id) {
+	    
+	    if (!$organism) {
 		warn "Species $species_name does not exist in the database! " if !$organism_id;
 	    }
 	    else { 
