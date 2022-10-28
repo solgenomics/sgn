@@ -132,7 +132,7 @@ my $coderef= sub  {
     my $update_count = 0;
     foreach my $accession (@rows ) {
 	#remove spaces from accession name 
-	$accession=~s/\s+//g;
+	##$accession=~s/\s+//g;
 	
 	my $species_name  =  $spreadsheet->value_at($accession, "species");
 	my $organism = $schema->resultset("Organism::Organism")->find( {
