@@ -145,6 +145,8 @@ my $coderef= sub  {
 	#$accession=~s/\s+//g;
 	
 	my $species_name  =  $spreadsheet->value_at($accession, "species");
+	chomp($species_name);
+	$species_name =~ s/\r//g;
 	if (!$species && $species_name) { 
 	    my $organism = $schema->resultset("Organism::Organism")->find( {
 		species => $species_name } );
