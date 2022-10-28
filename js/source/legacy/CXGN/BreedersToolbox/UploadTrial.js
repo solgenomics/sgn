@@ -316,14 +316,14 @@ document.getElementById('multiple_trial_designs_upload_file').addEventListener("
           if (row.trial_name == uniqueTrialsCopy[0]) {
               trialData[row.trial_name] = {};
               trialData[row.trial_name].layout = [];
-              trialData[row.trial_name].metadata = {
+              trialData[row.trial_name].metadata = [{
                   "endDate": row.harvest_date,
                   "startDate": row.planting_date,
                   "studyType": row.trial_type,
                   "studyName": row.trial_name,
                   "studyDescription": row.description,
-                  "trialName": row.breeding_program, // convert from trialName to trialDbId
-                  "locationName": row.location,  //convert from locationName to locationDbId
+                  "trialDbId": row.breeding_program, // convert from trialName to trialDbId
+                  "locationDbId": row.location,  //convert from locationName to locationDbId
                   "seasons": [row.year],
                   "additionalInfo": {
                       "field_size": row.field_size,
@@ -333,7 +333,7 @@ document.getElementById('multiple_trial_designs_upload_file').addEventListener("
                   "experimentalDesign": {
                       "PUI": row.design_type
                   }
-              };
+              }];
               uniqueTrialsCopy.shift();
           }
           // extract observation unit data
@@ -440,7 +440,7 @@ function loadAllTrials(uniqueTrials, trialData){
 function loadTrialsSequentially(uniqueTrials, trialData, uploadStatus){
 
     return loadSingleTrial(uniqueTrials, trialData).then(function(response) {
-        // console.log("load single image response is: " +JSON.stringify(response));
+        // console.log("load single trial response is: " +JSON.stringify(response));
 
         if (response.result) {
             var msg = "Successfly uploaded trial "+response.result.data[0].studyName;
@@ -452,8 +452,6 @@ function loadTrialsSequentially(uniqueTrials, trialData, uploadStatus){
             });
             return uploadStatus;
         }
-
-        trialData.shift();
 
         if (trialData.length < 1) {
             // console.log("We've shifted through and loaded all "+uniqueTrials.length+" trials");
@@ -471,9 +469,8 @@ function loadSingleTrial(uniqueTrials, trialData, uploadStatus){
 
     var currentTrialNum = uniqueTrials.length - Object.keys(trialData).length;
     var totalNum = uniqueTrials.length;
-    // var currentTrial = uniqueTrials[currentTrialNum];
     var currentTrial = uniqueTrials[0];
-    var trialMetadata = trialData[currentTrial].metadata;
+    var trialMetadata = trialData[currentTrial].metadata
     var trialLayout = trialData[currentTrial].layout;
 
     currentTrialNum++;
@@ -487,17 +484,28 @@ function loadSingleTrial(uniqueTrials, trialData, uploadStatus){
     return jQuery.ajax( {
         url: "/brapi/v2/studies",
         method: 'POST',
-        headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
-        data: trialMetadata,
+        headers: {
+            "Authorization": "Bearer "+jQuery.cookie("sgn_session_id"),
+            'Content-Type': 'application/json;charset=utf-8'
+        },
+        data: JSON.stringify(trialMetadata)
     }).success(function(response){
-        trialLayout.studyDbId = response.result.data[0].studyDbId;
+        studyDbId = response.result.data[0].studyDbId;
+        // console.log("New study dbid is: "+studyDbId);
+        trialLayout.forEach(unit => {unit.studyDbId = studyDbId;});
         jQuery.ajax( {
             url: "/brapi/v2/observationunits",
             method: 'POST',
             async: false,
-            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
-            data: JSON.stringify([trialLayout]),
-            contentType: "application/json; charset=utf-8"
-        });
+            headers: {
+                "Authorization": "Bearer "+jQuery.cookie("sgn_session_id"),
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            data: JSON.stringify([trialLayout])
+        }).error(function(response){
+            // console.log(JSON.stringify(response));
+        });;
+    }).error(function(response){
+        // console.log(JSON.stringify(response));
     });
 }
