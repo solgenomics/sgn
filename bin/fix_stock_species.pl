@@ -137,8 +137,12 @@ my $coderef= sub  {
 	my $species_name  =  $spreadsheet->value_at($accession, "species");
 	my $organism = $schema->resultset("Organism::Organism")->find( {
 	    species => $species_name } );
-	$organism_id = $organism->organism_id();
-	die "Species $species_name does not exist in the database! " if !$organism_id;
+	if ($organism) { 
+	    $organism_id = $organism->organism_id();
+	}
+	else {
+	    die "Species $species_name does not exist in the database! ";
+	}
 
 	my $stock = $schema->resultset("Stock::Stock")->find( {
 	    uniquename => $accession });
