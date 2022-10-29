@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-=head1
+=head1 NAME
 
 download_genotypes.pl - downloads a genotyping file (vcf or dosage) using a file with a list of accession names and a genotyping protocol id.
 
@@ -24,12 +24,6 @@ perl bin/download_genotypes.pl -h [dbhost] -d [dbname] -i [infile] -o [outfile] 
  -c cache root dir
  -b basepath
  
- 
-
-=head1 DESCRIPTION
-
-
-
 =head1 AUTHOR
 
   Lukas Mueller
@@ -51,6 +45,7 @@ use CXGN::List;
 our ($opt_h, $opt_d, $opt_p, $opt_i, $opt_o, $opt_q, $opt_t, $opt_c, $opt_b, $opt_f);
 
 getopts("h:d:p:i:o:q:t:c:b:f:");
+
 my $dbhost = $opt_h;
 my $dbname = $opt_d;
 my $in_file = $opt_i;
@@ -70,13 +65,9 @@ my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 
 				    } );
 
-
 my $schema= Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() });
 
-
-my $q = "SELECT nd_protocol_id, name
-                FROM nd_protocol
-                WHERE name = ?";
+my $q = "SELECT nd_protocol_id, name FROM nd_protocol WHERE name = ?";
 
 my $h = $dbh->prepare($q);
 $h->execute($protocol_name);
@@ -95,10 +86,8 @@ if (!$protocol_exists) {
 }
 
 my @accession_names;
-if ($in_file) { 
-    print STDERR "Getting genotype names... ";
-    
-    
+
+if ($in_file) {     
     open(my $F, "< :encoding(UTF-8)", $in_file) || die "Can't open file $in_file\n";
 
     while (<$F>) {
@@ -108,8 +97,7 @@ if ($in_file) {
     close($F);
 }
 
-
-my $s= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
+my $s = Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $p = CXGN::People::Schema->connect( sub { $dbh->get_actual_dbh() });
 
 my @accession_ids;
@@ -124,19 +112,25 @@ foreach my $a (@accession_names) {
     }	
 }
 
-
 my $ds = CXGN::Dataset::File->new( { people_schema => $p, schema => $s } );
 
 if ($in_file) { 
     $ds->accessions(\@accession_ids);
 }
+
 $ds->genotyping_protocols([ $protocol_id ]);
 
 if ($format eq "vcf") { 
-    my $fh = $ds->retrieve_genotypes_vcf($protocol_id, $out_file, '/tmp', $cluster_shared_tempdir, 'Slurm', $cluster_host, $web_cluster_queue, $basepath, 1);
+    my $fh = $ds->retrieve_genotypes_vcf($protocol_id, $out_file, '/tmp',
+					 $cluster_shared_tempdir, 'Slurm',
+					 $cluster_host, $web_cluster_queue,
+					 $basepath, 1);
 }
 elsif ($format eq "dosage") {
-    my $fh = $ds->retrieve_genotypes($protocol_id, $out_file, '/tmp', $cluster_shared_tempdir, 'Slurm', $cluster_host, $web_cluster_queue, $basepath, 1);
+    my $fh = $ds->retrieve_genotypes($protocol_id, $out_file, '/tmp',
+				     $cluster_shared_tempdir, 'Slurm',
+				     $cluster_host, $web_cluster_queue,
+				     $basepath, 1);
 }
 else {
     print STDERR "Unknown format $format.\n";
