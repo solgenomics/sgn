@@ -44,10 +44,8 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
-                    <br>
-                        (.xlsx format not supported)
                     <br><br>
                     <b>
                         Header:
@@ -191,10 +189,8 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
-                    <br>
-                        (.xlsx format not supported)
                     <br><br>
                     <b>
                         Header:
