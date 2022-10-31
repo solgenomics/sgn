@@ -111,9 +111,7 @@ $editable_stock_props_definitions
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Accessions may be uploaded in an Excel file (.xls)</b>
-                    <br />
-                    (.xlsx format not supported)
+                    <b>Accessions may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br /><br />
                     <b>Header:</b>
                     <br>
