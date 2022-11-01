@@ -364,14 +364,21 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     print STDERR "PROTOCOL ID = ".$protocol->[0]."\n";
 
-    my $forbid_cache = 0;
+    my $forbid_cache = 1;
 
     print STDERR "GENOFILE PATH = $geno_filepath\n";
     print STDERR "cache file path = ".$c->config->{cache_file_path}." CLUSTER SHARED TEMPDIR: ".$c->config->{cluster_shared_tempdir}."\n";
 
+    
+    my @accession_names = map { $_->[1] } @{$ds->retrieve_accessions()};
 
-    my $genotype_data_fh = $ds->retrieve_genotypes_vcf( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache, ['GT'], [], ['name', 'chrom', 'pos', 'alt', 'ref', 'format', 'filter', 'qual', 'info' ]);
+    print STDERR "ACCESSION NAME COUNT: ".scalar(@accession_names)."\n";
+    print STDERR "FIRST 10: ".join(",", @accession_names[0..9])."\n";
+ 
+    my $genotype_data_fh = $ds->retrieve_genotypes( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host},  $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 
+    print STDERR "NOW SUBMITTING R JOB...\n";
+    
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
             submit_host=>$c->config->{cluster_host},
