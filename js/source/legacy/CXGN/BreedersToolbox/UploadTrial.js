@@ -453,8 +453,12 @@ function loadTrialsSequentially(uniqueTrials, trialData, uploadStatus){
             return uploadStatus;
         }
 
-        if (trialData.length < 1) {
-            // console.log("We've shifted through and loaded all "+uniqueTrials.length+" trials");
+        uniqueTrials.shift();
+
+        if (uniqueTrials.length < 1) {
+            console.log("We've loaded all "+Object.keys(trialData).length+" trials");
+            uniqueTrials = [];
+            trialData = {};
             return uploadStatus;
         } else {
             return loadTrialsSequentially(uniqueTrials, trialData, uploadStatus);
@@ -466,9 +470,8 @@ function loadTrialsSequentially(uniqueTrials, trialData, uploadStatus){
 
 
 function loadSingleTrial(uniqueTrials, trialData, uploadStatus){
-
-    var currentTrialNum = uniqueTrials.length - Object.keys(trialData).length;
-    var totalNum = uniqueTrials.length;
+    var totalNum = Object.keys(trialData).length;
+    var currentTrialNum = totalNum - uniqueTrials.length;
     var currentTrial = uniqueTrials[0];
     var trialMetadata = trialData[currentTrial].metadata
     var trialLayout = trialData[currentTrial].layout;
