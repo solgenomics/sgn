@@ -471,7 +471,9 @@ sub save_ona_cross_info {
                             my $female_accession_name = $a->{'FieldActivities/FirstPollination/FemaleName'};
                             my $male_accession_name = $a->{'FieldActivities/FirstPollination/selectedMaleName'};
                             my $cycle_id = $a->{'FieldActivities/FirstPollination/cycleID'} || 1;
-                            $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
+                            if ($female_accession_name && $male_accession_name && $cycle_id) {
+                                $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
+                            }
 
                             $odk_female_plot_data = $a->{'FieldActivities/FirstPollination/femaleID'};
                             $odk_male_plot_data = $a->{'FieldActivities/FirstPollination/maleID'};
@@ -639,25 +641,30 @@ sub save_ona_cross_info {
                             my $weaning2_cross_id = $a->{'Nursery/Weaning2/getweaning2_crossid'};
                             my $weaning2_id = $a->{'Nursery/Weaning2/weaning2ID'};
                             my $number_of_weaning2_plantlets = $a->{'Nursery/Weaning2/number_of_weaning2_plantlets'};
-                            $weaning2_hash{$weaning2_cross_id}{$weaning2_id}++;
-
+                            if ($weaning2_cross_id && $weaning2_id) {
+                                $weaning2_hash{$weaning2_cross_id}{$weaning2_id}++;
+                            }
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'screenhouse'){
                             my $screenhouse_cross_id = $a->{'Nursery/Screenhouse/crossid_of_screenhouseID'};
                             my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
                             my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
-                            if (defined $screenhouse_cross_id) {
+                            if ($screenhouse_cross_id && $screenhouse_id) {
                                 $screenhouse_hash{$screenhouse_cross_id}{$screenhouse_id}++;
                             }
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'hardening'){
                             my $hardening_cross_id = $a->{'Nursery/Hardening/hardeningID_crossid'};
                             my $hardening_id = $a->{'Nursery/Hardening/hardeningID'};
                             my $number_of_hardening_plantlets = $a->{'Nursery/Hardening/number_of_hardening_plantlets'};
-                            $hardening_hash{$hardening_cross_id}{$hardening_id}++;
+                            if ($hardening_cross_id && $hardening_id) {
+                                $hardening_hash{$hardening_cross_id}{$hardening_id}++;
+                            }
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'openfield'){
                             my $openfield_cross_id = $a->{'Nursery/Openfield/openfieldID_crossid'};
                             my $openfield_id = $a->{'Nursery/Openfield/openfieldID'};
                             my $number_of_openfield_plantlets = $a->{'Nursery/Openfield/number_openfield_transferred_plantlets'};
-                            $openfield_hash{$openfield_cross_id}{$openfield_id}++;
+                            if ($openfield_cross_id && $openfield_id) {
+                                $openfield_hash{$openfield_cross_id}{$openfield_id}++;
+                            }
                         }
                     }
                 }
@@ -702,31 +709,35 @@ sub save_ona_cross_info {
                         $number_germinating{$germination_cross_id}{$germination_date} = $total_number_germinating;
 
                         my $embryoID_info = $activity_hash->{'Laboratory/EmbryoGermination/germinating_embryo'};
-                        if (defined $embryoID_info) {
+                        if ($embryoID_info) {
                             foreach my $germinating_embryo(@{ $embryoID_info }) {
                                 my $embryo_id = $germinating_embryo->{'Laboratory/EmbryoGermination/germinating_embryo/embryoID'};
-                                $embryoID_hash{$germination_cross_id}{$embryo_id}++;
+                                if ($germination_cross_id && $embryo_id) {
+                                    $embryoID_hash{$germination_cross_id}{$embryo_id}++;
+                                }
                             }
                         }
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'subculture') {
                         my $subculture_cross_id = $activity_hash->{'Laboratory/subculturing/cross_Sub'};
                         my $subculture_id = $activity_hash->{'Laboratory/subculturing/subcultureID'};
-                        $subcultures_hash{$subculture_cross_id}{$subculture_id}++;
-
+                        if ($subculture_cross_id && $subculture_id) {
+                            $subcultures_hash{$subculture_cross_id}{$subculture_id}++;
+                        }
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'rooting') {
                         my $rooting_cross_id = $activity_hash->{'Laboratory/rooting/getRoot_crossid'};
                         my $rooting_id = $activity_hash->{'Laboratory/rooting/rootingID'};
-                        if (defined $rooting_cross_id) {
+                        if ($rooting_cross_id && $rooting_id) {
                             $rooting_hash{$rooting_cross_id}{$rooting_id}++;
                         }
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'weaning1') {
                         my $weaning1_cross_id = $activity_hash->{'Laboratory/weaning1/getWeaning1_crossid'};
                         my $weaning1_id = $activity_hash->{'Laboratory/weaning1/weaning1ID'};
-                        $weaning1_hash{$weaning1_cross_id}{$weaning1_id}++;
+                        if ($weaning1_cross_id && $weaning1_id) {
+                            $weaning1_hash{$weaning1_cross_id}{$weaning1_id}++;
+                        }
                     }
-
                 }
             }
         }
@@ -856,7 +867,7 @@ sub save_ona_cross_info {
                 my %info_hash = %{$musa_cross_info{$info_type}};
                 foreach my $cross_name_key (keys %info_hash){
                     my $value = $info_hash{$cross_name_key};
-                    if (defined $value) {
+                    if ($cross_name_key && $info_type && $value) {
                         my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
                             chado_schema => $schema,
                             cross_name => $cross_name_key,
@@ -871,9 +882,10 @@ sub save_ona_cross_info {
         }
 
         foreach my $sample_type(keys %tissue_culture_details){
-                my %sample_info_hash = %{$tissue_culture_details{$sample_type}};
-                foreach my $cross_name (keys %sample_info_hash){
-                    my $value = $sample_info_hash{$cross_name};
+            my %sample_info_hash = %{$tissue_culture_details{$sample_type}};
+            foreach my $cross_name (keys %sample_info_hash){
+                my $value = $sample_info_hash{$cross_name};
+                if ($cross_name && $sample_type && $value) {
                     my $cross_add_samples = CXGN::Pedigree::AddCrossTissueSamples->new({
                         chado_schema => $schema,
                         cross_name => $cross_name,
@@ -883,6 +895,7 @@ sub save_ona_cross_info {
 
                     $cross_add_samples->add_samples();
                 }
+            }
         }
 
         foreach my $cross_name_key (keys %new_progeny_hash){
