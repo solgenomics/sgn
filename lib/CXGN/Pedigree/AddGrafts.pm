@@ -141,7 +141,7 @@ sub validate_grafts {
     my $schema = $self->schema();
     my %return_errors;
 
-    my $scion_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->$self->scion() });
+    my $scion_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->scion() });
     
     my $rootstock_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->rootstock() });
     
