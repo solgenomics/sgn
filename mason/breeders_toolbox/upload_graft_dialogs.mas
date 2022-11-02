@@ -62,7 +62,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadGraftDialog">Upload Graft</h4>
+        <h4 class="modal-title" id="uploadGraftDialog">Upload Grafting Information</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -70,7 +70,7 @@
     	  <p>
       	  <b>File format information</b>
       	  <br>
-      	  <a id="graft_upload_spreadsheet_format_info">Spreadsheet Format</a>
+      	  <a id="graft_upload_spreadsheet_format_info" data-toggle='modal' data-target='#graft_upload_spreadsheet_format_info_dialog'>Spreadsheet Format</a>
     	  </p>
   	  </&>
 
@@ -88,7 +88,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="graft_upload_spreadsheet_info_dialog" name="graft_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="graftUploadInfoDialog">
+<div class="modal fade" id="graft_upload_spreadsheet_format_info_dialog" name="graft_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="graftUploadInfoDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -108,45 +108,21 @@
 	  <table class="table table-hover table-bordered">
   	  <body>
 	    <tr>
-    	      <td>progeny name</td>
-    	      <td>female parent accession</td>
-    	      <!--<td>male parent accession(s) (if more than one, separate using commas)</td>-->
-              <td>male parent accession</td>
-              <td>type</td>
-
+    	      <td>scion</td>
+              <td>rootstock</td>
   	    </tr>
 	  </body>
 	  </table>
 
 	  <h4>Required fields:</h4>
 	  <ul>
-        <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
-        <li>female parent accession (must exist in the database)</li>
-        <li>type (biparental, self, open, backcross, sib, polycross, reselected)</li>
-            <ul class="a">
-                <li>cross type descriptions:</li>
-                <ul class="b">
-                    <li>biparental: An individual plant pollinated by another individual plant.</li>
-                    <li>self: A self pollinated individual plant.</li>
-                    <li>open: An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                    <li>backcross: An individual plant pollinated by one of its parents.</li>
-                    <li>sib: Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
-                    <li>polycross: Mating between individual female parent from a population and the corresponding male population.</li>
-                    <li>reselected: Selection of a new accession from an existing line (e.g. caused by a mutation).</li>
-                </ul>
-            </ul>
+        <li>scion (exact name must exist in the database)</li>
+        <li>rootstock (must exist in the database)</li>
       </ul>
-
-	  <h4>Optional fields</h4>
-	  <ul>
-	    <!--li>male parent accession (if provided, must exist in the database). Several potential male parents can be given separated by commas. A population entry will be generated in that case, with the listed male parents associated to the population.</li-->
-        <li>male parent accession (can be accession uniquename or accession synonym or population name).</li>
-	  </ul>
 
 	  <h4>Notes</h4>
 	  <ul>
-	    <li>Always specify the type of the cross (biparental, self, open, sib, backcross, polycross or reselected).</li>
-	    <li>If the type is open and no potential male parent is known, leave the male parent field empty
+	    <li>The graft accession will be created in the database upon upload. The name of the graft will be "scion"+"rootstock", where "+" is the default graft separator character. The default separator can be changed before upload. The default can be changed in the sgn_local.conf, default_graft_separator key.
 	  </ul>
         </div>
       </div>
@@ -156,3 +132,18 @@
     </div>
   </div>
 </div>
+
+<!-- script>
+  jQuery(document).ready(function(){
+    jQuery('#graft_upload_spreadsheet_format_info_dialog').dialog({
+     autoOpen: false,
+        height: 300,
+        width: 400});
+    
+    jQuery('#graft_upload_spreadsheet_format_info').click( function() {
+      alert('OPENING...');
+      jQuery('#graft_upload_spreadsheet_format_info_dialog').dialog('open');
+    });
+
+  });
+</script -->
