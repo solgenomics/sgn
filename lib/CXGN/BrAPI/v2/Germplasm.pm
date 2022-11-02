@@ -452,14 +452,10 @@ sub germplasm_progeny {
         $page_size = $total_count;
     }
     my $page = 0;
-    my $last_item = $page_size*($page+1)-1;
-    if($last_item > $total_count-1){
-        $last_item = $total_count-1;
-    }
     my $result = {
         germplasmName=>$stock->uniquename,
         germplasmDbId=>$stock_id,
-        progeny=>[@{$full_data}[$page_size*$page .. $last_item]],
+        progeny=>[@{$full_data}],
     };
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
