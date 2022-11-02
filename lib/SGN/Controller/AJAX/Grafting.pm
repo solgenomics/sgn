@@ -159,12 +159,6 @@ sub validate_grafts {
     
     my ($scion_accession, $rootstock_accession) = @$header;
 
-    chomp($scion_accession);
-    chomp($rootstock_accession);
-
-    $scion_accession =~ s/\r//g;
-    $rootstock_accession =~ s/\r//g;
-    
     my %header_errors;
     
     if ($scion_accession ne 'scion accession') {
@@ -236,6 +230,8 @@ sub _get_grafts_from_file {
     open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
     my $header = <$F>;
     $header =~ s/\r//g;
+    chomp($header);
+
     my @header = split/\t/, $header;
 
     foreach my $h (@header) {
