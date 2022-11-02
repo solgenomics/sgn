@@ -1087,13 +1087,13 @@ sub get_ancestor_hash {
   
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
   my $stock_relationships = $stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
-  my $female_parent_relationship = $stock_relationships->find({type_id => [ $cvterm_female_parent->cvterm_id(), $cvterm_scion_of->cvterm_id() ],  subject_id => {'not_in' => $direct_descendant_ids}});
+  my $female_parent_relationship = $stock_relationships->find({type_id => { in => [ $cvterm_female_parent->cvterm_id(), $cvterm_scion_of->cvterm_id() ]},  subject_id => {'not_in' => $direct_descendant_ids}});
   if ($female_parent_relationship) {
     my $female_parent_stock_id = $female_parent_relationship->subject_id();
     $pedigree{'cross_type'} = $female_parent_relationship->value();
 	$pedigree{'female_parent'} = get_ancestor_hash( $self, $female_parent_stock_id, $direct_descendant_ids );
   }
-  my $male_parent_relationship = $stock_relationships->find({type_id => [ $cvterm_male_parent->cvterm_id(), $cvterm_rootstock_of->cvterm_id() ], subject_id => {'not_in' => $direct_descendant_ids}});
+  my $male_parent_relationship = $stock_relationships->find({type_id => { in => [ $cvterm_male_parent->cvterm_id(), $cvterm_rootstock_of->cvterm_id() ]}, subject_id => {'not_in' => $direct_descendant_ids}});
   if ($male_parent_relationship) {
     my $male_parent_stock_id = $male_parent_relationship->subject_id();
 	$pedigree{'male_parent'} = get_ancestor_hash( $self, $male_parent_stock_id, $direct_descendant_ids );
