@@ -158,14 +158,20 @@ sub validate_grafts {
     my $separator_string = $c->config->{graft_separator_string};
     
     my ($scion_accession, $rootstock_accession) = @$header;
+
+    chomp($scion_accession);
+    chomp($rootstock_accession);
+
+    $scion_accession =~ s/\r//g;
+    $rootstock_accession =~ s/\r//g;
     
     my %header_errors;
     
-    if ($scion_accession ne 'scion') {
+    if ($scion_accession ne 'scion accession') {
 	$header_errors{'scion accession'} = "First column must have header 'scion accession' (not '$scion_accession'); ";
     }
     
-    if ($rootstock_accession ne 'rootstock') {
+    if ($rootstock_accession ne 'rootstock accession') {
 	$header_errors{'rootstock accession'} = "Second column must have header 'rootstock accession' (not '$rootstock_accession'); ";
     }
     
@@ -231,6 +237,11 @@ sub _get_grafts_from_file {
     my $header = <$F>;
     $header =~ s/\r//g;
     my @header = split/\t/, $header;
+
+    foreach my $h (@header) {
+	$h =~ s/^\s+|\s+$//g
+    }
+    
     my @grafts;
     my $line_num = 2;
     while (<$F>) {

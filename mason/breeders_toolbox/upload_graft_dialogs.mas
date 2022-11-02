@@ -108,16 +108,16 @@
 	  <table class="table table-hover table-bordered">
   	  <body>
 	    <tr>
-    	      <td>scion</td>
-              <td>rootstock</td>
+    	      <td>scion accession</td>
+              <td>rootstock accession</td>
   	    </tr>
 	  </body>
 	  </table>
 
 	  <h4>Required fields:</h4>
 	  <ul>
-        <li>scion (exact name must exist in the database)</li>
-        <li>rootstock (must exist in the database)</li>
+        <li>scion accession (exact name must exist in the database)</li>
+        <li>rootstock accession (must exist in the database)</li>
       </ul>
 
 	  <h4>Notes</h4>
