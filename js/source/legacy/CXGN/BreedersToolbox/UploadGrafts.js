@@ -62,6 +62,7 @@ jQuery(document).ready(function ($) {
             else {
 		alert(JSON.stringify(response));
                 archived_file_name = response.archived_file_name_with_path;
+		alert("Archived filename = "+archived_file_name);
 		$('#upload_graft_store').prop("disabled", false);
                 html = '<h3>There Were No Issues Identified</h3>Please click the "Store" button to save the grafts to the database.';
             }
