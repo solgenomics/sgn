@@ -133,17 +133,3 @@
   </div>
 </div>
 
-<!-- script>
-  jQuery(document).ready(function(){
-    jQuery('#graft_upload_spreadsheet_format_info_dialog').dialog({
-     autoOpen: false,
-        height: 300,
-        width: 400});
-    
-    jQuery('#graft_upload_spreadsheet_format_info').click( function() {
-      alert('OPENING...');
-      jQuery('#graft_upload_spreadsheet_format_info_dialog').dialog('open');
-    });
-
-  });
-</script -->

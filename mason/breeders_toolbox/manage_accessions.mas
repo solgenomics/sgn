@@ -31,12 +31,6 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 
 </%perl>
 
-
-
-<script>
-alert('Grafting button html: '+'<% $grafting_button %>');
-</script>
-
 <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=> $subtitle  &>
 	
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>

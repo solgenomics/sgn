@@ -54,12 +54,14 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("hide");
 
             var html;
-            archived_file_name = response.archived_file_name_with_path;
+
             if (response.error) {
                 html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
 		$('#upload_graft_store').prop("disabled", true);
             }
             else {
+		alert(JSON.stringify(response));
+                archived_file_name = response.archived_file_name_with_path;
 		$('#upload_graft_store').prop("disabled", false);
                 html = '<h3>There Were No Issues Identified</h3>Please click the "Store" button to save the grafts to the database.';
             }
