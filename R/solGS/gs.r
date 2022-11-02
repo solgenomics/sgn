@@ -6,7 +6,7 @@
 # Isaak Y Tecle (iyt2@cornell.edu)
 
 options(echo = FALSE)
-options(warn = -1)
+# options(warn = -1)
 suppressWarnings(suppressPackageStartupMessages({
 library(methods)
 library(rrBLUP)
@@ -23,7 +23,7 @@ library(rlang)
 library(jsonlite)
 library(data.table)
   }))
-
+library(genoDataFilter)
 
 allArgs <- commandArgs()
 
@@ -116,10 +116,10 @@ markerFilter <- 0.6
 cloneFilter <- 0.8
 
 logMsg <- c("Data preprocessing\n\n")
-logMsg <- append(logMsg, "\nThe following data filtering will be applied to the data set:\n\n")
-logMsg <- append(logMsg, c("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  were removed.\n"))
-logMsg <- append(logMsg, c("\nMarkers with greater or equal to ", markerFilter * 100, "% missing values were removed.\n"))
-logMsg <- append(logMsg, c("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  were removed.\n") )
+logMsg <- append(logMsg, "The following data filtering will be applied to the genotype dataset:\n\n")
+logMsg <- append(logMsg, paste0("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  will be removed.\n"))
+logMsg <- append(logMsg, paste0("\nMarkers with greater or equal to ", markerFilter * 100, "% missing values will be removed.\n"))
+logMsg <- append(logMsg, paste0("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  will be removed.\n") )
 
 if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
     filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,
@@ -140,9 +140,14 @@ if (is.null(filteredTrainingGenoData)) {
     genoData <- column_to_rownames(genoData, 'V1')
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
-    genoData <- filterGenoData(genoData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter)
-    genoData <- roundAlleleDosage(genoData)
 
+    
+    logMsg <- append(logMsg, "Running genotype data cleaning now....")
+    genoFilterOut <- filterGenoData(genoData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
+    
+    genoData <- genoFilterOut$data
+    logMsg <- append(logMsg, genoFilterOut$log)
+    genoData <- roundAlleleDosage(genoData)
     filteredTrainingGenoData   <- genoData
 
 }
@@ -208,11 +213,9 @@ if (datasetInfo == 'combined populations') {
          colnames(phenoTrait)[1] <- 'genotypes'
 
      } else if (length(grep('list', phenoFile)) != 0) {
- message('phenoTrait traitAbbr ', traitAbbr)
          phenoTrait <- averageTrait(phenoData, traitAbbr)
 
      } else {
-         message('phenoTrait trait_abbr ', traitAbbr)
          phenoTrait <- getAdjMeans(phenoData,
                                    traitName = traitAbbr,
                                    calcAverages = TRUE)
@@ -294,21 +297,20 @@ if (sum(is.na(genoData)) > 0) {
 #extract observation lines with both
 #phenotype and genotype data only.
 
-logMsg <- append(logMsg, c("After calculating averages, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n") )
+logMsg <- append(logMsg, paste0("After calculating trait averages, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n") )
 commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
-commonObs           <- data.frame(commonObs)
-rownames(commonObs) <- commonObs[, 1]
+
+logMsg <- append(logMsg, paste0(length(commonObs), " individuals are shared in both phenotype and genotype datasets.\n"))
 
 #remove genotyped lines without phenotype data
-genoDataFilteredObs <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
-message("After removing individuals without phenotype data, this genotype dataset has ", length(rownames(genoDataFilteredObs)), " individuals.")
+genoDataFilteredObs <- genoData[(rownames(genoData) %in% commonObs), ]
 
-logMsg <- append(logMsg, c("After removing individuals without phenotype data, this genotype dataset has ", length(rownames(genoDataFilteredObs)), " individuals.\n"))
+logMsg <- append(logMsg, paste0("After removing individuals without phenotype data, this genotype dataset has ", length(rownames(genoDataFilteredObs)), " individuals.\n"))
 
 #remove phenotyped lines without genotype data
-phenoTrait <- phenoTrait[(phenoTrait$genotypes %in% rownames(commonObs)), ]
+phenoTrait <- phenoTrait[(phenoTrait$genotypes %in% commonObs), ]
 
-logMsg <- append(logMsg, c("After removing individuals without genotype data, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n" ))
+logMsg <- append(logMsg, paste0("After removing individuals without genotype data, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n" ))
 
 phenoTraitMarker           <- data.frame(phenoTrait)
 rownames(phenoTraitMarker) <- phenoTraitMarker[, 1]
@@ -400,8 +402,8 @@ relationshipMatrix <- rownames_to_column(relationshipMatrix, var="genotypes")
 relationshipMatrix <- relationshipMatrix %>% mutate_if(is.numeric, round, 3)
 relationshipMatrix <- column_to_rownames(relationshipMatrix, var="genotypes")
 
-traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
-traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% rownames(commonObs))]
+traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in% commonObs), ]
+traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% commonObs)]
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
 
@@ -466,9 +468,9 @@ if (length(selectionData) == 0) {
   additiveVar <- round(trModel$Vg, 2)
   errorVar <- round(trModel$Ve, 2)
 
- varCompData <- c("\nAdditive genetic variance\t", additiveVar)
- varCompData <- append(varCompData, c("\nError variance\t", errorVar))
-  varCompData <- append(varCompData, c("\nSNP heritability (h)\t", heritability))
+ varCompData <- c("\nAdditive genetic variance\t", additiveVar, "\n")
+ varCompData <- append(varCompData, c("Error variance\t", errorVar, "\n"))
+  varCompData <- append(varCompData, c("SNP heritability (h)\t", heritability, "\n"))
 
   combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
 
@@ -707,8 +709,6 @@ if (!is.null(traitRawPhenoData) && length(traitRawPhenoFile) != 0) {
            quote = FALSE,
            )
 }
-
-message('filteredTrainingGenoFile: ', filteredTrainingGenoFile)
 
 if (!is.null(filteredTrainingGenoData) && file.info(filteredTrainingGenoFile)$size == 0) {
   fwrite(filteredTrainingGenoData,
