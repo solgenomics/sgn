@@ -60,9 +60,9 @@ jQuery(document).ready(function ($) {
 		$('#upload_graft_store').prop("disabled", true);
             }
             else {
-		alert(JSON.stringify(response));
-                archived_file_name = response.archived_file_name_with_path;
-		alert("Archived filename = "+archived_file_name);
+
+                archived_file_name = response.archived_filename_with_path;
+
 		$('#upload_graft_store').prop("disabled", false);
                 html = '<h3>There Were No Issues Identified</h3>Please click the "Store" button to save the grafts to the database.';
             }
