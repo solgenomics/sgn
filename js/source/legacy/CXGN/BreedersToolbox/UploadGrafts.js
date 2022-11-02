@@ -85,6 +85,7 @@ jQuery(document).ready(function ($) {
     }
 
     jQuery('#upload_graft_store').click(function(){
+	alert('Archive path: '+archived_file_name);
         jQuery.ajax( {
             url: '/ajax/grafts/upload_store',
             data: {
