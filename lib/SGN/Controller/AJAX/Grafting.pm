@@ -131,7 +131,7 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
 
 	print STDERR Dumper $info;
 	
-	if ($info->{errors}){
+	if (exists($info->{errors}) && defined($info->{error}) && $info->{error} ne ''){
 	    push @error_grafts, $info->{error};
 	}
 	else {
