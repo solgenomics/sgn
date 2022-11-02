@@ -31,7 +31,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
 
-    my $separator_string = $c->config->{separator_string};
+    my $separator_string = $c->config->{graft_separator_string};
     
     if (!$c->user()) {
 	print STDERR "User not logged in... not uploading grafts.\n";
@@ -173,7 +173,6 @@ sub validate_grafts {
 	my $error = join "<br />", values %header_errors;
 	return { error => $error  };
     }
-    
     
     my %errors;
     
