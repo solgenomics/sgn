@@ -54,7 +54,7 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("hide");
 
             var html;
-            archived_file_name = response.archived_file_name;
+            archived_file_name = response.archived_file_name_with_path;
             if (response.error) {
                 html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
 		$('#upload_graft_store').prop("disabled", true);
