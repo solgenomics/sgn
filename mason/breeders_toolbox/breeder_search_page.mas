@@ -69,10 +69,21 @@ $dataset_id => undef
             <ul class="wizard-list-selected wizard-list well"></ul>
 
             <div class="wizard-btn-center wizard-union-toggle">
-              <div class="btn-group">
-                <button class="wizard-btn-tag btn btn-xs btn-default disabled">Match</button
-                ><button class="btn btn-xs btn-primary active">ANY</button
-                ><button class="btn btn-default btn-xs">ALL</button>
+              <div class="btn-group wizard-union-toggle-btn-group">
+                <button type="button" class="btn btn-xs btn-default disabled">Match</button>
+                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-any btn-primary active">ANY</button>
+                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-min btn-default">MIN</button>
+                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-all btn-default">ALL</button>
+              </div>
+              <div class="input-group input-group-sm wizard-union-toggle-min-group">
+                <span class="input-group-btn">
+                  <button class="btn btn-default disabled" type="button">>=</button>
+                </span>
+                <input type="text" class="form-control wizard-union-toggle-min-value">
+                <span class="input-group-btn">
+                  <button class="btn btn-xs wizard-union-toggle-min-type wizard-union-toggle-min-type-percent btn-primary active" type="button">%</button>
+                  <button class="btn btn-xs wizard-union-toggle-min-type wizard-union-toggle-min-type-count btn-default" type="button">#</button>
+                </span>
               </div>
             </div>
 
