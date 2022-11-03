@@ -1281,13 +1281,13 @@ sub analysis_log_file {
 }
 
 sub get_confirm_msg {
-    my ( $self, $c, $job ) = @_;
+  my ( $self, $c, $job ) = @_;
 
-    $job =~ s/[_|-]/ /g;
-    $job = lc($job);
+  $job =~ s/[_|-]/ /g;
+  $job = lc($job);
 
-    my $msg = "Your $job job is submitted.";
-    return $msg;
+  my $msg = "Your $job job is submitted.";
+  return $msg;
 
 }
 
