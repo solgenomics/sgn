@@ -176,9 +176,12 @@ sub save_ona_cross_info {
     my $phenome_schema = $self->phenome_schema;
     my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
     my $germplasm_info_temp_file_path = $self->germplasm_info_temp_file_path;
-#    my $form_id = $self->odk_crossing_data_service_form_id;
-#debugging sendusu
-    my $form_id = '313930';
+    my $form_id = $self->odk_crossing_data_service_form_id;
+    print STDERR "SELECTED FORM ID =".Dumper($form_id)."\n";
+    #debugging sendusu
+    $form_id = '313930';
+    print STDERR "ASSIGNED FORM ID =".Dumper($form_id)."\n";
+
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
@@ -971,7 +974,8 @@ sub save_ona_cross_info {
                         $valid_info_hash{$info_type} = $info_hash{$info_type};
                     }
                 }
-                print STDERR "VALID INFO HASH =".Dumper(\%valid_info_hash);
+                print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
+                print STDERR "VALID INFO HASH =".Dumper(\%valid_info_hash)."\n";
 
                 my $previous_stockprop_rs = $valid_cross_name->stockprops({type_id=>$cross_info_cvterm->cvterm_id});
                 if ($previous_stockprop_rs->count == 1){
@@ -979,6 +983,7 @@ sub save_ona_cross_info {
                     $cross_json_hash_ref = decode_json $cross_json_string;
                     %cross_json_hash = %{$cross_json_hash_ref};
                     %all_cross_info = (%cross_json_hash, %valid_info_hash);
+                    print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
                     print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
                     my $all_cross_info_string = encode_json \%all_cross_info;
                     $previous_stockprop_rs->first->update({value=>$all_cross_info_string});
@@ -1028,17 +1033,17 @@ sub save_ona_cross_info {
             }
         }
 
-        my %odk_cross_hash = (
-            cross_info => \%cross_info,
-            cross_parents => \%cross_parents,
-            plant_status_info => \%plant_status_info,
-            raw_message => $message_hash
-        );
+#        my %odk_cross_hash = (
+#            cross_info => \%cross_info,
+#            cross_parents => \%cross_parents,
+#            plant_status_info => \%plant_status_info,
+#            raw_message => $message_hash
+#        );
         #Update cross progress tree
-        my $return = $self->create_odk_cross_progress_tree(\%odk_cross_hash);
-        if ($return->{error}){
-            return { error => $return->{error} };
-        }
+#        my $return = $self->create_odk_cross_progress_tree(\%odk_cross_hash);
+#        if ($return->{error}){
+#            return { error => $return->{error} };
+#        }
         return { success => 1 };
 
     } else {
