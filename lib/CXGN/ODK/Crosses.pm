@@ -971,7 +971,8 @@ sub save_ona_cross_info {
                 my %info_hash = %{$musa_cross_info{$cross_name_key}};
                 foreach my $info_type(@cross_properties){
                     if ($info_hash{$info_type}) {
-                        $valid_info_hash{$info_type} = $info_hash{$info_type};
+                        my $value = $info_hash{$info_type};
+                        $valid_info_hash{$info_type} = $value;
                     }
                 }
                 print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
