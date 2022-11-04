@@ -374,7 +374,7 @@ sub _validate_with_plugin {
         my $count = scalar(@{$plots});
         if ( $count > 1 ) {
             my @pos = split('-', $key);
-            push @error_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
+            push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
         }
     }
 
