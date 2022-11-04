@@ -594,7 +594,7 @@ sub save_ona_cross_info {
                             if ($seed_extraction_cross_id && $extraction_date_property && $odk_extraction_date) {
                                 $musa_cross_info{$seed_extraction_cross_id}{$extraction_date_property} = $odk_extraction_date;
                             }
-                            if ($seed_extraction_cross_id && $num_seeds_extracted_property && $number_of_seeds_extracted) {
+                            if ($seed_extraction_cross_id && $num_seeds_extracted_property && defined $number_of_seeds_extracted) {
                                 $musa_cross_info{$seed_extraction_cross_id}{$num_seeds_extracted_property} = $number_of_seeds_extracted;
                             }
                         }
@@ -616,21 +616,21 @@ sub save_ona_cross_info {
                             my $embryorescue_total_seeds = $a->{'Laboratory/embryoRescue/embryorescueID_Total_Seeds'};
                             my $embryorescue_total_seeds_property = 'Embryo Rescue Total Seeds';
 #                            $musa_cross_info{$embryorescue_total_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_total_seeds;
-                            if ($embryo_rescue_cross_id && $embryorescue_total_seeds_property && $embryorescue_total_seeds) {
+                            if ($embryo_rescue_cross_id && $embryorescue_total_seeds_property && defined $embryorescue_total_seeds) {
                                 $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_total_seeds_property} = $embryorescue_total_seeds;
                             }
 
                             my $embryorescue_good_seeds = $a->{'Laboratory/embryoRescue/goodSeeds'};
                             my $embryorescue_good_seeds_property = 'Embryo Rescue Good Seeds';
 #                            $musa_cross_info{$embryorescue_good_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_good_seeds;
-                            if ($embryo_rescue_cross_id && $embryorescue_good_seeds_property && $embryorescue_good_seeds) {
+                            if ($embryo_rescue_cross_id && $embryorescue_good_seeds_property && defined $embryorescue_good_seeds) {
                                 $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_good_seeds_property} = $embryorescue_good_seeds;
                             }
 
                             my $embryorescue_bad_seeds = $a->{'Laboratory/embryoRescue/badseeds'};
                             my $embryorescue_bad_seeds_property = 'Embryo Rescue Bad Seeds';
 #                            $musa_cross_info{$embryorescue_bad_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_bad_seeds;
-                            if ($embryo_rescue_cross_id && $embryorescue_bad_seeds_property && $embryorescue_bad_seeds) {
+                            if ($embryo_rescue_cross_id && $embryorescue_bad_seeds_property && defined $embryorescue_bad_seeds) {
                                 $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_bad_seeds_property} = $embryorescue_bad_seeds;
                             }
 
@@ -720,21 +720,21 @@ sub save_ona_cross_info {
                         my $embryorescue_total_seeds = $activity_hash->{'Laboratory/embryoRescue/embryorescueID_Total_Seeds'};
                         my $embryorescue_total_seeds_property = 'Embryo Rescue Total Seeds';
 #                        $musa_cross_info{$embryorescue_total_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_total_seeds;
-                        if ($embryo_rescue_cross_id && $embryorescue_total_seeds_property && $embryorescue_total_seeds) {
+                        if ($embryo_rescue_cross_id && $embryorescue_total_seeds_property && defined $embryorescue_total_seeds) {
                             $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_total_seeds_property} = $embryorescue_total_seeds;
                         }
 
                         my $embryorescue_good_seeds = $activity_hash->{'Laboratory/embryoRescue/goodSeeds'};
                         my $embryorescue_good_seeds_property = 'Embryo Rescue Good Seeds';
 #                        $musa_cross_info{$embryorescue_good_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_good_seeds;
-                        if ($embryo_rescue_cross_id && $embryorescue_good_seeds_property && $embryorescue_good_seeds) {
+                        if ($embryo_rescue_cross_id && $embryorescue_good_seeds_property && defined $embryorescue_good_seeds) {
                             $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_good_seeds_property} = $embryorescue_good_seeds;
                         }
 
                         my $embryorescue_bad_seeds = $activity_hash->{'Laboratory/embryoRescue/badseeds'};
                         my $embryorescue_bad_seeds_property = 'Embryo Rescue Bad Seeds';
 #                        $musa_cross_info{$embryorescue_bad_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_bad_seeds;
-                        if ($embryo_rescue_cross_id && $embryorescue_bad_seeds_property && $embryorescue_bad_seeds) {
+                        if ($embryo_rescue_cross_id && $embryorescue_bad_seeds_property && defined $embryorescue_bad_seeds) {
                             $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_bad_seeds_property} = $embryorescue_bad_seeds;
                         }
 
@@ -788,7 +788,7 @@ sub save_ona_cross_info {
             my $germinating_number_property = 'Number of Germinating Embryos';
             my $embryo_ids_property = 'Embryo IDs';
 #            $musa_cross_info{$germinating_number_property}{$embryo_cross} = $embryo_ids_count;
-            if ($embryo_cross && $germinating_number_property && $embryo_ids_count) {
+            if ($embryo_cross && $germinating_number_property && defined $embryo_ids_count) {
                 $musa_cross_info{$embryo_cross}{$germinating_number_property} = $embryo_ids_count;
             }
 
@@ -803,7 +803,7 @@ sub save_ona_cross_info {
             my $subculture_property = 'Subculture ID Count';
             my $subculture_ids_property = 'Subculture IDs';
 #            $musa_cross_info{$subculture_property}{$subculture_cross} = $subculture_id_count;
-            if ($subculture_cross && $subculture_property && $subculture_id_count) {
+            if ($subculture_cross && $subculture_property && defined $subculture_id_count) {
                 $musa_cross_info{$subculture_cross}{$subculture_property} = $subculture_id_count;
             }
 
@@ -818,7 +818,7 @@ sub save_ona_cross_info {
             my $rooting_property = 'Rooting ID Count';
             my $rooting_ids_property = 'Rooting IDs';
 #            $musa_cross_info{$rooting_property}{$rooting_cross} = $rooting_id_count;
-            if ($rooting_cross && $rooting_property && $rooting_id_count) {
+            if ($rooting_cross && $rooting_property && defined $rooting_id_count) {
                 $musa_cross_info{$rooting_cross}{$rooting_property} = $rooting_id_count;
             }
 
@@ -833,7 +833,7 @@ sub save_ona_cross_info {
             my $weaning1_property = 'Weaning1 ID Count';
             my $weaning1_ids_property = 'Weaning1 IDs';
 #            $musa_cross_info{$weaning1_property}{$weaning1_cross} = $weaning1_id_count;
-            if ($weaning1_cross && $weaning1_property && $weaning1_id_count) {
+            if ($weaning1_cross && $weaning1_property && defined $weaning1_id_count) {
                 $musa_cross_info{$weaning1_cross}{$weaning1_property} = $weaning1_id_count;
             }
 
@@ -848,7 +848,7 @@ sub save_ona_cross_info {
             my $weaning2_property = 'Weaning2 ID Count';
             my $weaning2_ids_property = 'Weaning2 IDs';
 #            $musa_cross_info{$weaning2_property}{$weaning2_cross} = $weaning2_id_count;
-            if ($weaning2_cross && $weaning2_property && $weaning2_id_count) {
+            if ($weaning2_cross && $weaning2_property && defined $weaning2_id_count) {
                 $musa_cross_info{$weaning2_cross}{$weaning2_property} = $weaning2_id_count;
             }
 
@@ -863,7 +863,7 @@ sub save_ona_cross_info {
             my $screenhouse_property = 'Screenhouse ID Count';
             my $screenhouse_ids_property = 'Screenhouse IDs';
 #            $musa_cross_info{$screenhouse_property}{$screenhouse_cross} = $screenhouse_id_count;
-            if ($screenhouse_cross && $screenhouse_property && $screenhouse_id_count) {
+            if ($screenhouse_cross && $screenhouse_property && defined $screenhouse_id_count) {
                 $musa_cross_info{$screenhouse_cross}{$screenhouse_property} = $screenhouse_id_count;
             }
 
@@ -878,7 +878,7 @@ sub save_ona_cross_info {
             my $hardening_property = 'Hardening ID Count';
             my $hardening_ids_property = 'Hardening IDs';
 #            $musa_cross_info{$hardening_property}{$hardening_cross} = $hardening_id_count;
-            if ($hardening_cross && $hardening_property && $hardening_id_count) {
+            if ($hardening_cross && $hardening_property && defined $hardening_id_count) {
                 $musa_cross_info{$hardening_cross}{$hardening_property} = $hardening_id_count;
             }
 
@@ -900,7 +900,7 @@ sub save_ona_cross_info {
             my $openfield_property = 'Openfield ID Count';
             my $openfield_ids_property = 'Openfield IDs';
 #            $musa_cross_info{$openfield_property}{$openfield_cross} = $openfield_id_count;
-            if ($openfield_cross && $openfield_property && $openfield_id_count) {
+            if ($openfield_cross && $openfield_property && defined $openfield_id_count) {
                 $musa_cross_info{$openfield_cross}{$openfield_property} = $openfield_id_count;
             }
 
