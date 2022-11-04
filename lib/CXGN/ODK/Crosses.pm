@@ -956,34 +956,35 @@ sub save_ona_cross_info {
 
         my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'crossing_metadata_json', 'stock_property');
 
-        my %valid_info_hash;
+#        my %valid_info_hash;
         my $cross_json_string;
         my $cross_json_hash_ref = {};
         my %cross_json_hash;
         my %all_cross_info;
         foreach my $cross_name_key (keys %musa_cross_info){
-            %valid_info_hash = ();
+#            %valid_info_hash = ();
             %cross_json_hash = ();
             %all_cross_info = ();
             %{$cross_json_hash_ref} =();
             my $valid_cross_name = $schema->resultset("Stock::Stock")->find({uniquename => $cross_name_key});
             if ($valid_cross_name){
                 my %info_hash = %{$musa_cross_info{$cross_name_key}};
-                foreach my $info_type(@cross_properties){
-                    if ($info_hash{$info_type}) {
-                        my $value = $info_hash{$info_type};
-                        $valid_info_hash{$info_type} = $value;
-                    }
-                }
+#                foreach my $info_type(@cross_properties){
+#                    if ($info_hash{$info_type}) {
+#                        my $value = $info_hash{$info_type};
+#                        $valid_info_hash{$info_type} = $value;
+#                    }
+#                }
                 print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
-                print STDERR "VALID INFO HASH =".Dumper(\%valid_info_hash)."\n";
+                print STDERR "NEW INFO HASH =".Dumper(\%info_hash)."\n";
+#                print STDERR "VALID INFO HASH =".Dumper(\%valid_info_hash)."\n";
 
                 my $previous_stockprop_rs = $valid_cross_name->stockprops({type_id=>$cross_info_cvterm->cvterm_id});
                 if ($previous_stockprop_rs->count == 1){
                     $cross_json_string = $previous_stockprop_rs->first->value();
                     $cross_json_hash_ref = decode_json $cross_json_string;
                     %cross_json_hash = %{$cross_json_hash_ref};
-                    %all_cross_info = (%cross_json_hash, %valid_info_hash);
+                    %all_cross_info = (%cross_json_hash, %info_hash);
                     print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
                     print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
                     my $all_cross_info_string = encode_json \%all_cross_info;
@@ -992,7 +993,8 @@ sub save_ona_cross_info {
                     print STDERR "More than one found!\n";
                     return;
                 } else {
-                    my $new_cross_info_string = encode_json \%valid_info_hash;
+#                    my $new_cross_info_string = encode_json \%valid_info_hash;
+                    my $new_cross_info_string = encode_json \%info_hash;
                     $valid_cross_name->create_stockprops({$cross_info_cvterm->name() => $new_cross_info_string});
                 }
             }
