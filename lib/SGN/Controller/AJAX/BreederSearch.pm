@@ -46,8 +46,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   print STDERR "Validating query types\n";
   foreach my $binary_number (@querytypes) {# ensure querytype arguments are 0 or 1
     chomp($binary_number);
-    if (! any { $binary_number == $_ } ( 0 , 1 )) {
-      $error = "Valid querytypes are '1' for intersect or '0' for union";
+    if ( $binary_number < 0 || $binary_number > 1 ) {
+      $error = "Valid querytypes are '1' for intersect or '0' for union or between 0 and 1 for percent match";
       $c->stash->{rest} = { error => $error };
       return;
     }

@@ -104,7 +104,7 @@ export function WizardSetup(main_id){
       var formData = new FormData();
       categories.forEach((c,i)=>{
         formData.append('categories[]', c);
-        formData.append('querytypes[]', operations[c]?1:0);
+        formData.append('querytypes[]', operations[c]);
         (selections[c]||[]).forEach(s=>{
           formData.append(`data[${i}][]`, s.id);
         })

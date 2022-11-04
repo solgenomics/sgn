@@ -24,7 +24,6 @@ ul.wizard-list li{
   display:inline-block;
 }
 .wizard-btn-center .btn-group .btn{
-  float: none;
   margin: 0px;
   display:inline-block;
 }
@@ -80,6 +79,18 @@ ul.wizard-list{
 }
 .wizard-panel .wizard-union-toggle{
   margin-top: 6px;
+}
+.wizard-panel .wizard-union-toggle-min-group {
+  max-width: 150px;
+  margin: 0 auto;
+  display: none;
+}
+.wizard-panel .wizard-union-toggle-min-group input {
+  height: 22px;
+}
+.wizard-panel .wizard-union-toggle-min-group .input-group-btn .btn {
+  height: 22px;
+  padding: 0 10px;
 }
 button.wizard-list-add{
   width:2.45em;
