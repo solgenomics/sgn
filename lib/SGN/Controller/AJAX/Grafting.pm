@@ -30,23 +30,48 @@ has 'schema' => (
 sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
-
-    my $separator_string = $c->config->{graft_separator_string};
+    my $session_id = $c->req->param("sgn_session_id");
     
-    if (!$c->user()) {
-	print STDERR "User not logged in... not uploading grafts.\n";
-	$c->stash->{rest} = {error => "You need to be logged in to upload grafts." };
-	return;
+    my $separator_string = $c->config->{graft_separator_string};
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+
+    STDERR->autoflush(1);
+    
+    print STDERR "checking session_id...\n";
+    if ($session_id){
+	print STDERR "We have a session id!\n";
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+	print STDERR "We do not have a session id...\n";
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
     }
     
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
 	return;
     }
-
+    
     my $time = DateTime->now();
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $user_name = $c->user()->get_object()->get_username();
+#    my $user_id = $c->user()->get_object()->get_sp_person_id();
+#    my $user_name = $c->user()->get_object()->get_username();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'graft_upload';
     
@@ -64,8 +89,8 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     
     my $md5;
     
-    my @user_roles = $c->user()->roles();
-    my $user_role = shift @user_roles;
+#    my @user_roles = $c->user()->roles();
+#    my $user_role = shift @user_roles;
     
     my $params = {
 	tempfile => $upload_tempfile,
@@ -105,6 +130,35 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     my $archived_file_name = $c->req->param('archived_file_name');
     my $overwrite_grafts = $c->req->param('overwrite_grafts') ne 'false' ? $c->req->param('overwrite_grafts') : 0;
     my $separator_string = $c->config->{graft_separator_string};
+
+        if ($session_id){
+	print STDERR "We have a session id!\n";
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+	print STDERR "We do not have a session id...\n";
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
+	return;
+    }
+
     
     print STDERR "ARCHIVED FILE NAME = $archived_file_name\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
