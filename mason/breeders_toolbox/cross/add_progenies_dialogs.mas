@@ -310,11 +310,8 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Family Name of existing crosses may be uploaded in an Excel file (.xls)
+                        Family Name of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
-                    <br>
-                        (.xlsx format not supported)
-                    <br>
                     <br>
                     <b>Family Types:</b>
                         <ul>

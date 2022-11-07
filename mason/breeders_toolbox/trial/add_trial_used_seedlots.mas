@@ -51,10 +51,8 @@ $trial_id
                 <div class="container-fluid">
                     <b>This is for recording which seedlots were planted in which plots in this trial.</b>
                     <br/>
-                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
