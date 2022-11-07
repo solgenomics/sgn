@@ -6,20 +6,55 @@ load_people.pl - loading user accounts into cxgn databases
 
 =head1 SYNOPSIS
 
-    load_people.pl -H [dbhost] -D [dbname] -i [infile]
+load_people.pl -H [dbhost] -D [dbname] -i [infile]
 
 =head1 COMMAND-LINE OPTIONS
-  ARGUMENTS
- -H host name (required) e.g. "localhost"
- -D database name (required) e.g. "cxgn_cassava"
- -i path to infile (required)
 
-  FLAGS
- -t Test run . Rolling back at the end.
+=head2 ARGUMENTS
+
+=item -H
+
+host name (required) e.g. "localhost"
+
+=item -D
+
+database name (required) e.g. "cxgn_cassava"
+
+=item -i
+
+path to infile (required)
+
+=back
+
+=head2 FLAGS
+
+=item -t
+
+Test run. Rolling back at the end.
+
+=back
 
 =head1 DESCRIPTION
 
-This script loads user account data into the sgn_people.sp_person table. Each column in the spreadsheet, which represents a single user account is stored as a single row in the sgn_person table. 
+This script loads user account data into the sgn_people.sp_person and sgn_people.sp_login table. Each column in the spreadsheet represents a single user, and one row will be added to sp_login and one row to sp_person. 
+
+The input file is xlsx format, and should have the following columns (column order is not important):
+
+username 
+first_name
+last_name
+email
+organization
+address
+country
+phone
+research_keywords
+research_interests
+webpage
+
+The first four columns listed are required.
+
+The script outputs the username, first_name, last_name, email and assigned initial random password. This can be used to send the password to the user.
 
 =head1 AUTHOR
 
