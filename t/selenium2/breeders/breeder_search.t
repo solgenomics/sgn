@@ -47,7 +47,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     # COLUMN 1 AND 2 - test for all / any / default values / check if numbers off possible combinations are changing
-    my $active_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "union")]/div[@class="btn-group"]/button[contains(@class, "active")]' , 'xpath', 'find active union button in first column');
+    my $active_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(@class, "active")]' , 'xpath', 'find active union button in first column');
     ok (lc($active_union_button->get_attribute('innerHTML')) eq "any", "default active union button for selection shall be ANY");
 
     my $button_count_all_second_column_xpath = '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[2]/div/div[@class="btn-group"]//span[contains(@class, "wizard-count-all")]';
@@ -71,8 +71,8 @@ $t->while_logged_in_as("submitter", sub {
     $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
     ok ($button_count_all_second_column->get_text() eq "4", "number of traits with 'ANY button' in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
 
-    my $all_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "union")]/div[@class="btn-group"]/button[contains(text(), "ALL")]' , 'xpath', 'find "ALL" button');
-    my $any_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "union")]/div[@class="btn-group"]/button[contains(text(), "ANY")]' , 'xpath', 'find "ANY" button');
+    my $all_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ALL")]' , 'xpath', 'find "ALL" button');
+    my $any_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ANY")]' , 'xpath', 'find "ANY" button');
 
     $all_union_button->click();
     sleep(1);
