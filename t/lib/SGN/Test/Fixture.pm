@@ -196,7 +196,7 @@ sub get_db_stats {
     $stats->{people} = $rs->get_column('sp_person_id_max')->first();
 
     $rs = $self->people_schema()->resultset('SpDataset')->search( {}, { columns => [ { 'sp_dataset_id_max' => { max => 'sp_dataset_id' }} ] } );
-    $stats->{datasets} = $rs->get_column('sp_dataset_id_max')->first();
+    $stats->{datasets} = defined $rs->get_column('sp_dataset_id_max')->first() ? $rs->get_column('sp_dataset_id_max')->first() : 0;
 
     $rs = $self->people_schema()->resultset('List')->search( {}, { columns => [ { 'list_id_max' => { max => 'list_id' }} ] } );
     $stats->{lists} = $rs->get_column('list_id_max')->first();
@@ -240,6 +240,17 @@ sub get_db_stats {
     $rs = $self->phenome_schema()->resultset('NdExperimentMdFiles')->search( {}, { columns => [ { 'nd_experiment_md_files_id_max' => { max => 'nd_experiment_md_files_id' }} ] });
     $stats->{experiment_files} = $rs->get_column('nd_experiment_md_files_id_max')->first();
 
+    $rs = $self->phenome_schema()->resultset('NdExperimentMdJson')->search( {}, { columns => [ { 'nd_experiment_md_json_id_max' => { max => 'nd_experiment_md_json_id' }} ] });
+    $stats->{experiment_json} = defined $rs->get_column('nd_experiment_md_json_id_max')->first() ? $rs->get_column('nd_experiment_md_json_id_max')->first() : 0;
+
+    # count project_owners
+    $rs = $self->phenome_schema()->resultset('ProjectOwner')->search( {}, { columns => [ { 'project_owner_id_max' => { max => 'project_owner_id' }} ] });
+    $stats->{project_owners} = defined $rs->get_column('project_owner_id_max')->first() ? $rs->get_column('project_owner_id_max')->first() : 0;
+
+    # count project_md_images
+    $rs = $self->phenome_schema()->resultset('ProjectMdImage')->search( {}, { columns => [ { 'project_md_image_id_max' => { max => 'project_md_image_id' }} ] });
+    $stats->{project_images} = defined $rs->get_column('project_md_image_id_max')->first() ? $rs->get_column('project_md_image_id_max')->first() : 0;
+
     # count metadata file entries
     $rs = $self->metadata_schema()->resultset('MdFiles')->search( {}, { columns => [ { 'file_id_max' => { max => 'file_id' }} ] } );
     $stats->{metadata_files} = $rs->get_column('file_id_max')->first();
@@ -266,15 +277,15 @@ sub clean_up_db {
 
     if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_relationships', 'project_owners', 'projectprops', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiments');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments');
     foreach my $table (@deletion_order) {
-	print STDERR "CLEANING $table...\n";
-	my $count = $stats->{$table} - $self->dbstats_start()->{$table};
- 	if ($count > 0) {
-	    print STDERR "Deleting...\n";
-	    $self->delete_table_entries($table, $self->dbstats_start()->{$table}, $stats->{$table});
- 	}
-     }
+	    print STDERR "CLEANING $table...\n";
+	    my $count = $stats->{$table} - $self->dbstats_start()->{$table};
+ 	    if ($count > 0) {
+	        print STDERR "Deleting...\n";
+	        $self->delete_table_entries($table, $self->dbstats_start()->{$table}, $stats->{$table});
+ 	    }
+    }
 }
 
 sub delete_table_entries {
@@ -324,7 +335,11 @@ sub delete_table_entries {
     }
 
     if ($table eq "project_owners") {
-	$rs = $self->metadata_schema()->resultset('ProjectOwner')->search( { project_owner_id => { '>' => $previous_max_id }});
+	$rs = $self->phenome_schema()->resultset('ProjectOwner')->search( { project_owner_id => { '>' => $previous_max_id }});
+    }
+
+    if ($table eq "project_images") {
+        $rs = $self->phenome_schema()->resultset('ProjectMdImage')->search( { project_md_image_id => { '>' => $previous_max_id }});
     }
 
     if ($table eq "projectprops") {
@@ -359,6 +374,10 @@ sub delete_table_entries {
 	$rs = $self->phenome_schema()->resultset('NdExperimentMdFiles')->search( { nd_experiment_md_files_id => { '>' => $previous_max_id }} );
     }
 
+    if ($table eq "experiment_json") {
+    $rs = $self->phenome_schema()->resultset('NdExperimentMdJson')->search( { nd_experiment_md_json_id => { '>' => $previous_max_id }} );
+    }
+
     if ($table eq "experiments") { 
 	$rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( { nd_experiment_id => { '>' => $previous_max_id } } );
     }
@@ -368,24 +387,25 @@ sub delete_table_entries {
     }
 
     if ($table eq "metadata") {
-	my $rs = undef;
-	my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
-	my $h = $self->dbh()->prepare($q);
-	$h->execute($previous_max_id);
+        my $rs = undef;
+        my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
+        my $h = $self->dbh()->prepare($q);
+        $h->execute($previous_max_id);
 
-	my $q2 = "DELETE FROM metadata.md_metadata where metadata_id > ? ";
-	my $h2 = $self->dbh()->prepare($q2);
-	$h2->execute($previous_max_id);
+        my $q2 = "DELETE FROM metadata.md_metadata where metadata_id > ? ";
+        my $h2 = $self->dbh()->prepare($q2);
+        $h2->execute($previous_max_id);
     }
 
 
     my $count = 0;
+    print STDERR "rs value: $rs";
     if ($rs) { 
-	while (my $row = $rs->next()) {
-	    $count++;
-	    print STDERR "Delete $table entries $count  \r";
-	    $row->delete();
-	}
+        while (my $row = $rs->next()) {
+            $count++;
+            print STDERR "Delete $table entries $count  \r";
+            $row->delete();
+        }
     }
     print STDERR "\n";
 }

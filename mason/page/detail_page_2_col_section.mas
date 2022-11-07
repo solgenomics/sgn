@@ -358,6 +358,9 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_project_plates'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_plates.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_plates
+% if ($info_section_id eq 'genotyping_project_deletion_section'){
+                                <& /breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas, trial_id=>$trial_id &>
+% } #End genotyping_project_deletion_section
 % if ($info_section_id eq 'identifier_generation_list'){
                                 <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
 % } #End identifier_generation_list

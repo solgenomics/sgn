@@ -82,7 +82,7 @@ export function WizardDownloads(main_id,wizard){
         openWindowWithPost(url, {
             ids: accession_ids.join(","),
             protocol_id: protocol_id,
-            format: accession_ids,
+            format: 'accession_ids',
             chromosome_number: chromosome_number,
             start_position: start_position,
             end_position: end_position,
@@ -109,7 +109,7 @@ export function WizardDownloads(main_id,wizard){
         openWindowWithPost(url, {
             ids: accession_ids.join(","),
             protocol_id: protocol_id,
-            format: accession_ids,
+            format: 'accession_ids',
             trial_ids: trial_ids.join(","),
             download_format: download_format,
             compute_from_parents: compute_from_parents,
@@ -135,7 +135,7 @@ export function WizardDownloads(main_id,wizard){
           openWindowWithPost(url, {
             ids: accession_ids.join(","),
             protocol_id: protocol_id,
-            format: accession_ids,
+            format: 'accession_ids',
             trait_ids: trait_ids.join(","),
             compute_from_parents: compute_from_parents,
             minor_allele_frequency: maf,

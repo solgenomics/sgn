@@ -763,4 +763,38 @@ sub get_gt_protocols {
 }
 
 
+sub get_treatments_by_observationunit_ids {
+    my $self = shift;
+    my $observationunit_ids = shift;
+
+    my $treatment_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
+
+    my $q = "SELECT project.name, stock_id
+        FROM project
+        JOIN nd_experiment_project ndp USING(project_id)
+        JOIN nd_experiment nde ON(ndp.nd_experiment_id = nde.nd_experiment_id AND nde.type_id = ?)
+        JOIN nd_experiment_stock nds ON(nds.nd_experiment_id = nde.nd_experiment_id AND nds.stock_id IN (@{[join',', ('?') x @$observationunit_ids]}))
+    ";
+
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($treatment_experiment_cvterm_id, @$observationunit_ids);
+
+    my %treatment_details;
+    my %unique_names;
+    while (my @treatment_data = $h->fetchrow_array()) {
+        my ($name, $id) = @treatment_data;
+        $unique_names{$name} = 1;
+        $treatment_details{$id}->{$name} = 1;
+    }
+
+    my @treatment_names = sort keys(%unique_names);
+
+    return {
+        treatment_names => \@treatment_names,
+        treatment_details => \%treatment_details
+    };
+
+}
+
+
 1;

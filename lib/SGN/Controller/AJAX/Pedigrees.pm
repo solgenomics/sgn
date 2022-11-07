@@ -157,7 +157,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     close($F);
     my @unique_stocks = keys(%stocks);
     my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations_or_vector_constructs',\@unique_stocks)->{'missing'}};
     my $cross_validator = CXGN::List::Validate->new();
     my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
     if (scalar(@stocks_missing)>0){
