@@ -98,10 +98,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual subplots in a plot.</b>
                     <br/>
-                    <b>Subplot names may be uploaded in an Excel file (.xls)</b>
+                    <b>Subplot names may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -190,10 +188,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number</b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls)</b>
+                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -282,10 +278,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specfied by num_subplots_per_plot</b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls)</b>
+                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:

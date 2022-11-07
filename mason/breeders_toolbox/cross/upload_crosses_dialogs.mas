@@ -281,11 +281,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
@@ -363,11 +360,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
@@ -446,11 +440,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:

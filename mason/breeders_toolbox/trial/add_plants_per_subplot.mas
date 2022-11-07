@@ -98,10 +98,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual plants in a subplot.</b>
                     <br/>
-                    <b>Plant names may be uploaded in an Excel file (.xls)</b>
+                    <b>Plant names may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -191,10 +189,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual plants in a subplot. The plant name will be saved as a concatenation of subplot_name + _ + plant_index_number</b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls)</b>
+                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -283,10 +279,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual plants in a subplot. The plant name will be saved as a concatenation of subplot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_subplot</b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls)</b>
+                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:

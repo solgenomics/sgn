@@ -352,10 +352,8 @@ $facilities => ();
                 <div class="container-fluid">
                     <b>This is for uploading a pre-existing genotyping plate layout.</b>
                     <br/>
-                    <b>File must be Excel file (.xls)</b>
+                    <b>File must be Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:

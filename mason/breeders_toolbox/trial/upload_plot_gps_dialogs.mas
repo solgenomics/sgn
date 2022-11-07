@@ -49,10 +49,8 @@ $trial_id
                 <div class="container-fluid">
                     <b>This is for recording the GPS coordinates of plots.</b>
                     <br/>
-                    <b>GPS coordinates may be uploaded in an Excel file (.xls)</b>
+                    <b>GPS coordinates may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:

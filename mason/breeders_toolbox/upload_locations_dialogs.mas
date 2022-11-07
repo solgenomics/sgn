@@ -12,9 +12,8 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-                <b>Locations may be uploaded in an Excel file (.xls)</b><br>
-                (.xlsx format not supported)
-                <br><br>
+                <b>Locations may be uploaded in an Excel file (.xls or .xlsx)</b>
+                <br>
                 <b>Header:</b><br>
                 The first row (header) must contain the following:
                 <br>
