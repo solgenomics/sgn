@@ -402,8 +402,6 @@ sub germplasm_progeny {
     my $self = shift;
     my $inputs = shift;
     my $stock_id = $inputs->{stock_id};
-    my $page_size = $self->page_size;
-    my $page = $self->page;
     my $status = $self->status;
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
@@ -449,14 +447,15 @@ sub germplasm_progeny {
         }
     }
     my $total_count = scalar @{$full_data};
-    my $last_item = $page_size*($page+1)-1;
-    if($last_item > $total_count-1){
-        $last_item = $total_count-1;
+    my $page_size = 10;
+    if ($total_count > $page_size){
+        $page_size = $total_count;
     }
+    my $page = 0;
     my $result = {
         germplasmName=>$stock->uniquename,
         germplasmDbId=>$stock_id,
-        progeny=>[@{$full_data}[$page_size*$page .. $last_item]],
+        progeny=>[@{$full_data}],
     };
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);

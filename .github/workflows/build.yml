@@ -87,10 +87,17 @@ jobs:
           ref: 'develop'
           submodules: 'recursive'
           
-#       TODO: add support for future and release branches
+      - name: Get breedbase_dockerfile
+        if: startsWith(steps.extract_branch.outputs.branch, 'release/')
+        uses: actions/checkout@master
+        with:
+          repository: Breeding-Insight/breedbase_dockerfile
+          path: breedbase_dockerfile
+          ref: ${{ steps.extract_branch.outputs.branch }}
+          submodules: 'recursive'
 
       - name: Get breedbase_dockerfile
-        if: steps.extract_branch.outputs.branch != 'develop'
+        if: steps.extract_branch.outputs.branch == 'master'
         uses: actions/checkout@master
         with:
           repository: Breeding-Insight/breedbase_dockerfile
@@ -98,13 +105,21 @@ jobs:
           ref: 'master'
           submodules: 'recursive'
 
-#       - name: Get the submodules
-#         working-directory: ./breedbase_dockerfile
-#         run: git submodule update --init --recursive --remote
+      - name: Get the submodules
+        working-directory: ./breedbase_dockerfile
+        run: git submodule update --init --recursive
+
+      - name: Set sgn origin
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: |
+          git remote rm origin
+          git remote add origin git@github.com:Breeding-Insight/sgn.git
+          git remote update
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
-        run: git switch ${{steps.extract_branch.outputs.branch}}
+        run: |
+          git checkout -b ${{ steps.extract_branch.outputs.branch }} origin/${{ steps.extract_branch.outputs.branch }}
 
       - name: Debug sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn

@@ -99,10 +99,6 @@ sub search {
     my $join = '';
     my @and_wheres;
 
-    # only get cvterms for the cv for the configured trait ontology
-    push @and_wheres, "cvterm.cv_id=".$self->trait_ontology_cv_id;
-
-
     if (scalar(@trait_ids)>0){
         my $trait_ids_sql = join ',', @trait_ids;
         push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
