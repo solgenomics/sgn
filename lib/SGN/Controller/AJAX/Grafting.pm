@@ -127,7 +127,10 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
 sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     my $self = shift;
     my $c = shift;
-    my $archived_file_name = $c->req->param('archived_file_name');
+    my $archived_filename = $c->req->param('archived_filename');
+
+    print STDERR "ARCHIVED FILENAME: $archived_filename\n";
+    
     my $overwrite_grafts = $c->req->param('overwrite_grafts') ne 'false' ? $c->req->param('overwrite_grafts') : 0;
     my $session_id = $c->req->param("sgn_session_id");
     
@@ -165,11 +168,9 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
 	return;
     }
 
-    
-    print STDERR "ARCHIVED FILE NAME = $archived_file_name\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     
-    my ($header, $grafts) = _get_grafts_from_file($c, $archived_file_name);
+    my ($header, $grafts) = _get_grafts_from_file($c, $archived_filename);
     
     my $info = $self->validate_grafts($c, $header, $grafts);
     
