@@ -16,7 +16,7 @@ rename_cvterms.pl - for renaming cvterms in bulk
 
 =head1 DESCRIPTION
 
-This script rename cvterms in bulk. The infile provided has two columns, in the first column is the cvterm name as it is in the database, and in the second column is the new cvterm name. There is no header on hte infile and the infile is .xls
+This script rename cvterms in bulk. The infile provided has two columns, in the first column is the cvterm name as it is in the database, and in the second column is the new cvterm name. There is no header on hte infile and the infile is .xls and .xlsx.
 
 
 =head1 AUTHOR
@@ -32,6 +32,7 @@ use Data::Dumper;
 use Carp qw /croak/ ;
 use Pod::Usage;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
@@ -46,7 +47,18 @@ if (!$opt_H || !$opt_D || !$opt_i || !$opt_c) {
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
-my $parser   = Spreadsheet::ParseExcel->new();
+
+# Match a dot, extension .xls / .xlsx
+my ($extension) = $opt_i =~ /(\.[^.]+)$/;
+my $parser;
+
+if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+}
+else {
+    $parser = Spreadsheet::ParseExcel->new();
+}
+
 my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({ 
