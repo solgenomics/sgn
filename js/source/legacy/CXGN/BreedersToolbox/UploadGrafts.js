@@ -35,7 +35,7 @@ jQuery(document).ready(function ($) {
         $("#grafts_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
-    var archived_file_name;
+    var archived_filename;
     $('#upload_graft_form').iframePostForm({
         json: false,
         post: function () {
@@ -61,7 +61,7 @@ jQuery(document).ready(function ($) {
             }
             else {
 
-                archived_file_name = response.archived_filename_with_path;
+                archived_filename = response.archived_filename_with_path;
 
 		$('#upload_graft_store').prop("disabled", false);
                 html = '<h3>There Were No Issues Identified</h3>Please click the "Store" button to save the grafts to the database.';
@@ -86,11 +86,11 @@ jQuery(document).ready(function ($) {
     }
 
     jQuery('#upload_graft_store').click(function(){
-	alert('Archive path: '+archived_file_name);
+	alert('Archive path: '+archived_filename);
         jQuery.ajax( {
             url: '/ajax/grafts/upload_store',
             data: {
-                'archived_file_name':archived_file_name,
+                'archived_filename':archived_filename,
                 'overwrite_grafts':jQuery('#graft_upload_overwrite_grafts').is(":checked")
             },
             beforeSend: function(){
