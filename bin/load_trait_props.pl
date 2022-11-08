@@ -37,6 +37,7 @@ use lib 'lib';
 use Getopt::Std;
 use Bio::Chado::Schema;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::DB::InsertDBH;
 use CXGN::DB::Connection;
 use CXGN::Fieldbook::TraitProps;
@@ -56,9 +57,18 @@ if (!$opt_D || !$opt_H || !$opt_I || !$opt_o) {
   die("Exiting: options missing\n");
 }
 
+# Match a dot, extension .xls / .xlsx
+my ($extension) = $opt_I =~ /(\.[^.]+)$/;
+my $parser;
+
+if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+}
+else {
+    $parser = Spreadsheet::ParseExcel->new();
+}
 
 #try to open the excel file and report any errors
-my $parser   = Spreadsheet::ParseExcel->new();
 my $excel_obj = $parser->parse($opt_I);
 
 if ( !$excel_obj ) {
