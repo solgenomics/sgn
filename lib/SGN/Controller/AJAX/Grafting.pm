@@ -64,7 +64,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
         $user_role = $c->user->get_object->get_user_type();
     }
     
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
+    if (!any { $_ eq "curator" || $_ eq "submitter" }  ($user_role)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
 	return;
     }
@@ -129,9 +129,15 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     my $c = shift;
     my $archived_file_name = $c->req->param('archived_file_name');
     my $overwrite_grafts = $c->req->param('overwrite_grafts') ne 'false' ? $c->req->param('overwrite_grafts') : 0;
+    my $session_id = $c->req->param("sgn_session_id");
+    
     my $separator_string = $c->config->{graft_separator_string};
 
-        if ($session_id){
+    my $user_id;
+    my $user_role;
+    my $user_name;
+    
+    if ($session_id){
 	print STDERR "We have a session id!\n";
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
