@@ -178,11 +178,11 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     print STDERR "FILE CONTENTS: ".Dumper($grafts);
     
     my @added_grafts;
-    my @already_existing_grafts;
+    my @grafts_already_present;
     my @error_grafts;
 
-    if (exists($info->{already_existing_grafts}) && defined($info->{already_existing_grafts})) {
-	@already_existing_grafts = @{$info->{already_existing_grafts}};
+    if (exists($info->{grafts_already_present}) && defined($info->{grafts_already_present})) {
+	@grafts_already_present = @{$info->{grafts_already_present}};
     }
     my $error;
     foreach my $g (@$grafts) {
@@ -208,7 +208,7 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
         $c->stash->{rest} = { error => join(", ",@error_grafts) };
         $c->detach();
     }
-    $c->stash->{rest} = { success => 1, added_grafts => \@added_grafts, already_existing_grafts =>\@already_existing_grafts };
+    $c->stash->{rest} = { success => 1, added_grafts => \@added_grafts, grafts_already_present =>\@grafts_already_present };
 }
 
 sub validate_grafts {
@@ -257,13 +257,18 @@ sub validate_grafts {
        
 	my $graft_check = $add->validate_grafts($separator_string);
 
-	@missing_accessions = $graft_check->{missing_accessions};
-	@grafts_already_present = $graft_check->{grafts_already_present};
+	push @missing_accessions, @{$graft_check->{missing_accessions}};
+	push @grafts_already_present, @{$graft_check->{grafts_already_present}};
 	
 	if (defined($graft_check->{errors}) && @{$graft_check->{errors}} > 0){
 	    push @errors, "There was a problem validating graft between $scion and $rootstock (".join("\n", @{$graft_check->{errors}}).")";
 	}
     }
+
+    if (@grafts_already_present == @$grafts) {
+	push @errors, "All grafts are already in the database. Nothing remains to be done :-) ";
+    }
+    
     if (@errors){
         return {error => join",", @errors };
     } else {
