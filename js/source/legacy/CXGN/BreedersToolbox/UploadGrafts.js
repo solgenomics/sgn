@@ -91,7 +91,6 @@ jQuery(document).ready(function ($) {
             url: '/ajax/grafts/upload_store',
             data: {
                 'archived_filename':archived_filename,
-                'overwrite_grafts':jQuery('#graft_upload_overwrite_grafts').is(":checked")
             },
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
@@ -111,7 +110,7 @@ jQuery(document).ready(function ($) {
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
 		jQuery('#list_of_grafts_with_problems').html(response.list_of_grafts_with_problems);
-                alert('An error occurred storing the grafts. None were uploaded.');
+                alert('An error occurred storing the grafts. None were uploaded.'+response.responseText);
             }
         });
     });

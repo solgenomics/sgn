@@ -190,7 +190,7 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
 	
 	my $info = $add->add_grafts($separator_string);
 
-	print STDERR Dumper $info;
+	print STDERR "Added grafts info: ".Dumper($info);
 	
 	if (exists($info->{errors}) && defined($info->{error}) && $info->{error} ne ''){
 	    push @error_grafts, $info->{error};

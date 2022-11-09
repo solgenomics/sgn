@@ -74,7 +74,7 @@ sub add_grafts {
 
 	
 	if ($scion_row && $rootstock_row) {
-	    my $graft = join("", $self->scion(), $separator_string, $self->rootstock());
+	    $graft = join("", $self->scion(), $separator_string, $self->rootstock());
 
 	    my $graft_row = $schema->resultset('Stock::Stock')->find( { uniquename => $graft });
 
@@ -128,9 +128,9 @@ sub add_grafts {
     if ($transaction_error) {
         $return_errors{error} = "Transaction error creating pedigrees: $transaction_error";
         print STDERR "Transaction error creating pedigrees: $transaction_error\n";
-        return \%return_errors;
+        return { errors => \%return_errors };
     }
-
+    print STDERR "Returning new graft $graft\n";
     return { errors => \%return_errors, graft => $graft };
 }
 
