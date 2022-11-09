@@ -86,7 +86,7 @@ jQuery(document).ready(function ($) {
     }
 
     jQuery('#upload_graft_store').click(function(){
-	alert('Archive path: '+archived_filename);
+	//alert('Archive path: '+archived_filename);
         jQuery.ajax( {
             url: '/ajax/grafts/upload_store',
             data: {
@@ -101,7 +101,7 @@ jQuery(document).ready(function ($) {
                     alert('An Error Occured: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. '+response.error);
                 }
                 else {
-		    alert("RESPONSE: "+JSON.stringify(response));
+		    //alert("RESPONSE: "+JSON.stringify(response));
                     jQuery('#graft_upload_success_dialog_message').modal('show');
 		    jQuery('#list_of_uploaded_grafts').val(response.added_grafts);
 		    jQuery('#list_of_already_uploaded_grafts').val(response.already_existing_grafts);
