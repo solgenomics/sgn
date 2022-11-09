@@ -266,7 +266,7 @@ for my $extension ("xls", "xlsx") {
 
 	#Upload IGD Trial File
 
-	$file_name = 't/data/genotype_trial_upload/CASSAVA_GS_74Template';
+	$file_name = 't/data/genotype_trial_upload/CASSAVA_GS_74Template.csv';
 	#parse uploaded file with wrong plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $file_name);
 	$parser->load_plugin('TrialExcelFormat');
@@ -763,13 +763,17 @@ for my $extension ("xls", "xlsx") {
 	my $sgn_session_id = $response->{access_token};
 	print STDERR $sgn_session_id . "\n";
 
-	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/NewGenotypeUpload";
+	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/genotype_trial_upload.$extension";
 	my $ua = LWP::UserAgent->new;
 	$response = $ua->post(
 		'http://localhost:3010/ajax/breeders/parsegenotypetrial',
 		Content_Type => 'form-data',
 		Content      => [
-			genotyping_trial_layout_upload => [ $file, 'genotype_trial_upload', Content_Type => 'application/vnd.ms-excel', ],
+			genotyping_trial_layout_upload => [
+				$file,
+				"genotype_trial_upload.$extension",
+				Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			],
 			"sgn_session_id"               => $sgn_session_id,
 			"genotyping_trial_name"        => '2018TestPlate02'
 		]
@@ -854,7 +858,7 @@ for my $extension ("xls", "xlsx") {
 
 	ok($response->{trial_id});
 
-	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/CoordinateTemplate";
+	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/CoordinateTemplate.csv";
 	my $ua = LWP::UserAgent->new;
 	$response = $ua->post(
 		'http://localhost:3010/ajax/breeders/parsegenotypetrial',
@@ -978,7 +982,7 @@ for my $extension ("xls", "xlsx") {
 
 	ok($response->{trial_id});
 
-	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/CoordinatePlateUpload";
+	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/CoordinatePlateUpload.csv";
 	my $ua = LWP::UserAgent->new;
 	$response = $ua->post(
 		'http://localhost:3010/ajax/breeders/parsegenotypetrial',
