@@ -104,7 +104,7 @@ jQuery(document).ready(function ($) {
 		    //alert("RESPONSE: "+JSON.stringify(response));
                     jQuery('#graft_upload_success_dialog_message').modal('show');
 		    jQuery('#list_of_uploaded_grafts').val(response.added_grafts);
-		    jQuery('#list_of_already_uploaded_grafts').val(response.already_existing_grafts);
+		    jQuery('#list_of_already_uploaded_grafts').val(response.grafts_already_present);
                 }
             },
             error: function(response) {

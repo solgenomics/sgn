@@ -120,6 +120,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     my $info = $self->validate_grafts($c, $header, $grafts);
     
     $info->{archived_filename_with_path} = $archived_filename_with_path;
+    $info->{success} = 1;
     
     $c->stash->{rest} = $info;
 }
@@ -179,7 +180,10 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     my @added_grafts;
     my @already_existing_grafts;
     my @error_grafts;
-    
+
+    if (exists($info->{already_existing_grafts}) && defined($info->{already_existing_grafts})) {
+	@already_existing_grafts = @{$info->{already_existing_grafts}};
+    }
     my $error;
     foreach my $g (@$grafts) {
 	my ($scion, $rootstock) = @$g;
@@ -221,6 +225,8 @@ sub validate_grafts {
     my ($scion_accession, $rootstock_accession) = @$header;
 
     my %header_errors;
+    my @grafts_already_present;
+    my @missing_accessions;
     
     if ($scion_accession ne 'scion accession') {
 	$header_errors{'scion accession'} = "First column must have header 'scion accession' (not '$scion_accession'); ";
@@ -235,52 +241,33 @@ sub validate_grafts {
 	return { error => $error  };
     }
     
-    my %errors;
-    
-    my %stocks;
-    my ($scion, $rootstock);
-    foreach my $acc (@$grafts) { 
-	$stocks{$acc->[0]}++;
-	$stocks{$acc->[1]}++;
-    }
-    
-    my @unique_stocks = keys(%stocks);
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
-    
-    if (scalar(@accessions_missing)>0){
-        $errors{"The following accessions could not be found in the database: ".(join ",", @accessions_missing)} = 1;
-    }
-    
-    if (%errors) {
-        return { error => "There were problems loading the graft for the following accessions or populations: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
-    }
-    
-    my $error = "";
+    my @errors;
     foreach my $g (@$grafts) { 
 	
 	my ($scion, $rootstock) = @$g;
 	
 	if ($scion eq $rootstock) {
-	    $error .= "Scion and rootstock ($scion and $rootstock) designate the same accession. Not generating a graft.\n";
+	    push @errors, "Scion and rootstock ($scion and $rootstock) designate the same accession. Not generating a graft.\n";
 	    
 	}
+	
 	my $add = CXGN::Pedigree::AddGrafts->new({ schema=>$schema });
 	$add->scion($scion);
 	$add->rootstock($rootstock);
-	
-	my $error;
+       
 	my $graft_check = $add->validate_grafts($separator_string);
-	print STDERR "UploadGraftCheck3".localtime()."Complete\n";
-	#print STDERR Dumper $graft_check;
-	if (!$graft_check){
-	    $error .= "There was a problem validating grafts. Grafts were not stored.";
+
+	@missing_accessions = $graft_check->{missing_accessions};
+	@grafts_already_present = $graft_check->{grafts_already_present};
+	
+	if (defined($graft_check->{errors}) && @{$graft_check->{errors}} > 0){
+	    push @errors, "There was a problem validating graft between $scion and $rootstock (".join("\n", @{$graft_check->{errors}}).")";
 	}
     }
-    if ($error){
-        return {error => $error };
+    if (@errors){
+        return {error => join",", @errors };
     } else {
-        return { success => 1 };
+        return { success => 1, grafts_already_present => \@grafts_already_present, missing_accessions => \@missing_accessions };
     }
 }
 

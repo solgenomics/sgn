@@ -55,10 +55,12 @@ sub add_grafts {
     my $self = shift;
     my $separator_string = shift || "+";
     my $schema = $self->schema();
-    my %return_errors;
 
     my $transaction_error = "";
     my $graft;
+    my @errors;
+    my %return_errors;
+    
     my $coderef = sub {
         #print STDERR "Getting cvterms...\n";
         # get cvterms for scion and rootstock
@@ -69,9 +71,6 @@ sub add_grafts {
 	my $scion_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->scion });
 
 	my $rootstock_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->rootstock() });
-
-	my @errors;
-
 	
 	if ($scion_row && $rootstock_row) {
 	    $graft = join("", $self->scion(), $separator_string, $self->rootstock());
@@ -140,12 +139,24 @@ sub validate_grafts {
     
     my $schema = $self->schema();
     my %return_errors;
-
+    my @errors;
+    my @missing_accessions;
+    my @grafts_already_present;
+    
     my $scion_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->scion() });
+
+    if (!$scion_row) {
+	push @missing_accessions, $scion_row->uniquename();
+	push @errors, "Parental accession ".$scion_row->uniquename(), " does not exist in the database\n";
+    }
     
     my $rootstock_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->rootstock() });
+
+    if (!$rootstock_row) {
+	push @missing_accessions, $rootstock_row->uniquename();
+	push @errors, "Parental accession ".$rootstock_row->uniquename(), " does not exist in the database\n";
+    }
     
-    my @errors;
     my @messages;
     
     if ($scion_row && $rootstock_row) {
@@ -154,19 +165,11 @@ sub validate_grafts {
 	my $graft_row = $schema->resultset('Stock::Stock')->find( { uniquename => $graft });
 	
 	if ($graft_row) {
+	    push @grafts_already_present, $graft_row->uniquename();
 	    push @messages, "The name for the graft $graft already exists in the database, not storing.\n";
 	}
 
-	if (!$scion_row) {
-	    push @errors,  "The scion ". $self->scion()." does not exist in the database.";
-	}
-	if (!$rootstock_row) {
-	    push @errors, "The rootstock ".$self->rootstock()." does not exist in the database.";
-	}
-
-	$return_errors{error} = join(", ", @errors);
-	
-	return { errors => \%return_errors, messages => \@messages };
+	return { errors => \@errors, messages => \@messages, missing_accessions => \@missing_accessions, grafts_already_present => \@grafts_already_present  };
     }
 }
 
