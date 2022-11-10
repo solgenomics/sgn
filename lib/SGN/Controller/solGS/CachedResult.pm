@@ -381,7 +381,7 @@ sub check_single_trial_training_data {
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $cached_pheno = $self->check_cached_phenotype_data($c, $pop_id); 
-    my $cached_geno = $self->check_cached_genotype_data($c, $pop_id); 
+    my $cached_geno = $self->check_cached_genotype_data($c, $pop_id, $protocol_id); 
 
     if ($cached_pheno && $cached_geno)
     {
@@ -395,9 +395,9 @@ sub check_single_trial_training_data {
 }
 
 sub check_cached_genotype_data {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $file = $c->stash->{genotype_file_name};
 
     my $cached; 
