@@ -1992,7 +1992,7 @@ jQuery(document).ready(function ($) {
                   'inherits_plot_treatments' : inherits_plot_treatments,
                 },
                 success: function(response) {
-                    console.log(response);
+                    //console.log(response);
                   if (response.error) {
                     alert(response.error);
                   }
@@ -2267,12 +2267,15 @@ jQuery(document).ready(function ($) {
             html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
             var design_hash = JSON.parse(design_array[i]);
             //console.log(design_hash);
-            for (var key in design_hash){
+            var keys = Object.keys(design_hash);
+            keys.sort();
+            keys.forEach(function(key){
                 if (key != 'treatments'){
                     var plot_obj = design_hash[key];
+                    //console.log(plot_obj);
                     html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"'  data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-subplot_names='"+JSON.stringify(plot_obj.subplots_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
                 }
-            }
+            });
             html += "</tbody></table>";
         }
         html += "<br/><br/>";
