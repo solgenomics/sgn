@@ -115,7 +115,7 @@ maf <- 0.01
 markerFilter <- 0.6
 cloneFilter <- 0.8
 
-trainingLog <- c("Data preprocessing\n\n")
+trainingLog <- c("Data preprocessing of training population genotype data\n\n")
 trainingLog <- append(trainingLog, "The following data filtering will be applied to the genotype dataset:\n\n")
 trainingLog <- append(trainingLog, paste0("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  will be removed.\n"))
 trainingLog <- append(trainingLog, paste0("\nMarkers with greater or equal to ", markerFilter * 100, "% missing values will be removed.\n"))
@@ -264,6 +264,7 @@ filteredPredGenoData     <- c()
 ## } else
 selectionLog <- c()
 if (length(selectionFile) != 0) {
+selectionLog <- append(selectionLog, paste0("Data preprocessing of selection population genotype data\n\n"))
 
     selectionData <- fread(selectionFile,
                            header = TRUE,
@@ -272,16 +273,16 @@ if (length(selectionFile) != 0) {
   selectionData <- data.frame(selectionData)
    
 
-    selectionData <- unique(selectionData, by='V1')
+  selectionData <- unique(selectionData, by='V1')
    
-    selectionData <- column_to_rownames(selectionData, 'V1')
-    selectionData <- convertToNumeric(selectionData)
-    trainingLog <- append(trainingLog, "Running selection population genotype data cleaning now....")
+  selectionData <- column_to_rownames(selectionData, 'V1')
+  selectionData <- convertToNumeric(selectionData)
+  selectionLog <- append(selectionLog, "Running selection population genotype data cleaning now....")
 
-    selectionFilterOut <- filterGenoData(selectionData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
-    selectionData <- selectionFilterOut$data
-    selectionLog <- append(selectionLog, selectionFilterOut$log)
-    selectionData <- roundAlleleDosage(selectionData)
+  selectionFilterOut <- filterGenoData(selectionData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
+  selectionData <- selectionFilterOut$data
+  selectionLog <- append(selectionLog, selectionFilterOut$log)
+  selectionData <- roundAlleleDosage(selectionData)
 
 }
 
@@ -871,16 +872,18 @@ if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
          quote = FALSE,
          )
 }
-cat(varCompData, file = varianceComponentsFile)
-message("")
+if (!is.null(varCompData)) {
+  cat(varCompData, file = varianceComponentsFile)
+}
+
 message("log file: ", analysisReportFile)
 message("training log\n", trainingLog)
 message("selection log\n", selectionLog)
-cat(trainingLog, fill = TRUE,  file = analysisReportFile, append=TRUE)
-if (selectionLog) {
+if (!is.null(selectionLog)) {
 message("writing selection log to: ", analysisReportFile)
-
 cat(selectionLog, fill = TRUE,  file = analysisReportFile, append=TRUE)
+} else {
+cat(trainingLog, fill = TRUE,  file = analysisReportFile, append=TRUE)
 }
 
 message("Done.")
