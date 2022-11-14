@@ -35,8 +35,10 @@ sub download_selection_pop_data :Path('/solgs/download/selection/pop/data') Args
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
 	my $geno_file = $self->download_selection_pop_filtered_geno_data_file($c);
-	$c->stash->{rest}{selection_pop_filtered_geno_file} = $geno_file;
+	my $log_file = $self->download_selection_prediction_report_file($c);
 
+	$c->stash->{rest}{selection_pop_filtered_geno_file} = $geno_file;
+	$c->stash->{rest}{selection_prediction_report_file} = $log_file;
 }
 
 sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) {
@@ -248,6 +250,26 @@ sub download_model_analysis_report_file {
 
 }
 
+sub download_selection_prediction_report_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+
+	my $page = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
+
+	if ($page =~ /selection/)
+	{
+		$c->stash->{analysis_type} =  'selection prediction';
+	}
+
+	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
+	$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
+
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+
+	return $file;
+
+}
 
 sub download_training_gebvs_file {
 	my ($self, $c) = @_;
