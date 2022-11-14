@@ -95,14 +95,19 @@ solGS.download = {
 
   createSelectionPopDownloadLinks: function (res) {
     var genoFile = res.selection_pop_filtered_geno_file;
+    var reportFile = res.selection_prediction_analysis_report_file;
 
     var genoFileName = genoFile.split("/").pop();
     var genoFileLink =
-      '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+    '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+      
+    var reportFileName = reportFile.split("/").pop();
+    var reportFileLink =
+      '<a href="' + reportFile + '" download=' + reportFileName + '">' + "Analysis log" + "</a>";
 
     var downloadLinks =
       " <strong>Download selection population</strong>: " +
-      genoFileLink;
+      genoFileLink + ' | ' + reportFileLink;
 
     jQuery("#selection_pop_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
