@@ -278,6 +278,11 @@ sub analysis_report_file {
         my $trait_abbr = $c->stash->{trait_abbr};
         my $protocol_id = $c->stash->{genotyping_protocol_id};
 
+        if ($type =~ /selection_prediction/) 
+        {     
+            $pop_id .= "_" . $c->stash->{selection_pop_id};
+        }
+
         $file_id  = "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     }
 
