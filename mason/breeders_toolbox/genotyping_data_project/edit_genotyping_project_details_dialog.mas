@@ -1,0 +1,93 @@
+<%args>
+$trial_id => undef
+$trial_name => undef
+$breeding_program_id => undef
+$breeding_program_name => undef
+$location_id => undef
+$location_name => undef
+$year => undef
+$trial_type => undef
+$trial_description => undef
+$user_can_modify => undef
+$genotyping_facility => undef
+$genotype_data_type => undef
+
+</%args>
+
+<div class="modal fade" id="edit_genotyping_project_details_dialog" tabindex="-1" role="dialog" aria-labelledby="EditGenotypingProjectDetailsDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header texkkt-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editGenotypingProjectDetailsDialog">Edit Genotyping Project Details</h4>
+            </div>
+            <div class="modal-body" id="edit_genotyping_project_details_body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_name">Genotyping Project Name: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_genotyping_project_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_genotyping_project_name_status"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_breeding_program">Breeding Program: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_genotyping_project_breeding_program" title="breeding_program" value="<%$breeding_program_name%>"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_location">Location: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_genotyping_project_location" title="project_location" type="text" value="<%$location_name%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_year">Year: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_genotyping_project_year" title="project_year" type="text" value="<%$year%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_facility">Genotyping Facility: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_genotyping_project_facility" title="facility" type="text" value="<%$genotyping_facility%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_data_type">Genotype Data Type: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_genotyping_project_data_type" title="data_type" type="text" value="<%$genotype_data_type%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_description">Description: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="edit_genotyping_project_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_genotyping_project_details_cancel_button">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save_genotyping_project_details">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
