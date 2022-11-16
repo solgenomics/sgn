@@ -2181,6 +2181,55 @@ sub get_items_select : Path('/ajax/html/select/items') Args(0) {
 }
 
 
+sub get_genotyping_facility_select : Path('/ajax/html/select/genotyping_facilities') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "facility_select";
+    my $name = $c->req->param("name") || "facility_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    if ($empty) { unshift @facilities, [ "", "Select Facility" ] }
+
+    my $default = $c->req->param("default") || @facilities[0]->[0];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@facilities,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
+sub get_genotype_data_type_select : Path('/ajax/html/select/genotype_data_type') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "genotype_data_type_select";
+    my $name = $c->req->param("name") || "genotype_data_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my @data_types = qw(SNP SSR);
+
+    if ($empty) { unshift @data_types, [ "", "Select Data Type" ] }
+
+    my $default = $c->req->param("default") || @data_types[0]->[0];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@data_types,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;

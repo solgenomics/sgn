@@ -11,6 +11,7 @@ $trial_description => undef
 $user_can_modify => undef
 $genotyping_facility => undef
 $genotype_data_type => undef
+$facilities => ()
 
 </%args>
 
@@ -44,7 +45,7 @@ $genotype_data_type => undef
                             <label class="col-sm-3 control-label" for="edit_genotyping_project_location">Location: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_genotyping_project_location" title="project_location" type="text" value="<%$location_name%>"/>
+                                    <select class="form-control" id="edit_genotyping_project_location" title="project_location" value="<%$location_name%>"></select>
                                 </div>
                             </div>
                         </div>
@@ -52,7 +53,7 @@ $genotype_data_type => undef
                             <label class="col-sm-3 control-label" for="edit_genotyping_project_year">Year: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_genotyping_project_year" title="project_year" type="text" value="<%$year%>"/>
+                                    <select class="form-control" id="edit_genotyping_project_year" title="project_year" value="<%$year%>"></select>
                                 </div>
                             </div>
                         </div>
@@ -60,7 +61,7 @@ $genotype_data_type => undef
                             <label class="col-sm-3 control-label" for="edit_genotyping_project_facility">Genotyping Facility: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_genotyping_project_facility" title="facility" type="text" value="<%$genotyping_facility%>"/>
+                                    <select class="form-control" id="edit_genotyping_project_facility" title="facility" type="text" value="<%$genotyping_facility%>"></select>
                                 </div>
                             </div>
                         </div>
@@ -68,7 +69,7 @@ $genotype_data_type => undef
                             <label class="col-sm-3 control-label" for="edit_genotyping_project_data_type">Genotype Data Type: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_genotyping_project_data_type" title="data_type" type="text" value="<%$genotype_data_type%>"/>
+                                    <select class="form-control col-sm-8" id="edit_genotyping_project_data_type" title="data_type" type="text" value="<%$genotype_data_type%>"></select>
                                 </div>
                             </div>
                         </div>
@@ -91,3 +92,32 @@ $genotype_data_type => undef
         </div>
     </div>
 </div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    var default_bp = document.getElementById("edit_genotyping_project_breeding_program").getAttribute("value");
+    get_select_box('breeding_programs', 'edit_genotyping_project_breeding_program', { 'default' : default_bp });
+    jQuery('#edit_genotyping_project_breeding_program').data("originalValue", default_bp);
+
+    var default_loc = document.getElementById("edit_genotyping_project_location").getAttribute("value");
+    get_select_box('locations', 'edit_genotyping_project_location', { 'default' : default_loc });
+    jQuery('#edit_genotyping_project_location').data("originalValue", default_loc);
+
+    var default_year = document.getElementById("edit_genotyping_project_year").getAttribute("value");
+    get_select_box('years', 'edit_genotyping_project_year', { 'default' : default_year, 'auto_generate': 1 });
+    jQuery('#edit_genotyping_project_year').data("originalValue", default_year);
+
+    var default_facility = document.getElementById("edit_genotyping_project_facility").getAttribute("value");
+    get_select_box('genotyping_facilities', 'edit_genotyping_project_facility', { 'default' : default_facility });
+    jQuery('#edit_genotyping_project_facility').data("originalValue", default_facility);
+
+    var default_data_type = document.getElementById("edit_genotyping_project_data_type").getAttribute("value");
+    get_select_box('genotype_data_type', 'edit_genotyping_project_data_type', { 'default' : default_data_type });
+    jQuery('#edit_genotyping_project_data_type').data("originalValue", default_data_type);
+
+
+});
+
+</script>
