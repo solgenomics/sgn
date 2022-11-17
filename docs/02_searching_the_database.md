@@ -40,11 +40,13 @@ In addition to the basic search operations demonstrated above, users can take ad
 
 -   Instead of picking a category in the first dropdown, users can instead populate the first selectbox from a list by scrolling down in the first dropdown to the "Load Selection from List" subheading and selecting a list. This is useful for starting queries with a list of plots, as this category is not among the options in the first dropdown.
 
-**ANY/ALL** Toggle <img src='{{"assets/images/wizard_any_all_toggle.png" | relative_url }}' alt="any_all.png" width="87" height="21" />
+**ANY/MIN/ALL** Toggle <img src='{{"assets/images/wizard_any_min_all_toggle.jpg" | relative_url }}' alt="any_all.jpg" width="120" />
 
--   By default, the search wizard combines options within a category using an OR query. In the example above, in the third panel the wizard retrieved accessions associated with the location ‘Ibadan’ in **ANY** of the years “2011 **OR** 2012”
+-   By default, the search wizard combines options within a category using an OR query. In the example above, in the third panel the wizard retrieved accessions associated with the location 'Ibadan' in **ANY** of the years "2011 **OR** 2012"
 
--   -   If the user clicked the toggle below the second select box to change it to ALL before choosing accessions in the third dropdown, the wizard would instead retrieve accessions associated with the location ‘Ibadan’ in the years “2011 AND 2012”. This will be a smaller set of accessions, because any accessions used only in 2011, or only in 2012 will be excluded.
+-   If the user clicked the toggle below the second select box to change it to **ALL** before choosing accessions in the third dropdown, the wizard would instead retrieve accessions associated with the location 'Ibadan' in the years "2011 **AND** 2012". This will be a smaller set of accessions, because any accessions used only in 2011, or only in 2012 will be excluded.
+
+-   A more advanced search could use the **MIN** toggle option.  This allows the user to make a query in between an ANY or ALL query, where a minimum number of matches from the selected column will be used as a filter for the next column.  The minimum can be provided as either a percentage (%) or an actual count of items (#).  In the example above, if the years 2011, 2012, and 2013 were selected in the second column, the user could enter '2' in as the minimum and select '#' as the minimum match type.  This would select accessions in the third column that were used in 2 or more of the selected years.<br /><img src='{{"assets/images/wizard_any_min_all_toggle_min_details.jpg" | relative_url }}' alt="min_details.jpg" width="120" />
 
 ### 2.1.2 How to use retrieved data 
 

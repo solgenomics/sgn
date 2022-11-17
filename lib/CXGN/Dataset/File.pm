@@ -113,14 +113,13 @@ override('retrieve_genotypes',
 	     my $basepath_config	= shift;
 	     my $forbid_cache = shift;
 	     
-	     my $accessions_list_ref = $self->retrieve_accessions();
+
 	     my $genotypeprop_hash_select = shift || ['DS'];
 	     my $protocolprop_top_key_select = shift || [];
 	     my $protocolprop_marker_hash_select = shift || [];
 	     my $return_only_first_genotypeprop_for_stock = shift || 1;
 	     
-	     #		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
-	     
+	     my $accessions_list_ref = $self->retrieve_accessions();
 	     my @accession_ids;
 	     foreach (@$accessions_list_ref) {
 		 push @accession_ids, $_->[0];
@@ -129,12 +128,11 @@ override('retrieve_genotypes',
 	     my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
 	     my @protocols;
 	     foreach my $p (@$genotyping_protocol_ref) {
-		 push @protocols, $p->[0];
-		 
+		 push @protocols, $p->[0];		 
 	     }
-	     
-	     
-	     my @accessions_list = @$accessions_list_ref;
+
+	     print STDERR "PROTOCOLS IN RETRIEVE_GENOTYPES: ".join(", ",@protocols)."\n";
+    	     my @accessions_list = @$accessions_list_ref;
 	     my $genotypes_search = CXGN::Genotype::Search->new(
 		 bcs_schema => $self->schema(),
 		 people_schema => $self->people_schema(),
@@ -148,6 +146,9 @@ override('retrieve_genotypes',
 		 return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock, #FOR MEMORY REASONS TO LIMIT DATA
 		 forbid_cache=>$forbid_cache
 		 );
+
+	     print STDERR "DONE WITH GENO SEARCH!\n";
+	     
 	     my @required_config = (
 		 $cluster_shared_tempdir_config,
 		 $backend_config,
@@ -156,7 +157,22 @@ override('retrieve_genotypes',
 		 $basepath_config
 		 );
 
-	     return $genotypes_search->get_cached_file_dosage_matrix(@required_config);
+	     my $fh = $genotypes_search->get_cached_file_dosage_matrix(@required_config);
+
+	     print STDERR "DONE GETTING DOSAGE MATRIX\n";
+
+
+	     if ($file) {
+		 print STDERR "Generating the file $file ...\n";
+		 open(my $F, ">", $file) || die "Can't open file $file";
+		 while(<$fh>) {
+		     print $F $_;
+		 }
+		 print STDERR "Done.\n";
+		 close($F);
+	     }
+
+	     return $fh;
 
 	 });
 
