@@ -78,10 +78,11 @@ $genotype_data_type => undef
 
 jQuery(document).ready(function () {
 
-  trial_detail_page_setup_dialogs();
+    trial_detail_page_setup_dialogs();
 
     jQuery('#edit_genotyping_project_details').click(function(){
         jQuery('#edit_genotyping_project_details_dialog').modal("show");
+        edit_genotyping_project_details();
     });
 
 
