@@ -142,6 +142,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $h2File = $tempfile . "_" . "h2File.png";
     my $figure3file = $tempfile . "_" . "figure3.png";
     my $figure4file = $tempfile . "_" . "figure4.png";
+    my $errorFile = $tempfile . "_" . "error.txt";
+
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
@@ -166,7 +168,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
             $trait_id,
             $figure3file,
             $figure4file,
-            $h2File
+            $h2File,
+            $errorFile
     );
     $cmd->alive;
     $cmd->is_cluster(1);
@@ -191,6 +194,12 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $figure4basename = basename($figure4file);
     my $figure4_response = "/documents/tempfiles/heritability_files/" . $figure4basename;
 
+    my $errors;
+    if ( -e $errorFile ) {
+        open my $fh, '<', $errorFile or die "Can't open error file $!";
+        $errors = do { local $/; <$fh> };
+    }
+
 
     #print STDERR $h2File_response;
         
@@ -198,7 +207,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         h2Table => $h2File_response,
         figure3 => $figure3_response,
         figure4 => $figure4_response,
-        dummy_response => $dataset_id
+        dummy_response => $dataset_id,
+        error => $errors
         # dummy_response2 => $trait_id,
     };
 }
