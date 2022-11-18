@@ -13,7 +13,6 @@ sub _validate_with_plugin {
     print STDERR "Check 3.1.1 ".localtime();
   my $self = shift;
   my $filename = $self->get_filename();
-  # my $filetype = $self->get_filetype();
   my $schema = $self->get_chado_schema();
   my $trial_stock_type = $self->get_trial_stock_type();
   my %errors;
@@ -38,6 +37,7 @@ sub _validate_with_plugin {
   my %seen_plot_names;
   my %seen_seedlot_names;
   my %seen_entry_names;
+  my %seen_plot_keys;
 
 
   #try to open the excel file and report any errors
@@ -308,6 +308,15 @@ sub _validate_with_plugin {
     if ($col_number && !($col_number =~ /^\d+?$/)){
         push @error_messages, "Cell I$row_name: col_number must be a positive integer: $col_number";
     }
+    if ($row_number && $col_number) {
+      my $k = "$row_number-$col_number";
+      if ( !exists $seen_plot_keys{$k} ) {
+        $seen_plot_keys{$k} = [$plot_number];
+      }
+      else {
+        push @{$seen_plot_keys{$k}}, $plot_number;
+      }
+    }
 
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -371,6 +380,16 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
     }
 
+    # check for multiple plots at the same position
+    foreach my $key (keys %seen_plot_keys) {
+        my $plots = $seen_plot_keys{$key};
+        my $count = scalar(@{$plots});
+        if ( $count > 1 ) {
+            my @pos = split('-', $key);
+            push @error_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
+        }
+    }
+
     if (scalar(@warning_messages) >= 1) {
         $warnings{'warning_messages'} = \@warning_messages;
         $self->_set_parse_warnings(\%warnings);
@@ -393,7 +412,6 @@ sub _validate_with_plugin {
 sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
-  # my $filetype = $self->get_filetype();
   my $schema = $self->get_chado_schema();
   my $trial_stock_type = $self->get_trial_stock_type();
 
