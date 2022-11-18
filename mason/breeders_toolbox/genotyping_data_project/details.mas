@@ -69,18 +69,6 @@ $genotype_data_type
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
-                <td>
-                    <div id="trial_description">
-% if ($trial_description) {
-%  print "$trial_description";
-% } else {
-%  print "<span class='text-danger'>[No Description]</span>";
-% }
-                    </div>
-                </td>
-            </tr>
-
             <tr><td><b>Genotyping Facility</b></td>
                 <td>
                     <div id="trial_genotyping_facility">
@@ -100,6 +88,18 @@ $genotype_data_type
 %  print "$genotype_data_type";
 % } else {
 %      print "<span class='text-danger'>[No Data Type]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($trial_description) {
+%  print "$trial_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
 % }
                     </div>
                 </td>
