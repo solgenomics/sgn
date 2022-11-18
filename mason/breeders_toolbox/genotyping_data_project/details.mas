@@ -44,7 +44,7 @@ $genotype_data_type
             </tr>
 
             <tr>
-                <td><b>Trial Location</b></td>
+                <td><b>Location</b></td>
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
