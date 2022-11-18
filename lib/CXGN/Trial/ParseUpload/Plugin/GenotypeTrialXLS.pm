@@ -22,10 +22,6 @@ sub _validate_with_plugin {
 
     my $parser;
 
-    print STDERR "\n filename $filename\n ";
-    print STDERR "\n line 25 in trial format.pm\n ";
-    print STDERR "extension: $extension";
-
     if ($extension eq '.xlsx') {
         $parser = Spreadsheet::ParseXLSX->new();
     }
@@ -357,7 +353,7 @@ sub _validate_with_plugin {
 
 
 sub _parse_with_plugin {
-    print STDERR "Parsing genotype trial file upload\n";
+
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -368,9 +364,6 @@ sub _parse_with_plugin {
     my ($extension) = $filename =~ /(\.[^.]+)$/;
 
     my $parser;
-
-    print STDERR "\n line in trial format.pm / 371 \n ";
-    print STDERR "extension: $extension";
 
     if ($extension eq '.xlsx') {
         $parser = Spreadsheet::ParseXLSX->new();
