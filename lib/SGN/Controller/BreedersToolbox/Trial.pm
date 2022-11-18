@@ -18,6 +18,7 @@ use JSON::XS;
 use Data::Dumper;
 use CXGN::TrialStatus;
 use SGN::Model::Cvterm;
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -191,6 +192,18 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         } else {
             $c->stash->{genotype_data_type} = 'SNP'
         }
+
+        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $c->stash->{trial_id}
+        });
+        my ($data, $tc) = $plate_info->get_plate_info();
+        my $has_plate;
+        if (!$data) {
+            $has_plate = 'none';
+        }
+        $c->stash->{has_plate} = $has_plate;
+
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
     elsif ($design_type eq "drone_run"){
