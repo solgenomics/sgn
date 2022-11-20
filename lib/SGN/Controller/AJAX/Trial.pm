@@ -905,6 +905,7 @@ sub upload_trial_file_POST : Args(0) {
     my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
     my $trial_stock_type = $c->req->param('trial_upload_trial_stock_type');
+    my $ignore_warnings = $c->req->param('upload_trial_ignore_warnings');
 
     my $upload = $c->req->upload('trial_uploaded_file');
     my $parser;
@@ -997,11 +998,11 @@ sub upload_trial_file_POST : Args(0) {
         return;
     }
 
-    my $return_warnings;
     if ($parser->has_parse_warnings()) {
-        my $warnings = $parser->get_parse_warnings();
-        foreach my $warning_string (@{$warnings->{'warning_messages'}}){
-            $return_warnings=$return_warnings.$warning_string."<br>";
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            $c->stash->{rest} = {warnings => $warnings->{'warning_messages'}};
+            return;
         }
     }
 
@@ -1081,7 +1082,7 @@ sub upload_trial_file_POST : Args(0) {
     #print STDERR "Check 5: ".localtime()."\n";
     if ($save->{'error'}) {
         print STDERR "Error saving trial: ".$save->{'error'};
-        $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
+        $c->stash->{rest} = {error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
 
@@ -1089,7 +1090,7 @@ sub upload_trial_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'all_but_genoview', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {warnings => $return_warnings, success => "1", trial_id => $save->{'trial_id'}};
+        $c->stash->{rest} = {success => "1", trial_id => $save->{'trial_id'}};
         return;
     }
 
