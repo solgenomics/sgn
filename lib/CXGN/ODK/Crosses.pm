@@ -178,15 +178,6 @@ sub save_ona_cross_info {
     my $germplasm_info_temp_file_path = $self->germplasm_info_temp_file_path;
     my $form_id = $self->odk_crossing_data_service_form_id;
     print STDERR "SELECTED FORM ID =".Dumper($form_id)."\n";
-    #debugging sendusu
-    #$form_id = '313930';
-
-    #debugging Arusha
-    #$form_id = '286910';
-
-    #debugging kawanda
-    #$form_id = 446576
-#    print STDERR "ASSIGNED FORM ID =".Dumper($form_id)."\n";
 
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
@@ -895,7 +886,6 @@ sub save_ona_cross_info {
 #        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 #        print STDERR "CHECKING TISSUE CULTURE INFO =".Dumper(\%tissue_culture_details)."\n";
 
-
         my $cross_add = CXGN::Pedigree::AddCrosses->new({
             chado_schema => $schema,
             phenome_schema => $phenome_schema,
@@ -916,8 +906,6 @@ sub save_ona_cross_info {
 
         my @cross_properties = split ',', $self->allowed_cross_properties;
 #        print STDERR "ALLOWED CROSS INFO =".Dumper(\@cross_properties)."\n";
-
-
 
 #        foreach my $info_type(@cross_properties){
 #            if ($musa_cross_info{$info_type}) {
@@ -952,8 +940,8 @@ sub save_ona_cross_info {
             my $valid_cross_name = $schema->resultset("Stock::Stock")->find({uniquename => $cross_name_key});
             if ($valid_cross_name){
                 my %info_hash = %{$musa_cross_info{$cross_name_key}};
-                print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
-                print STDERR "NEW INFO HASH =".Dumper(\%info_hash)."\n";
+#                print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
+#                print STDERR "NEW INFO HASH =".Dumper(\%info_hash)."\n";
 
                 my $previous_stockprop_rs = $valid_cross_name->stockprops({type_id=>$cross_info_cvterm->cvterm_id});
                 if ($previous_stockprop_rs->count == 1){
@@ -961,8 +949,8 @@ sub save_ona_cross_info {
                     $cross_json_hash_ref = decode_json $cross_json_string;
                     %cross_json_hash = %{$cross_json_hash_ref};
                     %all_cross_info = (%cross_json_hash, %info_hash);
-                    print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
-                    print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
+#                    print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
+#                    print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
                     my $all_cross_info_string = encode_json \%all_cross_info;
                     $previous_stockprop_rs->first->update({value=>$all_cross_info_string});
                 } elsif ($previous_stockprop_rs->count > 1) {
