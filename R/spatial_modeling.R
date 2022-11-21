@@ -34,6 +34,7 @@ traits = args[2]
 ################################################################################
 #read in the phenotypic data
 userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t", fill=TRUE)
+write(paste('phenotype:', userPheno), stderr())
 
 #The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
@@ -43,9 +44,9 @@ userResponse <- unlist(strsplit(traits, split=",", fixed=T))
 userID <- "germplasmName"
 row <- "rowNumber"
 col <- "colNumber"
-userPheno$R <- as.factor(userPheno$rowNumber)
-userPheno$C <- as.factor(userPheno$colNumber)
-
+R <- as.factor(userPheno$rowNumber)
+C <- as.factor(userPheno$colNumber)
+write(paste('C:', C), stderr())
 
 ################################################################################
 # 4. Fit the 2D Spline model in sommer
@@ -56,9 +57,9 @@ userModels <- list()
 
 for(i in 1:length(userResponse)){
 
-   fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID,")", sep = "")
+   fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID, sep = "")
 
-   randArg <- paste("~vs(", R, ")+vs(", C, ")+ spl2Da(",col,"," ,row ,")", sep = "")
+   randArg <- paste("~vsr(", R, ")+vs(", C, ")+ spl2Da(",col,"," ,row ,")", sep = "")
 
 
    m2.sommer <- mmer(fixed = as.formula(fixedArg),
@@ -66,7 +67,7 @@ for(i in 1:length(userResponse)){
                      rcov= ~units,
                      data=userPheno, verbose = FALSE)
 
-
+write(paste('model:', m2.sommer), stderr())
 
 
    userModels[[i]] <- m2.sommer
@@ -85,7 +86,7 @@ for(i in 1:length(userModels)){
 
   blue = summary(mixmodel)$beta
   BLUE<-as.data.frame(blue)
-
+  write(paste('BLUE:', BLUE), stderr())
 
  # adj = coef(m2.sommer)$Trait
   outfile_blue = paste(phenotypeFile, ".BLUEs", sep="");

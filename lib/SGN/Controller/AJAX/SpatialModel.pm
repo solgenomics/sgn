@@ -102,6 +102,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema,  file_name => $temppath, quotes=>0);
     $ds -> trials([$trial_id]);
+    $ds -> retrieve_phenotypes($pheno_filepath);
     open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
     open(my $CLEAN, ">", $pheno_filepath.".clean") || die "Can't open pheno_filepath clean for writing";
 
