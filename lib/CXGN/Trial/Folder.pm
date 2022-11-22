@@ -574,6 +574,10 @@ sub get_jstree_html {
         $local_type_of_interest = 'genotyping_plate'; # in order to match projectprop value
         $folder_type_of_interest = 'folder_for_genotyping_trials';
     }
+    elsif ($project_type_of_interest eq 'genotyping_project') {
+        $local_type_of_interest = 'genotype_data_project';
+        $folder_type_of_interest = 'folder_for_genotyping_trials';
+    }
 
     $html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
     $html .= "<ul>";
@@ -595,6 +599,12 @@ sub get_jstree_html {
             }
             elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'sampling_trial'}) {
                 $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($project_type_of_interest eq 'genotyping_project' && $children{$child}->{'genotype_data_project'}) {
+                $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($project_type_of_interest eq 'genotyping_project' && $children{$child}->{'pcr_genotype_data_project'}) {
+                $html .= _jstree_li_html($schema, 'pcr_genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
