@@ -22,7 +22,7 @@ $trial_id
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plot_gps_dialog_form" name="upload_plot_gps_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls): </label>
+                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plot_gps_file" id="trial_upload_plot_gps_file" encoding="multipart/form-data" />
                             </div>
