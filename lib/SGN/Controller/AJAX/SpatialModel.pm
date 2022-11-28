@@ -131,20 +131,22 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     my $last_index = scalar(@new_header)-1;
 
-    #while(<$PF>) {
-	#chomp;
-	#my @f = split /\t/;
+    while(<$PF>) {
+	print $CLEAN $_;
+    }
 
+    close($PF);
+    close($CLEAN);
 
-        my $cmd = CXGN::Tools::Run->new({
-            backend => $c->config->{backend},
-            submit_host=>$c->config->{cluster_host},
-            temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
-            queue => $c->config->{'web_cluster_queue'},
-            do_cleanup => 0,
-            # don't block and wait if the cluster looks full
-            max_cluster_jobs => 1_000_000_000,
-        });
+    my $cmd = CXGN::Tools::Run->new({
+	backend => $c->config->{backend},
+	submit_host=>$c->config->{cluster_host},
+	temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
+	queue => $c->config->{'web_cluster_queue'},
+	do_cleanup => 0,
+	# don't block and wait if the cluster looks full
+	max_cluster_jobs => 1_000_000_000,
+    });
 
     $cmd->run_cluster(
 	"Rscript ",
@@ -157,8 +159,6 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     while ($cmd->alive) {
 	sleep(1);
     }
-
-#    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
 
     my @data;
 
