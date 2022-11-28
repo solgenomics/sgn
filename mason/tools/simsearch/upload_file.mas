@@ -6,12 +6,52 @@ $reference_files_menu => ""
 
 <h1>Uploaded file <% $filename %></h1>
 
-<form action="/tools/simsearch/process_file" > 
+<div id="simsearch_input_form">
 
-      <% $reference_files_menu %>
+   Optional: Select reference genotyping file:<br /> 
 
-      <input type="hidden" name="filename" value="<% $filename %>" />
+   <% $reference_files_menu %><br /><br />
 
-      <input type="submit" value="Run!!!" />
+   <input id="simsearch_filename" type="hidden" name="filename" value="<% $filename %>" />
 
-</form>
+   <button class="btn" id="simsearch_run_button">Run SimSearch</button>
+
+</div>
+<br /><br />
+
+<div id="simsearch_results">
+
+   <table border="1" id="simsearch_results_table">
+      <thead>
+         <tr><th>col1</th><th>col2</th><th>col3</th><th>col4</th><th>col5</th><th>col6</th></tr>
+   </table>
+
+</div>
+
+<script>
+
+jQuery(document).ready( function() { 
+    jQuery('#simsearch_run_button').click( function() {
+
+        alert("Ideally, it would be running now!");
+        var filename = jQuery('#simsearch_filename').val();
+        alert("FILENAME = "+filename);
+        var reference_file = jQuery('#reference_file').val();
+        alert("REFERENCE FILE = "+reference_file);
+    
+        jQuery.ajax({
+            url: '/ajax/tools/simsearch/process_file',
+	    data: { 'filename' : filename, 'reference_file' : reference_file },
+	    method: 'post',
+	    timeout: 360000
+        }).done( function(response) {
+            jQuery('#simsearch_results_table').DataTable({
+                data: response.data
+	    });
+        
+        });
+    });
+});
+
+</script>
+
