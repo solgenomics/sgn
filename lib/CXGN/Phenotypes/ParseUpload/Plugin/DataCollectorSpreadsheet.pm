@@ -18,6 +18,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::DataCollectorSpreadsheet;
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 
 sub name {
     return "datacollector spreadsheet";
@@ -36,7 +37,18 @@ sub validate {
     my $delimiter = ',';
     my $header;
     my @header_row;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parse_result;
@@ -159,7 +171,18 @@ sub parse {
     my @plots;
     my @traits;
     my %data;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 

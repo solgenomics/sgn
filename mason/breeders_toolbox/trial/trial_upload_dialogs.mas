@@ -536,9 +536,7 @@ $design_types => ()
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Trials may be uploaded in an Excel file (.xls)</b>
-                    <br />
-                    (.xlsx format not supported)
+                    <b>Trials may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
                     <hr>
                     <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: accession", collapsible=>1, collapsed=>1 &>
@@ -674,13 +672,9 @@ $design_types => ()
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Trials may be uploaded in an Excel file (.xls)</b>
+                    <b>Trials may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
-
                     <b>Multiple Trial Designs:</b>
-
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following, which is an expansion of the single trial design header:

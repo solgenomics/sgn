@@ -16,7 +16,7 @@ load_locations_extended.pl - loading locations into cxgn databases.
 
 =head1 DESCRIPTION
 
-This script loads locations data into Chado, by adding data to nd_geolocation table, and properties to nd_geolocationprop. Infile is Excel .xls format. 
+This script loads locations data into Chado, by adding data to nd_geolocation table, and properties to nd_geolocationprop. Infile is Excel .xls and .xlsx format.
 Header must have in the first 4 columns: 'Name', 'Longitude', 'Latitude', 'Altitude'. 
 Header columns from colum 5 and onwards are stored as cvterms that are part of the cv 'geolocation_property'.
 
@@ -34,6 +34,7 @@ use Data::Dumper;
 use Carp qw /croak/ ;
 use Pod::Usage;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 
@@ -47,7 +48,18 @@ if (!$opt_H || !$opt_D || !$opt_i) {
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
-my $parser   = Spreadsheet::ParseExcel->new();
+
+# Match a dot, extension .xls / .xlsx
+my ($extension) = $opt_i =~ /(\.[^.]+)$/;
+my $parser;
+
+if ($extension eq '.xlsx') {
+	$parser = Spreadsheet::ParseXLSX->new();
+}
+else {
+	$parser = Spreadsheet::ParseExcel->new();
+}
+
 my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({ 

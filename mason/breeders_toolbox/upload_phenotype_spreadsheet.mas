@@ -84,7 +84,7 @@
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h4>Phenotype spreadsheet must be uploaded in .xls excel file format</h4>
+            <h4>Phenotype spreadsheet must be uploaded in .xls or .xlsx excel file format</h4>
             <p>(tab-delimited text formats are NOT supported)</p>
 
             <hr>
