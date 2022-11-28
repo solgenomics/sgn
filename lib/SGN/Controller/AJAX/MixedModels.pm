@@ -373,6 +373,7 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
 
 sub make_R_trait_name {
     my $trait = shift;
+    $trait =~ s/\%//g;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
     $trait =~ tr/ /./;

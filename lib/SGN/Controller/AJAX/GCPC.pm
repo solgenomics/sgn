@@ -436,6 +436,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
 sub make_R_trait_name {
     my $trait = shift;
+    $trait =~ s/\%//g;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
     $trait =~ tr/ /./;
