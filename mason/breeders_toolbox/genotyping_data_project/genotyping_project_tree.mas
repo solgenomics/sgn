@@ -78,6 +78,9 @@ jQuery(document).ready(function($) {
                     },
                     "genotyping_data_project" : {
                         "icon": 'glyphicon glyphicon-align-left text-warning',
+                    },
+                    "pcr_genotyping_data_project" : {
+                        "icon": 'glyphicon glyphicon-align-left text-warning',
                     }
                 },
                 "search" : {
@@ -89,40 +92,6 @@ jQuery(document).ready(function($) {
         error: function(response) {
             alert("An error occurred while loading the genotyping projects.");
         }
-    });
-
-    jQuery('#refresh_genotyping_project_jstree_html_button').click(function(){
-        jQuery.ajax( {
-            url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_project',
-            success: function(response) {
-                var html = '<ul>'+response.html+'</ul>';
-
-                jQuery('#genotyping_project_list').html(html);
-                //console.log(html);
-                jQuery('#trial_list').jstree( {
-                    "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-                    "valid_children" : [ "folder","breeding_program", "genotyping_data_project" ],
-                    "types" : {
-                        "breeding_program" : {
-                            "icon": 'glyphicon glyphicon-briefcase text-info',
-                        },
-                        "folder" : {
-                            "icon": 'glyphicon glyphicon-folder-open text-danger',
-                        },
-                        "genotyping_data_project" : {
-                            "icon": 'glyphicon glyphicon-align-left text-warning',
-                        },
-                    },
-                    "search" : {
-                        "case_insensitive" : true,
-                    },
-                    "plugins" : ["html_data","types","search"],
-                });
-            },
-            error: function(response) {
-                alert("An error occurred while loading the genotyping projects.");
-            }
-        });
     });
 
 });
