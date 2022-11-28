@@ -128,7 +128,18 @@ sub parse {
     my @observation_units;
     my @traits;
     my %data;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
