@@ -64,16 +64,26 @@ sub retrieve_plot_info {
 #	 ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
 #     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
 
-    my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'genotyping_project_and_plate_relationship', 'project_relationship');
-    my $genotyping_project_plate_relationship = $self->get_schema()->resultset("Project::ProjectRelationship")->find ({
-        subject_project_id => $project->project_id(),
-        type_id => $genotyping_project_relationship_cvterm->cvterm_id()
-    });
-    my $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
-    my $genotyping_project = $self->get_schema()->resultset("Project::Project")->find ({
-        project_id => $genotyping_project_id
-    });
-    my $genotyping_project_name = $genotyping_project->name();
+     my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'genotyping_project_and_plate_relationship', 'project_relationship');
+     my $genotyping_project_plate_relationship = $self->get_schema()->resultset("Project::ProjectRelationship")->find (
+	 {
+	     subject_project_id => $project->project_id(),
+	     type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+	 });
+     my $genotyping_project_id = "";
+     my $genotyping_project_name = "";
+     my $genotyping_project ="";
+
+     if ($genotyping_project_plate_relationship) {
+         $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
+         $genotyping_project = $self->get_schema()->resultset("Project::Project")->find (
+	     {
+		 project_id => $genotyping_project_id
+	     });
+         $genotyping_project_name = $genotyping_project->name();
+         print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
+     }
+     
     print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
 
      $design->{$plot_number}->{genotyping_user_id} = $genotyping_user_id;
