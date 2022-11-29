@@ -45,12 +45,28 @@ has 'default_page_size' => (
 
 =head1 PUBLIC ACTIONS
 
+=head2 create new vector
+
+=cut
+
+sub vector_new :Path('/vector/new') Args(0) {
+    my ($self, $c ) = @_;
+    my @editable_stock_props = split ',',$c->get_conf('editable_stock_props');
+    $c->stash(
+	template => '/stock/add_vector.mas',
+
+    stock_types => stock_types($self->schema),
+	sp_person_autocomplete_uri => '/ajax/people/autocomplete',
+    editable_stock_props => \@editable_stock_props
+	);
+
+}
 
 =head2 stock search using jQuery data tables
 
 =cut
 
-sub stock_search :Path('/search/vectors') Args(0) {
+sub vector_search :Path('/search/vectors') Args(0) {
     my ($self, $c ) = @_;
     my @editable_stock_props = split ',',$c->get_conf('editable_stock_props');
     $c->stash(
@@ -65,11 +81,11 @@ sub stock_search :Path('/search/vectors') Args(0) {
 
 
 
-sub _validate_pair {
-    my ($self,$c,$key,$value) = @_;
-    $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
-        if ($key =~ m/_id$/ and $value !~ m/\d+/);
-}
+# sub _validate_pair {
+#     my ($self,$c,$key,$value) = @_;
+#     $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
+#         if ($key =~ m/_id$/ and $value !~ m/\d+/);
+# }
 
 
 

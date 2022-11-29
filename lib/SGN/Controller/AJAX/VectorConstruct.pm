@@ -82,4 +82,35 @@ sub sync_cass_constructs_POST {
     $c->stash->{rest} = {response=>$status};
 }
 
+sub create_vector_construct: Path('/ajax/create_vector_construct') Args(0) ActionClass('REST') { }
+
+sub create_vector_construct_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $status = '';
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $construct_names = decode_json($c->req->param("data"));
+    my %construct_hash = %$construct_names;
+    my $constructs = $construct_hash{construct};
+    my @construct_array = @$constructs;
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+
+
+    foreach (@construct_array) {
+
+    	my $create_stock = $schema->resultset("Stock::Stock")->find_or_create({
+            uniquename => $_->{construct},
+            name => $_->{construct},
+            type_id => $stock_type_id,
+        });
+    }
+
+    #print STDERR Dumper $constructs;
+    #print STDERR $status;
+
+    $c->stash->{rest} = {response=>$status};
+}
+
 1;

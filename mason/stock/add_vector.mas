@@ -1,0 +1,94 @@
+
+<%args>
+$stockref => undef
+</%args>
+
+% my $stock_id = $stockref->{stock_id};
+
+<& /page/page_title.mas, title=> 'Create a New Vector' &>
+
+
+<&| /page/info_section.mas, title=>"Vector details"  &>
+
+
+<div class="infosectioncontent">
+
+
+<div class="row">
+  <div class="col-sm-12">
+
+<div id="stock_details">
+  <form id="edit_stock" method="get" action="">  <br>
+    <div class="panel panel-defaut">
+      <table class="table"> 
+        <tbody>
+          <tr><td>Organism</td><td width="20"></td><td><input class="form-control ui-autocomplete-input" type="text" id="species_name" name="Organism" value="Eucalyptus siderophloia" size="" onclick="jqueryStuff()" autocomplete="off"></td></tr>
+          <tr><td>Stock type</td><td width="20"></td><td> <select id="" class="form-control" name="type_id">  <option value="76446">cross</option>  <option value="76524">backcross population</option>  <option value="76525">f2 population</option>  <option value="76526">mutant population</option>  <option value="76527">plant</option>  <option value="76528">population</option>  <option value="76475">tissue_sample</option>  <option value="76480">training population</option>  <option value="76392" selected="selected">accession</option>  <option value="76393">plot</option>  <option value="76488">vector_construct</option>  <option value="77563">seedlot</option>  <option value="77574">subplot</option>  <option value="77584">grafted_accession</option>  <option value="77647">family_name</option>  <option value="78839">analysis_instance</option>  <option value="79010">imaging_event_vehicle</option>  </select> </td></tr>
+          <tr><td>Uniquename  <font color="red">*</font> </td><td width="20"></td><td> <input class="form-control" type="text" id="" name="uniquename" value="xcvxv" size="" onclick="jqueryStuff()">
+          </td></tr>
+          <tr><td>Description</td><td width="20"></td><td> <textarea class="form-control" id="" name="description" rows="4" cols="40">vx</textarea>
+          </td></tr>
+ <tr><td colspan="3" align="center">  <input type="hidden" id="" name="stock_id" value="">  <input type="hidden" id="" name="sp_person_id" value="41">  <input type="hidden" id="" name="action" value="store">  (<font color="red">*</font> denotes required field.)<br><br>  </td></tr>
+        </tbody>
+      </table>
+    </div> 
+  </form>
+  <input id="stockForm_submit_button" class="btn btn-primary btn-sm" type="button" onclick="javascript:stockForm.store()" value="Store">&nbsp;&nbsp;&nbsp;
+  <input id="stockForm_reset_button" class="btn btn-default btn-sm" type="button" onclick="javascript:stockForm.render( 'edit' )" value="Reset form"><br><br>
+</div>
+
+<script language="javascript" type="text/javascript">
+
+  var stockForm = new CXGN.Page.Form.JSFormPage( '' , 'stock', '/phenome/stock/stock_ajax_form.pl', 'stock_details', 'stockForm','/stock//view/');
+     stockForm.setNewButton('<a class="btn btn-sm btn-default" href ="/stock/0/new">New</a>');
+
+     
+
+     jQuery.ajax({
+              type: 'POST',
+              data: {'data': JSON.stringify(response)},
+              url: '/ajax/create_vector_construct',
+              success: function(response) {
+                //console.log(response);
+              },
+              error: function(response) {
+                //alert('An Error Occured Syncing Constructs.');
+              }
+            });
+
+como agregar stockprop???
+
+  stockForm.render();
+  
+</script>  
+
+
+
+<!-- <div class="row">
+  <div class="col-sm-12">
+
+  <& /page/form.mas,
+  object_type=>'stock',
+  object_id=>"$stock_id",
+  form_name=> 'stock_form',
+  server_side_script => '/phenome/stock/stock_ajax_form.pl',
+  form_div_name=>'stock_details',
+  js_object_name=> 'stockForm',
+  page_url => "/stock/$stock_id/view/" ,
+  alternate_new_button => '<a class="btn btn-sm btn-default" href ="/stock/0/new">New</a>'
+  &>
+
+  </div>
+</div> -->
+
+</&>
+
+<script language="javascript">
+function jqueryStuff() { 
+   jQuery(function() {
+     jQuery("#species_name").autocomplete({
+        source: '/organism/autocomplete'
+     });
+  });
+}
+</script>
