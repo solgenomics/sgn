@@ -4,28 +4,30 @@ package SGN::Controller::BrAPIClient;
 use Moose;
 use URI::FromHash 'uri';
 use JSON;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller' };
 
 sub authorize_client :Path('/brapi/authorize') QueryParam('redirect_uri') { #breedbase.org/brapi/authorize?success_url=fieldbook://&client_id=Field%20Book
     my $self = shift;
     my $c = shift;
-        
-    my $authorized_clients = decode_json $c->get_conf('authorized_clients_JSON');;
-    
+
+    my $authorized_clients = decode_json $c->get_conf('authorized_clients_JSON');
+
 	my %authorized_clients = %$authorized_clients;
-	
+
     my $redirect_uri = $c->request->param( 'redirect_uri' );
 	my @keys = keys %authorized_clients;
 	my $client_id = undef;
-
+    print STDERR "Authorized clients:\n ".Dumper( $authorized_clients);
 	while(my($k, $v) = each %authorized_clients) {
         if ($redirect_uri =~ m/^$k/) {
             $client_id = $v;
             last;
         }
     }
-
+    print STDERR "Redirect uri: $redirect_uri\n";
+    print STDERR "client_id: $client_id\n";
     if (defined $client_id) {
         if (!$c->user()) {  # redirect to login page
             $c->res->redirect( uri( path => '/user/login', query => { goto_url => "/brapi/authorize?redirect_uri=$redirect_uri" } ) );
