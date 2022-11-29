@@ -34,13 +34,21 @@ sub validate {
 
     #print STDERR Dumper \%all_names;
     my @missing;
+    my @valid;
+    
     foreach my $item (@$list) {
         if (!exists($all_names{$item})) {
             push @missing, $item;
         }
+	else {
+	    push @valid, $item;
+	}
     }
 
-    return { missing => \@missing };
+    return {
+	missing => \@missing,
+	valid => \@valid,
+    };
 }
 
 1;
