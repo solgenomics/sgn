@@ -21,9 +21,9 @@ $reference_files_menu => ""
 
 <div id="simsearch_results">
 
-   <table border="1" id="simsearch_results_table">
+   <table id="simsearch_results_table">
       <thead>
-         <tr><th>col1</th><th>col2</th><th>col3</th><th>col4</th><th>col5</th><th>col6</th></tr>
+         <tr><th>Group #</th><th>Min score</th><th>Max score</th><th>Similarity</th><th>Group members</th></tr>
    </table>
 
 </div>

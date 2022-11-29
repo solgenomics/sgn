@@ -55,8 +55,8 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
 	if (/^#/) { next; }
 	@line = split /\s+/;
 	$html .= '<tr><td>'.$group.'</td><td>'. join('<br />', @line[4..@line-1])."</td></tr>\n";
+	push @data, [ $line[0], $line[1], $line[2], $line[3], join("<br />", @line[4..@line-1]) ];
 	$group++;
-	push @data, [ $group, $line[3], join("<br />", @line[4..@line-1]) ];
     }
     $html.="</table>\n";
     close($F);
