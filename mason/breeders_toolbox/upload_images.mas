@@ -36,7 +36,7 @@
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
                         <div class="col-sm-9" >
-                            <input type="file" id="upload_associated_phenotypes_file_input" name="upload_images_file_input" encoding="multipart/form-data" accept=".xls"/>
+                            <input type="file" id="upload_associated_phenotypes_file_input" name="upload_images_file_input" encoding="multipart/form-data" accept=".xls, .xlsx"/>
                         </div>
                     </div>
                     <div class="form-group">
@@ -92,7 +92,7 @@
             <h4>Images with Associated Phenotypes:</h4>
             <ul>
                 <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values.</li>
-                <li>The phenotype values should be included in a .xls spreadsheet with the following columns:</li>
+                <li>The phenotype values should be included in a .xls or .xlsx spreadsheet with the following columns:</li>
                 <br/><table class="table table-hover table-bordered table-condensed table-responsive" >
                     <thead></thead>
                     <tbody>

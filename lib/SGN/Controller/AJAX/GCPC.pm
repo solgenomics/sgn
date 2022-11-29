@@ -369,16 +369,16 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     print STDERR "GENOFILE PATH = $geno_filepath\n";
     print STDERR "cache file path = ".$c->config->{cache_file_path}." CLUSTER SHARED TEMPDIR: ".$c->config->{cluster_shared_tempdir}."\n";
 
-    
+
     my @accession_names = map { $_->[1] } @{$ds->retrieve_accessions()};
 
     print STDERR "ACCESSION NAME COUNT: ".scalar(@accession_names)."\n";
     print STDERR "FIRST 10: ".join(",", @accession_names[0..9])."\n";
- 
+
     my $genotype_data_fh = $ds->retrieve_genotypes( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host},  $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 
     print STDERR "NOW SUBMITTING R JOB...\n";
-    
+
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
             submit_host=>$c->config->{cluster_host},
@@ -411,6 +411,12 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     open(my $F, "<", $pheno_filepath.".clean.out") || die "Can't open result file $pheno_filepath".".clean.out";
     my $header = <$F>;
+    my @h = split(',', $header);
+    my @spl;
+    foreach my $item (@h) {
+    push  @spl, {title => $item};
+  }
+    print STDERR "Header: ".Dumper(\@spl);
     while (<$F>) {
 	chomp;
 	my @fields = split /\,/;
@@ -429,6 +435,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     $c->stash->{rest} = {
 	data => \@data,
+  header => \@spl,
 	download_link => $download_link,
     };
 }

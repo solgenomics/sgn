@@ -61,6 +61,7 @@ $c->res->body($output);
 use Moose::Role;
 
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Trial;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Phenotypes::MetaDataMatrix;
@@ -127,7 +128,18 @@ sub download {
     #print STDERR Dumper \@data;
 
     print STDERR "Print Excel Start:".localtime."\n";
-    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $ss;
+
+    if ($extension eq '.xlsx') {
+        $ss = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $ss = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws = $ss->add_worksheet();
 
     my $header_offset = 0;

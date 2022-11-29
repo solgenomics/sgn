@@ -380,7 +380,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ($format eq "crossing_experiment_xls") {
         $plugin = "CrossingExperimentXLS";
         $what = "crosses";
-        $format = "xls";
+        $format = "xlsx";
         my $cross_properties = $c->config->{cross_properties};
         @field_crossing_data_order = split ',',$cross_properties;
     }
@@ -389,7 +389,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ($format eq "soil_data_xls") {
         $plugin = "SoilDataXLS";
         $what = "soil_data";
-        $format = "xls";
+        $format = "xlsx";
         $prop_id = $c->req->param("prop_id");
     }
 

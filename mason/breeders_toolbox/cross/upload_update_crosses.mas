@@ -71,11 +71,9 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Cross info of existing crosses may be uploaded in an Excel file (.xls)
+                        Cross info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
                     <br>
-                        (.xlsx format not supported)
-                    <br><br>
                     <b>
                         Header:
                     </b>
@@ -182,11 +180,9 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls)
+                        Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
                     <br>
-                        (.xlsx format not supported)
-                    <br><br>
                     <b>
                         Header:
                     </b>

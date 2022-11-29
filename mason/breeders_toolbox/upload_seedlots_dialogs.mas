@@ -98,7 +98,7 @@
 
                                 <div id="upload_seedlots_accessions_section" style="display:none">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                        <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
                                         <div class="col-sm-9" >
                                             <input type="file" name="seedlot_uploaded_file" id="seedlot_uploaded_file" encoding="multipart/form-data" />
                                         </div>
@@ -107,7 +107,7 @@
 
                                 <div id="upload_seedlots_harvested_section" style="display:none">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                        <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
                                         <div class="col-sm-9" >
                                             <input type="file" name="seedlot_harvested_uploaded_file" id="seedlot_harvested_uploaded_file" encoding="multipart/form-data" />
                                         </div>
@@ -235,10 +235,8 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -301,10 +299,8 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:

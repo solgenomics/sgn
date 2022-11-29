@@ -23,7 +23,7 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_upload_used_seedlot_form" name="trial_upload_used_seedlot_form">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls): </label>
+                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_used_seedlot_file" id="trial_upload_used_seedlot_file" encoding="multipart/form-data" />
                             </div>
@@ -51,10 +51,8 @@ $trial_id
                 <div class="container-fluid">
                     <b>This is for recording which seedlots were planted in which plots in this trial.</b>
                     <br/>
-                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:

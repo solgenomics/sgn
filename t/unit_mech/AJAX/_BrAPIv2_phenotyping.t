@@ -204,7 +204,9 @@ is_deeply($response,  {'result' => {'ontologyReference' => {'version' => undef,'
 
 
 $data = '[  {"additionalInfo": {},"copyright": "Copyright 2018 Bob","description": "Tomatoes","descriptiveOntologyTerms": [],"externalReferences": [],"imageFileName": "image_00G00231a.jpg","imageFileSize": 50000,"imageHeight": 550,"imageLocation": {  "geometry": {"coordinates": [  -76.506042,  42.417373,  9],"type": "Point"  },  "type": "Feature"},"imageName": "Tomato Imag-10","imageTimeStamp": "2020-06-17T16:20:00.217Z","imageURL": "https://breedbase.org/images/tomato","imageWidth": 700,"mimeType": "image/jpeg","observationDbIds": [],"observationUnitDbId": "38842"  }]';
+
 $mech->post('http://localhost:3010/brapi/v2/images', Content => $data);
+
 $response = decode_json $mech->content;
 print STDERR "\n\n" . Dumper $response;
 is_deeply($response->{metadata}, {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Images'},{'message' => 'Image metadata stored','messageType' => 'INFO'}],'datafiles' => undef,'pagination' => {'pageSize' => 10,'totalPages' => 1,'currentPage' => 0,'totalCount' => 1}});

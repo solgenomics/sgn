@@ -271,7 +271,11 @@ document.getElementById('multiple_trial_designs_upload_file').addEventListener("
                 $("#upload_trial_error_display_second_try").show();
             }
             if (response.warnings) {
-                alert(response.warnings);
+                warnings = response.warnings;
+                warning_html = "<li>"+warnings.join("</li><li>")+"</li>"
+                $("#upload_trial_warning_messages").show();
+                $("#upload_trial_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br>'+warning_html);
+                return;
             }
             if (response.success) {
                 refreshTrailJsTree(0);

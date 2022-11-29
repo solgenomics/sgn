@@ -68,7 +68,7 @@ $program_name
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                    <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
                                     <div class="col-sm-9" >
                                         <input type="file" name="profile_uploaded_file" id="profile_uploaded_file" encoding="multipart/form-data" />
                                     </div>
