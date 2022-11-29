@@ -165,7 +165,7 @@ override('retrieve_genotypes',
 	     if ($file) {
 		 print STDERR "Generating the file $file ...\n";
 		 open(my $F, ">", $file) || die "Can't open file $file";
-		 while(<$fh>) {
+		 while(<$$fh>) {
 		     print $F $_;
 		 }
 		 print STDERR "Done.\n";
