@@ -10,15 +10,18 @@ $breeding_program_name => undef
 $folder_for_trials => undef
 $folder_for_crosses => undef
 $folder_for_genotyping_trials => undef
+$folder_for_genotyping_projects => undef
 </%args>
 
 % my $get_field_trials = $folder_for_trials ? 1 : 0;
 % my $get_crossing_trials = $folder_for_crosses ? 1 : 0;
 % my $get_genotyping_trials = $folder_for_genotyping_trials ? 1 : 0;
+% my $get_genotyping_projects = $folder_for_genotyping_projects ? 1 : 0;
 % my $dialog_type;
 % if ($project_type eq 'field_trial') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial', }
 % if ($project_type eq 'genotyping_plate') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Plate'}
 % if ($project_type eq 'crossing_experiment') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Experiment' }
+% if ($project_type eq 'genotyping_project') { $get_genotyping_projects = 1; $folder_for_genotyping_projects = 1; $dialog_type = 'Genotyping Project'}
 % if (!$project_type) { $dialog_type = 'Trial(s)' }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
@@ -144,12 +147,14 @@ jQuery(document).ready(function() {
 });
 
 function breeding_program_change_folders() {
-  var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
-  var folder_for_trials;
-  var folder_for_crosses;
-  var folder_for_genotyping_trials;
+    var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
+    var folder_for_trials;
+    var folder_for_crosses;
+    var folder_for_genotyping_trials;
+    var folder_for_genotyping_projects;
+
 % if ($folder_for_trials){
-  folder_for_trials = true;
+    folder_for_trials = true;
 % }
 % if ($folder_for_crosses){
     folder_for_crosses = true;
@@ -157,17 +162,21 @@ function breeding_program_change_folders() {
 % if ($folder_for_genotyping_trials){
     folder_for_genotyping_trials = true;
 % }
-  get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial', 'breeding_program_id' : breeding_program_id, 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials });
+% if ($folder_for_genotyping_projects){
+    folder_for_genotyping_projects = true;
+% }
+
+  get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial', 'breeding_program_id' : breeding_program_id, 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials, 'folder_for_genotyping_projects': folder_for_genotyping_projects });
 }
 
 function breeding_program_change_trials() {
-  var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
-  var get_field_trials = <% $get_field_trials %>;
-  var include_analyses = 0;
-  if (get_field_trials == 1) {
-    include_analyses = 1;
-  }
-  get_select_box('projects', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_field_trials':get_field_trials, 'get_crossing_trials':<% $get_crossing_trials %>, 'get_genotyping_trials':<% $get_genotyping_trials %>, 'include_analyses':include_analyses, 'multiple': true });
+    var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
+    var get_field_trials = <% $get_field_trials %>;
+    var include_analyses = 0;
+    if (get_field_trials == 1) {
+        include_analyses = 1;
+    }
+    get_select_box('projects', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_field_trials':get_field_trials, 'get_crossing_trials':<% $get_crossing_trials %>, 'get_genotyping_trials':<% $get_genotyping_trials %>, 'get_genotyping_projects':<% $get_genotyping_projects %>, 'include_analyses':include_analyses, 'multiple': true });
 }
 
 function set_trial_folder() {
@@ -204,6 +213,9 @@ function set_trial_folder() {
                     refreshCrossJsTree(0);
 %  } elsif ($project_type eq 'genotyping_plate') {
                     refreshGenotypingTrialJsTree(0);
+%  }
+%  } elsif ($project_type eq 'genotyping_project') {
+                    refreshGenotypingProjectJsTree(0);
 %  }
         jQuery('#folder_set_success_dialog_message').modal("show");
     }

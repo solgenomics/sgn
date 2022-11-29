@@ -33,6 +33,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $folder_for_trials;
     my $folder_for_crosses;
     my $folder_for_genotyping_trials;
+    my $folder_for_genotyping_projects;
     my $project_type = $c->req->param("project_type");
 
     if ($project_type eq 'field_trial') {
@@ -41,6 +42,8 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
         $folder_for_crosses = 1;
     } elsif ($project_type = 'genotyping_plate') {
         $folder_for_genotyping_trials = 1
+    } elsif ($project_type = 'genotyping_project') {
+        $folder_for_genotyping_projects = 1
     }
 
 
@@ -61,7 +64,8 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
 	    breeding_program_id => $breeding_program_id,
         folder_for_trials => $folder_for_trials,
         folder_for_crosses => $folder_for_crosses,
-        folder_for_genotyping_trials => $folder_for_genotyping_trials
+        folder_for_genotyping_trials => $folder_for_genotyping_trials,
+        folder_for_genotyping_projects => $folder_for_genotyping_projects
 	});
 
     $c->stash->{rest} = {
