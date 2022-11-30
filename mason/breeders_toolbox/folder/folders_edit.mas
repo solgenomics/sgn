@@ -34,7 +34,7 @@ $folder_tree_refresh_name
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder(s) for Genotyping projects_that_are_crosses:</label>
+      	      <label class="col-sm-3 control-label">Folder(s) for Genotyping Projects:</label>
       	      <div class="col-sm-9" >
                 <input name="edit_folders_for_genotyping_projects" id="edit_folders_for_genotyping_projects" type="checkbox"/>
               </div>

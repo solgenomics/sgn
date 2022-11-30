@@ -34,18 +34,17 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $folder_for_crosses;
     my $folder_for_genotyping_trials;
     my $folder_for_genotyping_projects;
-    my $project_type = $c->req->param("project_type");
 
+    my $project_type = $c->req->param("project_type");
     if ($project_type eq 'field_trial') {
         $folder_for_trials = 1;
     } elsif ($project_type eq 'crossing_experiment') {
         $folder_for_crosses = 1;
-    } elsif ($project_type = 'genotyping_plate') {
-        $folder_for_genotyping_trials = 1
-    } elsif ($project_type = 'genotyping_project') {
-        $folder_for_genotyping_projects = 1
+    } elsif ($project_type eq 'genotyping_plate') {
+        $folder_for_genotyping_trials = 1;
+    } elsif ($project_type eq 'genotyping_project') {
+        $folder_for_genotyping_projects = 1;
     }
-
 
     if (! $self->check_privileges($c)) {
 	return;

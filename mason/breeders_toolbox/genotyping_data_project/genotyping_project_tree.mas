@@ -12,6 +12,10 @@ $facilities
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas, facilities => $facilities &>
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities => $facilities &>
 <& /breeders_toolbox/genotyping_data_project/create_genotyping_project_dialog.mas, facilities => $facilities &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type=>'genotyping_project' &>
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'genotyping_project' &>
+<& /breeders_toolbox/folder/folder_move.mas, project_type=>'genotyping_project' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crosses_list', folder_tree_refresh_name => 'refresh_crosses_jstree_html' &>
 
 <table class="table table-bordered">
     <thead>
@@ -27,7 +31,7 @@ $facilities
                 <input type="text" class="form-control input-sm" id="genotyping_project_tree_search" placeholder="Search" />
                 <hr>
 
-                <h5><i>Double click<br />genotyping project (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+                <h5><i>Double click<br />genotyping project (&nbsp;<span class="glyphicon glyphicon-align-left text-warning"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
                 <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
                 <h4>Folders</h4>
