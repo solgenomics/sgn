@@ -218,7 +218,7 @@ export function init() {
         }
 
         get_planting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'planting_order_layout');
+            this.traverse_map(this.plot_arr, 'planting_order_layout');
         }
 
         set_meta_data() {
@@ -283,8 +283,18 @@ export function init() {
         }
 
         get_plot_format(type, x, y) {
-            return { 
-                type: type, observationUnitName: this.trial_id + ' ' + type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
+            // Use the first plot from the trial to get trial-level metadata to give to a border plot
+            // NOTE: this will break if plots from multiple trials are loaded
+            let p = this.plot_arr[0];
+            return {
+                type: type,
+                observationUnitName: this.trial_id + ' ' + type,
+                observationUnitPosition: {
+                    positionCoordinateX: x,
+                    positionCoordinateY: y
+                },
+                locationName: p.locationName,
+                studyName: p.studyName
             }
         }
 
