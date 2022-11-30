@@ -189,6 +189,9 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
 sub make_R_trait_name {
     my $trait = shift;
+    if ($trait =~ /^\d/) {
+	$trait = "X".$trait;
+    }
     $trait =~ s/\%//g;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
