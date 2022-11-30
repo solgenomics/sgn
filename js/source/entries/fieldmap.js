@@ -213,12 +213,10 @@ export function init() {
             hiddenElement.click();    
         }
 
-        get_harvesting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'harvesting_order_layout');
-        }
-
-        get_planting_order() {
-            this.traverse_map(this.plot_arr, 'planting_order_layout');
+        get_plot_order(type, order, include_borders) {
+            let k = type === 'planting' ? 'planting_order_layout' : 'harvesting_order_layout';
+            this.meta_data[k] = order;
+            this.traverse_map(this.plot_arr.filter(plot => include_borders || plot.type !== "border"), k);
         }
 
         set_meta_data() {
