@@ -189,4 +189,22 @@ is_deeply($results, {
                'results' => []
              }, "wizard 0 results error query");
 
+
+$criteria_list = [
+  'trials',
+  'accessions'
+];
+$dataref = {
+  'accessions' => {
+    'trials' => '\'137\', \'139\', \'141\''
+  }
+};
+$queryref = {
+  'accessions' => {
+    'trials' => 0.5
+  }
+};
+$results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+is(scalar(@{$results->{'results'}}), 254, "wizard min match query");
+
 done_testing();

@@ -718,6 +718,16 @@ $message = $response->decoded_content;
 #print STDERR Dumper $message;
 ok($message);
 
+#test deleting genotyping project with protocol
+my $before_deleting_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'error'}, 'Cannot delete genotyping project with associated genotyping protocol.');
+
+my $after_deleting_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+is($after_deleting_genotyping_project, $before_deleting_genotyping_project);
+
 ## DELETE genotyping protocol and data
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
@@ -731,6 +741,14 @@ $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$protocol_i
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {success=>1});
+
+#test deleting empty genotyping project
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+my $after_deleting_empty_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project-1);
+
 
 }
 

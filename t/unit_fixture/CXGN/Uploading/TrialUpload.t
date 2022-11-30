@@ -743,6 +743,23 @@ my $post1_project_relationship_diff = $post_project_relationship_count - $pre_pr
 print STDERR "ProjectRelationship: ".$post1_project_relationship_diff."\n";
 ok($post1_project_relationship_diff == 5, "check projectrelationship table after upload excel trial");
 
+#adding new genotyping project
+my $add_genotyping_project_2 = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema => $chado_schema,
+	dbh => $c->dbh(),
+    project_name => 'test_genotyping_project_4',
+    breeding_program_id => $breeding_program_id,
+    project_facility => 'igd',
+    data_type => 'snp',
+    year => '2022',
+    project_description => 'genotyping project for test',
+    nd_geolocation_id => $location_id,
+    owner_id => 41
+});
+ok(my $store_return_2 = $add_genotyping_project_2->store_genotyping_project(), "store genotyping project");
+
+my $gp_rs_2 = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_4'});
+my $genotyping_project_id_2 = $gp_rs_2->project_id();
 
 my $mech = Test::WWW::Mechanize->new;
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
@@ -831,7 +848,7 @@ my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'yes',
     name => 'test_genotype_upload_trial1',
-    genotyping_project_id => $genotyping_project_id,
+    genotyping_project_id => $genotyping_project_id_2,
     sample_type => 'DNA',
     plate_format => '96'
 };
@@ -957,7 +974,7 @@ my $plate_data = {
     design => $message_hash->{design},
     genotyping_facility_submit => 'no',
     name => 'test_genotype_upload_coordinate_trial101',
-    genotyping_project_id => $genotyping_project_id,
+    genotyping_project_id => $genotyping_project_id_2,
     sample_type => 'DNA',
     plate_format => '96'
 };
@@ -1384,5 +1401,39 @@ is($management_factor_name2, "Trial_upload_test_with_management_factor_manage_fa
 my $management_factor_plots2 = $trial_management_factor2->get_plots();
 #print STDERR Dumper $management_factor_plots2;
 is(scalar(@$management_factor_plots2), 3);
+
+#test deleting genotyping project with genotyping plate
+my $schema = $f->bcs_schema();
+my $before_deleting_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_id.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'error'}, 'Cannot delete genotyping project with associated genotyping plates.');
+
+my $after_deleting_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+is($after_deleting_genotyping_project, $before_deleting_genotyping_project);
+
+#test deleting empty genotyping project
+#first deleting associated genotyping plates
+my $genotyping_plate_id_1 = $schema->resultset("Project::Project")->find({name=>'test_genotyping_trial_upload'})->project_id;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_plate_id_1.'/delete/layout');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $genotyping_plate_id_4 = $schema->resultset("Project::Project")->find({name=>'test_genotype_upload_coordinate_trial1'})->project_id;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_plate_id_4.'/delete/layout');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+#delete empty genotyping_project
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_id.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $after_deleting_empty_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+#deleting 2 associated genotyping plates and genotyping project
+is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project-3);
+
+
 
 done_testing();

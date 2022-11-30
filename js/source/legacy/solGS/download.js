@@ -40,6 +40,22 @@ solGS.download = {
   },
 
 
+  getTraitsAcronymFile: function () {
+    var args = solGS.getTrainingPopArgs();
+    args = JSON.stringify(args);
+
+    var popDataReq = jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: {
+        arguments: args,
+      },
+      url: "/solgs/download/traits/acronym",
+    });
+
+    return popDataReq;
+  },
+
   createTrainingPopDownloadLinks: function (res) {
     var genoFile = res.training_pop_raw_geno_file;
     var phenoFile = res.training_pop_raw_pheno_file;
@@ -52,20 +68,34 @@ solGS.download = {
     var phenoFileLink =
       '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
+    var traitsAcronymLink = this.createTraitsAcronymLinks(res);
+
     var downloadLinks =
       " <strong>Download training population</strong>: " +
       genoFileLink +
       " | " +
-      phenoFileLink;
+      phenoFileLink + " | " + traitsAcronymLink;
 
     jQuery("#training_pop_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
     );
   },
 
+
+  createTraitsAcronymLinks: function (res) {
+    var acronymFile = res.traits_acronym_file;
+
+    var acronymFileName = acronymFile.split("/").pop();
+    var acronymFileLink =
+      '<a href="' + acronymFile + '" download=' + acronymFileName + '">' + "Traits acronyms" + "</a>";
+
+    return acronymFileLink;
+
+  },
+
   createSelectionPopDownloadLinks: function (res) {
     var genoFile = res.selection_pop_filtered_geno_file;
-    
+
     var genoFileName = genoFile.split("/").pop();
     var genoFileLink =
       '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
@@ -194,6 +224,13 @@ jQuery(document).ready(function () {
         var errorMsg = "Error occured getting training pop raw data files.";
         solGS.showMessage(downloadMsgDiv, errorMsg)
       });
+
+      solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
+        var errorMsg = "Error occured getting training pop raw data files.";
+        solGS.showMessage(downloadMsgDiv, errorMsg)
+      });
+
+
     } else if (res.page_type.match(/training model/)) {
       solGS.download.getModelInputDataFiles().done(function (res) {
         solGS.download.createModelInputDownloadLinks(res);
@@ -226,7 +263,7 @@ jQuery(document).ready(function () {
         solGS.download.getSelectionPopRawDataFiles().done(function (res) {
           solGS.download.createSelectionPopDownloadLinks(res);
         });
-  
+
         solGS.download.getSelectionPopRawDataFiles().fail(function (res) {
           var errorMsg = "Error occured getting selection population genotype data files.";
           solGS.showMessage(downloadMsgDiv, errorMsg);
