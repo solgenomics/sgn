@@ -194,6 +194,8 @@ document.getElementById('multiple_trial_designs_upload_file').addEventListener("
 
     $('#multiple_trial_designs_upload_submit').click(function () {
         console.log("Registered click on multiple_trial_designs_upload_submit button");
+        // add a file validate step before uploading trials
+
         upload_multiple_trial_designs_file(uniqueTrials, trialData);
     });
 
@@ -395,9 +397,12 @@ function upload_multiple_trial_designs_file(uniqueTrials, trialData) {
       reportStoreResult(result);
   })
   .fail(function(error) {
-      console.log(error);
+      jQuery('#progress_modal').modal('hide');
+      // console.log(error);
+      var status = error.responseJSON.metadata.status;
+      var errors = status.map(x => x.message);
       jQuery('#upload_multiple_trials_status').append(
-          formatMessage(error, 'error')
+          formatMessage(errors, 'error')
       );
   });
 
