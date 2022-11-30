@@ -192,6 +192,7 @@ sub make_R_trait_name {
     if ($trait =~ /^\d/) {
 	$trait = "X".$trait;
     }
+    $trait =~ s/\&/\_/g;
     $trait =~ s/\%//g;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
