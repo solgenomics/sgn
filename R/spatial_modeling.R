@@ -44,9 +44,9 @@ userResponse <- unlist(strsplit(traits, split=",", fixed=T))
 userID <- "germplasmName"
 row <- "rowNumber"
 col <- "colNumber"
-R <- as.factor(userPheno$rowNumber)
-C <- as.factor(userPheno$colNumber)
-#write(paste('C:', C), stderr())
+userPheno$R <- as.factor(userPheno$rowNumber)
+userPheno$C <- as.factor(userPheno$colNumber)
+write(paste('userPheno:', userPheno), stderr())
 
 ################################################################################
 # 4. Fit the 2D Spline model in sommer
@@ -60,7 +60,7 @@ for(i in 1:length(userResponse)){
 
    fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID, sep = "")
 
-   randArg <- paste("~vsr(", R, ")+vs(", C, ")+ spl2Da(",col,"," ,row ,")", sep = "")
+   randArg <- paste("~vsr(R)+vsr(C)+ spl2Da(",col,"," ,row ,")", sep = "")
 
 
    m2.sommer <- mmer(fixed = as.formula(fixedArg),
