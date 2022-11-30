@@ -48,6 +48,7 @@ $c->res->body($output);
 use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Trial::TrialLayout;
@@ -61,7 +62,18 @@ sub download {
     my $self = shift;
 
     print STDERR "DATALEVEL ".$self->data_level."\n";
-    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $ss;
+
+    if ($extension eq '.xlsx') {
+        $ss = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $ss = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws = $ss->add_worksheet();
 
     my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({

@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::MultipleTrialDesignExcelFormat;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -22,7 +23,18 @@ sub _validate_with_plugin {
   my %warnings;
   my @warning_messages;
   my %missing_accessions;
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
 
@@ -90,6 +102,7 @@ sub _validate_with_plugin {
   my $field_size;
   my $planting_date;
   my $harvest_date;
+  my %seen_plot_keys;
 
   for my $row ( 1 .. $row_max ) {
 
@@ -234,6 +247,20 @@ sub _validate_with_plugin {
     }
     if ($worksheet->get_cell($row,23)) {
       $weight_gram_seed_per_plot = $worksheet->get_cell($row,23)->value();
+    }
+
+    if ( $row_number && $col_number ) {
+      my $tk = $current_trial_name;
+      my $pk = "$row_number-$col_number";
+      if ( !exists $seen_plot_keys{$tk} ) {
+        $seen_plot_keys{$tk} = {};
+      }
+      if ( !exists $seen_plot_keys{$tk}{$pk} ) {
+        $seen_plot_keys{$tk}{$pk} = [$plot_number];
+      }
+      else {
+        push @{$seen_plot_keys{$tk}{$pk}}, $plot_number;
+      }
     }
 
     if ($working_on_new_trial) {
@@ -567,6 +594,18 @@ sub _validate_with_plugin {
       push @error_messages, "Cell M".$seen_plot_names{$r->uniquename}.": plot name <b>".$r->uniquename."</b> already exists.";
   }
 
+  ## PLOT POSITION OVERALL VALIDATION
+  foreach my $tk (keys %seen_plot_keys) {
+      foreach my $pk (keys %{$seen_plot_keys{$tk}} ) {
+          my $plots = $seen_plot_keys{$tk}{$pk};
+          my $count = scalar(@{$plots});
+          if ( $count > 1 ) {
+              my @pos = split('-', $pk);
+              push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " trial=" . $tk . " plots=" . join(',', @$plots);
+          }
+      }
+  }
+
   if (scalar(@warning_messages) >= 1) {
       $warnings{'warning_messages'} = \@warning_messages;
       $self->_set_parse_warnings(\%warnings);
@@ -589,7 +628,18 @@ sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
 

@@ -33,8 +33,8 @@ traits = args[2]
 # 3. Process the phenotypic data.
 ################################################################################
 #read in the phenotypic data
+
 userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t", fill=TRUE)
-#write(paste('phenotype:', userPheno), stderr())
 
 #The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
@@ -46,7 +46,6 @@ row <- "rowNumber"
 col <- "colNumber"
 userPheno$R <- as.factor(userPheno$rowNumber)
 userPheno$C <- as.factor(userPheno$colNumber)
-write(paste('userPheno:', userPheno), stderr())
 
 ################################################################################
 # 4. Fit the 2D Spline model in sommer
@@ -56,6 +55,7 @@ write(paste('userPheno:', userPheno), stderr())
 userModels <- list()
 
 for(i in 1:length(userResponse)){
+
     write(paste('userResponse:', userResponse[i]), stderr())
 
    fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID, sep = "")
@@ -72,6 +72,7 @@ write(paste('model:', m2.sommer), stderr())
 
 
    userModels[[i]] <- m2.sommer
+
 
 }
 
@@ -94,3 +95,4 @@ for(i in 1:length(userModels)){
   write.table(BLUE, outfile_blue)
 
 }
+

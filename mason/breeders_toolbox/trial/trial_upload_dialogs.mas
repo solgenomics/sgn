@@ -29,7 +29,7 @@ $design_types => ()
                                 <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="next_step_upload_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "File Formatting" &>
@@ -49,7 +49,7 @@ $design_types => ()
                                                     <a id="upload_single_trial_design_format_info">Single trial spreadsheet</a>
                                                 </p>
                                             </&>
-                                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                            <button id="next_step_file_formatting_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                         </center>
                                     </div>
 
@@ -328,7 +328,7 @@ $design_types => ()
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
+                                <button id="next_step_trial_information_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
@@ -381,7 +381,22 @@ $design_types => ()
                                     </div>
                                 </div>
 
-                                <br/>
+                                <br />
+
+                                <div class="form-horizontal">
+                                    <p>Check this box to ignore any possible warning messages and save the trial to the database.</p>
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Ignore Warnings?: </label>
+                                        <div class="col-sm-7">
+                                            <input id="upload_trial_ignore_warnings" name="upload_trial_ignore_warnings" type="checkbox">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display:none; padding: 5px; text-align: center" id="upload_trial_warning_messages" class="alert-warning" role="alert"></div>
+
+                                <br />
+
                                 <center>
                                     <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
                                     <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit_first" onclick="Workflow.complete(this, false); return false;" >Upload Trial</button>
@@ -521,9 +536,7 @@ $design_types => ()
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Trials may be uploaded in an Excel file (.xls)</b>
-                    <br />
-                    (.xlsx format not supported)
+                    <b>Trials may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
                     <hr>
                     <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: accession", collapsible=>1, collapsed=>1 &>
@@ -659,13 +672,9 @@ $design_types => ()
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Trials may be uploaded in an Excel file (.xls)</b>
+                    <b>Trials may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
-
                     <b>Multiple Trial Designs:</b>
-
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following, which is an expansion of the single trial design header:
@@ -711,7 +720,7 @@ $design_types => ()
                     <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, purpose, unique number, and location.)</li>
                     <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
                     <li>location (The name of the location where the trial was held, must exist in the database.)</li>
-                    <li>year (The year the trial was held.)</li>
+                    <li>year (The year the trial was held.)</li>                    
                     <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
                     <li>plot_name (Must be unique across entire database. It is often a concatenation of the trial name and the plot number.)</li>

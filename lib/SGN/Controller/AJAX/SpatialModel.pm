@@ -1,3 +1,4 @@
+
 use strict;
 
 package SGN::Controller::AJAX::SpatialModel;
@@ -91,11 +92,15 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
       DIR=> $spatial_model_tmp_output,
     );
 
-    my $pheno_filepath = $tempfile . "_phenotype.txt";
+    my $temppath = $c->config->{basepath}."/".$tempfile;
 
+    my $pheno_filepath = $temppath . "_phenotype.txt";
+
+    print STDERR "pheno_filepath: $pheno_filepath\n";
 
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
 
 
     my $temppath =  $tempfile;
@@ -130,6 +135,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     print $CLEAN join("\t", @new_header)."\n";
 
     my $last_index = scalar(@new_header)-1;
+
 
     while(<$PF>) {
 	print $CLEAN $_;
@@ -189,6 +195,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
 sub make_R_trait_name {
     my $trait = shift;
+
     if ($trait =~ /^\d/) {
 	$trait = "X".$trait;
     }

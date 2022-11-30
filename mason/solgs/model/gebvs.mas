@@ -14,8 +14,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$blups_download_url
-
 </%args>
 
 <& /util/import_javascript.mas, classes => [  "solGS.gebvs", "solGS.histogram"] &>
@@ -32,8 +30,6 @@ $blups_download_url
 <br/>
 <br/>
 
-<& /solgs/model/save_gebvs.mas,
-	gebvs_download_url => $blups_download_url
-	&>
+<& /solgs/model/save_gebvs.mas &>
 
 </&>

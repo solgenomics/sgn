@@ -1315,7 +1315,7 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
                 box_name => $seedlot->[5],
                 current_count => $seedlot->[6],
                 current_weight => $seedlot->[7],
-                quality => $seedlot->[8]
+                quality => $seedlot->[8],
             }
         }
     }

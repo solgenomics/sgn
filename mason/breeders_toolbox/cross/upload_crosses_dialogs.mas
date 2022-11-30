@@ -34,7 +34,7 @@ $trial_name => undef
 
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
 
@@ -47,7 +47,7 @@ $trial_name => undef
                                 <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
                                 <center>
                                     <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a new crossing experiment, click here</button><br/><br/>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
+                                    <button id="next_step_crossing_trial_button" class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
                                 </center>
                             </div>
 
@@ -101,9 +101,9 @@ $trial_name => undef
                                     <div class="col-sm-9">
                                         <select class="form-control" id="cross_file_format_option">
                                             <option value="">Select a file format that you want to upload</option>
-                                            <option value="xls_cross_accession">Excel (.xls) file with only accession/population names for parents</option>
-                                            <option value="xls_cross_plot">Excel (.xls) file with accession and plot names for parents</option>
-                                            <option value="xls_cross_plant">Excel (.xls) file with accession and plant names for parents</option>
+                                            <option value="xls_cross_accession">Excel (.xls or .xlsx) file with only accession/population names for parents</option>
+                                            <option value="xls_cross_plot">Excel (.xls or .xlsx) file with accession and plot names for parents</option>
+                                            <option value="xls_cross_plant">Excel (.xls or .xlsx) file with accession and plant names for parents</option>
                                         </select>
                                     </div>
                                 </div>
@@ -235,7 +235,7 @@ $trial_name => undef
                             </ul>
                             <br/>
                             <center>
-                            <button class="btn btn-primary" name="upload_crosses_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            <button  class="btn btn-primary" name="upload_crosses_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
                             </center>
                         </&>
 
@@ -281,11 +281,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
@@ -363,11 +360,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
@@ -446,11 +440,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
