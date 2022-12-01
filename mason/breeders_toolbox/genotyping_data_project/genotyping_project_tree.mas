@@ -15,7 +15,7 @@ $facilities
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'genotyping_project' &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type=>'genotyping_project' &>
 <& /breeders_toolbox/folder/folder_move.mas, project_type=>'genotyping_project' &>
-<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crosses_list', folder_tree_refresh_name => 'refresh_crosses_jstree_html' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'genotyping_project', folder_tree_identifier => 'genotyping_project_list', folder_tree_refresh_name => 'refresh_genotyping_project_jstree_html' &>
 
 <table class="table table-bordered">
     <thead>
@@ -72,7 +72,7 @@ jQuery(document).ready(function($) {
             //console.log(html);
             jQuery('#genotyping_project_list').jstree( {
                 "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-                "valid_children" : [ "folder", "breeding_program", "genotyping_data_project"],
+                "valid_children" : [ "folder", "breeding_program", "genotyping_project"],
                 "types" : {
                     "breeding_program" : {
                         "icon": 'glyphicon glyphicon-briefcase text-info',
@@ -80,12 +80,9 @@ jQuery(document).ready(function($) {
                     "folder" : {
                         "icon": 'glyphicon glyphicon-folder-open text-danger',
                     },
-                    "genotyping_data_project" : {
+                    "genotyping_project" : {
                         "icon": 'glyphicon glyphicon-align-left text-warning',
                     },
-                    "pcr_genotyping_data_project" : {
-                        "icon": 'glyphicon glyphicon-align-left text-warning',
-                    }
                 },
                 "search" : {
                     "case_insensitive" : true,

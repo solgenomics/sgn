@@ -347,7 +347,7 @@ $analytics_protocol_result_summary => {}
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
 % if ($info_section_id eq 'genotyping_data_project_details'){
-                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
+                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type, trial_owner => $trial_owner &>
 % } #End genotyping_data_project_details
 % if ($info_section_id eq 'genotyping_data_project_protocols'){
                                 <& /breeders_toolbox/genotyping_data_project/protocols.mas, trial_id=>$trial_id &>

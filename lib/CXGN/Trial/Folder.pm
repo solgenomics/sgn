@@ -622,10 +622,10 @@ sub get_jstree_html {
                 $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($project_type_of_interest eq 'genotyping_project' && $children{$child}->{'genotype_data_project'}) {
-                $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+                $html .= _jstree_li_html($schema, 'genotyping_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($project_type_of_interest eq 'genotyping_project' && $children{$child}->{'pcr_genotype_data_project'}) {
-                $html .= _jstree_li_html($schema, 'pcr_genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+                $html .= _jstree_li_html($schema, 'genotyping_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
@@ -651,6 +651,7 @@ sub _jstree_li_html {
     my $type = shift;
     my $id = shift;
     my $name = shift;
+    print STDERR "TYPE =".Dumper($type)."\n";
 
     my $url = '#';
     if ($type eq 'trial' || $type eq 'genotyping_trial' || $type eq 'sampling_trial') {
@@ -663,6 +664,8 @@ sub _jstree_li_html {
         $url = "/analyses/".$id;
     } elsif ($type eq 'breeding_program') {
         $url = "/breeders/program/".$id;
+    } elsif ($type eq 'genotyping_project') {
+		$url = "/breeders/trial/".$id;
     }
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
