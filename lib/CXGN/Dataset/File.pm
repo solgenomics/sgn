@@ -89,7 +89,7 @@ sub retrieve_genotypes_vcf {
     if ($file) {
 	print STDERR "Generating the file $file ...\n";
 	open(my $F, ">", $file) || die "Can't open file $file";
-	while(<$filehandle>) {
+	while(<$$filehandle>) {
 	    print $F $_;
 	}
 	print STDERR "Done.\n";
