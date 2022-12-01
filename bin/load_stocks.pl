@@ -32,11 +32,10 @@ accession genus species population_name synonyms other_stock_props ...
 
 Multiple synonyms can be specified, separated by the | symbol
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Naama Menda (nm249@cornell.edu)
-
-April 2013
+Naama Menda (nm249@cornell.edu) - April 2013
+Lukas Mueller (lam87@cornell.edu) - minor edits, November 2022
 
 =cut
 
@@ -79,36 +78,14 @@ my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on
 					  );
 my $phenome_schema= CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh } , { on_connect_do => ['set search_path to public,phenome;'] }  );
 
-
-#getting the last database ids for resetting at the end in case of rolling back
-# my $last_stockprop_id= $schema->resultset('Stock::Stockprop')->get_column('stockprop_id')->max;
-# my $last_stock_id= $schema->resultset('Stock::Stock')->get_column('stock_id')->max;
-# my $last_stockrel_id= $schema->resultset('Stock::StockRelationship')->get_column('stock_relationship_id')->max;
-# my $last_cvterm_id= $schema->resultset('Cv::Cvterm')->get_column('cvterm_id')->max;
-# my $last_cv_id= $schema->resultset('Cv::Cv')->get_column('cv_id')->max;
-# my $last_db_id= $schema->resultset('General::Db')->get_column('db_id')->max;
-# my $last_dbxref_id= $schema->resultset('General::Dbxref')->get_column('dbxref_id')->max;
-
-
-# my %seq  = (
-#     'db_db_id_seq' => $last_db_id,
-#     'dbxref_dbxref_id_seq' => $last_dbxref_id,
-#     'cv_cv_id_seq' => $last_cv_id,
-#     'cvterm_cvterm_id_seq' => $last_cvterm_id,
-#     'stock_stock_id_seq' => $last_stock_id,
-#     'stockprop_stockprop_id_seq' => $last_stockprop_id,
-#     'stock_relationship_stock_relationship_id_seq' => $last_stockrel_id,
-#     );
-
-#new spreadsheet
+# new spreadsheet
+#
 my $spreadsheet=CXGN::Tools::File::Spreadsheet->new($file);
 
-##############
-##parse first the file with the clone names and synonyms. Load into stock, and stockprop
-#############
-# population for grouping the clones
 
-
+# parse first the file with the clone names and synonyms. Load into stock,
+# and stockprop population for grouping the clones
+#
 my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $username); 
 die "Need to have a user pre-loaded in the database! " if !$sp_person_id;
 
@@ -128,30 +105,34 @@ my $stock_property_cv_id = $schema->resultset("Cv::Cv")->find( { name => 'stock_
 print STDERR "Stock property CV ID = $stock_property_cv_id\n";
 
 
-#the cvterm for the population
+# the cvterm for the population
+#
 print "Finding/creating cvterm for population\n";
 my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
 
 
-#the cvterm for the accession 
+# the cvterm for the accession
+#
 my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
-#the cvterm for the relationship type
+# the cvterm for the relationship type
+#
 my $member_of =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
 
-## For the stock module
-################################
-
+# for the stock module
+#
 print "parsing spreadsheet... \n";
 my @rows = $spreadsheet->row_labels();
 my @columns = $spreadsheet->column_labels();
 
 my $syn_count;
-#accession genus species population_name synonyms
+
+# accession genus species population_name synonyms
+#
 my $coderef= sub  {
     foreach my $accession (@rows ) {
-	#remove spaces from accession name 
+	# remove spaces from accession name 
 	$accession=~s/\s+//g;
 	
 	my $species_name  =  $spreadsheet->value_at($accession, "species_name");
@@ -165,19 +146,6 @@ my $coderef= sub  {
 	my $population_name  =  $spreadsheet->value_at($accession, "population_name");
         my $synonym_string   =  $spreadsheet->value_at($accession, "synonyms");
 	my @synonyms = split /\|/ , $synonym_string;
-        # see if a stock exists with any of the synonyms
-        #my @stocks = $stock_rs->search( {
-        #    -or => [
-        #         uniquename => $accession,
-        #         uniquename => $iita_clone_name,
-        #         uniquename => $syn1,
-        #         uniquename => $syn2,
-        #         uniquename => $syn3,
-        #         uniquename => $syn4,
-        #         uniquename => $syn5,
-        #         uniquename => $icass,
-        #        ], }, );
-	
 
 	print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
 	my $population = $stock_rs->find_or_create(
@@ -199,16 +167,18 @@ my $coderef= sub  {
 	    });
         my $stock_id = $stock->stock_id;
         print "Adding owner $sp_person_id \n";
-	#add the owner for this stock
+	
+	# add the owner for this stock
+	#
         $phenome_schema->resultset("StockOwner")->find_or_create(
             {
                 stock_id     => $stock->stock_id,
                 sp_person_id => $sp_person_id,
             });
-        #####################
 
-	#the stock belongs to the population:
-        #add new stock_relationship
+	# the stock belongs to the population:
+        # add new stock_relationship
+	#
 	print "Accession $accession is member_of population $population_name \n";
 	$population->find_or_create_related('stock_relationship_objects', {
 	    type_id => $member_of->cvterm_id(),
@@ -227,7 +197,9 @@ my $coderef= sub  {
                 if (!$existing_synonym) {
 		    $syn_count++;
 		    print STDOUT "Adding synonym: $syn \n"  ;
-                    #add the synonym as a stockprop
+		    
+                    # add the synonym as a stockprop
+		    #
                     $stock->create_stockprops({ stock_synonym => $syn},
                                               {autocreate => 0,
 					       allow_duplicate_values=> 1,
@@ -259,9 +231,6 @@ my $coderef= sub  {
 	}
     }
 	
-	    
-    #########
-    
     if ($test) {
         die "TEST RUN! rolling back\n";
     }
@@ -272,11 +241,5 @@ try {
     $schema->txn_do($coderef);
     if (!$test) { print "Transaction succeeded! Commiting stocks and their properties! \n\n"; }
 } catch {
-    # Transaction failed
-    # foreach my $value ( keys %seq ) {
-    #      my $maxval= $seq{$value} || 0;
-    #      if ($maxval) { $dbh->do("SELECT setval ('$value', $maxval, true)") ;  }
-    #      else {  $dbh->do("SELECT setval ('$value', 1, false)");  }
-    #  }
     die "An error occured! Rolling back  and reseting database sequences!" . $_ . "\n";
 };
