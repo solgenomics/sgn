@@ -23,6 +23,7 @@ sub add_catalog_item_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
+    my $ordering_site = $c->config->{ordering_site};
 
     my $item_name = $c->req->param('item_name');
     my $item_type = $c->req->param('item_type');
@@ -33,6 +34,10 @@ sub add_catalog_item_POST : Args(0) {
     my $item_availability = $c->req->param('item_availability');
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
+
+    my $item_species = $c->req->param('item_species');
+    my $item_variety = $c->req->param('item_variety');
+
     my $item_stock_id;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
@@ -60,27 +65,44 @@ sub add_catalog_item_POST : Args(0) {
         return;
     }
 
-    my $stock_catalog = CXGN::Stock::Catalog->new({
-        bcs_schema => $schema,
-        parent_id => $item_stock_id,
-        prop_id => $item_prop_id
-    });
 
-    $stock_catalog->item_type($item_type);
-    $stock_catalog->category($item_category);
-    $stock_catalog->description($item_description);
-    $stock_catalog->material_source($item_material_source);
-    $stock_catalog->breeding_program($item_breeding_program_id);
-    $stock_catalog->availability($item_availability);
-    $stock_catalog->contact_person_id($sp_person_id);
+    if ($ordering_site eq 'BAT') {
+        my %catalog_info_hash;
+        my $stock_catalog_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property');
+        $catalog_info_hash{'ordering_site'} = $ordering_site;
+        $catalog_info_hash{'item_type'} = $item_type;
+        $catalog_info_hash{'category'} = $item_category;
+        $catalog_info_hash{'breeding_program'} = $item_breeding_program_id;
+        $catalog_info_hash{'species'} = $item_species;
+        $catalog_info_hash{'variety'} = $item_variety;
+        $catalog_info_hash{'contact_person_id'} = $sp_person_id;
 
-    $stock_catalog->store();
+        my $catalog_json_string = encode_json \%catalog_info_hash;
+        print STDERR "CATALOG JSON STRING =".Dumper($catalog_json_string)."\n";
+        $item_rs->create_stockprops({$stock_catalog_json_cvterm->name() => $catalog_json_string});
 
-    if (!$stock_catalog->store()){
-        $c->stash->{rest} = {error_string => "Error saving catalog item",};
-        return;
+    } else {
+        my $stock_catalog = CXGN::Stock::Catalog->new({
+            bcs_schema => $schema,
+            parent_id => $item_stock_id,
+            prop_id => $item_prop_id
+        });
+
+        $stock_catalog->item_type($item_type);
+        $stock_catalog->category($item_category);
+        $stock_catalog->description($item_description);
+        $stock_catalog->material_source($item_material_source);
+        $stock_catalog->breeding_program($item_breeding_program_id);
+        $stock_catalog->availability($item_availability);
+        $stock_catalog->contact_person_id($sp_person_id);
+
+        $stock_catalog->store();
+
+        if (!$stock_catalog->store()){
+            $c->stash->{rest} = {error_string => "Error saving catalog item",};
+            return;
+        }
     }
-
     $c->stash->{rest} = {success => "1",};
 
 }

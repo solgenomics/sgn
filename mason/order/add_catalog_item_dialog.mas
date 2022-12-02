@@ -56,9 +56,9 @@ $ordering_site => undef
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_variety">
                                     <option value="">Select a variety</option>
-                                    <option value="40754">40754</option>
+                                    <option value="C319">C319</option>
                                     <option value="K236">K236</option>
-                                    <option value="mix">Mix</option>
+                                    <option value="Mix">Mix</option>
                                 </select>
                             </div>
                         </div>
@@ -173,6 +173,8 @@ $ordering_site => undef
 <script>
 jQuery(document).ready(function(){
 
+    var ordering_site = "<% $ordering_site %>";
+
     jQuery("#add_catalog_item_button").click( function() {
 
         jQuery("#item_name").autocomplete({
@@ -193,14 +195,20 @@ jQuery(document).ready(function(){
         var availability = jQuery('#item_availability').val();
         var contact_person = jQuery('#contact_person_name').val();
 
-        if (name == '') { alert("Please provide a name") };
-        if (type == '') { alert("Please select a type") };
-        if (category == '') { alert("Please select a category") };
-        if (description == '') { alert("Please provide a description") };
-        if (material_source == '') { alert("Please select a material source") };
-        if (breeding_program == '') { alert("Please select a breeding program") };
-        if (availability == '') { alert("Please indicate availability") };
-        if (contact_person == '') { alert("Please indicate contact person") };
+        var item_species = jQuery('#item_species').val();
+        var item_variety = jQuery('#item_variety').val();
+
+        if (ordering_site != 'BAT') {
+            if (name == '') { alert("Please provide a name") };
+            if (type == '') { alert("Please select a type") };
+            if (category == '') { alert("Please select a category") };
+            if (description == '') { alert("Please provide a description") };
+            if (material_source == '') { alert("Please select a material source") };
+            if (breeding_program == '') { alert("Please select a breeding program") };
+            if (availability == '') { alert("Please indicate availability") };
+            if (contact_person == '') { alert("Please indicate contact person") };
+        }
+
 
         jQuery.ajax({
             url: '/ajax/catalog/add_item',
@@ -214,7 +222,9 @@ jQuery(document).ready(function(){
                 'item_material_source': material_source,
                 'item_breeding_program': breeding_program,
                 'item_availability': availability,
-                'contact_person': contact_person
+                'contact_person': contact_person,
+                'item_species': item_species,
+                'item_variety': item_variety
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
