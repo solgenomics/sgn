@@ -3,7 +3,7 @@
 
 $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
 $stock_types     => undef
-$editable_stock_props => undef
+$editable_vector_props => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
@@ -17,11 +17,11 @@ $editable_stock_props => undef
 
 use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
 
-my $accession_cvterm_id;
+my $vector_cvterm_id;
 
 for (my $i=0; $i<= scalar(@$stock_types); $i++) {
-   if ( $stock_types->[$i][1] eq "accession" ) {
-     $accession_cvterm_id = $stock_types->[$i][0];
+   if ( $stock_types->[$i][1] eq "vector_construct" ) {
+     $vector_cvterm_id = $stock_types->[$i][0];
 last();
    }
 }
@@ -29,7 +29,7 @@ last();
 my $stock_type_select = simple_selectbox_html(
 choices   => $stock_types,
 id        => "stock_type_select",
-selected => $accession_cvterm_id
+selected => $vector_cvterm_id
 );
 
 
@@ -107,7 +107,7 @@ selected => $accession_cvterm_id
             <div class="input-group">
               <!-- <span class="input-group-btn"> -->
                 <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
-%  foreach my $stockprop (@$editable_stock_props){
+%  foreach my $stockprop (@$editable_vector_props){
                   <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
                 </select>
@@ -149,7 +149,7 @@ selected => $accession_cvterm_id
             <div class="input-group">
               <span class="input-group-btn">
                 <select class="form-control" id="editable_stockprop_view_column_term" name="editable_stockprop_view_column_term">
-%  foreach my $stockprop (sort { "\L$a" cmp "\L$b" } @$editable_stock_props){
+%  foreach my $stockprop (sort { "\L$a" cmp "\L$b" } @$editable_vector_props){
                   <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
                 </select>
@@ -321,7 +321,7 @@ jQuery(document).ready(function () {
   jQuery('#submit_stock_search_all').click( function() {
     var editable_stockprops_search = {};
       if(jQuery('#any_name').val()){
-%  foreach my $stockprop (@$editable_stock_props){
+%  foreach my $stockprop (@$editable_vector_props){
           editable_stockprops_search['<% $stockprop %>'] = {"matchtype": "contains"};
           editable_stockprops_search['<% $stockprop %>']["value"] = jQuery('#any_name').val();
 %  }
@@ -336,53 +336,6 @@ jQuery(document).ready(function () {
          }
   } );
 
-
-  // For graphical filtering, using same search params
-  var run = false;
-  jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
-      var stock_type = jQuery('#stock_type_select option:selected').text();
-      if (stock_type == 'accession'){
-          jQuery.ajax ({
-              url : '/ajax/search/vectors',
-              data : {
-                  minimal_info : 1,
-                  any_name : jQuery('#any_name').val(),
-                  any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                  stock_type : jQuery('#stock_type_select option:selected').text(),
-                  editable_stockprop_values : JSON.stringify(editable_stockprops_search)
-              },
-              beforeSend: function() {
-                  jQuery("#working_modal").modal("show");
-                  jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
-              },
-              success: function(response){
-                  //console.log(response);
-                  jQuery("#working_modal").modal("hide");
-                  var stock_ids = [];
-                  for (var i=0; i<response.data.length; i++){
-                      stock_ids.push(response.data[i][0]);
-                  }
-
-                  if (run) {
-                      jQuery("#stock_search_graphical_filter_results_div").DataTable().destroy();
-                      jQuery("#stock_search_graphical_filter_results_div").html("");
-                  }
-                  run = true;
-                  params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
-                  loadBrAPIData("<% $c->config->{main_production_site_url} %>",params,function(response){
-                      useBrAPIData(response,true);
-                  });
-
-              },
-              error: function(response){
-                  jQuery("#working_modal").modal("hide");
-                  alert("Error retrieving accessions in graphical filtering.");
-              }
-          });
-      } else {
-          jQuery('#stock_search_graphical_filter_div').html("Graphical Filtering only configured for accessions. Currently searching across "+stock_type+". Change your search to accesions to use graphical filtering.");
-      }
-  });
 
 
 });

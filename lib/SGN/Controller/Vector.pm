@@ -51,13 +51,13 @@ has 'default_page_size' => (
 
 sub vector_new :Path('/vector/new') Args(0) {
     my ($self, $c ) = @_;
-    my @editable_stock_props = split ',',$c->get_conf('editable_stock_props');
+    my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
     $c->stash(
 	template => '/stock/add_vector.mas',
 
     stock_types => stock_types($self->schema),
 	sp_person_autocomplete_uri => '/ajax/people/autocomplete',
-    editable_stock_props => \@editable_stock_props
+    editable_vector_props => \@editable_vector_props
 	);
 
 }
@@ -68,13 +68,13 @@ sub vector_new :Path('/vector/new') Args(0) {
 
 sub vector_search :Path('/search/vectors') Args(0) {
     my ($self, $c ) = @_;
-    my @editable_stock_props = split ',',$c->get_conf('editable_stock_props');
+    my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
     $c->stash(
 	template => '/search/vectors.mas',
 
     stock_types => stock_types($self->schema),
 	sp_person_autocomplete_uri => '/ajax/people/autocomplete',
-    editable_stock_props => \@editable_stock_props
+    editable_vector_props => \@editable_vector_props
 	);
 
 }

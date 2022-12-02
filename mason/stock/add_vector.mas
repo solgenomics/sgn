@@ -13,73 +13,135 @@ $stockref => undef
 
 <div class="infosectioncontent">
 
-
+<p>Add new vector and details.</p> 
 <div class="row">
   <div class="col-sm-12">
 
-<div id="stock_details">
-  <form id="edit_stock" method="get" action="">  <br>
-    <div class="panel panel-defaut">
-      <table class="table"> 
-        <tbody>
-          <tr><td>Organism</td><td width="20"></td><td><input class="form-control ui-autocomplete-input" type="text" id="species_name" name="Organism" value="Eucalyptus siderophloia" size="" onclick="jqueryStuff()" autocomplete="off"></td></tr>
-          <tr><td>Stock type</td><td width="20"></td><td> <select id="" class="form-control" name="type_id">  <option value="76446">cross</option>  <option value="76524">backcross population</option>  <option value="76525">f2 population</option>  <option value="76526">mutant population</option>  <option value="76527">plant</option>  <option value="76528">population</option>  <option value="76475">tissue_sample</option>  <option value="76480">training population</option>  <option value="76392" selected="selected">accession</option>  <option value="76393">plot</option>  <option value="76488">vector_construct</option>  <option value="77563">seedlot</option>  <option value="77574">subplot</option>  <option value="77584">grafted_accession</option>  <option value="77647">family_name</option>  <option value="78839">analysis_instance</option>  <option value="79010">imaging_event_vehicle</option>  </select> </td></tr>
-          <tr><td>Uniquename  <font color="red">*</font> </td><td width="20"></td><td> <input class="form-control" type="text" id="" name="uniquename" value="xcvxv" size="" onclick="jqueryStuff()">
-          </td></tr>
-          <tr><td>Description</td><td width="20"></td><td> <textarea class="form-control" id="" name="description" rows="4" cols="40">vx</textarea>
-          </td></tr>
- <tr><td colspan="3" align="center">  <input type="hidden" id="" name="stock_id" value="">  <input type="hidden" id="" name="sp_person_id" value="41">  <input type="hidden" id="" name="action" value="store">  (<font color="red">*</font> denotes required field.)<br><br>  </td></tr>
-        </tbody>
-      </table>
-    </div> 
-  </form>
-  <input id="stockForm_submit_button" class="btn btn-primary btn-sm" type="button" onclick="javascript:stockForm.store()" value="Store">&nbsp;&nbsp;&nbsp;
-  <input id="stockForm_reset_button" class="btn btn-default btn-sm" type="button" onclick="javascript:stockForm.render( 'edit' )" value="Reset form"><br><br>
+<div class="container-fluid">
+  <div class="well">
+
+  <form class="form-horizontal" id="newVectorForm" action="#" onsubmit="handleSubmit();return false">
+
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Organism <font color="red">*</font>  
+      </label>
+      <div class="col-sm-9">
+        <input class="form-control ui-autocomplete-input" type="text" id="species_name" name="species_name" value="" size="" onclick="jqueryStuff()" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Uniquename <font color="red">*</font>  
+      </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" name="uniqueName">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Strain </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="Strain" name="Strain">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Backbone </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="Backbone" name="Backbone">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Cloning Organism </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="CloningOrganism" name="CloningOrganism">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Inherent Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="InherentMarker" name="InherentMarker">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Selection Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="SelectionMarker" name="SelectionMarker">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Cassette Name </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="CassetteName" name="CassetteName">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Gene </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="Gene" name="Gene">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Promotors </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="Promotors" name="Promotors">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Terminators </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="Terminators" name="Terminators">
+      </div>
+    </div>
+
+  <div class="form-group">
+    <label class="col-sm-3 control-label"></label>
+    <div class="col-sm-9">
+      <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;">Fields Marked With "*" Are Required.</h5>
+    </div>
+  </div>
+  <hr>
+  <button style="float:right" class="btn btn-primary btn-lg" id="contact_form_submit">Add new vector</button>
+  <br><br>
+
+</form>
+</div>
+
+<br>
+
 </div>
 
 <script language="javascript" type="text/javascript">
 
-  var stockForm = new CXGN.Page.Form.JSFormPage( '' , 'stock', '/phenome/stock/stock_ajax_form.pl', 'stock_details', 'stockForm','/stock//view/');
-     stockForm.setNewButton('<a class="btn btn-sm btn-default" href ="/stock/0/new">New</a>');
+function handleSubmit() {
 
-     
+  const form = document.getElementById('newVectorForm');
+    const dataForm = new FormData(form);
 
-     jQuery.ajax({
-              type: 'POST',
-              data: {'data': JSON.stringify(response)},
-              url: '/ajax/create_vector_construct',
-              success: function(response) {
-                //console.log(response);
-              },
-              error: function(response) {
-                //alert('An Error Occured Syncing Constructs.');
-              }
-            });
+    const value = Object.fromEntries(dataForm.entries());
 
-como agregar stockprop???
+    const data = {};
+    dataForm.forEach((value, key) => (data[key] = value));
 
-  stockForm.render();
+    jQuery.ajax({
+        type: 'POST',
+        data: {'data': JSON.stringify([data])},
+        url: '/ajax/create_vector_construct',
+        success: function(response) {
+          //console.log(response);
+          alert('Saved!');
+        },
+        error: function(response) {
+          alert('An Error occured while storing vectors.');
+        }
+      });
+
+    console.log(data);
+
+}
+
+
   
 </script>  
-
-
-
-<!-- <div class="row">
-  <div class="col-sm-12">
-
-  <& /page/form.mas,
-  object_type=>'stock',
-  object_id=>"$stock_id",
-  form_name=> 'stock_form',
-  server_side_script => '/phenome/stock/stock_ajax_form.pl',
-  form_div_name=>'stock_details',
-  js_object_name=> 'stockForm',
-  page_url => "/stock/$stock_id/view/" ,
-  alternate_new_button => '<a class="btn btn-sm btn-default" href ="/stock/0/new">New</a>'
-  &>
-
-  </div>
-</div> -->
 
 </&>
 
