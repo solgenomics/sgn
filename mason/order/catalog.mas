@@ -3,6 +3,7 @@
 $check_vendor_role
 $ordering_service_name => undef
 $additional_order_info => undef
+$ordering_site => undef
 
 </%args>
 
@@ -129,8 +130,8 @@ $additional_order_info => undef
     </div>
 </div>
 
-<& /order/upload_catalog_items_dialog.mas &>
-<& /order/add_catalog_item_dialog.mas &>
+<& /order/upload_catalog_items_dialog.mas, ordering_site => $ordering_site&>
+<& /order/add_catalog_item_dialog.mas, ordering_site => $ordering_site &>
 
 <script>
 

@@ -1,5 +1,6 @@
 <%args>
 $timestamp => localtime()
+$ordering_site => undef
 </%args>
 
 <div class="modal fade" id="add_catalog_item_dialog" name="add_catalog_item_dialog" tabindex="-1" role="dialog" aria-labelledby="addCatalogItemDialog">
@@ -18,6 +19,62 @@ $timestamp => localtime()
                                 <input class="form-control" id="item_name" placeholder="Item name must be in the database">
                             </div>
                         </div>
+% if ($ordering_site eq 'BAT') {
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Item Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_type">
+                                    <option value="">Select an item type</option>
+                                    <option value="single item">single item</option>
+                                    <option value="set of items">batch</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Category: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_category">
+                                    <option value="">Select a category</option>
+                                    <option value="seed">seed</option>
+                                    <option value="plant">plant</option>
+                                    <option value="construct">construct</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Species: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_species">
+                                    <option value="">Select a species</option>
+                                    <option value="Nicotiana benthamiana">Nicotiana benthamiana</option>
+                                    <option value="Nicotiana tabacum">Nicotiana tabacum</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Variety: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_variety">
+                                    <option value="">Select a variety</option>
+                                    <option value="40754">40754</option>
+                                    <option value="K236">K236</option>
+                                    <option value="mix">Mix</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Project: </label>
+                            <div class="col-sm-9" >
+                                <div id="item_breeding_program_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Contact Person Username: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
+                            </div>
+                        </div>
+%} else {
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Item Type: </label>
                             <div class="col-sm-9">
@@ -78,6 +135,7 @@ $timestamp => localtime()
                                 <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
                             </div>
                         </div>
+%}
                     </form>
                 </div>
             </div>
