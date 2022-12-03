@@ -1680,7 +1680,12 @@ sub get_cached_file_VCF {
 		    my $pos = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos};
 		    if (! $pos) {
 			(undef, $pos) = split /\_/, $m->{name};
-			#print STDERR "Warning! No position data, using $pos extracted from $m->{name}\n";
+			if ($pos) {
+			    #print STDERR "Warning! No position data, using $pos extracted from $m->{name}\n";
+		        } else {
+			    $pos = 0;
+			    print STDERR "Warning! No position data, using 0\n";
+			}
 		    }
                     #$genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
 		    $genotype_string .= $pos ."\t";

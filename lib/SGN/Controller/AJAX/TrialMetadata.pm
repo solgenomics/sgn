@@ -4673,7 +4673,7 @@ sub create_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/crea
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = "entry_numbers_XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-    $rel_file = $rel_file . ".xls";
+    $rel_file = $rel_file . ".xlsx";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
     my $download = CXGN::Trial::Download->new({
