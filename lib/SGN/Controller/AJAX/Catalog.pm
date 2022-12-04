@@ -238,33 +238,72 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
-    my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
-    my $catalog_ref = $catalog_obj->get_catalog_items();
-#    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
+    my $ordering_site = $c->config->{ordering_site};
     my @catalog_items;
-    my @catalog_list = @$catalog_ref;
-    foreach my $catalog_item (@catalog_list) {
-        my @item_details = ();
-        @item_details = @$catalog_item;
-        my $item_id = shift @item_details;
-        my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
-        my $item_name = $stock_rs->uniquename();
 
-        my $program_id = $item_details[4];
-        my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
-        my $program_name = $program_rs->name();
+    if ($ordering_site eq 'BAT') {
+        my $stock_catalog_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property');
 
-        push @catalog_items, {
-            item_id => $item_id,
-            item_name => $item_name,
-            item_type => $item_details[0],
-            category => $item_details[1],
-            description => $item_details[2],
-            material_source => $item_details[3],
-            breeding_program => $program_name,
-            availability => $item_details[5],
-        };
+        my $catalog_rs = $schema->resultset("Stock::Stockprop")->search({type_id => $stock_catalog_json_cvterm->cvterm_id() }, { order_by => {-asc => 'stock_id'} });
+        my @catalog_list;
+        while (my $r = $catalog_rs->next()){
+            my @each_row = ();
+            my $catalog_stock_id = $r->stock_id();
+            my $item_detail_json = $r->value();
+            my $detail_hash = decode_json $item_detail_json;
+            my $site_key = $detail_hash->{'ordering_site'};
+            if ($site_key eq 'BAT') {
+                my $item_type = $detail_hash->{'item_type'};
+                my $item_category = $detail_hash->{'category'};
+                my $species = $detail_hash->{'species'};
+                my $variety = $detail_hash->{'variety'};
+                my $program_id = $detail_hash->{'breeding_program'};
+
+                my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $catalog_stock_id });
+                my $item_name = $stock_rs->uniquename();
+
+                my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
+                my $program_name = $program_rs->name();
+
+                push @catalog_items, {
+                    item_id => $catalog_stock_id,
+                    item_name => $item_name,
+                    item_type => $item_type,
+                    category => $item_category,
+                    species => $species,
+                    variety => $variety,
+                    program => $program_name,
+                };
+            }
+        }
+    } else {
+
+        my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
+        my $catalog_ref = $catalog_obj->get_catalog_items();
+#    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
+        my @catalog_list = @$catalog_ref;
+        foreach my $catalog_item (@catalog_list) {
+            my @item_details = ();
+            @item_details = @$catalog_item;
+            my $item_id = shift @item_details;
+            my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
+            my $item_name = $stock_rs->uniquename();
+
+            my $program_id = $item_details[4];
+            my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
+            my $program_name = $program_rs->name();
+
+            push @catalog_items, {
+                item_id => $item_id,
+                item_name => $item_name,
+                item_type => $item_details[0],
+                category => $item_details[1],
+                description => $item_details[2],
+                material_source => $item_details[3],
+                breeding_program => $program_name,
+                availability => $item_details[5],
+            };
+        }
     }
 
     $c->stash->{rest} = {data => \@catalog_items};

@@ -139,23 +139,42 @@ jQuery(document).ready( function() {
 
     var ordering_service_name = "<% $ordering_service_name %>";
     var additional_order_info = "<% $additional_order_info %>";
+    var ordering_site = "<% $ordering_site %>";
 
-    jQuery('#catalog_items_table').DataTable( {
-        'autoWidth': false,
-        'order': false,
-        'search':'applied',
-        'ajax': '/ajax/catalog/items',
-        columns: [
-            { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
-            { title: "Type", "data": "item_type" },
-            { title: "Category", "data": "category" },
-            { title: "Description", "data": "description" },
-            { title: "Material Source", "data": "material_source" },
-            { title: "Breeding Program", "data": "breeding_program" },
-            { title: "Availability", "data": "availability" },
-            { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
-        ],
-    });
+    if (ordering_site == 'BAT') {
+        jQuery('#catalog_items_table').DataTable( {
+            'autoWidth': false,
+            'order': false,
+            'search':'applied',
+            'ajax': '/ajax/catalog/items',
+            columns: [
+                { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
+                { title: "Type", "data": "item_type" },
+                { title: "Category", "data": "category" },
+                { title: "Species", "data": "species" },
+                { title: "Variety", "data": "variety" },
+                { title: "Project", "data": "program" },
+                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+            ],
+        });
+    } else {
+        jQuery('#catalog_items_table').DataTable( {
+            'autoWidth': false,
+            'order': false,
+            'search':'applied',
+            'ajax': '/ajax/catalog/items',
+            columns: [
+                { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
+                { title: "Type", "data": "item_type" },
+                { title: "Category", "data": "category" },
+                { title: "Description", "data": "description" },
+                { title: "Material Source", "data": "material_source" },
+                { title: "Breeding Program", "data": "breeding_program" },
+                { title: "Availability", "data": "availability" },
+                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+            ],
+        });
+    }
 
     var lo = new CXGN.List();
     var list_id;
