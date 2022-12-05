@@ -242,7 +242,7 @@ sub download_model_analysis_report_file {
 	}
 
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
-	$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
+	#$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
 
 	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
 
@@ -263,7 +263,7 @@ sub download_selection_prediction_report_file {
 	}
 
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
-	$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
+	#$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
 
 	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
 
