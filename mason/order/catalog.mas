@@ -154,7 +154,7 @@ jQuery(document).ready( function() {
                 { title: "Species", "data": "species" },
                 { title: "Variety", "data": "variety" },
                 { title: "Project", "data": "program" },
-                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_site+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
             ],
         });
     } else {
@@ -283,22 +283,36 @@ jQuery(document).ready( function() {
 
 });
 
-function addToCart(item_name, additional_order_info, ordering_service_name){
+function addToCart(item_name, additional_order_info, ordering_service_name, ordering_site ){
     var additional_info = additional_order_info.split(",");
     var html = '';
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
-    if (ordering_service_name == 'ONA') {
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Info: </label><div class="col-sm-9" ><select class="form-control" id="item_additional_info" name="item_additional_info"><option disabled value="" selected hidden>Please select a required clone stage</option>';
-        if (additional_info) {
-            for (var i=0; i<additional_info.length; i++) {
-                html = html + '<option value='+additional_info[i]+'>'+additional_info[i]+'</option>';
-            }
-        }
-        html = html + '</select></div></div>';
-    }
-    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
 
+    if (ordering_site == 'BAT') {
+        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Facility: </label><div class="col-sm-9" ><input class="form-control" id="item_facility" name="item_facility" placeholder="Please Select"</div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Scientist(s): </label><div class="col-sm-9" ><input class="form-control" id="item_scientist" name="item_scientist" placeholder=""</div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Due/Requested by Date: </label><div class="col-sm-9" ><input class="form-control" id="due_date" name="due_date" placeholder=""</div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Experiment Name: </label><div class="col-sm-9" ><input class="form-control" id="experiment_name" name="experiment_name" placeholder=""</div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Experiment Type: </label><div class="col-sm-9" ><input class="form-control" id="experiment_type" name="experiment_type" placeholder="Please Select"</div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Risk Assessment: </label><div class="col-sm-9" ><input class="form-control" id="risk_assessment" name="risk_assessment" placeholder=""</div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Containment Zone: </label><div class="col-sm-9" ><input class="form-control" id="containment_zone" name="containment_zone" placeholder=""</div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="eg: Clothing & Special Handling"</div></div></form>';
+
+    } else {
+        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
+        if (ordering_service_name == 'ONA') {
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Info: </label><div class="col-sm-9" ><select class="form-control" id="item_additional_info" name="item_additional_info"><option disabled value="" selected hidden>Please select a required clone stage</option>';
+            if (additional_info) {
+                for (var i=0; i<additional_info.length; i++) {
+                    html = html + '<option value='+additional_info[i]+'>'+additional_info[i]+'</option>';
+                }
+            }
+            html = html + '</select></div></div>';
+        }
+        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
+    }
     jQuery('#add_item_detail_div').html(html);
     jQuery('#add_item_detail_dialog').modal('show');
 
