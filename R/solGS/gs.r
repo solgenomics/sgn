@@ -216,9 +216,14 @@ if (datasetInfo == 'combined populations') {
          phenoTrait <- averageTrait(phenoData, traitAbbr)
 
      } else {
-         phenoTrait <- getAdjMeans(phenoData,
+         meansResult <- getAdjMeans(phenoData,
                                    traitName = traitAbbr,
-                                   calcAverages = TRUE)
+                                   calcAverages = TRUE,
+                                   logReturn=TRUE)
+
+         
+          trainingLog <- paste0(trainingLog, "\n\n", meansResult$log)
+          phenoTrait <- meansResult$adjMeans
      }
 
      keepMetaCols <- c('observationUnitName', 'germplasmName', 'studyDbId', 'locationName',
@@ -338,10 +343,10 @@ commonMarkers  <- intersect(trainingMarkers, selectionMarkers)
 selectionLog <- append(selectionLog, paste0("The training and selection pops geno dataset have ", length(trainingMarkers), " markers in common.\n" ))
 
 genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
-selectionLog <- append(selectionLog, paste0("After filtering for shared markers, The training pop geno dataset has ", length(names(selectionData)), " markers.\n" ))
+selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the training pop geno dataset has ", length(names(selectionData)), " markers.\n" ))
 
 selectionData      <- subset(selectionData, select = commonMarkers)
-selectionLog <- append(selectionLog, paste0("After filtering for shared markers, The selection pop geno dataset has ", length(names(selectionData)), " markers.\n" ))
+selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the selection pop geno dataset has ", length(names(selectionData)), " markers.\n" ))
 
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
