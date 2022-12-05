@@ -161,15 +161,16 @@ override('retrieve_genotypes',
 
 	     print STDERR "DONE GETTING DOSAGE MATRIX\n";
 
-
+	     
 	     if ($file) {
 		 print STDERR "Generating the file $file ...\n";
 		 open(my $F, ">", $file) || die "Can't open file $file";
-		 while(<$$fh>) {
+		 while(<$fh>) {
 		     print $F $_;
 		 }
 		 print STDERR "Done.\n";
 		 close($F);
+		 seek $fh, 0, 0; # reset the filehandle
 	     }
 
 	     return $fh;
