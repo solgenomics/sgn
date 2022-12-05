@@ -190,24 +190,24 @@ sub get_transactions {
 
     my @transactions;
     while (my $row = $rs->next()) {
-        my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema );
-        $t_obj->transaction_id($row->stock_relationship_id);
-        $t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
-        $t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
-        my $data = JSON::Any->decode($row->value());
-        if (defined($data->{weight_gram})){
-            $t_obj->weight_gram($data->{weight_gram});
-        } else {
-            $t_obj->weight_gram('NA');
-        }
-        if (defined($data->{amount})){
-            $t_obj->amount($data->{amount});
-        } else {
-            $t_obj->amount('NA');
-        }
-        $t_obj->timestamp($data->{timestamp});
-        $t_obj->operator($data->{operator});
-        $t_obj->description($data->{description});
+        my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id=> $row->stock_relationship_id());
+        #$t_obj->transaction_id($row->stock_relationship_id);
+        #$t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
+        #$t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
+        #my $data = JSON::Any->decode($row->value());
+        #if (defined($data->{weight_gram})){
+        #    $t_obj->weight_gram($data->{weight_gram});
+        #} else {
+        #    $t_obj->weight_gram('NA');
+        #}
+        #if (defined($data->{amount})){
+        #    $t_obj->amount($data->{amount});
+        #} else {
+        #    $t_obj->amount('NA');
+        #}
+        #$t_obj->timestamp($data->{timestamp});
+        #$t_obj->operator($data->{operator});
+        #$t_obj->description($data->{description});
 
         push @transactions, $t_obj;
     }

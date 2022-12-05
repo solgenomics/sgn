@@ -216,15 +216,15 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
         <select class="form-control" id="select_print_format" name="select_print_format">
           <!--<option selected disabled>select printing format</option>-->
           <option value="">select printing format</option>
-          <option value="CASS">CASS printing format</option>
-          <option value="MUSA">MUSA printing format</option>
+          <option value="20A4">20 label Size Sticker Paper</option>
           <option value="32A4">32 label Size Sticker Paper</option>
           <option value="32_unique">32 Unique label Size Sticker Paper</option>
-          <option value="20A4">20 label Size Sticker Paper</option>
-          <option value="NCSU">NCSU printing format</option>
-          <option value="IITA-3">IITA-3-barcode</option>
-          <option value="IITA-2">IITA-2-barcode</option>
+          <option value="CASS">CASS printing format</option>
           <option value="crossing">CROSS</option>
+          <option value="IITA-2">IITA-2-barcode</option>
+          <option value="IITA-3">IITA-3-barcode</option>
+          <option value="MUSA">MUSA printing format</option>
+          <option value="NCSU">NCSU printing format</option>
         </select>
     </div>
   </div>

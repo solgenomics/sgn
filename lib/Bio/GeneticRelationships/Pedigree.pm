@@ -38,6 +38,7 @@ subtype 'CrossType',
       $_ eq 'doubled_haploid' ||
       $_ eq 'backcross' ||
       $_ eq 'genetic_transformation' ||
+      $_ eq 'reselected' ||
       $_ eq 'unknown' };
 
 has 'name' => (isa => 'Str',is => 'rw', predicate => 'has_name', required => 1,);
@@ -50,7 +51,8 @@ has 'female_plot' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw',
 has 'male_plot' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_male_plot');
 has 'female_plant' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_female_plant');
 has 'male_plant' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_male_plant');
-
+has 'rootstock_of' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_rootstock');
+has 'scion_of' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_scion');
 
 ###
 1;                              #do not remove

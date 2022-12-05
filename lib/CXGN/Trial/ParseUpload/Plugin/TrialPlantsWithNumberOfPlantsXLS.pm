@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialPlantsWithNumberOfPlantsXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -12,7 +13,18 @@ sub _validate_with_plugin {
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my @error_messages;
     my %errors;
     my %missing_accessions;
@@ -90,7 +102,7 @@ sub _validate_with_plugin {
         } else {
             #file must not contain duplicate plant names
             for my $i (1 .. $num_plants_per_plot) {
-                my $plant_name = $plot_name."_".$i;
+                my $plant_name = $plot_name."_plant_".$i;
                 if ($seen_plant_names{$plant_name}) {
                     push @error_messages, "Cell B$row_name: duplicate plant_name at cell A".$seen_plant_names{$plant_name}.": $plant_name";
                 }
@@ -133,7 +145,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parsed_entries;
@@ -179,7 +202,7 @@ sub _parse_with_plugin {
         }
 
         for my $i (1 .. $num_plants_per_plot) {
-            my $plant_name = $plot_name."_".$i;
+            my $plant_name = $plot_name."_plant_".$i;
 
             #skip blank lines
             if (!$plot_name && !$plant_name) {

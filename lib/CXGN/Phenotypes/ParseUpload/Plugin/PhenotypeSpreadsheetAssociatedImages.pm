@@ -18,6 +18,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetAssociatedIma
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 use CXGN::ZipFile;
@@ -41,7 +42,18 @@ sub validate {
     my @file_lines;
     my $header;
     my @header_row;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parse_result;
@@ -136,7 +148,7 @@ sub validate {
     my $observationunit_validator = CXGN::List::Validate->new();
     my @missing_observation_units = @{$observationunit_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@observation_units)->{'missing'}};
     if (scalar(@missing_observation_units) > 0) {
-        my $missing_observationunit_string = join ',', @missing_observation_units;
+        my $missing_observationunit_string = join '<br>', @missing_observation_units;
         $parse_result{'error'} = "The following observation unit names are not in the database: ".$missing_observationunit_string;
         return \%parse_result;
     }
@@ -159,7 +171,18 @@ sub parse {
     my %observationunits_seen;
     my %observationvariables_seen;
     my %data;
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 

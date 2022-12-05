@@ -47,6 +47,7 @@ use CXGN::List::Validate;
 use Data::Dumper;
 use CXGN::Trial::TrialLayout;
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Trait;
 use CXGN::List::Transform;
 use CXGN::People::Person;
@@ -127,6 +128,12 @@ has 'include_measured'=> (
     default => 'true',
 );
 
+has 'all_stats'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 has 'use_synonyms'=> (
     is => 'rw',
     isa => 'Str',
@@ -153,7 +160,22 @@ sub download {
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
     my $tempfile = $self->tempfile();
-    my $wb = Spreadsheet::WriteExcel->new($tempfile);
+
+
+    # my $wb = Spreadsheet::WriteExcel->new($tempfile);
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $tempfile =~ /(\.[^.]+)$/;
+    my $wb;
+
+    if ($extension eq '.xlsx') {
+        $wb = Excel::Writer::XLSX->new($tempfile);
+    }
+    else {
+        $wb = Spreadsheet::WriteExcel->new($tempfile);
+    }
+
+
     if (!$wb) {
         push @error_messages, "Could not create file.";
         $errors{'error_messages'} = \@error_messages;
@@ -168,6 +190,7 @@ sub download {
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
         include_measured => $self->include_measured,
+        all_stats => $self->all_stats,
         use_synonyms => $self->use_synonyms,
         selected_trait_ids => $self->selected_trait_ids,
         trial_stock_type => $self->trial_stock_type
@@ -202,7 +225,7 @@ sub download {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_name = $self->user_name();
     my $subdirectory_name = "tablet_field_layout";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trial_name.".xls");
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trial_name.($extension eq '.xlsx' ? ".xlsx" : ".xls"));
     my $archive_path = $self->archive_path();
     my $file_destination =  catfile($archive_path, $archived_file_name);
 
@@ -227,7 +250,7 @@ sub download {
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($file_destination),
         dirname => dirname($file_destination),
-        filetype => 'tablet field layout xls',
+        filetype => 'tablet field layout '. ($extension eq '.xlsx' ? "xlsx" : "xls"),
         md5checksum => $md5->hexdigest(),
         metadata_id => $md_row->metadata_id(),
     });

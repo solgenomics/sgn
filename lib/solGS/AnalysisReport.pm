@@ -9,6 +9,7 @@ use Email::Simple;
 use Email::Simple::Creator;
 use File::Spec::Functions qw /catfile catdir/;
 use File::Slurp qw /write_file read_file/;
+use JSON;
 use Storable qw/ nstore retrieve /;
 
 
@@ -94,6 +95,14 @@ sub check_success {
     elsif ( $analysis_profile->{analysis_type} =~ /kinship/ )
     {
 	$output_details = $self->check_kinship_analysis($output_details);
+    }
+    elsif ( $analysis_profile->{analysis_type} =~ /pca/ )
+    {
+	$output_details = $self->check_pca_analysis($output_details);
+    }
+    elsif ( $analysis_profile->{analysis_type} =~ /cluster/ )
+    {
+   $output_details = $self->check_cluster_analysis($output_details);
     }
 
     return $output_details;
@@ -520,6 +529,116 @@ sub check_kinship_analysis {
 }
 
 
+sub check_pca_analysis {
+    my ($self, $output_details) = @_;
+
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /pca/)
+	{
+
+	    my $scores_file = $output_details->{$k}->{scores_file};
+
+	    if ($scores_file)
+	    {
+		while (1)
+		{
+		    sleep 30;
+		    if (-s $scores_file)
+		    {
+			$output_details->{$k}->{success} = 1;
+			$output_details->{status} = 'Done';
+			last;
+		    }
+		    else
+		    {
+			my $end_process = $self->end_status_check();
+			if ($end_process)
+			{
+				# my $input_files = $output_details->{$k}->{input_file};
+				# my @input_files = split(/\t/, $input_file);
+				my $failure_reason;
+				my $input_file = $output_details->{$k}->{input_file};
+				# foreach my $input_file ($input_file) 
+				# {
+				if (!-s $input_file)
+				{
+					$failure_reason = "This dataset has no data. $input_file is empty.";
+				}
+				# }
+			    
+				if ($failure_reason) 
+				{
+					$output_details->{$k}->{failure_reason} = $failure_reason;	
+				}
+			    else
+			    {
+				$output_details->{$k}->{failure_reason} = 'The pca algorithm (R) caught an exception. Details are in the analysis error file.';
+			    }
+
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    return $output_details;
+}
+
+
+sub check_cluster_analysis {
+    my ($self, $output_details) = @_;
+
+    foreach my $k (keys %{$output_details})
+    {
+    	if ($k =~ /cluster/)
+    	{
+    	    my $result_file = $output_details->{$k}->{result_file};
+    	    if ($result_file)
+    	    {
+        		while (1)
+        		{
+        		    sleep 30;
+        		    if (-s $result_file)
+        		    {
+        			$output_details->{$k}->{success} = 1;
+        			$output_details->{status} = 'Done';
+        			last;
+        		    }
+        		    else
+        		    {
+        			my $end_process = $self->end_status_check();
+        			if ($end_process)
+        			{
+						my $input_file = $output_details->{$k}->{input_file};
+						
+        			    if (!-s $input_file )
+        			    {
+        				$output_details->{$k}->{failure_reason} = "The input data file ($input_file) is empty.\n";
+        			    }
+        			    else
+        			    {
+        				$output_details->{$k}->{failure_reason} = "The clustering algorithm (R) caught an exception. Details are in the analysis error file.\n";
+        			    }
+
+        			    $output_details->{$k}->{success} = 0;
+        			    $output_details->{status} = 'Failed';
+        			    last;
+        			   }
+        		    }
+    		    }
+    	    }
+    	}
+    }
+
+    return $output_details;
+}
+
+
 sub get_file {
     my ($self, $dir, $exp) = @_;
 
@@ -543,48 +662,47 @@ sub get_file {
 sub report_status {
     my ($self, $output_details) = @_;
 
-    my $analysis_profile = $output_details->{analysis_profile};
+    my $args  = $output_details->{analysis_profile}->{arguments};
+    my $json = JSON->new();
+    $args = $json->decode($args);
+    my $first_name = $args->{first_name};
+
+    my $analysis_status = $self->email_body($output_details);
+    my $closing = "If you have any remarks, please contact us:\n"
+   . $output_details->{contact_page}
+   ."\n\nThanks and regards,\nsolGS M Tool";
+
+    my $body = "Dear $first_name,\n"
+	. "\n$analysis_status"
+	. "$closing";
+
+    my $email_adds = $self->email_addresses($output_details);
+    my $analysis_name = $output_details->{analysis_profile}->{analysis_name};
+
+    my $email = Email::Simple->create(
+	header => [
+	    From    => $email_adds->{email_from},
+	    To      => $email_adds->{email_to},
+	    Cc      => $email_adds->{email_cc},
+	    Subject => "solGS Report: $analysis_name",
+	],
+	body => $body,
+	);
+
+    sendmail($email);
+
+}
+
+sub email_addresses {
+    my ($self, $output_details) = @_;
+
+    my $analysis_profile = $output_details->{analysis_profile}->{arguments};
+    my $json = JSON->new();
+    $analysis_profile = $json->decode($analysis_profile);
+    my $first_name = $analysis_profile->{first_name};
+
     my $user_email = $analysis_profile->{user_email};
     my $user_name  = $analysis_profile->{user_name};
-
-    my $analysis_page = $analysis_profile->{analysis_page};
-    my $analysis_name = $analysis_profile->{analysis_name};
-    my $analysis_type = $analysis_profile->{analysis_type};
-
-    my $analysis_result;
-
-    if ($analysis_type =~ /multiple models/)
-    {
-	$analysis_result = $self->multi_modeling_message($output_details);
-    }
-    elsif ($analysis_type =~ /single model/)
-    {
-    	$analysis_result = $self->single_modeling_message($output_details);
-    }
-    elsif ($analysis_type =~ /training dataset/  )
-    {
-    	$analysis_result = $self->population_download_message($output_details);
-    }
-    elsif ($analysis_type =~ /combine populations/  )
-    {
-    	$analysis_result = $self->combine_populations_message($output_details);
-    }
-    elsif ($analysis_type =~ /selection prediction/  )
-    {
-    	$analysis_result = $self->selection_prediction_message($output_details);
-    }
-      elsif ($analysis_type =~ /kinship/  )
-    {
-    	$analysis_result = $self->kinship_analysis_message($output_details);
-    }
-
-    my $closing = "If you have any remarks, please contact us:\n"
-	. $output_details->{contact_page}
-	."\n\nThanks and regards,\nsolGS M Tool";
-
-    my $body = "Dear $user_name,\n"
-	. "\n$analysis_result"
-	. "$closing";
 
     my $email_from;
     my $email_to;
@@ -598,33 +716,64 @@ sub report_status {
     }
     else
     {
-	my $mail_list = $output_details->{cluster_job_email};
+	my $mail_list = $output_details->{mailing_list};
+    $email_from =  'solGS M Tool <' . $mail_list . '>';
+    $email_cc   =  'solGS Job <' . $mail_list . '>';
+	$email_to   = $user_name . '<' . $user_email . '>';
 
-	if ($mail_list)
-	{
-	    $email_from =  'solGS M Tool <' . $mail_list . '>';
-	    $email_cc   =  'solGS Job <' . $mail_list . '>';
-	}
-	else
-	{
-	    $email_from = 'solGS M Tool <cluster-jobs@solgenomics.net>';
-	    $email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
-	}
-
-	$email_to   = "$user_name <$user_email>";
     }
 
-    my $email = Email::Simple->create(
-	header => [
-	    From    => $email_from,
-	    To      => $email_to,
-	    Cc      => $email_cc,
-	    Subject => "solGS Report: $analysis_name",
-	],
-	body => $body,
-	);
+    return {
+        'email_from' => $email_from,
+        'email_cc' => $email_cc,
+        'email_to' => $email_to
+    };
 
-    sendmail($email);
+}
+
+
+sub  email_body {
+    my ($self, $output_details) =@_;
+
+    my $analysis_profile = $output_details->{analysis_profile};
+    my $analysis_type = $analysis_profile->{analysis_type};
+
+    my $msg;
+
+    if ($analysis_type =~ /multiple models/)
+    {
+	    $msg = $self->multi_modeling_message($output_details);
+    }
+    elsif ($analysis_type =~ /single model/)
+    {
+    	$msg = $self->single_modeling_message($output_details);
+    }
+    elsif ($analysis_type =~ /training dataset/  )
+    {
+    	$msg = $self->population_download_message($output_details);
+    }
+    elsif ($analysis_type =~ /combine populations/  )
+    {
+    	$msg = $self->combine_populations_message($output_details);
+    }
+    elsif ($analysis_type =~ /selection prediction/  )
+    {
+    	$msg = $self->selection_prediction_message($output_details);
+    }
+    elsif ($analysis_type =~ /kinship/  )
+    {
+    	$msg = $self->kinship_analysis_message($output_details);
+    }
+    elsif ($analysis_type =~ /pca/  )
+    {
+    	$msg = $self->pca_analysis_message($output_details);
+    }
+    elsif ($analysis_type =~ /cluster/  )
+    {
+    	$msg = $self->cluster_analysis_message($output_details);
+    }
+
+    return $msg;
 
 }
 
@@ -729,27 +878,27 @@ sub selection_prediction_message {
 	    {
 		my $trait_name          = uc($output_details->{$k}->{trait_name});
 		my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-		my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
-		my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
-		$prediction_pop_name =~ s/^\s+|\s+$//g;
+		my $selection_pop_page = $output_details->{$k}->{selection_pop_page};
+		my $selection_pop_name = $output_details->{$k}->{selection_pop_name};
+		$selection_pop_name =~ s/^\s+|\s+$//g;
 
 		if ($output_details->{$k}->{success})
 		{
 		    $cnt++;
 		    if($cnt == 1)
 		    {
-			$message .= "The prediction of selection population $prediction_pop_name is done."
+			$message .= "The prediction of selection population $selection_pop_name is done."
 			    . "\nYou can view the prediction output here:\n\n"
 		    }
 
-		    $message .= "$prediction_pop_page\n\n";
+		    $message .= "$selection_pop_page\n\n";
 		}
 		else
 		{
 		    my $failure_reason = $output_details->{$k}->{failure_reason};
 		    $message = "The analysis for $trait_name failed. Possible reason is:\n\n";
 		    $message .= "$failure_reason\n\n";
-		    $message .= "Refering page: $prediction_pop_page\n\n";
+		    $message .= "Refering page: $selection_pop_page\n\n";
 		    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";
 		}
 	    }
@@ -868,11 +1017,10 @@ sub kinship_analysis_message {
     {
 	if ($k =~ /kinship/) {
 
-	    my $output_page;
+	    my $output_page = $output_details->{$k}->{output_page};
 
 	    if ($output_details->{$k}->{success})
-	    {
-		$output_page = $output_details->{$k}->{output_page};
+	    {	
 		$message = 'Your kinship analysis is done. You can access the result here:'
 		    . "\n\n$output_page\n\n";
 	    }
@@ -882,6 +1030,72 @@ sub kinship_analysis_message {
 		my $fail_message  = $output_details->{$k}->{failure_reason};
 
 		$message  = "The kinship analysis failed.\n";
+		$message .= "\nPossible causes are:\n$fail_message\n";
+		$message .= 'Refering page: ' . $output_page . "\n\n";
+		$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";
+	    }
+	}
+    }
+
+    return  $message;
+}
+
+sub pca_analysis_message {
+    my ($self, $output_details) = @_;
+
+    my $message;
+
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /pca/) {
+
+	    my $output_page = $output_details->{$k}->{output_page};
+
+	    if ($output_details->{$k}->{success})
+	    {	
+		$message = 'Your PCA is done. You can access the result here:'
+		    . "\n\n$output_page\n\n";
+	    }
+	    else
+	    {
+		no warnings 'uninitialized';
+		my $fail_message  = $output_details->{$k}->{failure_reason};
+
+		$message  = "The PCA failed.\n";
+		$message .= "\nPossible causes are:\n$fail_message\n";
+		$message .= 'Refering page: ' . $output_page . "\n\n";
+		$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";
+	    }
+	}
+    }
+
+    return  $message;
+}
+
+
+sub cluster_analysis_message {
+    my ($self, $output_details) = @_;
+
+    my $message;
+
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /cluster/) {
+
+	    my $output_page = $output_details->{$k}->{output_page};
+
+	    if ($output_details->{$k}->{success})
+	    {
+		
+		$message = 'Your clustering is done. You can access the result here:'
+		    . "\n\n$output_page\n\n";
+	    }
+	    else
+	    {
+		no warnings 'uninitialized';
+		my $fail_message  = $output_details->{$k}->{failure_reason};
+
+		$message  = "The cluster analysis failed.\n";
 		$message .= "\nPossible causes are:\n$fail_message\n";
 		$message .= 'Refering page: ' . $output_page . "\n\n";
 		$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";

@@ -1,0 +1,148 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadImages', 'CXGN.BreederSearch', 'CXGN.Trial', 'brapi.BrAPI' ] &>
+
+<div class="modal fade" id="upload_images_dialog" name="upload_images_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadImagesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadImagesDialog">Upload Images</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /page/explanation.mas, title=>'Template Information' &>
+                <p>
+                <b>File format information</b>
+                <br>
+                <a id="upload_images_format_info">Image File Format</a>
+                </p>
+            </&>
+
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_images_file_form" name="upload_images_file_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">File Format: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="upload_images_file_format" name="upload_images_file_format">
+                            <option value="images">Images</option>
+                            <option value="images_with_associated_phenotypes">Images with Associated Phenotypes</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="upload_images_with_associated_phenotypes_div" style="display:none">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
+                        <div class="col-sm-9" >
+                            <input type="file" id="upload_associated_phenotypes_file_input" name="upload_images_file_input" encoding="multipart/form-data" accept=".xls, .xlsx"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Images (.zip): </label>
+                        <div class="col-sm-9" >
+                            <input type="file" id="upload_images_zip_file_input" name="upload_images_zip_file_input" encoding="multipart/form-data" accept=".zip"/>
+                        </div>
+                    </div>
+                </div>
+                <div id="upload_images_div">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Image Files: </label>
+                        <div class="col-sm-9" >
+                            <input type="file" id="upload_images_file_input" name="upload_images_file_input" multiple="multiple" accept="image/*">
+                        </div>
+                    </div>
+                    <br>
+                    <div id="preview" class="form-group justify-content-sm-center"></div>
+                </div>
+                <div class="form-group" id="upload_images_status"></div>
+
+                </div>
+            </form><br/>
+
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-info" name="upload_images_submit_verify" id="upload_images_submit_verify">Verify</button>
+            <button disabled type="button" class="btn btn-primary" name="upload_images_submit_store" id="upload_images_submit_store" title="First Verify Your File">Store</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_images_info_dialog" name="upload_images_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadImagesInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadImagesInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h4>Images Alone:</h4>
+            <ul>
+                <li>Select multiple images directly for upload.</li>
+                <li>Image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).</li>
+            </ul>
+            <br/>
+            <h4>Images with Associated Phenotypes:</h4>
+            <ul>
+                <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values.</li>
+                <li>The phenotype values should be included in a .xls or .xlsx spreadsheet with the following columns:</li>
+                <br/><table class="table table-hover table-bordered table-condensed table-responsive" >
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td>observationUnitName</td>
+                            <td>observationVariableName</td>
+                            <td>value</td>
+                            <td>timestamp</td>
+                            <td>image_name</td>
+                            <td>person</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <li>The values in the <b>image_name</b> column should should match the image filenames in the zipfile.</li>
+            </ul>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery('#upload_images_link').click( function() {
+        jQuery('#upload_images_dialog').modal("show");
+    });
+
+    jQuery("#upload_images_format_info").click( function () {
+        jQuery("#upload_images_info_dialog" ).modal("show");
+    });
+
+    jQuery('#upload_images_file_format').change(function(){
+        jQuery('#upload_images_status').html('');
+        if (jQuery(this).val() == 'images_with_associated_phenotypes') {
+            jQuery('#upload_images_with_associated_phenotypes_div').show();
+            jQuery('#upload_images_div').hide();
+        }
+        else {
+            jQuery('#upload_images_div').show();
+            jQuery('#upload_images_with_associated_phenotypes_div').hide();
+        }
+    });
+
+});
+
+</script>

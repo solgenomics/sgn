@@ -33,6 +33,7 @@ package CXGN::List;
 
 use Moose;
 use Data::Dumper;
+use CXGN::Stock::Seedlot;
 
 has 'dbh' => ( isa => 'DBI::db',
 	       is => 'rw',
@@ -64,15 +65,23 @@ has 'elements' => (isa => 'ArrayRef',
 		   is => 'rw',
     );
 
+has 'schema' => (isa => 'Bio::Chado::Schema', is => 'rw');
+
+has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema',is => 'rw');
+
+
 # class method: Use like so: CXGN::List::create_list
 sub create_list {
     my $dbh = shift;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
     my ($name, $desc, $owner) = @_;
     my $new_list_id;
     eval {
-    my $q = "INSERT INTO sgn_people.list (name, description, owner) VALUES (?, ?, ?) RETURNING list_id";
+    my $q = "INSERT INTO sgn_people.list (name, description, owner, timestamp) VALUES (?, ?, ?, ?) RETURNING list_id";
     my $h = $dbh->prepare($q);
-    $h->execute($name, $desc, $owner);
+    $h->execute($name, $desc, $owner, $timestamp);
     ($new_list_id) = $h->fetchrow_array();
     print STDERR "NEW LIST using returning = $new_list_id\n";
 
@@ -100,7 +109,9 @@ sub all_types {
     $h->execute();
     my @all_types = ();
     while (my ($id, $name) = $h->fetchrow_array()) {
-	push @all_types, [ $id, $name ];
+        if ($name ne 'catalog_items') {
+            push @all_types, [ $id, $name ];
+        }
     }
     return \@all_types;
 
@@ -113,19 +124,19 @@ sub available_lists {
     my $owner = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, timestamp, modify_timestamp FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute($owner);
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
 	if ($requested_type) {
 	    if ($type && ($type eq $requested_type)) {
-		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
 	    }
 	}
 	else {
-	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
 	}
     }
     return \@lists;
@@ -135,19 +146,19 @@ sub available_public_lists {
     my $dbh = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username, timestamp, modify_timestamp FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute();
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
         if ($requested_type) {
             if ($type && ($type eq $requested_type)) {
-                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp];
             }
         }
         else {
-            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp];
         }
     }
     return \@lists;
@@ -260,12 +271,12 @@ after 'type' => sub {
     $h->execute($self->list_id);
 
     eval {
-	$q = "UPDATE sgn_people.list SET type_id=? WHERE list_id=?";
-	$h = $self->dbh->prepare($q);
-	$h->execute($cvterm_id, $self->list_id);
+			$q = "UPDATE sgn_people.list SET type_id=? WHERE list_id=?";
+			$h = $self->dbh->prepare($q);
+			$h->execute($cvterm_id, $self->list_id);
     };
     if ($@) {
-	return "An error occurred while updating the type of list ".self->list_id." to $type. $@";
+			return "An error occurred while updating the type of list ".self->list_id." to $type. $@";
     }
     return 0;
 };
@@ -298,21 +309,31 @@ sub add_element {
     #remove trailing spaces
     $element =~ s/^\s+|\s+$//g;
     if (!$element) {
-	return "Empty list elements are not allowed";
+			return "Empty list elements are not allowed";
     }
     if ($self->exists_element($element)) {
-	return "The element $element already exists";
+			return "The element $element already exists";
     }
 
     my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
     my $ih = $self->dbh()->prepare($iq);
     eval {
-	$ih->execute($self->list_id(), $element);
+			$ih->execute($self->list_id(), $element);
     };
     if ($@) {
         print STDERR Dumper $@;
-	return "An error occurred storing the element $element ($@)";
+				return "An error occurred storing the element $element ($@)";
     }
+
+		my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+		eval {
+    	my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+    	my $h = $self->dbh()->prepare($q);
+    	$h->execute($timestamp,$self->list_id());
+		};
+
 
     my $elements = $self->elements();
     push @$elements, $element;
@@ -333,6 +354,16 @@ sub remove_element {
 
 	return "An error occurred while attempting to delete item $element";
     }
+
+		my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+		eval {
+    	my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+    	my $h1 = $self->dbh()->prepare($q);
+    	$h1->execute($timestamp,$self->list_id());
+		};
+
     my $elements = $self->elements();
     my @clean = grep(!/^$element$/, @$elements);
     $self->elements(\@clean);
@@ -372,6 +403,15 @@ sub update_element_by_id {
 		return "An error occurred while attempting to update item $element_id";
 	}
 
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$self->list_id());
+	};
+
 	return;
 }
 
@@ -388,6 +428,15 @@ sub replace_by_name {
 		return "An error occurred while attempting to update item $item_name";
 	}
 
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$self->list_id());
+	};
+
 	return;
 }
 
@@ -402,6 +451,15 @@ sub remove_by_name {
 	if ($@) {
 		return "An error occurred while attempting to remove item $item_name";
 	}
+
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$self->list_id());
+	};
 
 	return;
 }
@@ -517,6 +575,21 @@ sub retrieve_elements_with_ids {
     return \@list;
 }
 
+sub retrieve_elements {
+    my $self = shift;
+    my $list_id = shift;
+
+    my $q = "SELECT list_item_id, content from sgn_people.list_item  WHERE list_id=? ORDER BY list_item_id ASC;";
+
+    my $h = $self->dbh()->prepare($q);
+    $h->execute($list_id);
+    my @list = ();
+    while (my ($item_id, $content) = $h->fetchrow_array()) {
+        push @list, $content;
+    }
+    return \@list;
+}
+
 sub add_bulk {
 	my $self = shift;
 	my $elements = shift;
@@ -581,6 +654,15 @@ sub add_bulk {
 		return {error => "An error occurred in bulk addition to list. ($@)"};
 	}
 
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+	eval {
+		my $q = "UPDATE sgn_people.list SET modify_timestamp=? WHERE list_id=?";
+		my $h1 = $self->dbh()->prepare($q);
+		$h1->execute($timestamp,$list_id);
+	};
+
 	$elements = $self->elements();
 	push @$elements, \@elements_added;
 	$self->elements($elements);
@@ -629,6 +711,56 @@ sub sort_items {
     $self->delete_bulk(\@item_ids);
     $self->add_bulk(\@sorted, $self->list_id);
     return 1;
+}
+
+
+sub seedlot_list_details {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $phenome_schema = $self->phenome_schema();
+    my $items = $self->elements();
+    my @seedlot_names = @$items;
+    my @seedlot_ids;
+    my @seedlot_details;
+    my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+
+    foreach my $seedlot(sort@seedlot_names) {
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot });
+        my $seedlot_id = $seedlot_rs->stock_id();
+        push @seedlot_ids, $seedlot_id;
+    }
+
+    foreach my $id (@seedlot_ids) {
+        my $content_name;
+        my $content_id;
+        my $content_type;
+        my $seedlot_obj = CXGN::Stock::Seedlot->new(
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            seedlot_id => $id
+        );
+
+        my $accessions = $seedlot_obj->accession();
+        my $crosses = $seedlot_obj->cross();
+
+        if ($accessions) {
+            $content_name = $accessions->[1];
+            $content_id = $accessions->[0];
+            $content_type = 'accession'
+        }
+
+        if ($crosses) {
+            $content_name = $crosses->[1];
+            $content_id = $crosses->[0];
+            $content_type = 'cross';
+        }
+
+        push @seedlot_details, [$id, $seedlot_obj->uniquename(), $content_id, $content_name, $content_type, $seedlot_obj->box_name(), $seedlot_obj->get_current_count_property(), $seedlot_obj->get_current_weight_property(), $seedlot_obj->quality()];
+
+    }
+
+    return \@seedlot_details;
+
 }
 
 1;

@@ -1,0 +1,154 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<!--button class='btn btn-default' style='margin:3px' id='export_drone_imagery_events'>Export Imaging Events</button-->
+
+<div class="modal fade" id="export_drone_imagery_dialog" name="export_drone_imagery_dialog" tabindex="-1" role="dialog" aria-labelledby="exportDroneImageryDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="exportDroneImageryDialog">Export Aerial Imaging Event(s)</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_export_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through exporting aerial imaging event(s) from the database" &>
+                    <ul>
+                        <li>Exporting imaging events is important for transferring data across ImageBreed instances.</li>
+                        <li>Exporting imaging events will return a spreadsheet file defining the imaging events, a zipfile containing the orthophoto imges, and a zipfile containing the GeoJSON plot-polygon definitions.</li>
+                        <li>Phenotypic values will not be exported in this workflow, please use the Wizard of the "Download Image-Phenotype File" to retrieve phenotypic values.</li>
+                    </ul>
+                    <br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to export imaging event(s)</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select your field trial" &>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="export_drone_image_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Drone Run" &>
+                    <& /page/page_title.mas, title=>"Create a new drone run" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_export_drone_runs_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Imaging Event Name</th>
+                                <th>Imaging Event Type</th>
+                                <th>Imaging Event Description</th>
+                                <th>Imaging Event Date</th>
+                                <th>Drone Run GDD</th>
+                                <th>Sensor</th>
+                                <th>Field Trial Name</th>
+                                <th>Field Trial Description</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_image_export_drone_run_continue">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Submit" &>
+                    <& /page/page_title.mas, title=>"Export Imaging Event(s)" &>
+
+                    <div id="export_drone_imagery_submit_div">
+                    </div>
+
+                    <center>
+                    <button type="button" class="btn btn-info" name="export_drone_imagery_submit" id="export_drone_imagery_submit">Submit</button>
+                    </center>
+                </&>
+
+            </&>
+
+            <div id="upload_drone_imagery_verify_status"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery('#export_drone_imagery_events').on('click', function(){
+        jQuery('#export_drone_imagery_dialog').modal('show');
+    });
+
+    get_select_box('trials', 'export_drone_image_trial_select_div', { 'name' : 'export_drone_run_field_trial_id', 'id' : 'export_drone_run_field_trial_id', 'empty':1, 'multiple':0 });
+
+    var export_imaging_events_field_trial_id;
+    jQuery(document).on('change', '#export_drone_run_field_trial_id', function() {
+        export_imaging_events_field_trial_id = jQuery(this).val();
+        jQuery('#drone_image_export_drone_runs_table').DataTable({
+            destroy : true,
+            ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=export_drone_imagery_drone_run_select&field_trial_ids='+export_imaging_events_field_trial_id
+        });
+    });
+
+    var export_imaging_events_drone_run_ids = [];
+    jQuery('#drone_image_export_drone_run_continue').click(function(){
+        export_imaging_events_drone_run_ids = [];
+        jQuery('input[name="export_drone_imagery_drone_run_select"]:checked').each(function() {
+            export_imaging_events_drone_run_ids.push(jQuery(this).val());
+        });
+        if (export_imaging_events_drone_run_ids.length < 1) {
+            alert('Please select at least one imaging event.');
+            return false;
+        }
+        else {
+            Workflow.complete('#drone_image_export_drone_run_continue');
+            Workflow.focus('#drone_imagery_export_workflow', 3);
+        }
+        return false;
+    });
+
+
+    jQuery('#export_drone_imagery_submit').click(function(){
+        jQuery.ajax({
+            url : '/api/drone_imagery/export_drone_runs?drone_run_project_ids='+JSON.stringify(export_imaging_events_drone_run_ids)+'&field_trial_id='+export_imaging_events_field_trial_id,
+            success: function(response){
+                console.log(response);
+
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+                else {
+                    var html = '<a href="'+response.imaging_events_spreadsheet+'">Download Imaging Event Spreadsheet</a><hr><a href="'+response.orthoimage_zipfile+'">Download Orthoimage Zipfile</a><hr><a href="'+response.geojson_zipfile+'">Download GeoJSON Zipfile</a>';
+                    jQuery('#export_drone_imagery_submit_div').html(html);
+                    return false;
+                }
+            },
+            error: function(response){
+                alert('Error exporting imaging events!');
+            }
+        });
+    });
+
+});
+</script>

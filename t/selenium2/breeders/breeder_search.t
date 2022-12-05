@@ -1,246 +1,436 @@
+use strict;
+
 use lib 't/lib';
 
-use Test::More;
+use Test::More 'tests' => 110;
+
 use SGN::Test::WWW::WebDriver;
+use Selenium::Remote::WDKeys 'KEYS';
 use SGN::Test::Fixture;
-use CXGN::BreederSearch;
-
-my $f = SGN::Test::Fixture->new();
-
-my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
-
-my $refresh = 'SELECT refresh_materialized_views()';
-my $h = $f->dbh->prepare($refresh);
-$h->execute();
 
 my $t = SGN::Test::WWW::WebDriver->new();
-#$t->driver->set_implicit_wait_timeout(5);
-
-$t->get_ok('/breeders/search');
-
-$t->find_element_ok("c1_to_list_menu", "id", "check if login prompt appears for c1")->send_keys('breeding programs');
-
-sleep(1);
+my $f = SGN::Test::Fixture->new();
 
 $t->while_logged_in_as("submitter", sub {
+    sleep(1);
+
     $t->get_ok('/breeders/search');
-
-    $t->find_element_ok("select1", "id", "retrieve traits")->send_keys('traits');
-
-    sleep(1);
-
-    $t->find_element_ok("c1_data", "id", "select specific trait")->send_keys('dry matter content|CO_334:0000092');
-
-    sleep(1);
-
-    $t->find_element_ok("c1_select_all", "id", "select all traits")->click();
-
-    sleep(1);
-
-    $t->find_element_ok("select2", "id", "retrieve trials")->send_keys('trials');
-
-    sleep(3);
-
-    $t->find_element_ok("c2_data", "id", "select specific trial")->send_keys('Kasese solgs trial');
-
-    sleep(1);
-
-    $t->find_element_ok("c2_select_all", "id", "select all trials")->click();
-
-    sleep(1);
-
-    $t->find_element_ok("select3", "id", "retrieve years")->send_keys('years');
-
-    sleep(3);
-
-    $t->find_element_ok("c3_data", "id", "select specific year")->send_keys('2014');
-
-    sleep(1);
-
-    $t->find_element_ok("c3_select_all", "id", "select all years")->click();
-
-    sleep(1);
-
-    $t->find_element_ok("wizard_save_dataset_button", "id", "save dataset")->click();
-
-    sleep(1);
-
-    $t->find_element_ok("save_wizard_dataset_name", "id", "find dataset name input box")->send_keys("another dataset");
-    
-    sleep(1);
-
-    $t->find_element_ok("wizard_save_dataset_submit_button", "id", "find wizard save dataset submit button")->click();
-
-    sleep(1);
-
-    $t->driver->accept_alert();
-    
-    sleep(1);
-
-    $t->find_element_ok("select4", "id", "retrieve accessions")->send_keys('accessions');
-
-    sleep(3);
-
-    $t->find_element_ok("c4_data", "id", "select specific accession")->send_keys('UG120001');
-
-    sleep(1);
-
-    $t->find_element_ok("c4_select_all", "id", "select all accessions")->click();
-
-    sleep(1);
-
-    $t->find_element_ok("c1_data_new_list_name", "id", "new list")->send_keys('trait_list');
-
-    $t->find_element_ok("c1_data_add_to_new_list", "id", "create trait list")->click();
-
-    sleep(3);
-
-    $t->driver->accept_alert();
-
-    $t->find_element_ok("c2_data_new_list_name", "id", "new list")->send_keys('trial_list');
-
-    $t->find_element_ok("c2_data_add_to_new_list", "id", "create trial list")->click();
-
-    sleep(1);
-
-    $t->driver->accept_alert();
-
-    $t->find_element_ok("c3_data_new_list_name", "id", "new list")->send_keys('year_list');
-
-    $t->find_element_ok("c3_data_add_to_new_list", "id", "create year list")->click();
-
-    sleep(1);
-
-    $t->driver->accept_alert();
-
-    $t->find_element_ok("c4_data_new_list_name", "id", "new list")->send_keys('acc_list');
-
-    $t->find_element_ok("c4_data_add_to_new_list", "id", "create accession list")->click();
-
-    sleep(1);
-
-    $t->driver->accept_alert();
-
-    my $paste_list_select =  $t->find_element_ok("paste_list_list_select", "id", "paste test acc list");
-
-    sleep(1);
-
-    $t->driver->move_to( element => $paste_list_select);
-
-    sleep(1);
-
-
-    $paste_list_select->send_keys('test_list');
-
-    sleep(1);
-
-    $t->find_element_ok("c1_data", "id", "select pasted test accession")->send_keys('test_accession1');
-
-    $t->find_element_ok("c1_select_all", "id", "select all pasted accessions")->click();
-
-    ## add test for '0 results' error here?
-
-    $t->find_element_ok("c1_data_list_select", "id", "select acc_list")->send_keys('acc_list');
-
-    my $c1_data_button = $t->find_element_ok("c1_data_button", "id", "add c1_data to acc_list");
-
-    $t->driver->move_to( element => $c1_data_button);
-    
-    sleep(1);
-
-    $c1_data_button->click();
-
-    sleep(1);
-
-    $t->driver->accept_alert();
-
-    # reload page to scroll up again - selenium has problems with 
-    # the menu bar on the website.
-    #
-    $t->get_ok('/breeders/search'); 
-
-    my $refresh_lists = $t->find_element_ok("paste_list_list_refresh", "id", "refresh lists");
-
-    sleep(1);
-
-    $t->driver()->move_to( element => $refresh_lists, yoffset => -50);
-
-    sleep(3);
-
-    $refresh_lists->click();
-
-    sleep(1);
-    
-    my $paste_list_list_select = $t->find_element_ok("paste_list_list_select", "id", "paste test acc list");
-    
-    sleep(1);
-    
-    $t->driver()->move_to( element => $paste_list_list_select);
-    
-    sleep(1);
-
-    my $paste_list_list_select = $t->find_element_ok("paste_list_list_select", "id", "paste test acc list");
-
-    sleep(1);
-
-    $paste_list_list_select->send_keys('acc_list');
-
-    sleep(1);
-
-    $t->find_element_ok("c1_data", "id", "select pasted test accession")->send_keys('test_accession1');
-
-    sleep(1);
-
-    $t->find_element_ok("c1_data", "id", "select pasted list accession")->send_keys('UG120001');
-
-    sleep(1);
-
-    $t->find_element_ok("select1", "id", "retrieve breeding programs")->send_keys('breeding_programs');
-
     sleep(2);
 
-    $t->find_element_ok("c1_data", "id", "select specific breeding_program")->send_keys('test');
-
-    $t->find_element_ok("c2_querytype_or", "id", "toggle c2_querytype to intersect")->click();
-
+    # COLUMN 1 WIZARD SEARCH - test list select / search - select trials
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[1]', 'xpath', 'find select column type in first column')->click();
     sleep(1);
-
-    $t->find_element_ok("c1_select_all", "id", "select all breeding programs")->click();
-
-    $t->find_element_ok("select2", "id", "retrieve genotyping protocols")->send_keys('genotyping_protocols');
-
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[1]//option[@value="trials"]', 'xpath', 'find and select "trials" in first column')->click();
     sleep(1);
-
-    $t->find_element_ok("c2_data", "id", "select specific genotyping protocol")->send_keys('GBS ApeKI genotyping v4');
-
-    $t->find_element_ok("c3_querytype_or", "id", "toggle c3_querytype to intersect")->click();
-
-    $t->find_element_ok("c2_select_all", "id", "select all breeding programs")->click();
-
-    $t->find_element_ok("select3", "id", "retrieve locations")->send_keys('locations');
-
-    sleep(1);
-
-    $t->find_element_ok("c3_data", "id", "select specific location")->send_keys('test_location');
-
-    $t->find_element_ok("c4_querytype_or", "id", "toggle c4_querytype to intersect")->click();
-
-    $t->find_element_ok("c3_select_all", "id", "select all locations")->click();
-
-    $t->find_element_ok("select4", "id", "retrieve plots")->send_keys('plots');
-
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"])[2]//input[contains(@class, "wizard-search")]' , 'xpath', 'find a search box and type "Kasese solgs trial"')->send_keys('Kasese solgs trial');
     sleep(2);
 
-    $t->find_element_ok("c4_data", "id", "select specific plot")->send_keys('KASESE_TP2013_1000');
+    # COLUMN 1 WIZARD SEARCH - check if only "Kasese solgs trial" is in unselect panel field
+    my $search_unselected = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/ul[contains(@class, "wizard-list-unselected")]',
+        'xpath',
+        'find a content of "unselected trials panel" to test searchbox in first column')->get_attribute('innerHTML');
 
-    $t->find_element_ok("c2_querytype_and", "id", "toggle c2_querytype to union")->click();
+    ok($search_unselected =~ /Kasese solgs trial/, "Verify if unselected panel after search contain: 'Kasese solgs trial'");
+    ok($search_unselected !~ /CASS_6Genotypes_Sampling_2015/, "Verify if unselected panel after search NOT contain: 'CASS_6Genotypes_Sampling_2015'");
+    ok($search_unselected !~ /trial2 NaCRRI/, "Verify if unselected panel after search NOT contain: 'trial2 NaCRRI'");
 
-    $t->find_element_ok("c3_querytype_and", "id", "toggle c3_querytype to union")->click();
+    sleep(1);
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]//a[contains(text(), "Kasese solgs trial")]//preceding-sibling::button' , 'xpath', 'find and add "Kasese solgs trial" trial in first column with search filter active')->click();
 
-    $t->find_element_ok("c4_querytype_and", "id", "toggle c4_querytype to union")->click();
+    # COLUMN 2 WIZARD SEARCH - test list select / search - select trials
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[2]', 'xpath', 'find select column type in second column')->click();
+    sleep(1);
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[2]//option[@value="traits"]', 'xpath', 'find and select "traits" in second column')->click();
+    sleep(1);
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[2]//a[contains(text(), "dry matter content percentage|CO_334:0000092")]//preceding-sibling::button' , 'xpath', 'find and add "dry matter content percentage|CO_334:0000092" trait in second column')->click();
+    sleep(1);
 
+    # COLUMN 1 AND 2 - test for all / any / default values / check if numbers off possible combinations are changing
+    my $active_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(@class, "active")]' , 'xpath', 'find active union button in first column');
+    ok (lc($active_union_button->get_attribute('innerHTML')) eq "any", "default active union button for selection shall be ANY");
+
+    my $button_count_all_second_column_xpath = '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[2]/div/div[@class="btn-group"]//span[contains(@class, "wizard-count-all")]';
+
+    my $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
+    ok ($button_count_all_second_column->get_text() eq "3", "number of traits with 'ANY button' in second panel from 'Kasese solgs trial' should be 3");
+
+    my $search_column_1 = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"])[2]//input[contains(@class, "wizard-search")]' , 'xpath', 'find search input in first column and clear it, for union test');
+    $search_column_1->send_keys(KEYS->{'control'}, 'a');
+    $search_column_1->send_keys(KEYS->{'backspace'});
+    sleep(2);
+
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]//a[contains(text(), "trial2 NaCRRI")]//preceding-sibling::button' , 'xpath', 'find and select "trial2 NaCRRI" in first column')->click();
+    sleep(1);
+
+    my $unselected_traits_second_column_xpath = '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[2]/ul[contains(@class, "wizard-list-unselected")]';
+
+    my $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column')->get_attribute('innerHTML');
+    ok ($unselected_traits_content =~ /harvest index variable|CO_334:0000015/, 'find new trait for two trials and ANY union "harvest index variable|CO_334:0000015"');
+
+    $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
+    ok ($button_count_all_second_column->get_text() eq "4", "number of traits with 'ANY button' in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
+
+    my $all_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ALL")]' , 'xpath', 'find "ALL" button');
+    my $any_union_button = $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ANY")]' , 'xpath', 'find "ANY" button');
+
+    $all_union_button->click();
+    sleep(1);
+    $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
+    ok ($button_count_all_second_column->get_text() eq "3", "ALL traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 3");
+
+    $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column"')->get_attribute('innerHTML');
+    ok ($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ALL union cannot be displayed in unselected traits');
+
+    $any_union_button->click();
+    sleep(1);
+    $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
+    ok ($button_count_all_second_column->get_text() eq "4", "ANY traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
+
+    $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column"')->get_attribute('innerHTML');
+    ok ($unselected_traits_content =~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ANY union shall be displayed in unselected traits');
+
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/ul[contains(@class, "wizard-list-selected wizard-list")]//a[contains(text(), "trial2 NaCRRI")]//preceding-sibling::button' , 'xpath', 'first select')->click();
+    sleep(1);
+    $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column"')->get_attribute('innerHTML');
+    ok ($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for one trial after "trial2 NaCRRI" removed should not be displayed in unselected traits');
+
+    # COLUMN 3 WIZARD SEARCH - select years and save first dataset with 3 list
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[3]', 'xpath', 'find select column type in third column')->click();
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[3]//option[@value="years"]', 'xpath', 'find and select "years" in third column')->click();
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[3]//a[contains(text(), "2014")]//preceding-sibling::button' , 'xpath', 'find and add "2014" year in third column')->click();
+    sleep(1);
+
+    my $dataset_name_input = $t->find_element_ok('input[placeholder="Create New Dataset"]', 'css', 'find dataset name input field');
+    $dataset_name_input->send_keys(KEYS->{'control'}, 'a');
+    $dataset_name_input->send_keys(KEYS->{'backspace'});
+    sleep(1);
+
+    my $dataset_name_1 = "another_dataset_3_columns";
+    $dataset_name_input->send_keys($dataset_name_1);
+    $t->find_element_ok('//input[@placeholder="Create New Dataset"]/parent::div//button[contains(text(), "Create")]', 'xpath', "find 'create' button and create dataset $dataset_name_1")->click;
+    sleep(1);
+    $t->driver()->accept_alert();
+
+    # COLUMN 4 WIZARD SEARCH - select accessions and save second dataset
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[4]', 'xpath', 'find select column type in fourth column')->click();
+    sleep(1);
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[4]//option[@value="accessions"]', 'xpath', 'find and select "accessions" in fourth column')->click();
+    sleep(1);
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[4]//a[contains(text(), "UG120001")]//preceding-sibling::button' , 'xpath', 'find and add "UG120001" year in fourth column')->click();
+    sleep(1);
+
+    $dataset_name_input = $t->find_element_ok('input[placeholder="Create New Dataset"]', 'css', 'find dataset name input field and clear content');
+    $dataset_name_input->send_keys(KEYS->{'control'}, 'a');
+    $dataset_name_input->send_keys(KEYS->{'backspace'});
+    sleep(1);
+
+    my $dataset_name_2 = "another_dataset_4_columns";
+    $dataset_name_input->send_keys($dataset_name_2);
+    $t->find_element_ok('//input[@placeholder="Create New Dataset"]/parent::div//button[contains(text(), "Create")]', 'xpath', "find 'create' button and create dataset $dataset_name_2")->click();
+    sleep(1);
+    $t->driver()->accept_alert();
+    sleep(1);
+
+    # SAVE A LIST FROM COLUMN 1
+    my $first_list_name = "trials_list";
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[1]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        'find a "list name" for first column and fill a name')->click();
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[1]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        "fill '$first_list_name' as list name in first column")->send_keys($first_list_name);
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[1]//button[contains(text(), "Create")]',
+        'xpath',
+        "find a 'create list' in first columns button and click")->click();
+    sleep(1);
+    $t->driver()->accept_alert();
+
+    # SAVE A LIST FROM COLUMN 2
+    my $second_list_name = "traits_list";
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[2]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        'find a "list name" for second column and fill a name')->click();
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[2]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        "fill '$second_list_name' as list name in second column")->send_keys($second_list_name);
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[2]//button[contains(text(), "Create")]',
+        'xpath',
+        "find a 'create list' in second columns button and click")->click();
+    sleep(1);
+    $t->driver()->accept_alert();
+
+    # SAVE A LIST FROM COLUMN 3
+    my $third_list_name = "years_list";
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[3]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        'find a "list name" for third column and fill a name')->click();
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[3]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        "fill '$third_list_name' as list name in third column")->send_keys($third_list_name);
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[3]//button[contains(text(), "Create")]',
+        'xpath',
+        "find a 'create list' in third columns button and click")->click();
+    sleep(1);
+    $t->driver()->accept_alert();
+
+    # SAVE A LIST FROM COLUMN 4
+    my $fourth_list_name = "acc_list";
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[4]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        'find a "list name" for fourth column and fill a name')->click();
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[4]//input[contains(@class, "wizard-create-list-name")]',
+        'xpath',
+        "fill '$fourth_list_name' as list name in fourth column")->send_keys($fourth_list_name);
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[4]//button[contains(text(), "Create")]',
+        'xpath',
+        "find a 'create list' in fourth columns button and click")->click();
+    sleep(1);
+    $t->driver()->accept_alert();
+
+    # RELOAD PAGE AND LOAD DATASET_3_COLUMNS
+    $t->get_ok('/breeders/search');
+    sleep(2);
+
+    $t->find_element_ok(
+        '//select[contains(@class, "wizard-dataset-select")]',
+        'xpath',
+        'find a "select input" for datasets to load and click')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        "//select[contains(\@class, 'wizard-dataset-select')]/optgroup/option[contains(text(), '$dataset_name_1')]",
+        'xpath',
+        "find a dataset name: $dataset_name_1 in select input and click")->click();
+
+    $t->find_element_ok(
+        '//div[contains(@class, "wizard-datasets")]//button[contains(@class, "wizard-dataset-load")]',
+        'xpath',
+        'find a load button for selected dataset and click')->click();
+    sleep(2);
+
+    # unselected 1 column
+    my $unselected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/ul[contains(@class, "wizard-list-unselected")]',
+        'xpath',
+        "find content of unselected list from first column")->get_attribute('innerHTML');
+
+    ok($unselected_reloaded_elements =~ /CASS_6Genotypes_Sampling_2015/, "Verify first column wizard, unselected after load $dataset_name_1: CASS_6Genotypes_Sampling_2015");
+    ok($unselected_reloaded_elements =~ /trial2 NaCRRI/, "Verify first column wizard, unselected after load $dataset_name_1: trial2 NaCRRI");
+
+    # selected 1 column
+    my $selected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/ul[contains(@class, "wizard-list-selected wizard-list")]',
+        'xpath',
+        "find content of selected list from first column")->get_attribute('innerHTML');
+
+    ok($selected_reloaded_elements =~ /Kasese solgs trial/, "Verify first column wizard, selected after load $dataset_name_1: Kasese solgs trial");
+
+    # unselected 2 column
+    my $unselected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[2]/ul[contains(@class, "wizard-list-unselected")]',
+        'xpath',
+        "find content of unselected list from second column")->get_attribute('innerHTML');
+
+    ok($unselected_reloaded_elements =~ /fresh root weight|CO_334:0000012/, "Verify second column wizard, unselected after load $dataset_name_1: fresh root weight|CO_334:0000012");
+    ok($unselected_reloaded_elements =~ /fresh shoot weight measurement in kg|CO_334:0000016/, "Verify second column wizard, unselected after load $dataset_name_1: fresh shoot weight measurement in kg|CO_334:0000016");
+
+    # selected 2 column
+    my $selected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[2]/ul[contains(@class, "wizard-list-selected wizard-list")]',
+        'xpath',
+        "find content of selected list from second column")->get_attribute('innerHTML');
+
+    ok($selected_reloaded_elements =~ /dry matter content percentage|CO_334:0000092/, "Verify second column wizard, selected after load $dataset_name_1: dry matter content percentage|CO_334:0000092");
+
+    # selected 3 column
+    my $selected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[3]/ul[contains(@class, "wizard-list-selected wizard-list")]',
+        'xpath',
+        "find content of selected list from third column")->get_attribute('innerHTML');
+
+    ok($selected_reloaded_elements =~ /2014/, "Verify third column wizard, selected after load $dataset_name_1: 2014");
+
+    # RELOAD PAGE AND LOAD DATASET_4_COLUMNS
+    $t->get_ok('/breeders/search');
+    sleep(2);
+
+    $t->find_element_ok(
+        '//select[contains(@class, "wizard-dataset-select")]',
+        'xpath',
+        'find a select input for datasets to load and click')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        "//select[contains(\@class, 'wizard-dataset-select')]/optgroup/option[text()='$dataset_name_2']",
+        'xpath',
+        "find a dataset name: $dataset_name_2 in select input and click")->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        '//div[contains(@class, "wizard-datasets")]//button[contains(@class, "wizard-dataset-load")]',
+        'xpath',
+        'find a load button for selected dataset and click')->click();
+    sleep(5);
+
+    # unselected 4 column
+    my $unselected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[4]/ul[contains(@class, "wizard-list-unselected")]',
+        'xpath',
+        "find content of unselected list from fourth column")->get_attribute('innerHTML');
+
+    ok($unselected_reloaded_elements =~ /UG120002/, "Verify last column wizard, unselected after load $dataset_name_2: UG120002");
+    ok($unselected_reloaded_elements =~ /UG120003/, "Verify last column wizard, unselected after load $dataset_name_2: UG120003");
+    ok($unselected_reloaded_elements =~ /UG120007/, "Verify last column wizard, unselected after load $dataset_name_2: UG120007");
+
+    # selected 4 column
+    my $selected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[4]/ul[contains(@class, "wizard-list-selected wizard-list")]',
+        'xpath',
+        "find content of selected list from fourth column")->get_attribute('innerHTML');
+
+    ok($selected_reloaded_elements =~ /UG120001/, "Verify last column wizard, selected after load $dataset_name_2: UG120001");
+
+    # RELOAD PAGE AND LOAD A LIST OF TRAILS
+    $t->get_ok('/breeders/search');
+    sleep(2);
+
+    # RELOAD PAGE AND LOAD A LIST OF TRAILS
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[1]', 'xpath', 'find select column type in first column')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        "(//div[\@id='wizard']/span/span/div/div/div[\@class='panel-heading']/select)[1]/optgroup/option[text()='$fourth_list_name']",
+        'xpath',
+        "find and select '$fourth_list_name' in first column")->click();
+    sleep(1);
+
+    # selected 1 column - 2 new accessions and 1 old
+    $selected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/ul[contains(@class, "wizard-list-selected wizard-list")]',
+        'xpath',
+        "find content of selected list from first column")->get_attribute('innerHTML');
+
+    ok($selected_reloaded_elements =~ /UG120001/, "Verify first column wizard, selected after load $fourth_list_name: accession UG120001");
+
+    # ADD TO LIST FUNCTIONALITY
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[1]', 'xpath', 'find select column type in first column')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        "(//div[\@id='wizard']/span/span/div/div/div[\@class='panel-heading']/select)[1]//option[\@value='accessions']", 'xpath', 'find and select "accessions" in first column')->click();
+    sleep(1);
+
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]//a[contains(text(), "IITA-TMS-IBA011412")]//preceding-sibling::button' , 'xpath', 'find and add "IITA-TMS-IBA011412" accessions in first column')->click();
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]//a[contains(text(), "IITA-TMS-IBA30572")]//preceding-sibling::button' , 'xpath', 'find and add "IITA-TMS-IBA30572" accessions in first column')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[1]//select[contains(@class, "wizard-add-to-list")]',
+        'xpath',
+        'find a add to list select for first column')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        "(//div[\@id='wizard']/span/span/div/div/table[contains(\@class, 'wizard-save-to-list')])[1]//select[contains(\@class, 'wizard-add-to-list')]/optgroup/option[text()='$fourth_list_name']",
+        'xpath',
+        "find a $fourth_list_name on lists name and select")->click();
+
+    $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/table[contains(@class, "wizard-save-to-list")])[1]//button[contains(@class, "wizard-add-to-list")]',
+        'xpath',
+        'find a button "add to list" and click')->click();
+    sleep(1);
+    $t->driver()->accept_alert();
+    sleep(1);
+    $t->driver()->accept_alert();
+
+    # reload to check a new acc_list with two extra accessions
+    $t->get_ok('/breeders/search');
+    sleep(3);
+
+    # COLUMN 1 WIZARD SEARCH - load saved list with accessions acc_list
+    $t->find_element_ok('(//div[@id="wizard"]/span/span/div/div/div[@class="panel-heading"]/select)[1]', 'xpath', 'find select column type in first column')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        "(//div[\@id='wizard']/span/span/div/div/div[\@class='panel-heading']/select)[1]/optgroup/option[text()='$fourth_list_name']",
+        'xpath',
+        "find and select '$fourth_list_name' in first column")->click();
+    sleep(1);
+
+    # selected 1 column
+    $selected_reloaded_elements = $t->find_element_ok(
+        '(//div[@id="wizard"]/span/span/div/div/div[@class="panel-body"])[1]/ul[contains(@class, "wizard-list-selected wizard-list")]',
+        'xpath',
+        "find content of selected list from first column")->get_attribute('innerHTML');
+
+    ok($selected_reloaded_elements =~ /UG120001/, "Verify first column wizard, selected elements, after merging $fourth_list_name and two new elements: accession UG120001");
+    ok($selected_reloaded_elements =~ /IITA-TMS-IBA011412/, "Verify first column wizard, selected elements, after merging $fourth_list_name and two new elements: accession IITA-TMS-IBA011412");
+    ok($selected_reloaded_elements =~ /IITA-TMS-IBA30572/, "Verify first column wizard, selected elements, after merging $fourth_list_name and two new elements: accession IITA-TMS-IBA30572");
+
+    #  DELETE DATASET
+    $t->get_ok('/breeders/search');
+    sleep(3);
+
+    $t->find_element_ok(
+        '//select[contains(@class, "wizard-dataset-select")]',
+        'xpath',
+        'find a select input for datasets to delete and click')->click();
+    sleep(1);
+
+    $t->find_element_ok(
+        "//select[contains(\@class, 'wizard-dataset-select')]/optgroup/option[contains(text(), '$dataset_name_1')]",
+        'xpath',
+        "find a dataset name: $dataset_name_1 in select input and click")->click();
+
+    $t->find_element_ok(
+        '//div[contains(@class, "wizard-datasets")]//button[contains(@class, "wizard-dataset-delete")]',
+        'xpath',
+        'find a "delete" dataset button for selected dataset and click')->click();
+    sleep(1);
+    $t->driver()->accept_alert();
+    sleep(1);
+    $t->driver()->accept_alert();
+
+    # TEST DATASET WAS DELETED
+    $t->get_ok('/breeders/search');
+    sleep(2);
+
+    my $datasets_list = $t->find_element_ok(
+        '//select[contains(@class, "wizard-dataset-select")]',
+        'xpath',
+        'find a select input for datasets to delete and click')->get_attribute('innerHTML');
+    sleep(1);
+
+    ok($datasets_list =~ /$dataset_name_2/, "Verify if datasets list after 'delete' contain $dataset_name_2");
+    ok($datasets_list !~ /$dataset_name_1/, "Verify if datasets list after 'delete' NOT contain $dataset_name_1");
+    sleep(1);
+
+    # DONE TESTING
     }
-
 );
 
+$t->driver()->close();
 done_testing();

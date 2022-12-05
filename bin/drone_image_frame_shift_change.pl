@@ -17,6 +17,8 @@ drone_image_frame_shift_change.pl
 
 =head1 DESCRIPTION
 
+The format is .csv
+
 =head1 AUTHOR
 
  Nicolas Morales (nm529@cornell.edu)
@@ -29,7 +31,6 @@ use Getopt::Std;
 use Data::Dumper;
 use Carp qw /croak/ ;
 use Pod::Usage;
-use Spreadsheet::ParseExcel;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::DroneImagery::ImagesSearch;
@@ -44,8 +45,6 @@ if (!$opt_H || !$opt_D || !$opt_i || !$opt_j) {
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
-my $parser   = Spreadsheet::ParseExcel->new();
-my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({ 
 	dbhost=>$dbhost,

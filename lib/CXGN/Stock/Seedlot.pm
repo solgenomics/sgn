@@ -99,6 +99,26 @@ my $cross => $seedlot->cross(),
 
 Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
+------------------------------------------------------------------------------
+
+Seed Maintenance Events can be stored and retrieved using the helper functions
+in this Seedlot class.
+
+To add a Maintenance Event:
+
+my $seedlot = CXGN::Stock::Seedlot->new( schema => $schema, seedlot_id => $seedlot_id );
+my @events = (
+    {
+        cvterm_id => $cvterm_id,
+        value => $value,
+        notes => $notes,
+        operator => $operator,
+        timestamp => $timestamp
+    }
+);
+my $stored_events = $seedlot->store_events(\@events);
+
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -111,6 +131,7 @@ Nick Morales <nm529@cornell.edu>
 package CXGN::Stock::Seedlot;
 
 use Moose;
+use DateTime;
 
 extends 'CXGN::Stock';
 
@@ -122,6 +143,7 @@ use CXGN::List::Validate;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Stock::Search;
+use JSON::Any;
 
 =head2 Accessor seedlot_id()
 
@@ -307,6 +329,7 @@ sub list_seedlots {
     my $accession_id = shift; #added for BrAPI
     my $quality = shift;
     my $only_good_quality = shift;
+    my $box_name = shift;
 
     select(STDERR);
     $| = 1;
@@ -322,6 +345,7 @@ sub list_seedlots {
     my $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
+    my $location_code_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "location_code", "stock_property")->cvterm_id();
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
@@ -374,7 +398,7 @@ sub list_seedlots {
         {'stock_relationship_objects' => 'subject'}
     );
 
-    if ($minimum_count || $minimum_weight || $quality || $only_good_quality) {
+    if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name) {
         if ($minimum_count) {
 	    print STDERR "Minimum count $minimum_count\n";
             $search_criteria{'stockprops.value' }  = { '>=' => $minimum_count };
@@ -389,6 +413,11 @@ sub list_seedlots {
 	     $search_criteria{'stockprops.value' } = { '=' => $quality };
 	     $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
 	}
+        if ($box_name) {
+            print STDERR "Box Name $box_name\n";
+            $search_criteria{'stockprops.value'} = { 'ilike' => '%'.$box_name.'%' };
+            $search_criteria{'stockprops.type_id'} = $location_code_cvterm_id;
+        }
         push @seedlot_search_joins, 'stockprops';
     }
 
@@ -426,7 +455,7 @@ sub list_seedlots {
     my @seen_seedlot_ids = keys %seen_seedlot_ids;
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
-    
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -862,9 +891,9 @@ sub _update_content_stock_id {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
-    
+
     my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>[$accession_type_id,$cross_type_id]}, {'join'=>'subject'});
-    
+
     while (my $r=$acc_rs->next){
         $r->delete();
     }
@@ -1199,14 +1228,15 @@ sub delete {
     my $self = shift;
     my $error = '';
     my $transactions = $self->transactions();
+    my $name = $self->name();
     if (scalar(@$transactions)>1){
-        $error = "This seedlot has been used in transactions and so cannot be deleted!";
+        $error = "Seedlot '$name' has been used in transactions and so cannot be deleted!";
     } else {
         my $stock = $self->stock();
         my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
         my $nd_experiment_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id});
         if ($nd_experiment_rs->count != 1){
-            $error = "Seedlot does not have 1 nd_experiment associated!";
+            $error = "Seedlot '$name' should have only one associated nd_experiment!";
         } else {
             my $nd_experiment = $nd_experiment_rs->first();
             $nd_experiment->delete();
@@ -1219,6 +1249,286 @@ sub delete {
     }
 
     return $error;
+}
+
+
+### CLASS FUNCTION DELETE_USING_LIST
+
+sub delete_verify_using_list {
+    my $class = shift;
+    my $schema = shift;
+    my $phenome_schema = shift;
+    my $list_id = shift;
+
+    my $list = CXGN::List->new( { dbh => $schema->storage->dbh(), list_id => $list_id } );
+    my $type_row = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type');
+
+    my $type_id;
+    if ($type_row) {
+	$type_id = $type_row->cvterm_id();
+    }
+
+    print STDERR "TYPE ID = $type_id\n";
+
+    my $elements = $list->elements();
+
+    my @errors;
+    my @ok;
+
+    print STDERR "ELEMENTS ".join(",", @$elements);
+    my $delete_count = 0;
+    foreach my $ele (@$elements) {
+	print STDERR "start deletion for seedlot ".Dumper($ele)."...\n";
+	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $ele, type_id => $type_id });
+	if ($rs->count() == 0) {
+	    print STDERR "No such seedlot $ele\n";
+	    push @errors, [ $ele, "No seedlot named '$ele' could be found in the database" ];
+	}
+	else {
+	    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
+	    my $seedlot_id = $rs->next()->stock_id();
+	    print STDERR "SEEDLOT ID: $seedlot_id\n";
+	    my $nd_experiment_rs = $schema->resultset('Stock::Stock')->search({'me.stock_id'=> $seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id});
+	    if ($nd_experiment_rs->count != 1){
+		my $error = "Seedlot '$ele' should have only one associated nd_experiment!";
+		push @errors, [ $ele, $error];
+	    }
+	    else {
+		push @ok, $ele;
+	    }
+
+	}
+    }
+    return ( \@ok, \@errors );
+
+
+}
+
+sub delete_using_list {
+    my $class = shift;
+    my $schema = shift;
+    my $phenome_schema = shift;
+    my $list_id = shift;
+
+    my $list = CXGN::List->new( { dbh => $schema->storage->dbh(), list_id => $list_id } );
+    my $type_row = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type');
+
+    my $type_id;
+    if ($type_row) {
+	$type_id = $type_row->cvterm_id();
+    }
+
+    print STDERR "TYPE ID = $type_id\n";
+
+    my $elements = $list->elements();
+
+    my @errors;
+    my $delete_count = 0;
+    foreach my $ele (@$elements) {
+	print STDERR "start deletion for seedlot ".Dumper($ele)."...\n";
+	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $ele, type_id => $type_id });
+	if ($rs->count() == 0) {
+	    print STDERR "No such seedlot $ele\n";
+	    push @errors, "No seedlot named '$ele' could be found in the database";
+	}
+	else {
+	    my $seedlot = CXGN::Stock::Seedlot->new( schema => $schema, phenome_schema => $phenome_schema, seedlot_id => $rs->next()->stock_id());
+	    my $error = $seedlot->delete();
+	    if ($error) {
+		print STDERR "Error during seedlot deletion: $error\n";
+		push @errors, $error;
+	    }
+	    else {
+		$delete_count++;
+	    }
+	}
+    }
+    return ( scalar(@$elements), $delete_count, \@errors );
+}
+
+
+#
+# SEEDLOT MAINTENANCE EVENT FUNCTIONS
+#
+
+=head2 get_events()
+
+ Usage:         my @events = $sl->get_events();
+ Desc:          get all of seedlot maintenance events associated with the seedlot
+ Args:          page = (optional) the page number of results to return
+                pageSize = (optional) the number of results per page to return
+ Ret:           a hash with the results metadata and the matching seedlot events:
+                    - page: current page number
+                    - maxPage: the number of the last page
+                    - pageSize: (max) number of results per page
+                    - total: total number of results
+                    - results: an arrayref of hases of the seedlot's stored events, with the following keys:
+                        - stock_id: the unique id of the seedlot
+                        - uniquename: the unique name of the seedlot
+                        - stockprop_id: the unique id of the maintenance event
+                        - cvterm_id: id of seedlot maintenance event ontology term
+                        - cvterm_name: name of seedlot maintenance event ontology term
+                        - value: value of the seedlot maintenance event
+                        - notes: additional notes/comments about the event
+                        - operator: username of the person creating the event
+                        - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
+
+=cut
+
+sub get_events {
+    my $self = shift;
+    my $page = shift;
+    my $pageSize = shift;
+    my $schema = $self->schema();
+    my $seedlot_name = $self->uniquename();
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+
+    return $m->filter_events({ names => [$seedlot_name] }, $page, $pageSize);
+}
+
+
+=head2 get_event()
+
+ Usage:         my $event = $sl->get_event($id);
+ Desc:          get the specified seedlot maintenance event associated with the seedlot
+ Args:          id = stockprop_id of maintenance event
+ Ret:           a hashref of the seedlot maintenance event, with the following keys:
+                    - stock_id: the unique id of the seedlot
+                    - uniquename: the unique name of the seedlot
+                    - stockprop_id: the unique id of the maintenance event
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - cvterm_name: name of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
+
+=cut
+
+sub get_event {
+    my $self = shift;
+    my $event_id = shift;
+    my $schema = $self->schema();
+    my $seedlot_name = $self->uniquename();
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+
+    my $events = $m->filter_events({ names => [$seedlot_name], events => [$event_id] });
+    return $events->{'results'}->[0];
+}
+
+
+=head2 store_events()
+
+ Usage:         my @events = ({ cvterm_id => $cvterm_id, value => $value, notes => $notes, operator => $operator, timestamp => $timestamp }, ... );
+                my $stored_events = $sl->store_events(\@events);
+ Desc:          store one or more seedlot maintenance events in the database as a JSON stockprop associated with the seedlot's stock entry.
+                this function uses the CXGN::Stock::Seedlot::Maintenance class to store the JSON stockprop
+ Args:          $events = arrayref of hashes of the event properties, with the following keys:
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: (optional) additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
+ Ret:           an arrayref of hashes of the processed/stored events (includes stockprop_id), with the following keys:
+                    - stockprop_id: the unique id of the maintenance event
+                    - stock_id: the unique id of the seedlot
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - cvterm_name: name of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
+                the function will die on a caught error
+
+=cut
+
+sub store_events {
+    my $self = shift;
+    my $events = shift;
+    my $schema = $self->schema();
+    my $seedlot_id = $self->seedlot_id();
+
+    # Process the passed events
+    my @processed_events = ();
+    foreach my $event (@$events) {
+        my $cvterm_id = $event->{cvterm_id};
+        my $value = $event->{value};
+        my $notes = $event->{notes};
+        my $operator = $event->{operator};
+        my $timestamp = $event->{timestamp};
+
+        # Check for required parameters
+        if ( !defined $cvterm_id || $cvterm_id eq '' ) {
+            die "cvterm_id is required!";
+        }
+        if ( !defined $value || $value eq '' ) {
+            die "value is required!";
+        }
+        if ( !defined $operator || $operator eq '' ) {
+            die "operator is required!";
+        }
+        if ( !defined $timestamp || $timestamp eq '' ) {
+            die "timestamp is required!";
+        }
+        if ( $timestamp !~ /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/ ) {
+            die "timestamp not valid format [YYYY-MM-DD HH:MM:SS]!";
+        }
+
+        # Find matching cvterm by id
+        my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search({ cvterm_id => $cvterm_id })->first();
+        if ( !defined $cvterm_rs ) {
+            die "cvterm_id $cvterm_id not found!";
+        }
+        my $cvterm_name = $cvterm_rs->name();
+
+        # Save processed event
+        my %processed_event = (
+            cvterm_id => $cvterm_id,
+            cvterm_name => $cvterm_name,
+            value => $value,
+            notes => $notes,
+            operator => $operator,
+            timestamp => $timestamp
+        );
+        push(@processed_events, \%processed_event);
+    }
+
+    # Store the processed events
+    foreach my $processed_event (@processed_events) {
+        my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id });
+        $event_obj->cvterm_id($processed_event->{cvterm_id});
+        $event_obj->cvterm_name($processed_event->{cvterm_name});
+        $event_obj->value($processed_event->{value});
+        $event_obj->notes($processed_event->{notes});
+        $event_obj->operator($processed_event->{operator});
+        $event_obj->timestamp($processed_event->{timestamp});
+        my $stockprop_id = $event_obj->store_by_rank();
+        $processed_event->{stockprop_id} = $stockprop_id;
+        $processed_event->{stock_id} = $seedlot_id;
+    }
+
+    # Return the processed events
+    return(\@processed_events);
+}
+
+
+=head2 remove_event()
+
+ Usage:         $sl->remove_event($id)
+ Desc:          delete the specified seedlot maintenance event from the database
+ Args:          $id = stockprop_id of the seedlot maintenance event
+ Ret:
+
+=cut
+
+sub remove_event {
+    my $self = shift;
+    my $event_id = shift;
+    my $seedlot_id = $self->seedlot_id();
+    my $schema = $self->schema();
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id, prop_id => $event_id });
+
+    $m->delete();
 }
 
 1;

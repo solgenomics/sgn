@@ -61,22 +61,22 @@
 <div class="container">
   <div class="row">
 
-    <div style="margin:20px;margin-left:auto;margin-right:auto;padding:10px;border:1px;border-style:dotted;width:60%;text-align:center">
+    <!-- div style="margin:20px;margin-left:auto;margin-right:auto;padding:10px;border:1px;border-style:dotted;width:60%;text-align:center">
       Note: The Mixed Model Tool is in testing. Please provide feedback but do not use in production setting.
-    </div>
-    
+    </div -->
+
     <div class="col-md-12">
-      
-      
+
+
       <div class="container-fluid">
-	
+
         <&| /util/workflow.mas, id=> "mixed_model_analysis_workflow" &>
           <&| /util/workflow.mas:step, title=> "Choose Dataset" &>
             <& /page/page_title.mas, title=>"Choose the dataset for your analysis" &>
-	      
-	      
+
+
 	      1. Choose a dataset
-	      
+
 	      <span style="width:240px" id="mixed_model_dataset_select">
 	      </span>
 	      <div>
@@ -86,23 +86,23 @@
 	      </div>
 	      <br />
 	      <br />
-	      
+
 </&>
 
 <&| /util/workflow.mas:step, title=> "Choose Dependent Variable" &>
   <& /page/page_title.mas, title=>"Choose the dependent variable for your analysis" &>
-    
-    
+
+
     <div id="dependent_variable" style="margin-bottom:50px">
     </div>
-    
+
     <div id="trait_histogram">
       [Histogram]
     </div>
 
     <div>
       <div style="float:right">
-	<button class="btn btn-main" id="mixed_model_analysis_fishished_choose_variable" 	onclick="Workflow.complete(this);">Next step</button>	
+	<button class="btn btn-main" id="mixed_model_analysis_fishished_choose_variable" 	onclick="Workflow.complete(this);">Next step</button>
       </div>
     </div>
 </&>
@@ -110,14 +110,21 @@
 
 <&| /util/workflow.mas:step, title=> "Build Model" &>
   <& /page/page_title.mas, title=>"Build mixed model" &>
-    
+
+    <div class="container form-check form-switch">
+      <h4>Choose engine</h4>
+      <input class="form-check-input" type="radio" id="select_engine_lme4" name="select_engine" value="lme4" checked="1" > lme4</input> |
+      <input class="form-check-input" type="radio" id="select_engine_sommer" name="select_engine" value="sommer"> sommer</input>
+	<br /><br />
+    </div>
+
     <div class="model_bg" >
       <div id="model_string" style="margin-top:10px;margin-bottom:10px;text-align:center;font-weight:bold">[model will appear here in lme4 format]</div>
       <!--  button id="store_model_formula" class="btn btn-default btn-sm">Save model</button -->
     </div>
-    
-    
-    
+
+
+
     <hr />
     <div class="container">
       <div class="row">
@@ -135,44 +142,44 @@
           <div  id="fixed_factors_panel" style="border-width:0;" class="panel panel-default">
 	    <div class="panel-header">Fixed factors</div>
 	    <div id="fixed_factors" class="panel-body factor_panel">
-	      
+
 	      <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" --></div>
-	    
+
           </div>
 	  <div id="interaction_factor_collection_panel" class="panel panel-default factor_interaction_panel">
 	    <!-- style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
             <div class="panel-header">
-	      Fixed factors with interaction<br />
+	      Random factors with interaction<br />
               <button  id="add_interaction_factor_button">add new interaction</button>
 	    </div>
 	    <div id="interaction_factors_collection" name="interaction_factors_collection" class="panel-body">
 	    </div>
           </div>
 	  <div id="variable_slope_intersect_collection_panel" class="panel panel-default factor_interaction_panel">
-	    
+
 	    <!--    style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
-	    
+
             <div class="panel-header">
               Fixed factors with variable slope/intersects<br />
               <button  id="add_variable_slope_intersect_button">add new variable slope/intersect</button>
 	    </div>
 	    <div id="variable_slope_intersect_collection" class="panel-body">
-	      
+
 	    </div>
 	  </div>
-	  
+
 	  <div style="height:30">&nbsp;</div>
           <div id="random_factors_panel" class="panel panel-default" style="border-width:0px">
             <div class="panel-header">Random factors</div>
 	    <div id="random_factors" class="panel-body factor_panel">
-	      
+
 	      <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" -->
             </div>
           </div>
 	</div>
       </div>
     </div>
-    
+
     <br />
     <div id="tempfile" style="display:none" >
     </div>
@@ -183,13 +190,13 @@
       </div>
     </div>
     <hr />
-    
+
 </&>
 
 <&| /util/workflow.mas:step, title=> "Results" &>
 
 <& /page/page_title.mas, title=>"Analysis Results" &>
-    
+
   <div>
     <ul class="nav nav-tabs">
       <li class="active"><a data-toggle="tab" id="adjusted_blups_tab_link" href="#adjusted_blups_tab">Adjusted means (BLUPs)</a></li>
@@ -201,12 +208,12 @@
       <div id="adjusted_blups_tab" class="tab-pane fade in active">
 	<br />
 	  <button id="open_store_adjusted_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means">Save adjusted means</button>
-	  
+
 	  <!-- button class="btn btn-primary">Download</button -->
 	  <br />
 	  <div id="mixed_models_adjusted_blups_results_div">[loading...]</div>
       </div>
-      
+
       <div id="blups_tab" class="tab-pane fade">
 	<br />
 	<button id="open_store_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blup" data-target="#generic_save_analysis_dialog">Save BLUPs</button>
@@ -216,14 +223,14 @@
       <div id="adjusted_blues_tab" class="tab-pane fade">
 	<br />
 	<button id="open_store_adjusted_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save adjusted BLUEs</button>
-	
+
 	<div id="mixed_models_adjusted_blues_results_div">[loading...]</div>
       </div>
 
       <div id="blues_tab" class="tab-pane fade">
 	<br />
 	<button id="open_store_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save BLUEs</button>
-	
+
 	<div id="mixed_models_blues_results_div">[loading...]</div>
       </div>
     </div> <!-- results_tab div -->
@@ -235,12 +242,8 @@
 
 <script>
 
-$(document).ready( function() { 
+$(document).ready( function() {
 var mixedmodels = window.jsMod['mixedmodels'].init("mixedmodels");
 });
 
 </script>
-
-
-
-

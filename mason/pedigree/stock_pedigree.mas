@@ -72,6 +72,8 @@ $stock_id
                                     <option value="biparental">biparental</option>
                                     <option value="self">self</option>
                                     <option value="open">open pollinated</option>
+                                    <option value="sib">sib</option>
+                                    <option value="reselected">reselected</option>
                                     <option value="bulk">bulk</option>
                                     <option value="bulk_self">bulk selfed</option>
                                     <option value="bulk_open">bulk and open pollinated</option>
@@ -100,7 +102,7 @@ $stock_id
         associate_parent();
     });
 
-    jQuery("#add_parent_link").click( function () { 
+    jQuery("#add_parent_link").click( function () {
         jQuery("#add_parent_dialog" ).modal("show");
     });
 
@@ -118,7 +120,7 @@ $stock_id
         }
     });
 
-    function associate_parent() { 
+    function associate_parent() {
       var parentType = "";
       parentType = jQuery("#add_parent_dialog").find("input:checked").val();
       //alert("PARENTTYPE="+parentType);
@@ -143,16 +145,16 @@ $stock_id
         parseerror: function(response) {
             alert("A parse error occurred. Please try again."+response);
         },
-        success: function(response) { 
+        success: function(response) {
           if (response.error) { alert(response.error); }
           else {
             alert("The parent has been added. ["+response.error+"]");
             jQuery("#add_parent_dialog").modal("hide");
-            document.location.reload(); // reload the entire page, because pedigree info is in several places. 
+            document.location.reload(); // reload the entire page, because pedigree info is in several places.
           }
-        }, 
+        },
       });
- 
+
 
    }
 
@@ -183,7 +185,7 @@ $stock_id
         <span class="glyphicon glyphicon-circle-arrow-right" style="color:purple;" aria-hidden="true">
         </span> Expand Pedigree
     </span>
-    
+
 </div>
 <center>
 <div id="pdgv-loading-indicator">
@@ -213,7 +215,7 @@ $stock_id
 (function() {
     'use strict';
     var STOCK_ID = "<% $stock_id %>";
-    var base_url="/brapi/v1";
+    var base_url="/brapi/v2";
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
     if (require_login === '1'){
@@ -223,7 +225,7 @@ $stock_id
         }
     }
 
-    var pdg = PedigreeViewer(base_url,auth_token,'v1.3',function(dbId){
+    var pdg = PedigreeViewer(base_url,auth_token,'v2.0',function(dbId){
         return "/stock/"+dbId+"/view";
     });
     pdg.newTree(STOCK_ID,function(){
@@ -263,8 +265,8 @@ $stock_id
 //                 callback(nodes);
 //             });
 //     };
-// 
-//     function main(start_nodes) {  
+//
+//     function main(start_nodes) {
 //         var tree = d3.pedigreeTree()
 //           .levelWidth(200)
 //           .levelMidpoint(50)
@@ -285,22 +287,22 @@ $stock_id
 //           .excludeFromGrouping([STOCK_ID]);
 //         drawTree(tree(),".pdgtree-canv");
 //     }
-// 
+//
 //     function drawTree(layout,svg_selector,trans){
-// 
+//
 //         //set default change-transtion to no duration
 //         trans = trans || d3.transition().duration(0);
-// 
+//
 //         //make wrapper(pdg)
 //         var canv = d3.select(svg_selector);
 //         var cbbox = canv.node().getBoundingClientRect();
-//         var canvw = cbbox.width, 
+//         var canvw = cbbox.width,
 //             canvh = cbbox.height;
 //         var pdg = canv.select('.pedigreeTree');
 //         if (pdg.empty()){
 //           pdg = canv.append('g').classed('pedigreeTree',true);
 //         }
-// 
+//
 //         //make background
 //         var bg = pdg.select('.pdg-bg');
 //         if (bg.empty()){
@@ -313,7 +315,7 @@ $stock_id
 //             .attr('fill',"white")
 //             .attr('stroke','none');
 //         }
-// 
+//
 //         //make scaled content/zoom groups
 //         var padding = 50;
 //         var pdgtree_width = d3.max([500,layout.x[1]-layout.x[0]]);
@@ -323,12 +325,12 @@ $stock_id
 //         var scale = get_fit_scale(canvw,canvh,pdgtree_width,pdgtree_height,padding);
 //         var offsetx = (canvw-(pdgtree_width)*scale)/2 + centeringx*scale;
 //         var offsety = (canvh-(pdgtree_height)*scale)/2 + centeringy*scale;
-// 
+//
 //         var content = pdg.select('.pdg-content');
 //         if (content.empty()){
 //           var zoom = d3.zoom();
 //           var zoom_group = pdg.append('g').classed('pdg-zoom',true).data([zoom]);
-// 
+//
 //           content = zoom_group.append('g').classed('pdg-content',true);
 //           content.datum({'zoom':zoom})
 //           zoom.on("zoom",function(){
@@ -339,7 +341,7 @@ $stock_id
 //             zoom.transform(bg.transition(),d3.zoomIdentity);
 //             return false;
 //           });
-// 
+//
 //           content.attr('transform',
 //               d3.zoomIdentity
 //                 .translate(offsetx,offsety)
@@ -353,8 +355,8 @@ $stock_id
 //               .translate(offsetx,offsety)
 //               .scale(scale)
 //           );
-// 
-// 
+//
+//
 //         //set up draw layers
 //         var linkLayer = content.select('.link-layer');
 //         if(linkLayer.empty()){
@@ -364,7 +366,7 @@ $stock_id
 //         if(nodeLayer.empty()){
 //             nodeLayer = content.append('g').classed('node-layer',true);
 //         }
-// 
+//
 //         //link curve generators
 //         var stepline = d3.line().curve(d3.curveStepAfter);
 //         var curveline = d3.line().curve(d3.curveBasis);
@@ -372,7 +374,7 @@ $stock_id
 //           if (d.type=="parent->mid") return curveline(d.path);
 //           if (d.type=="mid->child") return stepline(d.path);
 //         };
-// 
+//
 //         //draw nodes
 //         var nodes = nodeLayer.selectAll('.node')
 //           .data(layout.nodes,function(d){return d.id;});
@@ -561,26 +563,26 @@ $stock_id
 //             drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700).ease(d3.easeLinear));
 //         });
 //         var oldNodes = nodes.exit().remove();
-// 
-// 
+//
+//
 //         //link colors
 //         var link_color = function(d){
 //           if (d.type=="mid->child") return 'purple';
 //           if (d.type=="parent->mid"){
 //             //if its the first parent, red. Otherwise, blue.
 //             var representative = d.sinks[0].type=="node-group"?
-//                     d.sinks[0].value[0].value 
+//                     d.sinks[0].value[0].value
 //                     : d.sinks[0].value;
 //             if (representative.parents.mother == d.source.id){
 //                 return "red";
-//             } 
+//             }
 //             else {
 //                 return "blue";
 //             }
 //           }
 //           return 'gray';
 //         }
-// 
+//
 //         //make links
 //         var links = linkLayer.selectAll('.link')
 //           .data(layout.links,function(d){return d.id;});
@@ -605,7 +607,7 @@ $stock_id
 //         allLinks.transition(trans).select('path').attr('d',build_curve);
 //         var oldNodes = links.exit().remove();
 //     }
-// 
+//
 //     function load_blink(node){
 //         var stop = false;
 //         var original_fill = d3.select(node).style("fill");
@@ -627,12 +629,12 @@ $stock_id
 //             stop = true;
 //         }
 //     }
-// 
-// 
-// 
+//
+//
+//
 //     function get_fit_scale(w1,h1,w2,h2,pad){
 //         w1 -= pad*2;
-//         h1 -= pad*2;  
+//         h1 -= pad*2;
 //         if (w1/w2<h1/h2){
 //             return w1/w2;
 //         } else {
@@ -641,4 +643,3 @@ $stock_id
 //     }
 // })();
 </script>
-  

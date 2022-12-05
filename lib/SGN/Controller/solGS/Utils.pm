@@ -3,8 +3,9 @@ package SGN::Controller::solGS::Utils;
 use Moose;
 use namespace::autoclean;
 
-use File::Slurp qw /write_file read_file/;
-
+use File::Slurp qw /write_file read_file edit_file/;
+use JSON;
+use List::MoreUtils qw(first_index);
 
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
@@ -45,6 +46,32 @@ sub read_file_data {
 
 }
 
+
+sub read_file_data_cols {
+    my ($self, $file, $cols) = @_;
+
+    my @lines = read_file($file, {binmode => ':utf8'});
+    my @headers =  split(/\t/, shift(@lines));
+    my @h_indices;
+    foreach my  $col (@$cols)
+    {
+        my $index = first_index { $_ eq $col } @headers;
+        push @h_indices, $index;
+    }
+
+	chomp(@lines);
+
+    my @data;
+    foreach my $line (@lines) {
+        my @vals = split(/\t/, $line);
+
+        push @data, [@vals[@h_indices]];
+
+    }
+
+    return \@data;
+
+}
 
 sub structure_downloadable_data {
     my ($self, $file, $row_name) = @_;
@@ -97,6 +124,7 @@ sub abbreviate_term {
     $term =~ s/-/_/g;
     $term =~ s/\%/percent/g;
     $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
+    $term =~ s/"|\://g;
 
     my @words = split(/\s/, $term);
 
@@ -119,7 +147,7 @@ sub abbreviate_term {
 	    elsif ($word =~/^[0-9]/)
 	    {
 		my $str_wrd = $word;
-		my @str = $str_wrd =~ /[\d+-\d+]/g;
+		my @str = $str_wrd =~ /[\d+\-\d+]/g;
 		my $str = join("", @str);
 		my @wrd = $word =~ /[A-Za-z]/g;
 		my $wrd = join("", @wrd);
@@ -191,7 +219,8 @@ sub clean_traits {
     $terms =~ s/(\|\w+:\d+)//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
-
+    $terms =~ s/"|\://g;
+    
     return $terms;
 }
 
@@ -201,9 +230,10 @@ sub remove_ontology {
 
     my @clean_traits;
 
-    foreach my $tr (@$traits) {
-	my $name = $tr->[1];
-	$name= $self->clean_traits($name);
+    foreach my $tr (@$traits)
+	{
+		my $name = $tr->[1];
+		$name= $self->clean_traits($name);
 
 	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
  	push @clean_traits, $id_nm;
@@ -217,13 +247,13 @@ sub remove_ontology {
 sub get_clean_trial_trait_names {
     my ($self, $c, $trial_id) = @_;
 
-    my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+    my $traits = $c->controller('solGS::Search')->model($c)->trial_traits($trial_id);
     my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
     my @trait_names;
 
     foreach my $tr (@$clean_traits)
     {
-	push @trait_names, $tr->{trait_name};
+		push @trait_names, $tr->{trait_name};
     }
 
     return \@trait_names;
@@ -238,8 +268,58 @@ sub save_metadata {
 
     if (!-s $metadata_file)
     {
-	my $metadata   = $c->model('solGS::solGS')->trial_metadata();
+	my $metadata   = $c->controller('solGS::Search')->model($c)->trial_metadata();
 	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
+    }
+
+}
+
+
+sub stash_json_args {
+    my ($self, $c, $args_json) = @_;
+
+    my $json = JSON->new();
+    my $args_hash = $json->decode($args_json);
+    my $data_set_type = $args_hash->{'data_set_type'};
+
+    my $protocol_id =  $args_hash->{'genotyping_protocol_id'};
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+
+    foreach my $key (keys %{$args_hash})
+    {
+        my $val = $args_hash->{$key};
+        $val = $val =~ /null|undefined/ ? undef : $val;
+
+        if (ref($val) eq 'ARRAY' && scalar(@$val) == 1)
+        {
+            $c->stash->{$key} = $val->[0];
+
+            if ($key =~ /training_pop_id|model_id|combo_pops_list|combo_pops_id/)
+    		{
+                 if ($val->[0] =~ /\d+/)
+                 {
+            		    $c->stash->{pop_id} = $val->[0];
+                        $c->stash->{model_id} = $val->[0];
+                        $c->stash->{training_pop_id} = $val->[0];
+                 }
+            }
+
+            if ($key =~ /trait_id|training_traits_ids/)
+            {
+                $c->stash->{training_traits_ids} = $val;
+                $c->stash->{trait_id} = $val->[0];
+            }
+
+        }
+        else
+        {
+            $c->stash->{$key} = $val;
+        }
+    }
+
+    if  ($c->stash->{data_set_type} =~ /combined/)
+    {
+        $c->stash->{combo_pops_id} = $c->stash->{training_pop_id};
     }
 
 }
@@ -251,6 +331,15 @@ sub generic_message {
     $c->stash->{message} = $msg;
 
     $c->stash->{template} = "/generic_message.mas";
+}
+
+sub require_login {
+    my ($self, $c) = @_;
+
+    my $page = "/" . $c->req->path;
+    $c->res->redirect("/solgs/login/message?page=$page");
+    $c->detach;
+
 }
 
 ####

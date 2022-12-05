@@ -19,6 +19,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::FieldBook;
 use Moose;
 use File::Slurp;
 use Text::CSV;
+use Data::Dumper;
 
 sub name {
     return "field book";
@@ -39,6 +40,13 @@ sub validate {
 
     ## Check that the file can be read
     my @file_lines = read_file($filename);
+
+    # fix DOS-style line-endings!!!
+    #
+    foreach my $fl (@file_lines) {
+	$fl =~ s/\r//g;
+    }
+    
     if (!@file_lines) {
         $parse_result{'error'} = "Could not read file.";
         print STDERR "Could not read file.\n";
@@ -128,6 +136,13 @@ sub parse {
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
 
     @file_lines = read_file($filename);
+
+    # fix DOS-style line-endings!!!
+    #
+    foreach my $fl (@file_lines) {
+	$fl =~ s/\r//g;
+    }
+
     $header = shift(@file_lines);
     my $status  = $csv->parse($header);
     my @header_row = $csv->fields();
@@ -155,7 +170,10 @@ sub parse {
         return \%parse_result;
     }
 
-    foreach my $line (sort @file_lines) {
+
+    for my $index (0..$#file_lines) {
+        my $line = $file_lines[$index];
+        my $line_number = $index + 2;
         my $status  = $csv->parse($line);
         my @row = $csv->fields();
         my $plot_id = $row[0];
@@ -169,13 +187,13 @@ sub parse {
         my $collector = $row[$header_column_info{'person'}];
 
         if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
-            $parse_result{'error'} = "Error getting value from file";
-            print STDERR "value: $value\n";
+            $parse_result{'error'} = "Error parsing line $line_number: plot_name, trait, value, or timestamp is undefined.";
+            print STDERR "line $line_number has value: $value\n";
             return \%parse_result;
         }
         if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-            $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-            print STDERR "value: $timestamp\n";
+            $parse_result{'error'} = "Error parsing line $line_number: timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+            print STDERR "line $line_number has timestamp: $timestamp\n";
             return \%parse_result;
         }
         $plots_seen{$plot_id} = 1;

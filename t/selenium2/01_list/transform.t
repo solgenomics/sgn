@@ -8,71 +8,70 @@ use SGN::Test::WWW::WebDriver;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 
-$d->login_as("submitter");
+$d->while_logged_in_as('submitter', sub {
+    sleep(1);
+    $d->get_ok("/about/index.pl", "get root url test");
 
-$d->get_ok("/about/index.pl", "get root url test");
+    sleep(2);
 
-sleep(1);
+    my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
-my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
- 
-sleep(1);
+    sleep(1);
 
-print "Adding new list...\n";
+    print "Adding new list...\n";
 
-$d->find_element_ok("add_list_input", "id", "find add list input");
+    $d->find_element_ok("add_list_input", "id", "find add list input");
+    sleep(1);
+    my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input test");
 
-my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input test");
+    sleep(1);
 
-sleep(1);
+    $add_list_input->send_keys("new_test_list_transform");
 
-$add_list_input->send_keys("new_test_list_transform");
+    sleep(1);
 
-sleep(1);
+    $d->find_element_ok("add_list_button", "id", "find add list button test")->click();
+    sleep(1);
+    $d->find_element_ok("view_list_new_test_list_transform", "id", "view list test")->click();
 
-$d->find_element_ok("add_list_button", "id", "find add list button test")->click();
+    sleep(1);
 
-$d->find_element_ok("view_list_new_test_list_transform", "id", "view list test")->click();
+    $d->find_element_ok("dialog_add_list_item", "id", "add test list")->send_keys("test_accession1\ntest_accession2\ntest_accession3_synonym1\n");
 
-sleep(1);
+    sleep(1);
 
-$d->find_element_ok("dialog_add_list_item", "id", "add test list")->send_keys("test_accession1\ntest_accession2\ntest_accession3_synonym1\n");
+    $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
 
-sleep(1);
+    print "Close list content dialog...\n";
 
-$d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
+    sleep(2);
 
-print "Close list content dialog...\n";
+    my $button = $d->find_element_ok("close_list_item_dialog", "id", "find close_list_item_dialog button test");
 
-sleep(2);
+    $button->click() if ($button);
 
-my $button = $d->find_element_ok("close_list_item_dialog", "id", "find close_list_item_dialog button test");
+    print "Delete test list...\n";
 
-$button->click() if ($button);
+    my $delete_link = $d->find_element_ok("delete_list_new_test_list_transform", "id", "find delete test list button");
 
-print "Delete test list...\n";
+    $delete_link->click() if $delete_link;
 
-my $delete_link = $d->find_element_ok("delete_list_new_test_list_transform", "id", "find delete test list button");
+    sleep(1);
 
-$delete_link->click() if $delete_link;
+    my $text = $d->driver->get_alert_text();
 
-sleep(1);
+    $d->accept_alert_ok();
 
-my $text = $d->driver->get_alert_text();
+    sleep(1);
 
-$d->accept_alert_ok();
+    $d->accept_alert_ok();
 
-sleep(1);
+    print "Deleted the list\n";
 
-$d->accept_alert_ok();
+    $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
 
-print "Deleted the list\n";
-
-$d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
-
-$d->logout_ok();
-
-done_testing();
+});
 
 $d->driver->close();
+done_testing();
 

@@ -50,10 +50,10 @@ if(cv.scheme == "random"){
 
 # args[8] = training data.frame: observationUnit level data with phenotypes and spectra in JSON format
 train.input <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
-  rename(uniqueid = observationUnitId) %>%
+  rename("unique.id" = observationUnitId) %>%
   rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
-  dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
+  dplyr::select("unique.id", reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
 train.input$reference <- as.numeric(train.input$reference)
 
 print(train.input[1:5,1:5])
@@ -63,10 +63,10 @@ if(args[9] != "NULL"){
     print("TEST DATA PROVIDED")
 
   test.input <- jsonlite::fromJSON(txt = args[9], flatten = T) %>%
-    rename(uniqueid = observationUnitId) %>%
+    rename("unique.id" = observationUnitId) %>%
     rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
     rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
-    dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
+    dplyr::select("unique.id", reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
   test.input$reference <- as.numeric(test.input$reference)
 } else{
     print("NO TEST DATA")
@@ -84,33 +84,45 @@ if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
       test.ready <- test.input %>% dplyr::select(-germplasmName)
     }
 
+    print(train.ready[1:5,1:5])
     print(train.ready$reference)
-    wls <- colnames(train.ready)[-c(1:2)] %>% parse_number() # take off sample name and reference columns
     # Test model using non-specialized cv scheme
-    sm.output <- SaveModel(df = train.ready, save.model = FALSE,
-                           autoselect.preprocessing = preprocessing,
-                           preprocessing.method = preprocessing.method,
-                           model.save.folder = NULL, model.name = "PredictionModel",
-                           best.model.metric = "RMSE", tune.length = tune.length,
-                           model.method = model.method, num.iterations = num.iterations,
-                           wavelengths = wls, stratified.sampling = stratified.sampling,
-                           cv.scheme = NULL, trial1 = NULL, trial2 = NULL, trial3 = NULL)
+    sm.output <- save_model(df = train.ready,
+                            write.model = FALSE,
+                            pretreatment = preprocessing.method,
+                            model.save.folder = NULL,
+                            model.name = "PredictionModel",
+                            best.model.metric = "RMSE",
+                            tune.length = tune.length,
+                            model.method = model.method,
+                            num.iterations = num.iterations,
+                            stratified.sampling = stratified.sampling,
+                            cv.scheme = NULL,
+                            trial1 = NULL,
+                            trial2 = NULL,
+                            trial3 = NULL
+                            )
 
   } else{
     # Test model using specialized cv scheme AND SAVE
-    wls <- colnames(train.ready)[-c(1:3)] %>% parse_number() # take off sample name, reference, and genotype columns
-    sm.output <- SaveModel(df = NULL, save.model = TRUE,
-                           autoselect.preprocessing = preprocessing,
-                           preprocessing.method = preprocessing.method,
-                           model.save.folder = NULL, model.name = "PredictionModel",
-                           best.model.metric = "RMSE", tune.length = tune.length,
-                           model.method = model.method, num.iterations = num.iterations,
-                           wavelengths = wls, stratified.sampling = stratified.sampling,
-                           cv.scheme = cv.scheme, trial1 = train.input, trial2 = test.input,
-                           trial3 = NULL)
+    sm.output <- save_model(df = NULL,
+                            write.model = TRUE,
+                            pretreatment = preprocessing.method,
+                            model.save.folder = NULL,
+                            model.name = "PredictionModel",
+                            best.model.metric = "RMSE",
+                            tune.length = tune.length,
+                            model.method = model.method,
+                            num.iterations = num.iterations,
+                            stratified.sampling = stratified.sampling,
+                            cv.scheme = cv.scheme,
+                            trial1 = train.input,
+                            trial2 = test.input,
+                            trial3 = NULL
+                            )
   }
-  results.df <- sm.output[[1]]
-  saveRDS(sm.output[[2]], file = args[11]) # args[11] = model save location with .Rds in filename
+  results.df <- sm.output$best.model.stats
+  saveRDS(sm.output$best.model, file = args[11]) # args[11] = model save location with .Rds in filename
 
 } else{ # DON'T SAVE MODEL
   if(is.null(cv.scheme)){

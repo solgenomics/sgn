@@ -70,6 +70,18 @@ has 'progenies' => (isa => 'Ref',
 		    is => 'rw',
     );
 
+has 'file_type' => (isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
+has 'field_crossing_data_order' => (isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+    predicate => 'has_field_crossing_data_order',
+    required => 0,
+);
+
+
 
 sub BUILD {
     my $self = shift;
@@ -394,7 +406,7 @@ sub get_progeny_info {
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
         FROM stock_relationship as stock_relationship1
         INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
-        INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
+        INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ? AND progeny.is_obsolete <> 't'
         LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
         LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
         $where_clause ";
@@ -696,7 +708,7 @@ sub get_crosses_and_details_in_crossingtrial {
         LEFT JOIN stock AS stock6 ON (stock_relationship5.subject_id = stock6.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship6 ON (stock1.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
         LEFT JOIN stock AS stock7 ON (stock_relationship6.subject_id = stock7.stock_id)
-        WHERE nd_experiment_project.project_id = ? ";
+        WHERE nd_experiment_project.project_id = ? ORDER BY cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -730,7 +742,7 @@ sub get_cross_properties_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stockprop AS stockprop1 ON (stock.stock_id = stockprop1.stock_id) AND stockprop1.type_id = ?
         LEFT JOIN stockprop AS stockprop2 ON (stock.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
-        WHERE nd_experiment_project.project_id = ?";
+        WHERE nd_experiment_project.project_id = ? ORDER BY stock.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -773,7 +785,7 @@ sub get_seedlots_from_crossingtrial {
         JOIN stock as stock1 on (nd_experiment_stock.stock_id = stock1.stock_id)
         LEFT JOIN stock_relationship ON (stock1.stock_id = stock_relationship.subject_id) and stock_relationship.type_id = ?
         LEFT JOIN stock as stock2 ON (stock_relationship.object_id = stock2.stock_id)
-        WHERE nd_experiment_project.project_id = ?";
+        WHERE nd_experiment_project.project_id = ? ORDER BY stock1.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -821,7 +833,7 @@ sub get_cross_progenies_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
         WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS progeny_count_table
-        ON (cross_table.cross_id = progeny_count_table.cross_id)";
+        ON (cross_table.cross_id = progeny_count_table.cross_id) ORDER BY cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -1283,10 +1295,8 @@ sub get_cross_additional_info_trial {
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($cross_combination_typeid, $cross_additional_info_typeid, $trial_id);
-
 
     my @data = ();
     while(my($cross_id, $cross_name, $cross_combination, $cross_additional_info_json) = $h->fetchrow_array()){
@@ -1343,6 +1353,201 @@ sub get_nd_experiment_id_with_type_cross_experiment {
 
     return $experiment_id;
 }
+
+
+=head2 get_intercross_file_metadata
+
+
+=cut
+
+sub get_intercross_file_metadata {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id();
+    my $file_type = $self->file_type();
+    my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
+    my $file_metadata_json_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property')->cvterm_id;
+
+    my $projectprop_rs = $schema->resultset("Project::Projectprop")->find({ project_id => $crossing_experiment_id, type_id => $file_metadata_json_type_id });
+
+    my @file_ids;
+    my @file_info = ();
+    my $dbh = $schema->storage->dbh();
+    if ($projectprop_rs){
+        my $intercross_files;
+        my $file_metadata_json = $projectprop_rs->value();
+        my $file_metadata = decode_json$file_metadata_json;
+
+        if ($file_type eq 'intercross_download') {
+            $intercross_files = $file_metadata->{'intercross_download'};
+        } elsif ($file_type eq 'intercross_upload') {
+            $intercross_files = $file_metadata->{'intercross_upload'};
+        }
+
+        if ($intercross_files) {
+            my %intercross_hash = %{$intercross_files};
+            @file_ids = keys %intercross_hash;
+            if (scalar @file_ids > 0) {
+                foreach my $id (@file_ids){
+                    my @each_row = ();
+                    my $q = "SELECT f.file_id, m.create_date, p.sp_person_id, p.username, f.basename, f.dirname, f.filetype
+                        FROM metadata.md_files AS f
+                        JOIN metadata.md_metadata as m ON (f.metadata_id = m.metadata_id)
+                        JOIN sgn_people.sp_person as p ON (p.sp_person_id = m.create_person_id) WHERE f.file_id = ?
+                        ORDER BY f.file_id ASC";
+
+                    my $h = $dbh->prepare($q);
+                    $h->execute($id);
+                    @each_row = $h->fetchrow_array();
+                    push @file_info, [@each_row];
+                }
+            }
+        }
+    }
+
+    return \@file_info;
+
+}
+
+
+=head2 get_all_cross_entries
+
+    Class method.
+    Returns all cross entries and basic info.
+    Example: my @all_cross_entries = CXGN::Cross->get_all_cross_entries($schema);
+
+=cut
+
+sub get_all_cross_entries {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $cross_properties_ref = $self->field_crossing_data_order();
+
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $ploidy_level_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'ploidy_level', 'stock_property')->cvterm_id();
+    my $genome_structure_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genome_structure', 'stock_property')->cvterm_id();
+    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+    my $offspring_of_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
+    my $cross_props_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
+    my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
+
+    my $pollination_date_key;
+    my $number_of_seeds_key;
+
+    if ($cross_properties_ref) {
+        my @cross_properties = @$cross_properties_ref;
+
+        if ('First Pollination Date' ~~ @cross_properties) {
+            $pollination_date_key = 'First Pollination Date';
+        } else {
+            $pollination_date_key = 'Pollination Date';
+        }
+
+        if ('Number of Seeds Extracted' ~~ @cross_properties) {
+            $number_of_seeds_key = 'Number of Seeds Extracted';
+        } else {
+            $number_of_seeds_key = 'Number of Seeds'
+        }
+    } else {
+        $pollination_date_key = 'Pollination Date';
+        $number_of_seeds_key = 'Number of Seeds';
+    }
+
+    my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_type, cross_table.female_id, cross_table.female_name, cross_table.female_ploidy, cross_table.female_genome_structure,
+        cross_table.male_id, cross_table.male_name, cross_table.male_ploidy, cross_table.male_genome_structure, cross_table.crossing_experiment_id, cross_table.crossing_experiment_name, cross_table.crossing_experiment_description,
+        cross_table.location_name, progeny_table.progeny_number, cross_table.field_info
+        FROM
+        (SELECT cross_stock.stock_id AS cross_id, cross_stock.uniquename AS cross_name, female_relationship.value AS cross_type, female_stock.stock_id AS female_id,
+        female_stock.uniquename AS female_name, ploidy1.value AS female_ploidy, genome_structure1.value AS female_genome_structure, male_stock.stock_id AS male_id,
+        male_stock.uniquename AS male_name, ploidy2.value AS male_ploidy, genome_structure2.value AS male_genome_structure,
+        project.project_id AS crossing_experiment_id, project.name AS crossing_experiment_name, project.description AS crossing_experiment_description, nd_geolocation.description AS location_name,
+        cross_info.value AS field_info
+        FROM project JOIN nd_experiment_project ON (project.project_id = nd_experiment_project.project_id)
+        JOIN projectprop ON (project.project_id = projectprop.project_id) AND projectprop.type_id = ?
+        JOIN nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id)
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+        JOIN stock AS cross_stock ON (nd_experiment_stock.stock_id = cross_stock.stock_id) AND cross_stock.type_id = ?
+        JOIN stock_relationship AS female_relationship ON (cross_stock.stock_id = female_relationship.object_id) AND female_relationship.type_id = ?
+        JOIN stock AS female_stock ON (female_relationship.subject_id = female_stock.stock_id)
+        LEFT JOIN stockprop AS ploidy1 ON (female_stock.stock_id = ploidy1.stock_id) AND ploidy1.type_id = ?
+        LEFT JOIN stockprop AS genome_structure1 ON (female_stock.stock_id = genome_structure1.stock_id) AND genome_structure1.type_id = ?
+        LEFT JOIN stock_relationship AS male_relationship ON (cross_stock.stock_id = male_relationship.object_id) AND male_relationship.type_id = ?
+        LEFT JOIN stock AS male_stock ON (male_relationship.subject_id = male_stock.stock_id)
+        LEFT JOIN stockprop AS ploidy2 ON (male_stock.stock_id = ploidy2.stock_id) AND ploidy2.type_id = ?
+        LEFT JOIN stockprop AS genome_structure2 ON (male_stock.stock_id = genome_structure2.stock_id) AND genome_structure2.type_id = ?
+        LEFT JOIN stockprop AS cross_info ON (cross_stock.stock_id = cross_info.stock_id) AND cross_info.type_id = ?) AS cross_table
+        LEFT JOIN
+        (SELECT DISTINCT stock.stock_id AS cross_id, COUNT (stock_relationship.subject_id) AS progeny_number
+        FROM stock
+        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ? WHERE stock.type_id = ?
+        GROUP BY cross_id) AS progeny_table
+        ON (cross_table.cross_id = progeny_table.cross_id) ORDER BY cross_table.cross_id ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($geolocation_type_id, $cross_experiment_type_id, $cross_type_id, $female_parent_type_id, $ploidy_level_type_id, $genome_structure_type_id, $male_parent_type_id, $ploidy_level_type_id, $genome_structure_type_id, $cross_props_type_id, $offspring_of_type_id, $cross_type_id);
+
+    my @cross_data = ();
+    while(my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $female_genome_structure, $male_id, $male_name, $male_ploidy, $male_genome_structure, $project_id, $project_name, $project_description, $project_location, $progeny_count, $field_info) = $h->fetchrow_array()){
+        my $pollination_date;
+        my $number_of_seeds;
+        if ($field_info){
+            my $field_info_hash = decode_json $field_info;
+            $pollination_date = $field_info_hash->{$pollination_date_key};
+
+            $number_of_seeds = $field_info_hash->{$number_of_seeds_key};
+        }
+        push @cross_data, [$cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $female_genome_structure, $male_id, $male_name, $male_ploidy, $male_genome_structure, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name, $project_description, $project_location];
+    }
+
+    return \@cross_data;
+}
+
+
+=head2 get_cross_transaction_ids_in_experiment
+
+    Class method.
+    Returns all cross transaction ids in a specific crossing experiment.
+    Example: my @cross_transaction_ids = CXGN::Cross->get_cross_transaction_ids_in_experiment($schema, $trial_id);
+
+=cut
+
+sub get_cross_transaction_ids_in_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_transaction_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value
+        FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id) AND stock.type_id = ?
+        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($cross_type_id, $cross_transaction_type_id, $trial_id);
+
+    my @info = ();
+    while(my($cross_id, $cross_name, $cross_transaction_json) = $h->fetchrow_array()){
+        if ($cross_transaction_json){
+            my $cross_transaction_info = decode_json $cross_transaction_json;
+            my %transaction_hash = %{$cross_transaction_info};
+            my @transaction_ids = keys %transaction_hash;
+            push @info, [$cross_id, $cross_name, [@transaction_ids]];
+        } else {
+            push @info, [$cross_id, $cross_name, [$cross_transaction_json]];
+        }
+    }
+
+    return \@info;
+}
+
 
 
 1;

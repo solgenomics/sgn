@@ -3,31 +3,31 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More;
+use Test::More 'tests' => 8;
 use SGN::Test::WWW::WebDriver;
 
 my $t = SGN::Test::WWW::WebDriver -> new();
 
-$t->get_ok('/tools/onto');
+$t->while_logged_in_as("submitter", sub {
+    sleep(2);
 
-sleep(2);
+    $t->get_ok('/tools/onto');
+    sleep(3);
 
-my $mc = $t->find_element_ok("open_cvterm_67202", "id", "get ontology browser link for opening cellular_component");
+    $t->find_element_ok("ontology_browser_input", "id", "check if 'Find ID' input exist");
 
-$mc->click(); # open the link
+    $t->find_element_ok("ontology_browser_submit", "id", "check if 'Find' button exist");
 
-sleep(2); 
+    $t->find_element_ok("reset_hiliting", "id", "check if 'Clear Highlight' button exist");
 
-#print STDERR $t->driver->get_page_source();
+    $t->find_element_ok("reset_tree", "id", "check if 'Reset View' button exist");
 
-my $cell = $t->find_element_ok("cvterm_id_67546", "id", "get ontology browser link for cvterm detail page for a cell");
+    $t->find_element_ok("ontology_term_input", "id", "check if 'Search for text' input exist");
 
-sleep(2);
+    $t->find_element_ok("cv_select", "name", "check if 'Ontology' select exist");
 
-$cell->click();
+    $t->find_element_ok("term_search", "id", "check if 'Search' button exist");
+});
 
-sleep(2);
-
-ok($t->driver()->get_page_source() =~ m/The basic structural and functional unit of all organisms/, "find data on cell on detail page");
-
+$t->driver->close();
 done_testing();

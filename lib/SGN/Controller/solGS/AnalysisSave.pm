@@ -73,7 +73,7 @@ sub structure_gebvs_result_details {
 	my $model_details = $self->model_details($c);
 	my $app_details		= $self->app_details();
 	my $log					 = $self->analysis_log($c);
-
+ 
     my $details = {
 		'analysis_to_save_boolean' => 'yes',
 		'analysis_name' => $log->{analysis_name},
@@ -157,7 +157,7 @@ sub analysis_breeding_prog {
 	my $program_id;
 	if ($trial_id =~ /^\d+$/)
 	{
-		$program_id = $c->model('solGS::solGS')->trial_breeding_program_id($trial_id);
+		$program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trial_id);
 	}
 
 	return $program_id;
@@ -195,7 +195,7 @@ sub analysis_year {
 	my $log = $self->analysis_log($c);
 	my $time = $log->{analysis_time};
 
-	my $time= (split(/\s+/, $time))[0];
+	$time= (split(/\s+/, $time))[0];
 	my $year = (split(/\//, $time))[2];
 
 	return $year;
@@ -208,7 +208,7 @@ sub check_stored_analysis {
 
 	my $log = $self->analysis_log($c);
 	my $analysis_name = $log->{analysis_name};
-
+print STDERR "\ncheck_stored_analysis analysis name: $analysis_name\n";
 	if ($analysis_name)
 	{
 		my $schema = $self->schema($c);
@@ -235,7 +235,7 @@ sub extended_trait_name {
 
 	my $schema = $self->schema($c);
 	# foreach my $tr_id (@$trait_ids) {
-		#$c->controller('solGS::solGS')->get_trait_details($c, $tr_id);
+		#$c->controller('solGS::Trait')->get_trait_details($c, $tr_id);
 		my $extended_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
 		# push @trait_names, $extended_name;
 	# }
@@ -307,17 +307,23 @@ sub analysis_log {
 	my ($self, $c) = @_;
 
 	my $files = $self->all_users_analyses_logs($c);
-	my $ref = $c->req->referer;
+	my $analysis_page = $c->req->referer;
 	my $base = $c->req->base;
-	$ref =~ s/$base//;
+	$base =~ s/(https?)|(:\d+)|\/|://g;
+
+	$base =~ s/(www\.)//;
+	$analysis_page =~ s/(https?:\/\/)//;
+	$analysis_page =~ s/(www\.)//;
+	$analysis_page =~ s/$base//;
+	$analysis_page =~ s/:\d+//;
 
 	my @log;
 	foreach my $log_file (@$files)
 	{
 		my @logs = read_file($log_file, {binmode => ':utf8'});
-		my ($log) = grep{ $_ =~ /$ref/} @logs;
-
+		my ($log) = grep{ $_ =~ /$analysis_page/} @logs;
 		@log = split(/\t/, $log);
+		last if $log;
 	}
 
 	if (@log)

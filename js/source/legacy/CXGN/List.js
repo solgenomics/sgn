@@ -53,6 +53,9 @@ CXGN.List = function () {
 };
 
 
+
+
+
 CXGN.List.prototype = {
 
     // Return the data as a straight list
@@ -156,7 +159,7 @@ CXGN.List.prototype = {
                 }
             }
         });
-
+        types.sort((a,b) => a[1].toUpperCase().localeCompare(b[1].toUpperCase())); //alphabetize list type options
         return types;
     },
 
@@ -332,13 +335,15 @@ CXGN.List.prototype = {
         }
 
         html += '<div class="well well-sm"><table id="private_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Description</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Description</th><th>Date Created</th><th>Date Modified</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
             html += '<td>'+lists[i][2]+'</td>';
+            html += '<td>'+lists[i][7]+'</td>';
+            html += '<td>'+lists[i][8]+'</td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
-            html += '<td><a onclick="(new CXGN.List()).validate(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
+            html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
             html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></span></td>';
             html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
@@ -403,11 +408,13 @@ CXGN.List.prototype = {
         var html = '';
 
         html += '<table id="public_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Description</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Download</th><th>Copy To Your Lists</th><th>Owner</th><th>Make Private</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Description</th><th>Date Created</th><th>Date Modified</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Download</th><th>Copy To Your Lists</th><th>Owner</th><th>Make Private</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             html += '<tr>';
             html += '<td><a href="javascript:showPublicListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
             html += '<td>'+lists[i][2]+'</td>';
+            html += '<td>'+lists[i][7]+'</td>';
+            html += '<td>'+lists[i][8]+'</td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
             html += '<td><a onclick="(new CXGN.List()).validate(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
@@ -449,14 +456,37 @@ CXGN.List.prototype = {
         var items = list_data.elements;
         var list_type = list_data.type_name;
         var list_name = this.listNameById(list_id);
-
+        var type_select_id = 'type_select';
         var html = '';
-        html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
+
+        if (list_type == 'catalog_items') {
+            html += '<div class="well well-sm"><table id="list_cart_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
+
+            for(var n=0; n<items.length; n++) {
+                html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
+            }
+            html += '</tbody></table></div>';
+            jQuery('#'+div+'_div').html(html);
+
+            jQuery('#list_cart_item_dialog_datatable').DataTable({
+                destroy: true,
+                ordering: false,
+                scrollY:        '30vh',
+                scrollCollapse: true,
+                paging:         false,
+            });
+
+        } else {
+        html += '<table class="table">';
+        if (list_type == 'seedlots') {
+            html += '<a href="/list/details?list_id='+list_id+'">Go to List Details Page</a>';
+        }
+        html += '<tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>'
         html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
         html += '<tr><td>Description:<br/><input type="button" class="btn btn-primary btn-xs" id="updateListDescButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateListDescField" size="10" value="'+list_description+'" /></td></tr>';
-        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" title="Will determine whther the items in your list are saved in the database as valid entries. The validation depends on the list type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+','+undefined+',\''+type_select_id+'\')" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
         html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea></td></tr></table>';
 
         html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
@@ -477,6 +507,8 @@ CXGN.List.prototype = {
             paging:         false,
         });
 
+        }
+
         if (list_type == 'accessions' || list_type == 'crosses'){
             jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
         }
@@ -488,7 +520,7 @@ CXGN.List.prototype = {
             if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
                 jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
             } else {
-                jQuery('#availableSeedlotButtonDiv').html('')
+                jQuery('#availableSeedlotButtonDiv').html('');
             }
 
             if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples', 'family_names'].indexOf(jQuery('#type_select').val()) >= 0){
@@ -690,7 +722,7 @@ CXGN.List.prototype = {
         }
 
         if (refresh) {
-            if (types.length > 1) { types = types.join(',') };
+            if (types.length > 1) { types = types.join(',') }
             html = '<div class="input-group" id="'+div_name+'_list_select_div">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'\',\''+types+'\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
             return html;
         }
@@ -754,67 +786,52 @@ CXGN.List.prototype = {
         this.renderItems('list_item_dialog', list_id);
     },
 
+
     validate: function(list_id, type, non_interactive) {
-        var missing = new Array();
-        var error = 0;
-        jQuery.ajax( {
+	//alert("validate: "+list_id +" "+type+" "+ non_interactive);
+        return jQuery.ajax( {
             url: '/list/validate/'+list_id+'/'+type,
-            async: false,
-            success: function(response) {
-                //console.log(response);
-                if (response.error) {
-                    alert(response.error);
-                } else {
-                    missing = response.missing;
-                }
-            },
-            error: function(response) {
-                alert("An error occurred while validating the list "+list_id);
-                error=1;
-            }
-        });
-
-        if (error === 1 ) { return; }
-
-        if (missing.length==0) {
-            if (!non_interactive) { alert("This list passed validation."); }
-            return 1;
-        } else {
-            if (!non_interactive) {
-                if (type == 'accessions') {
-                    jQuery("#validate_accession_error_display tbody").html('');
-
-                    var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div></div>";
-
-
-                    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
-
-                    var missing_accessions_vals = '';
-                    var missing_accessions_vals_for_list = '';
-                    for(var i=0; i<missing.length; i++) {
-                        missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
-                        missing_accessions_vals_for_list = missing_accessions_vals_for_list + missing[i] + '\n';
-                    }
-
-                    jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
-                    jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
-                    addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
-                        selectText: true,
-                        listType: 'accessions'
-                    });
-
-                    jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
-                    jQuery('#validate_accession_error_display').modal("show");
-
-                    //alert("List validation failed. Elements not found: "+ missing.join(","));
-                    //return 0;
-                } else {
-                    alert('List did not pass validation because of these items: '+missing.join(", "));
-                }
-            }
-            return;
-        }
+	}).then(
+	    function(r) {
+		//alert("now="+JSON.stringify(r));
+		if (!non_interactive) {
+		    return validate_interactive(r, type, list_id)
+		}
+		else {
+		    return r;
+		}
+	    });
     },
+
+    legacy_validate: function(list_id, type, non_interactive) {
+
+	var valid = 0;
+
+	jQuery.ajax( {
+	    url: '/list/validate/'+list_id+'/'+type,
+	    async: false,
+	    success: function(r) {
+		if (r.error) {
+		    alert(r.error);
+		}
+		else {
+		    if (type == 'accessions' && r.valid ==1) {
+			valid= 1;
+		    }
+		    else if (type != 'accessions' && r.missing == 0) {
+			valid= 1;
+		    }
+		    else {
+			//alert('Please provide a valid list');
+			valid = 0;
+		    }
+		}
+	    },
+	    error: function(e) { alert('An error occurred validating the list '+list_id+' (type='+type+')'); }
+	});
+	return valid;
+    },
+
 
     seedlotSearch: function(list_id){
         var self = this;
@@ -1032,6 +1049,9 @@ CXGN.List.prototype = {
             case "plots":
                 new_type = 'plots_2_plot_ids';
                 break;
+            case "seedlots":
+                new_type = 'stocks_2_stock_ids';
+                break;
             default:
                 return { 'error' : "cannot convert the list because of unknown type" };
         }
@@ -1203,25 +1223,25 @@ function getData(id, selectText) {
         data = jQuery('#'+id).html();
     }
     if (divType == 'SELECT' && selectText) {
-        if (jQuery.browser.msie) {
-            // Note: MS IE unfortunately removes all whitespace
-            // in the jQuery().text() call. Program it out...
-            //
-            var selectbox = document.getElementById(id);
-            var datalist = new Array();
-            for (var n=0; n<selectbox.length; n++) {
-                if (selectbox.options[n].selected) {
-                    var x=selectbox.options[n].text;
-                    datalist.push(x);
-                }
-            }
-            data = datalist.join("\n");
-            //alert("data:"+data);
+        //if (jQuery.browser.msie) {
+        //    // Note: MS IE unfortunately removes all whitespace
+        //    // in the jQuery().text() call. Program it out...
+        //    //
+        //    var selectbox = document.getElementById(id);
+        //    var datalist = new Array();
+        //    for (var n=0; n<selectbox.length; n++) {
+        //         if (selectbox.options[n].selected) {
+        //             var x=selectbox.options[n].text;
+        //             datalist.push(x);
+        //         }
+        //     }
+        //     data = datalist.join("\n");
+        //     //alert("data:"+data);
 
-        }
-        else {
+        // }
+        // else {
             data = jQuery('#'+id+" option:selected").text();
-        }
+        //}
 
     }
     if (divType == 'SELECT' && ! selectText) {
@@ -1489,11 +1509,32 @@ function changeListType(html_select_id, list_id) {
 
 */
 
-function validateList(list_id, html_select_id) {
+function validateList(list_id, list_type, html_select_id) {
+    jQuery('#working_modal').modal('show');
     var lo = new CXGN.List();
-    var type = jQuery('#'+html_select_id).val();
-    lo.validate(list_id, type);
+    if (!list_type) {
+        list_type = jQuery('#'+html_select_id).val();
+    }
+    var validate = lo.validate(list_id, list_type);
+    validate.then(function(response) {
+	//alert("That's the response : "+JSON.stringify(response));
+        jQuery('#working_modal').modal('hide');
+    });
 }
+
+/*
+    validateLists - check a list of list ids and a list of types
+*/
+
+
+function validateLists(list_ids, types) {
+
+    return jQuery.ajax( {
+	url: '/ajax/list/validate_lists?list_ids='+list_ids.join(",")+'&amp;list_types='+types.join(",")
+    });
+
+}
+
 
 /*
    fuzzySearchList - perform a fuzzy search over the items in the list and return the match results of this search
@@ -1602,3 +1643,209 @@ jQuery(document).ready(function() {
     jQuery("#list_dialog").draggable();
     jQuery("#public_list_dialog").draggable();
 });
+
+
+function validate_interactive(response, type, list_id) {
+    missing = response.missing;
+    wrong_case = response.wrong_case;
+    multiple_wrong_case = response.multiple_wrong_case;
+    synonym_matches = response.synonyms;
+    multiple_synonym_matches = response.multiple_synonyms;
+    valid = response.valid;
+
+    //alert("validate_interactive: "+JSON.stringify(response));
+    if (type == 'accessions' && valid == 1) {
+	alert("This list passed validation.");
+	return;
+
+    }
+    else if (type != 'accessions' && missing.length == 0) {
+        alert("This list passed validation.");
+        return;
+    } else {
+        if (type == 'accessions') {
+	    //alert(JSON.stringify(response));
+            jQuery("#validate_accession_error_display tbody").html('');
+            var missing_accessions_link = "<button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br /><br />";
+
+            jQuery("#validate_stock_add_missing_accessions").html(missing_accessions_link);
+
+            var missing_accessions_vals = '';
+            var missing_accessions_vals_for_list = '';
+    	    var missing_accessions_for_table = new Array();
+
+            for(var i=0; i<missing.length; i++) {
+    		missing_accessions_for_table.push( [ missing[i], '(not&nbsp;present)' ] );
+                missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
+                missing_accessions_vals_for_list = missing_accessions_vals_for_list + missing[i] + '\n';
+            }
+
+    	    jQuery('#missing_accessions_table').DataTable( {
+    		destroy: true,
+    		data: missing_accessions_for_table,
+    		sDom: 'lrtip',
+    		bInfo: false,
+    		paging: false,
+    		columns: [
+    		    { title: 'List' },
+    		    { title: 'DB' },
+    		]
+    	    });
+
+
+            jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
+
+            addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
+                selectText: true,
+                listType: 'accessions'
+            });
+
+
+    	    var wrong_case_accessions_for_list = '';
+
+    	    jQuery('#wrong_case_message_div').html('');
+
+    	    if (wrong_case.length > 0) {
+    		//alert(JSON.stringify(wrong_case));
+    		jQuery('#wrong_case_table').DataTable( {
+    		    destroy: true,
+    		    data: wrong_case,
+    		    sDom: 'lrtip',
+    		    bInfo: false,
+    		    paging: false,
+    		    columns: [
+    			{ title: 'List' },
+    			{ title: 'DB'   }
+    		    ]
+    		});
+
+
+    		jQuery('#adjust_case_action_button').prop('disabled', false);
+
+    	    }
+    	    else {
+    		jQuery('#wrong_case_message_div').html('No mismatched cases found.');
+    	    }
+
+    	    if (multiple_wrong_case.length > 0) {
+    		//alert(JSON.stringify(multiple_wrong_case));
+    		jQuery('#multiple_wrong_case_table').DataTable( {
+    		    destroy: true,
+    		    data: multiple_wrong_case,
+    		    sDom: 'lrtip',
+    		    bInfo: false,
+    		    paging: false,
+    		    columns: [
+    			{ title : 'List' },
+    			{ title : 'DB' }
+    		    ]
+    		});
+    	    }
+    	    else {
+    		jQuery('#multiple_case_match_message_div').html('');
+    	    }
+
+    	    jQuery('#adjust_case_action_button').click( function() {
+    		jQuery.ajax( {
+    		    url : '/ajax/list/adjust_case',
+    		    data: { 'list_id' : list_id },
+    		    error: function() { alert('An error occurred'); },
+    		    success: function(r) {
+
+    			if (r.error) { alert(r.error); }
+
+    			else {
+    			    alert('Converted the following ids: '+JSON.stringify(r.mapping));
+    			    var lo = new CXGN.List();
+    			    lo.renderItems('list_item_dialog', list_id);
+
+    			    jQuery('#adjust_case_div').html("<br /><br /><h3>Mismatched case</h3><b>The case has been successfully adjusted.</b>");
+    			    jQuery('#adjust_case_action_button').prop('disabled', true);
+    			}
+    		    }
+    		});
+    	    });
+
+    	    var synonym_matches_table = new Array();
+
+    	    for(var i=0; i<synonym_matches.length; i++) {
+    		synonym_matches_table.push( [ synonym_matches[i]['synonym'], synonym_matches[i]['uniquename'] ] );
+    	    }
+
+    	    //alert(JSON.stringify(synonym_matches_table));
+
+    	    jQuery('#replace_synonyms_with_uniquenames_button').click( function() {
+    		jQuery.ajax( {
+    		    url : '/ajax/list/adjust_synonyms',
+    		    data: { 'list_id' : list_id },
+    		    error: function() { alert('An error occurred'); },
+    		    success: function(r) {
+
+    			if (r.error) { alert(r.error); return 1; }
+    			else {
+    			    var lo = new CXGN.List();
+    			    lo.renderItems('list_item_dialog', list_id);
+
+    			    jQuery('#synonym_matches_div').hide();
+    			    jQuery('#synonym_message').show();
+    			    jQuery('#synonym_message').html("<br /><br /><h3>Synonyms</h3><b>Synonyms have been successfully replaced with uniquenames.</b>");
+    			    jQuery('#replace_synonyms_with_uniquenames_button').prop('disabled', true);
+    			}
+    		    }
+    		});
+    	    });
+
+    	    if (synonym_matches.length > 0) {
+    		jQuery('#synonym_matches_div').show();
+    		jQuery('#synonym_message').html('');
+
+    		jQuery('#element_matches_synonym').DataTable( {
+    		    destroy: true,
+    		    data: synonym_matches_table,
+    		    sDom: 'lrtip',
+    		    bInfo: false,
+    		    paging: false,
+    		    columns: [
+
+    			{ title : 'List elements matching synonym' },
+    			{ title : 'Corresponding db names' }
+    		    ]
+    		});
+    	    }
+    	    else {
+    		jQuery('#synonym_matches_div').hide();
+    		jQuery('#synonym_message').html('No synonym matches found.');
+    	    }
+
+	    var multiple_synonym_matches_table = new Array();
+
+    	    for(var i=0; i< multiple_synonym_matches.length; i++) {
+    		multiple_synonym_matches_table.push( [ multiple_synonym_matches[i][0], multiple_synonym_matches[i][1] ] );
+    	    }
+
+	    if (multiple_synonym_matches_table.length > 0) {
+		jQuery('#multiple_synonym_matches_div').show();
+		jQuery('#element_matches_multiple_synonyms_table').DataTable( {
+    		    destroy: true,
+    		    data: multiple_synonym_matches_table,
+    		    sDom: 'lrtip',
+    		    bInfo: false,
+    		    paging: false,
+    		    columns: [
+    			{title : 'Item' },
+    			{title: 'Synonym'}
+    		    ]
+    		});
+    	    }
+
+
+            jQuery('#validate_accession_error_display').modal("show");
+            //alert("List validation failed. Elements not found: "+ missing.join(","));
+            //return 0;
+    	}
+    	else {
+	    alert('List did not pass validation because of these items: '+missing.join(", "));
+	    return 1;
+    	}
+    }
+}

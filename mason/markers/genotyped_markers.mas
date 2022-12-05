@@ -1,0 +1,91 @@
+<%doc>
+
+=head1 NAME
+
+/markers/genotyped_markers.mas - a Mason component displaying genotyped markers that share the same marker name
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker_id - the id of the mapped marker
+
+=back
+
+=head1 AUTHOR
+
+David Waring <djw64@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+    $marker_id => undef
+</%args>
+
+<%init>
+    if ( !defined $marker_id ) {
+        print "<p><strong>ERROR:</strong> Marker id is not defined!</p>";
+    }
+</%init>
+
+<&| /page/info_section.mas, title=>'Related Markers', collapsible=>1, collapsed=>0 &>
+    <p><strong>Related Genotyped Markers:</strong> These markers have been genotyped and share a name with this marker</p>
+    <div id="related-genotyped-markers">
+        <em>Loading...</em>
+    </div>
+</&>
+
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+    getRelatedGenotypeMarkers();
+});
+
+
+/**
+ * Get the genotyped markers related to the current mapped markers
+ */
+function getRelatedGenotypeMarkers() {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/mapped/related_variants',
+        data: { marker_id: "<% $marker_id %>" },
+        success: function(response) {
+            let html = "";
+            if ( response && response.related_variants ) {
+                html += "<table class='table table-striped'>";
+                html += "<thead><tr><th>Marker</th><th>Protocol</th><th>Species</th><th>Reference</th><th>Chromosome</th><th>Position</th><th>Ref</th><th>Alt</th></tr></thead>";
+                html += "<tbody>";
+                for ( let variant_name in response.related_variants ) {
+                    if ( response.related_variants.hasOwnProperty(variant_name) ) {
+                        let ms = response.related_variants[variant_name];
+                        for ( let i = 0; i < ms.length; i++ ) {
+                            html += "<tr>";
+                            html += "<td><strong><a href='/variant/" + variant_name + "/details'>" + ms[i].marker_name + "</a></strong></td>";
+                            html += "<td><a href='/breeders_toolbox/protocol/" + ms[i].nd_protocol_id + "'>" + ms[i].nd_protocol_name + "</a></td>";
+                            html += "<td>" + ms[i].species_name + "</td><td>" + ms[i].reference_genome_name + "</td>";
+                            html += "<td>" + ms[i].chrom + "</td><td>" + ms[i].pos + "</td><td>" + ms[i].ref + "</td><td>" + ms[i].alt + "</td>";
+                            html += "</tr>";
+                        }
+                    }
+                }
+                html += "</tbody>";
+                html += "</table>";
+            }
+            else {
+                html += "<em>No related genotyped markers found</em>";
+            }
+            jQuery("#related-genotyped-markers").html(html);
+        },
+        error: function(response) {
+            console.log("Could not get related genotyped markers");
+        }
+    });
+}
+</script>

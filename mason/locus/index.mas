@@ -90,7 +90,7 @@ my $owner_objects= $locus->get_owners(1);
 my $locus_name = $locus->get_locus_name();
 
 my $registry = $locus->get_associated_registry();
-my $registry_subtitle =  $is_owner && $locus_id ?   '<a href="javascript:Tools.toggleContent(\'associateRegistryForm\', \'locus_registry\')">[Associate a registry name with this locus]</a> ' 
+my $registry_subtitle =  $is_owner && $locus_id ?   '<a href="javascript:Tools.toggleContent(\'associateRegistryForm\', \'locus_registry\')">[Associate a registry name with this locus]</a> '
   : qq|<span class = "ghosted"> [Associate registry name]</span>| ;
 
 my @synonyms = $locus->get_locus_aliases('f','f');
@@ -145,6 +145,34 @@ foreach ( @{ $dbxrefs{'TAIR locus'} } ) {
   }
 }
 
+my $phylogenes;
+foreach ( @{ $dbxrefs{'PhyloGenes'} } ) {
+  if ( $_->[1] eq '0' ) {
+    my $url       = $_->[0]->get_urlprefix() . $_->[0]->get_url();
+    my $accession = $_->[0]->get_accession();
+    $phylogenes .=
+      qq|<br>$locus_name is on <a href="$url$accession" target="blank">PhyloGenes</a><br />|;
+  }
+}
+
+my $tomDel;
+my ($chr, $pos, $jbrowse_url);
+my $tomDel_pub = qq|Please cite <a href ="https://doi.org/10.1101/2021.11.08.467620" target="blank">Razifard et al.|;
+foreach ( @{ $dbxrefs{'TomDel'} } ) {
+  if ( $_->[1] eq '0' ) {
+    my $url       = $_->[0]->get_urlprefix() . $_->[0]->get_url();
+    my $accession = $_->[0]->get_accession();
+    my $description = $_->[0]->get_description;
+
+    $description =~ /^chromosome (SL2.50ch\d{2}).*position: (\d[0-9]+)$/;
+    $chr = $1;
+    $pos = $2;
+    $jbrowse_url = "https://solgenomics.net/jbrowse_solgenomics/?data=data/json/SL2.50&loc=$chr:$pos&tracks=DNA,gene_models,TomDelDB";
+    $tomDel .=
+      qq|<br /><a href="$url$accession" target="blank">TomDelDB genotype frequencies</a> in tomato populations. <a href="$jbrowse_url" target="blank">$description</a><br />|;
+    $tomDel .= qq|$tomDel_pub<br />|;
+    }
+}
 my $pub_subtitle = $curator || $submitter || $sequencer  ?
   qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| :
   qq|<span class=\"ghosted\">[Associate publication]</span>|;
@@ -201,7 +229,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 <& /page/form.mas,
     object_type          => 'locus',
     object_id            => "$locus_id",
-    form_name            => 'locus_form',	
+    form_name            => 'locus_form',
     server_side_script   => '/jsforms/locus_ajax_form.pl',
     form_div_name        => 'locus_details',
     js_object_name       => 'locusForm',
@@ -214,10 +242,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
 </td></tr>
-<tr><td>
-<% $tgrc %>
-<% $tair %>
-</td></tr>
+
 <tr><td>
 <& /phenome/display_owners.mas,
 	 object_id => $locus_id,
@@ -235,7 +260,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 <tr><td>
 % if ($locus_id && $person_id) {
   <a href="/phenome/claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
-% } elsif ( $locus_id ) { 
+% } elsif ( $locus_id ) {
   <span class="ghosted">[log-in to request editor privileges]</span><br />
 %}
 <& /locus/edits_info.mas, locus=>$locus  &>
@@ -252,6 +277,22 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 % if($locus_id) {
 
+
+<&| /page/info_section.mas,
+    title     => "Links to external databases",
+    subtitle  => "",
+    id        => "locus_dbxrefs",
+    collapsible => 1,
+    is_subsection => 1,
+  &>
+
+<% $tgrc %>
+<% $tair %>
+<% $phylogenes %>
+<% $tomDel %>
+
+</&>
+
 <&| /page/info_section.mas,
     title       => "Registry name: $registry",
     subtitle    => $registry_subtitle,
@@ -259,7 +300,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
     collapsible => 1,
     is_subsection => 1,
     &>
-    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id", registry => $registry , is_owner => $is_owner &> 
+    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id", registry => $registry , is_owner => $is_owner &>
 </&>
 
 % if($is_owner) {
@@ -289,7 +330,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
  <&| /page/info_section.mas, title=>"Accessions and images (" .  scalar(@$accessions)  . ")", subtitle => "$stock_subtitle", id=>"locus_accessions", collapsible=>1, collapsed=>1 &>
     <& /phenome/associate_accession_form.mas , locus_id=>$locus_id, person_id=>$person_id &>
       <& /phenome/associated_accessions.mas , accessions=>$accessions, dbh=>$dbh &>
- 
+
  </&>
 
 <&| /page/info_section.mas, title=>"Alleles (" .  scalar(@alleles)  . ")", subtitle => "$allele_subtitle", collapsible=>1, collapsed=>1 &>
@@ -345,7 +386,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 	feature   => $feature,
 	blast_url => $blast_url,
     &>
-%}    
+%}
    </&>
 
     <&| /page/info_section.mas, title => "Gene model matches",

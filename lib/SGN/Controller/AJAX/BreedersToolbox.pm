@@ -16,6 +16,9 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location;
 use Try::Tiny;
 use CXGN::Tools::Run;
+use CXGN::Dataset;
+use CXGN::Dataset::File;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -36,30 +39,30 @@ sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
     $c->stash->{rest} = $breeding_programs;
 }
 
-sub new_breeding_program :Path('/breeders/program/new') Args(0) {
+sub store_breeding_program :Path('/breeders/program/store') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $id = $c->req->param("id") || undef;
     my $name = $c->req->param("name");
     my $desc = $c->req->param("desc");
 
     if (!($c->user() || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add a breeding program.' };
+        $c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
     }
 
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+    my $p = CXGN::BreedersToolbox::Projects->new( {
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        id => $id,
+        name => $name,
+        description => $desc,
+    });
 
-    my $new_program = $p->new_breeding_program($name, $desc);
+    my $program = $p->store_breeding_program();
 
-    print STDERR "New program is ".Dumper($new_program)."\n";
+    print STDERR "Program is ".Dumper($program)."\n";
 
-    $c->stash->{rest} = $new_program;
+    $c->stash->{rest} = $program;
 
-    # if ($new_program->{'error'}) {
-	# $c->stash->{rest} = { error => $error };
-    # }
-    # else {
-	# $c->stash->{rest} =  { success => "The new breeding program $name was created.", id => };
-    # }
 }
 
 sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
@@ -68,12 +71,12 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
     my $program_id = shift;
 
     if ($c->user && ($c->user->check_roles("curator"))) {
-	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-	$p->delete_breeding_program($program_id);
-	$c->stash->{rest} = [ 1 ];
+    	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+    	$p->delete_breeding_program($program_id);
+    	$c->stash->{rest} = [ 1 ];
     }
     else {
-	$c->stash->{rest} = { error => "You don't have sufficient privileges to delete breeding programs." };
+        $c->stash->{rest} = { error => "You need to be logged in with curator privileges to delete a breeding program." };
     }
 }
 
@@ -320,6 +323,80 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     $async_refresh->run_async("perl " . $c->config->{basepath} . "/bin/refresh_matviews.pl -H " . $c->config->{dbhost} . " -D " . $c->config->{dbname} . " -U " . $c->config->{dbuser} . " -P " . $c->config->{dbpass} . " -m fullview -c");
 
     $c->stash->{rest} = {success => 1};
+}
+
+sub progress : Path('/ajax/progress') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $trait_id = $c->req->param("trait_id");
+
+    print STDERR "Trait id = $trait_id\n";
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "select projectprop.value, avg(phenotype.value::REAL), stddev(phenotype.value::REAL),count(*) from phenotype join cvterm on(cvalue_id=cvterm_id) join nd_experiment_phenotype using(phenotype_id) join nd_experiment_project using(nd_experiment_id) join projectprop using(project_id)  where cvterm.cvterm_id=? and phenotype.value not in ('-', 'miss','#VALUE!','..') and projectprop.type_id=(SELECT cvterm_id FROM cvterm where name='project year') group by projectprop.type_id, projectprop.value order by projectprop.value";
+
+    my $h = $dbh->prepare($q);
+
+    $h->execute($trait_id);
+
+    my $data = [];
+
+    while (my ($year, $mean, $stddev, $count) = $h->fetchrow_array()) {
+	push @$data, [ $year, sprintf("%.2f", $mean), sprintf("%.2f", $stddev), $count ];
+    }
+
+    print STDERR "Data = ".Dumper($data);
+
+    $c->stash->{rest} = { data => $data };
+}
+
+
+sub radarGraph : Path('/ajax/radargraph') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->param('dataset_id');
+
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh = $schema->storage->dbh();
+
+
+    # my $stock_id = $c->req->param("stock_id");
+    # my $cvterm_id = $c->req->param("cvterm_id");
+
+    # my $q = 'select accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(*)
+    #         from cvterm
+    #         join phenotype on(cvalue_id=cvterm_id)
+    #         join nd_experiment_phenotype using(phenotype_id)
+    #         join nd_experiment_stock using(nd_experiment_id)
+    #         join stock using(stock_id)
+    #         join stock_relationship on(subject_id=stock.stock_id)
+    #         join stock as accessions on(stock_relationship.object_id=accessions.stock_id)
+    #         where stock.type_id=76393 and accessions.stock_id=? and cvterm.cvterm_id=? and phenotype.value ~ \'^[0-9]+\.?[0-9]*$\'
+    #         group by accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id;';
+    # my $h = $dbh->prepare($q);
+
+
+    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+    my $trait_list = $ds->retrieve_phenotypes();
+    my $ds_name = $ds->name();
+
+    #print STDERR "Dataset Id = $dataset_id\n";
+    #print STDERR "Trait List = ".Dumper($trait_list);
+
+    $c->stash->{rest} = {
+        data => \@$trait_list,
+        name => $ds_name,
+    };
+
+
+    #print STDERR "Dataset Id = $dataset_id\n";
+    #print STDERR "Trait List = ".Dumper($trait_list);
+
+
 }
 
 1;

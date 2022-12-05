@@ -1,0 +1,79 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+
+<&| /page/info_section.mas, title => "Trial Soil Data", collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "soil_data_table" class="table table-hover table-striped">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<script defer="defer">
+
+jQuery(document).ready(function () {
+
+    var soil_data_table = jQuery('#soil_data_table').DataTable({
+        'searching': false,
+        'order': false,
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_soil_data',
+        columns: [
+            { title: "Soil Data ID", "data": "prop_id" },
+            { title: "Description", "data": "description" },
+            { title: "Date", "data": "date" },
+            { title: "GPS", "data": "gps" },
+            { title: "Type of Sampling", "data": "type_of_sampling" },
+            { title: "Soil Data", "data": "soil_data" },
+            { title: "Download", "data": "download_link" },
+            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteSoilData("+row.prop_id+")'>Delete</a>"; } },
+        ]
+    });
+
+});
+
+function deleteSoilData(prop_id){
+    var confirmation = confirm('Are you sure you want to delete this soil data id. The deletion cannot be undone.');
+
+    if (confirmation) {
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/delete_soil_data',
+            method: 'POST',
+            data : {
+                'prop_id': prop_id
+            },
+
+            destroy: true,
+            beforeSend: function(response) {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert('Deletion was successful');
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred during deletion');
+            }
+        });
+    }
+}
+
+
+</script>

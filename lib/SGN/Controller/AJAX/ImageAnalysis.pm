@@ -41,6 +41,7 @@ use List::Util qw/sum/;
 use Parallel::ForkManager;
 use CXGN::Image::Search;
 use CXGN::Trait::Search;
+use File::Slurp;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -63,6 +64,7 @@ sub image_analysis_submit_POST : Args(0) {
     my $trait = $c->req->param('trait');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $main_production_site_url = $c->config->{main_production_site_url};
+    _log_analysis_activity($c,$image_ids,$service,$trait);
 
     unless (ref($image_ids) eq 'ARRAY') { $image_ids = [$image_ids]; }
 
@@ -269,9 +271,8 @@ sub image_analysis_submit_POST : Args(0) {
         $it++;
     }
 
-    print STDERR "Before grouping result is: ".Dumper($result);
+    # print STDERR "Before grouping result is: ".Dumper($result);
 
-    # $result = _group_results_by_observationunit($result);
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
@@ -284,21 +285,21 @@ sub image_analysis_group_POST : Args(0) {
     my %grouped_results = ();
     my @table_data = ();
 
-    my ($uniquename, $trait, $value, $results_ref);
+    my ($uniquename, $next_uniquename, $trait, $value, $results_ref, $next_results_ref);
     # sort result hash array by $stock_id
     my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
-    my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
+    # my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
     $grouped_results{$sorted_result[0]->{'stock_uniquename'}}{$sorted_result[0]->{'result'}->{'trait'}} = [];
 
     for (my $i = 0; $i <= $#sorted_result; $i++) {
         $results_ref = $sorted_result[$i];
-        # print STDERR "Results ref is ".Dumper($results_ref);
+        # print STDERR "\n\nResults ref is ".Dumper($results_ref)."\n\n";
         $uniquename = $results_ref->{'stock_uniquename'};
         $trait = $results_ref->{'result'}->{'trait'};
         $value = $results_ref->{'result'}->{'value'};
 
         if ($trait && $value) {
-            print STDERR "Working a $trait for $uniquename. Saving the details \n";
+            print STDERR "Working on $trait for $uniquename. Saving the details \n";
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
                         collector => $results_ref->{'image_username'},
@@ -307,39 +308,77 @@ sub image_analysis_group_POST : Args(0) {
                         image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
                         trait_id => $results_ref->{'result'}->{'trait_id'},
                         value => $value + 0
-                    };
+                };
         }
-        else { print STDERR "No usable data in this results_ref \n"} # if no result returned for an image, skip it.
+        else { # if no result returned for an image, include it with error details.
+            print STDERR "No usable analysis data in this results_ref \n";
+            push @{$grouped_results{$uniquename}{$trait}}, {
+                        stock_id => $results_ref->{'stock_id'},
+                        collector => $results_ref->{'image_username'},
+                        original_link => $results_ref->{'result'}->{'original_image'},
+                        analyzed_link => 'Error: ' . $results_ref->{'result'}->{'error'},
+                        image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
+                        trait_id => $results_ref->{'result'}->{'trait_id'},
+                        value => 'NA'
+                };
+        }
 
-        if ( ($uniquename ne $old_uniquename) || ($i == $#sorted_result) ) {
-            if ($i == $#sorted_result) { $old_uniquename = $uniquename; }
-            print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
+        $next_results_ref = $sorted_result[$i+1];
+        $next_uniquename = $next_results_ref->{'stock_uniquename'};
 
-            my $old_uniquename_data = $grouped_results{$old_uniquename};
+        if ($next_uniquename ne $uniquename) {
 
-            foreach my $trait (keys %{$old_uniquename_data}) {
-                my $details = $old_uniquename_data->{$trait};
-                my @values = map { $_->{'value'}} @{$old_uniquename_data->{$trait}};
+            print STDERR "Calculating mean value for $uniquename\n";
+
+            my $uniquename_data = $grouped_results{$uniquename};
+
+            foreach my $trait (keys %{$uniquename_data}) {
+                my $details = $uniquename_data->{$trait};
+                my @values = map { $_->{'value'}} @{$uniquename_data->{$trait}};
+                @values= grep { $_ ne 'NA' } @values; # remove NAs before calculating mean
+                # print STDERR "\n\n\nVALUES ARE @values and length is ". scalar @values . "\n\n\n";
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
-
+                print STDERR "Mean value is $mean_value\n";
                 push @table_data, {
-                    observationUnitDbId => $old_uniquename_data->{$trait}[0]->{'stock_id'},
-                    observationUnitName => $old_uniquename,
-                    collector => $old_uniquename_data->{$trait}[0]->{'collector'},
+                    observationUnitDbId => $uniquename_data->{$trait}[0]->{'stock_id'},
+                    observationUnitName => $uniquename,
+                    collector => $uniquename_data->{$trait}[0]->{'collector'},
                     observationTimeStamp => localtime()->datetime,
-                    observationVariableDbId => $old_uniquename_data->{$trait}[0]->{'trait_id'},
+                    observationVariableDbId => $uniquename_data->{$trait}[0]->{'trait_id'},
                     observationVariableName => $trait,
                     value => $mean_value,
                     details => $details,
-                    numberAnalyzed => scalar @{$details}
+                    numberAnalyzed => scalar @values
                     # Add previously observed trait value
                 };
             }
         }
-        $old_uniquename = $uniquename;
     }
     # print STDERR "table data is ".Dumper(@table_data);
     $c->stash->{rest} = { success => 1, results => \@table_data };
+}
+
+sub get_activity_data : Path('/ajax/image_analysis/activity') Args(0) {
+  my $self = shift;
+  my $c = shift;
+
+  my @activity;
+  my $logfile = $c->config->{image_analysis_log};
+  if (-e $logfile) {
+        my @file_data = read_file($logfile, chomp => 1);
+        foreach my $line (@file_data) {
+            my @values = split("\t", $line);
+            my @ts_parts = split(" ", $values[0]);
+            push @activity, { date => $ts_parts[0]};
+        }
+    } else {
+        $c->stash->{rest} = {error=>'No activity log set up.'};
+        $c->detach();
+    }
+
+  my $json = JSON->new();
+  $c->stash->{rest} = { activity => $json->encode(\@activity)};
+
 }
 
 sub _check_user_login {
@@ -370,6 +409,32 @@ sub _check_user_login {
         $user_role = $c->user->get_object->get_user_type();
     }
     return ($user_id, $user_name, $user_role);
+}
+
+sub _log_analysis_activity {
+    my $c = shift;
+    my $image_ids = shift;
+    my $service = shift;
+    my $trait = shift;
+    my $now = DateTime->now();
+
+    if ($c->config->{image_analysis_log}) {
+      my $logfile = $c->config->{image_analysis_log};
+      open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
+      print $F join("\t", (
+            $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
+            $c->user->get_object->get_username(),
+            $service,
+            $trait,
+            $image_ids
+            ));
+      print $F "\n";
+      close($F);
+      print STDERR "Analysis submission logged in $logfile\n";
+    }
+    else {
+      print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
+    }
 }
 
 1;

@@ -36,9 +36,9 @@ my $h = $dbh->prepare($q);
 $h->execute();
 
 while (my ($gt, $stock) = $h->fetchrow_array()) {
-    $g2s{uc($gt)} = uc($stock);
+    $g2s{uc($gt)} = $stock;#uc($stock);
     if ($gt =~ m/(.*?)\|(.*)/) {
-	$g2s{uc($1)} = uc($stock);
+	$g2s{uc($1)} = $stock; #uc($stock);
     }
 }
 
@@ -74,9 +74,9 @@ while (my $line = <$file_fh>) {
 	$id = $1;
     }
 
-    if ($line =~ /^(TMS.*)\_A\d{5}$/) {
-	$id = $1;
-    }
+#    if ($line =~ /^(TMS.*)\_A\d{5}$/) {
+#	$id = $1;
+#    }
     
     my $uniquename = "";
     my $match_type = "";
@@ -86,7 +86,8 @@ while (my $line = <$file_fh>) {
 	$uniquename = $g2s{$line};
 	$match_type = "hash_direct";
 	$stats{hash_direct}++;
-	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $line } });
+
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $uniquename } });
 	
 	$stock_type = $stock_types{$stock_row->type_id};# "accession";
     }
@@ -94,13 +95,14 @@ while (my $line = <$file_fh>) {
 	$uniquename = $g2s{$id};
 	$match_type = "hash_modified";
 	$stats{hash_modified}++;
-	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $id } });
-	$stock_type = $stock_types{$stock_row->type_id}; #"accession";
-    }
-    else { 
-	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $id } });
 
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $uniquename } });
+	$stock_type = $stock_types{$stock_row->type_id}; #"accession";	
+    }
+    else {
 	
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $id } });
+		
 	if ($stock_row) {
 	    $uniquename = $stock_row->uniquename();
 	    $match_type = "direct";

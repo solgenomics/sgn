@@ -16,7 +16,9 @@ use Carp qw/ carp confess croak /;
 use SGN::Model::solGS::solGS;
 use SGN::Controller::solGS::solGS;
 use SGN::Controller::solGS::List;
-
+use Data::Dumper;
+use Bio::Chado::Schema;
+use CXGN::People::Schema;
 
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
@@ -28,6 +30,35 @@ has 'data_type' => (
     required => 1,
     );
 
+has 'dbname' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
+
+has 'dbhost' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
+
+has 'dbport' => (isa => 'Int',
+is=>'rw',
+default => 5432
+
+);
+
+has 'dbpass' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
+
+has 'dbuser' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
 
 has 'population_type' => (
     is       => 'ro',
@@ -91,40 +122,40 @@ sub trial_genotype_data {
     my $model = $self->get_model();
 
     my $search_obj = $model->genotype_data($args);
-    $self->write_geno_data($model, $search_obj, $geno_file);
+    $self->write_geno_data($search_obj, $geno_file);
 
 }
 
 
 sub write_geno_data {
-    my ($self, $model, $search_obj, $file) = @_;
+    my ($self, $search_obj, $file) = @_;
 
     my $exists = $self->check_data_exists;
-    my $count = 0;
+    my $count = 1;
     my $marker_headers;
 
+    my $model = $self->get_model();
+    my $add_headers = 1;
     while (my $geno = $search_obj->get_next_genotype_info())
     {
-	my $geno_data;
-	$count++;
-	if ($count == 1)
-	{
-	    my $geno_hash = $geno->{selected_genotype_hash};
-	    $marker_headers = $model->get_dataset_markers($geno_hash);
-	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);
-	    write_file($file, {binmode => ':utf8'}, $$geno_data);
-	}
-	else
-	{
-
-	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);
-	    write_file($file, {append => 1, binmode => ':utf8'}, $$geno_data);
-	}
-
-	if ($self->check_data_exists)
-	{
-	    last if $$geno_data;
-	}
+        my $geno_data;
+       
+        if ($count == 1)
+        {
+            my $geno_hash = $geno->{selected_genotype_hash};
+            $marker_headers = $model->get_dataset_markers($geno_hash);
+        }  else {
+            $add_headers = 0;
+        }
+    
+        $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $add_headers);
+        write_file($file, {append => 1, binmode => ':utf8'}, $$geno_data);
+          
+        $count++;
+        if ($self->check_data_exists)
+        {
+            last if $$geno_data;
+        }
     }
 
 }
@@ -168,7 +199,9 @@ sub genotypes_list_genotype_data {
     my $model = $self->get_model();
     my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids, $protocol_id);
 
-    $self->write_geno_data($model, $search_obj, $geno_file);
+    ###empty cached geno file first
+    write_file($geno_file);
+    $self->write_geno_data($search_obj, $geno_file);
 
 }
 
@@ -202,10 +235,10 @@ sub dataset_genotype_data {
 
     my $args =  $self->get_args();
     my $dataset_id = $args->{dataset_id};
-
 	my $model = $self->get_model();
-	my $genotypes_ids = $model->get_genotypes_from_dataset ($dataset_id);
 
+	my $genotypes_ids = $model->get_genotypes_from_dataset ($dataset_id);
+    my $cnt = @$genotypes_ids;
 	if (@$genotypes_ids)
 	{
 		$self->genotypes_list_genotype_data($genotypes_ids);
@@ -216,6 +249,8 @@ sub dataset_genotype_data {
 		my $protocol_id = $args->{genotyping_protocol_id};
       	my $search_obj = $model->get_dataset_genotype_data($dataset_id);
 		my $geno_file = $args->{genotype_file};
+        ###empty cached dataset geno file first
+        write_file($geno_file);
    		$self->write_geno_data($model, $search_obj, $geno_file);
 	}
 
@@ -225,8 +260,22 @@ sub dataset_genotype_data {
 sub get_model {
     my $self = shift;
 
-    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context',
-					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
+    my $dbname = $self->dbname;
+    my $dbhost = $self->dbhost;
+
+    my $dbuser = $self->dbuser;
+    my $dbpass = $self->dbpass;
+
+    my $dsn = "dbi:Pg:database=$dbname;host=$dbhost";
+
+    my $bcs_schema = Bio::Chado::Schema->connect($dsn, $dbuser, $dbpass);
+    my $people_schema = CXGN::People::Schema->connect($dsn,  $dbuser, $dbpass, { on_connect_do => [ 'SET search_path TO sgn_people, public, sgn' ]});
+
+
+    my $model = SGN::Model::solGS::solGS->new({
+					       schema => $bcs_schema,
+                       people_schema =>$people_schema });
+
 
     return $model;
 

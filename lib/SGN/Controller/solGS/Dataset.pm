@@ -8,7 +8,9 @@ use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use POSIX qw(strftime);
 use Scalar::Util qw /weaken reftype/;
+use Storable qw/ nstore retrieve /;
 #BEGIN { extends 'Catalyst::Controller' }
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -69,8 +71,7 @@ sub get_dataset_trials_ids {
     my ($self, $c) = @_;
     my $dataset_id = $c->stash->{dataset_id};
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
     my $trials_ids = $data->{categories}->{trials};
 
     $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
@@ -106,14 +107,12 @@ sub get_dataset_genotypes_list {
     my ($self, $c, $dataset_id) = @_;
 
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
-	my $model = $self->get_model();
 
-	my $genotypes_ids = $model->get_genotypes_from_dataset($dataset_id);
-
+    my $genotypes_ids = $self->get_model($c)->get_genotypes_from_dataset($dataset_id);
    	my $genotypes  = $c->controller('solGS::List')->transform_uniqueids_genotypes($c, $genotypes_ids);
     $c->stash->{genotypes_list} = $genotypes;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
-	
+
 }
 
 sub submit_dataset_training_data_query {
@@ -121,8 +120,7 @@ sub submit_dataset_training_data_query {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
 
@@ -141,12 +139,12 @@ sub submit_dataset_training_data_query {
     {
 	my $trials = $data->{categories}->{trials};
 
-	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
+	$c->controller('solGS::AsyncJob')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
 
     $c->stash->{dependent_jobs} = $query_jobs_file;
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 }
 
 
@@ -156,14 +154,13 @@ sub get_dataset_phenotype_data {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    #$self->get_dataset_plots_list($c);
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_names} = $data->{categories}->{plots};
+	$c->stash->{plots_ids} = $data->{categories}->{plots};
 
 	$c->controller('solGS::List')->plots_list_phenotype_file($c);
 	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
@@ -181,14 +178,11 @@ sub create_dataset_pheno_data_query_jobs {
     my ($self, $c) = @_;
 
     my $dataset_id = $c->stash->{dataset_id};
-
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_names} = $data->{categories}->{plots};
-	my $plots = $data->{categories}->{plots};
+	$c->stash->{plots_ids} = $data->{categories}->{plots};
 
 	$c->controller('solGS::List')->plots_list_phenotype_query_job($c);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{plots_list_phenotype_query_job};
@@ -200,7 +194,7 @@ sub create_dataset_pheno_data_query_jobs {
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
 
-	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials_ids);
+	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials_ids);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 }
@@ -211,27 +205,95 @@ sub create_dataset_geno_data_query_jobs {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
 
     if ($data->{categories}->{accessions}->[0])
     {
-	$self->get_dataset_genotypes_list($c);
-
-	$c->controller('solGS::List')->genotypes_list_genotype_query_job($c);
-	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{genotypes_list_genotype_query_job};
+	       $self->dataset_genotype_query_jobs($c);
     }
     elsif ($data->{categories}->{trials}->[0])
     {
-	my $trials_ids = $data->{categories}->{trials};
-	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
-	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
+    	my $trials_ids = $data->{categories}->{trials};
+    	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
+    	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
 
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
-	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
+    	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
+    	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
+}
+
+
+sub dataset_genotype_query_jobs {
+    my ($self, $c) = @_;
+
+    my $dataset_id = $c->stash->{dataset_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+	my $pop_id = 'dataset_' . $dataset_id;
+	my $data_dir =  $c->stash->{solgs_datasets_dir};
+	my $pop_type = 'dataset';
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+
+    my $args = {
+    'dataset_id'=>$dataset_id,
+	'data_dir'  => $data_dir,
+	'genotype_file'  => $geno_file,
+	'genotyping_protocol_id'=> $protocol_id,
+	'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
+    };
+
+    $c->stash->{r_temp_file} = $args->{r_temp_file};
+    $c->controller('solGS::AsyncJob')->create_cluster_accessible_tmp_files($c);
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
+
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $background_job = $c->stash->{background_job};
+
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-report-args-${pop_id}");
+    $c->stash->{report_file} = $report_file;
+
+     my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_temp_file,
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
+     };
+
+    my $config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
+
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-job-args-file-${pop_id}");
+
+    nstore $args, $args_file
+		or croak "data query script: $! serializing genotype lists genotype query details to $args_file ";
+
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $dbpass = $c->config->{dbpass};
+        my $dbuser = $c->config->{dbuser};
+
+    my $cmd = 'mx-run solGS::queryJobs '
+        . ' --dbhost ' . $dbhost
+        .' --dbname ' . $dbname
+        .' --dbuser ' . $dbuser
+        .' --dbpass ' . $dbpass
+    	. ' --data_type genotype '
+    	. ' --population_type ' . $pop_type
+    	. ' --args_file ' . $args_file;
+
+    my $job_args = {
+	'cmd' => $cmd,
+	'config' => $config,
+	'background_job'=> $background_job,
+	'temp_dir' => $temp_dir,
+    };
+
+    $c->stash->{dataset_geno_data_query_jobs} = $job_args;
+
 }
 
 
@@ -240,8 +302,7 @@ sub get_dataset_genotyping_protocol {
 
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     my $protocol_id = $data->{categories}->{genotyping_protocols};
 
@@ -261,9 +322,7 @@ sub get_dataset_plots_list {
     my ($self, $c) = @_;
 
     my $dataset_id = $c->stash->{dataset_id};
-
-    my $model = $self->get_model();
-    my $plots = $model->get_dataset_plots_list($dataset_id);
+    my $plots = $self->get_model($c)->get_dataset_plots_list($dataset_id);
 
     $c->stash->{plots_names} = $plots;
     $c->controller('solGS::List')->get_plots_list_elements_ids($c);
@@ -273,12 +332,10 @@ sub get_dataset_plots_list {
 
 sub get_model {
     my $self = shift;
+    my $c = shift;
 
-    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context',
-					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
-					      });
+    return $c->controller('solGS::Search')->model($c);
 
-    return $model;
 }
 
 
@@ -318,7 +375,7 @@ sub dataset_population_summary {
 
 	    $c->stash(project_id          => $file_id,
 		      project_name        => $dataset_name,
-		      prediction_pop_name => $dataset_name,
+		      selection_pop_name => $dataset_name,
 		      project_desc        => $desc,
 		      owner               => $user_name,
 		      protocol            => $protocol,
@@ -349,7 +406,7 @@ sub get_dataset_name {
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
     $dataset_id =~ s/\w+_//g;
 
-    my $dataset_name = $c->model('solGS::solGS')->get_dataset_name($dataset_id);
+    my $dataset_name = $c->controller('solGS::Search')->model($c)->get_dataset_name($dataset_id);
     return $dataset_name;
 
 
@@ -398,7 +455,7 @@ sub dataset_plots_list_phenotype_file {
     my ($self, $c) = @_;
 
     my $dataset_id  = $c->stash->{dataset_id};
-    my $plots_ids = $c->model('solGS::solGS')->get_dataset_plots_list($dataset_id);
+    my $plots_ids = $c->controller('solGS::Search')->model($c)->get_dataset_plots_list($dataset_id);
     my $file_id = $self->dataset_file_id($c);
 
     $c->stash->{pop_id} = $file_id;

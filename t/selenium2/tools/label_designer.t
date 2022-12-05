@@ -3,6 +3,7 @@ use lib 't/lib';
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+use Selenium::Remote::WDKeys 'KEYS';
 use Data::Dumper;
 
 my $f = SGN::Test::Fixture->new();
@@ -10,49 +11,100 @@ my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->while_logged_in_as("submitter", sub {
+    sleep(2);
+
     $t->get_ok('/tools/label_designer');
 
     sleep(3);
 
-    $t->driver->find_element("//button[\@title='Select a data source']")->click();
+    $t->driver->find_element("//button[\@title='Select a list, crossing exp, trial, or GT plate']")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->driver->find_element("//li[\@data-original-index='5']")->click();
 
+    sleep(180);
+
+    $t->find_element_ok(
+        '//select[@id="label_designer_data_level"]',
+        "xpath",
+        "select a data level")->click();
+    sleep(2);
+
+    $t->find_element_ok(
+        '//select[@id="label_designer_data_level"]/option[@value="plots"]',
+        "xpath",
+        "select a data level")->click();
+    sleep(1);
+
     sleep(12);
 
-    $t->find_element_ok("page_format", "id", "select a page format")->send_keys('US Letter PDF');
+    $t->driver->find_element("select_datasource_button","id", "click next")->click();
 
+    sleep(12);
+
+    $t->find_element_ok("page_format", "id", "select a page format")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="page_format"]/option[contains(text(), "US Letter PDF")]',
+        "xpath",
+        "select a page format 'US Letter PDF'")->click();
     sleep(1);
 
-    $t->find_element_ok("label_format", "id", "select a label format")->send_keys('1" x 2 5/8"');
 
+    $t->find_element_ok("label_format", "id", "select a label format")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="label_format"]/option[contains(text(), \'1" x 2 5/8"\')]',
+        "xpath",
+        "select a label format '1\" x 2 5/8\"'")->click();
     sleep(1);
 
-    #add text
+    sleep(10);
 
-    $t->find_element_ok("d3-add-type-input", "id", "select a text element type")->send_keys('Text (PDF)');
+    $t->driver->find_element("select_layout_button","id", "click next")->click();
+
+    sleep(3);
+
+    $t->find_element_ok("d3-add-type-input", "id", "select a text element type")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="d3-add-type-input"]/option[contains(text(), "Text (PDF)")]',
+        "xpath",
+        "select a text element 'Text (PDF)'")->click();
+    sleep(1);
 
     sleep(1);
 
     $t->driver->find_element("//select[\@id='d3-add-field-input']")->click();
 
+    sleep(3);
+
+    $t->find_element_ok("d3-add-field-input", "id", "select a text element field")->click();
     sleep(1);
-
-    $t->find_element_ok("d3-add-field-input", "id", "select a text element field")->send_keys('accession_name');
-
-    sleep(1);
-
-    $t->find_element_ok("d3-add-size-input", "id", "clear size field")->clear();
-
-    sleep(1);
-
-    $t->find_element_ok("d3-add-size-input", "id", "select a text element size")->send_keys('64');
+    $t->find_element_ok(
+        '//select[@id="d3-add-field-input"]/option[contains(text(), "accession_name")]',
+        "xpath",
+        "select a text element 'accession_name'")->click();
 
     sleep(1);
 
-    $t->find_element_ok("d3-add-font-input", "id", "select a text element font")->send_keys('Times-Bold');
+    my $size_input = $t->find_element_ok("d3-add-size-input", "id", "clear size field");
+    $size_input->send_keys(KEYS->{'control'}, 'a');
+    $size_input->send_keys(KEYS->{'backspace'});
+
+    sleep(1);
+
+    $size_input->send_keys('64');
+
+    sleep(1);
+
+    $t->find_element_ok("d3-add-font-input", "id", "select a text element font")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="d3-add-font-input"]/option[@value="Times-Bold"]',
+        "xpath",
+        "select a text font 'Times-Bold'")->click();
 
     sleep(1);
 
@@ -60,21 +112,30 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    #add barcode
-
-    $t->find_element_ok("d3-add-type-input", "id", "select a QRcode element type")->send_keys('2D Barcode (QRCode)');
+    $t->find_element_ok("d3-add-type-input", "id", "select a QRcode element type")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="d3-add-type-input"]/option[contains(text(), "2D Barcode (QRCode)")]',
+        "xpath",
+        "select a type input as '2D Barcode (QRCode)'")->click();
 
     sleep(1);
 
     $t->driver->find_element("//select[\@id='d3-add-field-input']")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="d3-add-field-input"]/option[text()="plot_name"]',
+        "xpath",
+        "select a field as 'plot_name'")->click();
 
     sleep(1);
 
-    $t->find_element_ok("d3-add-field-input", "id", "select a QRcode element field")->send_keys('plot_name');
-
+    $t->find_element_ok("d3-add-size-input", "id", "select a QRcode element size")->click();
     sleep(1);
-
-    $t->find_element_ok("d3-add-size-input", "id", "select a QRcode element size")->send_keys('Six');
+    $t->find_element_ok(
+        '//select[@id="d3-add-size-input"]/option[@value="6"]',
+        "xpath",
+        "select a text font size to '6'")->click();
 
     sleep(1);
 
@@ -86,10 +147,12 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    # add custom text
-
-    $t->find_element_ok("d3-add-type-input", "id", "select a  custom element type")->send_keys('Text (PDF)');
-
+    $t->find_element_ok("d3-add-type-input", "id", "select a  custom element type")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="d3-add-type-input"]/option[contains(text(), "Text (PDF)")]',
+        "xpath",
+        "select a text element 'Text (PDF)'")->click();
     sleep(1);
 
     $t->find_element_ok("d3-custom-field", "id", "add custom element")->click();
@@ -104,23 +167,33 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("d3-custom-add-field-input", "id", "add custom element field")->send_keys('plot_number');
-
-    sleep(2);
+    $t->find_element_ok("d3-custom-add-field-input", "id", "add custom element field")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="d3-custom-add-field-input"]/option[text()="plot_number"]',
+        "xpath",
+        "select field input as 'plot_number'")->click();
+    sleep(1);
 
     $t->find_element_ok("d3-custom-field-save", "id", "add custom element save")->click();
 
     sleep(1);
 
-    $t->find_element_ok("d3-add-size-input", "id", "clear size field again")->clear();
+    $size_input = $t->find_element_ok("d3-add-size-input", "id", "clear size field");
+    $size_input->send_keys(KEYS->{'control'}, 'a');
+    $size_input->send_keys(KEYS->{'backspace'});
+    $size_input->send_keys('48');
 
     sleep(1);
 
-    $t->find_element_ok("d3-add-size-input", "id", "select a custom text element size")->send_keys('48');
-
+    $t->find_element_ok("d3-add-font-input", "id", "select a custom element font")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="d3-add-font-input"]/option[@value="Times"]',
+        "xpath",
+        "select a text font size to '6'")->click();
     sleep(1);
 
-    $t->find_element_ok("d3-add-font-input", "id", "select a custom element font")->send_keys('Times');
 
     sleep(1);
 
@@ -130,17 +203,20 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("element2", "id", "click on new custom element")->click();
 
-    sleep(1);
+    sleep(12);
 
     #save to list, reload page
+    $t->find_element_ok("design_label_button", "id", "click on next")->click();
+
+    sleep(1);
 
     $t->find_element_ok("save_design_name", "id", "enter list name")->send_keys('test_label');
 
-    sleep(1);
+    sleep(3);
 
     $t->find_element_ok("d3-save-button", "id", "save test label")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->driver->accept_alert();
 
@@ -150,29 +226,49 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(3);
 
-    $t->driver->find_element("//button[\@title='Select a data source']")->click();
+    $t->driver->find_element("//button[\@title='Select a list, crossing exp, trial, or GT plate']")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->driver->find_element("//li[\@data-original-index='5']")->click();
 
     sleep(12);
 
-    $t->find_element_ok("design_list_list_select", "id", "select saved list")->send_keys('test_label');
+    $t->find_element_ok("label_designer_data_level","id", "select a data level")->click();
+    sleep(1);
+    $t->find_element_ok(
+        '//select[@id="label_designer_data_level"]/option[@value="plots"]',
+        "xpath",
+        "select a data level")->click();
+
+    sleep(12);
+
+    $t->driver->find_element("select_datasource_button","id", "click next")->click();
 
     sleep(3);
 
+    $t->find_element("//input[\@value='saved']")->click();
 
-    $t->find_element_ok("element0", "id", "check for first element")->click();
+    sleep(12);
 
+    $t->driver->find_element("design_list_list_select","id", "click on saved options")->click();
+
+    sleep(6);
+
+    $t->find_element_ok("design_list_list_select","id", "click on saved test label option")->click();
     sleep(1);
+    $t->find_element_ok(
+        '//select[@id="design_list_list_select"]/option[text()="test_label"]',
+        "xpath",
+        "select a data level")->click();
 
-    $t->find_element_ok("element1", "id", "check for second element")->click();
+    sleep(12);
 
-    sleep(1);
-
+    #find loaded element
+    # TODO : better test after load
+    # $t->find_element_ok("element2", "id", "click on new custom element")->click();
+    # sleep(1);
     }
-
 );
 
 done_testing();

@@ -178,9 +178,9 @@ is_deeply(\@sorted_cross_trials, [
 #print STDERR Dumper $genotyping_trials;
 is_deeply($genotyping_trials, undef, 'test get geno trials');
 
-my $locations = $p->get_location_geojson();
+my $locations = $p->get_location_geojson_data();
 print STDERR Dumper $locations;
-is($locations, '[{"geometry":{"coordinates":[-115.86428,32.61359],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":109,"Code":"USA","Country":"United States","Id":"23","Latitude":32.61359,"Longitude":-115.86428,"NOAAStationID":null,"Name":"test_location","Program":"test","Trials":"<a href=\"/search/trials?location_id=23\">5 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[-76.4735,42.45345],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":274,"Code":"USA","Country":"United States","Id":"24","Latitude":42.45345,"Longitude":-76.4735,"NOAAStationID":null,"Name":"Cornell Biotech","Program":"test","Trials":"<a href=\"/search/trials?location_id=24\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":"25","Latitude":null,"Longitude":null,"NOAAStationID":null,"Name":"NA","Program":null,"Trials":"<a href=\"/search/trials?location_id=25\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":"26","Latitude":null,"Longitude":null,"NOAAStationID":null,"Name":"[Computation]","Program":null,"Trials":"<a href=\"/search/trials?location_id=26\">2 trials</a>","Type":null},"type":"Feature"}]');
+is_deeply($locations, [{"geometry"=>{"coordinates"=>[-115.86428,32.61359],"type"=>"Point"},"properties"=>{"Abbreviation"=>undef,"Altitude"=>109,"Code"=>"USA","Country"=>"United States","Id"=>"23","Latitude"=>32.61359,"Longitude"=>-115.86428,"NOAAStationID"=>undef,"Name"=>"test_location","Program"=>"test","Trials"=>"<a href=\"/search/trials?location_id=23\">5 trials</a>","Type"=>undef},"type"=>"Feature"},{"geometry"=>{"coordinates"=>[-76.4735,42.45345],"type"=>"Point"},"properties"=>{"Abbreviation"=>undef,"Altitude"=>274,"Code"=>"USA","Country"=>"United States","Id"=>"24","Latitude"=>42.45345,"Longitude"=>-76.4735,"NOAAStationID"=>undef,"Name"=>"Cornell Biotech","Program"=>"test","Trials"=>"<a href=\"/search/trials?location_id=24\">0 trials</a>","Type"=>undef},"type"=>"Feature"},{"geometry"=>{"coordinates"=>[undef,undef],"type"=>"Point"},"properties"=>{"Abbreviation"=>undef,"Altitude"=>undef,"Code"=>undef,"Country"=>undef,"Id"=>"25","Latitude"=>undef,"Longitude"=>undef,"NOAAStationID"=>undef,"Name"=>"NA","Program"=>undef,"Trials"=>"<a href=\"/search/trials?location_id=25\">0 trials</a>","Type"=>undef},"type"=>"Feature"},{"geometry"=>{"coordinates"=>[undef,undef],"type"=>"Point"},"properties"=>{"Abbreviation"=>undef,"Altitude"=>undef,"Code"=>undef,"Country"=>undef,"Id"=>"26","Latitude"=>undef,"Longitude"=>undef,"NOAAStationID"=>undef,"Name"=>"[Computation]","Program"=>undef,"Trials"=>"<a href=\"/search/trials?location_id=26\">0 trials</a>","Type"=>undef},"type"=>"Feature"}]);
 
 
 
@@ -247,16 +247,30 @@ is_deeply($all_locations, [
 my @all_years = $p->get_all_years();
 print STDERR Dumper \@all_years;
 is_deeply(\@all_years, [
-            '2020',
           '2017',
           '2016',
           '2015',
           '2014'
         ], 'get all years');
 
-my $new_bp_error = $p->new_breeding_program('test_new_bp', 'test_new_bp_desc');
-print STDERR Dumper $new_bp_error;
-ok($new_bp_error->{success});
+my $new_bp = CXGN::BreedersToolbox::Projects->new({
+    schema=>$schema,
+    name => 'test_new_bp_to_edit',
+    description => 'test_new_bp_desc_to_edit',
+});
+my $new_bp_result = $new_bp->store_breeding_program();
+print STDERR Dumper $new_bp_result;
+ok($new_bp_result->{success});
+
+my $edit_bp = CXGN::BreedersToolbox::Projects->new({
+    schema=>$schema,
+    id => $new_bp_result->{id},
+    name => 'test_new_bp',
+    description => 'test_new_bp_desc',
+});
+my $edit_bp_result = $edit_bp->store_breeding_program();
+print STDERR Dumper $edit_bp_result;
+ok($edit_bp_result->{success});
 
 my $bp_projects = $p->get_breeding_program_with_trial($trial_id);
 #print STDERR Dumper $bp_projects;
@@ -277,7 +291,7 @@ is_deeply($gt_protocols, [
           ]
         ], 'get gt protocols');
 
-my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_new_bp'})->project_id();
-ok($p->delete_breeding_program($trial_id));
+my $program_id = $schema->resultset('Project::Project')->find({name=>'test_new_bp'})->project_id();
+ok($p->delete_breeding_program($program_id));
 
 done_testing;

@@ -21,12 +21,32 @@ $facilities
                                 <& /page/page_title.mas, title=>"This workflow will guide you through uploading genotypes into the database" &>
                                 <p>Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.</p>
                                 <p>Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.</p>
-                                <p>Curently we support the VCF format, the Tassel HDF5 format, and the Intertek CSV format for upload.</p>
+                                <p>Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format and SSR for upload.</p>
                                 <p>If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).</p>
 
                                 <br/><br/>
                                 <center>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+
+                            <&| /util/workflow.mas:step, title=> "Data Type" &>
+                                <& /page/page_title.mas, title=>"Select the type of genotyping data being uploaded" &>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Type of genotyping data: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="genotype_data_type_select" name="genotype_data_type_select">
+                                            <option value="">Select data type</option>
+                                            <option value="vcf">VCF</option>
+                                            <option value="tassel_hdf5">Tassel HDF5</option>
+                                            <option value="intertek">Intertek</option>
+                                            <option value="ssr">SSR</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" id="upload_genotyping_data_type_check_button">Go to Next Step</button>
                                 </center>
                             </&>
 
@@ -169,6 +189,7 @@ $facilities
                                     </div>
                                 </div>
 
+
                                 <div class="well">
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">Location of Data Generation: </label>
@@ -193,17 +214,13 @@ $facilities
                                 <& /page/page_title.mas, title=>"Provide genotype information" &>
                                 <br/><br/>
 
-
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Select type of genotyping data: </label>
+                                    <label class="col-sm-5 control-label">Type of Genotype Data:</label>
                                     <div class="col-sm-7">
-                                        <select class="form-control" id="upload_genotype_data_format_select" name="upload_genotype_data_format_select">
-                                            <option value="vcf">VCF</option>
-                                            <option value="tassel_hdf5">Tassel HDF5</option>
-                                            <option value="intertek">Intertek</option>
-                                        </select>
+                                        <input class="form-control" id="upload_genotype_data_type" name="upload_genotype_data_type" type="text" value = "" disabled />
                                     </div>
                                 </div>
+
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Ignore any possible warnings and upload genotypes?: </label>
                                     <div class="col-sm-7">
@@ -297,6 +314,33 @@ $facilities
                                                         <label class="col-sm-6 control-label">Select Intertek SNP Information File: </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_intertek_snp_file_input" id="upload_genotype_intertek_snp_file_input" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="well well-sm" id="upload_genotype_data_format_ssr" style="display:none">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_ssr_data_spreadsheet_info">SSR format</a>
+                                                </p>
+                                            </&>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select SSR File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_genotype_ssr_file_input" id="upload_genotype_ssr_file_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -549,6 +593,273 @@ $facilities
     </div>
 </div>
 
+<div class="modal fade" id="upload_ssr_protocol_format_dialog" name="upload_ssr_protocol_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolFormatDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolFormatDialog">Upload SSR Marker Info Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>SSR marker info may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following fields:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>marker_name</td>
+                                <td>forward_primer</td>
+                                <td>reverse_primer</td>
+                                <td>annealing_temperature</td>
+                                <td>product_sizes</td>
+                                <td>sequence_motif</td>
+                                <td>sequence_source</td>
+                                <td>linkage_group</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li>marker_name</li>
+                        <li>forward_primer</li>
+                        <li>reverse_primer</li>
+                        <li>annealing_temperature</li>
+                        <li>product_sizes</li>
+                    </ul>
+                    <b>Optional columns (required in the header, but value may be left blank)</b>
+                    <ul>
+                        <li>sequence_motif</li>
+                        <li>sequence_source</li>
+                        <li>linkage_group</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_ssr_protocol_error_display" name="upload_ssr_protocol_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolErrorDialog">Upload SSR Marker Info Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ssr_protocol_saved_dialog_message" name="ssr_protocol_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="SSRProtocolSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SSRProtocolSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        SSR marker info was saved successfully. You can now proceed with SSR genotyping data upload.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_ssr_protocol_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_ssr_protocol_dialog" name="upload_ssr_protocol_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolDialog">Upload SSR Protocol (Marker Info) </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_ssr_protocol_form" name="upload_ssr_protocol_form">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">SSR Protocol Name:</label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="upload_ssr_protocol_name" name="upload_ssr_protocol_name" type="text" placeholder=" e.g. SSR Cassava set 1"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Species:</label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="upload_ssr_species_name_input" name="upload_ssr_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Description:</label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="upload_ssr_protocol_description_input" name="upload_ssr_protocol_description_input" type="text" />
+                            </div>
+                        </div>
+<!--
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Sample Type: </label>
+                            <div class="col-sm-7">
+                                <select class="form-control" id="upload_ssr_sample_type_select" name="upload_ssr_sample_type_select">
+                                    <option value="">Select sample type</option>
+                                    <option value="accession">Accession</option>
+                                    <option value="tissue_sample">Tissue Sample</option>
+                                </select>
+                            </div>
+                        </div>
+-->
+                        <div class="row">
+                            <div class="col-sm-5">
+                                <&| /page/explanation.mas, title=>'Template information' &>
+                                    <p>
+                                        <b>File format information</b>
+                                        <br>
+                                        <a id="upload_ssr_protocol_format">Spreadsheet format</a>
+                                    </p>
+                                </&>
+                            </div>
+                            <div class="col-sm-7">
+                                <br/>
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Select an XLS File: </label>
+                                            <div class="col-sm-4">
+                                                <input type="file" name="xls_ssr_protocol_file" id="xls_ssr_protocol_file" encoding="multipart/form-data" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" name="upload_ssr_protocol_submit" id="upload_ssr_protocol_submit">Upload File</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_ssr_spreadsheet_info_dialog" name="upload_ssr_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRSpreadsheetInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRSpreadsheetInfoDialog">Upload SSR Data Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>SSR data may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Example of SSR Data Spreadsheet:</b>
+                    <br>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_name</td>
+                                <td>s01</td>
+                                <td>s01</td>
+                                <td>s01</td>
+                                <td>s02</td>
+                                <td>s02</td>
+                                <td>s02</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td>139</td>
+                                <td>170</td>
+                                <td>194</td>
+                                <td>203</td>
+                                <td>229</td>
+                                <td>290</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_A</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>1</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_B</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_C</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Column Info:
+                    </b>
+                    <ul>
+                        <li>s01 and s02 are marker names.</li>
+                        <li>139, 170, 194 are product sizes generated by marker s01 and 203,229,290 are product sizes generated by marker s02.</li>
+                        <li>sample_A, sample_B, sample_C are accession names.</li>
+                        <li>"1" indicates the presence of PCR product.</li>
+                        <li>"0" indicates the absence of PCR product.</li>
+                        <br>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <style>
 
 .ui-autocomplete { z-index:2147483647; }
@@ -557,6 +868,55 @@ $facilities
 
 <script>
 jQuery(document).ready(function(){
+
+    jQuery('#genotype_data_type_select').change(function() {
+        var data_type = jQuery('#genotype_data_type_select').val();
+
+        document.getElementById('upload_genotype_data_type').value = data_type;
+
+        if (data_type == 'vcf') {
+            jQuery('#upload_genotype_data_format_vcf').show();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').hide();
+        } else if (data_type == 'intertek') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').show();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').hide();
+        } else if (data_type == 'tassel_hdf5') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').show();
+            jQuery('#upload_genotype_data_format_ssr').hide();
+        } else if (data_type == 'ssr') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').show();
+        }
+
+    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
+        if (data_type == 'ssr') {
+            selected = [];
+            jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
+                selected.push(jQuery(this).val());
+            });
+            if (selected.length == 0){
+                jQuery('#upload_ssr_protocol_dialog').modal('show');
+                jQuery("#upload_ssr_species_name_input").autocomplete({
+                    source: '/organism/autocomplete'
+                });
+            } else if (selected.length > 0) {
+                alert('If you selected a protocol, do not try to make a new one at the same time!');
+            }
+        } else {
+            jQuery('#upload_genotype_data_protocol_details').show();
+        }
+        return false;
+    });
+
+    });
 
     var upload_genotyping_data_trial_table = jQuery('#upload_genotyping_data_project_search_results').DataTable( {
         'ajax': {
@@ -575,6 +935,16 @@ jQuery(document).ready(function(){
         return false;
     });
 
+    jQuery('#upload_genotyping_data_type_check_button').click(function(){
+        var data_type = jQuery('#genotype_data_type_select').val();
+        if (data_type == '') {
+            alert('Please select a data type');
+        } else {
+            Workflow.complete('#upload_genotyping_data_type_check_button');
+            Workflow.focus('#upload_genotypes_workflow', 2);
+        }
+    });
+
     jQuery('#upload_genotyping_data_project_check_button').click(function(){
         selected = [];
         jQuery('input[name="upload_genotyping_data_project_select"]:checked').each(function() {
@@ -590,7 +960,7 @@ jQuery(document).ready(function(){
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_project_name').val() == ''){
                 jQuery('#upload_genotype_project_id').val(selected[0]);
                 Workflow.complete('#upload_genotyping_data_project_check_button');
-                Workflow.focus('#upload_genotypes_workflow', 2);
+                Workflow.focus('#upload_genotypes_workflow', 3);
             } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_project_name').val() != '') {
                 if (jQuery('#upload_genotype_year_select').val() == ''){
                     alert('Please give a year');
@@ -599,17 +969,14 @@ jQuery(document).ready(function(){
                 } else {
                     jQuery('#upload_genotype_project_id').val(undefined);
                     Workflow.complete('#upload_genotyping_data_project_check_button');
-                    Workflow.focus('#upload_genotypes_workflow', 2);
+                    Workflow.focus('#upload_genotypes_workflow', 3);
                 }
             }
         }
         return false;
     });
 
-    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
-        jQuery('#upload_genotype_data_protocol_details').show();
-        return false;
-    });
+    var ssr_protocol_id;
 
     jQuery('#upload_genotyping_data_protocol_check_button').click(function(){
         selected = [];
@@ -619,14 +986,17 @@ jQuery(document).ready(function(){
         if (selected.length > 1){
             alert('Only select one genotyping protocol!');
         } else {
-            if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() == ''){
+            if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() == '' && jQuery('#upload_genotype_protocol_id').val() == ''){
                 alert('Select a genotyping protocol or create a new one!');
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_protocol_name').val() != ''){
                 alert('If you selected a protocol, do not try to make a new one at the same time!');
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_protocol_name').val() == ''){
                 jQuery('#upload_genotype_protocol_id').val(selected[0]);
                 Workflow.complete('#upload_genotyping_data_protocol_check_button');
-                Workflow.focus('#upload_genotypes_workflow', 3);
+                Workflow.focus('#upload_genotypes_workflow', 4);
+            } else if (selected.length == 0 && jQuery('#upload_genotype_protocol_id').val() != ''){
+                Workflow.complete('#upload_genotyping_data_protocol_check_button');
+                Workflow.focus('#upload_genotypes_workflow', 4);
             } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() != '') {
                 if (jQuery('#upload_genotype_vcf_reference_genome_name').val() == ''){
                     alert('Please give a reference genome name.');
@@ -635,7 +1005,7 @@ jQuery(document).ready(function(){
                 } else {
                     jQuery('#upload_genotype_protocol_id').val(undefined);
                     Workflow.complete('#upload_genotyping_data_protocol_check_button');
-                    Workflow.focus('#upload_genotypes_workflow', 3);
+                    Workflow.focus('#upload_genotypes_workflow', 4);
                 }
             }
         }
@@ -654,20 +1024,68 @@ jQuery(document).ready(function(){
         jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal('show');
     });
 
-    jQuery('#upload_genotype_data_format_select').change(function(){
-        var selected_option = jQuery(this).val();
-        if (selected_option == 'vcf') {
-            jQuery('#upload_genotype_data_format_vcf').show();
-            jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
-        } else if (selected_option == 'intertek') {
-            jQuery('#upload_genotype_data_format_vcf').hide();
-            jQuery('#upload_genotype_data_format_intertek').show();
-            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
-        } else if (selected_option == 'tassel_hdf5') {
-            jQuery('#upload_genotype_data_format_vcf').hide();
-            jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_tassel_hdf5').show();
+    jQuery('#upload_ssr_data_spreadsheet_info').click(function(){
+        jQuery('#upload_ssr_spreadsheet_info_dialog').modal('show');
+    });
+
+    jQuery('#upload_ssr_protocol_format').click(function(){
+        jQuery('#upload_ssr_protocol_format_dialog').modal('show');
+        jQuery('#upload_ssr_protocol_dialog').modal('hide');
+    });
+
+    jQuery("#upload_ssr_protocol_submit").click(function(){
+
+        var ssr_protocol_name = jQuery("#upload_ssr_protocol_name").val();
+        var ssr_protocol_species_name = jQuery("#upload_ssr_species_name_input").val();
+        var ssr_protocol_description = jQuery("#upload_ssr_protocol_description_input").val();
+        var uploadFile = jQuery("#xls_ssr_protocol_file").val();
+
+        jQuery('#upload_ssr_protocol_form').attr("action", "/ajax/genotype/upload_ssr_protocol");
+        if (ssr_protocol_name === ''){
+            alert("Please give a protocol name");
+            return;
+        }
+        if (ssr_protocol_species_name === ''){
+            alert("Please give a species name");
+            return;
+        }
+        if (ssr_protocol_description === ''){
+            alert("Please give a description");
+            return;
+        }
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery('#upload_ssr_protocol_form').submit();
+        jQuery('#upload_ssr_protocol_dialog').modal("hide");
+    });
+
+    jQuery('#upload_ssr_protocol_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_ssr_protocol_error_display tbody").html('');
+                jQuery("#upload_ssr_protocol_error_display tbody").append(response.error_string);
+                jQuery("#upload_ssr_protocol_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#ssr_protocol_saved_dialog_message').modal("show");
+
+                ssr_protocol_id = response.protocol_id;
+                jQuery('#upload_genotype_protocol_id').val(ssr_protocol_id);
+
+            }
+
         }
     });
 

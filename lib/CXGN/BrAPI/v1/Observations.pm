@@ -47,8 +47,7 @@ sub observations_store {
 
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
-        push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'You must have submitter privileges to upload phenotypes! Please contact us!', 403);
     }
 
     ## Validate request structure and parse data
@@ -150,7 +149,7 @@ sub observations_store {
 
     ## Will need to initiate refresh matviews in controller instead
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
 

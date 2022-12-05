@@ -237,9 +237,9 @@ You can do ANOVA from two places: trial detail and training population detail. I
 
 <img src='{{"assets/images/anova-dm.png" | relative_url }}' width="522" />
 
-4.6 K-Means Clustering
+4.6 Clustering (K-Means, Hierarchical)
 --------------
-Clustering, currently using the K-Means method, allows you to partition a dataset into groups (K number). You can do this partition based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated.
+The K-Means method allows you to partition a dataset into groups (K number). The hierarchical clustering, agglomerative, allows you to explore underlying similarity and visualize in a tree structure (dendrogram) the different levels of similarities (clusters) among samples.  You can do clustering based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated. Both methods use Euclidean distance as a measure of similarity. For the hierachical clustering, the complete-linkage (farthest neighbour) method is used to link up clusters.
 
 There are three pathways to using this tool.
 
@@ -249,15 +249,19 @@ There are three pathways to using this tool.
 
    (B) -- make sure you are logged in
 
-   (C) -- select your list or dataset, click 'Go'
+   (C) -- Select the relevant genotyping protocol, if you are clustering using genotype data
 
-   (D) -- select the data type to use
+   (D) -- select your list or dataset, click 'Go'
 
-   (E) -- provide the number of partitions, if left blank it will partition the data set into optimal numbers for the dataset.
+   (E) -- select clustering type
 
-   (F) -- click the 'Run Cluster' and wait for the analysis to finish, depending on the data size this may take minutes.
+   (F) -- select the data type to use
 
-   (G) -- You can download the outputs following the download links.
+   (G) -- If you are running K-Means clustering, provide the number of partitions (K).  If left blank it will partition the data set into optimal numbers for the dataset.
+
+   (H) -- click the 'Run Cluster' and wait for the analysis to finish or queue the request and wait for an email with the analysis result.
+
+   (I) -- You can download the outputs following the download links.
 
 (2) From the trial detail page:
 
@@ -269,8 +273,13 @@ There are three pathways to using this tool.
 
    (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above (option 2).
 
+K-Means clustering:
+
  <img src='{{"assets/images/k-means-cluster.png" | relative_url }}' width="522" />
 
+Hierarchical clustering:
+
+<img src='{{"assets/images/hclustering.png" | relative_url }}' width="522" />
 
 4.7 Genetic Gain
 --------------
@@ -333,7 +342,7 @@ The procedure is:
 
    -- select 'K-means',
 
-   -- select 'Genotype',   
+   -- select 'Genotype',
 
    -- in the K-numbers textbox, fill in the number of groups you want to create,
 
@@ -343,7 +352,7 @@ The procedure is:
 
 <img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
-5.10 Search Wizard Genomic Relationship Matrix (GRM) Download
+4.10 Search Wizard Genomic Relationship Matrix (GRM) Download
 --------------
 
 The genomic relationship matrix (GRM) is useful for understanding underlying structure in your population. Breedbase can compute the GRM using rrBLUP. First, select accessions in the search wizard and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn_local.conf). Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. The GRM can be returned in a matrix format (.tsv) which shows all pairwise relationships between the selected accessions and is useful for visualization; alternatively, the GRM can be returned in a three-column format (.tsv) which is useful for programs like ASReml outside of Breedbase. The GRM can also be returned as a simple correlation heatmap image (.pdf). The GRM can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox "compute from parents"; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
@@ -478,3 +487,24 @@ The result view contains two tabs, one with the raw data, either BLUPS or BLUEs,
 The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
 
 
+4.14 Genomic Prediction of Cross Performance (GCPC)
+--------------
+
+The GCPC tool is available at <a href="/tools/gcpc">/tools/gcpc</a> and a link is provided from the Analyze menu.
+The GCPC tool implements genomic prediction with additive and directional dominance in the linear mixed model to predict for cross performance.
+
+Before using the tool, first create a dataset using the Wizard containing the data that you would like to analyze. (The dataset should have genotyping_protocols).
+Second, create Selection Indices for your traits using Selection Index in Analyze Menu.
+
+To use the tool, Select the GCPC tool from the Analyze menu.
+
+Then, select the dataset with genotyping_protocols that you wish to analyze, click on "Proceed to Factor Selection" to load available factors that can be included in the model.
+
+Select the factors you wish to include in the model either as Fixed or Random. Click "None" for factors that you don't want to include in the model. Note that the "germplasmName" is factored as Random by default.
+
+The next step is to select the selection index for your traits on the dropdown menu.
+
+Once you are through, click "Run GCPC" to run the model. The output will be presented in form of a table with "ID", "Parent1", "Parent2" and their cross prediction merit organized in descending order.
+The results will also have sex information based on whether the dataset has plant sexes available in the database.
+
+<img src='{{"assets/images/gcpc.png" | relative_url }}' width="522" />

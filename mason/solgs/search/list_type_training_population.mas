@@ -35,7 +35,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     </div>  
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list or dataset of plots or trials</a>  
+      <a href="/breeders/search/?dsp=genotyping_protocols,trials|plots,traits,accessions&dsr=/solgs/search" style="color:#ffffff">Make a new dataset of plots or trials</a>
     </div>
     <br>
     <br>  

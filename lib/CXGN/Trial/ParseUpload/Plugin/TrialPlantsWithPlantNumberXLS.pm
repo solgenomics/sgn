@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialPlantsWithPlantNumberXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -12,7 +13,19 @@ sub _validate_with_plugin {
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
+
     my @error_messages;
     my %errors;
     my %missing_accessions;
@@ -89,7 +102,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell B$row_name: plant_indeX_number must be a number";
         } else {
             #file must not contain duplicate plot names
-            my $plant_name = $plot_name."_".$plant_index_number;
+            my $plant_name = $plot_name."_plant_".$plant_index_number;
             if ($seen_plant_names{$plant_name}) {
                 push @error_messages, "Cell B$row_name: duplicate plant_name at cell A".$seen_plant_names{$plant_name}.": $plant_name";
             }
@@ -131,7 +144,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parsed_entries;
@@ -157,7 +181,7 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,1)) {
             $plant_index_number = $worksheet->get_cell($row,1)->value();
         }
-        my $plant_name = $plot_name."_".$plant_index_number;
+        my $plant_name = $plot_name."_plant_".$plant_index_number;
         $seen_plant_names{$plant_name}++;
     }
     my @plots = keys %seen_plot_names;
@@ -180,7 +204,7 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,1)) {
             $plant_index_number = $worksheet->get_cell($row,1)->value();
         }
-        my $plant_name = $plot_name."_".$plant_index_number;
+        my $plant_name = $plot_name."_plant_".$plant_index_number;
 
         #skip blank lines
         if (!$plot_name && !$plant_name) {

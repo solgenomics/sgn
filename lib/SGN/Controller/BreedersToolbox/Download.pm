@@ -21,7 +21,7 @@ use File::Basename;
 use File::Copy;
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
-use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Trial::Download;
 use POSIX qw(strftime);
 use Sort::Maker;
@@ -39,7 +39,7 @@ use CXGN::Genotype::DownloadFactory;
 use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
 use CXGN::Accession;
-use Spreadsheet::WriteExcel;
+use CXGN::Stock::Seedlot::Maintenance;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -51,6 +51,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 	    return;
     }
 
+    $c->stash->{seedlot_maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
@@ -215,9 +216,11 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
 
     my $has_header = defined($c->req->param('has_header')) ? $c->req->param('has_header') : 1;
-    my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
+    my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
+    my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xlsx";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
+    my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
     my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
     my $trait_list = $c->req->param("trait_list");
@@ -333,19 +336,23 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
 
     my $plugin = "";
-    if ($format eq "xls") {
-        $plugin = "TrialPhenotypeExcel";
+    if ($format eq "xlsx") {
+        $plugin = $entry_numbers_option ? "TrialPhenotypeExcelEntryNumbers" : "TrialPhenotypeExcel";
     }
     if ($format eq "csv") {
-        $plugin = "TrialPhenotypeCSV";
+        $plugin = $entry_numbers_option ? "TrialPhenotypeCSVEntryNumbers" : "TrialPhenotypeCSV";
     }
 
     my $temp_file_name;
+    my $download_file_name;
     my $dir = $c->tempfiles_subdir('download');
+
     if ($data_level eq 'metadata'){
         $temp_file_name = "metadata" . "XXXX";
+        $download_file_name = "metadata.$format";
     }else{
         $temp_file_name = "phenotype" . "XXXX";
+        $download_file_name = "phenotype.$format";
     }
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
@@ -372,14 +379,14 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
-        has_header=>$has_header
+        has_header => $has_header,
+        search_type => $search_type
     });
 
     my $error = $download->download();
 
-    my $file_name = "phenotype.$format";
     $c->res->content_type('Application/'.$format);
-    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
 
     my $output = read_file($tempfile);  ## works for xls format
 
@@ -563,7 +570,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         my $temp_file_name = $time_stamp . "$what" . "XXXX";
         my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
         my $tempfile = $c->config->{basepath}."/".$rel_file;
-
         if ($format eq ".csv") {
 
             #build csv with column names
@@ -589,7 +595,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             close CSV;
 
         } else {
-            my $ss = Spreadsheet::WriteExcel->new($tempfile);
+            my $ss = Excel::Writer::XLSX->new($tempfile);
             my $ws = $ss->add_worksheet();
 
             for (my $line =0; $line< @data; $line++) {
@@ -601,7 +607,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             #$ws->write(0, 0, "$program_name, $location ($year)");
             $ss ->close();
 
-            $format = ".xls";
+            $format = ".xlsx";
         }
 
         #Using tempfile and new filename,send file to client
@@ -645,7 +651,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
     # Get request params
     my $accession_list_id = $c->req->param("accession_properties_accession_list_list_select");
-    my $file_format = $c->req->param("file_format") || ".xls";
+    my $file_format = $c->req->param("file_format") || ".xlsx";
     my $dl_token = $c->req->param("accession_properties_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     if ( !$accession_list_id ) {
@@ -662,26 +668,20 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
     my @accession_ids = @{$accession_id_hash->{transform}};
 
-    # Create list of accession objects
-    my @accessions = ();
-    foreach (@accession_ids) {
-        push @accessions, CXGN::Accession->new( $dbh, $_ );
-    }
-
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
     # Build Accession Info
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
+    my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
 
-    # Create and Return XLS file
-    if ( $file_format eq ".xls" ) {
-        my $file_path = $tempfile . ".xls";
+    # Create and Return XLS and XLSX  file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
         my $file_name = basename($file_path);
 
         # Write to the xls file
-        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $workbook = Excel::Writer::XLSX->new($file_path);
         my $worksheet = $workbook->add_worksheet();
         for ( my $i = 0; $i <= $#$rows; $i++ ) {
             $worksheet->write_row($i, 0, $rows->[$i]);
@@ -689,16 +689,14 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         $workbook->close();
 
         # Return the xls file
-        $c->res->content_type('Application/xls');
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $c->res->cookies->{$dl_cookie} = {
-          value => $dl_token,
-          expires => '+1m',
+            value => $dl_token,
+            expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
-
         my $output = read_file($file_path);  ### works here because it is xls, otherwise does not work with utf8
-
         $c->res->body($output);
     }
 
@@ -733,18 +731,17 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         # Return the csv file
         $c->res->content_type('text/csv');
         $c->res->cookies->{$dl_cookie} = {
-          value => $dl_token,
-          expires => '+1m',
+            value => $dl_token,
+            expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-        #my $output = read_file($file_path);   ### Does not work with UTF8 text files
-	my $output = "";
-	open(my $F, "< :encoding(UTF-8)", $file_path) || die "Can't open file $file_path for reading.";
-	while (<$F>) {
-	    $output .= $_;
-	}
-	close($F);
 
+        my $output = "";
+        open(my $F, "< :encoding(UTF-8)", $file_path) || die "Can't open file $file_path for reading.";
+        while (<$F>) {
+            $output .= $_;
+        }
+        close($F);
         $c->res->body($output);
     }
 
@@ -755,55 +752,66 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 #
 # Generate the rows in the accession info table for the specified Accessions
 #
-# Usage: my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
+# Usage: my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
 # Returns: an arrayref where each array item is an array of accession properties
 #          the first item is an array of the header values
 #
 sub build_accession_properties_info {
     my $self = shift;
-    my $schema = shift;
+    my $dbh = shift;
     my $accession_ids = shift;
     my $editable_stock_props = shift;
 
     # Setup Stock Props
-    my @required_stock_props = ("accession_name", "species_name", "population_name", "organization", "synonym", "PUI");
-    my @parsed_editable_stock_props = ();
+    my @stock_props = ("organization", "synonym", "PUI");
     foreach my $esp (@$editable_stock_props) {
-        if ( !grep(/^$esp$/, @required_stock_props) ) {
-            push(@parsed_editable_stock_props, $esp)
+        if ( !grep(/^$esp$/, @stock_props) ) {
+            push(@stock_props, $esp)
         }
     }
 
     # Build Header
-    my @accession_headers = ();
-    push(@accession_headers, @required_stock_props);
-    push(@accession_headers, @parsed_editable_stock_props);
+    my @accession_headers = ("accession_name", "species_name", "population_name");
+    push(@accession_headers, @stock_props);
 
     # Add Header to Rows
     my @accession_rows = ();
     push(@accession_rows, \@accession_headers);
 
-    # Build Row for each Accession
-    foreach my $stock_id ( @$accession_ids ) {
-        my $a = new CXGN::Stock::Accession({ schema => $schema, stock_id => $stock_id});
-        my $synonym_string = join(',', @{$a->synonyms()});
+    # Start query blocks
+    my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
+    my $from = "FROM public.stock";
+    my $joins = "LEFT JOIN public.organism USING (organism_id)";
+    $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id AND stock_relationship.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship')))";
+    $joins .= " LEFT JOIN public.stock AS rs ON (stock_relationship.object_id = rs.stock_id)";
+    my $group = "GROUP BY stock.stock_id, organism.species";
+    my $order = "ORDER BY stock.uniquename ASC;";
+    my @params;
 
-        # Setup row with required stock props
-        my @r = (
-            $a->uniquename(),
-            $a->get_species(),
-            $a->population_name(),
-            $a->organization_name(),
-            $synonym_string,
-            $a->germplasmPUI()
-        );
+    # Add each of the stock props
+    my $count = 0;
+    foreach my $sp (@stock_props) {
+        $count++;
+        my $table = "sp" . $count;
+        $select .= ", string_agg(distinct($table.value), ', ') AS \"$sp\"";
+        $joins .= " LEFT JOIN public.stockprop AS $table ON (stock.stock_id = $table.stock_id AND $table.type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$sp' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_property')))";
+    }
 
-        # Add parsed editable stock props
-        foreach my $esp (@parsed_editable_stock_props) {
-            push(@r, $a->_retrieve_stockprop($esp));
-        }
+    # Build where block using accession ids
+    my $where = "WHERE stock.stock_id IN (" . join(',', ('?') x @$accession_ids) . ")";
+    push(@params, @$accession_ids);
 
-        push(@accession_rows, \@r);
+    # Put query together
+    my $q = "$select $from $joins $where $group $order";
+
+    #print STDERR "QUERY = $q\n";
+
+    # Execute the query and add results to accession rows
+    my $h = $dbh->prepare($q);
+    $h->execute(@params);
+    while (my @results = $h->fetchrow_array()) {
+        # print STDERR "RETRIEVED: ".join(",", @results)."\n";
+        push(@accession_rows, \@results);
     }
 
     return \@accession_rows;
@@ -887,6 +895,89 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 # pedigree download -- end
 
 #=pod
+
+
+# seedlot maintenance events download -- start
+
+#
+# Download a file of seedlot maintenance events
+#
+# POST Params:
+#   seedlot_maintenance_events_list_list_select = list id of a seedlot list
+#   file_format: format of the file output (.xls)
+#
+sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlot_maintenance_events_action') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    # Get request params
+    my $seedlot_list_id = $c->req->param("seedlot_maintenance_events_list_list_select");
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $dl_token = $c->req->param("seedlot_maintenance_events_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    if ( !$seedlot_list_id ) {
+        print STDERR "ERROR: No seedlot list id provided to download seedlot maintenance events action";
+        return;
+    }
+
+    # Get seedlots from list
+    my $seedlot_data = SGN::Controller::AJAX::List->retrieve_list($c, $seedlot_list_id);
+    my @seedlot_names = map { $_->[1] } @$seedlot_data;
+
+    # Get Maintenance Events
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+    my $results = $m->filter_events({ names => \@seedlot_names }, 1, 65000);
+    my $events = $results->{results};
+
+    # Create tempfile
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_seedlot_maintenance_events_XXXXX", UNLINK => 0);
+
+    # Create and Return XLSX file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
+        my $file_name = basename($file_path);
+
+        # Get Excel worksheet
+        my $workbook = Excel::Writer::XLSX->new($file_path);
+        my $worksheet = $workbook->add_worksheet();
+
+        # Write header
+        my @header = ("seedlot", "type", "value", "notes", "operator", "timestamp");
+        $worksheet->write_row(0, 0, \@header);
+
+        # Write each event
+        my $row_count = 1;
+        foreach my $event (@$events) {
+            my @row = (
+                $event->{uniquename},
+                $event->{cvterm_name},
+                $event->{value},
+                $event->{notes},
+                $event->{operator},
+                $event->{timestamp}
+            );
+            $worksheet->write_row($row_count, 0, \@row);
+            $row_count++;
+        }
+        $workbook->close();
+
+        # Return the xls file
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+        my $output = read_file($file_path);  ### works here because it is xls, otherwise does not work with utf8
+
+        $c->res->body($output);
+    }
+
+}
+
+# seedlot maintenanve events download -- end
 
 
 #Used from wizard page and manage download page for downloading gbs from accessions
@@ -1319,7 +1410,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$trial_id."_XXXXX");
 
-    my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
+    my $file_path = $c->config->{basepath}."/".$tempfile.".xlsx";
     move($tempfile, $file_path);
 
     my $td = CXGN::Trial::Download->new( {
@@ -1412,7 +1503,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     # prepare file for download
     #
     my $file_name = basename($file_path);
-    $c->res->content_type('Application/xls');
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
 

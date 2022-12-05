@@ -177,6 +177,8 @@ sub save_ona_cross_info {
     my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
     my $germplasm_info_temp_file_path = $self->germplasm_info_temp_file_path;
     my $form_id = $self->odk_crossing_data_service_form_id;
+    print STDERR "SELECTED FORM ID =".Dumper($form_id)."\n";
+
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
@@ -449,13 +451,13 @@ sub save_ona_cross_info {
                                         my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
                                         $image_id = $image->get_image_id;
                                     } else {
-                                        print STDERR $response->status_line."\n";
+#                                        print STDERR $response->status_line."\n";
                                     }
                                 }
                                 if ($image && $image_id){
                                     my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
                                     my $image_source_tag_thumb = $image->get_img_src_tag("thumbnail");
-                                    print STDERR "IMAGE FOR ".$stock_id.": ".$image_id.": ".$image_source_tag_tiny."\n";
+#                                    print STDERR "IMAGE FOR ".$stock_id.": ".$image_id.": ".$image_source_tag_tiny."\n";
                                     $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_tiny} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
                                     $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_thumb} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_thumb.'</a>';
                                 }
@@ -471,7 +473,9 @@ sub save_ona_cross_info {
                             my $female_accession_name = $a->{'FieldActivities/FirstPollination/FemaleName'};
                             my $male_accession_name = $a->{'FieldActivities/FirstPollination/selectedMaleName'};
                             my $cycle_id = $a->{'FieldActivities/FirstPollination/cycleID'} || 1;
-                            $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
+                            if ($female_accession_name && $male_accession_name && $cycle_id) {
+                                $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
+                            }
 
                             $odk_female_plot_data = $a->{'FieldActivities/FirstPollination/femaleID'};
                             $odk_male_plot_data = $a->{'FieldActivities/FirstPollination/maleID'};
@@ -534,7 +538,9 @@ sub save_ona_cross_info {
 #                           print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
                             my $pollination_date_property = 'First Pollination Date';
                             my $firstPollinationDate = $a->{'FieldActivities/FirstPollination/firstpollination_date'};
-                            $musa_cross_info{$pollination_date_property}{$odk_cross_unique_id} = $firstPollinationDate;
+                            if ($odk_cross_unique_id && $pollination_date_property && $firstPollinationDate) {
+                                $musa_cross_info{$odk_cross_unique_id}{$pollination_date_property} = $firstPollinationDate;
+                            }
                         } elsif ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                             push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
                             #my $female_accession_name = $a->{'FieldActivities/RepeatPollination/getRptFemaleAccName'};
@@ -555,15 +561,15 @@ sub save_ona_cross_info {
                                     ($harvest_date) = ($odk_harvest_date =~ /^([^T]+)/);
 #                                    print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
 #                                    print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
-                                    if (defined $harvest_cross_id){
-                                        $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+                                    if ($harvest_cross_id && $harvest_date_property && $harvest_date){
+                                        $musa_cross_info{$harvest_cross_id}{$harvest_date_property} = $harvest_date;
                                      }
                                 }
                             } else {
                                 $harvest_cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'};
                                 $harvest_date = $a->{'FieldActivities/harvesting/harvesting_date'};
-                                if (defined $harvest_cross_id){
-                                    $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+                                if ($harvest_cross_id && $harvest_date_property && $harvest_date){
+                                    $musa_cross_info{$harvest_cross_id}{$harvest_date_property} = $harvest_date;
                                 }
                             }
 
@@ -577,9 +583,11 @@ sub save_ona_cross_info {
                             my $number_of_seeds_extracted = $a->{'FieldActivities/seedExtraction/totalSeedsExtracted'};
                             my $num_seeds_extracted_property = 'Number of Seeds Extracted';
 
-                            if (defined $seed_extraction_cross_id){
-                                $musa_cross_info{$extraction_date_property}{$seed_extraction_cross_id} = $odk_extraction_date;
-                                $musa_cross_info{$num_seeds_extracted_property}{$seed_extraction_cross_id} = $number_of_seeds_extracted;
+                            if ($seed_extraction_cross_id && $extraction_date_property && $odk_extraction_date) {
+                                $musa_cross_info{$seed_extraction_cross_id}{$extraction_date_property} = $odk_extraction_date;
+                            }
+                            if ($seed_extraction_cross_id && $num_seeds_extracted_property) {
+                                $musa_cross_info{$seed_extraction_cross_id}{$num_seeds_extracted_property} = $number_of_seeds_extracted;
                             }
                         }
                     } elsif ($activity_category eq 'laboratory'){
@@ -592,19 +600,27 @@ sub save_ona_cross_info {
                             my $embryo_rescue_cross_id = $a->{'Laboratory/embryoRescue/embryorescueID'};
                             my $embryorescue_date = $a->{'Laboratory/embryoRescue/embryorescue_date'};
                             my $embryorescue_date_property = 'Embryo Rescue Date';
-                            $musa_cross_info{$embryorescue_date_property}{$embryo_rescue_cross_id} = $embryorescue_date;
+                            if ($embryo_rescue_cross_id && $embryorescue_date_property && $embryorescue_date) {
+                                $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_date_property} = $embryorescue_date;
+                            }
 
                             my $embryorescue_total_seeds = $a->{'Laboratory/embryoRescue/embryorescueID_Total_Seeds'};
                             my $embryorescue_total_seeds_property = 'Embryo Rescue Total Seeds';
-                            $musa_cross_info{$embryorescue_total_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_total_seeds;
+                            if ($embryo_rescue_cross_id && $embryorescue_total_seeds_property) {
+                                $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_total_seeds_property} = $embryorescue_total_seeds;
+                            }
 
                             my $embryorescue_good_seeds = $a->{'Laboratory/embryoRescue/goodSeeds'};
                             my $embryorescue_good_seeds_property = 'Embryo Rescue Good Seeds';
-                            $musa_cross_info{$embryorescue_good_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_good_seeds;
+                            if ($embryo_rescue_cross_id && $embryorescue_good_seeds_property) {
+                                $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_good_seeds_property} = $embryorescue_good_seeds;
+                            }
 
                             my $embryorescue_bad_seeds = $a->{'Laboratory/embryoRescue/badseeds'};
                             my $embryorescue_bad_seeds_property = 'Embryo Rescue Bad Seeds';
-                            $musa_cross_info{$embryorescue_bad_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_bad_seeds;
+                            if ($embryo_rescue_cross_id && $embryorescue_bad_seeds_property) {
+                                $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_bad_seeds_property} = $embryorescue_bad_seeds;
+                            }
 
                         } elsif ($a->{'Laboratory/labActivity'} eq 'germinating_after_2wks'){
                             push @{$cross_info{$a->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wksID'}}->{'germinating_after_2wks'}}, $a;
@@ -639,25 +655,30 @@ sub save_ona_cross_info {
                             my $weaning2_cross_id = $a->{'Nursery/Weaning2/getweaning2_crossid'};
                             my $weaning2_id = $a->{'Nursery/Weaning2/weaning2ID'};
                             my $number_of_weaning2_plantlets = $a->{'Nursery/Weaning2/number_of_weaning2_plantlets'};
-                            $weaning2_hash{$weaning2_cross_id}{$weaning2_id}++;
-
+                            if ($weaning2_cross_id && $weaning2_id) {
+                                $weaning2_hash{$weaning2_cross_id}{$weaning2_id}++;
+                            }
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'screenhouse'){
                             my $screenhouse_cross_id = $a->{'Nursery/Screenhouse/crossid_of_screenhouseID'};
                             my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
                             my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
-                            if (defined $screenhouse_cross_id) {
+                            if ($screenhouse_cross_id && $screenhouse_id) {
                                 $screenhouse_hash{$screenhouse_cross_id}{$screenhouse_id}++;
                             }
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'hardening'){
                             my $hardening_cross_id = $a->{'Nursery/Hardening/hardeningID_crossid'};
                             my $hardening_id = $a->{'Nursery/Hardening/hardeningID'};
                             my $number_of_hardening_plantlets = $a->{'Nursery/Hardening/number_of_hardening_plantlets'};
-                            $hardening_hash{$hardening_cross_id}{$hardening_id}++;
+                            if ($hardening_cross_id && $hardening_id) {
+                                $hardening_hash{$hardening_cross_id}{$hardening_id}++;
+                            }
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'openfield'){
                             my $openfield_cross_id = $a->{'Nursery/Openfield/openfieldID_crossid'};
                             my $openfield_id = $a->{'Nursery/Openfield/openfieldID'};
                             my $number_of_openfield_plantlets = $a->{'Nursery/Openfield/number_openfield_transferred_plantlets'};
-                            $openfield_hash{$openfield_cross_id}{$openfield_id}++;
+                            if ($openfield_cross_id && $openfield_id) {
+                                $openfield_hash{$openfield_cross_id}{$openfield_id}++;
+                            }
                         }
                     }
                 }
@@ -679,19 +700,27 @@ sub save_ona_cross_info {
                         my $embryo_rescue_cross_id = $activity_hash->{'Laboratory/embryoRescue/embryorescueID'};
                         my $embryorescue_date = $activity_hash->{'Laboratory/embryoRescue/embryorescue_date'};
                         my $embryorescue_date_property = 'Embryo Rescue Date';
-                        $musa_cross_info{$embryorescue_date_property}{$embryo_rescue_cross_id} = $embryorescue_date;
+                        if ($embryo_rescue_cross_id && $embryorescue_date_property && $embryorescue_date) {
+                            $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_date_property} = $embryorescue_date;
+                        }
 
                         my $embryorescue_total_seeds = $activity_hash->{'Laboratory/embryoRescue/embryorescueID_Total_Seeds'};
                         my $embryorescue_total_seeds_property = 'Embryo Rescue Total Seeds';
-                        $musa_cross_info{$embryorescue_total_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_total_seeds;
+                        if ($embryo_rescue_cross_id && $embryorescue_total_seeds_property) {
+                            $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_total_seeds_property} = $embryorescue_total_seeds;
+                        }
 
                         my $embryorescue_good_seeds = $activity_hash->{'Laboratory/embryoRescue/goodSeeds'};
                         my $embryorescue_good_seeds_property = 'Embryo Rescue Good Seeds';
-                        $musa_cross_info{$embryorescue_good_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_good_seeds;
+                        if ($embryo_rescue_cross_id && $embryorescue_good_seeds_property) {
+                            $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_good_seeds_property} = $embryorescue_good_seeds;
+                        }
 
                         my $embryorescue_bad_seeds = $activity_hash->{'Laboratory/embryoRescue/badseeds'};
                         my $embryorescue_bad_seeds_property = 'Embryo Rescue Bad Seeds';
-                        $musa_cross_info{$embryorescue_bad_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_bad_seeds;
+                        if ($embryo_rescue_cross_id && $embryorescue_bad_seeds_property) {
+                            $musa_cross_info{$embryo_rescue_cross_id}{$embryorescue_bad_seeds_property} = $embryorescue_bad_seeds;
+                        }
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'germination') {
                         my $germination_cross_id = $activity_hash->{'Laboratory/EmbryoGermination/embryo_germinationID'};
@@ -702,31 +731,35 @@ sub save_ona_cross_info {
                         $number_germinating{$germination_cross_id}{$germination_date} = $total_number_germinating;
 
                         my $embryoID_info = $activity_hash->{'Laboratory/EmbryoGermination/germinating_embryo'};
-                        if (defined $embryoID_info) {
+                        if ($embryoID_info) {
                             foreach my $germinating_embryo(@{ $embryoID_info }) {
                                 my $embryo_id = $germinating_embryo->{'Laboratory/EmbryoGermination/germinating_embryo/embryoID'};
-                                $embryoID_hash{$germination_cross_id}{$embryo_id}++;
+                                if ($germination_cross_id && $embryo_id) {
+                                    $embryoID_hash{$germination_cross_id}{$embryo_id}++;
+                                }
                             }
                         }
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'subculture') {
                         my $subculture_cross_id = $activity_hash->{'Laboratory/subculturing/cross_Sub'};
                         my $subculture_id = $activity_hash->{'Laboratory/subculturing/subcultureID'};
-                        $subcultures_hash{$subculture_cross_id}{$subculture_id}++;
-
+                        if ($subculture_cross_id && $subculture_id) {
+                            $subcultures_hash{$subculture_cross_id}{$subculture_id}++;
+                        }
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'rooting') {
                         my $rooting_cross_id = $activity_hash->{'Laboratory/rooting/getRoot_crossid'};
                         my $rooting_id = $activity_hash->{'Laboratory/rooting/rootingID'};
-                        if (defined $rooting_cross_id) {
+                        if ($rooting_cross_id && $rooting_id) {
                             $rooting_hash{$rooting_cross_id}{$rooting_id}++;
                         }
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'weaning1') {
                         my $weaning1_cross_id = $activity_hash->{'Laboratory/weaning1/getWeaning1_crossid'};
                         my $weaning1_id = $activity_hash->{'Laboratory/weaning1/weaning1ID'};
-                        $weaning1_hash{$weaning1_cross_id}{$weaning1_id}++;
+                        if ($weaning1_cross_id && $weaning1_id) {
+                            $weaning1_hash{$weaning1_cross_id}{$weaning1_id}++;
+                        }
                     }
-
                 }
             }
         }
@@ -738,7 +771,10 @@ sub save_ona_cross_info {
             my $embryo_ids_count = keys %embryo_hash;
             my $germinating_number_property = 'Number of Germinating Embryos';
             my $embryo_ids_property = 'Embryo IDs';
-            $musa_cross_info{$germinating_number_property}{$embryo_cross} = $embryo_ids_count;
+            if ($embryo_cross && $germinating_number_property) {
+                $musa_cross_info{$embryo_cross}{$germinating_number_property} = $embryo_ids_count;
+            }
+
             $tissue_culture_details{$embryo_ids_property}{$embryo_cross} = \@all_embryo_ids;
         }
 
@@ -749,7 +785,10 @@ sub save_ona_cross_info {
             my @all_subculture_ids = keys %subculture_info;
             my $subculture_property = 'Subculture ID Count';
             my $subculture_ids_property = 'Subculture IDs';
-            $musa_cross_info{$subculture_property}{$subculture_cross} = $subculture_id_count;
+            if ($subculture_cross && $subculture_property) {
+                $musa_cross_info{$subculture_cross}{$subculture_property} = $subculture_id_count;
+            }
+
             $tissue_culture_details{$subculture_ids_property}{$subculture_cross} = \@all_subculture_ids;
         }
 
@@ -760,7 +799,10 @@ sub save_ona_cross_info {
             my @all_rooting_ids = keys %rooting_info;
             my $rooting_property = 'Rooting ID Count';
             my $rooting_ids_property = 'Rooting IDs';
-            $musa_cross_info{$rooting_property}{$rooting_cross} = $rooting_id_count;
+            if ($rooting_cross && $rooting_property) {
+                $musa_cross_info{$rooting_cross}{$rooting_property} = $rooting_id_count;
+            }
+
             $tissue_culture_details{$rooting_ids_property}{$rooting_cross} = \@all_rooting_ids;
         }
 
@@ -771,7 +813,10 @@ sub save_ona_cross_info {
             my @all_weaning1_ids = keys %weaning1_info;
             my $weaning1_property = 'Weaning1 ID Count';
             my $weaning1_ids_property = 'Weaning1 IDs';
-            $musa_cross_info{$weaning1_property}{$weaning1_cross} = $weaning1_id_count;
+            if ($weaning1_cross && $weaning1_property) {
+                $musa_cross_info{$weaning1_cross}{$weaning1_property} = $weaning1_id_count;
+            }
+
             $tissue_culture_details{$weaning1_ids_property}{$weaning1_cross} = \@all_weaning1_ids;
         }
 
@@ -782,7 +827,10 @@ sub save_ona_cross_info {
             my @all_weaning2_ids = keys %weaning2_info;
             my $weaning2_property = 'Weaning2 ID Count';
             my $weaning2_ids_property = 'Weaning2 IDs';
-            $musa_cross_info{$weaning2_property}{$weaning2_cross} = $weaning2_id_count;
+            if ($weaning2_cross && $weaning2_property) {
+                $musa_cross_info{$weaning2_cross}{$weaning2_property} = $weaning2_id_count;
+            }
+
             $tissue_culture_details{$weaning2_ids_property}{$weaning2_cross} = \@all_weaning2_ids;
         }
 
@@ -793,7 +841,10 @@ sub save_ona_cross_info {
             my @all_screenhouse_ids = keys %screenhouse_info;
             my $screenhouse_property = 'Screenhouse ID Count';
             my $screenhouse_ids_property = 'Screenhouse IDs';
-            $musa_cross_info{$screenhouse_property}{$screenhouse_cross} = $screenhouse_id_count;
+            if ($screenhouse_cross && $screenhouse_property) {
+                $musa_cross_info{$screenhouse_cross}{$screenhouse_property} = $screenhouse_id_count;
+            }
+
             $tissue_culture_details{$screenhouse_ids_property}{$screenhouse_cross} = \@all_screenhouse_ids;
         }
 
@@ -804,7 +855,10 @@ sub save_ona_cross_info {
             my @all_hardening_ids = keys %hardening_info;
             my $hardening_property = 'Hardening ID Count';
             my $hardening_ids_property = 'Hardening IDs';
-            $musa_cross_info{$hardening_property}{$hardening_cross} = $hardening_id_count;
+            if ($hardening_cross && $hardening_property) {
+                $musa_cross_info{$hardening_cross}{$hardening_property} = $hardening_id_count;
+            }
+
             $tissue_culture_details{$hardening_ids_property}{$hardening_cross} = \@all_hardening_ids;
         }
 
@@ -822,13 +876,15 @@ sub save_ona_cross_info {
             }
             my $openfield_property = 'Openfield ID Count';
             my $openfield_ids_property = 'Openfield IDs';
-            $musa_cross_info{$openfield_property}{$openfield_cross} = $openfield_id_count;
+            if ($openfield_cross && $openfield_property) {
+                $musa_cross_info{$openfield_cross}{$openfield_property} = $openfield_id_count;
+            }
+
             $tissue_culture_details{$openfield_ids_property}{$openfield_cross} = \@all_openfield_ids;
         }
 
 #        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 #        print STDERR "CHECKING TISSUE CULTURE INFO =".Dumper(\%tissue_culture_details)."\n";
-
 
         my $cross_add = CXGN::Pedigree::AddCrosses->new({
             chado_schema => $schema,
@@ -851,28 +907,67 @@ sub save_ona_cross_info {
         my @cross_properties = split ',', $self->allowed_cross_properties;
 #        print STDERR "ALLOWED CROSS INFO =".Dumper(\@cross_properties)."\n";
 
-        foreach my $info_type(@cross_properties){
-            if ($musa_cross_info{$info_type}) {
-                my %info_hash = %{$musa_cross_info{$info_type}};
-                foreach my $cross_name_key (keys %info_hash){
-                    my $value = $info_hash{$cross_name_key};
-                    if (defined $value) {
-                        my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
-                            chado_schema => $schema,
-                            cross_name => $cross_name_key,
-                            key => $info_type,
-                            value => $value,
-                        });
-                        $cross_add_info->add_info();
-                    }
+#        foreach my $info_type(@cross_properties){
+#            if ($musa_cross_info{$info_type}) {
+#                my %info_hash = %{$musa_cross_info{$info_type}};
+#                foreach my $cross_name_key (keys %info_hash){
+#                    my $valid_cross_name = $schema->resultset("Stock::Stock")->find({uniquename => $cross_name_key});
+#                    my $value = $info_hash{$cross_name_key};
+#                    if ($valid_cross_name && $info_type && $value) {
+#                        my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+#                            chado_schema => $schema,
+#                            cross_name => $cross_name_key,
+#                            key => $info_type,
+#                            value => $value,
+#                            data_type => 'crossing_metadata_json'
+#                        });
+#                        $cross_add_info->add_info();
+#                    }
+#                }
+#            }
+#        }
+
+        my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'crossing_metadata_json', 'stock_property');
+
+        my $cross_json_string;
+        my $cross_json_hash_ref = {};
+        my %cross_json_hash;
+        my %all_cross_info;
+        foreach my $cross_name_key (keys %musa_cross_info){
+            %cross_json_hash = ();
+            %all_cross_info = ();
+            %{$cross_json_hash_ref} =();
+            my $valid_cross_name = $schema->resultset("Stock::Stock")->find({uniquename => $cross_name_key});
+            if ($valid_cross_name){
+                my %info_hash = %{$musa_cross_info{$cross_name_key}};
+#                print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
+#                print STDERR "NEW INFO HASH =".Dumper(\%info_hash)."\n";
+
+                my $previous_stockprop_rs = $valid_cross_name->stockprops({type_id=>$cross_info_cvterm->cvterm_id});
+                if ($previous_stockprop_rs->count == 1){
+                    $cross_json_string = $previous_stockprop_rs->first->value();
+                    $cross_json_hash_ref = decode_json $cross_json_string;
+                    %cross_json_hash = %{$cross_json_hash_ref};
+                    %all_cross_info = (%cross_json_hash, %info_hash);
+#                    print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
+#                    print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
+                    my $all_cross_info_string = encode_json \%all_cross_info;
+                    $previous_stockprop_rs->first->update({value=>$all_cross_info_string});
+                } elsif ($previous_stockprop_rs->count > 1) {
+                    print STDERR "More than one found!\n";
+                    return;
+                } else {
+                    my $new_cross_info_string = encode_json \%info_hash;
+                    $valid_cross_name->create_stockprops({$cross_info_cvterm->name() => $new_cross_info_string});
                 }
             }
         }
 
         foreach my $sample_type(keys %tissue_culture_details){
-                my %sample_info_hash = %{$tissue_culture_details{$sample_type}};
-                foreach my $cross_name (keys %sample_info_hash){
-                    my $value = $sample_info_hash{$cross_name};
+            my %sample_info_hash = %{$tissue_culture_details{$sample_type}};
+            foreach my $cross_name (keys %sample_info_hash){
+                my $value = $sample_info_hash{$cross_name};
+                if ($cross_name && $sample_type && $value) {
                     my $cross_add_samples = CXGN::Pedigree::AddCrossTissueSamples->new({
                         chado_schema => $schema,
                         cross_name => $cross_name,
@@ -882,6 +977,7 @@ sub save_ona_cross_info {
 
                     $cross_add_samples->add_samples();
                 }
+            }
         }
 
         foreach my $cross_name_key (keys %new_progeny_hash){
@@ -903,17 +999,17 @@ sub save_ona_cross_info {
             }
         }
 
-        my %odk_cross_hash = (
-            cross_info => \%cross_info,
-            cross_parents => \%cross_parents,
-            plant_status_info => \%plant_status_info,
-            raw_message => $message_hash
-        );
+#        my %odk_cross_hash = (
+#            cross_info => \%cross_info,
+#            cross_parents => \%cross_parents,
+#            plant_status_info => \%plant_status_info,
+#            raw_message => $message_hash
+#        );
         #Update cross progress tree
-        my $return = $self->create_odk_cross_progress_tree(\%odk_cross_hash);
-        if ($return->{error}){
-            return { error => $return->{error} };
-        }
+#        my $return = $self->create_odk_cross_progress_tree(\%odk_cross_hash);
+#        if ($return->{error}){
+#            return { error => $return->{error} };
+#        }
         return { success => 1 };
 
     } else {

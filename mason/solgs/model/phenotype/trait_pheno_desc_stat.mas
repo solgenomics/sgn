@@ -1,0 +1,34 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/model/phenotype/trait_phenotype_desc_stat.mas - displays descriptive statistics of trait pheno data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$descriptive_stat
+
+</%args>
+
+
+<div id="pheno_desc_stat">
+    <br/>
+
+    <& /page/columnar_table.mas,
+       headings    => [ '',  ''],
+      data         => $descriptive_stat,
+      __alt_freq   => 2,
+      __alt_width  => 1,
+      __alt_offset => 3,
+      __align      => 'l',
+      &>
+
+</div>

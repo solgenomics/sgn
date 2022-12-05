@@ -37,16 +37,15 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     my $traits = $ds->retrieve_traits();
     my @trait_info;
     foreach my $t (@$traits) {
-          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t->[0] });
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
     $c->tempfiles_subdir("heritability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"heritability_files/trait_XXXXX");
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
+    print STDERR "***** temppath = $temppath\n";
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
@@ -93,13 +92,13 @@ sub extract_trait_data :Path('/ajax/heritability/getdata') Args(0) {
 	chomp;
 
 	my @fields = split "\t";
-	my %line = {};
+	my %line;
 	for(my $n=0; $n <@keys; $n++) {
 	    if (exists($fields[$n]) && defined($fields[$n])) {
 		$line{$keys[$n]}=$fields[$n];
 	    }
 	}
-    print STDERR Dumper(\%line);
+	#print STDERR Dumper(\%line);
 	push @data, \%line;
     }
 
@@ -111,25 +110,29 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
-    print"****************************************************************************\n";
-    print"The dataset is $dataset_id\n";
+    print STDERR "****************************************************************************\n";
+    print STDERR "The dataset is $dataset_id\n";
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("heritability_files");
     my $heritability_tmp_output = $c->config->{cluster_shared_tempdir}."/heritability_files";
     mkdir $heritability_tmp_output if ! -d $heritability_tmp_output;
+    print STDERR "heritability_files subdir = $heritability_tmp_output\n";
     my ($tmp_fh, $tempfile) = tempfile(
       "h2_download_XXXXX",
       DIR=> $heritability_tmp_output,
     );
 
+    print STDERR "TEMPFILE NOW = $tempfile\n";
+    
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     
-
+    
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $temppath = $heritability_tmp_output . "/" . $tempfile;
+    #my $temppath = $heritability_tmp_output . "/" . $tempfile;
+    my $temppath = $tempfile;
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
 
@@ -139,6 +142,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $h2File = $tempfile . "_" . "h2File.png";
     my $figure3file = $tempfile . "_" . "figure3.png";
     my $figure4file = $tempfile . "_" . "figure4.png";
+    my $errorFile = $tempfile . "_" . "error.txt";
+
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
@@ -163,7 +168,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
             $trait_id,
             $figure3file,
             $figure4file,
-            $h2File
+            $h2File,
+            $errorFile
     );
     $cmd->alive;
     $cmd->is_cluster(1);
@@ -179,9 +185,6 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     copy($figure3file, $figure_path);
     copy($figure4file, $figure_path);
 
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
-
-    
     my $h2Filebasename = basename($h2File);
     my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
 
@@ -191,14 +194,21 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $figure4basename = basename($figure4file);
     my $figure4_response = "/documents/tempfiles/heritability_files/" . $figure4basename;
 
+    my $errors;
+    if ( -e $errorFile ) {
+        open my $fh, '<', $errorFile or die "Can't open error file $!";
+        $errors = do { local $/; <$fh> };
+    }
 
-    print $h2File_response;
+
+    #print STDERR $h2File_response;
         
     $c->stash->{rest} = {
         h2Table => $h2File_response,
         figure3 => $figure3_response,
         figure4 => $figure4_response,
-        dummy_response => $dataset_id
+        dummy_response => $dataset_id,
+        error => $errors
         # dummy_response2 => $trait_id,
     };
 }

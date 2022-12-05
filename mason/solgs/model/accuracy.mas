@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-/mode/accuracy.mas - displays cross-validation output of the prediction model
+/solgs/model/accuracy.mas - displays cross-validation output of the prediction model
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -13,7 +13,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $accuracy_report
-$validation_download_url => ''
 
 </%args>
 
@@ -33,7 +32,6 @@ $validation_download_url => ''
   __align      => 'll',
 &>
 
-<br />
-[ <% $validation_download_url %> ]
-
+<div id="validation_download"></div>
+<div id="valdiation_download_message"  class="message"></div>
 </&>

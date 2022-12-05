@@ -40,9 +40,8 @@ $selection_markers_cnt => ''
 $model_page_url => ''
 $owner => ''
 $protocol_url => ''
-$top_blups
-$blups_download_url
 $combined_populations => ''
+$combo_pops_id => ''
 $genotyping_protocol_id
 $data_set_type => ''
 
@@ -59,8 +58,8 @@ $data_set_type => ''
                                              ]
   &>
 
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css', '/static/css/d3-tip.css'] &>
 
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas,
    title => "GEBVs for $trait_name ($trait_abbr) in $selection_pop_name"
@@ -73,9 +72,9 @@ $data_set_type => ''
   &>
 
  <& summary.mas,
-    pop_id   => $selection_pop_id,
-    pop_name => $selection_pop_name,
-    pop_desc => $selection_pop_desc,
+    selection_pop_id   => $selection_pop_id,
+    selection_pop_name => $selection_pop_name,
+    selection_pop_desc => $selection_pop_desc,
     model_page_url   => $model_page_url,
 	training_pop_url => $training_pop_url,
     stocks_no    => $selection_stocks_cnt,
@@ -95,21 +94,20 @@ $data_set_type => ''
    		selection_pop_name => $selection_pop_name,
    		selection_pop_desc => $selection_pop_desc,
    		genotyping_protocol_id => $genotyping_protocol_id,
-		trait_id => $trait_id
+		trait_id => $trait_id,
+        combo_pops_id => $combo_pops_id
     &>
 </&>
 
-<& /solgs/pca/analysis.mas &>
+<& /solgs/tools/pca/analysis.mas &>
 
-<& /solgs/model/gebvs.mas,
-   top_blups         => $top_blups,
-  blups_download_url => $blups_download_url,
+<& /solgs/model/gebvs.mas &>
 
-&>
-
-
-<& /solgs/genetic_gain/genetic_gain.mas,
+<& /solgs/tools/genetic_gain/genetic_gain.mas,
    trait_id         => $trait_id,
    training_pop_id  => $training_pop_id,
    selection_pop_id => $selection_pop_id,
 &>
+
+<& /solgs/population/download.mas &>
+

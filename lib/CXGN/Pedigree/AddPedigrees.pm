@@ -74,7 +74,7 @@ sub add_pedigrees {
         my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship');
         my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship');
 
-        my ($accessions_crosses_hash_ref, $accessions_crosses_populations_hash_ref) = $self->_get_available_stocks();
+        my ($accessions_crosses_hash_ref, $accessions_crosses_populations_hash_ref) = $self->_get_available_stocks;
         my %accessions_crosses_hash = %{$accessions_crosses_hash_ref};
         my %accessions_crosses_populations_hash = %{$accessions_crosses_populations_hash_ref};
 
@@ -217,10 +217,10 @@ sub validate_pedigrees {
             push @{$return{error}}, "Female parent not found for $progeny_name.";
         }
 
-        if ($cross_type ne 'biparental' && $cross_type ne 'self' && $cross_type ne 'open' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross'){
-            push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib or polycross for progeny $progeny_name.";
+        if ($cross_type ne 'biparental' && $cross_type ne 'self' && $cross_type ne 'open' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected'){
+            push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib, reselected or polycross for progeny $progeny_name.";
         }
-        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross') {
+        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross' || $cross_type eq 'reselected') {
             if (!$pedigree->get_male_parent){
                 push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
             }
@@ -280,11 +280,12 @@ sub _get_available_stocks {
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-	my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
 
     my %accessions_crosses_hash;
     my %accessions_crosses_populations_hash;
-    my $q = "SELECT stock.uniquename, stock.type_id, stock.stock_id, stock.organism_id, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_cvterm OR stock.type_id=$population_cvterm OR stock.type_id=$cross_cvterm";
+    my $q = "SELECT stock.uniquename, stock.type_id, stock.stock_id, stock.organism_id, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_cvterm OR stock.type_id=$population_cvterm OR stock.type_id=$cross_cvterm OR stock.type_id=$vector_construct_cvterm_id";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     while (my ($uniquename, $stock_type_id, $stock_id, $organism_id, $synonym, $type_id) = $h->fetchrow_array()) {

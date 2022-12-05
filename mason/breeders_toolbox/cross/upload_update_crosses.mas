@@ -12,6 +12,8 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
+                    <label class="col-sm-12 control-label">If you are uploading an Intercross file, please use manage Intercross section</label>
+                    <br>
                     <&| /page/explanation.mas, title=>'Template Information' &>
                         <p>
                             <b>File Format Information</b>
@@ -69,11 +71,9 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Cross info of existing crosses may be uploaded in an Excel file (.xls)
+                        Cross info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
                     <br>
-                        (.xlsx format not supported)
-                    <br><br>
                     <b>
                         Header:
                     </b>
@@ -180,11 +180,9 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls)
+                        Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
                     <br>
-                        (.xlsx format not supported)
-                    <br><br>
                     <b>
                         Header:
                     </b>
@@ -226,8 +224,7 @@
 
 jQuery(document).ready(function(){
 
-    jQuery("#upload_cross_info").click(function(){
-
+    jQuery('[name="upload_cross_info"]').click(function(){
         jQuery("#update_crossinfo_spreadsheet_format").click(function(){
             jQuery("#update_crossinfo_spreadsheet_info_dialog").modal("show");
         });

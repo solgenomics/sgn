@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::MultipleTrialDesignExcelFormat;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -22,7 +23,18 @@ sub _validate_with_plugin {
   my %warnings;
   my @warning_messages;
   my %missing_accessions;
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
 
@@ -90,6 +102,7 @@ sub _validate_with_plugin {
   my $field_size;
   my $planting_date;
   my $harvest_date;
+  my %seen_plot_keys;
 
   for my $row ( 1 .. $row_max ) {
 
@@ -234,6 +247,20 @@ sub _validate_with_plugin {
     }
     if ($worksheet->get_cell($row,23)) {
       $weight_gram_seed_per_plot = $worksheet->get_cell($row,23)->value();
+    }
+
+    if ( $row_number && $col_number ) {
+      my $tk = $current_trial_name;
+      my $pk = "$row_number-$col_number";
+      if ( !exists $seen_plot_keys{$tk} ) {
+        $seen_plot_keys{$tk} = {};
+      }
+      if ( !exists $seen_plot_keys{$tk}{$pk} ) {
+        $seen_plot_keys{$tk}{$pk} = [$plot_number];
+      }
+      else {
+        push @{$seen_plot_keys{$tk}{$pk}}, $plot_number;
+      }
     }
 
     if ($working_on_new_trial) {
@@ -420,7 +447,7 @@ sub _validate_with_plugin {
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
-            if (defined($apply_treatment) && $apply_treatment ne '1'){
+            if ( ($apply_treatment ne '') && defined($apply_treatment) && $apply_treatment ne '1'){
                 push @error_messages, "Treatment value for treatment <b>$treatment_name</b> in row $row_name should be either 1 or empty";
             }
         }
@@ -468,6 +495,9 @@ sub _validate_with_plugin {
   my %valid_design_types = (
     "CRD" => 1,
     "RCBD" => 1,
+    "RRC" => 1,
+    "DRRC" => 1,
+    "ARC" => 1,
     "Alpha" => 1,
     "Lattice" => 1,
     "Augmented" => 1,
@@ -504,11 +534,36 @@ sub _validate_with_plugin {
 
   ## ACCESSIONS OVERALL VALIDATION
   my @accessions = keys %seen_accession_names;
-  my @accessions_missing = @{$validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+  my $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+
+  #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
+  my @synonyms =  @{$accessions_hashref->{'synonyms'}};
+  foreach my $synonym (@synonyms) {
+      my $found_acc_name_from_synonym = $synonym->{'uniquename'};
+      my $matched_synonym = $synonym->{'synonym'};
+
+      push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
+
+      @accessions = grep !/$matched_synonym/, @accessions;
+      push @accessions, $found_acc_name_from_synonym;
+  }
+
+  #now validate again the accession names
+  $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+
+  my @accessions_missing = @{$accessions_hashref->{'missing'}};
+  my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
   if (scalar(@accessions_missing) > 0) {
       # $errors{'missing_accessions'} = \@accessions_missing;
       push @error_messages, "Accession(s) <b>".join(',',@accessions_missing)."</b> are not in the database as uniquenames or synonyms.";
+  }
+  if (scalar(@multiple_synonyms) > 0) {
+      my @msgs;
+      foreach my $m (@multiple_synonyms) {
+          push(@msgs, 'Name: ' . @$m[0] . ' = Synonym: ' . @$m[1]);
+      }
+      push @error_messages, "Accession(s) <b>".join(',',@msgs)."</b> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
   }
 
   ## SEEDLOTS OVERALL VALIDATION
@@ -539,6 +594,18 @@ sub _validate_with_plugin {
       push @error_messages, "Cell M".$seen_plot_names{$r->uniquename}.": plot name <b>".$r->uniquename."</b> already exists.";
   }
 
+  ## PLOT POSITION OVERALL VALIDATION
+  foreach my $tk (keys %seen_plot_keys) {
+      foreach my $pk (keys %{$seen_plot_keys{$tk}} ) {
+          my $plots = $seen_plot_keys{$tk}{$pk};
+          my $count = scalar(@{$plots});
+          if ( $count > 1 ) {
+              my @pos = split('-', $pk);
+              push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " trial=" . $tk . " plots=" . join(',', @$plots);
+          }
+      }
+  }
+
   if (scalar(@warning_messages) >= 1) {
       $warnings{'warning_messages'} = \@warning_messages;
       $self->_set_parse_warnings(\%warnings);
@@ -561,7 +628,18 @@ sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
 
@@ -645,9 +723,15 @@ sub _parse_with_plugin {
 
     if ($current_trial_name && $current_trial_name ne $trial_name) {
 
-      if ($current_trial_name ne $worksheet->get_cell(1,0)->value()) {
+      if ($trial_name) {
         ## Save old single trial hash in all trials hash; reinitialize temp hashes
-        my %final_design_details = %design_details;
+        my %final_design_details = ();
+        my $previous_design_data = $all_designs{$trial_name}{'design_details'};
+        if ($previous_design_data) {
+            %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
+        } else {
+            %final_design_details = %design_details;
+        }
         %design_details = ();
         $single_design{'design_details'} = \%final_design_details;
         my %final_single_design = %single_design;
@@ -790,7 +874,14 @@ sub _parse_with_plugin {
   }
 
   # add last trial design to all_designs and save parsed data, then return
-  $single_design{'design_details'} = \%design_details;
+  my %final_design_details = ();
+  my $previous_design_data = $all_designs{$trial_name}{'design_details'};
+  if ($previous_design_data) {
+      %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
+  } else {
+      %final_design_details = %design_details;
+  }
+  $single_design{'design_details'} = \%final_design_details;
   $all_designs{$trial_name} = \%single_design;
 
   $self->_set_parsed_data(\%all_designs);

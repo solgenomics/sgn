@@ -26,22 +26,30 @@ my $nocleanup;
 my $noserver;
 my $dumpupdatedfixture;
 my $noparallel = 0;
+my $nopatch;
 my $list_config = "";
+my $logfile = "logfile.$$.txt";
+my $print_environment;
 # relative to `sgn/ (or parent of wherever this script is located)
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
 GetOptions(
-    "carpalways" => \( my $carpalways = 0 ),
-    "verbose" => \$verbose ,
-    "nocleanup" => \$nocleanup,
+    "carpalways"         => \(my $carpalways = 0),
+    "verbose"            => \$verbose,
+    "nocleanup"          => \$nocleanup,
     "dumpupdatedfixture" => \$dumpupdatedfixture,
-    "noserver" => \$noserver,
-    "noparallel" => \$noparallel,
-    "fixture_path" => \$fixture_path,
-    "list_config" => \$list_config
+    "noserver"           => \$noserver,
+    "noparallel"         => \$noparallel,
+    "nopatch"            => \$nopatch,
+    "fixture_path"       => \$fixture_path,
+    "list_config"        => \$list_config,
+    "logfile=s"            => \$logfile,
+    "env"                => \$print_environment,
     );
 
 require Carp::Always if $carpalways;
+
+if ($print_environment) { print STDERR "CURRENT ENV: ".Dumper(\%ENV); }
 
 my @prove_args = @ARGV;
 if(@prove_args){
@@ -59,7 +67,7 @@ chdir($sgn_dir);
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 #my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
 # relative to `sgn/`
-my $conf_file_base = 'sgn_local.conf';
+my $conf_file_base = $ENV{SGN_TEST_CONF} || 'sgn_test.conf';
 my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
 #
@@ -68,7 +76,7 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-if ($list_config) { 
+if ($list_config) {
     print STDERR Dumper($cfg);
 }
 
@@ -89,10 +97,16 @@ foreach my $k (keys %{$template}) {
 
 # load the database fixture
 #
-my $now = DateTime->now();
-my $dbname = join "_", map { $now->$_ } (qw | year month day hour minute |);
-$dbname = 'test_db_'.$dbname;
-$dbname .= $$;
+my $dbname;
+
+if ($ENV{TEST_DB_NAME}) { $dbname = $ENV{TEST_DB_NAME}; }
+
+else {
+    my $now = DateTime->now();
+    $dbname = join "_", map { $now->$_ } (qw | year month day hour minute |);
+    $dbname = 'test_db_'.$dbname;
+    $dbname .= $$;
+}
 
 print STDERR "# Writing a .pgpass file... ";
 # format = hostname:port:database:username:password
@@ -103,12 +117,17 @@ close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
 print STDERR "Done.\n";
 
-my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
-print STDERR "# Loading database fixture... $database_fixture_dump ... ";
-system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
-system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
+# load fixture only if no TEST_DB_NAME env var was provided
+if (! $ENV{TEST_DB_NAME}) {
+    my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
+    print STDERR "# Loading database fixture... $database_fixture_dump ... ";
+    system("createdb -h $config->{dbhost} -U postgres -T template0 -E UTF8 --no-password $dbname");
+    # will emit an error if web_usr role already exists, but that's OK
+    system("psql -h $config->{dbhost} -U postgres $dbname -c \"CREATE USER web_usr PASSWORD '$db_user_password'\"");
+    system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
-print STDERR "Done.\n";
+    print STDERR "Done.\n";
+}
 
 print STDERR "# Creating sgn_fixture.conf file... ";
 $config->{dbname} = $dbname;
@@ -124,7 +143,11 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe -s 117");
+if (! $nopatch) {
+    print STDERR "Running patches... ";
+    system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 157 > /dev/null");
+    print STDERR "Done\n";
+}
 
 # run the materialized views creation script
 #
@@ -133,7 +156,7 @@ system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_po
 
 if ($dumpupdatedfixture){
     print STDERR "Dumping new updated fixture with all patches run on it to t/data/fixture/cxgn_fixture.sql\n";
-    system("pg_dump -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
+    system("pg_dump -h $config->{dbhost} -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
 }
 
 print STDERR "Done.\n";
@@ -141,13 +164,11 @@ print STDERR "Done.\n";
 # start the test web server
 #
 my $server_pid;
-my $logfile;
 if ($noserver) {
     print STDERR "# [ --noserver option: not starting web server]\n";
 }
 else {
     $server_pid = fork;
-    $logfile  = "logfile.$$.txt";
 
     unless( $server_pid ) {
 
@@ -167,7 +188,7 @@ else {
 
 	if (!$nocleanup) {
 	    print STDERR "# Removing test database ($dbname)... ";
-	    
+
 	    if ($noserver) {
 		print STDERR "# [ --noserver option: No logfile to remove]\n";
 	    }
@@ -208,7 +229,7 @@ unless( $prove_pid ) {
 
     # set up env vars for prove and the tests
     #
-    $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
+    $ENV{SGN_TEST_SERVER} ||= "http://localhost:$catalyst_server_port";
     if(! $noparallel ) {
         $ENV{SGN_PARALLEL_TESTING} = 1;
         $ENV{SGN_SKIP_LEAK_TEST}   = 1;
@@ -219,7 +240,7 @@ unless( $prove_pid ) {
     my $app = App::Prove->new;
 
     my $v = $verbose ? 'v' : '';
-    
+
     $app->process_args(
         '-lr'.$v,
         ( map { -I => $_ } @INC ),
@@ -234,6 +255,7 @@ $SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
 
 print STDERR "# Start prove (PID $prove_pid)... \n";
 waitpid $prove_pid, 0;
+my $prove_pid_exit_status = $? >> 8;
 print STDERR "# Prove finished, stopping web server PID $server_pid... ";
 
 END { kill 15, $server_pid if $server_pid }
@@ -242,9 +264,14 @@ sleep(3);
 print STDERR "Done.\n";
 
 if (!$nocleanup) {
-    print STDERR "# Removing test database ($dbname)... ";
-    system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
-    print STDERR "Done.\n";
+    if ($ENV{TEST_DB_NAME}) {
+	print STDERR "Not removing test database (TEST_DB_NAME = $ENV{TEST_DB_NAME} is set.\n";
+    }
+    else {
+	print STDERR "# Removing test database ($dbname)... ";
+	system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
+	print STDERR "Done.\n";
+    }
 
     if ($noserver) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
@@ -264,6 +291,7 @@ else {
     print STDERR "# --nocleanup option: not removing db or files.\n";
 }
 print STDERR "# Test run complete.\n\n";
+exit($prove_pid_exit_status); # exit with non-zero exit status if any tests failed
 
 
 
@@ -331,6 +359,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
   --noparallel   Do not run the server in parallel mode.
 
+  --nopatch      Do not run fixture and database patches
+
   --fixture_path specify a path to the fixture different from the default
                  (t/data/fixture/cxgn_fixture.pl). Note: You can also set the env
                  variable DATABASE_FIXTURE_PATH, which will overrule this
@@ -340,6 +370,10 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
   -- -v          options specified after two dashes will be passed to prove
                  directly, such -v will run prove in verbose mode.
+
+By default, the configuration will be taken from the file sgn_test.conf. To use another configuration file, set the environment variable SGN_TEST_CONF to the name of the file you would like to use.
+
+To use an existing database as the fixture, set the environment variable TEST_DB_NAME to the name of the database you would like to use.
 
 =head1 AUTHORS
 

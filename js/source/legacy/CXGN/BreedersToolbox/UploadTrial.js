@@ -19,6 +19,9 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
+    var trial_id;
+    var plants_per_plot;
+    var inherits_plot_treatments;
     jQuery('#upload_trial_trial_sourced').change(function(){
         if(jQuery(this).val() == 'yes'){
             jQuery('#upload_trial_source_trial_section').show();
@@ -46,6 +49,9 @@ jQuery(document).ready(function ($) {
         var trial_stock_type = $("#trial_upload_trial_stock_type").val();
         var plot_width = $("#trial_upload_plot_width").val();
         var plot_length = $("#trial_upload_plot_length").val();
+        plants_per_plot = $("#trial_upload_plant_entries").val();
+        inherits_plot_treatments = $('#trial_upload_plants_per_plot_inherit_treatments').val();
+
 
         if (trial_name === '') {
             alert("Please give a trial name");
@@ -70,6 +76,9 @@ jQuery(document).ready(function ($) {
         }
         else if (plot_length > 13){
             alert("Please check the plot length is too high");
+        }
+        else if (plants_per_plot > 500) {
+            alert("Please no more than 500 plants per plot.");
         }
         else if (description === '') {
             alert("Please give a description");
@@ -143,6 +152,32 @@ jQuery(document).ready(function ($) {
         $("#trial_upload_design_method").change();
     }
 
+    function add_plants_per_plot() {
+        if (plants_per_plot && plants_per_plot != 0) {
+            jQuery.ajax( {
+                url: '/ajax/breeders/trial/'+trial_id+'/create_plant_entries/',
+                type: 'POST',
+                data: {
+                    'plants_per_plot' : plants_per_plot,
+                    'inherits_plot_treatments' : inherits_plot_treatments,
+                },
+                success: function(response) {
+                    console.log(response);
+                    if (response.error) {
+                    alert(response.error);
+                    }
+                    else {
+                    jQuery('#add_plants_dialog').modal("hide");
+                    }
+                },
+                error: function(response) {
+                    alert(response);
+                },
+                });
+        }
+    }
+
+
     $('[name="upload_trial_link"]').click(function () {
         get_select_box('years', 'trial_upload_year', {'auto_generate': 1 });
         get_select_box('trial_types', 'trial_upload_trial_type', {'empty': 1 });
@@ -187,6 +222,7 @@ jQuery(document).ready(function ($) {
             }
         },
         complete: function (response) {
+            trial_id = response.trial_id;
             console.log(response);
 
             $('#working_modal').modal("hide");
@@ -240,7 +276,11 @@ jQuery(document).ready(function ($) {
                 $("#upload_trial_error_display_second_try").show();
             }
             if (response.warnings) {
-                alert(response.warnings);
+                warnings = response.warnings;
+                warning_html = "<li>"+warnings.join("</li><li>")+"</li>"
+                $("#upload_trial_warning_messages").show();
+                $("#upload_trial_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br>'+warning_html);
+                return;
             }
             if (response.success) {
                 refreshTrailJsTree(0);
@@ -252,6 +292,7 @@ jQuery(document).ready(function ($) {
                 Workflow.skip('#upload_trial_error_display_second_try', false);
                 Workflow.focus("#trial_upload_workflow", -1); //Go to success page
                 Workflow.check_complete("#trial_upload_workflow");
+                add_plants_per_plot();
             }
         }
     });
@@ -280,16 +321,20 @@ jQuery(document).ready(function ($) {
             }
             if (response.errors) {
                 errors = response.errors;
-                error_html = "<li>"+errors.join("</li><li>")+"</li>"
+                if (Array.isArray(errors)) {
+                    error_html = "<li>"+errors.join("</li><li>")+"</li>";
+                } else {
+                    error_html = "<li>"+errors+"</li>";
+                }
                 $("#upload_multiple_trials_error_messages").show();
-                $("#upload_multiple_trials_error_messages").html('<b>Errors. Fix the following errors and try again.</b><br><br>'+error_html);
+                $("#upload_multiple_trials_error_messages").html('<b>Errors found. Fix the following problems and try again.</b><br><br>'+error_html);
                 return;
             }
             if (response.success) {
                 console.log("Success!!");
                 refreshTrailJsTree(0);
                 $("#upload_multiple_trials_success_messages").show();
-                $("#upload_multiple_trials_success_messages").html("Success! All trial successfully loaded.");
+                $("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
                 $("#multiple_trial_designs_upload_submit").hide();
                 $("#upload_multiple_trials_success_button").show();
                 return;

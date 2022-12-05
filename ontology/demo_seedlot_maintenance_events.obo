@@ -1,0 +1,70 @@
+format-version: 1.2
+date: 08:06:2021 11:53
+saved-by: djw64
+remark: This ontology is an example of a simple seedlot maintenance event ontology.  The ontology should include three levels in the hierarchy (below the root term): the top level are categories to group the events (example: into actions and observations), the second level includes the actual event terms, and the third (optional) level includes allowed values for the event (if there are no child terms for the event, the event will allow free-form entry for the value).
+default-namespace: seedlot_maintenance_event
+ontology: SEEDLOT_MAINTENANCE
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0000000
+name: Seedlot Maintenance Events
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0000001
+name: Observations
+def: "Observations of the Seedlot made to track its overall quality" []
+is_a: SEEDLOT_MAINTENANCE:0000000
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0000002
+name: Actions
+def: "Actions taken to properly maintain the Seedlot" []
+is_a: SEEDLOT_MAINTENANCE:0000000
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001000
+name: Overall Quality
+def: "Rank of the overall quality of the Seedlot" []
+is_a: SEEDLOT_MAINTENANCE:0000001
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001001
+name: Low
+def: "Low quality" []
+is_a: SEEDLOT_MAINTENANCE:0001000
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001002
+name: Medium
+def: "Medium quality" []
+is_a: SEEDLOT_MAINTENANCE:0001000
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001003
+name: High
+def: "High quality" []
+is_a: SEEDLOT_MAINTENANCE:0001000
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0001100
+name: Quality Notes
+def: "Additional comments on the overall quality of the Seedlot" []
+is_a: SEEDLOT_MAINTENANCE:0000001
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002000
+name: Media Change
+def: "Change the media the Seedlot is stored in" []
+is_a: SEEDLOT_MAINTENANCE:0000002
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002001
+name: Successful
+def: "Media change was perfomed successfully" []
+is_a: SEEDLOT_MAINTENANCE:0002000
+
+[Term]
+id: SEEDLOT_MAINTENANCE:0002002
+name: Unsuccessful
+def: "Media change was not perfomed successfully" []
+is_a: SEEDLOT_MAINTENANCE:0002000
