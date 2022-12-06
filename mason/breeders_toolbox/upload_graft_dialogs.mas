@@ -1,0 +1,135 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="upload_graft_validate_display" name="upload_graft_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadGraftValidateDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadGraftValidateDialog">Results From Validation</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <!-- div class="well">To Overwrite previous scion and/or rootstocks, in the case that an accession already has scions/rootstocks <input type="checkbox" checked id="graft_upload_overwrite_graft" /></div -->
+ 	  <table class="table table-hover">
+    	    <tbody></tbody>
+  	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="upload_graft_store" id="upload_graft_store" data-dismiss="modal">Store</button>
+	
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="graft_upload_success_dialog_message" name="graft_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadGraftSuccessDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadGraftSuccessDialog">Upload Successful</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+ 	  <h2>The graft upload was successful.</h2>
+
+	  Successfully created:<br />
+	  <textarea id="list_of_uploaded_grafts">
+	  </textarea>
+	  <br />
+	  
+	  Already in the system:<br />
+	  <textarea id="list_of_already_uploaded_grafts">
+	  </textarea>
+
+	  <div id="list_of_grafts_with_problem"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="graft_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="upload_graft_dialog" name="upload_graft_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGraftDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadGraftDialog">Upload Grafting Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <&| /page/explanation.mas, title=>'Template Information' &>
+    	  <p>
+      	  <b>File format information</b>
+      	  <br>
+      	  <a id="graft_upload_spreadsheet_format_info" data-toggle='modal' data-target='#graft_upload_spreadsheet_format_info_dialog'>Spreadsheet Format</a>
+    	  </p>
+  	  </&>
+
+  	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_graft_form" name="upload_graft_form">
+    	    <label for="graft_uploaded_file" style="display: inline-block; width: 100px;">Upload Grafting File:</label>
+    	    <input type="file" name="graft_uploaded_file" id="graft_uploaded_file" encoding="multipart/form-data" />
+    	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="upload_graft_dialog_submit" id="upload_graft_dialog_submit">Validate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="graft_upload_spreadsheet_format_info_dialog" name="graft_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="graftUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="graftUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+ 	  <b>Graft may be uploaded in tab-delimited text file format</b>
+	  <br>
+	  <p>(.xls or .xlsx formats are <b>NOT</b> supported)</p>
+	  <hr>
+	  <b>Header:</b>
+	  <br>
+	  <p>The first row (header) should contain the following:</p>
+
+	  <table class="table table-hover table-bordered">
+  	  <body>
+	    <tr>
+    	      <td>scion accession</td>
+              <td>rootstock accession</td>
+  	    </tr>
+	  </body>
+	  </table>
+
+	  <h4>Required fields:</h4>
+	  <ul>
+        <li>scion accession (exact name must exist in the database)</li>
+        <li>rootstock accession (must exist in the database)</li>
+      </ul>
+
+	  <h4>Notes</h4>
+	  <ul>
+	    <li>The graft accession will be created in the database upon upload. The name of the graft will be "scion"+"rootstock", where "+" is the default graft separator character. The default separator can be changed before upload. The default can be changed in the sgn_local.conf, default_graft_separator key.
+	  </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+

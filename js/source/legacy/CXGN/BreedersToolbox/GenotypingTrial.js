@@ -48,11 +48,12 @@ jQuery(document).ready(function ($) {
     var plate_data = new Object();
     jQuery('#add_geno_trial_submit').click(function () {
         plate_data = new Object();
-        plate_data.breeding_program = jQuery('#breeding_program_select').val();
-        plate_data.year = jQuery('#year_select').val();
-        plate_data.location = jQuery('#location_select').val();
+//        plate_data.breeding_program = jQuery('#breeding_program_select').val();
+//        plate_data.year = jQuery('#year_select').val();
+//        plate_data.location = jQuery('#location_select').val();
         plate_data.description = jQuery('#genotyping_trial_description').val();
-        plate_data.project_name = jQuery('#genotyping_project_name').val();
+//        plate_data.project_name = jQuery('#genotyping_project_name').val();
+        plate_data.genotyping_project_id = jQuery('#plate_genotyping_project_id').val();
         plate_data.name = jQuery('#genotyping_trial_name').val();
         plate_data.plate_format = jQuery('#genotyping_trial_plate_format').val();
         plate_data.sample_type = jQuery('#genotyping_trial_plate_sample_type').val();
@@ -65,8 +66,9 @@ jQuery(document).ready(function ($) {
         plate_data.well_volume = jQuery('#genotyping_well_volume').val();
         plate_data.well_tissue = jQuery('#genotyping_well_tissue').val();
         plate_data.well_notes = jQuery('#genotyping_well_notes').val();
-        plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
+//        plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
         plate_data.genotyping_facility_submit = jQuery('#genotyping_trial_facility_submit_select').val();
+        plate_data.include_facility_identifiers = jQuery('#upload_genotype_plate_include_facility_identifiers').val();
 
         if (plate_data.name == '') {
             alert("A name is required and it should be unique in the database. Please try again.");
@@ -477,6 +479,11 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    jQuery('[name="create_genotyping_project_link"]').click(function() {
+        jQuery('#create_genotyping_project_dialog').modal("show");
+    });
+
+
 });
 
 function edit_genotyping_trial_details(){
@@ -493,6 +500,10 @@ function edit_genotyping_trial_details(){
     var default_bp = document.getElementById("edit_genotyping_trial_breeding_program").getAttribute("value");
     get_select_box('breeding_programs', 'edit_genotyping_trial_breeding_program', { 'default' : default_bp });
     jQuery('#edit_trial_breeding_program').data("originalValue", default_bp);
+
+    var default_facility = document.getElementById("edit_genotyping_facility").getAttribute("value");
+    get_select_box('genotyping_facilities', 'edit_genotyping_facility', { 'default' : default_facility });
+    jQuery('#edit_genotyping_facility').data("originalValue", default_facility);
 
     jQuery('#edit_genotyping_trial_details_cancel_button').click(function(){
         reset_dialog_body('genotyping_trial_details_edit_body', edit_details_body_html);

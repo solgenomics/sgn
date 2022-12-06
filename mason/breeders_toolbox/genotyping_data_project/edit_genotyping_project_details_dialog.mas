@@ -1,0 +1,202 @@
+<%args>
+$trial_id
+$trial_name
+$breeding_program_id
+$breeding_program_name
+$year => undef
+$trial_description => undef
+$user_can_modify => undef
+$genotyping_facility => undef
+$has_plate => undef
+
+</%args>
+
+<div class="modal fade" id="edit_genotyping_project_details_dialog" tabindex="-1" role="dialog" aria-labelledby="editGenotypingProjectDetailsDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header texkkt-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editGenotypingProjectDetailsDialog">Edit Genotyping Project Details</h4>
+            </div>
+            <div class="modal-body" id="edit_genotyping_project_details_body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_name">Genotyping Project Name: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_genotyping_project_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_genotyping_project_name_status"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_breeding_program">Breeding Program: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_genotyping_project_breeding_program" title="breeding_program" value="<%$breeding_program_name%>"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_year">Year: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_genotyping_project_year" title="year" value="<%$year%>"></select>
+                                </div>
+                            </div>
+                        </div>
+%if($has_plate eq 'none') {
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_facility">Genotyping Facility: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_genotyping_project_facility" title="facility" type="text" value="<%$genotyping_facility%>"></select>
+                                </div>
+                            </div>
+                        </div>
+%}
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_description">Description: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="edit_genotyping_project_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_genotyping_project_details_cancel_button">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save_genotyping_project_details">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="genotyping_project_details_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="genotypingProjectDetailsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProjectDetailsSavedDialog">Details Saved</h4>
+            </div>
+            <div class="modal-body" id="genotyping_project_details_saved_body">
+                <ul class="list-group" id="genotyping_project_details_saved_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="genotyping_project_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="genotyping_project_details_error_dialog" tabindex="-1" role="dialog" aria-labelledby="genotypingProjectDetailsErrorDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProjectDetailsErrorDialog">Error Saving Genotyping Project Details</h4>
+            </div>
+            <div class="modal-body" id="genotyping_project_details_error_body">
+                <ul class="list-group" id="genotyping_project_details_error_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="genotyping_project_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    var default_bp = document.getElementById("edit_genotyping_project_breeding_program").getAttribute("value");
+    get_select_box('breeding_programs', 'edit_genotyping_project_breeding_program', { 'default' : default_bp });
+    jQuery('#edit_genotyping_project_breeding_program').data("originalValue", default_bp);
+
+    var default_year = document.getElementById("edit_genotyping_project_year").getAttribute("value");
+    get_select_box('years', 'edit_genotyping_project_year', { 'default' : default_year, 'auto_generate': 1 });
+    jQuery('#edit_genotyping_project_year').data("originalValue", default_year);
+
+    var default_facility = document.getElementById("edit_genotyping_project_facility").getAttribute("value");
+    get_select_box('genotyping_facilities', 'edit_genotyping_project_facility', { 'default' : default_facility });
+    jQuery('#edit_genotyping_project_facility').data("originalValue", default_facility);
+
+
+});
+
+function edit_genotyping_project_details(){
+
+    jQuery('[id^="edit_genotyping_"]').change(function (){
+        var this_element = jQuery(this);
+        highlight_changed_details(this_element);
+    });
+
+    var edit_details_body_html = document.getElementById('edit_genotyping_project_details_body').innerHTML;
+
+    jQuery('#edit_genotyping_project_details_cancel_button').click(function(){
+        reset_dialog_body('edit_genotyping_project_details_body', edit_details_body_html);
+    });
+
+    jQuery('#save_genotyping_project_details').click(function(){
+        var changed_elements = document.getElementsByName("changed");
+        var categories = [];
+        var new_details = {};
+        var success_message = '';
+        for(var i=0; i<changed_elements.length; i++){
+            var id = changed_elements[i].id;
+            var type = changed_elements[i].title;
+            var new_value = changed_elements[i].value;
+            categories.push(type);
+            new_details[type] = new_value;
+            if(jQuery('#'+id).is("select")){
+                new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
+            }
+            success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
+        }
+
+        save_genotyping_project_details(categories, new_details, success_message);
+
+    });
+
+    jQuery('#genotyping_project_details_error_close_button').click( function() {
+        document.getElementById('genotyping_project_details_error_message').innerHTML = "";
+    });
+
+    jQuery('#genotyping_project_details_saved_close_button').click( function() {
+        location.reload();
+    });
+
+}
+
+
+function save_genotyping_project_details (categories, new_details, success_message) {
+    var trial_id = get_trial_id();
+    jQuery.ajax( {
+        url: '/ajax/breeders/trial/'+trial_id+'/details/',
+        type: 'POST',
+        data: { 'categories' : categories, 'details' : new_details },
+
+        success: function(response) {
+            if (response.success) {
+                document.getElementById('genotyping_project_details_saved_message').innerHTML = success_message;
+                jQuery('#genotyping_project_details_saved_dialog').modal("show");
+                return;
+            } else {
+                document.getElementById('genotyping_project_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+response.error+"</li>";
+                jQuery('#genotyping_project_details_error_dialog').modal("show");
+            }
+        },
+        error: function(response) {
+            document.getElementById('genotyping_project_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Genotyping project detail update AJAX request failed. Update not completed.</li>";
+            jQuery('#genotyping_project_details_error_dialog').modal("show");
+        },
+    });
+}
+
+
+</script>

@@ -87,6 +87,7 @@ $species_name => undef
 $create_date => undef
 $sample_observation_unit_type_name => undef
 $marker_type => undef
+$genotype_data_type => undef
 
 #Specific to drone run detail page
 $drone_run_date => undef
@@ -346,7 +347,7 @@ $analytics_protocol_result_summary => {}
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
 % if ($info_section_id eq 'genotyping_data_project_details'){
-                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility &>
+                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
 % } #End genotyping_data_project_details
 % if ($info_section_id eq 'genotyping_data_project_protocols'){
                                 <& /breeders_toolbox/genotyping_data_project/protocols.mas, trial_id=>$trial_id &>
@@ -354,6 +355,12 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_data_project_data'){
                                 <& /breeders_toolbox/genotyping_data_project/genotype_data.mas, trial_id=>$trial_id &>
 % } #End genotyping_data_project_data
+% if ($info_section_id eq 'genotyping_project_plates'){
+                                <& /breeders_toolbox/genotyping_data_project/genotyping_plates.mas, trial_id=>$trial_id &>
+% } #End genotyping_project_plates
+% if ($info_section_id eq 'genotyping_project_deletion_section'){
+                                <& /breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas, trial_id=>$trial_id &>
+% } #End genotyping_project_deletion_section
 % if ($info_section_id eq 'identifier_generation_list'){
                                 <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
 % } #End identifier_generation_list

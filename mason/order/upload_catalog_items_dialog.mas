@@ -22,7 +22,7 @@
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_catalog_items_form" name="upload_catalog_items_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                            <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
                                 <div class="col-sm-9">
                                     <input type="file" name="catalog_items_upload_file" id="catalog_items_upload_file" encoding="multipart/form-data" />
                                 </div>
@@ -90,10 +90,8 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Catalog Items may be uploaded in an Excel file (.xls)</b>
+                    <b>Catalog Items may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     <table class="table table-bordered table-hover">

@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialExcelFormat;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -19,12 +20,24 @@ sub _validate_with_plugin {
   my %warnings;
   my @warning_messages;
   my %missing_accessions;
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
   my %seen_plot_names;
   my %seen_seedlot_names;
   my %seen_entry_names;
+  my %seen_plot_keys;
 
 
   #try to open the excel file and report any errors
@@ -295,6 +308,15 @@ sub _validate_with_plugin {
     if ($col_number && !($col_number =~ /^\d+?$/)){
         push @error_messages, "Cell I$row_name: col_number must be a positive integer: $col_number";
     }
+    if ($row_number && $col_number) {
+      my $k = "$row_number-$col_number";
+      if ( !exists $seen_plot_keys{$k} ) {
+        $seen_plot_keys{$k} = [$plot_number];
+      }
+      else {
+        push @{$seen_plot_keys{$k}}, $plot_number;
+      }
+    }
 
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -358,6 +380,16 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
     }
 
+    # check for multiple plots at the same position
+    foreach my $key (keys %seen_plot_keys) {
+        my $plots = $seen_plot_keys{$key};
+        my $count = scalar(@{$plots});
+        if ( $count > 1 ) {
+            my @pos = split('-', $key);
+            push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
+        }
+    }
+
     if (scalar(@warning_messages) >= 1) {
         $warnings{'warning_messages'} = \@warning_messages;
         $self->_set_parse_warnings(\%warnings);
@@ -382,7 +414,18 @@ sub _parse_with_plugin {
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
   my $trial_stock_type = $self->get_trial_stock_type();
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
   my %design;

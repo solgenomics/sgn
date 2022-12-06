@@ -17,6 +17,8 @@ use CXGN::List;
 use JSON::XS;
 use Data::Dumper;
 use CXGN::TrialStatus;
+use SGN::Model::Cvterm;
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -150,6 +152,22 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_vendor_order_id} = $trial->get_genotyping_vendor_order_id;
         $c->stash->{genotyping_vendor_submission_id} = $trial->get_genotyping_vendor_submission_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
+
+        my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+        my $genotyping_project_plate_relationship = $schema->resultset("Project::ProjectRelationship")->find ({
+            subject_project_id => $c->stash->{trial_id},
+            type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+        });
+        if ($genotyping_project_plate_relationship) {
+            my $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
+            my $genotyping_project = $schema->resultset("Project::Project")->find ({
+                project_id => $genotyping_project_id
+            });
+            my $genotyping_project_name = $genotyping_project->name();
+            my $genotyping_project_link = '<a href="/breeders/trial/'.$genotyping_project_id.'">'.$genotyping_project_name.'</a>';
+            $c->stash->{genotyping_project_link} = $genotyping_project_link;
+        }
+
         if ($trial->get_genotyping_plate_format){
             $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
         }
@@ -170,10 +188,22 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
     elsif (($design_type eq "genotype_data_project") || ($design_type eq "pcr_genotype_data_project")){
         if ($design_type eq "pcr_genotype_data_project") {
-            $c->stash->{genotype_data_type} = 'pcr_genotype_project'
+            $c->stash->{genotype_data_type} = 'SSR'
         } else {
-            $c->stash->{genotype_data_type} = 'snp_genotype_project'
+            $c->stash->{genotype_data_type} = 'SNP'
         }
+
+        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $c->stash->{trial_id}
+        });
+        my ($data, $tc) = $plate_info->get_plate_info();
+        my $has_plate;
+        if (!$data) {
+            $has_plate = 'none';
+        }
+        $c->stash->{has_plate} = $has_plate;
+
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
     elsif ($design_type eq "drone_run"){
@@ -305,7 +335,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
-        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1, 'facility_identifier'=>1};
     }
     if ($data_level eq 'samplingtrial'){
         $selected_cols = {'trial_name'=>1, 'year'=>1, 'location'=>1, 'sampling_facility'=>1, 'sampling_trial_sample_type'=>1, 'acquisition_date'=>1, 'tissue_sample_name'=>1, 'plot_number'=>1, 'rep_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1 };
@@ -363,7 +393,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ($format eq "crossing_experiment_xls") {
         $plugin = "CrossingExperimentXLS";
         $what = "crosses";
-        $format = "xls";
+        $format = "xlsx";
         my $cross_properties = $c->config->{cross_properties};
         @field_crossing_data_order = split ',',$cross_properties;
     }
@@ -372,7 +402,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ($format eq "soil_data_xls") {
         $plugin = "SoilDataXLS";
         $what = "soil_data";
-        $format = "xls";
+        $format = "xlsx";
         $prop_id = $c->req->param("prop_id");
     }
 
@@ -439,7 +469,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1,
-        'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+        'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1, 'facility_identifier' =>1};
     }
 
     my $plugin = "";
