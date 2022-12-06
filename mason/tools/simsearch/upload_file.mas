@@ -1,10 +1,13 @@
 
 <%args>
 $filename => ""
+$user_readable_filename => ""
 $reference_files_menu => ""
+$format => ""
 </%args>
 
-<h1>Uploaded file <% $filename %></h1>
+<h1>Uploaded file <% $user_readable_filename %> [ <% $format %> ]</h1>
+(working file <% $filename %>)
 
 <div id="simsearch_input_form">
 
@@ -33,15 +36,13 @@ $reference_files_menu => ""
 jQuery(document).ready( function() { 
     jQuery('#simsearch_run_button').click( function() {
 
-        alert("Ideally, it would be running now!");
         var filename = jQuery('#simsearch_filename').val();
-        alert("FILENAME = "+filename);
         var reference_file = jQuery('#reference_file').val();
-        alert("REFERENCE FILE = "+reference_file);
-    
-        jQuery.ajax({
+	var format = '<% $format %>';
+
+	jQuery.ajax({
             url: '/ajax/tools/simsearch/process_file',
-	    data: { 'filename' : filename, 'reference_file' : reference_file },
+	    data: { 'filename' : filename, 'reference_file' : reference_file, 'format' : format },
 	    method: 'post',
 	    timeout: 360000
         }).done( function(response) {

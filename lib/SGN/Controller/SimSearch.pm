@@ -27,7 +27,12 @@ sub upload_file : Path('/tools/simsearch/upload_file') {
     my $filename = $upload->filename();
     
     print STDERR "UPLOAD FILENAME: $filename\n";
-
+    my $format = "dosage";
+    
+    if ($filename =~ m/\.vcf$/) {
+	$format = "vcf";
+    }
+    
     my $tempname = $upload->tempname();
     print STDERR "TEMPNAME: $tempname\n";
     
@@ -58,7 +63,8 @@ sub upload_file : Path('/tools/simsearch/upload_file') {
     print STDERR "COPIED TO $tempfile\n";
     $c->stash->{reference_files_menu} = $pulldown;
     $c->stash->{filename} = basename($tempfile);
-
+    $c->stash->{user_readable_filename} = basename($filename);
+    $c->stash->{format} = $format;
 }
 
 sub process_file :Path('/tools/simsearch/process_file') :Args(0) {

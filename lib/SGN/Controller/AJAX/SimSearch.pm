@@ -22,7 +22,18 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
 
     
     my $filename = $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/simsearch/".$c->req->param("filename");
+    my $format = $c->req->param("format");
 
+    print STDERR "FORMAT = $format\n";
+    
+    if ($format eq "vcf") {
+	print STDERR "Converting vcf to dosage...\n";
+	system("perl ../gtsimsrch/src/vcf2dosage.pl < $filename > $filename.dosage");
+	$filename = $filename.".dosage";
+    }
+
+    
+    
     print STDERR "READING FROM $filename\n";
     my $reference_file = $c->req->param("reference_file");
 
