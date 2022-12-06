@@ -72,10 +72,8 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <strong>Seedlot Maintenance Events may be uploaded in an Excel file (.xls)</strong>
+                    <strong>Seedlot Maintenance Events may be uploaded in an Excel file (.xls or .xlsx)</strong>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <strong>Header:</strong>
                     <br />
                     The first row (header) should contain the following:

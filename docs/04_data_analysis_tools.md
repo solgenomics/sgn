@@ -248,7 +248,7 @@ There are three pathways to using this tool.
    (A) -- go to the 'Analyze' menu and select the clustering option
 
    (B) -- make sure you are logged in
-   
+
    (C) -- Select the relevant genotyping protocol, if you are clustering using genotype data
 
    (D) -- select your list or dataset, click 'Go'
@@ -352,7 +352,7 @@ The procedure is:
 
 <img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
-5.10 Search Wizard Genomic Relationship Matrix (GRM) Download
+4.10 Search Wizard Genomic Relationship Matrix (GRM) Download
 --------------
 
 The genomic relationship matrix (GRM) is useful for understanding underlying structure in your population. Breedbase can compute the GRM using rrBLUP. First, select accessions in the search wizard and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn_local.conf). Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. The GRM can be returned in a matrix format (.tsv) which shows all pairwise relationships between the selected accessions and is useful for visualization; alternatively, the GRM can be returned in a three-column format (.tsv) which is useful for programs like ASReml outside of Breedbase. The GRM can also be returned as a simple correlation heatmap image (.pdf). The GRM can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox "compute from parents"; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
@@ -485,3 +485,26 @@ On the model build screen, all the factors are displayed that are contained with
 The result view contains two tabs, one with the raw data, either BLUPS or BLUEs, and the other the adjusted means from the raw data.
 
 The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
+
+
+4.14 Genomic Prediction of Cross Performance (GCPC)
+--------------
+
+The GCPC tool is available at <a href="/tools/gcpc">/tools/gcpc</a> and a link is provided from the Analyze menu.
+The GCPC tool implements genomic prediction with additive and directional dominance in the linear mixed model to predict for cross performance.
+
+Before using the tool, first create a dataset using the Wizard containing the data that you would like to analyze. (The dataset should have genotyping_protocols).
+Second, create Selection Indices for your traits using Selection Index in Analyze Menu.
+
+To use the tool, Select the GCPC tool from the Analyze menu.
+
+Then, select the dataset with genotyping_protocols that you wish to analyze, click on "Proceed to Factor Selection" to load available factors that can be included in the model.
+
+Select the factors you wish to include in the model either as Fixed or Random. Click "None" for factors that you don't want to include in the model. Note that the "germplasmName" is factored as Random by default.
+
+The next step is to select the selection index for your traits on the dropdown menu.
+
+Once you are through, click "Run GCPC" to run the model. The output will be presented in form of a table with "ID", "Parent1", "Parent2" and their cross prediction merit organized in descending order.
+The results will also have sex information based on whether the dataset has plant sexes available in the database.
+
+<img src='{{"assets/images/gcpc.png" | relative_url }}' width="522" />

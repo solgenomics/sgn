@@ -2,6 +2,7 @@ package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotMaintenanceEventXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use CXGN::Onto;
@@ -12,7 +13,17 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $event_ontology_root = $self->get_event_ontology_root();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
 
     # Errors in validation
     my @error_messages;
@@ -213,7 +224,17 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $event_ontology_root = $self->get_event_ontology_root();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
 
     print STDERR "===> PARSE SME FILE: $filename\n";
 

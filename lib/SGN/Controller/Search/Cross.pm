@@ -76,7 +76,7 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
 
     my $cross_properties_string = $c->config->{cross_properties};
     my @cross_properties = split ',', $cross_properties_string;
-    my $file_format = "xls";
+    my $file_format = "xlsx";
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd();

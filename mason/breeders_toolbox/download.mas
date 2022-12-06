@@ -53,7 +53,7 @@ Choose a list for each parameter and click "Download".
     <b>Format:</b><br/>
     <select class="form-control" id="format" name="format">
         <option value=".csv">CSV</option>
-        <option value=".xls">XLS</option>
+        <option value=".xlsx">XLSX</option>
         <option value="html">HTML</option>
     </select>
     <br/>
@@ -133,7 +133,7 @@ Choose a list for each parameter and click "Download".
     <td>
     <b>Format:</b><br/>
     <select class="form-control" id="metadata_format" name="metadata_format">
-        <option value=".xls">XLS</option>
+        <option value=".xlsx">XLSX</option>
         <option value=".csv">CSV</option>
         <option value="html">HTML</option>
     </select>
@@ -282,7 +282,7 @@ function download_phenotypes() {
         </td>
         <td>
           <select class="form-control" id="accession_properties_format" name="file_format">
-              <option value=".xls">XLS</option>
+              <option value=".xlsx">XLSX</option>
               <option value=".csv">CSV</option>
           </select>
         </td>
@@ -448,7 +448,7 @@ $(document).ready(function() {
           </td>
           <td>
             <select class="form-control" id="seedlot_maintenance_events_format" name="file_format">
-                <option value=".xls">XLS</option>
+                <option value=".xlsx">XLSX</option>
             </select>
           </td>
           <td>

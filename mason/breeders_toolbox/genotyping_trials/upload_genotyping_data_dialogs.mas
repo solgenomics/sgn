@@ -602,10 +602,8 @@ $facilities
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>SSR marker info may be uploaded in an Excel file (.xls)</b>
+                    <b>SSR marker info may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                        (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following fields:
@@ -775,10 +773,8 @@ $facilities
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>SSR data may be uploaded in an Excel file (.xls)</b>
+                    <b>SSR data may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                        (.xlsx format not supported)
-                    <br /><br />
                     <b>Example of SSR Data Spreadsheet:</b>
                     <br>
                     <table class="table table-hover table-bordered table-condensed" >
