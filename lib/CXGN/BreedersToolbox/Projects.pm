@@ -705,28 +705,36 @@ sub get_gt_protocols {
 }
 
 
-sub get_treatments_by_observationunit_ids {
+sub get_related_treatments {
     my $self = shift;
-    my $observationunit_ids = shift;
+    my $trial_ids = shift;
+    my $relevant_obsunits = shift;
 
     my $treatment_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
+    my $field_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'field_layout', 'experiment_type')->cvterm_id();
 
-    my $q = "SELECT project.name, stock_id
-        FROM project
-        JOIN nd_experiment_project ndp USING(project_id)
-        JOIN nd_experiment nde ON(ndp.nd_experiment_id = nde.nd_experiment_id AND nde.type_id = ?)
-        JOIN nd_experiment_stock nds ON(nds.nd_experiment_id = nde.nd_experiment_id AND nds.stock_id IN (@{[join',', ('?') x @$observationunit_ids]}))
+    my $q = "SELECT treatment.name, nds_treatment.stock_id
+        FROM project AS treatment
+        INNER JOIN nd_experiment_project AS ndp_treatment ON(treatment.project_id = ndp_treatment.project_id)
+        INNER JOIN nd_experiment AS nde_treatment ON(ndp_treatment.nd_experiment_id = nde_treatment.nd_experiment_id AND nde_treatment.type_id = ?)
+        INNER JOIN nd_experiment_stock AS nds_treatment ON(nds_treatment.nd_experiment_id = nde_treatment.nd_experiment_id)
+        INNER JOIN nd_experiment_stock AS nds_trial ON(nds_treatment.stock_id = nds_trial.stock_id)
+        INNER JOIN nd_experiment nde_trial ON(nds_trial.nd_experiment_id = nde_trial.nd_experiment_id AND nde_trial.type_id = ?)
+        INNER JOIN nd_experiment_project ndp_trial ON(nde_trial.nd_experiment_id = ndp_trial.nd_experiment_id AND ndp_trial.project_id IN (@{[join',', ('?') x @$trial_ids]}))
+
     ";
 
     my $h = $self->schema()->storage()->dbh()->prepare($q);
-    $h->execute($treatment_experiment_cvterm_id, @$observationunit_ids);
+    $h->execute($treatment_experiment_cvterm_id, $field_layout_cvterm_id, @$trial_ids);
 
     my %treatment_details;
     my %unique_names;
     while (my @treatment_data = $h->fetchrow_array()) {
         my ($name, $id) = @treatment_data;
-        $unique_names{$name} = 1;
-        $treatment_details{$id}->{$name} = 1;
+        if ($relevant_obsunits->{$id}) {
+            $unique_names{$name} = 1;
+            $treatment_details{$id}->{$name} = 1;
+        }
     }
 
     my @treatment_names = sort keys(%unique_names);

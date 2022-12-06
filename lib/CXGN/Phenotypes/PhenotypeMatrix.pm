@@ -365,7 +365,7 @@ sub get_phenotype_matrix {
 
         # retrieve treatments
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-        my $treatment_info = $project_object->get_treatments_by_observationunit_ids(\@unique_obsunit_list);
+        my $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
         my $treatment_names = $treatment_info->{treatment_names};
         my $treatment_details = $treatment_info->{treatment_details};
 
