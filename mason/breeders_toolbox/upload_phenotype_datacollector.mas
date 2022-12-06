@@ -70,7 +70,7 @@
       <div class="modal-body">
         <div class="container-fluid">
         
-            <h4>Must be in .xls excel file format</h4>
+            <h4>Must be in .xls or .xlsx excel file format</h4>
             <p>(tab-delimited text formats are NOT supported)</p>
             <hr>
             <h4>"Field Book" Sheet Header: (8th Sheet in Workbook)</h4>

@@ -59,7 +59,7 @@ $trial_name => undef
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plants_dialog_form" name="upload_plants_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls): </label>
+                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plants_file" id="trial_upload_plants_file" encoding="multipart/form-data" />
                             </div>
@@ -98,10 +98,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual plants in a plot.</b>
                     <br/>
-                    <b>Plant names may be uploaded in an Excel file (.xls)</b>
+                    <b>Plant names may be uploaded in an Excel (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -152,7 +150,7 @@ $trial_name => undef
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plants_with_index_number_dialog_form" name="upload_plants_with_index_number_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls): </label>
+                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plants_with_index_number_file" id="trial_upload_plants_with_index_number_file" encoding="multipart/form-data" />
                             </div>
@@ -191,10 +189,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number</b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls)</b>
+                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -244,7 +240,7 @@ $trial_name => undef
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plants_with_num_plants_dialog_form" name="upload_plants_with_num_plants_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls): </label>
+                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plants_with_number_of_plants_file" id="trial_upload_plants_with_number_of_plants_file" encoding="multipart/form-data" />
                             </div>
@@ -283,10 +279,8 @@ $trial_name => undef
                 <div class="container-fluid">
                     <b>This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_plot</b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls)</b>
+                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:

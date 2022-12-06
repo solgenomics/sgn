@@ -21,7 +21,7 @@ delete_cvterms.pl - for deleting cvterms in bulk
 
 This script deletes cvterms in bulk. The infile provided has one column containing the cvterm name as it is in the database which should be deleted.
 
-There is no header in the infile and the format is .xls
+There is no header in the infile and the format is .xls and .xlsx
 
 =head1 AUTHOR
 
@@ -36,6 +36,7 @@ use Data::Dumper;
 use Carp qw /croak/ ;
 use Pod::Usage;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
@@ -52,7 +53,18 @@ if (!$opt_H || !$opt_D || !$opt_i || !$opt_c) {
 if ($opt_a) { print STDERR "Using accession instead of name\n"; }
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
-my $parser   = Spreadsheet::ParseExcel->new();
+
+# Match a dot, extension .xls / .xlsx
+my ($extension) = $opt_i =~ /(\.[^.]+)$/;
+my $parser;
+
+if ($extension eq '.xlsx') {
+	$parser = Spreadsheet::ParseXLSX->new();
+}
+else {
+	$parser = Spreadsheet::ParseExcel->new();
+}
+
 my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({ 

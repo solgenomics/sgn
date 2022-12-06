@@ -36,6 +36,7 @@ $c->res->body($output);
 use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Cross;
 
 sub verify {
@@ -53,7 +54,17 @@ sub download {
         push @trial_ids, @{$self->trial_list};
     }
 
-    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $ss;
+
+    if ($extension eq '.xlsx') {
+        $ss = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $ss = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws = $ss->add_worksheet();
 
     my @header = ('Cross Unique ID', 'Cross Combination', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Male Parent', 'Male Ploidy', 'Female Plot', 'Male Plot', 'Female Plant', 'Male Plant', 'Seedlot Name', 'Family Name', 'Number of Progenies');
