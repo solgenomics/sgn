@@ -122,10 +122,17 @@ $ordering_site => undef
                     </div>
                 </div>
             </div>
+% if ($ordering_site eq 'BAT') {
+            <div class="modal-footer">
+                <button id="close_submit_item_detail_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_single_step_button" type="button" class="btn btn-primary" >Submit</button>
+            </div>
+%} else {
             <div class="modal-footer">
                 <button id="close_add_item_detail_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button id="add_item_button" type="button" class="btn btn-primary" >Add Item</button>
             </div>
+%}
         </div>
     </div>
 </div>
@@ -288,17 +295,16 @@ function addToCart(item_name, additional_order_info, ordering_service_name, orde
     var html = '';
 
     if (ordering_site == 'BAT') {
-        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Facility: </label><div class="col-sm-9" ><input class="form-control" id="item_facility" name="item_facility" placeholder="Please Select"</div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Scientist(s): </label><div class="col-sm-9" ><input class="form-control" id="item_scientist" name="item_scientist" placeholder=""</div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Due/Requested by Date: </label><div class="col-sm-9" ><input class="form-control" id="due_date" name="due_date" placeholder=""</div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Experiment Name: </label><div class="col-sm-9" ><input class="form-control" id="experiment_name" name="experiment_name" placeholder=""</div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Experiment Type: </label><div class="col-sm-9" ><input class="form-control" id="experiment_type" name="experiment_type" placeholder="Please Select"</div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Risk Assessment: </label><div class="col-sm-9" ><input class="form-control" id="risk_assessment" name="risk_assessment" placeholder=""</div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Containment Zone: </label><div class="col-sm-9" ><input class="form-control" id="containment_zone" name="containment_zone" placeholder=""</div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="eg: Clothing & Special Handling"</div></div></form>';
-
+        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Facility: </label><div class="col-sm-9" ><input class="form-control" id="item_facility" name="item_facility" placeholder="Please Select"></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Scientist(s): </label><div class="col-sm-9" ><input class="form-control" id="item_scientist" name="item_scientist" placeholder=""></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Due/Requested by Date: </label><div class="col-sm-9" ><input class="form-control" id="item_due_date" name="item_due_date" placeholder=""></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Experiment Name: </label><div class="col-sm-9" ><input class="form-control" id="experiment_name" name="experiment_name" placeholder=""></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Experiment Type: </label><div class="col-sm-9" ><input class="form-control" id="experiment_type" name="experiment_type" placeholder="Please Select"></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Risk Assessment: </label><div class="col-sm-9" ><input class="form-control" id="risk_assessment" name="risk_assessment" placeholder=""></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Containment Zone: </label><div class="col-sm-9" ><input class="form-control" id="containment_zone" name="containment_zone" placeholder=""></div><br><br>';
+        html = html + '<label class="col-sm-3 control-label">Additional Comments: </label><div class="col-sm-9" ><input class="form-control" id="additional_comments" name="additional_comments" placeholder="eg: Clothing & Special Handling"></div></div></div></form>';
     } else {
         html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
         html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
