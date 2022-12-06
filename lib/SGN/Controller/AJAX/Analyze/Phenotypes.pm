@@ -15,7 +15,7 @@ use POSIX qw(strftime);
 use Moose;
 use File::Slurp qw| slurp |;
 use File::Basename;
-use CXGN::Tools::Run;
+use CXGN::Tools::Run;/home/production/cxgn/sgn//static/documents/tempfiles/download/phenotype7aIW.csv
 use CXGN::Phenotypes::File;
 
 BEGIN { extends 'Catalyst::Controller::REST'; };
@@ -33,7 +33,6 @@ sub run: Path('/analyze/phenotypes/r') Args(0) {
     my $params = $c->req()->params();
     my $trial_id = $params->{trial_id};
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = "phenotype" . "XXXX";
 
@@ -51,6 +50,7 @@ sub run: Path('/analyze/phenotypes/r') Args(0) {
         trial_list => \@trial_ids,
         filename => $tempfile,
         format => "TrialPhenotypeCSV",
+        search_type => "Native",
         data_level => "plot"
     });
 
