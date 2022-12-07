@@ -217,7 +217,10 @@ sub get_phenotype_matrix {
         # retrieve treatments and add treatment names to header
         my %seen_obsunits = map { $_->{observationunit_stock_id} => 1 } @$data;
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-        my $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
+        my $treatment_info = {};
+        if ($self->trial_list) {
+            $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
+        }
         my $treatment_names = $treatment_info->{treatment_names};
         my $treatment_details = $treatment_info->{treatment_details};
 
@@ -366,7 +369,10 @@ sub get_phenotype_matrix {
 
         # retrieve treatments
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-        my $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
+        my $treatment_info = {};
+        if ($self->trial_list) {
+            $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
+        }
         my $treatment_names = $treatment_info->{treatment_names};
         my $treatment_details = $treatment_info->{treatment_details};
 
