@@ -70,6 +70,8 @@ sub validate {
         }
     }
 
+    # print STDERR "Columns are: @columns\n";
+
     my $header_col_1 = shift @columns;
     if ($header_col_1 ne "sample_name") {
         $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
@@ -78,16 +80,23 @@ sub validate {
     }
 
     my $header_col_2 = shift @columns;
-    if ($header_col_2 ne "device_id") {
-        $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
-        print STDERR "Second cell must be 'device_id'\n";
+    if ($header_col_2 ne "tissue_type") {
+        $parse_result{'error'} = "Second cell must be 'tissue_type'. Please, check your file.";
+        print STDERR "Second cell must be 'tissue_type'\n";
         return \%parse_result;
     }
 
     my $header_col_3 = shift @columns;
-    if ($header_col_3 ne "comments") {
-        $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
-        print STDERR "Third cell must be 'comments'\n";
+    if ($header_col_3 ne "device_id") {
+        $parse_result{'error'} = "Third cell must be 'device_id'. Please, check your file.";
+        print STDERR "Third cell must be 'device_id'\n";
+        return \%parse_result;
+    }
+
+    my $header_col_4 = shift @columns;
+    if ($header_col_4 ne "comments") {
+        $parse_result{'error'} = "Fourth cell must be 'comments'. Please, check your file.";
+        print STDERR "Fourth cell must be 'comments'\n";
         return \%parse_result;
     }
 
@@ -115,6 +124,7 @@ sub validate {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        my $tissue_type = shift @fields;
         my $device_id = shift @fields;
         my $comments = shift @fields;
         push @samples, $sample_name;
@@ -132,10 +142,10 @@ sub validate {
     my @samples_missing = @{$samples_validator->validate($schema, $data_level, \@samples)->{'missing'}};
     if (scalar(@samples_missing) > 0) {
         my $samples_string = join ', ', @samples_missing;
-        $parse_result{'error'}= "The following samples in your file are not valid in the database (".$samples_string."). Please add them in a sampling trial first!";
+        $parse_result{'error'}= "The following samples in your file are not valid in the database (".$samples_string."). Please add them to the database first!";
         return \%parse_result;
     }
-
+.bj
     if ($nd_protocol_id) {
         my $nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
         my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
@@ -222,17 +232,19 @@ sub parse {
         }
 
         my $observationunit_name = $columns[0];
-        my $device_id = $columns[1];
-        my $comments = $columns[2];
+        my $tissue_type = $columns[1];
+        my $device_id = $columns[2];
+        my $comments = $columns[3];
         $observation_units_seen{$observationunit_name} = 1;
         # print "The plots are $observationunit_name\n";
         my %spectra;
-        foreach my $col (3..$num_cols-1){
+        foreach my $col (4..$num_cols-1){
             my $column_name = $header[$col];
             $traits_seen{$column_name}++;
             my $wavelength = "X".$column_name;
             my $nir_value = $columns[$col];
             $spectra{$wavelength} = $nir_value;
+            .+-
         }
         $data{$observationunit_name}->{'nirs'}->{'device_id'} = $device_id;
         $data{$observationunit_name}->{'nirs'}->{'comments'} = $comments;
