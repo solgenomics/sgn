@@ -4,8 +4,13 @@
 
 <& /page/page_title.mas, title => "SimSearch" &>
 
-Upload a genotyping file to identify matches within the file or with other genotypic data in the database. Please upload in vcf format. To compare with data in the database, the upload must correspond precisely to the genotyping protocols available in the database.
+<div>
+Upload a genotyping file to identify matches within the file or with other genotypic data in the database. To compare with data in the database, the upload must correspond precisely to the genotyping protocols available in the database.
+</div>
 <br />
+<div>
+Upload format is either <a href="https://samtools.github.io/hts-specs/VCFv4.2.pdf">vcf</a> or <a href="">dosage</a> format.
+</div>
 <br />
 
 <form action="/tools/simsearch/upload_file" method="post" enctype="multipart/form-data" >

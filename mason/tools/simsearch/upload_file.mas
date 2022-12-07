@@ -6,8 +6,9 @@ $reference_files_menu => ""
 $format => ""
 </%args>
 
-<h1>Uploaded file <% $user_readable_filename %> [ <% $format %> ]</h1>
-(working file <% $filename %>)
+<& /site/page_title.mas, title => "File <% $user_readable_filename %> uploaded for analysis [ <% $format %> format ]" &>
+
+(working file name <% $filename %>)
 
 <div id="simsearch_input_form">
 
