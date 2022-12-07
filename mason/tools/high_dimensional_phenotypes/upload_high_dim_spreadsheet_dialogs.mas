@@ -547,15 +547,17 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
             <ul>
                 <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
-                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
+                <li><strong>tissue_type</strong>: This should be a specific tissue type, for example leaf, root, stem, seed or fruit. If your sample_names are already tissue_samples, this clarifies the type. If they are not, then the upload will automatically create new tissue samples attached to your plots, plants, or subplots</li>
+                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g.lo serial number). Can be numeric or letter.</li>
                 <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
-                <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc). You can add as many columns as you want upload, there isn't a limit.</li>
+                <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc, must be an integer). You can add as many columns as you want upload, there isn't a limit.</li>
             </ul>
-            <table class="table table-hover table-bordered table-condensed" >
+            <table class="table table-hover table-bordered table-condensed" >lo
                 <thead></thead>
                 <tbody>
                     <tr>
                         <td>sample_name</td>
+                        <td>tissue_type</td>
                         <td>device_id</td>
                         <td>comments</td>
                         <td>wavelength columns (e.g. 400, 1200, etc)</td>
