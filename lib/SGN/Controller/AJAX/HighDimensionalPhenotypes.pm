@@ -365,9 +365,14 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
 
     my @filter_input;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $tissue_type = $o->{nirs}->{tissue_type};
         my $device_id = $o->{nirs}->{device_id};
         my $comments = $o->{nirs}->{comments};
         my $spectras = $o->{nirs}->{spectra};
+
+        # create new tissue sample based on $stock_name and $tissue_type
+        
+
         foreach my $spectra (@$spectras) {
             push @filter_input, {
                 "observationUnitId" => $stock_name,

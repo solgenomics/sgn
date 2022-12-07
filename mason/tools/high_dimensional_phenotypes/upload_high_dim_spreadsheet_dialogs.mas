@@ -552,7 +552,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                 <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
                 <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc, must be an integer). You can add as many columns as you want upload, there isn't a limit.</li>
             </ul>
-            <table class="table table-hover table-bordered table-condensed" >lo
+            <table class="table table-hover table-bordered table-condensed">
                 <thead></thead>
                 <tbody>
                     <tr>
