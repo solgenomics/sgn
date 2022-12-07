@@ -215,13 +215,11 @@ sub get_phenotype_matrix {
         push @line, 'notes';
 
         # retrieve treatments and add treatment names to header
-        print STDERR "Retrieve Treatment Info Start:".localtime."\n";
         my %seen_obsunits = map { $_->{observationunit_stock_id} => 1 } @$data;
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
         my $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
         my $treatment_names = $treatment_info->{treatment_names};
         my $treatment_details = $treatment_info->{treatment_details};
-        print STDERR "Retrieve Treatment Info End:".localtime."\n";
 
         foreach my $name (@$treatment_names) {
             push @line, $name;
@@ -367,12 +365,10 @@ sub get_phenotype_matrix {
         #print STDERR Dumper \%traits;
 
         # retrieve treatments
-        print STDERR "Retrieve Treatment Info Start:".localtime."\n";
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
         my $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
         my $treatment_names = $treatment_info->{treatment_names};
         my $treatment_details = $treatment_info->{treatment_details};
-        print STDERR "Retrieve Treatment Info End:".localtime."\n";
 
         my @line = @metadata_headers;
 

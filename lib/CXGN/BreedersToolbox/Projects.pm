@@ -710,22 +710,20 @@ sub get_related_treatments {
     my $trial_ids = shift;
     my $relevant_obsunits = shift;
 
-    my $treatment_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
-    my $field_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
 
-    my $q = "SELECT treatment.name, nds_treatment.stock_id
-        FROM project AS treatment
-        INNER JOIN nd_experiment_project AS ndp_treatment ON(treatment.project_id = ndp_treatment.project_id)
-        INNER JOIN nd_experiment AS nde_treatment ON(ndp_treatment.nd_experiment_id = nde_treatment.nd_experiment_id AND nde_treatment.type_id = ?)
-        INNER JOIN nd_experiment_stock AS nds_treatment ON(nds_treatment.nd_experiment_id = nde_treatment.nd_experiment_id)
-        INNER JOIN nd_experiment_stock AS nds_trial ON(nds_treatment.stock_id = nds_trial.stock_id)
-        INNER JOIN nd_experiment nde_trial ON(nds_trial.nd_experiment_id = nde_trial.nd_experiment_id AND nde_trial.type_id = ?)
-        INNER JOIN nd_experiment_project ndp_trial ON(nde_trial.nd_experiment_id = ndp_trial.nd_experiment_id AND ndp_trial.project_id IN (@{[join',', ('?') x @$trial_ids]}))
-
-    ";
+    my $q = "SELECT treatment.name, nds.stock_id
+    FROM project_relationship AS pr
+    JOIN project AS treatment ON(
+        pr.type_id = ? AND
+        pr.subject_project_id = treatment.project_id AND
+        pr.object_project_id IN (@{[join',', ('?') x @$trial_ids]})
+    )
+    JOIN nd_experiment_project AS ndp ON( treatment.project_id = ndp.project_id )
+    JOIN nd_experiment_stock AS nds ON( ndp.nd_experiment_id = nds.nd_experiment_id )";
 
     my $h = $self->schema()->storage()->dbh()->prepare($q);
-    $h->execute($treatment_experiment_cvterm_id, $field_layout_cvterm_id, @$trial_ids);
+    $h->execute($trial_treatment_relationship_cvterm_id, @$trial_ids);
 
     my %treatment_details;
     my %unique_names;
