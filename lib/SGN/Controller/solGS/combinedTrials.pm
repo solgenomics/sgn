@@ -863,7 +863,7 @@ sub combined_pops_summary {
 		$model_link = $c->controller('solGS::Path')->model_page_url($model_page_args);
 	}
 
-    my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
+    my $stocks_no    =  $self->count_combined_trials_lines($c, $combo_pops_id, $trait_id);
     my $training_pop_name = "Training population $combo_pops_id";
 
 	$tr_page_args->{'training_pop_id'} = $combo_pops_id;
@@ -1232,7 +1232,7 @@ sub combined_pops_gs_input_files {
 }
 
 
-sub count_combined_trials_lines_count {
+sub count_combined_trials_lines {
     my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
     $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
@@ -1255,10 +1255,7 @@ sub count_combined_trials_lines_count {
 	    	'trait_id' => $trait_id
 	    };
 
-	    $genos_cnt = $c->controller('solGS::solGS')->predicted_lines_count($c, $args);
-
-	   # my $genos = qx /cut -f 1 $combined_pops_geno_file/;
-	   # @genotypes = split(" ", $genos);
+	    $genos_cnt = $c->controller('solGS::solGS')->count_predicted_lines($c, $args);
 	}
     }
     else
@@ -1273,10 +1270,8 @@ sub count_combined_trials_lines_count {
 
 		foreach my $geno_file (@geno_files)
 		{
-
 		    my $genos = qx /cut -f 1 $geno_file/;
 		    my @genos = split(" ", $genos);
-
 		    push @genotypes, @genos;
 		}
 

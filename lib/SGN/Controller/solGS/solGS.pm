@@ -149,7 +149,7 @@ sub get_markers_count {
 }
 
 
-sub predicted_lines_count {
+sub count_predicted_lines {
     my ($self, $c, $args) = @_;
 
     my $training_pop_id = $args->{training_pop_id};
@@ -164,39 +164,35 @@ sub predicted_lines_count {
     }
     elsif ($selection_pop_id && $training_pop_id)
     {
-	# my $identifier = $training_pop_id . '_' . $selection_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	$gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
     }
 
-    my $geno = qx /wc -l $gebvs_file/;
-    my ($geno_lines, $g_file) = split(" ", $geno);
-
-    my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+    my $count = $c->controller('solGS::Utils')->count_data_rows($gebvs_file);
 
     return $count;
 }
 
 
 sub training_pop_lines_count {
-    my ($self, $c, $pop_id, $protocol_id) = @_;
+    my ($self, $c, $training_pop_id, $protocol_id) = @_;
 
     $c->stash->{genotyping_protocol_id} = $protocol_id;
-    my $count;
+
+    my $genotypes_file;
     if ($c->req->path =~ /solgs\/trait\//)
     {
-	my $trait_id = $c->stash->{trait_id};
-    	$count = $self->predicted_lines_count($c, {'training_pop_id' => $pop_id, 'trait_id'=> $trait_id});
+	    my $trait_id = $c->stash->{trait_id};
+        $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
+	    $genotypes_file = $c->stash->{rrblup_training_gebvs_file};
     }
     else
     {
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-	my $geno_file  = $c->stash->{genotype_file_name};
-	my $geno = qx /wc -l $geno_file/;
-	my ($geno_lines, $g_file) = split(" ", $geno);
-
-	$count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
+    $genotypes_file  = $c->stash->{genotype_file_name};
     }
+
+    my $count = $c->controller('solGS::Utils')->count_data_rows($genotypes_file);
 
     return $count;
 }
@@ -364,7 +360,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		    'trait_id' => $trait_id
 		};
 
-		$c->stash->{selection_stocks_cnt} = $self->predicted_lines_count($c, $args);
+		$c->stash->{selection_stocks_cnt} = $self->count_predicted_lines($c, $args);
 
 		$self->top_blups($c, $gebvs_file);
 		my $training_pop_name = $c->stash->{training_pop_name};
