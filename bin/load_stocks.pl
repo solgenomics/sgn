@@ -28,7 +28,7 @@ if the corresponding stock_property does not exist in the database it will be ad
 
 File format for infile (tab delimited):
 
-accession genus species population_name synonyms other_stock_props ...
+accession genus species_name population_name synonyms other_stock_props ...
 
 Multiple synonyms can be specified, separated by the | symbol
 
@@ -41,6 +41,7 @@ Lukas Mueller (lam87@cornell.edu) - minor edits, November 2022
 
 
 use strict;
+use warnings;
 use Getopt::Std;
 use CXGN::Tools::File::Spreadsheet;
 
