@@ -127,7 +127,7 @@ $ordering_site => undef
 % if ($ordering_site eq 'BAT') {
             <div class="modal-footer">
                 <button id="close_submit_item_detail_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="submit_single_step_button" type="button" class="btn btn-primary" >Submit</button>
+                <button id="single_step_submission_button" type="button" class="btn btn-primary" >Submit</button>
             </div>
 %} else {
             <div class="modal-footer">
@@ -289,6 +289,57 @@ jQuery(document).ready( function() {
     jQuery("#dismiss_order_response_dialog").click(function(){
         location.reload();
     });
+
+    jQuery('#single_step_submission_button').click(function(){
+        var item_name = jQuery('#item_name').val();
+        var quantity = jQuery('#item_quantity').val();
+        var facility = jQuery('#item_facility').val();
+        var scientist = jQuery('#item_scientist').val();
+        var due_date = jQuery('#item_due_date').val();
+        var experiment_name = jQuery('#experiment_name').val();
+        var experiment_type = jQuery('#experiment_type').val();
+        var risk_assessment = jQuery('#risk_assessment').val();
+        var containment_zone = jQuery('#containment_zone').val();
+        var additional_comments = jQuery('#additonal_comments').val();
+
+        jQuery.ajax({
+            url: '/ajax/order/single_step_submission',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'item_name' : item_name,
+                'quantity': quantity,
+                'facility': facility,
+                'scientist': scientist,
+                'due_date': due_date,
+                'experiment_name': experiment_name,
+                'experiment_type':experiment_type,
+                'risk_assessment': risk_assessment,
+                'containment_zone': containment_zone,
+                'additional_comments': additional_comments
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success) {
+                    jQuery('#ordering_response_div').html(response.success);
+
+                    jQuery('#order_response_dialog').modal('show');
+                    jQuery('#add_item_detail_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving your request');
+            }
+        });
+    });
+
 
 });
 

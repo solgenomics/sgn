@@ -547,6 +547,113 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
 
     $c->stash->{rest} = {success => "1",};
 
+}
+
+
+sub single_step_submission : Path('/ajax/order/single_step_submission') : ActionClass('REST'){ }
+
+sub single_step_submission_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $request_date = $time->ymd();
+    my $item_name = $c->req->param('item_name');
+    my $quantity = $c->req->param('quantity');
+    my $facility = $c->req->param('facility');
+    my $scientist = $c->req->param('scientist');
+    my $due_date = $c->req->param('due_date');
+    my $experiment_name = $c->req->param('experiment_name');
+    my $experiment_type = $c->req->param('experiment_type');
+    my $risk_assessment = $c->req->param('risk_assessment');
+    my $containment_zone = $c->req->param('containment_zone');
+    my $additional_comments = $c->req->param('additional_comments');
+    my %request_details;
+    my @item_list;
+    $request_details{$item_name}{'quantity'} = $quantity;
+    $request_details{$item_name}{'facility'} = $facility;
+    $request_details{$item_name}{'scientist'} = $scientist;
+    $request_details{$item_name}{'due_date'} = $due_date;
+    $request_details{$item_name}{'experiment_name'} = $experiment_name;
+    $request_details{$item_name}{'experiment_type'} = $experiment_type;
+    $request_details{$item_name}{'risk_assessment'} = $risk_assessment;
+    $request_details{$item_name}{'containment_zone'} = $containment_zone;
+    $request_details{$item_name}{'additional_comments'} = $additional_comments;
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not adding a catalog item.\n";
+        $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $user_role = $c->user->get_object->get_user_type();
+
+    my $catalog_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
+    my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
+    my $item_id = $item_rs->stock_id();
+    my $item_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $catalog_cvterm_id});
+    my $item_info_string = $item_info_rs->value();
+    my $item_info_hash = decode_json $item_info_string;
+    my $contact_person_id = $item_info_hash->{'contact_person_id'};
+    my $item_type = $item_info_hash->{'item_type'};
+    $request_details{$item_name}{'item_type'} = $item_type;
+    push @item_list, \%request_details;
+    print STDERR "REQUEST DETAILS =".Dumper(\%request_details)."\n";
+    my @history = ();
+    my $history_info = {};
+
+    my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
+    $new_order->order_from_id($user_id);
+    $new_order->order_to_id($contact_person_id);
+    $new_order->order_status("submitted");
+    $new_order->create_date($timestamp);
+    my $order_id = $new_order->store();
+#        print STDERR "ORDER ID =".($order_id)."\n";
+    if (!$order_id){
+        $c->stash->{rest} = {error_string => "Error saving your order",};
+        return;
+    }
+
+    $history_info ->{'submitted'} = $timestamp;
+    push @history, $history_info;
+
+
+    my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
+    $order_prop->clone_list(\@item_list);
+    $order_prop->parent_id($order_id);
+    $order_prop->history(\@history);
+    my $order_prop_id = $order_prop->store_sp_orderprop();
+#        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
+
+    if (!$order_prop_id){
+        $c->stash->{rest} = {error_string => "Error saving your order",};
+        return;
+    }
+
+    my $contact_person = CXGN::People::Person -> new($dbh, $contact_person_id);
+    my $contact_email = $contact_person->get_contact_email();
+
+    my $host = $c->config->{main_production_site_url};
+    my $project_name = $c->config->{project_name};
+    my $subject="Ordering Notification from $project_name";
+    my $body=<<END_HEREDOC;
+
+You have an order submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    CXGN::Contact::send_email($subject,$body,$contact_email);
+
+    $c->stash->{rest}->{success} .= 'Your request has been submitted successfully and the vendor has been notified.';
+
 
 }
 
