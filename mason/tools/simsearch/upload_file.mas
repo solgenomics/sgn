@@ -6,7 +6,7 @@ $reference_files_menu => ""
 $format => ""
 </%args>
 
-<& /site/page_title.mas, title => "File <% $user_readable_filename %> uploaded for analysis [ <% $format %> format ]" &>
+<& /page/page_title.mas, title => "File <% $user_readable_filename %> uploaded for analysis [ <% $format %> format ]" &>
 
 (working file name <% $filename %>)
 
