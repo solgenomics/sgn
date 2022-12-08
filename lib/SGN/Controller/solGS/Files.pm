@@ -291,7 +291,7 @@ sub analysis_report_file {
     my $cache_data = { key       => $name,
 		       file      => $name,
 		       cache_dir => $cache_dir,
-		       stash_key => "analysis_report_file",
+		       stash_key => "${type}_report_file",
     };
 
     $self->cache_file($c, $cache_data);
