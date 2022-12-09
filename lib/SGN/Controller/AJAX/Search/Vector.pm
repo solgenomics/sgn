@@ -46,9 +46,8 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
     #This defines the stockprops that will be returned in the results.
     my $stockprop_columns_view = $params->{extra_stockprop_columns_view} ? decode_json $params->{extra_stockprop_columns_view} : {};
     my $stockprop_columns_view_array = $params->{stockprop_extra_columns_view_array} ? decode_json $params->{stockprop_extra_columns_view_array} : [];
-    #print STDERR Dumper $stockprop_columns_view;
-    print STDERR Dumper $stockprops_values;
-    print STDERR "\n\n->{stock_type}\n\n". Dumper $params->{stock_type};
+
+    print STDERR "\n\n->{stock_type}". Dumper $params->{stock_type};
 
     my $stock_search = CXGN::Stock::SearchVector->new({
         bcs_schema=>$schema,
@@ -70,7 +69,6 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         $draw =~ s/\D//g; # cast to int
     }
 
-    #print STDERR Dumper $result;
     my @return;
     foreach (@$result){
         if (!$params->{minimal_info}){
@@ -106,7 +104,6 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         }
     }
 
-    #print STDERR Dumper \@return;
     $c->stash->{rest} = { data => [ @return ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }
 

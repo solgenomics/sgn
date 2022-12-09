@@ -293,7 +293,7 @@ sub store {
         }
     }
 
-    print STDERR "Saving returned ID $id.\n";
+    print STDERR "Saving with ID $id.\n";
     $self->stock_id($id);
 
     return $self->stock_id();

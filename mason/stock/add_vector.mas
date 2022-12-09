@@ -26,7 +26,7 @@ $stockref => undef
       <label class="col-sm-3 control-label">Organism <font color="red">*</font>  
       </label>
       <div class="col-sm-9">
-        <input class="form-control ui-autocomplete-input" type="text" id="species_name" name="species_name" value="" size="" onclick="jqueryStuff()" autocomplete="off">
+        <input class="form-control ui-autocomplete-input" type="text" id="species_name" name="species_name" value="" size="" onclick="jqueryStuff()" autocomplete="off" required>
       </div>
     </div>
 
@@ -34,7 +34,7 @@ $stockref => undef
       <label class="col-sm-3 control-label">Uniquename <font color="red">*</font>  
       </label>
       <div class="col-sm-9">
-        <input type="text" class="form-control" value="" name="uniqueName">
+        <input type="text" class="form-control" value="" name="uniqueName" required>
       </div>
     </div>
 
@@ -96,7 +96,7 @@ $stockref => undef
   <div class="form-group">
     <label class="col-sm-3 control-label"></label>
     <div class="col-sm-9">
-      <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;">Fields Marked With "*" Are Required.</h5>
+      <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;">Fields Marked With * Are Required.</h5>
     </div>
   </div>
   <hr>
@@ -127,11 +127,11 @@ function handleSubmit() {
         data: {'data': JSON.stringify([data])},
         url: '/ajax/create_vector_construct',
         success: function(response) {
-          //console.log(response);
-          alert('Saved!');
+          if (response.error) { alert(response.error); }
+          else { alert('Saved!'); }
         },
         error: function(response) {
-          alert('An Error occured while storing vectors.');
+          alert( 'An Error occured while storing vectors.');
         }
       });
 
