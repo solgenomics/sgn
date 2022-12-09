@@ -187,9 +187,11 @@ sub generate_model {
 #
 #    }
  #   else {
-	if (@$random_factors) {
-	    $formatted_random_factors = join(" + ",  map { "(1|$_)" } @$random_factors);
-	    push @addends, $formatted_random_factors;
+	foreach my $rf (@$random_factors) {
+      if ($rf) {
+        $formatted_random_factors .= " + (1|$rf)" ;
+	      push @addends, $formatted_random_factors;
+      }
 	}
 
     #}
@@ -209,7 +211,7 @@ sub generate_model_sommer {
     my $random_factors_interaction = $self->random_factors_interaction();
     my $variable_slope_intersects = $self->variable_slope_intersects();
     my $random_factors = $self->random_factors();
-
+    my $formula = "";
     print STDERR "FIXED FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors);
     print STDERR "FIXED InteractionFACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors_interaction);
     print STDERR "RANDOM InteractionFACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($random_factors_interaction);
@@ -233,7 +235,7 @@ sub generate_model_sommer {
 	$mmer_fixed_factors = make_R_variable_name($dependent_variables->[0]) ." ~ ". $mmer_fixed_factors;
 
 
-	if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
+	if (scalar(@$random_factors)== 0) {$mmer_random_factors = ""; }
 	else { $mmer_random_factors = join("+", @$random_factors);}
 
 	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = ""; }
@@ -264,19 +266,26 @@ sub generate_model_sommer {
          }
       }
 
-
-	   $mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction." ".$mmer_variable_slope_intersects;
+      if ($mmer_random_factors){
+	         $formula = " ~ ".$mmer_random_factors ;
+      }
+      if ($mmer_fixed_factors_interaction) {
+          $formula.=" ".$mmer_fixed_factors_interaction;
+      }
+      if ($mmer_variable_slope_intersects) {
+          $formula.=" ".$mmer_variable_slope_intersects;
+      }
    }
     #location:genotype
 
     print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
-    print STDERR "mmer_random_factors = $mmer_random_factors\n";
+    print STDERR "mmer_random_factors = $formula\n";
 
     #my $data = { fixed_factors => $mmer_fixed_factors,
 	#	 random_factors => $mmer_random_factors,
     #};
 
-    my $model = [ $mmer_fixed_factors, $mmer_random_factors ];
+    my $model = [ $mmer_fixed_factors, $formula ];
 
     print STDERR "Data returned from generate_model_sommer: ".Dumper($model);
 
