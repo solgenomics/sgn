@@ -489,6 +489,14 @@ sub BUILD {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
     }
+
+    if ($self->uniquename) {
+	$stock = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $self->uniquename() });
+	$self->stock($stock);
+	$self->stock_id($stock->stock_id);
+    }
+
+    
     if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
 #	my $organism = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() });
@@ -521,6 +529,8 @@ sub BUILD {
 
 	$self->subjects(\@subjects);
     }
+
+    
     return $self;
 }
 
