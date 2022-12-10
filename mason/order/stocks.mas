@@ -53,7 +53,7 @@ $check_vendor_role
                                 <tr>
                                     <th>Order Number</th>
                                     <th>Submitted Date</th>
-                                    <th>Items</th>
+                                    <th>Order Details</th>
                                     <th>Status</th>
                                     <th>Send Order to</th>
                                     <th>Comments from Vendor</th>

@@ -367,6 +367,10 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $user_id;
+    my $ordering_site = $c->config->{ordering_site};
+    my $order_properties = $c->config->{order_properties};
+    my @properties = split ',',$order_properties;
+
 
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to view your current orders!'};
@@ -379,13 +383,55 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $all_orders_ref = $orders->get_orders_from_person_id();
+
     my @current_orders;
     my @all_orders = @$all_orders_ref;
     foreach my $order (@all_orders) {
-        if (($order->[3]) ne 'completed') {
-            push @current_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[5], $order->[6]]
+        if (($order->{'order_status'}) ne 'completed') {
+            my $clone_list = $order->{'clone_list'};
+            my $item_name;
+            my $all_details_string;
+            foreach my $each_item (@$clone_list) {
+                my @request_details = ();
+                $item_name = (keys %$each_item)[0];
+                push @request_details, "Item Name". ":"."".$item_name;
+                foreach my $field (@properties) {
+                    my $each_detail = $each_item->{$item_name}->{$field};
+                    my $detail_string = $field. ":"."".$each_detail;
+                    push @request_details, $detail_string;
+                }
+                $all_details_string = join("<br>", @request_details);
+            }
+            push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
+
+        #                my $quantity = $each_item->{$item_name}->{'quantity'};
+        #                my $comments = $each_item->{$item_name}->{'comments'};
+        #                my $additional_info = $each_item->{$item_name}->{'additional_info'};
+
+        #                my $each_item_details;
+        #                if ($additional_info && $comments) {
+        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+        #                } elsif ($additional_info && (!$comments)){
+        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+        #                } elsif ((!$additional_info) && $comments) {
+        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
+        #                } else {
+        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
+        #                }
+        #                push @list, $each_item_details;
+        #            }
+        #            my @sort_list = sort @list;
+        #            $item_list = join("<br>", @sort_list);
+
+#            push @current_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[5], $order->[6]]
     }
+#    foreach my $order (@all_orders) {
+#        if (($order->[3]) ne 'completed') {
+#            push @current_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[5], $order->[6]]
+#        }
+#    }
+
     $c->stash->{rest} = {data => \@current_orders};
 }
 
