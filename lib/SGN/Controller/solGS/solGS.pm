@@ -556,6 +556,9 @@ sub output_files {
     my $training_pop_id   = $c->stash->{pop_id};
     $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id}  if !$training_pop_id;
 
+    my $page_type = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
+    my $analysis_type = $c->stash->{analysis_type}  || $page_type;
+    $analysis_type =~ s/\s+/_/g;
     my $trait    = $c->stash->{trait_abbr};
     my $trait_id = $c->stash->{trait_id};
     $c->stash->{cache_dir} =  $c->stash->{solgs_cache_dir};
@@ -601,7 +604,7 @@ sub output_files {
                         $c->stash->{filtered_training_genotype_file},
                         $c->stash->{filtered_selection_genotype_file},
                         $c->stash->{rrblup_selection_gebvs_file},
-                        $c->stash->{analysis_report_file}
+                        $c->stash->{"${analysis_type}_report_file"}
         );
 
     my $name = "output_files_${trait}_${training_pop_id}";

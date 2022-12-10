@@ -261,7 +261,7 @@ sub create_itemized_prediction_log_entries {
         else {
             $analysis_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
-            $analysis_type = 'single model';
+            $analysis_type = 'training model';
         }
 
         my $analysis_name =

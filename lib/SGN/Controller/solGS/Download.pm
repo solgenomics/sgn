@@ -238,7 +238,7 @@ sub download_model_analysis_report_file {
 
 	if ($page =~ /training model/)
 	{
-		$c->stash->{analysis_type} =  'single model';
+		$c->stash->{analysis_type} =  'training model';
 	}
 
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);

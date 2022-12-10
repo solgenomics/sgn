@@ -269,6 +269,8 @@ sub analysis_report_file {
 
     my $type      = $c->stash->{analysis_type};
     $type =~ s/\s+/_/g;
+
+    print STDERR "\nanalysis_report_file: type -- $type\n";
     my $cache_dir = $c->stash->{cache_dir} || $c->stash->{solgs_cache_dir};
     my $file_id   = $c->stash->{file_id};
 

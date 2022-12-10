@@ -744,7 +744,7 @@ sub  email_body {
     {
 	    $msg = $self->multi_modeling_message($output_details);
     }
-    elsif ($analysis_type =~ /single model/)
+    elsif ($analysis_type =~ /training model/)
     {
     	$msg = $self->single_modeling_message($output_details);
     }

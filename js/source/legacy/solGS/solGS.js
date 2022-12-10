@@ -462,7 +462,7 @@ solGS.submitJob = {
 
       args["trait_id"] = [urlStr[3]];
       args["training_pop_id"] = [urlStr[5]];
-      args["analysis_type"] = "single model";
+      args["analysis_type"] = "training model";
       args["data_set_type"] = "single population";
     } else if (url.match(/solgs\/model\/combined\/trials\//)) {
       var urlStr = url.split(/\/+/);
@@ -487,7 +487,7 @@ solGS.submitJob = {
       args["trait_id"] = traitId;
       args["training_pop_id"] = populationId;
       args["combo_pops_id"] = comboPopsId;
-      args["analysis_type"] = "single model";
+      args["analysis_type"] = "training model";
       args["data_set_type"] = "combined populations";
       args["genotyping_protocol_id"] = protocolId;
     } else if (url.match(/solgs\/population\//)) {
@@ -697,7 +697,7 @@ jQuery(document).ready(function () {
       }
 
       if (traitIds.length == 1) {
-        analysisType = "single model";
+        analysisType = "training model";
 
         if (referer.match(/solgs\/populations\/combined\//)) {
           page =

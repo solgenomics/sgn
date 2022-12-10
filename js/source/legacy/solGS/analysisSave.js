@@ -70,7 +70,7 @@ solGS.save = {
     var path = location.pathname;
 
     if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
-      type = "single model";
+      type = "training model";
     } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
       type = "multiple models";
     } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
