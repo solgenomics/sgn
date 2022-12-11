@@ -366,11 +366,10 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $user_id;
     my $ordering_site = $c->config->{ordering_site};
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
-
+    my $user_id;
 
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to view your current orders!'};
@@ -394,7 +393,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
                 $item_name = (keys %$each_item)[0];
-                push @request_details, "Item Name". ":"."".$item_name;
+                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
                 foreach my $field (@properties) {
                     my $each_detail = $each_item->{$item_name}->{$field};
                     my $detail_string = $field. ":"."".$each_detail;
@@ -441,6 +440,9 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
+    my $ordering_site = $c->config->{ordering_site};
+    my $order_properties = $c->config->{order_properties};
+    my @properties = split ',',$order_properties;
     my $user_id;
 
     if (!$c->user){
@@ -456,11 +458,33 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $all_orders_ref = $orders->get_orders_from_person_id();
     my @completed_orders;
     my @all_orders = @$all_orders_ref;
+
     foreach my $order (@all_orders) {
-        if (($order->[3]) eq 'completed') {
-            push @completed_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[4], $order->[5], $order->[6]]
+        if (($order->{'order_status'}) eq 'completed') {
+            my $clone_list = $order->{'clone_list'};
+            my $item_name;
+            my $all_details_string;
+            foreach my $each_item (@$clone_list) {
+                my @request_details = ();
+                $item_name = (keys %$each_item)[0];
+                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+                foreach my $field (@properties) {
+                    my $each_detail = $each_item->{$item_name}->{$field};
+                    my $detail_string = $field. ":"."".$each_detail;
+                    push @request_details, $detail_string;
+                }
+                $all_details_string = join("<br>", @request_details);
+            }
+            push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
     }
+
+
+#    foreach my $order (@all_orders) {
+#        if (($order->[3]) eq 'completed') {
+#            push @completed_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[4], $order->[5], $order->[6]]
+#        }
+#    }
 
     $c->stash->{rest} = {data => \@completed_orders};
 
@@ -473,6 +497,9 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
+    my $ordering_site = $c->config->{ordering_site};
+    my $order_properties = $c->config->{order_properties};
+    my @properties = split ',',$order_properties;
     my $user_id;
 
     if (!$c->user){
@@ -491,6 +518,21 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my @all_vendor_orders = @$vendor_orders_ref;
         foreach my $vendor_order (@all_vendor_orders) {
             if (($vendor_order->{'order_status'}) ne 'completed') {
+                my $clone_list = $vendor_order->{'clone_list'};
+                my $item_name;
+                my $all_details_string;
+                foreach my $each_item (@$clone_list) {
+                    my @request_details = ();
+                    $item_name = (keys %$each_item)[0];
+                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+                    foreach my $field (@properties) {
+                        my $each_detail = $each_item->{$item_name}->{$field};
+                        my $detail_string = $field. ":"."".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+                    $all_details_string = join("<br>", @request_details);
+                }
+                $vendor_order->{'order_details'} = $all_details_string;
                 push @vendor_current_orders, $vendor_order
             }
         }
@@ -506,6 +548,9 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
+    my $ordering_site = $c->config->{ordering_site};
+    my $order_properties = $c->config->{order_properties};
+    my @properties = split ',',$order_properties;
     my $user_id;
 
     if (!$c->user){
@@ -524,6 +569,22 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my @all_vendor_orders = @$vendor_orders_ref;
     foreach my $vendor_order (@all_vendor_orders) {
         if (($vendor_order->{'order_status'}) eq 'completed') {
+            my $clone_list = $vendor_order->{'clone_list'};
+            my $item_name;
+            my $all_details_string;
+            foreach my $each_item (@$clone_list) {
+                my @request_details = ();
+                $item_name = (keys %$each_item)[0];
+                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+                foreach my $field (@properties) {
+                    my $each_detail = $each_item->{$item_name}->{$field};
+                    my $detail_string = $field. ":"."".$each_detail;
+                    push @request_details, $detail_string;
+                }
+                $all_details_string = join("<br>", @request_details);
+            }
+            $vendor_order->{'order_details'} = $all_details_string;
+
             push @vendor_completed_orders, $vendor_order
         }
     }
@@ -619,15 +680,15 @@ sub single_step_submission_POST : Args(0) {
     my $additional_comments = $c->req->param('additional_comments');
     my %request_details;
     my @item_list;
-    $request_details{$item_name}{'quantity'} = $quantity;
-    $request_details{$item_name}{'facility'} = $facility;
-    $request_details{$item_name}{'scientist'} = $scientist;
-    $request_details{$item_name}{'due_date'} = $due_date;
-    $request_details{$item_name}{'experiment_name'} = $experiment_name;
-    $request_details{$item_name}{'experiment_type'} = $experiment_type;
-    $request_details{$item_name}{'risk_assessment'} = $risk_assessment;
-    $request_details{$item_name}{'containment_zone'} = $containment_zone;
-    $request_details{$item_name}{'additional_comments'} = $additional_comments;
+    $request_details{$item_name}{'Quantity'} = $quantity;
+    $request_details{$item_name}{'Facility'} = $facility;
+    $request_details{$item_name}{'Scientist'} = $scientist;
+    $request_details{$item_name}{'Required by Date'} = $due_date;
+    $request_details{$item_name}{'Experiment Name'} = $experiment_name;
+    $request_details{$item_name}{'Experiment Type'} = $experiment_type;
+    $request_details{$item_name}{'Risk Assessment'} = $risk_assessment;
+    $request_details{$item_name}{'Containment Zone'} = $containment_zone;
+    $request_details{$item_name}{'Additional Comments'} = $additional_comments;
 
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";

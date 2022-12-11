@@ -157,38 +157,39 @@ sub get_orders_to_person_id {
         my $order_from_name=$person->get_first_name()." ".$person->get_last_name();
 
         my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+        my $all_items = ();
         while (my $item_result = $orderprop_rs->next()){
             my @list;
             my $item_json = $item_result->value();
             my $item_hash = JSON::Any->jsonToObj($item_json);
-            my $all_items = $item_hash->{'clone_list'};
-            foreach my $each_item (@$all_items) {
-                my $item_name = (keys %$each_item)[0];
-                my $quantity = $each_item->{$item_name}->{'quantity'};
-                my $comments = $each_item->{$item_name}->{'comments'};
-                my $additional_info = $each_item->{$item_name}->{'additional_info'};
-
-                my $each_item_details;
-                if ($additional_info && $comments) {
-                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
-                } elsif ($additional_info && (!$comments)){
-                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
-                } elsif ((!$additional_info) && $comments) {
-                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
-                } else {
-                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
-                }
-                push @list, $each_item_details;
-            }
-            my @sort_list = sort @list;
-            $item_list = join("<br>", @sort_list);
+            $all_items = $item_hash->{'clone_list'};
+#            foreach my $each_item (@$all_items) {
+#                my $item_name = (keys %$each_item)[0];
+#                my $quantity = $each_item->{$item_name}->{'quantity'};
+#                my $comments = $each_item->{$item_name}->{'comments'};
+#                my $additional_info = $each_item->{$item_name}->{'additional_info'};
+#
+#                my $each_item_details;
+#                if ($additional_info && $comments) {
+#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+#                } elsif ($additional_info && (!$comments)){
+#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+#                } elsif ((!$additional_info) && $comments) {
+#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
+#                } else {
+#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
+#                }
+#                push @list, $each_item_details;
+#            }
+#            my @sort_list = sort @list;
+#            $item_list = join("<br>", @sort_list);
         }
 
         push @orders, {
             order_id => $order_id,
             order_from_name => $order_from_name,
             create_date => $create_date,
-            item_list => $item_list,
+            clone_list => $all_items,
             order_status => $order_status,
             completion_date => $completion_date,
             contact_person_comments => $comments
