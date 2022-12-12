@@ -30,10 +30,10 @@ jQuery(document).ready(function ($) {
         upload_rename_accessions_file();
     });
 
-    $("#rename_accessions_upload_spreadsheet_format_info_link").click( function () {
-        $('#upload_rename_accessions_dialog').modal("hide");
-        $("#rename_accessions_upload_spreadsheet_format_info_dialog" ).modal("show");
-    });
+ //    $("#rename_accessions_upload_spreadsheet_format_info_link").click( function () {
+ //       $('#upload_rename_accessions_dialog').modal("hide");
+ //       $("#rename_accessions_upload_spreadsheet_format_info_dialog" ).modal("show");
+ //   });
     
     var archived_filename;
     $('#upload_rename_accessions_form').iframePostForm({
