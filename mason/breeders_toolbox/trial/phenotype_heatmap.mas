@@ -153,27 +153,27 @@ $data_level => 'plot'
 <br><br>
 <div id="container_fm">
     <div style="margin-top: 2%; position: relative">
-        <div style="display: flex; flex-wrap: wrap; gap: 25px">
+        <div style="display: flex; flex-wrap: wrap; gap: 25px" class="form-inline">
             <div class="form-inline">
-                <button class="btn btn-primary" id="planting_order_button"> Download Planting Order </button>
-                <select class="form-control" name="planting_order" id="planting_order">
-                    <option value="">--Select Planting Layout--</option>
-                    <option value="by_col_serpentine">By Column: Serpentine</option>
-                    <option value="by_col_zigzag">By Column: Zigzag</option>
-                    <option value="by_row_serpentine">By Row: Serpentine</option>
-                    <option value="by_row_zigzag">By Row: Zigzag</option>
+                <label>Download Plot Order</label>
+                <select class="form-control form-inline" name="plot_download_type" id="plot_download_type">
+                    <option value="">--Select Type--</option>
+                    <option value="planting">Planting Order</option>
+                    <option value="harvest">Harvest Order</option>
                 </select>
             </div>
-            <div class="form-inline">
-                <button class="btn btn-primary" id="harvesting_order_button"> Download Harvesting Order </button>
-                <select class="form-control" name="harvesting_order" id="harvesting_order">
-                    <option value="">--Select Harvest Layout--</option>
-                    <option value="by_col_serpentine">By Column: Serpentine</option>
-                    <option value="by_col_zigzag">By Column: Zigzag</option>
-                    <option value="by_row_serpentine">By Row: Serpentine</option>
-                    <option value="by_row_zigzag">By Row: Zigzag</option>
-                </select>
+            <select class="form-control" name="plot_download_order" id="plot_download_order">
+                <option value="">--Select Plot Layout--</option>
+                <option value="by_col_serpentine">By Column: Serpentine</option>
+                <option value="by_col_zigzag">By Column: Zigzag</option>
+                <option value="by_row_serpentine">By Row: Serpentine</option>
+                <option value="by_row_zigzag">By Row: Zigzag</option>
+            </select>
+            <div clas="form-inline">
+                <label for="plot_download_borders">Include Borders</label>
+                <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
             </div>
+            <button class="btn btn-primary" id="plot_download_button">Download</button>
         </div>
         <br />
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
@@ -864,23 +864,21 @@ jQuery(document).ready( function() {
         FieldMap.load();
     });
 
-    jQuery("#planting_order_button").click(function() {
-        if (jQuery('#planting_order').val() == "") {
-            alert("Please select an order layout.")
-        } else {
-            FieldMap.meta_data.planting_order_layout = jQuery('#planting_order').val();
-            FieldMap.get_planting_order();
+    jQuery("#plot_download_button").click(() => {
+        let type = jQuery("#plot_download_type").val();
+        let order = jQuery("#plot_download_order").val();
+        let include_borders = jQuery("#plot_download_borders").is(":checked");
+        if ( !type || type === '' ) {
+            alert("Please select a type");
+            return;
         }
+        if ( !order || order === '' ) {
+            alert("Please select a plot layout");
+            return;
+        }
+        FieldMap.get_plot_order(type, order, include_borders)
     });
 
-    jQuery('#harvesting_order_button').click(function() {
-        if (jQuery('#harvesting_order').val() == "") {
-            alert("Please select an order layout.")
-        } else {
-            FieldMap.meta_data.harvesting_order_layout = jQuery('#harvesting_order').val();
-            FieldMap.get_harvesting_order();
-        }
-    })
     jQuery("#invert_row_checkmark").change(function() {
         FieldMap.meta_data.invert_row_checkmark = document.getElementById("invert_row_checkmark").checked;
         FieldMap.load();
