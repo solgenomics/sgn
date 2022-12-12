@@ -32,6 +32,10 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
     my $ordering_site = $c->config->{ordering_site};
     $c->stash->{ordering_site} = $ordering_site;
 
+    my $order_properties = $c->config->{order_properties};
+
+    $c->stash->{order_properties} = $order_properties;
+
     $c->stash->{template} = '/order/catalog.mas';
 
 }

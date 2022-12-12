@@ -669,6 +669,10 @@ sub single_step_submission_POST : Args(0) {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $request_date = $time->ymd();
     my $item_name = $c->req->param('item_name');
+    my $order_details = $c->req->param('order_details');
+    print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
+    return;
+
     my $quantity = $c->req->param('quantity');
     my $facility = $c->req->param('facility');
     my $scientist = $c->req->param('scientist');

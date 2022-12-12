@@ -4,6 +4,7 @@ $check_vendor_role
 $ordering_service_name => undef
 $additional_order_info => undef
 $ordering_site => undef
+$order_properties => undef
 
 </%args>
 
@@ -149,6 +150,9 @@ jQuery(document).ready( function() {
     var ordering_service_name = "<% $ordering_service_name %>";
     var additional_order_info = "<% $additional_order_info %>";
     var ordering_site = "<% $ordering_site %>";
+    var order_properties = "<% $order_properties %>";
+    var property_keys = order_properties.split(",");
+
 
     if (ordering_site == 'BAT') {
         jQuery('#catalog_items_table').DataTable( {
@@ -163,7 +167,7 @@ jQuery(document).ready( function() {
                 { title: "Species", "data": "species" },
                 { title: "Variety", "data": "variety" },
                 { title: "Project", "data": "program" },
-                { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_site+"\")'>Request</a>"; } },
+                { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_site+"\", \""+order_properties+"\")'>Request</a>"; } },
             ],
         });
     } else {
@@ -291,16 +295,12 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#single_step_submission_button').click(function(){
+        var order_details = {};
         var item_name = jQuery('#item_name').val();
-        var quantity = jQuery('#item_quantity').val();
-        var facility = jQuery('#item_facility').val();
-        var scientist = jQuery('#item_scientist').val();
-        var due_date = jQuery('#item_due_date').val();
-        var experiment_name = jQuery('#experiment_name').val();
-        var experiment_type = jQuery('#experiment_type').val();
-        var risk_assessment = jQuery('#risk_assessment').val();
-        var containment_zone = jQuery('#containment_zone').val();
-        var additional_comments = jQuery('#additonal_comments').val();
+        for(var i=0; i<property_keys.length; i++){
+            var each_value = jQuery('#'+ i +'').val();
+            order_details[property_keys[i]] = each_value;
+        }
 
         jQuery.ajax({
             url: '/ajax/order/single_step_submission',
@@ -308,15 +308,7 @@ jQuery(document).ready( function() {
             type: 'POST',
             data : {
                 'item_name' : item_name,
-                'quantity': quantity,
-                'facility': facility,
-                'scientist': scientist,
-                'due_date': due_date,
-                'experiment_name': experiment_name,
-                'experiment_type':experiment_type,
-                'risk_assessment': risk_assessment,
-                'containment_zone': containment_zone,
-                'additional_comments': additional_comments
+                'order_details': JSON.stringify(order_details),
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -343,21 +335,29 @@ jQuery(document).ready( function() {
 
 });
 
-function addToCart(item_name, additional_order_info, ordering_service_name, ordering_site ){
+function addToCart(item_name, additional_order_info, ordering_service_name, ordering_site, order_properties ){
     var additional_info = additional_order_info.split(",");
+    var properties = order_properties.split(",");
     var html = '';
 
     if (ordering_site == 'BAT') {
         html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Facility: </label><div class="col-sm-9" ><input class="form-control" id="item_facility" name="item_facility" placeholder="Please Select"></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Scientist(s): </label><div class="col-sm-9" ><input class="form-control" id="item_scientist" name="item_scientist" placeholder=""></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Due/Requested by Date: </label><div class="col-sm-9" ><input class="form-control" id="item_due_date" name="item_due_date" placeholder=""></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Experiment Name: </label><div class="col-sm-9" ><input class="form-control" id="experiment_name" name="experiment_name" placeholder=""></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Experiment Type: </label><div class="col-sm-9" ><input class="form-control" id="experiment_type" name="experiment_type" placeholder="Please Select"></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Risk Assessment: </label><div class="col-sm-9" ><input class="form-control" id="risk_assessment" name="risk_assessment" placeholder=""></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Containment Zone: </label><div class="col-sm-9" ><input class="form-control" id="containment_zone" name="containment_zone" placeholder=""></div><br><br><br>';
-        html = html + '<label class="col-sm-3 control-label">Additional Comments: </label><div class="col-sm-9" ><input class="form-control" id="additional_comments" name="additional_comments" placeholder="eg: Clothing & Special Handling"></div></div></div></form>';
+//        html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Facility: </label><div class="col-sm-9" ><input class="form-control" id="item_facility" name="item_facility" placeholder="Please Select"></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Scientist(s): </label><div class="col-sm-9" ><input class="form-control" id="item_scientist" name="item_scientist" placeholder=""></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Due/Requested by Date: </label><div class="col-sm-9" ><input class="form-control" id="item_due_date" name="item_due_date" placeholder=""></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Experiment Name: </label><div class="col-sm-9" ><input class="form-control" id="experiment_name" name="experiment_name" placeholder=""></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Experiment Type: </label><div class="col-sm-9" ><input class="form-control" id="experiment_type" name="experiment_type" placeholder="Please Select"></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Risk Assessment: </label><div class="col-sm-9" ><input class="form-control" id="risk_assessment" name="risk_assessment" placeholder=""></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Containment Zone: </label><div class="col-sm-9" ><input class="form-control" id="containment_zone" name="containment_zone" placeholder=""></div><br><br><br>';
+//        html = html + '<label class="col-sm-3 control-label">Additional Comments: </label><div class="col-sm-9" ><input class="form-control" id="additional_comments" name="additional_comments" placeholder="eg: Clothing & Special Handling"></div>';
+
+        for(var i=0; i<properties.length; i++){
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
+
+        }
+
+        html = html + '</div></div></form>';
     } else {
         html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
         html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
