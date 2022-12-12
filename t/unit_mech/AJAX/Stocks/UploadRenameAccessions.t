@@ -9,7 +9,7 @@ use Test::WWW::Mechanize;
 use List::MoreUtils qw | any |;
 use LWP::UserAgent;
 use CXGN::List;
-
+use CXGN::Stock::Accession;
 use Data::Dumper;
 use JSON::XS;
 use SGN::Model::Cvterm;
@@ -46,7 +46,7 @@ $message = submit_rename_accessions($sgn_session_id, $message->{archived_filenam
 
 is_deeply($message->{'success'}, 1);
 
-my $stock1 = CXGN::Stock->new( { schema => $f->bcs_schema(), uniquename => 'test_accession100' });
+my $stock1 = CXGN::Stock::Accession->new( { schema => $f->bcs_schema(), uniquename => 'test_accession100' });
 
 my $stock1_synonyms = $stock1->synonyms();
 
@@ -68,7 +68,7 @@ $message = submit_rename_accessions($sgn_session_id, $message->{archived_filenam
 
 is_deeply($message->{success}, 1);
 
-my $stock2 = CXGN::Stock->new( { schema => $f->bcs_schema(), uniquename => 'test_accession1' });
+my $stock2 = CXGN::Stock::Accession->new( { schema => $f->bcs_schema(), uniquename => 'test_accession1' });
 
 my $stock2_synonyms = $stock2->synonyms();
 
