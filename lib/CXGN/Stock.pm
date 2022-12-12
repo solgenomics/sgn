@@ -479,25 +479,6 @@ has 'subjects' => (
     is => 'rw',
 );
 
-=head2 accessor synonyms()
-
- Usage:        my $synonyms = $stock->synonyms();
- Desc:         retrieves synonyms from the database as a lazy build
- Ret:          listref of synonyms
- Args:
- Side Effects: accesses the database
- Example:      
-
-=cut
-
-has 'synonyms' => (
-    isa => 'Maybe[Ref]',
-    is => 'rw',
-    lazy => 1,
-    builder => '_retrieve_synonyms',
-);
-    
-
 
 sub BUILD {
     my $self = shift;
@@ -509,11 +490,15 @@ sub BUILD {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
     }
-
-    if ($self->uniquename) {
+    elsif ($self->uniquename) {
 	$stock = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $self->uniquename() });
-	$self->stock($stock);
-	$self->stock_id($stock->stock_id);
+	if (!$stock) {
+	    print STDERR "Can't find stock ".$self->uniquename.". Generating empty object.\n";
+	}
+	else {
+	    $self->stock($stock);
+	    $self->stock_id($stock->stock_id);
+	}
     }
 
     
@@ -567,19 +552,6 @@ sub _retrieve_stock_owner {
     $self->owners(\@owners);
 }
 
-sub _retrieve_synonyms {
-    my $self =shift;
-    if (! $self->stock_id()) {
-	return [];
-    }
-    my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    my $synonyms_rs = $self->schema()->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $synonym_type_id });
-    my @synonyms = ();
-    while (my $row = $synonyms_rs->next()) {
-	push @synonyms, $row->value();
-    }
-    return \@synonyms;
-}
 
 =head2 store()
 
@@ -1566,11 +1538,6 @@ sub add_synonym {
     my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
     $stock->create_stockprops({$synonym_cvterm->name() => $synonym});
 }
-
-=head2 synonyms()
-
- Usage:  @synonyms = $stock->synonyms();
- Desc:   retrieves the synonyms as a list
 
 
 
