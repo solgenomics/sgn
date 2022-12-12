@@ -542,29 +542,58 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+          <&| /page/info_section.mas, title=>"NIRS upload with existing sample names", collapsible=>1, collapsed=>1 &>
+            <div class="well well-sm">
+                <h3>Upload NIRS in a tabular spreadsheet (.csv) format with the following columns:</h3>
 
-            <h3>Upload NIRS in a tabular spreadsheet (.csv) format with the following columns:</h3>
+                <ul>
+                    <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                    <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g.lo serial number). Can be numeric or letter.</li>
+                    <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
+                    <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc, must be an integer). You can add as many columns as you want upload, there isn't a limit.</li>
+                </ul>
+                <table class="table table-hover table-bordered table-condensed">
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td>sample_name</td>
+                            <td>device_id</td>
+                            <td>comments</td>
+                            <td>wavelength columns (e.g. 400, 1200, etc)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+          </&>
+          <&| /page/info_section.mas, title=>"NIRS upload with other observation_unit names", collapsible=>1, collapsed=>1 &>
+            <div class="well well-sm">
+                <h3>Upload NIRS in a tabular spreadsheet (.csv) format with the following columns. The upload will automatically create new tissue samples attached to your observation_unit names.</h3>
 
-            <ul>
-                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
-                <li><strong>tissue_type</strong>: This should be a specific tissue type, for example leaf, root, stem, seed or fruit. If your sample_names are already tissue_samples, this clarifies the type. If they are not, then the upload will automatically create new tissue samples attached to your plots, plants, or subplots</li>
-                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g.lo serial number). Can be numeric or letter.</li>
-                <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
-                <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc, must be an integer). You can add as many columns as you want upload, there isn't a limit.</li>
-            </ul>
-            <table class="table table-hover table-bordered table-condensed">
-                <thead></thead>
-                <tbody>
-                    <tr>
-                        <td>sample_name</td>
-                        <td>tissue_type</td>
-                        <td>device_id</td>
-                        <td>comments</td>
-                        <td>wavelength columns (e.g. 400, 1200, etc)</td>
-                    </tr>
-                </tbody>
-            </table>
-
+                <ul>
+                    <li><strong>observation_unit</strong>: This should be an observation_unit name that exists in the database.</li>
+                    <li><strong>sample_prefix</strong>: This should be a string describing the sample, the observation unit name will be concatenated with this and the replicate number to create the a sample name, to which the spectra will be attached.</li>
+                    <li><strong>replicate</strong>: The replicate number for the sample.</li>
+                    <li><strong>tissue_type</strong>: This should be a specific tissue type, for example leaf, root, stem, seed or fruit.</li>
+                    <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g.lo serial number). Can be numeric or letter.</li>
+                    <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
+                    <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc, must be an integer). You can add as many columns as you want upload, there isn't a limit.</li>
+                </ul>
+                <table class="table table-hover table-bordered table-condensed">
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td>observationunit_name</td>
+                            <td>sample_prefix</td>
+                            <td>replicate</td>
+                            <td>tissue_type</td>
+                            <td>device_id</td>
+                            <td>comments</td>
+                            <td>wavelength columns (e.g. 400, 1200, etc)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+          </&>
         </div>
       </div>
       <div class="modal-footer">
