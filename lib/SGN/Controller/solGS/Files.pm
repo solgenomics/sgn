@@ -175,6 +175,26 @@ sub filtered_training_genotype_file {
     $self->cache_file($c, $cache_data);
 }
 
+sub genotype_filtering_log_file {
+    my ($self, $c) = @_;
+
+    my $tr_pop_id = $c->stash->{training_pop_id};
+    my $sel_pop_id = $c->stash->{selection_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+    my $file_id = "${tr_pop_id}";
+    $file_id .=  "-${sel_pop_id}" if $sel_pop_id;
+    $file_id .= "-GP-${protocol_id}";
+
+    my $cache_data = { key       => 'genotype_filtering_log' . $file_id,
+                       file      => 'genotype_filtering_log_' . $file_id,
+                       stash_key => 'genotype_filtering_log_file',
+		       cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $self->cache_file($c, $cache_data);
+}
+
 
 sub filtered_selection_genotype_file {
     my ($self, $c) = @_;
