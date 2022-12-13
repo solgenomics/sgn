@@ -105,14 +105,14 @@ jQuery(document).ready(function ($) {
                 else {
 		    //alert("RESPONSE: "+JSON.stringify(response));
                     jQuery('#rename_accessions_upload_success_dialog_message').modal('show');
-		    jQuery('#list_of_uploaded_rename_accessions').val(response.renamed_accessions);
+		    var renamed_accessions_html = response.renamed_accessions.join("<br />");
+		    jQuery('#list_of_uploaded_rename_accessions').html(renamed_accessions_html);
 		    //jQuery('#list_of_already_uploaded_rename_accessions').val(response.grafts_already_present);
                 }
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-		jQuery('#list_of_rename_accessions_with_problems').html(response.list_of_grafts_with_problems);
-                alert('An error occurred storing the accession data. None were renamed.'+response.responseText);
+		alert('An error occurred storing the accession data. None were renamed.'+response.responseText);
             }
         });
     });

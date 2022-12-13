@@ -38,7 +38,8 @@
  	  <h2>The accession renaming list upload was successful.</h2>
 	  
 	  Successfully renamed:<br />
-	  <div id="list_of_uploaded_rename_accessions">
+	  <div class="bg-success" id="list_of_uploaded_rename_accessions">
+	       [loading...]
 	  </div>
 	  <br />
 	  
@@ -113,8 +114,8 @@
 	  
 	  <h4>Required fields:</h4>
 	  <ul>
-            <li>old accession name (exact name MUST exist in the database)</li>
-            <li>new accession name (must NOT exist in the database)</li>
+            <li>old_name (exact name MUST exist in the database)</li>
+            <li>new_name (must NOT exist in the database)</li>
 	  </ul>
 	</div>
       </div>

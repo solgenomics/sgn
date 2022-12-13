@@ -187,7 +187,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     
     my ($header, $rename) = $self->_get_rename_accessions_from_file($c, $archived_filename);
-    
+
     my $info = $self->validate_rename_accessions($c, $header, $rename);
     
     print STDERR "FILE CONTENTS: ".Dumper($rename);
@@ -195,7 +195,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
     my @renamed_accessions;
     my @accessions_already_present;
     my @error_accessions;
-
+    
     if (exists($info->{accessions_already_present}) && defined($info->{accessions_already_present})) {
 	@accessions_already_present = @{$info->{accessions_already_present}};
     }
@@ -203,12 +203,12 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
     
     foreach my $g (@$rename) {
 	my ($old_accession_name, $new_accession_name) = @$g;
-
-
+	
+	
 	my $stock = CXGN::Stock->new( { schema => $schema, uniquename => $old_accession_name });
-
+	
 	$stock->uniquename($new_accession_name);
-
+	
 	if ($store_old_name_as_synonym eq "on") {
 	    print STDERR "Storing old name ($old_accession_name) as synonym for $new_accession_name.\n";
 	    $stock->add_synonym($old_accession_name);
@@ -216,7 +216,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
 	else {
 	    print STDERR "Synonym storing not requested. \n";
 	}
-
+	
 	$stock->store();
 	
 	if (exists($info->{errors}) && defined($info->{error}) && $info->{error} ne ''){
@@ -228,7 +228,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
     }
     
     if (@error_accessions){
-        $c->stash->{rest} = { error => join(", ",@error_accessions) };
+	$c->stash->{rest} = { error => join(", ",@error_accessions) };
         $c->detach();
     }
     $c->stash->{rest} = { success => 1, renamed_accession_count => \@renamed_accessions, renamed_accessions => $rename };
@@ -243,9 +243,9 @@ sub _get_rename_accessions_from_file {
     my $header = <$F>;
     $header =~ s/\r//g;
     chomp($header);
-
+    
     my @header = split/\t/, $header;
-
+    
     foreach my $h (@header) {
 	$h =~ s/^\s+|\s+$//g
     }
@@ -261,39 +261,48 @@ sub _get_rename_accessions_from_file {
 	$new_accession_name =~ s/^\s+|\s+$//g; # trim also
 	push @rename, [ $old_accession_name, $new_accession_name ];
     }
-
-    return \@header, \@rename;
+    
+    return (\@header, \@rename);
 }
+
 
 sub validate_rename_accessions {
     my $self = shift;
     my $c = shift;
     my $header = shift;
     my $rename = shift;
-
+    
+    my $error = "";
+    
+    if ($header->[0] ne "old_name") {
+	$error = "Column 1 header must be old_name. "; 
+    }
+    if ($header->[1] ne "new_name") {
+	$error .= "Column 2 header must be new_name. ";
+    }
+    
     my @must_exist = map { $_->[0] } @$rename;
-
+    
     my @must_not_exist = map { $_->[1] } @$rename;
-
+    
     $self->schema( $c->dbic_schema("Bio::Chado::Schema") );
     print STDERR "INPUT MUST EXIST: ".Dumper(\@must_exist);
     print STDERR "INPUT MUST NOT EXIST: ".Dumper(\@must_not_exist);
     my $list_validate = CXGN::List::Validate->new();
     
-
     my $must_exist_data = $list_validate->validate( $self->schema, 'accessions', \@must_exist );
-
+    
     print STDERR "MUST EXIST: ".Dumper($must_exist_data);
-
+    
     my $must_not_exist_data = $list_validate->validate( $self->schema, 'accessions', \@must_not_exist );
-
+    
     my @missing = ();
     if (ref($must_not_exist_data->{missing})) { 
 	@missing = @{$must_not_exist_data->{missing}};
     }
-
+    
     print STDERR "MUST NOT EXIST MISSING: ".Dumper(\@missing);
-
+    
     my @must_not_exist_but_present = ();
     foreach my $m (@must_not_exist) {
 	print STDERR "checking $m...\n";
@@ -302,10 +311,10 @@ sub validate_rename_accessions {
 	    push @must_not_exist_but_present, $m;
 	}
     }
-
+    
     print STDERR "MUST NOT EXIST BUT PRESENT: ".Dumper(\@must_not_exist_but_present);
     
-    return { must_exist_missing => $must_exist_data->{missing}, must_not_exist_present => \@must_not_exist_but_present };
+    return { error => $error, must_exist_missing => $must_exist_data->{missing}, must_not_exist_present => \@must_not_exist_but_present };
 }
 
     
