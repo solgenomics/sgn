@@ -47,8 +47,6 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
     my $stockprop_columns_view = $params->{extra_stockprop_columns_view} ? decode_json $params->{extra_stockprop_columns_view} : {};
     my $stockprop_columns_view_array = $params->{stockprop_extra_columns_view_array} ? decode_json $params->{stockprop_extra_columns_view_array} : [];
 
-    print STDERR "\n\n->{stock_type}". Dumper $params->{stock_type};
-
     my $stock_search = CXGN::Stock::SearchVector->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -76,7 +74,7 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
             my $uniquename = $_->{uniquename};
             my $type = $_->{stock_type};
             my $organism = $_->{species};
-            my $synonym_string = join ',', @{$_->{synonyms}};
+            my $synonym_string = $_->{synonyms} ? join ',', @{$_->{synonyms}} : undef;
             my @owners = @{$_->{owners}};
             my @owners_html;
             foreach (@owners){
@@ -84,16 +82,8 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
             }
             my $owners_string = join ', ', @owners_html;
 
-            my @return_row;
-            if ($type eq "cross"){
-                @return_row = ( "<a href=\"/cross/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
-            }  elsif ($type eq "family_name"){
-                @return_row = ( "<a href=\"/family/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
-            } elsif ($type eq "seedlot"){
-                @return_row = ( "<a href=\"/breeders/seedlot/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
-            } else {
-                @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
-            }
+            my @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
+
             foreach my $property (@$stockprop_columns_view_array){
                 push @return_row, $_->{$property};
             }

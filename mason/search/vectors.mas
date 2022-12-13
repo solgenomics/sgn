@@ -175,7 +175,6 @@ selected => $vector_cvterm_id
                   <th>Organism</th>
                   <th>Synonyms</th>
                   <th>Submitters</th>
-                  <th>Organization</th>
               </tr>
               </thead>
 
@@ -251,8 +250,9 @@ jQuery(document).ready(function () {
   }
 
   //For adding stockprop columns to search result
-  var stockprop_extra_columns_view = { 'organization':1 };
-  var stockprop_extra_columns_view_array = [ 'organization' ];
+  var stockprop_extra_columns_view = { };
+  var stockprop_extra_columns_view_array = [ ];
+  
   jQuery('#editable_stockprop_view_column_add').click(function(){
       var selected_property = jQuery('#editable_stockprop_view_column_term').val();
       if (!(selected_property in stockprop_extra_columns_view)){
@@ -374,9 +374,6 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
             d.any_name_matchtype = '';//jQuery('#any_name_matchtype').val();
             d.stock_type   = stock_type;
             d.person       = jQuery('#person').val();
-            d.trait        = jQuery('#trait').val();
-            d.minimum_trait_value        = jQuery('#minimum_trait_value').val();
-            d.maximum_trait_value        = jQuery('#maximum_trait_value').val();
             d.project      = jQuery('#project').val();
             d.location     = jQuery('#location').val();
             d.year         = jQuery('#year').val();

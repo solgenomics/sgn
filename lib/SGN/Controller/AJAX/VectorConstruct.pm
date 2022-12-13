@@ -207,11 +207,7 @@ sub create_vector_construct_POST {
                 push @added_stocks, $added_stock_id;
             }
         }
-        if (scalar(@added_stocks) > 0){
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-        }
+
     };
 
     #save data
@@ -226,6 +222,12 @@ sub create_vector_construct_POST {
 
     if ($transaction_error){
         $status = sprintf('There was an error storing vector %s', $transaction_error);
+    }
+
+    if (scalar(@added_stocks) > 0){
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
     }
 
     $c->stash->{rest} = {response=>$status};

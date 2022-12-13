@@ -23,8 +23,6 @@ my $stock_search = CXGN::Stock::SearchVector->new({
     owner_first_name=>$owner_first_name,
     owner_last_name=>$owner_last_name,
     trait_cvterm_name_list=>\@trait_cvterm_name_list,
-    minimum_phenotype_value=>$minimum_phenotype_value,
-    maximum_phenotype_value=>$maximum_phenotype_value,
     trial_id_list=>\@trial_id_list,
     trial_name_list=>\@trial_name_list,
     breeding_program_id_list=>\@breeding_program_id_list,
@@ -168,16 +166,6 @@ has 'trait_cvterm_name_list' => (
     is => 'rw',
 );
 
-has 'minimum_phenotype_value' => (
-    isa => 'Num|Undef',
-    is => 'rw',
-);
-
-has 'maximum_phenotype_value' => (
-    isa => 'Num|Undef',
-    is => 'rw',
-);
-
 has 'trial_name_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
@@ -252,10 +240,7 @@ sub search {
     my $organism_id = $self->organism_id;
     my $owner_first_name = $self->owner_first_name;
     my $owner_last_name = $self->owner_last_name;
-    my $minimum_phenotype_value = $self->minimum_phenotype_value;
-    my $maximum_phenotype_value = $self->maximum_phenotype_value;
     my @uniquename_array = $self->uniquename_list ? @{$self->uniquename_list} : ();
-    my @trait_name_array = $self->trait_cvterm_name_list ? @{$self->trait_cvterm_name_list} : ();
     my @trial_name_array = $self->trial_name_list ? @{$self->trial_name_list} : ();
     my @trial_id_array = $self->trial_id_list ? @{$self->trial_id_list} : ();
     my @location_name_array = $self->location_name_list ? @{$self->location_name_list} : ();
@@ -270,8 +255,6 @@ sub search {
         
     my $stock_type_name = 'vector_construct';
     my $stock_type_id;
-print STDERR "\nstock_type_id:" . $stock_type_id;
-print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
 
     unless ($matchtype eq 'exactly') { #trim whitespace from both ends unless exact search was specified
         $any_name =~ s/^\s+|\s+$//g;
@@ -338,7 +321,6 @@ print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
         $and_conditions->{'me.type_id'} = $stock_type_id;
         $stock_type_search = $stock_type_id;
     }
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     if ( $owner_first_name || $owner_last_name ){
         my %person_params;
@@ -367,20 +349,6 @@ print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
     my $stock_join;
     my $nd_experiment_joins = [];
 
-    if (scalar(@trait_name_array)>0 || $minimum_phenotype_value || $maximum_phenotype_value){
-        push @$nd_experiment_joins, {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }};
-        foreach (@trait_name_array){
-            if ($_){
-                push @{$and_conditions->{ 'observable.name' }}, $_;
-            }
-        }
-        if ($minimum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '>' => $minimum_phenotype_value };
-        }
-        if ($maximum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '<' => $maximum_phenotype_value };
-        }
-    }
 
     if (scalar(@location_name_array)>0){
         push @$nd_experiment_joins, 'nd_geolocation';
@@ -471,12 +439,12 @@ print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
                 }
 
             } else {
-                print STDERR "Stockprop $term_name is not in this database! Only use stock_property in system_cvterms.txt!\n";
+                print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
             }
         }
         my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
 
-        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";print STDERR $stockprop_query;
+        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
@@ -484,7 +452,7 @@ print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
         }
     }
 
-    if ($stock_type_search == $accession_cvterm_id){
+    if ($stock_type_search == $stock_type_id){
         $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
     } else {
         $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
@@ -555,12 +523,6 @@ print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
                 common_name => $common_name,
                 organism_id => $organism_id,
                 owners => \@owners,
-                # pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
-                # synonyms=> $stock_object->synonyms,
-                # speciesAuthority=>$stock_object->get_species_authority,
-                # subtaxa=>$stock_object->get_subtaxa,
-                # subtaxaAuthority=>$stock_object->get_subtaxa_authority,
-                # donors=>$stock_object->donors,
             };
         } else {
             $result_hash{$stock_id} = {
@@ -570,50 +532,14 @@ print STDERR "\nSstock_type_name:" . $stock_type_name ."\n";
         }
     }
     #print STDERR Dumper \%result_hash;
-    
+
     # Comma separated list of query placeholders for the result stock ids
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
     
-    # Get additional organism properties (species authority, subtaxa, subtaxa authority)
-    my $organism_query = "SELECT op.organism_id, cvterm.name, op.value, op.rank
-FROM organismprop AS op
-LEFT JOIN cvterm ON (op.type_id = cvterm.cvterm_id)
-WHERE op.organism_id IN (SELECT DISTINCT(organism_id) FROM stock WHERE stock_id IN ($id_ph))
-AND cvterm.name IN ('species authority', 'subtaxa', 'subtaxa authority')
-ORDER BY organism_id ASC;";
-    my $organism_sth = $schema->storage()->dbh()->prepare($organism_query);
-    $organism_sth->execute(@result_stock_ids);
-
-    # Parse organism properties into hash $organism_props->organism_id->prop_type (cvterm name)->prop values (array)
-    my %organism_props;
-    while ( my @r = $organism_sth->fetchrow_array() ) {
-        my $organism_id = $r[0];
-        my $prop_type = $r[1];
-        my $prop_value = $r[2];
-
-        if ( !defined($organism_props{$organism_id}) ) {
-            $organism_props{$organism_id} = {
-                organism_id => $organism_id
-            };
-        }
-        if ( !defined($organism_props{$organism_id}->{$prop_type}) ) {
-            $organism_props{$organism_id}->{$prop_type} = ();
-        }
-
-        push @{$organism_props{$organism_id}->{$prop_type}}, $prop_value;
-    }
-    
     # Get additional stock properties (pedigree, synonyms, donor info)
-    my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
-               mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\"
-        FROM stock
-        LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
-        LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
-        LEFT JOIN stock_relationship f_rel ON (stock.stock_id = f_rel.object_id AND f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
-        LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
-        LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
-        WHERE stock.stock_id IN ($id_ph);";
+    my $stock_query = "SELECT stock_id, uniquename, organism_id, stock_synonym
+        FROM materialized_stockprop
+        WHERE stock_id IN ($id_ph);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
     $sth->execute(@result_stock_ids);
     
@@ -621,37 +547,11 @@ ORDER BY organism_id ASC;";
     while (my @r = $sth->fetchrow_array()) {
         my $stock_id = $r[0];
         my $organism_id = $r[2];
-        my $mother = $r[3] || 'NA';
-        my $father = $r[4] || 'NA';
-        my $syn_json = $r[6] ? decode_json(encode("utf8",$r[6])) : {};
+        my $syn_json = $r[3] ? decode_json(encode("utf8",$r[3])) : {};
         my @synonyms = sort keys %{$syn_json};
-        my $donor_json = $r[7] ? decode_json(encode("utf8",$r[7])) : {};
-        my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
-        my $donor_pui_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
-        my @donor_accessions = keys %{$donor_json};
-        my @donor_institutes = keys %{$donor_inst_json};
-        my @donor_puis = keys %{$donor_pui_json};
 
         # add stock props to the result hash
-        $result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
         $result_hash{$stock_id}{synonyms} = \@synonyms;
-        my @donor_array;
-        if (scalar(@donor_accessions)>0 && scalar(@donor_institutes)>0 && scalar(@donor_puis)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
-            for (0 .. scalar(@donor_accessions)-1){
-                push @donor_array, {
-                    'donorGermplasmName'=>$donor_accessions[$_],
-                    'donorAccessionNumber'=>$donor_accessions[$_],
-                    'donorInstituteCode'=>$donor_institutes[$_],
-                    'germplasmPUI'=>$donor_puis[$_]
-                };
-            }
-        }
-        $result_hash{$stock_id}{donors} = \@donor_array;
-
-        # add organism props for each stock
-        $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
-        $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
-        $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
