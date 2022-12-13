@@ -669,31 +669,10 @@ sub single_step_submission_POST : Args(0) {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $request_date = $time->ymd();
     my $item_name = $c->req->param('item_name');
-    my $order_details = $c->req->param('order_details');
-    print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
-    return;
+    my $order_details = decode_json ($c->req->param('order_details'));
+    my %details;
 
-    my $quantity = $c->req->param('quantity');
-    my $facility = $c->req->param('facility');
-    my $scientist = $c->req->param('scientist');
-    my $due_date = $c->req->param('due_date');
-    my $experiment_name = $c->req->param('experiment_name');
-    my $experiment_type = $c->req->param('experiment_type');
-    my $risk_assessment = $c->req->param('risk_assessment');
-    my $containment_zone = $c->req->param('containment_zone');
-    my $additional_comments = $c->req->param('additional_comments');
-    my %request_details;
-    my @item_list;
-    $request_details{$item_name}{'Quantity'} = $quantity;
-    $request_details{$item_name}{'Facility'} = $facility;
-    $request_details{$item_name}{'Scientist'} = $scientist;
-    $request_details{$item_name}{'Required by Date'} = $due_date;
-    $request_details{$item_name}{'Experiment Name'} = $experiment_name;
-    $request_details{$item_name}{'Experiment Type'} = $experiment_type;
-    $request_details{$item_name}{'Risk Assessment'} = $risk_assessment;
-    $request_details{$item_name}{'Containment Zone'} = $containment_zone;
-    $request_details{$item_name}{'Additional Comments'} = $additional_comments;
-
+    $details{$item_name} = $order_detail
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
         $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
@@ -711,9 +690,9 @@ sub single_step_submission_POST : Args(0) {
     my $item_info_hash = decode_json $item_info_string;
     my $contact_person_id = $item_info_hash->{'contact_person_id'};
     my $item_type = $item_info_hash->{'item_type'};
-    $request_details{$item_name}{'item_type'} = $item_type;
-    push @item_list, \%request_details;
-    print STDERR "REQUEST DETAILS =".Dumper(\%request_details)."\n";
+    $details{$item_name}{'item_type'} = $item_type;
+    push my @item_list, \%details;
+    print STDERR "REQUEST DETAILS =".Dumper(\%details)."\n";
     my @history = ();
     my $history_info = {};
 
@@ -764,7 +743,6 @@ END_HEREDOC
     CXGN::Contact::send_email($subject,$body,$contact_email);
 
     $c->stash->{rest}->{success} .= 'Your request has been submitted successfully and the vendor has been notified.';
-
 
 }
 
