@@ -86,15 +86,18 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     $c->tempfiles_subdir("spatial_model_files");
     my $spatial_model_tmp_output = $c->config->{cluster_shared_tempdir}."/spatial_model_files";
+    print STDERR "spatial_model_tmp_output: $spatial_model_tmp_output\n";
     mkdir $spatial_model_tmp_output if ! -d $spatial_model_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
       "spatial_model_download_XXXXX",
       DIR=> $spatial_model_tmp_output,
     );
+    print STDERR "tempfile: $tempfile\n";
 
-    my $temppath = $c->config->{basepath}."/".$tempfile;
+    #my $temppath = $c->config->{basepath}."/".$tempfile;
+    #print STDERR "temppath: $temppath\n";
 
-    my $pheno_filepath = $temppath . "_phenotype.txt";
+    my $pheno_filepath = $tempfile . "_phenotype.txt";
 
     print STDERR "pheno_filepath: $pheno_filepath\n";
 
