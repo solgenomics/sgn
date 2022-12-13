@@ -37,15 +37,12 @@
         <div class="container-fluid">
  	  <h2>The accession renaming list upload was successful.</h2>
 	  
-	  Successfully created:<br />
-	  <textarea id="list_of_uploaded_rename_accessions">
-	  </textarea>
+	  Successfully renamed:<br />
+	  <div id="list_of_uploaded_rename_accessions">
+	  </div>
 	  <br />
 	  
-	  Already in the system:<br />
-	  <textarea id="list_of_already_uploaded_rename_accessions">
-	  </textarea>
-
+	 
 	  <div id="list_of_rename_accessions_with_problem"></div>
         </div>
       </div>
@@ -75,7 +72,7 @@
   	  </&>
 
   	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_rename_accessions_form" name="upload_rename_accessions_form">
-    	    <label for="rename_accession_uploaded_file" style="display: inline-block; width: 100px;">Upload Rename Accessios File:</label>
+    	    <label for="rename_accession_uploaded_file" style="display: inline-block; width: 300px;">Upload Rename Accessions File:</label>
     	    <input type="file" name="rename_accessions_uploaded_file" id="rename_accessions_uploaded_file" encoding="multipart/form-data" />
     	  </form>
         </div>
