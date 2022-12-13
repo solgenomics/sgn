@@ -101,6 +101,7 @@ $stockref => undef
   </div>
   <hr>
   <button style="float:right" class="btn btn-primary btn-lg" id="contact_form_submit">Add new vector</button>
+  <input type="reset" value="Reset" class="btn btn-primary btn-lg" style="float:right;background-color: white; color:black" />
   <br><br>
 
 </form>
