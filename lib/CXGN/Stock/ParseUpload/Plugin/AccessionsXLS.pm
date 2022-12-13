@@ -32,6 +32,8 @@ sub _validate_with_plugin {
     my %errors;
     my %missing_accessions;
 
+    print STDERR "Check 3.0.1: CXGN::Stock::ParseUpload ".localtime()."\n";
+
     #try to open the excel file and report any errors
     my $excel_obj = $parser->parse($filename);
     if (!$excel_obj) {
@@ -56,6 +58,8 @@ sub _validate_with_plugin {
         $self->_set_parse_errors(\%errors);
         return;
     }
+
+    print STDERR "Check 3.0.2: CXGN::Stock::ParseUpload ".localtime()."\n";
 
     #get column headers
     my $accession_name_head;
@@ -107,6 +111,8 @@ sub _validate_with_plugin {
         push @error_messages, "Cell E1: synonym is missing from the header";
     }
 
+    print STDERR "Check 3.0.3: CXGN::Stock::ParseUpload ".localtime()."\n";
+
     my %seen_accession_names;
     my %seen_species_names;
     my %seen_synonyms;
@@ -141,6 +147,8 @@ sub _validate_with_plugin {
             $seen_species_names{$species_name}=$row_name;
         }
     }
+
+    print STDERR "Check 3.0.4: CXGN::Stock::ParseUpload ".localtime()."\n";
 
     my @species = keys %seen_species_names;
     my $species_validator = CXGN::List::Validate->new();
@@ -226,14 +234,23 @@ sub _parse_with_plugin {
         }
     }
 
+    print STDERR "Check 3.1.1: CXGN::Stock::ParseUpload ".localtime()."\n";
+
     my @accession_list = keys %seen_accession_names;
+    my @lc_accession_list = map { lc($_) } @accession_list;
     my @synonyms_list = keys %seen_synonyms;
     my @organism_list = keys %seen_species_names;
     my %accession_lookup;
-    my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-ilike=>\@accession_list}});
-    while(my $r=$accessions_in_db_rs->next){
+
+    my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({
+        # 'LOWER(uniquename)' => { 'in' => \@lc_accession_list }
+        uniquename => { -in => \@accession_list }
+    });
+    while (my $r=$accessions_in_db_rs->next) {
         $accession_lookup{$r->uniquename} = $r->stock_id;
     }
+
+    print STDERR "Check 3.1.2: CXGN::Stock::ParseUpload ".localtime()."\n";
 
     # Old accession upload format had "(s)" appended to the editable_stock_props terms... this is now not the case, but should still allow for it. Now the header of the uploaded file should use the terms in the editable_stock_props configuration key directly.
     my %col_name_map = (
@@ -291,6 +308,8 @@ sub _parse_with_plugin {
         push @header, $stockprops_head;
     }
 
+    print STDERR "Check 3.1.3: CXGN::Stock::ParseUpload ".localtime()."\n";
+
     for my $row ( 1 .. $row_max ) {
         my $accession_name;
         my $species_name;
@@ -338,6 +357,8 @@ sub _parse_with_plugin {
             $row_info{stock_id} = $stock_id;
         }
 
+        print STDERR "Check 3.1.4: CXGN::Stock::ParseUpload ".localtime()."\n";
+
         my $counter = 0;
         for my $i (5..$col_max){
             my $stockprop_header_term = $header[$counter];
@@ -368,6 +389,8 @@ sub _parse_with_plugin {
         $parsed_entries{$row} = \%row_info;
     }
 
+    print STDERR "Check 3.1.5: CXGN::Stock::ParseUpload ".localtime()."\n";
+
     my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
     my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
     my $max_distance = 0.2;
@@ -389,6 +412,8 @@ sub _parse_with_plugin {
     if ($do_fuzzy_search) {
         my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
 
+        print STDERR "Check 3.1.6: CXGN::Stock::ParseUpload with fuzzy search".localtime()."\n";
+
         $found_accessions = $fuzzy_search_result->{'found'};
         $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
         $absent_accessions = $fuzzy_search_result->{'absent'};
@@ -407,20 +432,44 @@ sub _parse_with_plugin {
             $absent_organisms = $fuzzy_organism_result->{'absent'};
         }
 
+        print STDERR "Check 3.1.7: CXGN::Stock::ParseUpload with fuzzy search".localtime()."\n";
+
         if ($fuzzy_search_result->{'error'}){
             $return_data{error_string} = $fuzzy_search_result->{'error'};
         }
     } else {
-        my $validator = CXGN::List::Validate->new();
-        my $absent_accessions = $validator->validate($schema, 'accessions', \@accession_list)->{'missing'};
-        my %accessions_missing_hash = map { $_ => 1 } @$absent_accessions;
+        print STDERR "Check 3.1.6: CXGN::Stock::ParseUpload no fuzzy search".localtime()."\n";
+        # my $validator = CXGN::List::Validate->new();
+
+        # Current system puts all missing accessions in a missing hash, everything else in found and fuzzy
 
         foreach (@accession_list){
-            if (!exists($accessions_missing_hash{$_})){
+            if (exists($accession_lookup{$_})){
+                print STDERR "$_ already exists, adding to found array\n";
                 push @$found_accessions, { unique_name => $_,  matched_string => $_};
                 push @$fuzzy_accessions, { unique_name => $_,  matched_string => $_};
+            } else {
+                print STDERR "$_ does not exist, adding to absent accessions\n";
+                push @$absent_accessions, $_;
             }
         }
+
+        # my %existing_accessions_hash = map { $_ => 1 } keys %accession_lookup;
+        #
+        # my @absent_accessions
+        #
+        # # my $absent_accessions = $validator->validate($schema, 'accessions', \@accession_list)->{'missing'};
+        # my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
+        #
+        #
+        #
+        # foreach (@accession_list){
+        #     if (!exists($accessions_missing_hash{$_})){
+        #         push @$found_accessions, { unique_name => $_,  matched_string => $_};
+        #         push @$fuzzy_accessions, { unique_name => $_,  matched_string => $_};
+        #     }
+        # }
+        print STDERR "Check 3.1.7: CXGN::Stock::ParseUpload no fuzzy search".localtime()."\n";
     }
 
     %return_data = (
@@ -435,7 +484,7 @@ sub _parse_with_plugin {
         fuzzy_organisms => $fuzzy_organisms,
         absent_organisms => $absent_organisms
     );
-    print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";             
+    # print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";
 
     $self->_set_parsed_data(\%return_data);
     return 1;

@@ -50,13 +50,15 @@ has '_parsed_data' => (
 sub parse {
   my $self = shift;
 
+  print STDERR "Check 3.0: CXGN::Stock::ParseUpload ".localtime()."\n";
+
   if (!$self->_validate_with_plugin()) {
 		my $errors = $self->get_parse_errors();
     print STDERR "\nCould not validate trial file: ".$self->get_filename()."\nError:".Dumper($errors)."\n";
     return;
   }
 
-  print STDERR "Check 3.1: CXGN::Stock::ParseUpload ".localtime();
+  print STDERR "Check 3.1: CXGN::Stock::ParseUpload ".localtime()."\n";
 
   if (!$self->_parse_with_plugin()) {
 		my $errors = $self->get_parse_errors();
@@ -64,7 +66,7 @@ sub parse {
     return;
   }
 
-  print STDERR "Check 3.2: CXGN::Stock::ParseUpload ".localtime();
+  print STDERR "Check 3.2: CXGN::Stock::ParseUpload ".localtime()."\n";
 
   if (!$self->_has_parsed_data()) {
 		my $errors = $self->get_parse_errors();
@@ -74,7 +76,7 @@ sub parse {
     return $self->_parsed_data();
   }
 
-  print STDERR "Check 3.3: CXGN::Stock::ParseUpload ".localtime();
+  print STDERR "Check 3.3: CXGN::Stock::ParseUpload ".localtime()."\n";
 
 	my $errors = $self->get_parse_errors();
   print STDERR "\nError parsing trial file: ".$self->get_filename()."\nError:".Dumper($errors)."\n";

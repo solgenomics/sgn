@@ -45,6 +45,8 @@ sub get_matches {
     my @found_organisms;
     my %results;
 
+    print STDERR "OrganismFuzzySearch 1".localtime()."\n";
+
     my $q = "SELECT species from organism;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
@@ -53,6 +55,8 @@ sub get_matches {
         $uniquename_hash{$species}++;
     }
     my @complete_species_list = keys %uniquename_hash;
+
+    print STDERR "OrganismFuzzySearch 2".localtime()."\n";
 
     foreach my $species_name (@$species_list_ref) {
         if (exists($uniquename_hash{$species_name})){
@@ -80,11 +84,14 @@ sub get_matches {
         $species_and_fuzzy_matches{'matches'} = \@matches;
         push (@fuzzy_organisms, \%species_and_fuzzy_matches);
     }
+    print STDERR "OrganismFuzzySearch 3".localtime()."\n";
     $results{'found'} = \@found_organisms;
     $results{'fuzzy'} = \@fuzzy_organisms;
     $results{'absent'} = \@absent_organisms;
     return \%results;
 }
+
+
 
 ###
 1;

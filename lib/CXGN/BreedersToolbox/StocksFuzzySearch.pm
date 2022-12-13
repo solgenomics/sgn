@@ -48,14 +48,17 @@ sub get_matches {
     my @found_stocks;
     my %results;
     my $error = '';
-    print STDERR "FuzzySearch 1".localtime()."\n";
-    
+    print STDERR "StocksFuzzySearch 1".localtime()."\n";
+
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
     my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$stock_type_id";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %uniquename_hash;
+
+    print STDERR "StocksFuzzySearch 2".localtime()."\n";
+
     while (my ($uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
         $uniquename_hash{$uniquename}++;
         if ($type_id){
@@ -76,23 +79,25 @@ sub get_matches {
         $lowercase_name_lookup{lc($_)} = $_;
     }
 
+    print STDERR "StocksFuzzySearch 3".localtime()."\n";
+
     my @lowercased_synonyms;
     my %lowercase_synonym_lookup;
     foreach (@synonym_names){
         push @lowercased_synonyms, lc($_);
         $lowercase_synonym_lookup{lc($_)} = $_;
     }
-    print STDERR "FuzzySearch 2".localtime()."\n";
+    print STDERR "StocksFuzzySearch 4".localtime()."\n";
 
     foreach my $stock_name (@stock_list) {
 	#lookup case insensitive stock names#
 	my $lc_name = lc($stock_name);
 	if (exists($lowercase_name_lookup{$lc_name})){
 	    my $uniquename = $lowercase_name_lookup{$lc_name};
-            push @found_stocks, {matched_string => $stock_name, unique_name => $uniquename}; 
+            push @found_stocks, {matched_string => $stock_name, unique_name => $uniquename};
             next;
         }
-	#lookup cases insensitive stock synonyms# 
+	#lookup cases insensitive stock synonyms#
         if (exists($lowercase_synonym_lookup{$lc_name})){
             my %match_info;
             if (scalar(@{$lowercase_synonym_lookup{$lc_name}}) > 1){
@@ -115,7 +120,6 @@ sub get_matches {
                 push @search_stock_names, $_;
             }
         }
-
        #####case-sensitive matches are exact_match
         my @stock_matches = @{$fuzzy_string_search->get_matches(lc($stock_name), \@search_stock_names, $max_distance)};
 
@@ -149,6 +153,7 @@ sub get_matches {
             };
         }
     }
+    print STDERR "StocksFuzzySearch 5".localtime()."\n";
 
     if ($error){
         print STDERR "FUZZY ERRORS: $error\n";
