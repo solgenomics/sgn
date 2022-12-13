@@ -63,7 +63,7 @@ sub check_success {
     {
 	$output_details = $self->check_population_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /(single|multiple) model/ )
+    elsif ( $analysis_profile->{analysis_type} =~ /(training|multiple) model/ )
     {
 	if ($output_details->{data_set_type} =~ /combined populations/)
 	{
