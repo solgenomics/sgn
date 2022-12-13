@@ -364,7 +364,7 @@ $dataset_id => undef
                 <select class="wizard-download-phenotypes-format form-control input-sm">
                   <option value="" disabled>Download Format</option>
                   <option selected value="csv">CSV</option>
-                  <option value="xls">XLS</option>
+                  <option value="xlsx">XLSX</option>
                 </select>
               </td>
               <td colspan="1">
