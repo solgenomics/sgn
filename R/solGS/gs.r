@@ -91,6 +91,7 @@ message('model input trait geno file ', modelPhenoFile)
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 analysisReportFile <- grep("_report_", outputFiles, value = TRUE)
+genoFilteringLogFile <- grep("genotype_filtering_log", outputFiles, value = TRUE)
 
 filteredTrainingGenoFile       <- grep("filtered_training_genotype_data", outputFiles, value = TRUE)
 filteredSelGenoFile       <- grep("filtered_selection_genotype_data", outputFiles, value = TRUE)
@@ -108,6 +109,7 @@ if (file.info(genoFile)$size == 0) {
 
 readfilteredTrainingGenoData <- c()
 filteredTrainingGenoData <- c()
+genoFilterLog <- c()
 formattedPhenoData <- c()
 phenoData          <- c()
 genoData           <- c()
@@ -141,16 +143,23 @@ if (is.null(filteredTrainingGenoData)) {
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
 
-    
     trainingLog <- append(trainingLog, "Running trainning population genotype data cleaning now....")
     genoFilterOut <- filterGenoData(genoData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
     
     genoData <- genoFilterOut$data
-    trainingLog <- append(trainingLog, genoFilterOut$log)
+    genoFilteringLog <- genoFilterOut$log
     genoData <- roundAlleleDosage(genoData)
     filteredTrainingGenoData   <- genoData
 
+} else {
+  genoFilteringLog <- scan(genoFilteringLogFile, what = "character", sep="\n")
+  genoFilteringLog <- paste0(genoFilteringLog, collapse="\n")
 }
+
+message("genofilteringlogfile: ", genoFilteringLogFile)
+message(genoFilteringLog)
+trainingLog <- append(trainingLog, genoFilteringLog)
+
 genoData <- genoData[order(row.names(genoData)), ]
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
@@ -187,7 +196,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
 
 phenoTrait <- c()
 traitRawPhenoData <- c()
-
+anovaLog <- c("\nPreprocessing phenotype data now....\n")
 if (datasetInfo == 'combined populations') {
 
    if (!is.null(formattedPhenoData)) {
@@ -222,7 +231,8 @@ if (datasetInfo == 'combined populations') {
                                    logReturn=TRUE)
 
          
-          trainingLog <- paste0(trainingLog, "\n\n", meansResult$log)
+
+          anovaLog <- paste0(anovaLog, meansResult$log)
           phenoTrait <- meansResult$adjMeans
      }
 
@@ -276,19 +286,16 @@ selectionLog <- append(selectionLog, paste0("Data preprocessing of selection pop
                            na.strings = c("NA", "", "--", "-"))
 
   selectionData <- data.frame(selectionData)
-   
-
-  selectionData <- unique(selectionData, by='V1')
-   
+  selectionData <- unique(selectionData, by='V1') 
   selectionData <- column_to_rownames(selectionData, 'V1')
   selectionData <- convertToNumeric(selectionData)
+
   selectionLog <- append(selectionLog, "Running selection population genotype data cleaning now....")
 
   selectionFilterOut <- filterGenoData(selectionData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
   selectionData <- selectionFilterOut$data
   selectionLog <- append(selectionLog, selectionFilterOut$log)
   selectionData <- roundAlleleDosage(selectionData)
-
 }
 
 #impute genotype values for obs with missing values,
@@ -485,7 +492,6 @@ if (length(selectionData) == 0) {
   colnames(ordered.markerEffects) <- c("Marker Effects")
   ordered.markerEffects <- data.frame(ordered.markerEffects)
 
-
   modelPhenoData   <- data.frame(round(phenoTraitMarker, 2))
 
   heritability  <- round((trModel$Vg/(trModel$Ve + trModel$Vg)), 2)
@@ -528,7 +534,6 @@ if (length(selectionData) == 0) {
 
       set.seed(4567)
 
-    
       k <- 10
       times <- 2
       cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
@@ -557,7 +562,6 @@ if (length(selectionData) == 0) {
 
               #calculate cross-validation accuracy
               valBlups   <- result$g
-
               valBlups   <- data.frame(valBlups)
 
               slG <- slG[which(slG <= nrow(phenoTrait))]
@@ -698,7 +702,6 @@ if (length(combinedGebvsFile) != 0 ) {
     }
 }
 
-
 if (!is.null(modelPhenoData) && length(modelPhenoFile) != 0) {
 
     if (!is.null(meanType)) {
@@ -742,6 +745,7 @@ if (!is.null(filteredTrainingGenoData) && file.info(filteredTrainingGenoFile)$si
          quote = FALSE,
          )
 
+  cat(genoFilteringLog, fill = TRUE,  file = genoFilteringLogFile, append=FALSE)
 }
 
 if (length(filteredSelGenoFile) != 0 && file.info(filteredSelGenoFile)$size == 0) {
@@ -772,7 +776,6 @@ if (length(filteredSelGenoFile) != 0 && file.info(filteredSelGenoFile)$size == 0
 ##               )
 ## }
 
-
 if (file.info(relationshipMatrixFile)$size == 0) {
 
   fwrite(relationshipMatrix,
@@ -801,7 +804,6 @@ if (file.info(relationshipMatrixJsonFile)$size == 0) {
                     file  = relationshipMatrixJsonFile,
                     )
 }
-
 
 if (file.info(traitRelationshipMatrixFile)$size == 0) {
 
@@ -881,14 +883,10 @@ if (!is.null(varCompData)) {
   cat(varCompData, file = varianceComponentsFile)
 }
 
-message("log file: ", analysisReportFile)
-message("training log\n", trainingLog)
-message("selection log\n", selectionLog)
 if (!is.null(selectionLog)) {
-message("writing selection log to: ", analysisReportFile)
-cat(selectionLog, fill = TRUE,  file = analysisReportFile, append=TRUE)
+  cat(selectionLog, fill = TRUE,  file = analysisReportFile, append=FALSE)
 } else {
-cat(trainingLog, fill = TRUE,  file = analysisReportFile, append=TRUE)
+  cat(anovaLog, trainingLog, fill = TRUE,  file = analysisReportFile, append=FALSE)
 }
 
 message("Done.")
