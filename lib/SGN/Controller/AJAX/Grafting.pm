@@ -257,8 +257,10 @@ sub validate_grafts {
        
 	my $graft_check = $add->validate_grafts($separator_string);
 
-	push @missing_accessions, @{$graft_check->{missing_accessions}};
-	push @grafts_already_present, @{$graft_check->{grafts_already_present}};
+	if ($graft_check) { 
+	    push @missing_accessions, @{$graft_check->{missing_accessions}};
+	    push @grafts_already_present, @{$graft_check->{grafts_already_present}};
+	}
 	
 	if (defined($graft_check->{errors}) && @{$graft_check->{errors}} > 0){
 	    push @errors, "There was a problem validating graft between $scion and $rootstock (".join("\n", @{$graft_check->{errors}}).")";
