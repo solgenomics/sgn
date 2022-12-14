@@ -28,8 +28,12 @@ userSexes = args[5]
 userFixed = args[6]
 userRandom = args[7]
 
+#userSexes = as.vector(userSexes)
 
-write(paste('PLANT SEX CVTERM: ', userSexes), stderr())
+#L = length(userSexes)
+#if (L==1 && userSexes[1]!="") {write('PLANT SEX is empty: ', stderr())}
+write(paste('PLANT SEX CVTERM: |', userSexes, "|"), stderr())
+
 
 ################################################################################
 # 1. Load software needed
@@ -177,7 +181,7 @@ userNCrosses <- 100 # for testing only
 #    monomorphic or biallelic sites which could be communicated through the GUI.
 #    It's also possible to filter them here.
 
-if (file_ext(genotypeFile) == 'vcf') { 
+if (file_ext(genotypeFile) == 'vcf') {
    write(paste("READING VARIANT FILE ", genotypeFile), stderr())
    #  Import VCF with VariantAnnotation package and extract matrix of dosages
    myVCF <- readVcf(genotypeFile)
@@ -201,10 +205,10 @@ if (file_ext(genotypeFile) == 'vcf') {
    write(paste("READING DOSAGE FILE ", genotypeFile), stderr())
      GF <- read.delim(genotypeFile)
      GD <- GF[,-1]
-     GM <- as.matrix(GD)	
+     GM <- as.matrix(GD)
      G <- t(GM)
 
-     
+
 }
 
 write("G Matrix start --------", stderr())
@@ -461,9 +465,9 @@ write("weight marker effects...", stderr())
 ai <- 0
 di <- 0
 for(i in 1:length(userWeights)){
-  write(paste("USER ADD EFF : ", userAddEff[[i]]), stderr())
-    write(paste("USER DOM EFF : ", userDomEff[[i]]), stderr())
-  write(paste("USER WEIGHT : ", userWeights[i]), stderr())
+  #write(paste("USER ADD EFF : ", userAddEff[[i]]), stderr())
+  #  write(paste("USER DOM EFF : ", userDomEff[[i]]), stderr())
+  #write(paste("USER WEIGHT : ", userWeights[i]), stderr())
 
 
        ai <- ai + userAddEff[[i]] *  userWeights[i]
@@ -517,8 +521,8 @@ write("Done with calcCrossMean!!!!!!", stderr())
 
 #assign_hash(userPheno$germplasmName, userPheno$userSexes, hash)
 
-if(!is.na(userSexes)){  # "plant sex estimation 0-4"
-
+if(userSexes!=""){  # "plant sex estimation 0-4"
+#!is.na(userSexes)
 
   write(paste("userSexes", head(userSexes)), stderr())
 
@@ -559,7 +563,7 @@ if(!is.na(userSexes)){  # "plant sex estimation 0-4"
 }
 
 
-if(is.na(userSexes)){
+if(userSexes==""){
 
   # only subset the number of crosses the user wishes to output
   crossPlan <- as.data.frame(crossPlan)

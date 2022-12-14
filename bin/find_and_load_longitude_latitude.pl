@@ -13,7 +13,7 @@ find_and_load_longitude_latitude.pl - find long/lat, altitude, country_name, cou
   -H localhost
   -D database
   -O outfile.csv
-  -s save found props that don't have exisiting values in the database
+  -s save found props that don't have existing values in the database
 
 =head1 DESCRIPTION
 

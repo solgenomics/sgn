@@ -114,11 +114,9 @@ $trial_name
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Soil data may be uploaded in an Excel file (.xls)
+                        Soil data may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
                     <br>
-                        (.xlsx format not supported)
-                    <br><br>
                     <b>
                         Header:
                     </b>

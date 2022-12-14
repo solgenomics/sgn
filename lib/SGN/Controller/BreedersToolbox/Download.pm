@@ -21,7 +21,7 @@ use File::Basename;
 use File::Copy;
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
-use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Trial::Download;
 use POSIX qw(strftime);
 use Sort::Maker;
@@ -40,7 +40,6 @@ use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
 use CXGN::Accession;
 use CXGN::Stock::Seedlot::Maintenance;
-use Spreadsheet::WriteExcel;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -218,7 +217,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $has_header = defined($c->req->param('has_header')) ? $c->req->param('has_header') : 1;
     my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
-    my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
+    my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xlsx";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
@@ -337,7 +336,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
 
     my $plugin = "";
-    if ($format eq "xls") {
+    if ($format eq "xlsx") {
         $plugin = $entry_numbers_option ? "TrialPhenotypeExcelEntryNumbers" : "TrialPhenotypeExcel";
     }
     if ($format eq "csv") {
@@ -596,7 +595,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             close CSV;
 
         } else {
-            my $ss = Spreadsheet::WriteExcel->new($tempfile);
+            my $ss = Excel::Writer::XLSX->new($tempfile);
             my $ws = $ss->add_worksheet();
 
             for (my $line =0; $line< @data; $line++) {
@@ -608,7 +607,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             #$ws->write(0, 0, "$program_name, $location ($year)");
             $ss ->close();
 
-            $format = ".xls";
+            $format = ".xlsx";
         }
 
         #Using tempfile and new filename,send file to client
@@ -652,7 +651,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
     # Get request params
     my $accession_list_id = $c->req->param("accession_properties_accession_list_list_select");
-    my $file_format = $c->req->param("file_format") || ".xls";
+    my $file_format = $c->req->param("file_format") || ".xlsx";
     my $dl_token = $c->req->param("accession_properties_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     if ( !$accession_list_id ) {
@@ -676,13 +675,13 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
 
-    # Create and Return XLS file
-    if ( $file_format eq ".xls" ) {
-        my $file_path = $tempfile . ".xls";
+    # Create and Return XLS and XLSX  file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
         my $file_name = basename($file_path);
 
         # Write to the xls file
-        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $workbook = Excel::Writer::XLSX->new($file_path);
         my $worksheet = $workbook->add_worksheet();
         for ( my $i = 0; $i <= $#$rows; $i++ ) {
             $worksheet->write_row($i, 0, $rows->[$i]);
@@ -690,7 +689,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         $workbook->close();
 
         # Return the xls file
-        $c->res->content_type('Application/xls');
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $c->res->cookies->{$dl_cookie} = {
             value => $dl_token,
             expires => '+1m',
@@ -914,7 +913,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
 
     # Get request params
     my $seedlot_list_id = $c->req->param("seedlot_maintenance_events_list_list_select");
-    my $file_format = $c->req->param("file_format") || ".xls";
+    my $file_format = $c->req->param("file_format") || ".xlsx";
     my $dl_token = $c->req->param("seedlot_maintenance_events_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     if ( !$seedlot_list_id ) {
@@ -934,13 +933,13 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_seedlot_maintenance_events_XXXXX", UNLINK => 0);
 
-    # Create and Return XLS file
-    if ( $file_format eq ".xls" ) {
-        my $file_path = $tempfile . ".xls";
+    # Create and Return XLSX file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
         my $file_name = basename($file_path);
 
         # Get Excel worksheet
-        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $workbook = Excel::Writer::XLSX->new($file_path);
         my $worksheet = $workbook->add_worksheet();
 
         # Write header
@@ -964,7 +963,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
         $workbook->close();
 
         # Return the xls file
-        $c->res->content_type('Application/xls');
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $c->res->cookies->{$dl_cookie} = {
           value => $dl_token,
           expires => '+1m',
@@ -1411,7 +1410,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$trial_id."_XXXXX");
 
-    my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
+    my $file_path = $c->config->{basepath}."/".$tempfile.".xlsx";
     move($tempfile, $file_path);
 
     my $td = CXGN::Trial::Download->new( {
@@ -1504,7 +1503,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     # prepare file for download
     #
     my $file_name = basename($file_path);
-    $c->res->content_type('Application/xls');
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
 

@@ -26,7 +26,7 @@ The infile provided has three columns:
 3) the new stock uniquename (needs to be in the database).
 4) optional: a new plot name
 
-There is no header on the infile and the infile is .xls.
+There is no header on the infile and the infile is .xls and .xlsx.
 
 The script will dissociate the old accession in column 1 and associate the new accession. The plot name will be unchanged.
 
@@ -47,6 +47,7 @@ use Data::Dumper;
 use Carp qw /croak/ ;
 use Pod::Usage;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
@@ -61,7 +62,18 @@ if (!$opt_H || !$opt_D || !$opt_i) {
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
-my $parser   = Spreadsheet::ParseExcel->new();
+
+# Match a dot, extension .xls / .xlsx
+my ($extension) = $opt_i =~ /(\.[^.]+)$/;
+my $parser;
+
+if ($extension eq '.xlsx') {
+	$parser = Spreadsheet::ParseXLSX->new();
+}
+else {
+	$parser = Spreadsheet::ParseExcel->new();
+}
+
 my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({ 
