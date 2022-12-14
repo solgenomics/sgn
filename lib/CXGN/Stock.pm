@@ -479,6 +479,7 @@ has 'subjects' => (
     is => 'rw',
 );
 
+
 sub BUILD {
     my $self = shift;
 
@@ -489,6 +490,18 @@ sub BUILD {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
     }
+    elsif ($self->uniquename) {
+	$stock = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $self->uniquename() });
+	if (!$stock) {
+	    print STDERR "Can't find stock ".$self->uniquename.". Generating empty object.\n";
+	}
+	else {
+	    $self->stock($stock);
+	    $self->stock_id($stock->stock_id);
+	}
+    }
+
+    
     if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
 #	my $organism = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() });
@@ -521,6 +534,8 @@ sub BUILD {
 
 	$self->subjects(\@subjects);
     }
+
+    
     return $self;
 }
 
@@ -536,6 +551,7 @@ sub _retrieve_stock_owner {
     }
     $self->owners(\@owners);
 }
+
 
 =head2 store()
 

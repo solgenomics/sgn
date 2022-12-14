@@ -146,15 +146,15 @@ sub validate_grafts {
     my $scion_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->scion() });
 
     if (!$scion_row) {
-	push @missing_accessions, $scion_row->uniquename();
-	push @errors, "Parental accession ".$scion_row->uniquename(), " does not exist in the database\n";
+	push @missing_accessions, $self->scion();
+	push @errors, "Parental accession ".$self->scion(), " does not exist in the database\n";
     }
     
     my $rootstock_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->rootstock() });
 
     if (!$rootstock_row) {
-	push @missing_accessions, $rootstock_row->uniquename();
-	push @errors, "Parental accession ".$rootstock_row->uniquename(), " does not exist in the database\n";
+	push @missing_accessions, $self->rootstock();
+	push @errors, "Parental accession ".$self->rootstock(), " does not exist in the database\n";
     }
     
     my @messages;
