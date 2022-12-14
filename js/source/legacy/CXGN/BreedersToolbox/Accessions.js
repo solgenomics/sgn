@@ -563,6 +563,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
 	    //alert(JSON.stringify(verifyResponse.absent));
 	    //alert(JSON.stringify(infoToAdd));
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
+                console.log("Absent accessions are:"+JSON.stringify(verifyResponse.absent));
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
                 alert('All accessions in your list already exist in the database. (3)');

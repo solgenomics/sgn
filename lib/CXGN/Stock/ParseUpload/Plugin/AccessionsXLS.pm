@@ -474,17 +474,27 @@ sub _parse_with_plugin {
         my $validator = CXGN::List::Validate->new();
         my $validator_results = $validator->validate($schema, 'accessions', \@accession_list);
 
-         @$found_accessions = map { { matched_string => $_,  unique_name => $_} } $validator_results->{'exact'};
+        @$found_accessions = map { { matched_string => $_,  unique_name => $_} } $validator_results->{'exact'};
+        my %found_map;
 
         foreach my $match (@{$validator_results->{'wrong_case'}}){
+                $found_map{$match->[0]} = 1;
                 push @$found_accessions, { matched_string => $match->[0],  unique_name => $match->[1] . " (case mismatch)" };
         }
 
         foreach my $match (@{$validator_results->{'synonyms'}}){
-                push @$found_accessions, {
-                    matched_string => $match->{'item'},
-                    unique_name => $match->{'synonym'} . " (synonym of ".$match->{'uniquename'}.")" };
+            $found_map{$match->{'item'}} = 1;
+            push @$found_accessions, {
+                matched_string => $match->{'item'},
+                unique_name => $match->{'synonym'} . " (synonym of ".$match->{'uniquename'}.")"
+            };
         }
+
+        # remove case mismatches and synonyms from absent accessions list
+        my %actually_missing;
+        @actually_missing{ @{$validator_results->{'missing'}} } = ();
+        delete @actually_missing{ keys %found_map };
+        @$absent_accessions = keys %actually_missing;
 
         print STDERR "Check 3.1.6: CXGN::Stock::ParseUpload no fuzzy search".localtime()."\n";
     }

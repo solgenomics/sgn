@@ -67,8 +67,9 @@ sub validate {
     );
     while (my $r=$synonym_rs->next) {
         my $uniquename = $r->uniquename();
+        my $synonym = $r->get_column('stockprops_value');
         print STDERR "this is a case-independent synonym match: $uniquename\n";
-        push @synonyms, { item => $lc_missing_map{lc($uniquename)}, uniquename =>  $uniquename, synonym => $r->get_column('stockprops_value') };
+        push @synonyms, { item => $lc_missing_map{lc($synonym)}, uniquename =>  $uniquename, synonym => $synonym };
     }
 
     # Now do more searches on the non-exact matches
