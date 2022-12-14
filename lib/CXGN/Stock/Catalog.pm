@@ -6,31 +6,38 @@ use Data::Dumper;
 
 extends 'CXGN::JSONProp';
 
-# a general human readable description of the stock
-has 'description' => ( isa => 'Str', is => 'rw' );
-
 # a list of representative images, given as image_ids
 has 'images' => ( isa => 'Maybe[ArrayRef]', is => 'rw' );
-
-# availability status: in_stock, delayed, currently_unavailable ...
-has 'availability' => ( isa => 'Str', is => 'rw' );
 
 # list of hashrefs like { stock_center => { name => ..., count_available => ..., delivery_time => } }
 has 'order_source' => ( isa => 'ArrayRef', is => 'rw');
 
-# center that generates clones or seed
-has 'material_source' => ( isa => 'Str', is => 'rw');
-
 # item type such as single accession or a set of 10 accessions
 has 'item_type' => ( isa => 'Str', is => 'rw');
 
-# the breeding program this clones originated from
-has 'breeding_program' => ( isa => 'Int', is => 'rw');
+# material type such as seed or plant
+has 'material_type' => ( isa => 'Str', is => 'rw');
 
-#
+# center that generates clones or seed
+has 'material_source' => ( isa => 'Str', is => 'rw');
+
 has 'category' => ( isa => 'Str', is => 'rw' );
 
+has 'species' => ( isa => 'Str', is => 'rw' );
+
+has 'variety' => ( isa => 'Str', is => 'rw' );
+
+has 'breeding_program' => ( isa => 'Int', is => 'rw');
+
+has 'additional_info' => ( isa => 'Str', is => 'rw' );
+
 has 'contact_person_id' => ( isa => 'Int', is => 'rw') ;
+
+# a general human readable description of the stock
+#has 'description' => ( isa => 'Str', is => 'rw' );
+
+# availability status: in_stock, delayed, currently_unavailable ...
+#has 'availability' => ( isa => 'Str', is => 'rw' );
 
 
 sub BUILD {
@@ -42,7 +49,7 @@ sub BUILD {
     $self->prop_primary_key('stockprop_id');
     $self->prop_type('stock_catalog_json');
     $self->cv_name('stock_property');
-    $self->allowed_fields( [ qw | item_type category description material_source breeding_program availability contact_person_id images | ] );
+    $self->allowed_fields( [ qw | item_type species variety material_type material_source additional_info breeding_program contact_person_id images | ] );
     $self->parent_table('stock');
     $self->parent_primary_key('stock_id');
 

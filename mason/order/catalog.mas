@@ -3,7 +3,7 @@
 $check_vendor_role
 $ordering_service_name => undef
 $additional_order_info => undef
-$ordering_site => undef
+$ordering_type => undef
 $order_properties => undef
 
 </%args>
@@ -36,7 +36,7 @@ $order_properties => undef
                 </div>
             </div>
         </div>
-% if ($ordering_site ne 'BAT') {
+% if ($ordering_type ne 'single_step') {
         <div class="panel panel-default">
             <div class="panel-body">
                 <button id="your_cart_button" type="button" class="btn btn-primary btn-sm">
@@ -125,7 +125,7 @@ $order_properties => undef
                     </div>
                 </div>
             </div>
-% if ($ordering_site eq 'BAT') {
+% if ($ordering_type eq 'single_step') {
             <div class="modal-footer">
                 <button id="close_submit_item_detail_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button id="single_step_submission_button" type="button" class="btn btn-primary" >Submit</button>
@@ -140,8 +140,8 @@ $order_properties => undef
     </div>
 </div>
 
-<& /order/upload_catalog_items_dialog.mas, ordering_site => $ordering_site&>
-<& /order/add_catalog_item_dialog.mas, ordering_site => $ordering_site &>
+<& /order/upload_catalog_items_dialog.mas, ordering_type => $ordering_type&>
+<& /order/add_catalog_item_dialog.mas, ordering_type => $ordering_type &>
 
 <script>
 
@@ -149,45 +149,30 @@ jQuery(document).ready( function() {
 
     var ordering_service_name = "<% $ordering_service_name %>";
     var additional_order_info = "<% $additional_order_info %>";
-    var ordering_site = "<% $ordering_site %>";
+    var ordering_type = "<% $ordering_type %>";
     var order_properties = "<% $order_properties %>";
     var property_keys = order_properties.split(",");
+    alert(ordering_type);
 
-
-    if (ordering_site == 'BAT') {
-        jQuery('#catalog_items_table').DataTable( {
-            'autoWidth': false,
-            'order': false,
-            'search':'applied',
-            'ajax': '/ajax/catalog/items',
-            columns: [
-                { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
-                { title: "Type", "data": "item_type" },
-                { title: "Category", "data": "category" },
-                { title: "Species", "data": "species" },
-                { title: "Variety", "data": "variety" },
-                { title: "Project", "data": "program" },
-                { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_site+"\", \""+order_properties+"\")'>Request</a>"; } },
-            ],
-        });
-    } else {
-        jQuery('#catalog_items_table').DataTable( {
-            'autoWidth': false,
-            'order': false,
-            'search':'applied',
-            'ajax': '/ajax/catalog/items',
-            columns: [
-                { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
-                { title: "Type", "data": "item_type" },
-                { title: "Category", "data": "category" },
-                { title: "Description", "data": "description" },
-                { title: "Material Source", "data": "material_source" },
-                { title: "Breeding Program", "data": "breeding_program" },
-                { title: "Availability", "data": "availability" },
-                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
-            ],
-        });
-    }
+    jQuery('#catalog_items_table').DataTable( {
+        'autoWidth': false,
+        'order': false,
+        'search':'applied',
+        'ajax': '/ajax/catalog/items',
+        columns: [
+            { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
+            { title: "Type", "data": "item_type" },
+            { title: "Material Type", "data": "material_type" },
+            { title: "Species", "data": "species" },
+            { title: "Variety", "data": "variety" },
+            { title: "Category", "data": "category" },
+            { title: "Additional Info", "data": "additional_info" },
+            { title: "Material Source", "data": "material_source" },
+            { title: "Breeding Program", "data": "breeding_program" },
+//          { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+            { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties+"\")'>Request</a>"; } },
+        ],
+    });
 
     var lo = new CXGN.List();
     var list_id;
@@ -335,12 +320,12 @@ jQuery(document).ready( function() {
 
 });
 
-function addToCart(item_name, additional_order_info, ordering_service_name, ordering_site, order_properties ){
+function addToCart(item_name, additional_order_info, ordering_service_name, ordering_type, order_properties ){
     var additional_info = additional_order_info.split(",");
     var properties = order_properties.split(",");
     var html = '';
 
-    if (ordering_site == 'BAT') {
+    if (ordering_type == 'single_step') {
         html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
 //        html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br><br>';
 //        html = html + '<label class="col-sm-3 control-label">Facility: </label><div class="col-sm-9" ><input class="form-control" id="item_facility" name="item_facility" placeholder="Please Select"></div><br><br><br>';

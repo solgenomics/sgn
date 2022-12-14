@@ -25,18 +25,17 @@ sub add_catalog_item_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
     my $ordering_site = $c->config->{ordering_site};
 
-    my $item_name = $c->req->param('item_name');
-    my $item_type = $c->req->param('item_type');
-    my $item_category = $c->req->param('item_category');
-    my $item_description = $c->req->param('item_description');
-    my $item_material_source = $c->req->param('item_material_source');
-    my $item_breeding_program_id = $c->req->param('item_breeding_program');
-    my $item_availability = $c->req->param('item_availability');
+    my $item_name = $c->req->param('name');
+    my $item_type = $c->req->param('type');
+    my $item_category = $c->req->param('category');
+    my $item_additional_info = $c->req->param('additional_info');
+    my $item_material_source = $c->req->param('material_source');
+    my $item_breeding_program_id = $c->req->param('breeding_program_id');
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
 
-    my $item_species = $c->req->param('item_species');
-    my $item_variety = $c->req->param('item_variety');
+    my $item_species = $c->req->param('species');
+    my $item_variety = $c->req->param('variety');
 
     my $item_stock_id;
     if (!$c->user()) {
@@ -90,10 +89,13 @@ sub add_catalog_item_POST : Args(0) {
 
         $stock_catalog->item_type($item_type);
         $stock_catalog->category($item_category);
-        $stock_catalog->description($item_description);
+#        $stock_catalog->description($item_description);
         $stock_catalog->material_source($item_material_source);
         $stock_catalog->breeding_program($item_breeding_program_id);
-        $stock_catalog->availability($item_availability);
+        $stock_catalog->species($item_species);
+        $stock_catalog->variety($item_variety);
+
+#        $stock_catalog->availability($item_availability);
         $stock_catalog->contact_person_id($sp_person_id);
 
         $stock_catalog->store();

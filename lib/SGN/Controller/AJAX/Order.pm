@@ -672,7 +672,7 @@ sub single_step_submission_POST : Args(0) {
     my $order_details = decode_json ($c->req->param('order_details'));
     my %details;
 
-    $details{$item_name} = $order_detail
+    $details{$item_name} = $order_details;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
         $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
