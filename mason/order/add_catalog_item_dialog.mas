@@ -70,6 +70,7 @@ $ordering_type => undef
                                     <option value="Pathogen Assay ">Pathogen Assay</option>
                                     <option value="Control">Control</option>
                                     <option value="Transgenic Line">Transgenic Line</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -96,30 +97,6 @@ $ordering_type => undef
                                 <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
                             </div>
                         </div>
-<!--
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Material Source: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_material_source">
-                                    <option value="">Select a material source</option>
-                                    <option value="OrderingSystemTest">OrderingSystemTest</option>
-                                    <option value="Sendusu">Sendusu</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Availability: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_availability">
-                                    <option value="">Select availability</option>
-                                    <option value="in stock">in stock</option>
-                                    <option value="out of stock">out of stock</option>
-                                    <option value="available in 3 months">available in 3 months</option>
-                                </select>
-                            </div>
-                        </div>
--->
                     </form>
                 </div>
             </div>
@@ -182,7 +159,8 @@ jQuery(document).ready(function(){
         if (name == '') { alert("Please provide a name") };
         if (type == '') { alert("Please select a type") };
         if (material_type == '') { alert("Please select a material type") };
-        if (material_source == '') { alert("Please select a material source") };
+        if (species == '') { alert("Please select a species") };
+        if (category == '') { alert("Please select a category") };
         if (breeding_program == '') { alert("Please select a program") };
         if (contact_person == '') { alert("Please indicate contact person") };
 

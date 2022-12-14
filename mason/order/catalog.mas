@@ -152,7 +152,6 @@ jQuery(document).ready( function() {
     var ordering_type = "<% $ordering_type %>";
     var order_properties = "<% $order_properties %>";
     var property_keys = order_properties.split(",");
-    alert(ordering_type);
 
     jQuery('#catalog_items_table').DataTable( {
         'autoWidth': false,
@@ -168,9 +167,9 @@ jQuery(document).ready( function() {
             { title: "Category", "data": "category" },
             { title: "Additional Info", "data": "additional_info" },
             { title: "Material Source", "data": "material_source" },
-            { title: "Breeding Program", "data": "breeding_program" },
-//          { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+            { title: "Program", "data": "breeding_program" },
             { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties+"\")'>Request</a>"; } },
+//            { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
         ],
     });
 
