@@ -204,7 +204,7 @@ sub do_exact_search {
 sub verify_accessions_file : Path('/ajax/accessions/verify_accessions_file') : ActionClass('REST') { }
 sub verify_accessions_file_POST : Args(0) {
     my ($self, $c) = @_;
-    
+
     my $user_id;
     my $user_name;
     my $user_role;
@@ -318,7 +318,7 @@ sub verify_accessions_file_POST : Args(0) {
         fuzzy_organisms => $parsed_data->{fuzzy_organisms},
         found_organisms => $parsed_data->{found_organisms}
     );
-    print STDERR "verify_accessions_file returns: " . Dumper %return;
+    # print STDERR "verify_accessions_file returns: " . Dumper %return;
     if ($parsed_data->{error_string}){
         $return{error_string} = $parsed_data->{error_string};
     }
@@ -588,7 +588,7 @@ sub _parse_list_from_json {
       print STDERR "JSON NOW: $list_json\n";
       my $decoded_list = $json->decode($list_json);# _json(encode("UTF-8", $list_json));
      #my $decoded_list = decode_json($list_json);
-      
+
       my @array_of_list_items = ();
       if (ref($decoded_list) eq "ARRAY" ) {
 	  @array_of_list_items = @{$decoded_list};

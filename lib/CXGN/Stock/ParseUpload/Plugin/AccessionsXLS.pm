@@ -237,14 +237,15 @@ sub _parse_with_plugin {
     print STDERR "Check 3.1.1: CXGN::Stock::ParseUpload ".localtime()."\n";
 
     my @accession_list = keys %seen_accession_names;
-    my @lc_accession_list = map { lc($_) } @accession_list;
     my @synonyms_list = keys %seen_synonyms;
     my @organism_list = keys %seen_species_names;
     my %accession_lookup;
 
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({
-        # 'LOWER(uniquename)' => { 'in' => \@lc_accession_list }
-        uniquename => { -in => \@accession_list }
+        uniquename => { -in => \@accession_list },
+        'me.type_id' => $accession_type_id,
+        is_obsolete => 'F'
     });
     while (my $r=$accessions_in_db_rs->next) {
         $accession_lookup{$r->uniquename} = $r->stock_id;
@@ -357,8 +358,6 @@ sub _parse_with_plugin {
             $row_info{stock_id} = $stock_id;
         }
 
-        print STDERR "Check 3.1.4: CXGN::Stock::ParseUpload ".localtime()."\n";
-
         my $counter = 0;
         for my $i (5..$col_max){
             my $stockprop_header_term = $header[$counter];
@@ -389,7 +388,7 @@ sub _parse_with_plugin {
         $parsed_entries{$row} = \%row_info;
     }
 
-    print STDERR "Check 3.1.5: CXGN::Stock::ParseUpload ".localtime()."\n";
+    print STDERR "Check 3.1.4: CXGN::Stock::ParseUpload ".localtime()."\n";
 
     my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
     my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
@@ -412,7 +411,7 @@ sub _parse_with_plugin {
     if ($do_fuzzy_search) {
         my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
 
-        print STDERR "Check 3.1.6: CXGN::Stock::ParseUpload with fuzzy search".localtime()."\n";
+        print STDERR "Check 3.1.5: CXGN::Stock::ParseUpload with fuzzy search".localtime()."\n";
 
         $found_accessions = $fuzzy_search_result->{'found'};
         $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
@@ -432,44 +431,62 @@ sub _parse_with_plugin {
             $absent_organisms = $fuzzy_organism_result->{'absent'};
         }
 
-        print STDERR "Check 3.1.7: CXGN::Stock::ParseUpload with fuzzy search".localtime()."\n";
+        print STDERR "Check 3.1.6: CXGN::Stock::ParseUpload with fuzzy search".localtime()."\n";
 
         if ($fuzzy_search_result->{'error'}){
             $return_data{error_string} = $fuzzy_search_result->{'error'};
         }
     } else {
-        print STDERR "Check 3.1.6: CXGN::Stock::ParseUpload no fuzzy search".localtime()."\n";
+        print STDERR "Check 3.1.5: CXGN::Stock::ParseUpload no fuzzy search".localtime()."\n";
         # my $validator = CXGN::List::Validate->new();
 
         # Current system puts all missing accessions in a missing hash, everything else in found and fuzzy
-
-        foreach (@accession_list){
-            if (exists($accession_lookup{$_})){
-                print STDERR "$_ already exists, adding to found array\n";
-                push @$found_accessions, { unique_name => $_,  matched_string => $_};
-                push @$fuzzy_accessions, { unique_name => $_,  matched_string => $_};
-            } else {
-                print STDERR "$_ does not exist, adding to absent accessions\n";
-                push @$absent_accessions, $_;
-            }
-        }
+        # my %matching_accessions;
+        # my @lc_accession_list = map { lc($_) } @accession_list;
+        # my $accessions_rs = $schema->resultset("Stock::Stock")->search({
+        #     'lower(uniquename)' => { 'in' => \@lc_accession_list }
+        # });
+        # while (my $r=$accessions_rs->next) {
+        #     print STDERR "this is a lc match: ".$r->uniquename."\n";
+        #     my $file_name =
+        #     $matching_accessions{$r->uniquename} = $r->stock_id;
+        # }
+        #
+        # print STDERR "Matching accessions are: ";
+        # print STDERR Dumper(%matching_accessions);
+        #
+        # foreach (@accession_list){
+        #     if (exists($accession_lookup{$_})){
+        #         print STDERR "$_ already exists, adding to found array\n";
+        #         push @$found_accessions, { unique_name => $_,  matched_string => $_};
+        #     } elsif (exists($matching_accessions{$_})){
+        #         print STDERR "$_ exists with different case, adding to fuzzy array\n";
+        #         push @$fuzzy_accessions, { name => $_,  matches => []};
+        #     } else {
+        #         print STDERR "$_ does not exist, adding to absent accessions\n";
+        #         push @$absent_accessions, $_;
+        #     }
+        # }
 
         # my %existing_accessions_hash = map { $_ => 1 } keys %accession_lookup;
         #
         # my @absent_accessions
-        #
-        # # my $absent_accessions = $validator->validate($schema, 'accessions', \@accession_list)->{'missing'};
-        # my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
-        #
-        #
-        #
-        # foreach (@accession_list){
-        #     if (!exists($accessions_missing_hash{$_})){
-        #         push @$found_accessions, { unique_name => $_,  matched_string => $_};
-        #         push @$fuzzy_accessions, { unique_name => $_,  matched_string => $_};
-        #     }
-        # }
-        print STDERR "Check 3.1.7: CXGN::Stock::ParseUpload no fuzzy search".localtime()."\n";
+        my $validator = CXGN::List::Validate->new();
+        my $validator_results = $validator->validate($schema, 'accessions', \@accession_list);
+
+         @$found_accessions = map { { matched_string => $_,  unique_name => $_} } $validator_results->{'exact'};
+
+        foreach my $match (@{$validator_results->{'wrong_case'}}){
+                push @$found_accessions, { matched_string => $match->[0],  unique_name => $match->[1] . " (case mismatch)" };
+        }
+
+        foreach my $match (@{$validator_results->{'synonyms'}}){
+                push @$found_accessions, {
+                    matched_string => $match->{'item'},
+                    unique_name => $match->{'synonym'} . " (synonym of ".$match->{'uniquename'}.")" };
+        }
+
+        print STDERR "Check 3.1.6: CXGN::Stock::ParseUpload no fuzzy search".localtime()."\n";
     }
 
     %return_data = (
