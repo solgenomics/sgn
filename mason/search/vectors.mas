@@ -252,7 +252,7 @@ jQuery(document).ready(function () {
   //For adding stockprop columns to search result
   var stockprop_extra_columns_view = { };
   var stockprop_extra_columns_view_array = [ ];
-  
+
   jQuery('#editable_stockprop_view_column_add').click(function(){
       var selected_property = jQuery('#editable_stockprop_view_column_term').val();
       if (!(selected_property in stockprop_extra_columns_view)){
@@ -288,6 +288,7 @@ jQuery(document).ready(function () {
 
   });
 
+  //stockprop search
  jQuery('#submit_stock_search').click( function() {
       var editable_stockprops_search = {};
       if(jQuery('#field_input_id').val()){
@@ -298,6 +299,7 @@ jQuery(document).ready(function () {
       _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
  });
 
+ //gene and vector search
   jQuery('#submit_stock_search_simple').click( function() {
       var stock_type;
       var any_name;
@@ -314,19 +316,21 @@ jQuery(document).ready(function () {
       if(!any_name && !gene_name){
         alert("Type a valid value!",any_name);
       }
-      _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name);
+      _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name,'and');
  });
 
 
   jQuery('#submit_stock_search_all').click( function() {
     var editable_stockprops_search = {};
+    var stock_type = 'vector_construct';
+    var any_name = jQuery('#any_name').val();
       if(jQuery('#any_name').val()){
 %  foreach my $stockprop (@$editable_vector_props){
           editable_stockprops_search['<% $stockprop %>'] = {"matchtype": "contains"};
           editable_stockprops_search['<% $stockprop %>']["value"] = jQuery('#any_name').val();
 %  }
       }
-      _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+      _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name);
  });
 
  jQuery('#stock_search_form').keypress( function( e ) {
@@ -358,7 +362,7 @@ if ( params.has('prop') & params.has('value') ) {
 }
 }
 
-function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array, any_name){
+function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array, any_name, operator){
   console.log(stock_type);
   console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
   stock_table = jQuery('#stock_search_results').DataTable({
@@ -372,6 +376,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
           'data': function(d) {
             d.any_name  = any_name; //jQuery('#any_name').val();
             d.any_name_matchtype = '';//jQuery('#any_name_matchtype').val();
+            d.operator     = operator;
             d.stock_type   = stock_type;
             d.person       = jQuery('#person').val();
             d.project      = jQuery('#project').val();

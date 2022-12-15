@@ -111,6 +111,11 @@ has 'match_name' => (
     is => 'rw',
 );
 
+has 'operator' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 has 'uniquename_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
@@ -237,6 +242,7 @@ sub search {
     my $phenome_schema = $self->phenome_schema;
     my $matchtype = $self->match_type || 'contains';
     my $any_name = $self->match_name;
+    my $default_operator = $self->operator;
     my $organism_id = $self->organism_id;
     my $owner_first_name = $self->owner_first_name;
     my $owner_last_name = $self->owner_last_name;
@@ -459,8 +465,9 @@ sub search {
     }
 
     #$schema->storage->debug(1);
+    my $operator = $default_operator ? $default_operator : (scalar(@stockprop_filtered_stock_ids)>0 ? "or" : "and");
     my $search_query = {
-        -and => [
+        -$operator => [
             $or_conditions,
             $and_conditions,
         ],
@@ -468,7 +475,7 @@ sub search {
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
     }
-    if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
+    if ( scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
     }
 
