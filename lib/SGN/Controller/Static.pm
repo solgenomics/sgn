@@ -112,6 +112,13 @@ sub usage_policy : Path('/usage_policy') {
     $c->stash->{template} = '/usage_policy.mas';
 }
 
+sub radargraph : Path('/radargraph') {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template}='/breeders_toolbox/radargraph.mas';
+}
+
 sub ted : Path('/ted') Args(0) {
     my ($self, $c) = @_;
     my $uri = $c->request->uri->as_string();

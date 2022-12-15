@@ -80,14 +80,14 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 
     my $limit = $show_result =~ /all/ ? undef : 10;
 
-    my $projects_ids = $c->model('solGS::solGS')->all_gs_projects($limit);
+    my $projects_ids = $self->model($c)->all_gs_projects($limit);
 
     my $ret->{status} = 'failed';
     my $formatted_trials = [];
 
     if (@$projects_ids)
     {
-    	my $projects_rs = $c->model('solGS::solGS')->project_details([$projects_ids]);
+    	my $projects_rs = $self->model($c)->project_details([$projects_ids]);
 
     	$self->get_projects_details($c, $projects_rs);
     	my $projects = $c->stash->{projects_details};
@@ -110,7 +110,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 sub search_trials_trait : Path('/solgs/search/trials/trait') Args() {
     my ($self, $c, $trait_id, $gp, $protocol_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/search/trials/trait.mas');
@@ -124,15 +124,15 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args() {
     my $combine = $c->req->param('combine');
     my $page = $c->req->param('page') || 1;
 
-    my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id, $protocol_id);
+    my $projects_ids = $self->model($c)->search_trait_trials($trait_id, $protocol_id);
 
     my $ret->{status} = 'failed';
     my $formatted_projects = [];
 
     if (@$projects_ids)
     {
-	my $projects_rs  = $c->model('solGS::solGS')->project_details($projects_ids);
-	my $trait        = $c->model('solGS::solGS')->trait_name($trait_id);
+	my $projects_rs  = $self->model($c)->project_details($projects_ids);
+	my $trait        = $self->model($c)->trait_name($trait_id);
 
 	$self->get_projects_details($c, $projects_rs);
 	my $projects = $c->stash->{projects_details};
@@ -156,8 +156,8 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args() {
 sub search_traits : Path('/solgs/search/traits/') Args() {
     my ($self, $c, $query, $gp, $protocol_id) = @_;
 
-    my $traits = $c->model('solGS::solGS')->search_trait($query);
-    my $result = $c->model('solGS::solGS')->trait_details($traits);
+    my $traits = $self->model($c)->search_trait($query);
+    my $result = $self->model($c)->trait_details($traits);
 
     my $ret->{status} = 0;
     if ($result->first)
@@ -178,8 +178,8 @@ sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
     my ($self, $c) = @_;
 
    my $id = $c->req->param('id');
-   $c->controller('solGS::solGS')->get_all_traits($c, $id);
-   my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $id);
+   $c->controller('solGS::Trait')->get_all_traits($c, $id);
+   my $acronyms = $c->controller('solGS::Trait')->get_acronym_pairs($c, $id);
 
    my $ret->{acronyms}  = $acronyms;
    my $json = JSON->new();
@@ -207,7 +207,7 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
     $self->hyperlink_traits($c, $trait);
     my $trait_url = $c->stash->{traits_urls};
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait);
     push @traits_list, [$trait_url, $c->stash->{trait_def}];
     }
 
@@ -226,8 +226,8 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 sub show_search_result_traits : Path('/solgs/search/result/traits') Args() {
     my ($self, $c, $query, $gp, $protocol_id) = @_;
 
-    my $traits = $c->model('solGS::solGS')->search_trait($query);
-    my $result    = $c->model('solGS::solGS')->trait_details($traits);
+    my $traits = $self->model($c)->search_trait($query);
+    my $result    = $self->model($c)->trait_details($traits);
 
     my @rows;
     while (my $row = $result->next)
@@ -284,7 +284,7 @@ sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
 
     my $name = $c->req->param('name');
 
-    my $rs = $c->model("solGS::solGS")->project_details_by_name($name);
+    my $rs = $self->model($c)->project_details_by_name($name);
 
     my @pop_ids;
     while (my $row = $rs->next)
@@ -326,7 +326,7 @@ sub check_training_population :Path('/solgs/check/training/population/') Args() 
         }
     }
 
-	my $pr_rs = $c->model('solGS::solGS')->project_details(\@gs_pop_ids);
+	my $pr_rs = $self->model($c)->project_details(\@gs_pop_ids);
 	$self->projects_links($c, $pr_rs);
 	my $training_pop_data = $c->stash->{projects_pages};
 
@@ -381,7 +381,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 	$c->stash->{combo_pops_id} = $training_pop_id;
     }
 
-    my $pr_rs = $c->model("solGS::solGS")->project_details_by_exact_name($selection_pop_name);
+    my $pr_rs = $self->model($c)->project_details_by_exact_name($selection_pop_name);
 
     my $selection_pop_id;
     while (my $row = $pr_rs->next) {
@@ -447,6 +447,42 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 }
 
 
+sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
+    my ($self, $c, $tr_pop_id) = @_;
+
+    my @traits_ids = $c->req->param('training_traits_ids[]');
+    $c->stash->{training_traits_ids} = \@traits_ids;
+    $c->stash->{training_pop_id} = $tr_pop_id;
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+
+    $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
+    my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
+
+    my $ret->{result} = 0;
+
+    if (-s $pred_pops_file)
+    {
+	$self->list_of_prediction_pops($c, $tr_pop_id);
+	my $selection_pops_ids = $c->stash->{selection_pops_ids};
+	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
+
+	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
+	my $selection_pop_traits = $c->stash->{selection_pop_analyzed_traits_ids};
+
+	$ret->{selection_traits} = $selection_pop_traits;
+	$ret->{data} = $formatted_selection_pops;
+    }
+
+    $ret = to_json($ret);
+
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
+
 sub projects_links {
     my ($self, $c, $pr_rs) = @_;
 
@@ -488,9 +524,12 @@ sub projects_links {
 	   	  	};
 
 	   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+            my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+            my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
+
 
 		    push @projects_pages, [$checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|,
-					   $pr_desc, $pr_location, $pr_year
+					   $pr_desc, $pr_location, $pr_year, $trial_link
 			];
 
 		}
@@ -518,7 +557,8 @@ sub project_description {
     }
     else
     {
-        my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
+
+        my $pr_rs = $self->model($c)->project_details($pr_id);
 
         while (my $row = $pr_rs->next)
         {
@@ -587,8 +627,10 @@ sub format_trait_gs_projects {
 				};
 
 		      	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
+                my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+                my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
 
-			   push @formatted_projects, [ $checkbox, qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
+			   push @formatted_projects, [ $checkbox, qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $trial_link];
 	       }
 	   }
    }
@@ -636,8 +678,10 @@ sub format_gs_projects {
 		  	  	};
 
 	  	 		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+                my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+                my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
 
-		   		push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+		   		push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $trial_link];
 	       }
 	   }
    }
@@ -706,14 +750,14 @@ sub get_projects_details {
 		$pr_name = $pr->get_column('name');
 		$pr_desc = $pr->get_column('description');
 
-		my $pr_yr_rs = $c->model('solGS::solGS')->project_year($pr_id);
+		my $pr_yr_rs = $self->model($c)->project_year($pr_id);
 
 		while (my $pr = $pr_yr_rs->next)
 		{
 		    $year = $pr->value;
 		}
 
-		my $location = $c->model('solGS::solGS')->project_location($pr_id);
+		my $location = $self->model($c)->project_location($pr_id);
 
 		$projects_details{$pr_id} = {
 		    project_name     => $pr_name,
@@ -777,7 +821,7 @@ sub check_population_is_training_population {
 sub check_saved_analysis_trial {
     my ($self, $c, $pop_id) = @_;
 
-    my $location = $c->model('solGS::solGS')->project_location($pop_id);
+    my $location = $self->model($c)->project_location($pop_id);
     if ($location && $location =~ /computation/i)
     {
        return 1;
@@ -805,7 +849,7 @@ sub check_population_has_phenotype {
 	}
     else
 	{
-        $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pop_id);
+        $has_phenotype = $self->model($c)->has_phenotype($pop_id);
 	}
 
     return $has_phenotype;
@@ -833,7 +877,7 @@ sub check_population_has_genotype {
     }
     else
     {
-		$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id, $protocol_id);
+		$has_genotype = $self->model($c)->has_genotype($pop_id, $protocol_id);
     }
 
     return $has_genotype;
@@ -862,7 +906,7 @@ sub save_selection_pops {
 sub search_all_relevant_selection_pops {
     my ($self, $c, $training_pop_id) = @_;
 
-    my @pred_pops_ids = @{$c->model('solGS::solGS')->prediction_pops($training_pop_id)};
+    my @pred_pops_ids = @{$self->model($c)->prediction_pops($training_pop_id)};
 
     $self->save_selection_pops($c, \@pred_pops_ids);
 
@@ -876,7 +920,8 @@ sub search_all_relevant_selection_pops {
 sub get_project_owners {
     my ($self, $c, $pr_id) = @_;
 
-    my $owners = $c->model("solGS::solGS")->get_stock_owners($pr_id);
+
+    my $owners = $self->model($c)->get_stock_owners($pr_id);
     my $owners_names;
 
     if ($owners)
@@ -908,7 +953,7 @@ sub format_selection_pops {
 
         foreach my $selection_pop_id (@selection_pops_ids)
         {
-          my $selection_pop_rs = $c->model('solGS::solGS')->project_details($selection_pop_id);
+          my $selection_pop_rs = $self->model($c)->project_details($selection_pop_id);
           my $selection_pop_link;
 
           while (my $row = $selection_pop_rs->next)
@@ -931,7 +976,7 @@ sub format_selection_pops {
 	      $selection_pop_link = qq | <data><input type="hidden" value=\'$id_pop_name\'>$name</data>|;
 
 
-	      my $pr_yr_rs = $c->model('solGS::solGS')->project_year($selection_pop_id);
+	      my $pr_yr_rs = $self->model($c)->project_year($selection_pop_id);
 	      my $project_yr;
 
 	      while ( my $yr_r = $pr_yr_rs->next )
@@ -939,10 +984,13 @@ sub format_selection_pops {
 		  $project_yr = $yr_r->value;
 	      }
 
+          my $trial_url = $c->controller('solGS::Path')->trial_page_url($selection_pop_id);
+          my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
+
 	      $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id);
 	      my $download_selection = $c->stash->{selection_prediction_download};
 
-	      push @data,  [$selection_pop_link, $desc, $project_yr, $download_selection];
+	      push @data,  [$selection_pop_link, $desc, $project_yr, $trial_link, $download_selection];
           }
         }
     }
@@ -955,7 +1003,7 @@ sub format_selection_pops {
 sub get_project_details {
     my ($self, $c, $pr_id) = @_;
 
-    my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
+    my $pr_rs = $self->model($c)->project_details($pr_id);
 
     while (my $row = $pr_rs->next)
     {
@@ -1030,7 +1078,7 @@ sub compare_genotyping_platforms {
                 my @pop_names;
                 foreach ($pop_id_1, $pop_id_2)
                 {
-                    my $pr_rs = $c->model('solGS::solGS')->project_details($_);
+                    my $pr_rs = $self->model($c)->project_details($_);
 
                     while (my $row = $pr_rs->next)
                     {
@@ -1061,13 +1109,13 @@ sub store_project_marker_count {
 
     unless ($marker_count)
     {
-	my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);
+	my $markers = $self->model($c)->get_project_genotyping_markers($pop_id);
 	my @markers = split('\t', $markers);
 	$marker_count = scalar(@markers);
     }
 
     my $genoprop = {'project_id' => $pop_id, 'marker_count' => $marker_count};
-    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);
+    $self->model($c)->set_project_genotypeprop($genoprop);
 
 }
 
@@ -1170,25 +1218,25 @@ sub all_gs_traits_list {
     # my $traits;
     # my $mv_name = 'all_gs_traits';
     #
-    # my $matview = $c->model('solGS::solGS')->check_matview_exists($mv_name);
+    # my $matview = $self->model($c)->check_matview_exists($mv_name);
     #
     # if (!$matview)
     # {
-    # $c->model('solGS::solGS')->materialized_view_all_gs_traits();
-	# $c->model('solGS::solGS')->insert_matview_public($mv_name);
+    # $self->model($c)->materialized_view_all_gs_traits();
+	# $self->model($c)->insert_matview_public($mv_name);
     # }
     # else
     # {
 	# if (!-s $file)
 	# {
-    # $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
-    # $c->model('solGS::solGS')->update_matview_public($mv_name);
+    # $self->model($c)->refresh_materialized_view_all_gs_traits();
+    # $self->model($c)->update_matview_public($mv_name);
 	# }
     # }
 
     # try
     # {
-        my $traits = $c->model('solGS::solGS')->all_gs_traits();
+        my $traits = $self->model($c)->all_gs_traits();
     # }
     # catch
     # {
@@ -1197,9 +1245,9 @@ sub all_gs_traits_list {
     #     {
     #         try
     #         {
-    #             $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
-    #             $c->model('solGS::solGS')->update_matview_public($mv_name);
-    #             $traits = $c->model('solGS::solGS')->all_gs_traits();
+    #             $self->model($c)->refresh_materialized_view_all_gs_traits();
+    #             $self->model($c)->update_matview_public($mv_name);
+    #             $traits = $self->model($c)->all_gs_traits();
     #         };
     #     }
     # };
@@ -1209,6 +1257,18 @@ sub all_gs_traits_list {
 
 }
 
+
+sub model {
+    my ($self, $c) = @_;
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $model = SGN::Model::solGS::solGS->new({schema => $bcs_schema,
+        people_schema => $people_schema} );
+
+    return $model;
+
+}
 
 sub begin : Private {
     my ($self, $c) = @_;

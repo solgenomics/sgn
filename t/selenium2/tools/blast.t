@@ -29,8 +29,10 @@ $submit->click();
 
 sleep(10);
 
-ok($t->driver->get_page_source()=~m/Query: 1   aattcggcaccagtaaattttcccaaaggtttcaaaaatgaaaatttt/, "find aligned seq");
+my $elem = $t->driver->find_element('SGN_output', 'id')->get_attribute('innerHTML');
+ok(lc($elem) =~ m/query[:\s]*1[\s]*aattcggcaccagtaaattttcccaaaggtttcaaaaatgaaaatttt/, "find aligned seq");
 
 done_testing();
+$t->driver->close();
 
 

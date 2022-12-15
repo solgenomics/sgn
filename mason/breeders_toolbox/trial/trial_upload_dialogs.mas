@@ -29,7 +29,7 @@ $design_types => ()
                                 <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="next_step_upload_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "File Formatting" &>
@@ -49,7 +49,7 @@ $design_types => ()
                                                     <a id="upload_single_trial_design_format_info">Single trial spreadsheet</a>
                                                 </p>
                                             </&>
-                                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                            <button id="next_step_file_formatting_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                         </center>
                                     </div>
 
@@ -258,7 +258,7 @@ $design_types => ()
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Plants per Plot: </label> 
+                                    <label class="col-sm-3 control-label">Plants per Plot: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="trial_upload_plant_entries" name="trial_upload_plant_entries" type="text" />
                                         <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
@@ -295,6 +295,12 @@ $design_types => ()
 %        $method = 'CRD';
 %    } elsif ($type eq 'Complete Block'){
 %        $method = 'RCBD';
+%    } elsif ($type eq 'Resolvable Row-Column'){
+%        $method = 'RRC';
+%    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
+%        $method = 'DRRC';
+%    } elsif ($type eq 'Augmented Row-Column'){
+%        $method = 'ARC';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
@@ -322,7 +328,7 @@ $design_types => ()
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
+                                <button id="next_step_trial_information_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
@@ -612,9 +618,9 @@ $design_types => ()
 
                     <b>Required fields:</b>
                     <ul>
-                    <li>plot_name (must be unique across entire database. this is often a concatenation of the trial name and the plot number.)</li>
-                    <li>accession_name or cross_unique_id or family_name (must exist in the database. this is the accession or cross unique id or family name being tested in the plot.)</li>
-                    <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). these numbers should be unique for the trial.)</li>
+                    <li>plot_name (must be unique across entire database. This is often a concatenation of the trial name and the plot number.)</li>
+                    <li>accession_name or cross_unique_id or family_name (must exist in the database. This is the accession or cross unique id or family name being tested in the plot.)</li>
+                    <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). These numbers should be unique for the trial.)</li>
                     <li>block_number (a design parameter indicating which block the plot is in)</li>
                     </ul>
 
@@ -623,16 +629,16 @@ $design_types => ()
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions/cross unique ids/family names that are controls, so you should indicate the plots of those accessions/cross unique ids/family names as a control.)</li>
                     <li>rep_number (replicate number, numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, numeric)</li>
-                    <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
-                    <li>col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
-                    <li>seedlot_name (the seedlot from where the planted seed originated. must exist in the database)</li>
-                    <li>num_seed_per_plot (number seeds per plot. seed is transferred from seedlot mentioned in seedlot_name. numeric)</li>
-                    <li>weight_gram_seed_per_plot (weight in gram of seeds in plot. seed is transferred from seedlot mentioned in seedlot name. numeric)</li>
+                    <li>row_number (row number. If the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot should be row 1, column 1)</li>
+                    <li>col_number (column number. If the field is a grid, this represents the x coordinate. Sometimes called range_number, numeric, required for field map generation. the top left plot should be row 1, column 1)</li>
+                    <li>seedlot_name (the seedlot from where the planted seed originated. Must exist in the database)</li>
+                    <li>num_seed_per_plot (number seeds per plot. Seed is transferred from seedlot mentioned in seedlot_name. Numeric)</li>
+                    <li>weight_gram_seed_per_plot (weight in gram of seeds in plot. seed is transferred from seedlot mentioned in seedlot name. Numeric)</li>
                     </ul>
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty.)</li>
+                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). The value for each plot should be 1 if the treatment was applied or empty.)</li>
                     </ul>
                 </div>
             </div>
@@ -705,8 +711,8 @@ $design_types => ()
                     <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, purpose, unique number, and location.)</li>
                     <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
                     <li>location (The name of the location where the trial was held, must exist in the database.)</li>
-                    <li>year (The year the trial was held.)</li>
-                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), Alpha (Alpha Lattice Design) Augmented (Augmented Design), MAD (Modified Augmented Design), Westcott (Westcott Design), Lattice (Lattice Design))</li>
+                    <li>year (The year the trial was held.)</li>                    
+                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
                     <li>plot_name (Must be unique across entire database. It is often a concatenation of the trial name and the plot number.)</li>
                     <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>
@@ -722,7 +728,7 @@ $design_types => ()
                     <li>field_size (field size in hectares)</li>
                     <li>planting_date (Date of Planting in YYYY-MM-DD format)</li>
                     <li>harvest_date (Date of Harvest in YYYY-MM-DD format)</li>
-                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise 0 or leave blank. generally you will have accessions that are controls, so you shuold indicate the plots that that accession is in as a control.)</li>
+                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise 0 or leave blank. generally you will have accessions that are controls, so you should indicate the plots that that accession is in as a control.)</li>
                     <li>rep_number (replicate number, must be numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, must be numeric)</li>
                     <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>

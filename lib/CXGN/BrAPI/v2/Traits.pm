@@ -36,7 +36,7 @@ sub list {
 	my $offset = $page*$page_size;
 	my $total_count = 0;
 	my @data;
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) JOIN cvtermsynonym on(cvtermsynonym.cvterm_id=cvterm.cvterm_id) $where_clause group by cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) LEFT JOIN cvtermsynonym on(cvtermsynonym.cvterm_id=cvterm.cvterm_id) $where_clause group by cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	$sth->execute();

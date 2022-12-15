@@ -507,7 +507,7 @@ sub population_metadata_file {
     }
     elsif ($c->stash->{dataset_id})
     {
-	$owner_id = $c->model('solGS::solGS')->get_dataset_owner($c->stash->{dataset_id});
+	       $owner_id = $c->controller('solGS::Search')->model($c)->get_dataset_owner($c->stash->{dataset_id});
     }
 
     my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
@@ -544,7 +544,7 @@ sub rrblup_training_gebvs_file {
     $identifier = $c->stash->{pop_id} || $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} if !$identifier;
     $trait_id  = $c->stash->{trait_id} if !$trait_id;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
@@ -564,7 +564,7 @@ sub rrblup_training_gebvs_file {
 sub rrblup_selection_gebvs_file {
     my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
@@ -689,6 +689,21 @@ sub cache_file {
     }
 
     $c->stash->{$cache_data->{stash_key}} = $file;
+
+}
+
+sub copy_to_tempfiles_subdir {
+    my ($self, $c, $file, $dir_name) = @_;
+
+    my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
+    my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+
+    mkpath ([$base_tmp_dir], 0, 0755);
+
+    $self->copy_file($file, $base_tmp_dir);
+    $file = catfile($tmp_dir, basename($file));
+
+    return $file;
 
 }
 

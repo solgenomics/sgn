@@ -157,7 +157,7 @@ sub analysis_breeding_prog {
 	my $program_id;
 	if ($trial_id =~ /^\d+$/)
 	{
-		$program_id = $c->model('solGS::solGS')->trial_breeding_program_id($trial_id);
+		$program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trial_id);
 	}
 
 	return $program_id;
@@ -195,7 +195,7 @@ sub analysis_year {
 	my $log = $self->analysis_log($c);
 	my $time = $log->{analysis_time};
 
-	my $time= (split(/\s+/, $time))[0];
+	$time= (split(/\s+/, $time))[0];
 	my $year = (split(/\//, $time))[2];
 
 	return $year;
@@ -235,7 +235,7 @@ sub extended_trait_name {
 
 	my $schema = $self->schema($c);
 	# foreach my $tr_id (@$trait_ids) {
-		#$c->controller('solGS::solGS')->get_trait_details($c, $tr_id);
+		#$c->controller('solGS::Trait')->get_trait_details($c, $tr_id);
 		my $extended_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
 		# push @trait_names, $extended_name;
 	# }

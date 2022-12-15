@@ -122,6 +122,8 @@ sub search {
         },
         trial_id_list=>$study_db_id,
         trial_name_list=>$study_names,
+        external_ref_id_list=>$external_reference_id_arrayref,
+        external_ref_source_list=>$external_reference_source_arrayref,
         limit=>$limit,
         offset=>$offset,
         display_pedigree=>1
@@ -168,28 +170,12 @@ sub search {
 
         #Get external references and check for search params
         my @references;
-        my $external_reference_id = $external_reference_id_arrayref->[0];
-        my $external_reference_source = $external_reference_source_arrayref->[0];
-        my $match_found = $external_reference_id || $external_reference_source ? 0 : 1;
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
 
                 push @references, $_;
-                if (!$match_found) {
-                    my $source_found = $external_reference_source ? 0 : 1;
-                    my $id_found = $external_reference_id ? 0 : 1;
-                    if (!$id_found) {
-                        $id_found = $external_reference_id && $_->{referenceID} eq $external_reference_id ? 1 : 0;
-                    }
-                    if (!$source_found) {
-                        $source_found = $external_reference_source && $_->{referenceSource} eq $external_reference_source ? 1 : 0;
-                    }
-                    $match_found = $id_found && $source_found;
-                }
             }
         }
-        # Skip this germplasm if an external reference match was not found
-        if (!$match_found) { next; }
 
         my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $q = "SELECT value FROM stock_relationship WHERE object_id = ? AND type_id = ?;";
@@ -346,8 +332,6 @@ sub germplasm_pedigree {
                 };
             }
             $cross_plan = $cross_type;
-            $mother = $female_parent_name ? $female_parent_name : "NA";
-            $father = $male_parent_name ? $male_parent_name : "NA";
         }
 
         #Cross information
@@ -380,18 +364,24 @@ sub germplasm_pedigree {
             }
         }
 
-        my $parent = [
-            {
-                germplasmDbId=>qq|$female_parent_stock_id|,
+        #Add parents:
+        my $parent = [];
+        if ($female_parent_stock_id){
+            push @$parent, {
+                germplasmDbId=>$female_parent_stock_id ? qq|$female_parent_stock_id| : $female_parent_stock_id ,
                 germplasmName=>$mother,
                 parentType=>'FEMALE',
-            },
-            {
-                germplasmDbId=>qq|$male_parent_stock_id|,
+            };
+        }
+        if ($male_parent_stock_id){
+            push @$parent, {
+                germplasmDbId=>$male_parent_stock_id ? qq|$male_parent_stock_id| : $male_parent_stock_id,
                 germplasmName=>$father,
                 parentType=>'MALE',
-            },
-            ];
+            }
+
+        }
+
         %result = (
             crossingProjectDbId=>$membership_info[0][0],
             crossingYear=>$membership_info[0][5],
@@ -412,8 +402,6 @@ sub germplasm_progeny {
     my $self = shift;
     my $inputs = shift;
     my $stock_id = $inputs->{stock_id};
-    my $page_size = $self->page_size;
-    my $page = $self->page;
     my $status = $self->status;
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
@@ -459,14 +447,15 @@ sub germplasm_progeny {
         }
     }
     my $total_count = scalar @{$full_data};
-    my $last_item = $page_size*($page+1)-1;
-    if($last_item > $total_count-1){
-        $last_item = $total_count-1;
+    my $page_size = 10;
+    if ($total_count > $page_size){
+        $page_size = $total_count;
     }
+    my $page = 0;
     my $result = {
         germplasmName=>$stock->uniquename,
         germplasmDbId=>$stock_id,
-        progeny=>[@{$full_data}[$page_size*$page .. $last_item]],
+        progeny=>[@{$full_data}],
     };
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
@@ -561,7 +550,7 @@ sub germplasm_mcpd {
             ancestralData=>$_->{pedigree},
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
             countryOfOrigin=>$_->{'country of origin'},
             storageTypeCodes=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},

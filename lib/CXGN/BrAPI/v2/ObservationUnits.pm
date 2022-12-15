@@ -31,7 +31,8 @@ sub search {
     my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
     my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
     my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
-    my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
+    my $trait_list_arrayref = $params->{observationVariableName} || ($params->{observationVariableNames} || ());
+    my $trait_ids_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
     my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
@@ -69,7 +70,10 @@ sub search {
     my $reference_result = $references->search();
 
     my $lt = CXGN::List::Transform->new();
-    my $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
+    
+    if (!$trait_ids_arrayref && $trait_list_arrayref) {
+        $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
+    }
 
     my $limit = $page_size;
     my $offset = $page_size*$page;
@@ -172,7 +176,7 @@ sub search {
         while( my $r = $sp_rs->next()){
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
-        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : '';
+        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : undef;
         my $geo_coordinates; 
 
         if ($geo_coordinates_string){
@@ -283,6 +287,20 @@ sub search {
             }
         }
 
+        my @plot_image_ids;
+			eval {
+	            my $image_id = CXGN::Stock->new({
+	    			schema => $self->bcs_schema,
+	    			stock_id => $obs_unit->{observationunit_stock_id},
+	    		});
+	    		@plot_image_ids = $image_id->get_image_ids();
+	    	};
+            my @ids;
+            foreach my $arrayimage (@plot_image_ids){
+                push @ids, $arrayimage->[0];
+            }
+        
+
         push @data_window, {
             externalReferences => \@references,
             additionalInfo => $additional_info,
@@ -298,8 +316,10 @@ sub search {
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
             seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
+            seedLotName => $obs_unit->{seedlot_uniquename} ? qq|$obs_unit->{seedlot_uniquename}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
+            plotImageDbIds => \@ids,
             treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
@@ -451,14 +471,15 @@ sub observationunits_update {
         }
 
         #update accession
+        my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
         if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
             my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
                 bcs_schema => $schema,
                 trial_id => $study_ids_arrayref,
-                new_accession => $accession_name,
-                old_accession => $old_accession,
-                old_plot_id => $observation_unit_db_id,
-                old_plot_name => $observationUnit_name,
+                # new_accession => $accession_name,
+                # old_accession => $old_accession,
+                # old_plot_id => $observation_unit_db_id,
+                # old_plot_name => $observationUnit_name,
                 experiment_type => 'field_layout'
             });
 
@@ -468,7 +489,7 @@ sub observationunits_update {
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
             }
 
-            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
             if ($replace_return_error) {
                 print STDERR Dumper $replace_return_error;
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
@@ -476,28 +497,30 @@ sub observationunits_update {
         }
 
         #Update: geo coordinates
-        my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || "";
-        my $geno_json_string = encode_json $geo_coordinates;
+        my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || undef;
+        if($geo_coordinates) {
+        
+            my $geno_json_string = encode_json $geo_coordinates;
 
-        #sub upload coordinates
-        my $upload_plot_gps_txn = sub {
+            #sub upload coordinates
+            my $upload_plot_gps_txn = sub {
 
-            my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>$observation_unit_db_id}});
+                my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>$observation_unit_db_id}});
 
-            while (my $plot=$plots_rs->next){
-                my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
-                $previous_plot_gps_rs->delete_all();
-                $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+                while (my $plot=$plots_rs->next){
+                    my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
+                    $previous_plot_gps_rs->delete_all();
+                    $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+                }
+            };
+
+            eval {
+                $schema->txn_do($upload_plot_gps_txn);
+            };
+            if ($@) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
             }
-        };
-
-        eval {
-            $schema->txn_do($upload_plot_gps_txn);
-        };
-        if ($@) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
         }
-
 
         #update stockprops
         if ($level_number){
@@ -524,9 +547,9 @@ sub observationunits_update {
             });
             my $reference_result = $references->store();
         }
-
-        $self->_refresh_matviews($dbh, $c, 5 * 60);
     }
+
+    $self->_refresh_matviews($dbh, $c, 5 * 60);
 
     my @observation_unit_db_ids;
     foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
@@ -820,4 +843,4 @@ sub _order {
     return $levels{$value} + 0;
 }
 
-1;
+

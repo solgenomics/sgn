@@ -136,7 +136,7 @@ sub validate {
     my $observationunit_validator = CXGN::List::Validate->new();
     my @missing_observation_units = @{$observationunit_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@observation_units)->{'missing'}};
     if (scalar(@missing_observation_units) > 0) {
-        my $missing_observationunit_string = join ',', @missing_observation_units;
+        my $missing_observationunit_string = join '<br>', @missing_observation_units;
         $parse_result{'error'} = "The following observation unit names are not in the database: ".$missing_observationunit_string;
         return \%parse_result;
     }

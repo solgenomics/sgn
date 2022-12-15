@@ -46,23 +46,54 @@ my $trial = CXGN::Trial->new({
     trial_id => $project_id
 });
 
+my $rs = $schema->resultset('Phenotype::Phenotype')->search();
+my $total_phenotypes_in_db_before = $rs->count();
+
+my $phenotype_count_before = $trial->phenotype_count();
+
 my $traits_assayed = $trial->get_traits_assayed();
 my @trait_ids;
 foreach (@$traits_assayed){
     push @trait_ids, $_->[0];
 }
 
-$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/layout');
-$response = decode_json $mech->content;
-print STDERR Dumper $response;
-ok($response->{'error'});
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete_single_trait', [ "traits_id"=> encode_json(\@trait_ids) ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'success' => 1});
+sleep(5);
+
+my $phenotype_count_after_single_trait_delete = $trial->phenotype_count();
+
+
+
+print STDERR "PHENO COUNTS: $phenotype_count_before, $phenotype_count_after_single_trait_delete\n";
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/phenotypes');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+my $phenotype_count_after_delete = $trial->phenotype_count();
+is($phenotype_count_after_delete, 0, 'successfull phenotype deletion');
+
+sleep(10);
+
+my $phenotypes_deleted = $phenotype_count_before - $phenotype_count_after_delete;
+
+my $rs = $schema->resultset('Phenotype::Phenotype')->search();
+my $total_phenotypes_in_db_after = $rs->count();
+
+is($total_phenotypes_in_db_before - $total_phenotypes_in_db_after, $phenotypes_deleted, 'check if only trial phenotypes were deleted');
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/layout');
+sleep(10);
+
+#$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/layout');
+#$response = decode_json $mech->content;
+#print STDERR Dumper $response;
+#ok($response->{'error'});
+
+#sleep(10);
+
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'message' => 'Successfully deleted trial data.','success' => 1}, 'test trial layout + entry deletion');

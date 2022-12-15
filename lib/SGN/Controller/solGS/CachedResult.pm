@@ -476,7 +476,7 @@ sub check_selection_pop_all_traits_output {
 sub check_combined_trials_training_data {
     my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
     $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
@@ -560,19 +560,18 @@ sub check_cluster_output {
         $c->stash->{file_id} = $file_id;
 
         my $cluster_type = $c->stash->{cluster_type};
-        my $result_file;
-        if ($cluster_type =~/k-means/i)
-        {
-            $c->controller('solGS::Cluster')->kcluster_result_file($c);
-            $result_file = $c->stash->{'k-means_result_file'};
-        }
-        else
-        {
-            $self->hierarchical_result_file($c);
-            $result_file = $c->stash->{hierarchical_result_file};
-        }
-
-    	if (-s $result_file)
+	my $cached_file;
+	if ($cluster_type =~ /k-means/i)
+	{
+        $c->controller('solGS::Cluster')->cluster_result_file($c);
+        $cached_file = $c->stash->{"${cluster_type}_result_file"};
+	}
+	else
+	{
+	    $c->controller('solGS::Cluster')->cluster_result_file($c);
+	    $cached_file = $c->stash->{"${cluster_type}_result_newick_file"};
+	}
+    	if (-s $cached_file)
     	{
     	    return 1;
     	}

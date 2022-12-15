@@ -31,11 +31,11 @@ sub create_design {
     } else {
       die "No stock list specified\n";
     }
-    if ($self->has_replicated_accession_no()) {
-      $number_of_replicated_accession = $self->get_replicated_accession_no();
+    if ($self->has_replicated_stock_no()) {
+      $number_of_replicated_accession = $self->get_replicated_stock_no();
     } 
-    if ($self->has_unreplicated_accession_no()) {
-      $number_of_unreplicated_accession = $self->set_unreplicated_accession_no();
+    if ($self->has_unreplicated_stock_no()) {
+      $number_of_unreplicated_accession = $self->get_unreplicated_stock_no();
     } 
     if ($self->has_num_of_replicated_times()) {
       $num_of_replicated_times = $self->get_num_of_replicated_times();

@@ -44,13 +44,15 @@ has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'family_name' => (isa =>'Str', is => 'rw', predicate => 'has_family_name', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
+has 'family_type' => (isa => 'Str', is => 'rw', predicate => 'has_family_type', required => 1,);
 
 sub add_family_name {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
     my $family_name = $self->get_family_name();
-	my $cross_name = $self->get_cross_name();
+    my $cross_name = $self->get_cross_name();
+    my $family_type = $self->get_family_type();
     my $cross_stock;
     my $organism_id;
     my $family_name_id;
@@ -69,10 +71,11 @@ sub add_family_name {
 
         my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
         my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
-		my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship')->cvterm_id();
-		my $family_female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
-		my $family_male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
+        my $family_female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
+        my $family_male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
+        my $family_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'family_type', 'stock_property');
 
        #Get stock of type cross matching cross name
         $cross_stock = $self->_get_cross($cross_name);
@@ -109,7 +112,15 @@ sub add_family_name {
         });
 
         if ($family_name_rs){
-			my $family_female_parent = $chado_schema->resultset("Stock::StockRelationship")->find ({
+
+            my $stored_family_type = $chado_schema->resultset("Stock::Stockprop")->find({ stock_id => $family_name_rs->stock_id(), type_id => $family_type_cvterm->cvterm_id() })->value();
+
+            if ($stored_family_type ne $family_type) {
+                push @{$return{error}},"The previously stored family type of family: $family_name is not the same as the selected family type";
+                return \%return;
+            }
+
+            my $family_female_parent = $chado_schema->resultset("Stock::StockRelationship")->find ({
                 object_id => $family_name_rs->stock_id(),
                 type_id => $family_female_parent_cvterm_id,
             });
@@ -120,40 +131,50 @@ sub add_family_name {
             });
 
             my $family_male_id;
-			my $family_female_id = $family_female_parent->subject_id();
+            my $family_female_id = $family_female_parent->subject_id();
             if ($family_male_parent){
-			    $family_male_id = $family_male_parent->subject_id();
+                $family_male_id = $family_male_parent->subject_id();
             }
 
-			my $previous_linkage = $chado_schema->resultset("Stock::StockRelationship")->find ({
+            if ($family_type eq 'same_parents') {
+                if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
+                    push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
+                    return \%return;
+                }
+            } elsif ($family_type eq 'reciprocal_parents') {
+                if (($cross_female_id != $family_female_id) && ($cross_female_id != $family_male_id)) {
+                    push @{$return{error}},"Female parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+                    return \%return;
+                } elsif (($cross_male_id != $family_female_id) && ($cross_male_id != $family_male_id)) {
+                    push @{$return{error}},"Male parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+                    return \%return;
+                }
+            }
+
+            my $previous_linkage = $chado_schema->resultset("Stock::StockRelationship")->find ({
                 object_id => $family_name_rs->stock_id(),
-				subject_id => $cross_stock->stock_id(),
-				type_id => $cross_member_of_cvterm_id,
+                subject_id => $cross_stock->stock_id(),
+                type_id => $cross_member_of_cvterm_id,
             });
 
-#           print STDERR "CROSS FEMALE ID =".Dumper($cross_female_id)."\n";
-#			print STDERR "CROSS MALE ID =".Dumper($cross_male_id)."\n";
-#			print STDERR "FAMILY FEMALE ID =".Dumper($family_female_id)."\n";
-#			print STDERR "FAMILY MALE ID =".Dumper($family_male_id)."\n";
-
-            if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
-				push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
-				return \%return;
-            } elsif (!$previous_linkage) {
-				$family_name_rs->find_or_create_related('stock_relationship_objects', {
-	                type_id => $cross_member_of_cvterm_id,
-	                object_id => $family_name_rs->stock_id(),
-	                subject_id => $cross_stock->stock_id(),
-	            });
+            if (!$previous_linkage) {
+#                print STDERR "ADDING..".Dumper($cross_stock->name())."\n";
+                $family_name_rs->find_or_create_related('stock_relationship_objects', {
+                    type_id => $cross_member_of_cvterm_id,
+                    object_id => $family_name_rs->stock_id(),
+                    subject_id => $cross_stock->stock_id(),
+                });
             }
         } else {
-            my $new_family_name_rs;
-            $new_family_name_rs = $chado_schema->resultset("Stock::Stock")->create({
+            my $new_family_name_rs = $chado_schema->resultset("Stock::Stock")->create({
                 organism_id => $organism_id,
                 name       => $family_name,
                 uniquename => $family_name,
                 type_id    => $family_name_cvterm_id,
             });
+
+            #create family_type stock_property
+            $new_family_name_rs->create_stockprops({$family_type_cvterm->name() => $family_type});
 
             #create relationship between new family_name and cross
             $new_family_name_rs->find_or_create_related('stock_relationship_objects', {

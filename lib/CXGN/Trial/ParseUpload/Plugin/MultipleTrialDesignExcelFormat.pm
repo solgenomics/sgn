@@ -420,7 +420,7 @@ sub _validate_with_plugin {
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
-            if (defined($apply_treatment) && $apply_treatment ne '1'){
+            if ( ($apply_treatment ne '') && defined($apply_treatment) && $apply_treatment ne '1'){
                 push @error_messages, "Treatment value for treatment <b>$treatment_name</b> in row $row_name should be either 1 or empty";
             }
         }
@@ -468,6 +468,9 @@ sub _validate_with_plugin {
   my %valid_design_types = (
     "CRD" => 1,
     "RCBD" => 1,
+    "RRC" => 1,
+    "DRRC" => 1,
+    "ARC" => 1,
     "Alpha" => 1,
     "Lattice" => 1,
     "Augmented" => 1,
@@ -514,22 +517,26 @@ sub _validate_with_plugin {
 
       push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
 
-      @accessions = grep !/$matched_synonym/, @accessions;
+      @accessions = grep !/\Q$matched_synonym/, @accessions;
       push @accessions, $found_acc_name_from_synonym;
   }
-  
+
   #now validate again the accession names
   $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
-  
+
   my @accessions_missing = @{$accessions_hashref->{'missing'}};
   my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
-  
+
   if (scalar(@accessions_missing) > 0) {
       # $errors{'missing_accessions'} = \@accessions_missing;
       push @error_messages, "Accession(s) <b>".join(',',@accessions_missing)."</b> are not in the database as uniquenames or synonyms.";
   }
   if (scalar(@multiple_synonyms) > 0) {
-      push @error_messages, "Accession(s) <b>".join(',',@multiple_synonyms)."</b> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
+      my @msgs;
+      foreach my $m (@multiple_synonyms) {
+          push(@msgs, 'Name: ' . @$m[0] . ' = Synonym: ' . @$m[1]);
+      }
+      push @error_messages, "Accession(s) <b>".join(',',@msgs)."</b> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
   }
 
   ## SEEDLOTS OVERALL VALIDATION

@@ -26,7 +26,37 @@ on:
   workflow_dispatch:
 
 jobs:
+  version:
+    if: github.actor != 'rob-ouser-bi'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Get release version
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+      - name: Update version
+        run: sed -i -E "s/^version .*/version ${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER/" sgn.conf
+      - name: Update version info
+        run: sed -i -E "s/^version_updated .*/version_updated ${{ github.event.repository.updated_at}}/" sgn.conf
+      - name: Commit sgn.conf
+        run: |
+          git config --local user.email "bidevteam@cornell.edu"
+          git config --local user.name "rob-ouser-bi"
+          git add .
+          git commit -m "[autocommit] bumping build number"
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.ROB_OUSER_TOKEN }}
+          branch: ${{ github.ref }}
+          force: true
+          
   build:
+    needs: version
     runs-on: ubuntu-latest
 
     steps:
@@ -39,9 +69,9 @@ jobs:
       - name: Get the sgn repo
         uses: actions/checkout@v2
 
-      - name: Get release version
-        uses: actions-ecosystem/action-get-latest-tag@v1
-        id: get-latest-tag
+#       - name: Get release version
+#         uses: actions-ecosystem/action-get-latest-tag@v1
+#         id: get-latest-tag
 
       - name: Extract branch name
         shell: bash
@@ -55,24 +85,41 @@ jobs:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
           ref: 'develop'
+          submodules: 'recursive'
           
-#       TODO: add support for future and release branches
+      - name: Get breedbase_dockerfile
+        if: startsWith(steps.extract_branch.outputs.branch, 'release/')
+        uses: actions/checkout@master
+        with:
+          repository: Breeding-Insight/breedbase_dockerfile
+          path: breedbase_dockerfile
+          ref: ${{ steps.extract_branch.outputs.branch }}
+          submodules: 'recursive'
 
       - name: Get breedbase_dockerfile
-        if: steps.extract_branch.outputs.branch != 'develop'
+        if: steps.extract_branch.outputs.branch == 'master'
         uses: actions/checkout@master
         with:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
           ref: 'master'
+          submodules: 'recursive'
 
       - name: Get the submodules
         working-directory: ./breedbase_dockerfile
-        run: git submodule update --init --recursive --remote
+        run: git submodule update --init --recursive
+
+      - name: Set sgn origin
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: |
+          git remote rm origin
+          git remote add origin git@github.com:Breeding-Insight/sgn.git
+          git remote update
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
-        run: git switch ${{steps.extract_branch.outputs.branch}}
+        run: |
+          git checkout -b ${{ steps.extract_branch.outputs.branch }} origin/${{ steps.extract_branch.outputs.branch }}
 
       - name: Debug sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
@@ -80,7 +127,7 @@ jobs:
 
       - name: Set tag
         id: vars
-        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER)
+        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:$(sed -nE "s/^version (.*)/\1/p" sgn.conf))
         
       - name: Build Docker and push image
         working-directory: ./breedbase_dockerfile

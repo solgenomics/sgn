@@ -7,6 +7,7 @@ use CXGN::Trial::Folder;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use JSON;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -129,6 +130,15 @@ sub details {
             my $folder_description = $folder->description;
             my $breeding_program_id = $folder->breeding_program->project_id();
 
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema => $schema,
+                table_name => 'project',
+                table_id_key => 'project_id',
+                id => $folder_id,
+            });
+            my $external_references = $references->search();
+            my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+
 			my %result = (
                 active=>JSON::true,
 				additionalInfo=>$additional_info,
@@ -137,7 +147,7 @@ sub details {
                 datasetAuthorships=>undef,
                 documentationURL=>undef,
                 endDate=>undef,
-                externalReferences=>undef,
+                externalReferences=>@formatted_external_references,
                 programDbId=>qq|$breeding_program_id|,
                 programName=>$folder->breeding_program->name(),
                 publications=>undef,
@@ -186,6 +196,7 @@ sub store {
         my $breeding_program_id = $params->{programDbId} || undef;
         my $description = $params->{trialDescription} || undef;
         my $additional_info = $params->{additionalInfo} || undef;
+        my $external_references = $params->{externalReferences} || undef;
         my $folder_for_trials = 1;
         my $folder_for_crosses = 0;
         my $folder_for_genotyping_trials = 0;
@@ -210,6 +221,23 @@ sub store {
             folder_for_genotyping_trials => $folder_for_genotyping_trials,
             additional_info              => $additional_info
         });
+
+        # save external references if specified
+        if ($external_references) {
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema          => $schema,
+                external_references => $external_references,
+                table_name          => 'project',
+                table_id_key         => 'project_id',
+                id             => $folder->folder_id(),
+            });
+
+            $references->store();
+
+            if ($references->{'error'}) {
+                return { error => $references->{'error'} };
+            }
+        }
 
         push @stored_ids, $folder->folder_id();
     }
@@ -262,6 +290,7 @@ sub update {
     my $breeding_program_id = $params->{programDbId} || undef;
     my $description = $params->{trialDescription} || undef;
     my $additional_info = $params->{additionalInfo} || undef;
+    my $updated_external_references = $params->{externalReferences} || undef;
 
     # Check that the breeding program was passed and exists
     if (! defined $breeding_program_id) {
@@ -310,6 +339,21 @@ sub update {
     my $folder_description = $folder->name; #description doesn't exist 
     my $breeding_program_id = $folder->breeding_program->project_id();
 
+    # external references
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        external_references => $updated_external_references,
+        bcs_schema          => $schema,
+        table_name          => 'project',
+        table_id_key        => 'project_id',
+        id                  => $folder->folder_id(),
+
+    });
+    $references->store();
+
+    if ($references->{'error'}) {
+        return { error => $references->{'error'} };
+    }
+
     my %result = (
         active=>JSON::true,
         additionalInfo=>$folder->additional_info,
@@ -318,7 +362,7 @@ sub update {
         datasetAuthorships=>undef,
         documentationURL=>undef,
         endDate=>undef,
-        externalReferences=>undef,
+        externalReferences=>$updated_external_references,
         programDbId=>qq|$breeding_program_id|,
         programName=>$folder->breeding_program->name(),
         publications=>undef,
@@ -421,9 +465,16 @@ sub _get_folders {
         # Filter our trials that don't have required search studies if filter was passed
         $trial_filter = 1;
     }
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $schema,
+        table_name => 'project',
+        table_id_key => 'project_id',
+        id => $self->{'id'},
+    });
+    my $external_references = $references->search();
+    my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
 
     if ($trial_filter < 1){
-        print Dumper($self);
         push @{$data}, {
             active=>JSON::true,
             additionalInfo=>$self->{project_additional_info} ? decode_json($self->{project_additional_info}) : undef,
@@ -432,7 +483,7 @@ sub _get_folders {
             datasetAuthorships=>undef,
             documentationURL=>undef,
             endDate=>undef,
-            externalReferences=>undef,
+            externalReferences=>@formatted_external_references,
             programDbId=>qq|$self->{'program_id'}|,
             programName=>$self->{'program_name'},
             publications=>undef,
@@ -441,7 +492,7 @@ sub _get_folders {
             trialName=>$self->{'name'},
             trialDescription=>$self->{'description'},
             trialPUI=>undef
-        }
+        };
     };
 
 	return $data;

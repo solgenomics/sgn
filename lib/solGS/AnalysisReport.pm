@@ -651,7 +651,7 @@ sub report_status {
     my $json = JSON->new();
     $args = $json->decode($args);
     my $first_name = $args->{first_name};
-    
+
     my $analysis_status = $self->email_body($output_details);
     my $closing = "If you have any remarks, please contact us:\n"
    . $output_details->{contact_page}
@@ -681,9 +681,14 @@ sub report_status {
 sub email_addresses {
     my ($self, $output_details) = @_;
 
-    my $analysis_profile = $output_details->{analysis_profile};
+    my $analysis_profile = $output_details->{analysis_profile}->{arguments};
+    my $json = JSON->new();
+    $analysis_profile = $json->decode($analysis_profile);
+    my $first_name = $analysis_profile->{first_name};
+
     my $user_email = $analysis_profile->{user_email};
     my $user_name  = $analysis_profile->{user_name};
+    print STDERR "\nuser_email: $user_email -- fs: $first_name -- un: $user_name\n";
 
     my $email_from;
     my $email_to;
@@ -700,7 +705,8 @@ sub email_addresses {
 	my $mail_list = $output_details->{mailing_list};
     $email_from =  'solGS M Tool <' . $mail_list . '>';
     $email_cc   =  'solGS Job <' . $mail_list . '>';
-	$email_to   = "$user_name <$user_email>";
+	$email_to   = $user_name . '<' . $user_email . '>';
+
     }
 
     return {
