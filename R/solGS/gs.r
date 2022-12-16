@@ -117,7 +117,10 @@ maf <- 0.01
 markerFilter <- 0.6
 cloneFilter <- 0.8
 
-trainingLog <- c("Data preprocessing of training population genotype data\n\n")
+logHeading <- paste0("Genomic Prediction Analysis Log for ", traitAbbr,  ".\n")
+logHeading <- append(logHeading,  paste0("Date: ", format(Sys.time(), "%d %b %Y %H:%M"), "\n\n\n"))
+logHeading <- format(logHeading, width=80, justify="c")
+trainingLog <- paste0("#Preprocessing training population genotype data.\n\n")
 trainingLog <- append(trainingLog, "The following data filtering will be applied to the genotype dataset:\n\n")
 trainingLog <- append(trainingLog, paste0("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  will be removed.\n"))
 trainingLog <- append(trainingLog, paste0("\nMarkers with greater or equal to ", markerFilter * 100, "% missing values will be removed.\n"))
@@ -143,7 +146,7 @@ if (is.null(filteredTrainingGenoData)) {
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
 
-    trainingLog <- append(trainingLog, "Running trainning population genotype data cleaning now....")
+    trainingLog <- append(trainingLog, "#Running training population genotype data cleaning.\n\n")
     genoFilterOut <- filterGenoData(genoData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
     
     genoData <- genoFilterOut$data
@@ -196,7 +199,8 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
 
 phenoTrait <- c()
 traitRawPhenoData <- c()
-anovaLog <- c("\nPreprocessing phenotype data now....\n")
+anovaLog <- paste0("#Preprocessing training population phenotype data.\n\n")
+
 if (datasetInfo == 'combined populations') {
 
    if (!is.null(formattedPhenoData)) {
@@ -279,7 +283,7 @@ filteredPredGenoData     <- c()
 ## } else
 selectionLog <- c()
 if (length(selectionFile) != 0) {
-selectionLog <- append(selectionLog, paste0("Data preprocessing of selection population genotype data\n\n"))
+selectionLog <- append(selectionLog, paste0("#Data preprocessing of selection population genotype data.\n\n"))
 
     selectionData <- fread(selectionFile,
                            header = TRUE,
@@ -290,7 +294,7 @@ selectionLog <- append(selectionLog, paste0("Data preprocessing of selection pop
   selectionData <- column_to_rownames(selectionData, 'V1')
   selectionData <- convertToNumeric(selectionData)
 
-  selectionLog <- append(selectionLog, "Running selection population genotype data cleaning now....")
+  selectionLog <- append(selectionLog, paste0("Running selection population genotype data cleaning."))
 
   selectionFilterOut <- filterGenoData(selectionData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
   selectionData <- selectionFilterOut$data
@@ -313,8 +317,10 @@ if (sum(is.na(genoData)) > 0) {
 
 #extract observation lines with both
 #phenotype and genotype data only.
+trainingLog <- append(trainingLog, paste0("\n\n#Filtering for training population genotypes with both phenotype and marker data.\n\n"))
+trainingLog <- append(trainingLog, paste0("After calculating trait averages, the training population phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n") )
+trainingLog <- append(trainingLog, paste0("After cleaning up for missing values, the training population genotype dataset has ", length(rownames(genoData)), " individuals.\n") )
 
-trainingLog <- append(trainingLog, paste0("After calculating trait averages, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n") )
 commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
 
 trainingLog <- append(trainingLog, paste0(length(commonObs), " individuals are shared in both phenotype and genotype datasets.\n"))
@@ -341,19 +347,19 @@ if (length(selectionData) != 0) {
   trainingMarkers <- names(genoDataFilteredObs)
   selectionMarkers <-  names(selectionData)
 
-selectionLog <- append(selectionLog, paste0("Comparing markers in the training and selection populations genotype datasets... .\n" ))
+selectionLog <- append(selectionLog, paste0("#Comparing markers in the training and selection populations genotype datasets.\n\n" ))
   
-selectionLog <- append(selectionLog, paste0("The training pop geno dataset has ", length(trainingMarkers), " markers.\n" ))
-selectionLog <- append(selectionLog, paste0("The selection pop geno dataset has ", length(selectionMarkers), " markers.\n" ))
+selectionLog <- append(selectionLog, paste0("The training population genotype dataset has ", length(trainingMarkers), " markers.\n" ))
+selectionLog <- append(selectionLog, paste0("The selection population genotype dataset has ", length(selectionMarkers), " markers.\n" ))
 
 commonMarkers  <- intersect(trainingMarkers, selectionMarkers)
-selectionLog <- append(selectionLog, paste0("The training and selection pops geno dataset have ", length(trainingMarkers), " markers in common.\n" ))
+selectionLog <- append(selectionLog, paste0("The training and selection populations genotype dataset have ", length(trainingMarkers), " markers in common.\n" ))
 
 genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
-selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the training pop geno dataset has ", length(names(selectionData)), " markers.\n" ))
+selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the training population genotype dataset has ", length(names(selectionData)), " markers.\n" ))
 
 selectionData      <- subset(selectionData, select = commonMarkers)
-selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the selection pop geno dataset has ", length(names(selectionData)), " markers.\n" ))
+selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the selection population genotype dataset has ", length(names(selectionData)), " markers.\n" ))
 
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
@@ -446,6 +452,7 @@ if (nCores > 1) {
   nCores <- 1
 }
 varCompData <- c()
+modelingLog <- paste0("\n\n#Training a model for ", traitAbbr, ".\n\n")
 if (length(selectionData) == 0) {
 
   trModel  <- kin.blup(data   = phenoTrait,
@@ -455,6 +462,8 @@ if (length(selectionData) == 0) {
                       n.core = nCores,
                       PEV    = TRUE
                      )
+
+modelingLog <- paste0(modelingLog, "The model training is based on rrBLUP R package, version ", packageVersion('rrBLUP'), ". GEBVs are predicted using the kin.blup function and GBLUP method.\n\n")
 
   trGEBV    <- trModel$g
   trGEBVPEV <- trModel$PEV
@@ -535,10 +544,12 @@ if (length(selectionData) == 0) {
       set.seed(4567)
 
       k <- 10
-      times <- 2
-      cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
+      reps <- 2
+      cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=reps)
 
-      for ( r in 1:times) {
+  modelingLog <- paste0(modelingLog, "Model prediction accuracy is evaluated using cross-validation method. ",  k,  " folds, replicated ", reps, " times are used to predict the model accuracy.\n\n")
+
+      for ( r in 1:reps) {
           re <- paste0('Rep', r)
 
           for (i in 1:k) {
@@ -850,7 +861,6 @@ if (file.info(inbreedingFile)$size == 0) {
          )
 }
 
-
 if (file.info(aveKinshipFile)$size == 0) {
 
     aveKinship <- data.frame(apply(traitRelationshipMatrix, 1, mean))
@@ -870,7 +880,6 @@ if (file.info(aveKinshipFile)$size == 0) {
            )
 }
 
-
 if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
   fwrite(formattedPhenoData,
          file = formattedPhenoFile,
@@ -884,9 +893,9 @@ if (!is.null(varCompData)) {
 }
 
 if (!is.null(selectionLog)) {
-  cat(selectionLog, fill = TRUE,  file = analysisReportFile, append=FALSE)
+  cat(logHeading, selectionLog, fill = TRUE,  file = analysisReportFile, append=FALSE)
 } else {
-  cat(anovaLog, trainingLog, fill = TRUE,  file = analysisReportFile, append=FALSE)
+  cat(logHeading, anovaLog, trainingLog, modelingLog, fill = TRUE,  file = analysisReportFile, append=FALSE)
 }
 
 message("Done.")
