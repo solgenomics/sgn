@@ -199,11 +199,14 @@ sub upload_catalog_items_POST : Args(0) {
             my $stock_catalog = CXGN::Stock::Catalog->new({
                 bcs_schema => $schema,
                 item_type => $catalog_info_hash{item_type},
+                material_type => $catalog_info_hash{material_type},
+                species => $catalog_info_hash{species},
+                variety => $catalog_info_hash{variety},
                 category => $catalog_info_hash{category},
-                description => $catalog_info_hash{description},
+                additional_info => $catalog_info_hash{additional_info},
                 material_source => $catalog_info_hash{material_source},
                 breeding_program => $catalog_info_hash{breeding_program},
-                availability => $catalog_info_hash{availability},
+#                availability => $catalog_info_hash{availability},
                 contact_person_id => $catalog_info_hash{contact_person_id},
                 parent_id => $stock_id
             });
