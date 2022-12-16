@@ -302,6 +302,8 @@ jQuery(document).ready(function ($) {
     });
 
     $('#review_absent_accessions_submit').click(function () {
+        console.log("fullParsedData is: ");
+        console.log(fullParsedData);
         if (fullParsedData == undefined){
             var speciesName = $("#species_name_input").val();
             var populationName = $("#population_name_input").val();
@@ -345,7 +347,9 @@ jQuery(document).ready(function ($) {
 	    );
 	}
 
-	add_accessions(infoToAdd, speciesNames)
+    console.log(infoToAdd.length);
+    console.log("Adding accessions: "+JSON.stringify(infoToAdd));
+	add_accessions(infoToAdd, speciesNames);
 	$('#review_absent_dialog').modal("hide");
 
         //window.location.href='/breeders/accessions';
@@ -508,7 +512,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
                 +'</td><td>'
                 +verifyResponse.found[i].unique_name
                 +'</td></tr>';
-            accessionListFound[verifyResponse.found[i].unique_name] = 1;
+            accessionListFound[verifyResponse.found[i].matched_string] = 1;
         }
         found_html = found_html +'</tbody></table>';
 
@@ -564,7 +568,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
 	    //alert(JSON.stringify(infoToAdd));
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 console.log("Absent accessions are:"+JSON.stringify(verifyResponse.absent));
-                populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
+                populate_review_absent_dialog(verifyResponse.absent);
             } else {
                 alert('All accessions in your list already exist in the database. (3)');
             }
@@ -577,7 +581,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
 
 }
 
-function populate_review_absent_dialog(absent, infoToAdd){
+function populate_review_absent_dialog(absent){
     console.log(infoToAdd);
     console.log(absent);
 
@@ -597,23 +601,31 @@ function populate_review_absent_dialog(absent, infoToAdd){
 
     if (infoToAdd.length>0){
         var infoToAdd_html = '<div class="well"><b>The following new accessions will be added:</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
-        for( i=0; i < infoToAdd.length; i++){
-            if (!('stock_id' in infoToAdd[i])){
-                infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
+        var toIgnore = [];
+        console.log(infoToAdd.length);
+        infoToAdd.forEach((row, index) => {
+            // console.log("working on "+JSON.stringify(row));
+            if (absent.includes(row['germplasmName'])){
+                infoToAdd_html = infoToAdd_html + '<tr><td>'+row['germplasmName']+'</td>';
                 var infoToAdd_properties_html = '';
-                for (key in infoToAdd[i]){
+                for (key in row){
                     if (key != 'uniquename' && key != 'other_editable_stock_props'){
-                        infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                        infoToAdd_properties_html = infoToAdd_properties_html + key+':'+row[key]+'   ';
                     }
                     else if (key == 'other_editable_stock_props') {
-                        for (key_other in infoToAdd[i][key]) {
-                            infoToAdd_properties_html = infoToAdd_properties_html + key_other+':'+infoToAdd[i][key][key_other]+'   ';
+                        for (key_other in row[key]) {
+                            infoToAdd_properties_html = infoToAdd_properties_html + key_other+':'+row[key][key_other]+'   ';
                         }
                     }
                 }
                 infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
+            } else if (!('stock_id' in row)) {
+                toIgnore.push(index);
             }
-        }
+        });
+        infoToAdd = infoToAdd.filter((_, index) => !toIgnore.includes(index));
+        console.log(infoToAdd.length);
+
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
         infoToAdd_html = infoToAdd_html + '<div class="well"><b>The following accessions will be updated:</b><br/><br/><table id="infoToAdd_updated_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
         for( i=0; i < infoToAdd.length; i++){
@@ -692,7 +704,7 @@ function process_fuzzy_options(accession_list_id) {
                         }
                     }
                 }
-                populate_review_absent_dialog(accessionList, infoToAdd);
+                populate_review_absent_dialog(accessionList);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
                 alert('All accessions in your list now exist in the database. 2');

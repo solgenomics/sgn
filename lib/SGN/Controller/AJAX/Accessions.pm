@@ -323,7 +323,7 @@ sub verify_accessions_file_POST : Args(0) {
         $return{error_string} = $parsed_data->{error_string};
     }
 
-        
+
     $c->stash->{rest} = \%return;
 }
 
