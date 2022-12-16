@@ -226,29 +226,32 @@ sub get_order_details {
     my $item_json = $orderprop_rs->value();
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
-    my @list;
-    foreach my $each_item (@$all_items) {
-        my $item_name = (keys %$each_item)[0];
-        my $quantity = $each_item->{$item_name}->{'quantity'};
-        my $comments = $each_item->{$item_name}->{'comments'};
-        my $additional_info = $each_item->{$item_name}->{'additional_info'};
 
-        my $each_item_details;
-        if ($additional_info && $comments) {
-            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
-        } elsif ($additional_info && (!$comments)){
-            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
-        } elsif ((!$additional_info) && $comments) {
-            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
-        } else {
-            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
-        }
-        push @list, $each_item_details;
-    }
-    my @sort_list = sort @list;
-    my $item_list = join("<br>", @sort_list);
 
-    push @order_details, $order_id, $order_from_name, $create_date, $item_list, $order_to_name, $order_status, $comments;
+
+#    my @list;
+#    foreach my $each_item (@$all_items) {
+#        my $item_name = (keys %$each_item)[0];
+#        my $quantity = $each_item->{$item_name}->{'quantity'};
+#        my $comments = $each_item->{$item_name}->{'comments'};
+#        my $additional_info = $each_item->{$item_name}->{'additional_info'};
+
+#        my $each_item_details;
+#        if ($additional_info && $comments) {
+#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+#        } elsif ($additional_info && (!$comments)){
+#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+#        } elsif ((!$additional_info) && $comments) {
+#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
+#        } else {
+#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
+#        }
+#        push @list, $each_item_details;
+#    }
+#    my @sort_list = sort @list;
+#    my $item_list = join("<br>", @sort_list);
+
+    push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments;
 #    print STDERR "DETAILS =".Dumper(\@order_details)."\n";
 
     return \@order_details;
