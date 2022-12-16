@@ -395,64 +395,122 @@ sub add_accession_list_POST : Args(0) {
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $main_production_site_url = $c->config->{main_production_site_url};
+    my @edited_fullinfo_stocks;
+    my @edited_stocks;
     my @added_fullinfo_stocks;
     my @added_stocks;
 
     my $coderef_bcs = sub {
         foreach (@$full_info){
             if (exists($allowed_organisms{$_->{species}})){
-                my $stock = CXGN::Stock::Accession->new({
-                    schema=>$schema,
-                    check_name_exists=>0,
-                    main_production_site_url=>$main_production_site_url,
-                    type=>'accession',
-                    type_id=>$type_id,
-                    species=>$_->{species},
-                    #genus=>$_->{genus},
-                    stock_id=>$_->{stock_id}, #For adding properties to an accessions
-                    is_saving=>1,
-                    name=>$_->{defaultDisplayName},
-                    uniquename=>$_->{germplasmName},
-                    organization_name=>$_->{organizationName},
-                    population_name=>$_->{populationName},
-                    description=>$_->{description},
-                    accessionNumber=>$_->{accessionNumber},
-                    germplasmPUI=>$_->{germplasmPUI},
-                    pedigree=>$_->{pedigree},
-                    germplasmSeedSource=>$_->{germplasmSeedSource},
-                    synonyms=>$_->{synonyms},
-                    #commonCropName=>$_->{commonCropName},
-                    instituteCode=>$_->{instituteCode},
-                    instituteName=>$_->{instituteName},
-                    biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
-                    countryOfOriginCode=>$_->{countryOfOriginCode},
-                    typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
-                    #speciesAuthority=>$_->{speciesAuthority},
-                    #subtaxa=>$_->{subtaxa},
-                    #subtaxaAuthority=>$_->{subtaxaAuthority},
-                    donors=>$_->{donors},
-                    acquisitionDate=>$_->{acquisitionDate},
-                    transgenic=>$_->{transgenic},
-                    notes=>$_->{notes},
-                    state=>$_->{state},
-                    variety=>$_->{variety},
-                    genomeStructure=>$_->{genomeStructure},
-                    ploidyLevel=>$_->{ploidyLevel},
-                    locationCode=>$_->{locationCode},
-                    introgression_parent=>$_->{introgression_parent},
-                    introgression_backcross_parent=>$_->{introgression_backcross_parent},
-                    introgression_map_version=>$_->{introgression_map_version},
-                    introgression_chromosome=>$_->{introgression_chromosome},
-                    introgression_start_position_bp=>$_->{introgression_start_position_bp},
-                    introgression_end_position_bp=>$_->{introgression_end_position_bp},
-                    other_editable_stock_props=>$_->{other_editable_stock_props},
-                    sp_person_id => $user_id,
-                    user_name => $user_name,
-                    modification_note => 'Bulk load of accession information'
-                });
-                my $added_stock_id = $stock->store();
-                push @added_stocks, $added_stock_id;
-                push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
+                if ($_->{stock_id}) {
+                    my $stock = CXGN::Stock::Accession->new({
+                        schema=>$schema,
+                        check_name_exists=>0,
+                        main_production_site_url=>$main_production_site_url,
+                        type=>'accession',
+                        type_id=>$type_id,
+                        species=>$_->{species},
+                        #genus=>$_->{genus},
+                        stock_id=>$_->{stock_id}, #For adding properties to an accessions
+                        is_saving=>1,
+                        name=>$_->{defaultDisplayName},
+                        uniquename=>$_->{germplasmName},
+                        organization_name=>$_->{organizationName},
+                        population_name=>$_->{populationName},
+                        description=>$_->{description},
+                        accessionNumber=>$_->{accessionNumber},
+                        germplasmPUI=>$_->{germplasmPUI},
+                        pedigree=>$_->{pedigree},
+                        germplasmSeedSource=>$_->{germplasmSeedSource},
+                        synonyms=>$_->{synonyms},
+                        #commonCropName=>$_->{commonCropName},
+                        instituteCode=>$_->{instituteCode},
+                        instituteName=>$_->{instituteName},
+                        biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
+                        countryOfOriginCode=>$_->{countryOfOriginCode},
+                        typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
+                        #speciesAuthority=>$_->{speciesAuthority},
+                        #subtaxa=>$_->{subtaxa},
+                        #subtaxaAuthority=>$_->{subtaxaAuthority},
+                        donors=>$_->{donors},
+                        acquisitionDate=>$_->{acquisitionDate},
+                        transgenic=>$_->{transgenic},
+                        notes=>$_->{notes},
+                        state=>$_->{state},
+                        variety=>$_->{variety},
+                        genomeStructure=>$_->{genomeStructure},
+                        ploidyLevel=>$_->{ploidyLevel},
+                        locationCode=>$_->{locationCode},
+                        introgression_parent=>$_->{introgression_parent},
+                        introgression_backcross_parent=>$_->{introgression_backcross_parent},
+                        introgression_map_version=>$_->{introgression_map_version},
+                        introgression_chromosome=>$_->{introgression_chromosome},
+                        introgression_start_position_bp=>$_->{introgression_start_position_bp},
+                        introgression_end_position_bp=>$_->{introgression_end_position_bp},
+                        other_editable_stock_props=>$_->{other_editable_stock_props},
+                        sp_person_id => $user_id,
+                        user_name => $user_name,
+                        modification_note => 'Bulk load of accession information'
+                    });
+                    my $edited_stock_id = $stock->store();
+                    push @edited_stocks, $edited_stock_id;
+                    push @edited_fullinfo_stocks, [$edited_stock_id, $_->{germplasmName}];
+
+                } else {
+                    my $stock = CXGN::Stock::Accession->new({
+                        schema=>$schema,
+                        check_name_exists=>0,
+                        main_production_site_url=>$main_production_site_url,
+                        type=>'accession',
+                        type_id=>$type_id,
+                        species=>$_->{species},
+                        #genus=>$_->{genus},
+                        stock_id=>$_->{stock_id}, #For adding properties to an accessions
+                        is_saving=>1,
+                        name=>$_->{defaultDisplayName},
+                        uniquename=>$_->{germplasmName},
+                        organization_name=>$_->{organizationName},
+                        population_name=>$_->{populationName},
+                        description=>$_->{description},
+                        accessionNumber=>$_->{accessionNumber},
+                        germplasmPUI=>$_->{germplasmPUI},
+                        pedigree=>$_->{pedigree},
+                        germplasmSeedSource=>$_->{germplasmSeedSource},
+                        synonyms=>$_->{synonyms},
+                        #commonCropName=>$_->{commonCropName},
+                        instituteCode=>$_->{instituteCode},
+                        instituteName=>$_->{instituteName},
+                        biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
+                        countryOfOriginCode=>$_->{countryOfOriginCode},
+                        typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
+                        #speciesAuthority=>$_->{speciesAuthority},
+                        #subtaxa=>$_->{subtaxa},
+                        #subtaxaAuthority=>$_->{subtaxaAuthority},
+                        donors=>$_->{donors},
+                        acquisitionDate=>$_->{acquisitionDate},
+                        transgenic=>$_->{transgenic},
+                        notes=>$_->{notes},
+                        state=>$_->{state},
+                        variety=>$_->{variety},
+                        genomeStructure=>$_->{genomeStructure},
+                        ploidyLevel=>$_->{ploidyLevel},
+                        locationCode=>$_->{locationCode},
+                        introgression_parent=>$_->{introgression_parent},
+                        introgression_backcross_parent=>$_->{introgression_backcross_parent},
+                        introgression_map_version=>$_->{introgression_map_version},
+                        introgression_chromosome=>$_->{introgression_chromosome},
+                        introgression_start_position_bp=>$_->{introgression_start_position_bp},
+                        introgression_end_position_bp=>$_->{introgression_end_position_bp},
+                        other_editable_stock_props=>$_->{other_editable_stock_props},
+                        sp_person_id => $user_id,
+                        user_name => $user_name,
+                        modification_note => 'Bulk load of accession information'
+                    });
+                    my $added_stock_id = $stock->store();
+                    push @added_stocks, $added_stock_id;
+                    push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
+                }
             }
         }
     };
@@ -476,6 +534,7 @@ sub add_accession_list_POST : Args(0) {
     #print STDERR Dumper \@added_fullinfo_stocks;
     $c->stash->{rest} = {
         success => "1",
+        edited => \@edited_fullinfo_stocks,
         added => \@added_fullinfo_stocks
     };
     return;

@@ -258,7 +258,11 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    var html = 'The following stocks were added!<br/>';
+                    var html = 'The following accessions were edited: <br/>';
+                    for (var i=0; i<response.edited.length; i++){
+                        html = html + '<a href="/stock/'+response.edited[i][0]+'/view">'+response.edited[i][1]+'</a><br/>';
+                    }
+                    html = html + '<br/>The following accessions were added: <br/>';
                     for (var i=0; i<response.added.length; i++){
                         html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
                     }
