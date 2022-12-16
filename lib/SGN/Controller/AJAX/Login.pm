@@ -19,7 +19,12 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     
     if (my $user = $c->user()) { 
 	my $user_id = $user->get_object->get_sp_person_id();
-	$c->stash->{rest} = { user_id => $user_id };
+	$c->stash->{rest} = {
+	    user_id => $user_id,
+	    username => $user->get_object->get_username(),
+	    first_name => $user->get_object->get_first_name(),
+	    last_name => $user->get_object->get_last_name(),
+	};
 	return;
     }
     $c->stash->{rest} = { user_id => 0 };
