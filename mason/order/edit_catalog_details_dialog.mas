@@ -44,6 +44,34 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_species">Species: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_item_species" type="text" value="<%$species%>" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_variety">Variety: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_item_variety" type="text" value="<%$variety%>" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_material_type">Material Type: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_material_type" value="<%$material_type%>">
+                                        <option value="Plant">Plant</option>
+                                        <option value="Seed">Seed</option>
+                                        <option value="Construct">Construct</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label" for="edit_item_category">Item Category: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
@@ -60,7 +88,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_material_source">Material Source: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <textarea class="form-control" id="edit_item_material_source" <input class="form-control" placeholder="">
+                                    <input class="form-control col-sm-8" id="edit_item_material_source" type="text" value="<%$material_source%>" />
                                 </div>
                             </div>
                         </div>
@@ -68,7 +96,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_additional_info">Additional Info: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <textarea class="form-control" id="edit_item_additional_info" <input class="form-control" placeholder="">
+                                    <input class="form-control col-sm-8" id="edit_item_additional_info" type="text" value="<%$additional_info%>" />
                                 </div>
                             </div>
                         </div>
@@ -142,11 +170,18 @@ jQuery(document).ready( function() {
         var default_category = document.getElementById("edit_item_category").getAttribute("value");
         jQuery('#edit_item_category option[value="'+default_category+'"]').prop("selected", true);
 
+        var default_material_type = document.getElementById("edit_material_type").getAttribute("value");
+        jQuery('#edit_material_type option[value="'+default_material_type+'"]').prop("selected", true);
+
+
     });
 
     jQuery('#save_item_details').click( function() {
-        var name = jQuery('#edit_item_name').val();
-        var type = jQuery('#edit_item_type').val();
+        var item_name = jQuery('#edit_item_name').val();
+        var item_type = jQuery('#edit_item_type').val();
+        var species = jQuery('#edit_item_species').val();
+        var variety = jQuery('#edit_item_variety').val();
+        var material_type = jQuery('#edit_material_type').val();
         var category = jQuery('#edit_item_category').val();
         var additional_info = jQuery('#edit_item_additional_info').val();
         var material_source = jQuery('#edit_item_material_source').val();
@@ -157,12 +192,15 @@ jQuery(document).ready( function() {
             dataType: "json",
             type: 'POST',
             data : {
-                'item_name': name,
-                'item_type': type,
-                'item_category': category,
-                'item_additional_info': additional_info,
-                'item_material_source': material_source,
-                'item_breeding_program': breeding_program,
+                'name': item_name,
+                'type': item_type,
+                'species': species,
+                'variety': variety,
+                'material_type': material_type,
+                'category': category,
+                'additional_info': additional_info,
+                'material_source': material_source,
+                'breeding_program_id': breeding_program,
                 'contact_person': contact_person,
                 'item_prop_id': item_prop_id
             },
