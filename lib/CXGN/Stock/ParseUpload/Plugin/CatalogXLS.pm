@@ -405,7 +405,7 @@ sub _parse_with_plugin {
             'species' => $species,
             'variety' => $variety,
             'category' => $category,
-            'additional_info' => $description,
+            'additional_info' => $additional_info,
             'material_source' => $material_source,
             'breeding_program' => $breeding_program_id,
 #            'availability' => $availability,
