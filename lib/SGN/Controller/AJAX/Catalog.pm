@@ -35,9 +35,6 @@ sub add_catalog_item_POST : Args(0) {
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
 
-    my $item_species = $c->req->param('species');
-    my $item_variety = $c->req->param('variety');
-
     my $item_stock_id;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
@@ -45,12 +42,26 @@ sub add_catalog_item_POST : Args(0) {
         return;
     }
 
+    my $item_stock_id;
+    my $item_species;
+    my $item_variety;
     my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
+    my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+
     if (!$item_rs) {
         $c->stash->{rest} = {error_string => "Item name is not in the database!",};
         return;
     } else {
         $item_stock_id = $item_rs->stock_id();
+        my $organism_id = $item_rs->organism_id();
+        my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+        $item_species = $organism->species();
+        my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_stock_id, type_id => $variety_type_id});
+        if ($item_stockprop) {
+            $item_variety = $item_stockprop->value();
+        } else {
+            $item_variety = 'NA';
+        }
     }
 
     my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person);
@@ -189,19 +200,31 @@ sub upload_catalog_items_POST : Args(0) {
     }
 
     if ($parsed_data) {
+        my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
         my %catalog_info = %{$parsed_data};
         foreach my $item_name (keys %catalog_info) {
+            my $item_species;
+            my $item_variety;
             my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
             my $stock_id = $stock_rs->stock_id();
-            print STDERR "STOCK ID =".Dumper($stock_id)."\n";
+            my $organism_id = $stock_rs->organism_id();
+            my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+            $item_species = $organism->species();
+            my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $variety_type_id});
+            if ($item_stockprop) {
+                $item_variety = $item_stockprop->value();
+            } else {
+                $item_variety = 'NA';
+            }
+
             my %catalog_info_hash = %{$catalog_info{$item_name}};
 
             my $stock_catalog = CXGN::Stock::Catalog->new({
                 bcs_schema => $schema,
                 item_type => $catalog_info_hash{item_type},
                 material_type => $catalog_info_hash{material_type},
-                species => $catalog_info_hash{species},
-                variety => $catalog_info_hash{variety},
+                species => $item_species,
+                variety => $item_variety,
                 category => $catalog_info_hash{category},
                 additional_info => $catalog_info_hash{additional_info},
                 material_source => $catalog_info_hash{material_source},

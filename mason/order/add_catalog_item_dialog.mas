@@ -24,8 +24,8 @@ $ordering_type => undef
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_type">
                                     <option value="">Select an item type</option>
-                                    <option value="single item">Single item</option>
-                                    <option value="set of items">Set of items</option>
+                                    <option value="single item">single item</option>
+                                    <option value="set of items">set of items</option>
                                 </select>
                             </div>
                         </div>
@@ -34,30 +34,9 @@ $ordering_type => undef
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_material_type">
                                     <option value="">Select a material type</option>
-                                    <option value="Seed">Seed</option>
-                                    <option value="Plant">Plant</option>
-                                    <option value="Construct">Construct</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Species: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_species">
-                                    <option value="">Select a species</option>
-                                    <option value="Nicotiana benthamiana">Nicotiana benthamiana</option>
-                                    <option value="Nicotiana tabacum">Nicotiana tabacum</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Variety: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_variety">
-                                    <option value="">Select a variety</option>
-                                    <option value="C319">C319</option>
-                                    <option value="K236">K236</option>
-                                    <option value="Mix">Mix</option>
+                                    <option value="seed">seed</option>
+                                    <option value="plant">plant</option>
+                                    <option value="construct">construct</option>
                                 </select>
                             </div>
                         </div>
@@ -66,17 +45,17 @@ $ordering_type => undef
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_category">
                                     <option value="">Select a category</option>
-                                    <option value="Released Variety">Released Variety</option>
-                                    <option value="Pathogen Assay ">Pathogen Assay</option>
-                                    <option value="Control">Control</option>
-                                    <option value="Transgenic Line">Transgenic Line</option>
+                                    <option value="released variety">released variety</option>
+                                    <option value="pathogen assay ">pathogen assay</option>
+                                    <option value="control">control</option>
+                                    <option value="transgenic line">transgenic line</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Additional Info: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_additional_info" placeholder="">
+                                <input class="form-control" id="item_additional_info" placeholder="optional">
                             </div>
                         </div>
                         <div class="form-group">
@@ -86,7 +65,7 @@ $ordering_type => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Program: </label>
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
                             <div class="col-sm-9" >
                                 <div id="item_breeding_program_div"></div>
                             </div>
@@ -148,8 +127,6 @@ jQuery(document).ready(function(){
         var name = jQuery('#item_name').val();
         var type = jQuery('#item_type').val();
         var material_type = jQuery('#item_material_type').val();
-        var species = jQuery('#item_species').val();
-        var variety = jQuery('#item_variety').val();
         var category = jQuery('#item_category').val();
         var additional_info = jQuery('#item_additional_info').val();
         var material_source = jQuery('#item_material_source').val();
@@ -159,7 +136,6 @@ jQuery(document).ready(function(){
         if (name == '') { alert("Please provide a name") };
         if (type == '') { alert("Please select a type") };
         if (material_type == '') { alert("Please select a material type") };
-        if (species == '') { alert("Please select a species") };
         if (category == '') { alert("Please select a category") };
         if (breeding_program == '') { alert("Please select a program") };
         if (contact_person == '') { alert("Please indicate contact person") };
@@ -177,8 +153,6 @@ jQuery(document).ready(function(){
                 'material_source': material_source,
                 'breeding_program_id': breeding_program,
                 'contact_person': contact_person,
-                'species': species,
-                'variety': variety
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

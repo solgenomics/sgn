@@ -81,10 +81,7 @@ sub _validate_with_plugin {
     my $item_name_header;
     my $item_type_header;
     my $material_type_header;
-    my $species_header;
-    my $variety_header;
     my $category_header;
-#    my $description_header;
     my $additional_info_header;
     my $material_source_header;
     my $breeding_program_header;
@@ -101,25 +98,19 @@ sub _validate_with_plugin {
         $material_type_header  = $worksheet->get_cell(0,2)->value();
     }
     if ($worksheet->get_cell(0,3)) {
-        $species_header  = $worksheet->get_cell(0,3)->value();
+        $category_header  = $worksheet->get_cell(0,3)->value();
     }
     if ($worksheet->get_cell(0,4)) {
-        $variety_header  = $worksheet->get_cell(0,4)->value();
+        $additional_info_header  = $worksheet->get_cell(0,4)->value();
     }
     if ($worksheet->get_cell(0,5)) {
-        $category_header  = $worksheet->get_cell(0,5)->value();
+        $material_source_header  = $worksheet->get_cell(0,5)->value();
     }
     if ($worksheet->get_cell(0,6)) {
-        $additional_info_header  = $worksheet->get_cell(0,6)->value();
+        $breeding_program_header  = $worksheet->get_cell(0,6)->value();
     }
     if ($worksheet->get_cell(0,7)) {
-        $material_source_header  = $worksheet->get_cell(0,7)->value();
-    }
-    if ($worksheet->get_cell(0,8)) {
-        $breeding_program_header  = $worksheet->get_cell(0,8)->value();
-    }
-    if ($worksheet->get_cell(0,9)) {
-        $contact_person_header  = $worksheet->get_cell(0,9)->value();
+        $contact_person_header  = $worksheet->get_cell(0,7)->value();
     }
 
     if (!$item_name_header || $item_name_header ne 'item_name' ) {
@@ -131,29 +122,23 @@ sub _validate_with_plugin {
     if (!$material_type_header || $material_type_header ne 'material_type') {
         push @error_messages, "Cell C1: material_type is missing from the header";
     }
-    if (!$species_header || $species_header ne 'species') {
-        push @error_messages, "Cell D1: species is missing from the header";
-    }
-    if (!$variety_header || $variety_header ne 'variety') {
-        push @error_messages, "Cell E1: variety is missing from the header";
-    }
     if (!$category_header || $category_header ne 'category') {
-        push @error_messages, "Cell F1: category is missing from the header";
+        push @error_messages, "Cell D1: category is missing from the header";
     }
     if (!$additional_info_header || $additional_info_header ne 'additional_info') {
-        push @error_messages, "Cell G1: additional_info is missing from the header";
+        push @error_messages, "Cell E1: additional_info is missing from the header";
     }
     if (!$material_source_header || $material_source_header ne 'material_source') {
-        push @error_messages, "Cell H1: material_source is missing from the header";
+        push @error_messages, "Cell F1: material_source is missing from the header";
     }
     if (!$breeding_program_header || $breeding_program_header ne 'breeding_program') {
-        push @error_messages, "Cell I1: breeding_program is missing from the header";
+        push @error_messages, "Cell G1: breeding_program is missing from the header";
     }
 #    if (!$availability_header || $availability_header ne 'availability') {
 #        push @error_messages, "Cell G1: availability is missing from the header";
 #    }
     if (!$contact_person_header || $contact_person_header ne 'contact_person_username') {
-        push @error_messages, "Cell J1: contact_person_username is missing from the header";
+        push @error_messages, "Cell H1: contact_person_username is missing from the header";
     }
 
     my %seen_stock_names;
@@ -164,8 +149,6 @@ sub _validate_with_plugin {
         my $item_name;
         my $item_type;
         my $material_type;
-        my $species;
-        my $variety;
         my $category;
         my $additional_info;
         my $material_source;
@@ -186,33 +169,25 @@ sub _validate_with_plugin {
             $material_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
-            $species =  $worksheet->get_cell($row,3)->value();
-            $species =~ s/^\s+|\s+$//g;
-        }
-        if ($worksheet->get_cell($row,4)) {
-            $variety =  $worksheet->get_cell($row,4)->value();
-            $variety =~ s/^\s+|\s+$//g;
-        }
-        if ($worksheet->get_cell($row,5)) {
-            $category = $worksheet->get_cell($row,5)->value();
+            $category = $worksheet->get_cell($row,3)->value();
             $category =~ s/^\s+|\s+$//g;
         }
-        if ($worksheet->get_cell($row,6)) {
-            $additional_info =  $worksheet->get_cell($row,6)->value();
+        if ($worksheet->get_cell($row,4)) {
+            $additional_info =  $worksheet->get_cell($row,4)->value();
         }
-        if ($worksheet->get_cell($row,7)) {
-            $material_source =  $worksheet->get_cell($row,7)->value();
+        if ($worksheet->get_cell($row,5)) {
+            $material_source =  $worksheet->get_cell($row,5)->value();
             $material_source =~ s/^\s+|\s+$//g;
         }
-        if ($worksheet->get_cell($row,8)) {
-            $breeding_program =  $worksheet->get_cell($row,8)->value();
+        if ($worksheet->get_cell($row,6)) {
+            $breeding_program =  $worksheet->get_cell($row,6)->value();
         }
 #        if ($worksheet->get_cell($row,6)) {
 #            $availability =  $worksheet->get_cell($row,6)->value();
 #            $availability =~ s/^\s+|\s+$//g;
 #        }
-        if ($worksheet->get_cell($row,9)) {
-            $contact_person_username =  $worksheet->get_cell($row,9)->value();
+        if ($worksheet->get_cell($row,7)) {
+            $contact_person_username =  $worksheet->get_cell($row,7)->value();
         }
 
 
@@ -230,12 +205,8 @@ sub _validate_with_plugin {
             push @error_messages, "Cell C$row_name: material_type missing";
         }
 
-        if (!$species || $species eq '') {
-            push @error_messages, "Cell C$row_name: species missing";
-        }
-
         if (!$category || $category eq '') {
-            push @error_messages, "Cell C$row_name: category missing";
+            push @error_messages, "Cell D$row_name: category missing";
         }
 
 #        } elsif (!$supported_categories{$category}) {
@@ -252,7 +223,7 @@ sub _validate_with_plugin {
 #        }
 
         if (!$breeding_program || $breeding_program eq '') {
-            push @error_messages, "Cell F$row_name: breeding_program missing";
+            push @error_messages, "Cell G$row_name: breeding_program missing";
         }
 
 #        if (!$availability || $availability eq '') {
@@ -350,10 +321,7 @@ sub _parse_with_plugin {
         my $item_name;
         my $item_type;
         my $material_type;
-        my $species;
-        my $variety;
         my $category;
-#        my $description;
         my $additional_info;
         my $material_source;
         my $breeding_program;
@@ -370,28 +338,22 @@ sub _parse_with_plugin {
             $material_type =  $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $species =  $worksheet->get_cell($row,3)->value();
+            $category = $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
-            $variety =  $worksheet->get_cell($row,4)->value();
+            $additional_info =  $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $category = $worksheet->get_cell($row,5)->value();
+            $material_source =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $additional_info =  $worksheet->get_cell($row,6)->value();
-        }
-        if ($worksheet->get_cell($row,7)) {
-            $material_source =  $worksheet->get_cell($row,7)->value();
-        }
-        if ($worksheet->get_cell($row,8)) {
-            $breeding_program =  $worksheet->get_cell($row,8)->value();
+            $breeding_program =  $worksheet->get_cell($row,6)->value();
         }
 #        if ($worksheet->get_cell($row,6)) {
 #            $availability =  $worksheet->get_cell($row,6)->value();
 #        }
-        if ($worksheet->get_cell($row,9)) {
-            $contact_person_username =  $worksheet->get_cell($row,9)->value();
+        if ($worksheet->get_cell($row,7)) {
+            $contact_person_username =  $worksheet->get_cell($row,7)->value();
         }
 
         my $contact_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_username);
@@ -402,8 +364,6 @@ sub _parse_with_plugin {
         $parsed_result{$item_name} = {
             'item_type' => $item_type,
             'material_type' => $material_type,
-            'species' => $species,
-            'variety' => $variety,
             'category' => $category,
             'additional_info' => $additional_info,
             'material_source' => $material_source,

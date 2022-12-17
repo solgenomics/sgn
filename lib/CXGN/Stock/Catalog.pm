@@ -25,11 +25,11 @@ has 'category' => ( isa => 'Str', is => 'rw' );
 
 has 'species' => ( isa => 'Str', is => 'rw' );
 
-has 'variety' => ( isa => 'Str', is => 'rw' );
+has 'variety' => ( isa => 'Str', is => 'rw', required => 0);
 
 has 'breeding_program' => ( isa => 'Int', is => 'rw');
 
-has 'additional_info' => ( isa => 'Str', is => 'rw' );
+has 'additional_info' => ( isa => 'Str', is => 'rw', required => 0 );
 
 has 'contact_person_id' => ( isa => 'Int', is => 'rw') ;
 
