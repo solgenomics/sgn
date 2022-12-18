@@ -210,29 +210,38 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#add_item_button').click(function(){
-        var item_name = jQuery('#cart_item_name').val();
-        var item_quantity = jQuery('#item_quantity').val();
-        if (!item_quantity) {
-            item_quantity = '1';
+        var order_details = {};
+        var item_name = jQuery('#item_name').val();
+        order_details['Item Name'] = item_name;
+        for(var i=0; i<property_keys.length; i++){
+            var each_value = jQuery('#'+ i +'').val();
+            order_details[property_keys[i]] = each_value;
         }
-        if (ordering_service_name == 'ONA') {
-            var item_additional_info = jQuery('#item_additional_info').val();
-            if (!item_additional_info) {
-                alert("Please select additional info");
-                return;
-            }
-        }
-        var item_comments = jQuery('#item_comments').val();
 
-        if (!item_comments && !item_additional_info) {
-            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity;
-        } else if ((!item_comments) && (item_additional_info)) {
-            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info;
-        } else if ((item_comments) && (!item_additional_info)) {
-            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Comments:' + ' ' + item_comments;
-        } else if (item_comments && item_additional_info) {
-            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info + ',' + ' ' + 'Comments:' + ' ' + item_comments;
-        }
+        var item_string = JSON.stringify(order_details);
+
+//        var item_quantity = jQuery('#item_quantity').val();
+//        if (!item_quantity) {
+//            item_quantity = '1';
+//        }
+//        if (ordering_service_name == 'ONA') {
+//            var item_additional_info = jQuery('#item_additional_info').val();
+//            if (!item_additional_info) {
+//                alert("Please select additional info");
+//                return;
+//            }
+//        }
+//        var item_comments = jQuery('#item_comments').val();
+
+//        if (!item_comments && !item_additional_info) {
+//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity;
+//        } else if ((!item_comments) && (item_additional_info)) {
+//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info;
+//        } else if ((item_comments) && (!item_additional_info)) {
+//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Comments:' + ' ' + item_comments;
+//        } else if (item_comments && item_additional_info) {
+//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info + ',' + ' ' + 'Comments:' + ' ' + item_comments;
+//        }
 
         var lo = new CXGN.List();
 
@@ -344,26 +353,26 @@ function addToCart(item_name, additional_order_info, ordering_service_name, orde
     var properties = order_properties.split(",");
     var html = '';
 
-    if (ordering_type == 'single_step') {
+//    if (ordering_type == 'single_step') {
         html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
         for(var i=0; i<properties.length; i++){
             html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
         }
         html = html + '</div></div></form>';
-    } else {
-        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
-        if (ordering_service_name == 'ONA') {
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Info: </label><div class="col-sm-9" ><select class="form-control" id="item_additional_info" name="item_additional_info"><option disabled value="" selected hidden>Please select a required clone stage</option>';
-            if (additional_info) {
-                for (var i=0; i<additional_info.length; i++) {
-                    html = html + '<option value='+additional_info[i]+'>'+additional_info[i]+'</option>';
-                }
-            }
-            html = html + '</select></div></div>';
-        }
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
-    }
+//    } else {
+//        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
+//        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
+//        if (ordering_service_name == 'ONA') {
+//            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Info: </label><div class="col-sm-9" ><select class="form-control" id="item_additional_info" name="item_additional_info"><option disabled value="" selected hidden>Please select a required clone stage</option>';
+//            if (additional_info) {
+//                for (var i=0; i<additional_info.length; i++) {
+//                    html = html + '<option value='+additional_info[i]+'>'+additional_info[i]+'</option>';
+//                }
+//            }
+//            html = html + '</select></div></div>';
+//        }
+//        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
+//    }
     jQuery('#add_item_detail_div').html(html);
     jQuery('#add_item_detail_dialog').modal('show');
 

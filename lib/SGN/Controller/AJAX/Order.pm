@@ -46,6 +46,9 @@ sub submit_order_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $request_date = $time->ymd();
+    my $order_properties = $c->config->{order_properties};
+    my @properties = split ',',$order_properties;
+
 #    print STDERR "LIST ID =".Dumper($list_id)."\n";
 
     if (!$c->user()) {
@@ -66,9 +69,17 @@ sub submit_order_POST : Args(0) {
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
         my @ona_info = ();
-        my @ordered_item_split = split /,/, $ordered_item;
-        my $number_of_fields = @ordered_item_split;
-        my $item_name = $ordered_item_split[0];
+        my $order_details_ref = decode_json ($ordered_item);
+        my %order_details = %{$order_details_ref};
+        my $item_name = $order_details{'Item Name'};
+        my %each_item_details;
+        foreach my $field (@properties) {
+            $each_item_details{$field} = $order_details{$field};
+        }
+
+#        my @ordered_item_split = split /,/, $ordered_item;
+#        my $number_of_fields = @ordered_item_split;
+#        my $item_name = $ordered_item_split[0];
         my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
         my $item_id = $item_rs->stock_id();
         my $item_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $catalog_cvterm_id});
@@ -79,46 +90,47 @@ sub submit_order_POST : Args(0) {
         my $item_source = $item_info_hash->{'material_source'};
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'item_type'} = $item_type;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'material_source'} = $item_source;
+        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name} = \%each_item_details;
 
-        my $quantity_string = $ordered_item_split[1];
-        my @quantity_info = split /:/, $quantity_string;
-        my $quantity = $quantity_info[1];
-        $quantity =~ s/^\s+|\s+$//g;
-        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
+#        my $quantity_string = $ordered_item_split[1];
+#        my @quantity_info = split /:/, $quantity_string;
+#        my $quantity = $quantity_info[1];
+#        $quantity =~ s/^\s+|\s+$//g;
+#        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
 
-        my $ona_additional_info;
-        if ($number_of_fields == 3) {
-            my $optional_field = $ordered_item_split[2];
-            my @optional_field_array = split /:/, $optional_field;
-            my $optional_title = $optional_field_array[0];
-            $optional_title =~ s/^\s+|\s+$//g;
-            print STDERR "OPTIONAL TITLE =".Dumper($optional_title)."\n";
-            my $optional_info = $optional_field_array[1];
-            $optional_info =~ s/^\s+|\s+$//g;
-            print STDERR "OPTIONAL INFO =".Dumper($optional_info)."\n";
-            if ($optional_title eq 'Comments') {
-                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $optional_info;
-            } elsif ($optional_title eq 'Additional Info') {
-                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $optional_info;
-                $ona_additional_info = $optional_info;
-                print STDERR "ONA ADDITIONAL INFO =".Dumper($ona_additional_info)."\n";
-            }
-        } elsif ($number_of_fields == 4) {
-            my $additional_info_field = $ordered_item_split[2];
-            my @additional_info_array = split /:/, $additional_info_field;
-            my $additional_info = $additional_info_array[1];
-            $additional_info =~ s/^\s+|\s+$//g;
-            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $additional_info;
-            $ona_additional_info = $additional_info;
-            my $comments_field = $ordered_item_split[3];
-            my @comments_array = split /:/, $comments_field;
-            my $comments = $comments_array[1];
-            $comments =~ s/^\s+|\s+$//g;
-            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $comments;
-        }
+#        my $ona_additional_info;
+#        if ($number_of_fields == 3) {
+#            my $optional_field = $ordered_item_split[2];
+#            my @optional_field_array = split /:/, $optional_field;
+#            my $optional_title = $optional_field_array[0];
+#            $optional_title =~ s/^\s+|\s+$//g;
+#            print STDERR "OPTIONAL TITLE =".Dumper($optional_title)."\n";
+#            my $optional_info = $optional_field_array[1];
+#            $optional_info =~ s/^\s+|\s+$//g;
+#            print STDERR "OPTIONAL INFO =".Dumper($optional_info)."\n";
+#            if ($optional_title eq 'Comments') {
+#                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $optional_info;
+#            } elsif ($optional_title eq 'Additional Info') {
+#                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $optional_info;
+#                $ona_additional_info = $optional_info;
+#                print STDERR "ONA ADDITIONAL INFO =".Dumper($ona_additional_info)."\n";
+#            }
+#        } elsif ($number_of_fields == 4) {
+#            my $additional_info_field = $ordered_item_split[2];
+#            my @additional_info_array = split /:/, $additional_info_field;
+#            my $additional_info = $additional_info_array[1];
+#            $additional_info =~ s/^\s+|\s+$//g;
+#            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $additional_info;
+#            $ona_additional_info = $additional_info;
+#            my $comments_field = $ordered_item_split[3];
+#            my @comments_array = split /:/, $comments_field;
+#            my $comments = $comments_array[1];
+#            $comments =~ s/^\s+|\s+$//g;
+#            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $comments;
+#        }
 
-        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
-        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
+#        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
+#        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
     }
 
     my $ordering_service_name = $c->config->{ordering_service_name};
@@ -147,7 +159,7 @@ sub submit_order_POST : Args(0) {
 
         $history_info ->{'submitted'} = $timestamp;
         push @history, $history_info;
-
+        print STDERR "ITEM LIST =".Dumper(\@item_list)."\n";
         my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
         $order_prop->clone_list(\@item_list);
         $order_prop->parent_id($order_id);
