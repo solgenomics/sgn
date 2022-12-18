@@ -346,21 +346,9 @@ function addToCart(item_name, additional_order_info, ordering_service_name, orde
 
     if (ordering_type == 'single_step') {
         html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Facility: </label><div class="col-sm-9" ><input class="form-control" id="item_facility" name="item_facility" placeholder="Please Select"></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Scientist(s): </label><div class="col-sm-9" ><input class="form-control" id="item_scientist" name="item_scientist" placeholder=""></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Due/Requested by Date: </label><div class="col-sm-9" ><input class="form-control" id="item_due_date" name="item_due_date" placeholder=""></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Experiment Name: </label><div class="col-sm-9" ><input class="form-control" id="experiment_name" name="experiment_name" placeholder=""></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Experiment Type: </label><div class="col-sm-9" ><input class="form-control" id="experiment_type" name="experiment_type" placeholder="Please Select"></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Risk Assessment: </label><div class="col-sm-9" ><input class="form-control" id="risk_assessment" name="risk_assessment" placeholder=""></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Containment Zone: </label><div class="col-sm-9" ><input class="form-control" id="containment_zone" name="containment_zone" placeholder=""></div><br><br><br>';
-//        html = html + '<label class="col-sm-3 control-label">Additional Comments: </label><div class="col-sm-9" ><input class="form-control" id="additional_comments" name="additional_comments" placeholder="eg: Clothing & Special Handling"></div>';
-
         for(var i=0; i<properties.length; i++){
             html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
-
         }
-
         html = html + '</div></div></form>';
     } else {
         html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
