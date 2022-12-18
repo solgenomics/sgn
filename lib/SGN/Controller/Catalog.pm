@@ -70,7 +70,6 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
         return;
     } else {
         $item_prop_id = $stock_catalog_info->stockprop_id();
-#        print STDERR "STOCKPROP ID =".Dumper($item_prop_id)."\n";
     }
 
     my $stock_catalog_item = $schema->resultset("Stock::Stock")->find({stock_id => $item_id});

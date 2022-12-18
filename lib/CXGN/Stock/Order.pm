@@ -98,29 +98,8 @@ sub get_orders_from_person_id {
             my $item_json = $item_result->value();
             my $item_hash = JSON::Any->jsonToObj($item_json);
             $all_items = $item_hash->{'clone_list'};
-#            foreach my $each_item (@$all_items) {
-#                my $item_name = (keys %$each_item)[0];
-#                my $quantity = $each_item->{$item_name}->{'quantity'};
-#                my $comments = $each_item->{$item_name}->{'comments'};
-#                my $additional_info = $each_item->{$item_name}->{'additional_info'};
-
-#                my $each_item_details;
-#                if ($additional_info && $comments) {
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
-#                } elsif ($additional_info && (!$comments)){
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
-#                } elsif ((!$additional_info) && $comments) {
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
-#                } else {
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
-#                }
-#                push @list, $each_item_details;
-#            }
-#            my @sort_list = sort @list;
-#            $item_list = join("<br>", @sort_list);
         }
 
-#        push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name, $comments ];
         push @orders, {
             order_id => $order_id,
             create_date => $create_date,
@@ -148,7 +127,6 @@ sub get_orders_to_person_id {
         my $item_list;
         my $order_id = $result->sp_order_id();
         my $order_from_id = $result->order_from_id();
-#        my $order_to_id = $result->order_to_id();
         my $order_status = $result->order_status();
         my $create_date = $result->create_date();
         my $completion_date = $result->completion_date();
@@ -163,26 +141,6 @@ sub get_orders_to_person_id {
             my $item_json = $item_result->value();
             my $item_hash = JSON::Any->jsonToObj($item_json);
             $all_items = $item_hash->{'clone_list'};
-#            foreach my $each_item (@$all_items) {
-#                my $item_name = (keys %$each_item)[0];
-#                my $quantity = $each_item->{$item_name}->{'quantity'};
-#                my $comments = $each_item->{$item_name}->{'comments'};
-#                my $additional_info = $each_item->{$item_name}->{'additional_info'};
-#
-#                my $each_item_details;
-#                if ($additional_info && $comments) {
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
-#                } elsif ($additional_info && (!$comments)){
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
-#                } elsif ((!$additional_info) && $comments) {
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
-#                } else {
-#                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
-#                }
-#                push @list, $each_item_details;
-#            }
-#            my @sort_list = sort @list;
-#            $item_list = join("<br>", @sort_list);
         }
 
         push @orders, {
@@ -195,7 +153,7 @@ sub get_orders_to_person_id {
             contact_person_comments => $comments
         }
     }
-#    print STDERR "ORDERS =".Dumper(\@orders)."\n";
+
     return \@orders;
 }
 
@@ -227,32 +185,7 @@ sub get_order_details {
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
 
-
-
-#    my @list;
-#    foreach my $each_item (@$all_items) {
-#        my $item_name = (keys %$each_item)[0];
-#        my $quantity = $each_item->{$item_name}->{'quantity'};
-#        my $comments = $each_item->{$item_name}->{'comments'};
-#        my $additional_info = $each_item->{$item_name}->{'additional_info'};
-
-#        my $each_item_details;
-#        if ($additional_info && $comments) {
-#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
-#        } elsif ($additional_info && (!$comments)){
-#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
-#        } elsif ((!$additional_info) && $comments) {
-#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
-#        } else {
-#            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
-#        }
-#        push @list, $each_item_details;
-#    }
-#    my @sort_list = sort @list;
-#    my $item_list = join("<br>", @sort_list);
-
     push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments;
-#    print STDERR "DETAILS =".Dumper(\@order_details)."\n";
 
     return \@order_details;
 

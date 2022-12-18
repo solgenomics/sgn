@@ -49,8 +49,6 @@ sub submit_order_POST : Args(0) {
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
 
-#    print STDERR "LIST ID =".Dumper($list_id)."\n";
-
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
         $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
@@ -77,9 +75,6 @@ sub submit_order_POST : Args(0) {
             $each_item_details{$field} = $order_details{$field};
         }
 
-#        my @ordered_item_split = split /,/, $ordered_item;
-#        my $number_of_fields = @ordered_item_split;
-#        my $item_name = $ordered_item_split[0];
         my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
         my $item_id = $item_rs->stock_id();
         my $item_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $catalog_cvterm_id});
@@ -93,46 +88,8 @@ sub submit_order_POST : Args(0) {
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name} = \%each_item_details;
     }
 
-#        my $quantity_string = $ordered_item_split[1];
-#        my @quantity_info = split /:/, $quantity_string;
-#        my $quantity = $quantity_info[1];
-#        $quantity =~ s/^\s+|\s+$//g;
-#        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
-
-#        my $ona_additional_info;
-#        if ($number_of_fields == 3) {
-#            my $optional_field = $ordered_item_split[2];
-#            my @optional_field_array = split /:/, $optional_field;
-#            my $optional_title = $optional_field_array[0];
-#            $optional_title =~ s/^\s+|\s+$//g;
-#            print STDERR "OPTIONAL TITLE =".Dumper($optional_title)."\n";
-#            my $optional_info = $optional_field_array[1];
-#            $optional_info =~ s/^\s+|\s+$//g;
-#            print STDERR "OPTIONAL INFO =".Dumper($optional_info)."\n";
-#            if ($optional_title eq 'Comments') {
-#                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $optional_info;
-#            } elsif ($optional_title eq 'Additional Info') {
-#                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $optional_info;
-#                $ona_additional_info = $optional_info;
-#                print STDERR "ONA ADDITIONAL INFO =".Dumper($ona_additional_info)."\n";
-#            }
-#        } elsif ($number_of_fields == 4) {
-#            my $additional_info_field = $ordered_item_split[2];
-#            my @additional_info_array = split /:/, $additional_info_field;
-#            my $additional_info = $additional_info_array[1];
-#            $additional_info =~ s/^\s+|\s+$//g;
-#            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $additional_info;
-#            $ona_additional_info = $additional_info;
-#            my $comments_field = $ordered_item_split[3];
-#            my @comments_array = split /:/, $comments_field;
-#            my $comments = $comments_array[1];
-#            $comments =~ s/^\s+|\s+$//g;
-#            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $comments;
-#        }
-
 #        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
 #        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
-#    }
 
     my $ordering_service_name = $c->config->{ordering_service_name};
     my $ordering_service_url = $c->config->{ordering_service_url};
@@ -152,7 +109,6 @@ sub submit_order_POST : Args(0) {
         $new_order->order_status("submitted");
         $new_order->create_date($timestamp);
         my $order_id = $new_order->store();
-#        print STDERR "ORDER ID =".($order_id)."\n";
         if (!$order_id){
             $c->stash->{rest} = {error_string => "Error saving your order",};
             return;
@@ -160,7 +116,7 @@ sub submit_order_POST : Args(0) {
 
         $history_info ->{'submitted'} = $timestamp;
         push @history, $history_info;
-        print STDERR "ITEM LIST =".Dumper(\@item_list)."\n";
+
         my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
         $order_prop->clone_list(\@item_list);
         $order_prop->parent_id($order_id);
@@ -221,7 +177,6 @@ sub submit_order_POST : Args(0) {
                     my $message_hash_d = decode_json $message_d;
                     foreach my $t (@$message_hash_d) {
                         if ($t->{'data_value'} eq $order_file_name) {
-#                        print STDERR "DELETE INFO =".Dumper($t)."\n";
                             getstore($t->{media_url}, $previous_order_temp_file_path);
                             $order_ona_id = $t->{id};
                         }
@@ -422,33 +377,6 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
             push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
 
-        #                my $quantity = $each_item->{$item_name}->{'quantity'};
-        #                my $comments = $each_item->{$item_name}->{'comments'};
-        #                my $additional_info = $each_item->{$item_name}->{'additional_info'};
-
-        #                my $each_item_details;
-        #                if ($additional_info && $comments) {
-        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
-        #                } elsif ($additional_info && (!$comments)){
-        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
-        #                } elsif ((!$additional_info) && $comments) {
-        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
-        #                } else {
-        #                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
-        #                }
-        #                push @list, $each_item_details;
-        #            }
-        #            my @sort_list = sort @list;
-        #            $item_list = join("<br>", @sort_list);
-
-#            push @current_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[5], $order->[6]]
-    }
-#    foreach my $order (@all_orders) {
-#        if (($order->[3]) ne 'completed') {
-#            push @current_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[5], $order->[6]]
-#        }
-#    }
-
     $c->stash->{rest} = {data => \@current_orders};
 }
 
@@ -502,13 +430,6 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
             push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
     }
-
-
-#    foreach my $order (@all_orders) {
-#        if (($order->[3]) eq 'completed') {
-#            push @completed_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[4], $order->[5], $order->[6]]
-#        }
-#    }
 
     $c->stash->{rest} = {data => \@completed_orders};
 

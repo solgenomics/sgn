@@ -19,7 +19,7 @@ has 'item_type' => ( isa => 'Str', is => 'rw');
 has 'material_type' => ( isa => 'Str', is => 'rw');
 
 # center that generates clones or seed
-has 'material_source' => ( isa => 'Str', is => 'rw');
+has 'material_source' => ( isa => 'Str', is => 'rw')
 
 has 'category' => ( isa => 'Str', is => 'rw' );
 
@@ -99,7 +99,6 @@ sub get_item_details {
     foreach my $field (@fields){
         push @item_details, $detail_hash->{$field};
     }
-#    print STDERR "ITEM DETAILS =".Dumper(\@item_details)."\n";
 
     return \@item_details;
 }

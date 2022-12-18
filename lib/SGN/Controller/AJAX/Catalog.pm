@@ -92,9 +92,6 @@ sub add_catalog_item_POST : Args(0) {
     $stock_catalog->additional_info($item_additional_info);
     $stock_catalog->contact_person_id($sp_person_id);
 
-#    $stock_catalog->description($item_description);
-#    $stock_catalog->availability($item_availability);
-
     $stock_catalog->store();
 
     if (!$stock_catalog->store()){
@@ -317,18 +314,12 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
         my $image_page  = "/image/view/$image_obj_id";
         my $small_image = $image_obj->get_image_url("thumbnail");
 
-#        print STDERR "IMAGE OBJECT ID =".Dumper($image_obj_id)."\n";
-#        print STDERR "IMAGE OBJECT NAME =".Dumper($image_obj_name)."\n";
-#        print STDERR "IMAGE OBJECT DESCRIPTION =".Dumper($image_obj_description)."\n";
-#        print STDERR "IMAGE MEDIUM =".Dumper($medium_image)."\n";
-#        print STDERR "IMAGE PAGE =".Dumper($image_page)."\n";
         push @image_list, {
                 image_id => $image_obj_id,
                 image_name => $image_obj_name,
                 small_image => qq|<a href="$medium_image"  title="<a href=$image_page>Go to image page ($image_obj_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image"/></a> |,
                 image_description => $image_obj_description,
             };
-#            print STDERR "IMAGE LIST =".Dumper(\@image_list)."\n";
     }
 
     $c->stash->{rest} = {data => \@image_list};
