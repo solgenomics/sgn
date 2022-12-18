@@ -19,7 +19,7 @@ has 'item_type' => ( isa => 'Str', is => 'rw');
 has 'material_type' => ( isa => 'Str', is => 'rw');
 
 # center that generates clones or seed
-has 'material_source' => ( isa => 'Str', is => 'rw')
+has 'material_source' => ( isa => 'Str', is => 'rw');
 
 has 'category' => ( isa => 'Str', is => 'rw' );
 

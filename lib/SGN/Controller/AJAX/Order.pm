@@ -376,6 +376,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
             $all_details_string = join("<br>", @all_item_details);
             push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
+    }
 
     $c->stash->{rest} = {data => \@current_orders};
 }
