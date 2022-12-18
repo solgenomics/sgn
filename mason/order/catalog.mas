@@ -353,26 +353,12 @@ function addToCart(item_name, additional_order_info, ordering_service_name, orde
     var properties = order_properties.split(",");
     var html = '';
 
-//    if (ordering_type == 'single_step') {
-        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
-        for(var i=0; i<properties.length; i++){
-            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
-        }
-        html = html + '</div></div></form>';
-//    } else {
-//        html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
-//        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
-//        if (ordering_service_name == 'ONA') {
-//            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Info: </label><div class="col-sm-9" ><select class="form-control" id="item_additional_info" name="item_additional_info"><option disabled value="" selected hidden>Please select a required clone stage</option>';
-//            if (additional_info) {
-//                for (var i=0; i<additional_info.length; i++) {
-//                    html = html + '<option value='+additional_info[i]+'>'+additional_info[i]+'</option>';
-//                }
-//            }
-//            html = html + '</select></div></div>';
-//        }
-//        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
-//    }
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
+    for(var i=0; i<properties.length; i++){
+        html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
+    }
+    html = html + '</div></div></form>';
+
     jQuery('#add_item_detail_div').html(html);
     jQuery('#add_item_detail_dialog').modal('show');
 
