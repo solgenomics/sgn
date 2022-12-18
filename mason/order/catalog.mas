@@ -220,29 +220,6 @@ jQuery(document).ready( function() {
 
         var item_string = JSON.stringify(order_details);
 
-//        var item_quantity = jQuery('#item_quantity').val();
-//        if (!item_quantity) {
-//            item_quantity = '1';
-//        }
-//        if (ordering_service_name == 'ONA') {
-//            var item_additional_info = jQuery('#item_additional_info').val();
-//            if (!item_additional_info) {
-//                alert("Please select additional info");
-//                return;
-//            }
-//        }
-//        var item_comments = jQuery('#item_comments').val();
-
-//        if (!item_comments && !item_additional_info) {
-//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity;
-//        } else if ((!item_comments) && (item_additional_info)) {
-//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info;
-//        } else if ((item_comments) && (!item_additional_info)) {
-//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Comments:' + ' ' + item_comments;
-//        } else if (item_comments && item_additional_info) {
-//            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info + ',' + ' ' + 'Comments:' + ' ' + item_comments;
-//        }
-
         var lo = new CXGN.List();
 
         var myCart = lo.availableLists('catalog_items')
