@@ -91,6 +91,7 @@ sub submit_order_POST : Args(0) {
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'item_type'} = $item_type;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'material_source'} = $item_source;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name} = \%each_item_details;
+    }
 
 #        my $quantity_string = $ordered_item_split[1];
 #        my @quantity_info = split /:/, $quantity_string;
@@ -131,7 +132,7 @@ sub submit_order_POST : Args(0) {
 
 #        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
 #        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
-    }
+#    }
 
     my $ordering_service_name = $c->config->{ordering_service_name};
     my $ordering_service_url = $c->config->{ordering_service_url};
@@ -401,7 +402,9 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
         if (($order->{'order_status'}) ne 'completed') {
             my $clone_list = $order->{'clone_list'};
             my $item_name;
+            my @all_item_details = ();
             my $all_details_string;
+            my $empty_string = '';
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
                 $item_name = (keys %$each_item)[0];
@@ -411,8 +414,11 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
                     my $detail_string = $field. ":"."".$each_detail;
                     push @request_details, $detail_string;
                 }
-                $all_details_string = join("<br>", @request_details);
+                push @request_details, $empty_string;
+                my $details_string = join("<br>", @request_details);
+                push @all_item_details, $details_string;
             }
+            $all_details_string = join("<br>", @all_item_details);
             push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
 
@@ -475,6 +481,8 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
         if (($order->{'order_status'}) eq 'completed') {
             my $clone_list = $order->{'clone_list'};
             my $item_name;
+            my @all_item_details = ();
+            my $empty_string = '';
             my $all_details_string;
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
@@ -485,8 +493,12 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
                     my $detail_string = $field. ":"."".$each_detail;
                     push @request_details, $detail_string;
                 }
-                $all_details_string = join("<br>", @request_details);
+                push @request_details, $empty_string;
+                my $details_string = join("<br>", @request_details);
+                push @all_item_details, $details_string;
             }
+            $all_details_string = join("<br>", @all_item_details);
+
             push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
     }
@@ -528,26 +540,33 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
 
     my @vendor_current_orders;
     my @all_vendor_orders = @$vendor_orders_ref;
-        foreach my $vendor_order (@all_vendor_orders) {
-            if (($vendor_order->{'order_status'}) ne 'completed') {
-                my $clone_list = $vendor_order->{'clone_list'};
-                my $item_name;
-                my $all_details_string;
-                foreach my $each_item (@$clone_list) {
-                    my @request_details = ();
-                    $item_name = (keys %$each_item)[0];
-                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                    foreach my $field (@properties) {
-                        my $each_detail = $each_item->{$item_name}->{$field};
-                        my $detail_string = $field. ":"."".$each_detail;
-                        push @request_details, $detail_string;
-                    }
-                    $all_details_string = join("<br>", @request_details);
+    foreach my $vendor_order (@all_vendor_orders) {
+        if (($vendor_order->{'order_status'}) ne 'completed') {
+            my $clone_list = $vendor_order->{'clone_list'};
+            my $item_name;
+            my @all_item_details = ();
+            my $all_details_string;
+            my $empty_string = '';
+            foreach my $each_item (@$clone_list) {
+                my @request_details = ();
+                $item_name = (keys %$each_item)[0];
+                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+                foreach my $field (@properties) {
+                    my $each_detail = $each_item->{$item_name}->{$field};
+                    my $detail_string = $field. ":"."".$each_detail;
+                    push @request_details, $detail_string;
                 }
-                $vendor_order->{'order_details'} = $all_details_string;
-                push @vendor_current_orders, $vendor_order
+                push @request_details, $empty_string;
+                my $details_string = join("<br>", @request_details);
+
+                push @all_item_details, $details_string;
             }
+            $all_details_string = join("<br>", @all_item_details);
+
+            $vendor_order->{'order_details'} = $all_details_string;
+            push @vendor_current_orders, $vendor_order
         }
+    }
 
     $c->stash->{rest} = {data => \@vendor_current_orders};
 
@@ -583,6 +602,8 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
         if (($vendor_order->{'order_status'}) eq 'completed') {
             my $clone_list = $vendor_order->{'clone_list'};
             my $item_name;
+            my @all_item_details = ();
+            my $empty_string = '';
             my $all_details_string;
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
@@ -593,8 +614,11 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
                     my $detail_string = $field. ":"."".$each_detail;
                     push @request_details, $detail_string;
                 }
-                $all_details_string = join("<br>", @request_details);
+                push @request_details, $empty_string;
+                my $details_string = join("<br>", @request_details);
+                push @all_item_details, $details_string;
             }
+            $all_details_string = join("<br>", @all_item_details);
             $vendor_order->{'order_details'} = $all_details_string;
 
             push @vendor_completed_orders, $vendor_order
