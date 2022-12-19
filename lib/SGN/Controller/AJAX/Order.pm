@@ -101,7 +101,7 @@ sub submit_order_POST : Args(0) {
         my $history_info = {};
         my $item_ref = $group_by_contact_id{$contact_id}{'item_list'};
         my %item_hashes = %{$item_ref};
-        my @item_list = map { { $_ => $item_hashes{$_} } } keys %item_hashes;
+        my @item_list = map { { $_ => $item_hashes{$_} } } sort keys %item_hashes;
 
         my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
         $new_order->order_from_id($user_id);
