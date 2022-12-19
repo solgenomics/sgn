@@ -5,6 +5,7 @@ $ordering_service_name => undef
 $additional_order_info => undef
 $ordering_type => undef
 $order_properties => undef
+$order_properties_dialog => undef
 
 </%args>
 
@@ -152,6 +153,8 @@ jQuery(document).ready( function() {
     var ordering_type = "<% $ordering_type %>";
     var order_properties = "<% $order_properties %>";
     var property_keys = order_properties.split(",");
+    var order_properties_dialog = "<% $order_properties_dialog %>";
+    var property_dialog_keys = order_properties_dialog.split(",");
 
     if (ordering_type == 'single_step') {
         jQuery('#catalog_items_table').DataTable( {
@@ -169,7 +172,7 @@ jQuery(document).ready( function() {
                 { title: "Additional Info", "data": "additional_info" },
                 { title: "Material Source", "data": "material_source" },
                 { title: "Program", "data": "breeding_program" },
-                { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties+"\")'>Request</a>"; } },
+                { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\")'>Request</a>"; } },
             ],
         });
     } else {
@@ -188,7 +191,7 @@ jQuery(document).ready( function() {
                 { title: "Additional Info", "data": "additional_info" },
                 { title: "Material Source", "data": "material_source" },
                 { title: "Program", "data": "breeding_program" },
-                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
             ],
         });
     }
@@ -325,14 +328,23 @@ jQuery(document).ready( function() {
 
 });
 
-function addToCart(item_name, additional_order_info, ordering_service_name, ordering_type, order_properties ){
+function addToCart(item_name, additional_order_info, ordering_service_name, ordering_type, order_properties_dialog ){
     var additional_info = additional_order_info.split(",");
-    var properties = order_properties.split(",");
+    var properties = order_properties_dialog.split(",");
     var html = '';
 
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
     for(var i=0; i<properties.length; i++){
-        html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
+        var each_property_info = properties[i].split(":");
+        if (each_property_info.length == 1) {
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
+        } else {
+            html = html + '<label class="col-sm-3 control-label">'+ each_property_info[0] +'</label><div class="col-sm-9" ><select class="form-control" id= '+ i +' name= '+ i +'> ';
+            for (var j=1; j<each_property_info.length; j++) {
+                html = html + "<option value='"+each_property_info[j]+"'>" + each_property_info[j] + "</option>";
+            }
+            html = html + "</select></div><br><br><br>";
+        }
     }
     html = html + '</div></div></form>';
 

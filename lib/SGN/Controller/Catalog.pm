@@ -30,12 +30,13 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
     $c->stash->{additional_order_info} = $additional_order_info;
 
     my $ordering_type = $c->config->{ordering_type};
-    print STDERR "ORDERING TYPE =".Dumper($ordering_type)."\n";
     $c->stash->{ordering_type} = $ordering_type;
 
     my $order_properties = $c->config->{order_properties};
+    my $order_properties_dialog = $c->config->{order_properties_dialog};
 
     $c->stash->{order_properties} = $order_properties;
+    $c->stash->{order_properties_dialog} = $order_properties_dialog;
 
     $c->stash->{template} = '/order/catalog.mas';
 
