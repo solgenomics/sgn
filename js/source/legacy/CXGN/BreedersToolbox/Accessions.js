@@ -258,7 +258,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    var html = 'The following accessions were edited: <br/>';
+                    var html = 'The following accessions were updated: <br/>';
                     for (var i=0; i<response.edited.length; i++){
                         html = html + '<a href="/stock/'+response.edited[i][0]+'/view">'+response.edited[i][1]+'</a><br/>';
                     }
