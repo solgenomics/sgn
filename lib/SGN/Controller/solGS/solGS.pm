@@ -220,7 +220,7 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     elsif ($type =~ /combined/)
     {
 	$c->stash->{combo_pops_id} = $pop_id;
-	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_lines_count($c, $pop_id, $protocol_id);
+	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_lines($c, $pop_id, $protocol_id);
     }
 
     my $ret->{status} = 'failed';
