@@ -87,12 +87,11 @@ sub search {
         foreach (@$observations){
             my $observation_id = "$_->{phenotype_id}";
             # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
-                my %season = {
+                my %season = (
                     year => $obs_unit->{year},
                     seasonName => $obs_unit->{year},
                     seasonDbId => $obs_unit->{year}
-                };
-
+                );
                 my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
                 if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
                 if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
