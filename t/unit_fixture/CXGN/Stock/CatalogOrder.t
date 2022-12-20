@@ -43,18 +43,33 @@ for my $extension ("xls", "xlsx") {
 
     my $program_id = $schema->resultset('Project::Project')->find({ name => 'test' })->project_id();
 
-    my $item_id = $schema->resultset("Stock::Stock")->find({ name => 'UG120001' })->stock_id();
+    my $item_rs = $schema->resultset("Stock::Stock")->find({ name => 'UG120001' });
+    my $item_id = $item_rs->stock_id();
     my $stock_catalog = CXGN::Stock::Catalog->new({
         bcs_schema => $schema,
         parent_id  => $item_id,
     });
 
+    my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+    my $organism_id = $item_rs->organism_id();
+    my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+    my $item_species = $organism->species();
+    my $item_variety;
+    my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $variety_type_id});
+    if ($item_stockprop) {
+        $item_variety = $item_stockprop->value();
+    } else {
+        $item_variety = 'NA';
+    }
+
     $stock_catalog->item_type('single item');
+    $stock_catalog->material_type('plant');
+    $stock_catalog->material_source('BTI');
     $stock_catalog->category('released variety');
-    $stock_catalog->description('test item');
-    $stock_catalog->material_source('Sendusu');
+    $stock_catalog->species($item_species);
+    $stock_catalog->variety($item_variety);
     $stock_catalog->breeding_program($program_id);
-    $stock_catalog->availability('in stock');
+    $stock_catalog->additional_info('test adding info');
     $stock_catalog->contact_person_id($johndoe_id);
 
     ok($stock_catalog->store(), "check adding catalog");
@@ -107,10 +122,10 @@ for my $extension ("xls", "xlsx") {
             bcs_schema        => $schema,
             item_type         => $catalog_info_hash{item_type},
             category          => $catalog_info_hash{category},
-            description       => $catalog_info_hash{description},
+            material_type       => $catalog_info_hash{material_type},
             material_source   => $catalog_info_hash{material_source},
             breeding_program  => $catalog_info_hash{breeding_program},
-            availability      => $catalog_info_hash{availability},
+            additional_info      => $catalog_info_hash{additional_info},
             contact_person_id => $catalog_info_hash{contact_person_id},
             parent_id         => $stock_id
         });
