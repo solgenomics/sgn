@@ -35,14 +35,19 @@ sub _validate_with_plugin {
     my %supported_types;
     my %supported_categories;
     my %supported_material_sources;
-    my %supported_availability;
+    my %supported_material_types;
 
     $supported_types{'single item'} = 1;
     $supported_types{'set of items'} = 1;
 
-#    $supported_categories{'released variety'} = 1;
-#    $supported_categories{'pathogen assay'} = 1;
-#    $supported_categories{'control'} = 1;
+    $supported_categories{'released variety'} = 1;
+    $supported_categories{'pathogen assay'} = 1;
+    $supported_categories{'control'} = 1;
+    $supported_categories{'transgenic line'} = 1;
+
+    $supported_material_types{'seed'} = 1;
+    $supported_material_types{'plant'} = 1;
+    $supported_material_types{'construct'} = 1;
 
 #    $supported_material_sources{'OrderingSystemTest'} = 1;
 #    $supported_material_sources{'Sendusu'} = 1;
@@ -203,18 +208,15 @@ sub _validate_with_plugin {
 
         if (!$material_type || $material_type eq '') {
             push @error_messages, "Cell C$row_name: material_type missing";
+        } elsif (!$supported_material_types{$material_type}) {
+            push @error_messages, "Cell C$row_name: material type is not supported: $material_type";
         }
 
         if (!$category || $category eq '') {
             push @error_messages, "Cell D$row_name: category missing";
+        } elsif (!$supported_categories{$category}) {
+            push @error_messages, "Cell C$row_name: category is not supported: $category";
         }
-
-#        } elsif (!$supported_categories{$category}) {
-#            push @error_messages, "Cell C$row_name: category is not supported: $category";
-#        }
-#        if (!$description || $description eq '') {
-#            push @error_messages, "Cell D$row_name: description missing";
-#        }
 
 #        if (!$material_source || $material_source eq '') {
 #            push @error_messages, "Cell E$row_name: material_source missing";

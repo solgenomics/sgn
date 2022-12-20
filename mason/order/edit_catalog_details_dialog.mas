@@ -64,9 +64,9 @@ $item_prop_id
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_material_type" value="<%$material_type%>">
-                                        <option value="Plant">Plant</option>
-                                        <option value="Seed">Seed</option>
-                                        <option value="Construct">Construct</option>
+                                        <option value="plant">plant</option>
+                                        <option value="seed">seed</option>
+                                        <option value="construct">construct</option>
                                     </select>
                                 </div>
                             </div>
@@ -76,10 +76,10 @@ $item_prop_id
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_item_category" value="<%$category%>">
-                                        <option value="Released Variety">Released Variety</option>
-                                        <option value="Pathogen Assay ">Pathogen Assay</option>
-                                        <option value="Control">Control</option>
-                                        <option value="Transgenic Line">Transgenic Line</option>
+                                        <option value="released variety">released variety</option>
+                                        <option value="pathogen assay ">pathogen assay</option>
+                                        <option value="control">control</option>
+                                        <option value="transgenic line">transgenic line</option>
                                     </select>
                                 </div>
                             </div>
