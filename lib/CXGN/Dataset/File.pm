@@ -92,6 +92,7 @@ sub retrieve_genotypes_vcf {
 	while(<$filehandle>) {
 	    print $F $_;
 	}
+	seek $filehandle, 0,0; # rewind filehandle to the beginning of the file
 	print STDERR "Done.\n";
 	close($F);
     }
@@ -161,7 +162,7 @@ override('retrieve_genotypes',
 
 	     print STDERR "DONE GETTING DOSAGE MATRIX\n";
 
-
+	     
 	     if ($file) {
 		 print STDERR "Generating the file $file ...\n";
 		 open(my $F, ">", $file) || die "Can't open file $file";
@@ -170,6 +171,7 @@ override('retrieve_genotypes',
 		 }
 		 print STDERR "Done.\n";
 		 close($F);
+		 seek $fh, 0, 0; # reset the filehandle
 	     }
 
 	     return $fh;

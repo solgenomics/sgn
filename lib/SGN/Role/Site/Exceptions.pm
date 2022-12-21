@@ -161,7 +161,6 @@ sub _set_exception_response {
 
         exception        => \@exceptions,
         show_dev_message => !$self->get_conf('production_server'),
-        contact_email    => $self->config->{feedback_email},
     });
 
     $self->res->content_type('text/html');
@@ -175,9 +174,9 @@ sub _set_exception_response {
             $self->res->status(500);
             $self->res->content_type('text/plain');
             $self->res->body(
-                'Our apologies, a severe error has occurred.  Please email '
-               .($self->config->{feedback_email} || "this site's maintainers")
-               .' and report this error.'
+                'Our apologies, a severe error has occurred. '
+                ."Please contact <a href=\"/contact/form\">this site's maintainers</a>"
+                . ' and report this error.'
               );
         }
     };

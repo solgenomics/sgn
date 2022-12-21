@@ -80,9 +80,6 @@
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
       <div> <p> Plant Sex info: 1= Male, 2=Female, 3= Monoecious male (m>f) and 4= Monoecious female(f>m)</p> </div>
       <table id="gcpc_output">
-	<thead>
-	  <tr><th>Cross #</th><th>Parent 1</th><th>Parent 2</th><th>Cross Predicted Merit</th><th>Parent1 Sex</th><th>Parent2 Sex</th></tr>
-	</thead>
 
       </table>
 
@@ -248,15 +245,27 @@ jQuery(document).ready(function() {
       }
 
 
+      var headers = data.header;
+      var column_headers = [];
+
+      for (var i in headers) {
+      // some code
+        column_headers += `{ "data": ${headers[i]} },`
+      }
+      //alert (column_headers);
+
       //alert('JSON data retrieved: '+JSON.stringify(data));
 	jQuery('#working_modal').modal('hide');
         jQuery('#gcpc_output').DataTable( {
 	     'destroy': true,
              'timeout': 6000000,
              'data' : data.data,
+             'columns': headers,
 
              "order": [[ 3, "desc" ]]
-             //"columns": [
+
+
+             //[
              //   { "data": "Cross #" },
              //   { "data": "Parent 1" },
              //   { "data": "Parent 2" },

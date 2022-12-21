@@ -44,10 +44,8 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
-                    <br>
-                        (.xlsx format not supported)
                     <br><br>
                     <b>
                         Header:
@@ -191,10 +189,8 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
-                    <br>
-                        (.xlsx format not supported)
                     <br><br>
                     <b>
                         Header:
@@ -257,7 +253,7 @@
                         </div>
                         <div id="upload_family_with_the_same_parents" style="display:none">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
                                 <div class="col-sm-8" >
                                     <input type="file" name="same_parents_file" id="same_parents_file" encoding="multipart/form-data" />
                                 </div>
@@ -265,7 +261,7 @@
                         </div>
                         <div id="upload_family_with_reciprocal_parents" style="display:none">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
                                 <div class="col-sm-8" >
                                     <input type="file" name="reciprocal_parents_file" id="reciprocal_parents_file" encoding="multipart/form-data" />
                                 </div>
@@ -314,11 +310,8 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Family Name of existing crosses may be uploaded in an Excel file (.xls)
+                        Family Name of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
                     </b>
-                    <br>
-                        (.xlsx format not supported)
-                    <br>
                     <br>
                     <b>Family Types:</b>
                         <ul>

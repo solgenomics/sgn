@@ -26,10 +26,10 @@
     An error report has been sent to the <% $project_name %> development team.
 % }
 
-% if( $e->is_client_error || $e->is_server_error and $contact_email ) {
+% if( $e->is_client_error || $e->is_server_error ) {
 
-    Feel free to contact us at <a href="mailto:<% $contact_email %>">
-    <% $contact_email %></a>, if the problem persists, and
+    Feel free to contact the <a href="/contact/form">development team</a>,
+        if the problem persists, and
 %   if( $e->is_server_error ) {
       we will keep you informed of our progress in resolving it.
 %   } else {
