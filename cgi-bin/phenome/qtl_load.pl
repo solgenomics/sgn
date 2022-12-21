@@ -321,6 +321,7 @@ sub load_pop_details {
         $donor_id = $self->store_accession($donor);
     }
 
+ print STDERR "storing population details....\n";
     my $pop = CXGN::Phenome::Population->new($dbh);
     $pop->set_name($name);
     $pop->set_description($desc);
@@ -334,8 +335,12 @@ sub load_pop_details {
     $pop->set_web_uploaded('t');
     $pop->set_common_name_id($common_name_id);
     $pop->store();
+ print STDERR "Done storing population details....\n";
 
-    my $pop_id = $dbh->last_insert_id( "population", "phenome" );
+    # my $pop_id = $dbh->last_insert_id("population");
+    my $population = CXGN::Phenome::Population->new_with_name( $dbh, $name );
+    my $pop_id = $population->get_population_id();
+print STDERR "Done storing population details....pop id: $pop_id\n";
 
     $pop = CXGN::Phenome::Population->new( $dbh, $pop_id );
     $pop->store_data_privacy($is_public);
@@ -367,7 +372,7 @@ sub store_accession {
     eval {
         my $sth = $dbh->prepare(
             "SELECT accession_id, chado_organism_id, common_name 
-                                    FROM sgn.accession 
+                                    FROM accession 
                                     WHERE common_name ILIKE ?"
         );
         $sth->execute($cultivar);
@@ -1138,7 +1143,7 @@ sub store_genotype {
                         next();
                     }
 
-                    $genotype_region->set_genotype_id($genotype_id);
+                    $genotype_region->set_phenome_genotype_id($genotype_id);
                     $genotype_region->set_marker_id_nn( $marker_id );
                     $genotype_region->set_marker_id_ns( $marker_id );
                     $genotype_region->set_marker_id_sn( $marker_id );

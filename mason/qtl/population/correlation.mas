@@ -26,8 +26,8 @@ my $pop_id = $pop->get_population_id();
 
 
 
-<& /solgs/population/correlation.mas,
-    pop_id => $pop_id
+<& /solgs/tools/correlation/correlation.mas,
+    corre_pop_id => $pop_id
 &>
 
  

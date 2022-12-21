@@ -119,13 +119,16 @@ sub check_phenotype_data {
     my $data_set_type = $c->stash->{data_set_type};
 
     my @pheno_files;
-
     my $referer = $c->req->referer;
+print STDERR "\ncheck_phenotype_data: referer - $referer -- corre_pop_id: $pop_id\n";
+
     if ($referer =~ /qtl/)
     {
   	    my $phenotype_dir = $c->stash->{solqtl_cache_dir};
         my $phenotype_file   = 'phenodata_' . $pop_id;
         $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
+print STDERR "\ncheck_phenotype_data:pheno file: $phenotype_file\n";
+
         push @pheno_files, $phenotype_file;
     }
     else
@@ -207,12 +210,15 @@ sub pheno_correlation_output_files {
 
     my $pop_id = $c->stash->{corre_pop_id};
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
+print STDERR "\npheno_correlation_output_files -- corre_pop_id: $pop_id  corre cache dir: $corre_cache_dir\n";
 
     my $table_cache_data = {key    => 'corre_coefficients_table_' . $pop_id,
 		      file      => "corre_coefficients_table_${pop_id}" . '.txt',
 		      stash_key => 'corre_coefficients_table_file',
 		      cache_dir => $corre_cache_dir
     };
+    
+print STDERR "\ncache data pheno_correlation_output_files -- corre_pop_id: $pop_id\n";
 
     $c->controller('solGS::Files')->cache_file($c, $table_cache_data);
 
