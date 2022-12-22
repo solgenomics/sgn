@@ -1,0 +1,190 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+
+<div class="modal fade" id="upload_target_numbers_dialog" name="upload_target_numbers_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTargetNumbersDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTargetNumbersDialog">Upload Target Numbers of Seed/progenies </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Target Numbers Upload Information' &>
+                        <p>
+                            <a id="upload_target_numbers_spreadsheet_format_info">Target Numbers Upload Information</a>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_target_numbers_form" name="upload_target_numbers_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Target Numbers of Seed/progenies of crosses in Crossing Experiment: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" name="intercross_experiment_name" id="intercross_experiment_name" disabled value="<% $trial_name %>">
+                                <input name="intercross_experiment_id" id="intercross_experiment_id" type="hidden" value="<% $trial_id %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <div class="col-sm-8">
+                                <input type="file" name="target_numbers_file" id="target_numbers_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_target_numbers_submit" id="upload_target_numbers_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_target_numbers_error_display" name="upload_target_numbers_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTargetNumbersErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTargetNumbersErrorDialog">Upload Target Numbers Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="target_numbers_saved_dialog_message" name="target_numbers_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="targetNumbersSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="targetNumbersSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The target numbers of seed/progenies were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_target_numbers_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="target_numbers_spreadsheet_info_dialog" name="target_numbers_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="targetNumbersFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="targetNumbersFileInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Target numbers of seed/progenies may be uploaded in an Excel file (.xls or .xlsx)
+                    <br><br>
+                    <b>Header:</b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>female_accession</td>
+                                <td>male_accession</td>
+                                <td>target_number_of_seed</td>
+                                <td>target_number_of_progenies</td>
+                                <td>Note</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Field Info:</b>
+                    <ul>
+                        <li>female_accession (must exist as uniquename in the database.)</li>
+                        <li>male_accession (must exist as uniquename in the database.)</li>
+                        <li>target_number_of_seed ()</li>
+                        <li>target_number_of_progenies () )</li>
+                        <li>note (optional)</li>
+                    </ul>
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_target_numbers_link').click(function(){
+        jQuery('#upload_target_numbers_dialog').modal("show");
+    });
+
+    jQuery('#upload_target_numbers_spreadsheet_format_info').click(function(){
+        jQuery("#target_numbers_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_target_numbers_submit").click(function(){
+        var uploadFile = jQuery("#target_numbers_file").val();
+
+        jQuery('#upload_target_numbers_form').attr("action", "/ajax/cross/upload_target_numbers");
+
+
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#upload_target_numbers_form").submit();
+        jQuery("#upload_target_numbers_dialog").modal("hide");
+    });
+
+    jQuery('#upload_target_numbers_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_target_numbers_error_display tbody").html('');
+                jQuery("#upload_target_numbers_error_display tbody").append(response.error_string);
+                jQuery("#upload_target_numbers_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#target_numbers_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_target_numbers_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>
