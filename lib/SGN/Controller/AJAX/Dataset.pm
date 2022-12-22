@@ -81,6 +81,30 @@ sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
     $c->stash->{rest} = $datasets;
 }
 
+sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->stash->{rest} = { error => "No logged in user to display dataset information for." };
+        return;
+    }
+
+    my $datasets = CXGN::Dataset->get_datasets_by_user(
+        $c->dbic_schema("CXGN::People::Schema"),
+        $user->get_object()->get_sp_person_id()
+        );
+
+    my @result;
+    foreach (@$datasets) {
+        my @res;
+        push @res, ("<a href=\"/dataset/$_->[0]\">$_->[1]</a>", $_->[2]);
+        push @result , \@res;
+    }
+    $c->stash->{rest} = { data => \@result };
+}
+
 sub get_datasets_public :Path('/ajax/dataset/get_public') {
     my $self = shift;
     my $c = shift;
