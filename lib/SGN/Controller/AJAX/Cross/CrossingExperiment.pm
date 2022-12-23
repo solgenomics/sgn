@@ -128,7 +128,7 @@ sub upload_target_numbers_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('TargetNumbers.xls');
+    $parser->load_plugin('TargetNumbersExcel');
     $parsed_data = $parser->parse();
     #print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
     if (!$parsed_data){
