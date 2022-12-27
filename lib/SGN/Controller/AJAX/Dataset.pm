@@ -8,7 +8,8 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
-
+use strict;
+use warnings;
 
 __PACKAGE__->config(
     default   => 'application/json',

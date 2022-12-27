@@ -3,6 +3,8 @@ package SGN::Controller::Dataset;
 
 use Moose;
 use CXGN::Dataset;
+use strict;
+use warnings;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
