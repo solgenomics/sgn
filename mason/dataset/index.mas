@@ -102,11 +102,6 @@ $dataset_contents => ''
   <div id="wizard" class="row">
 
   <div class="wizard-datasets">
-  <div class="input-group">
-  <select class="form-control input-sm wizard-dataset-select">
-      <option value="16115" selected>Flowering</option>
-      <option value="10">Load2</option>
-  </select>
   <table id="dataset_results"; border="1">
          <tr><td>Name<td><% $dataset_name %>
          <tr><td>Description<td><% $dataset_description %>
@@ -121,7 +116,6 @@ $dataset_contents => ''
 %        }
          <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
   </table>
-  </div> 
   </div>
   </div>
 
