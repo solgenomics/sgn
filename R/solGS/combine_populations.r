@@ -51,7 +51,12 @@ combinedPhenoFile <- grep("model_phenodata",
                           value = TRUE
                           )
 
-
+analysisReportFile <- grep("_report_",
+                          outFiles,
+                          ignore.case = TRUE,
+                          fixed = FALSE,
+                          value = TRUE
+                          )
 
 ## traitFile <- grep("model_phenodata",
 ##                   inFiles,
@@ -112,6 +117,12 @@ combinedPhenoPops <- c()
 cnt               <- 0
 traitRawPhenoData <- c()
 
+logHeading <- paste0("Genomic Prediction Analysis Log for ", traitAbbr,  ".\n")
+logHeading <- append(logHeading,  paste0("Date: ", format(Sys.time(), "%d %b %Y %H:%M"), "\n\n\n"))
+logHeading <- format(logHeading, width=80, justify="c")
+
+anovaLog <- paste0("#Preprocessing training population phenotype data.\n\n")
+
 for (popPhenoFile in allPhenoFiles) {
 
      cnt <- cnt + 1
@@ -123,9 +134,13 @@ for (popPhenoFile in allPhenoFiles) {
 
      phenoData <- data.frame(phenoData)
 
-     phenoTrait <- getAdjMeans(phenoData,
+     meansResult <- getAdjMeans(phenoData,
                                traitName = traitAbbr,
-                               calcAverages = TRUE)
+                               calcAverages = TRUE,
+                               logReturn = TRUE)
+
+   anovaLog <- append(anovaLog, meansResult$log)
+   phenoTrait <- meansResult$adjMeans
 
     keepMetaCols <- c('observationUnitName', 'germplasmName', 'studyDbId', 'locationName',
                   'studyYear', 'replicate', 'blockNumber')
@@ -198,5 +213,7 @@ if(!is.null(combinedGenoPops)) {
            row.names = TRUE,
            )
  }
+
+cat(anovaLog, fill = TRUE,  file = analysisReportFile, append=FALSE)
 
 q(save = "no", runLast = FALSE)
