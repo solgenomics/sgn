@@ -104,7 +104,7 @@ $t->while_logged_in_as("submitter", sub {
 		# SCREEN 4 /Well Info/
 		$t->find_element_ok('genotyping_trial_well_input_option', 'id', 'find "genotyping trial well input" select and click')->click();
 		sleep(1);
-		$t->find_element_ok('//select[@id="genotyping_trial_well_input_option"]/option[@value="xls"]', 'xpath', 'Select "xls" as value of trial well input formal (Excel)')->click();
+		$t->find_element_ok('//select[@id="genotyping_trial_well_input_option"]/option[@value="xlsx"]', 'xpath', 'Select "xlsx" as value of trial well input formal (Excel)')->click();
 		sleep(2);
 
 		my $file_upload = $t->find_element_ok("genotyping_trial_layout_upload", "id", "find trial file upload button");

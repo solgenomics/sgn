@@ -744,7 +744,7 @@ $facilities
                                 <div class="panel panel-default">
                                     <div class="panel-body">
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label">Select an XLS File: </label>
+                                            <label class="col-sm-4 control-label">Select an XLSX (or XLS) File: </label>
                                             <div class="col-sm-4">
                                                 <input type="file" name="xls_ssr_protocol_file" id="xls_ssr_protocol_file" encoding="multipart/form-data" />
                                             </div>

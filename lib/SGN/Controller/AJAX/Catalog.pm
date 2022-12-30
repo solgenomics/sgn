@@ -23,16 +23,18 @@ sub add_catalog_item_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
+    my $ordering_site = $c->config->{ordering_site};
 
-    my $item_name = $c->req->param('item_name');
-    my $item_type = $c->req->param('item_type');
-    my $item_category = $c->req->param('item_category');
-    my $item_description = $c->req->param('item_description');
-    my $item_material_source = $c->req->param('item_material_source');
-    my $item_breeding_program_id = $c->req->param('item_breeding_program');
-    my $item_availability = $c->req->param('item_availability');
+    my $item_name = $c->req->param('name');
+    my $item_type = $c->req->param('type');
+    my $item_material_type = $c->req->param('material_type');
+    my $item_category = $c->req->param('category');
+    my $item_additional_info = $c->req->param('additional_info');
+    my $item_material_source = $c->req->param('material_source');
+    my $item_breeding_program_id = $c->req->param('breeding_program_id');
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
+
     my $item_stock_id;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
@@ -40,12 +42,26 @@ sub add_catalog_item_POST : Args(0) {
         return;
     }
 
+    my $item_stock_id;
+    my $item_species;
+    my $item_variety;
     my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
+    my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+
     if (!$item_rs) {
         $c->stash->{rest} = {error_string => "Item name is not in the database!",};
         return;
     } else {
         $item_stock_id = $item_rs->stock_id();
+        my $organism_id = $item_rs->organism_id();
+        my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+        $item_species = $organism->species();
+        my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_stock_id, type_id => $variety_type_id});
+        if ($item_stockprop) {
+            $item_variety = $item_stockprop->value();
+        } else {
+            $item_variety = 'NA';
+        }
     }
 
     my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person);
@@ -67,11 +83,13 @@ sub add_catalog_item_POST : Args(0) {
     });
 
     $stock_catalog->item_type($item_type);
-    $stock_catalog->category($item_category);
-    $stock_catalog->description($item_description);
+    $stock_catalog->material_type($item_material_type);
     $stock_catalog->material_source($item_material_source);
+    $stock_catalog->category($item_category);
+    $stock_catalog->species($item_species);
+    $stock_catalog->variety($item_variety);
     $stock_catalog->breeding_program($item_breeding_program_id);
-    $stock_catalog->availability($item_availability);
+    $stock_catalog->additional_info($item_additional_info);
     $stock_catalog->contact_person_id($sp_person_id);
 
     $stock_catalog->store();
@@ -179,21 +197,36 @@ sub upload_catalog_items_POST : Args(0) {
     }
 
     if ($parsed_data) {
+        my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
         my %catalog_info = %{$parsed_data};
         foreach my $item_name (keys %catalog_info) {
+            my $item_species;
+            my $item_variety;
             my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
             my $stock_id = $stock_rs->stock_id();
-            print STDERR "STOCK ID =".Dumper($stock_id)."\n";
+            my $organism_id = $stock_rs->organism_id();
+            my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+            $item_species = $organism->species();
+            my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $variety_type_id});
+            if ($item_stockprop) {
+                $item_variety = $item_stockprop->value();
+            } else {
+                $item_variety = 'NA';
+            }
+
             my %catalog_info_hash = %{$catalog_info{$item_name}};
 
             my $stock_catalog = CXGN::Stock::Catalog->new({
                 bcs_schema => $schema,
                 item_type => $catalog_info_hash{item_type},
+                material_type => $catalog_info_hash{material_type},
+                species => $item_species,
+                variety => $item_variety,
                 category => $catalog_info_hash{category},
-                description => $catalog_info_hash{description},
+                additional_info => $catalog_info_hash{additional_info},
                 material_source => $catalog_info_hash{material_source},
                 breeding_program => $catalog_info_hash{breeding_program},
-                availability => $catalog_info_hash{availability},
+#                availability => $catalog_info_hash{availability},
                 contact_person_id => $catalog_info_hash{contact_person_id},
                 parent_id => $stock_id
             });
@@ -216,11 +249,11 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @catalog_items;
 
     my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
     my $catalog_ref = $catalog_obj->get_catalog_items();
 #    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
-    my @catalog_items;
     my @catalog_list = @$catalog_ref;
     foreach my $catalog_item (@catalog_list) {
         my @item_details = ();
@@ -229,7 +262,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
         my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
         my $item_name = $stock_rs->uniquename();
 
-        my $program_id = $item_details[4];
+        my $program_id = $item_details[7];
         my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
         my $program_name = $program_rs->name();
 
@@ -237,11 +270,13 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
             item_id => $item_id,
             item_name => $item_name,
             item_type => $item_details[0],
-            category => $item_details[1],
-            description => $item_details[2],
-            material_source => $item_details[3],
+            species => $item_details[1],
+            variety => $item_details[2],
+            material_type => $item_details[3],
+            category => $item_details[4],
+            material_source => $item_details[5],
+            additional_info => $item_details[6],
             breeding_program => $program_name,
-            availability => $item_details[5],
         };
     }
 
@@ -279,18 +314,12 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
         my $image_page  = "/image/view/$image_obj_id";
         my $small_image = $image_obj->get_image_url("thumbnail");
 
-#        print STDERR "IMAGE OBJECT ID =".Dumper($image_obj_id)."\n";
-#        print STDERR "IMAGE OBJECT NAME =".Dumper($image_obj_name)."\n";
-#        print STDERR "IMAGE OBJECT DESCRIPTION =".Dumper($image_obj_description)."\n";
-#        print STDERR "IMAGE MEDIUM =".Dumper($medium_image)."\n";
-#        print STDERR "IMAGE PAGE =".Dumper($image_page)."\n";
         push @image_list, {
                 image_id => $image_obj_id,
                 image_name => $image_obj_name,
                 small_image => qq|<a href="$medium_image"  title="<a href=$image_page>Go to image page ($image_obj_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image"/></a> |,
                 image_description => $image_obj_description,
             };
-#            print STDERR "IMAGE LIST =".Dumper(\@image_list)."\n";
     }
 
     $c->stash->{rest} = {data => \@image_list};
