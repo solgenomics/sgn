@@ -202,6 +202,8 @@ traitRawPhenoData <- c()
 anovaLog <- paste0("#Preprocessing training population phenotype data.\n\n")
 
 if (datasetInfo == 'combined populations') {
+   anovaLog <- scan(analysisReportFile, what = "character", sep="\n")
+  anovaLog <- paste0(anovaLog, collapse="\n")
 
    if (!is.null(formattedPhenoData)) {
       phenoTrait <- subset(formattedPhenoData, select = traitAbbr)
@@ -232,7 +234,7 @@ if (datasetInfo == 'combined populations') {
          meansResult <- getAdjMeans(phenoData,
                                    traitName = traitAbbr,
                                    calcAverages = TRUE,
-                                   logReturn=TRUE)
+                                   logReturn = TRUE)
 
          
 
