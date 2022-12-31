@@ -1433,6 +1433,12 @@ sub combine_trait_data_input {
     $c->controller('solGS::Files')->model_info_file($c);
     my $model_info_file = $c->stash->{model_info_file};
 
+    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+    $c->controller('solGS::Files')->analysis_report_file($c);
+    my $analysis_type = $c->stash->{analysis_type};
+    $analysis_type =~ s/\s+/_/g;
+    my $analysis_report_file = $c->stash->{"${analysis_type}_report_file"};
+
     $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
     my $trait_raw_phenodatafile =   $c->stash->{trait_raw_phenodata_file};
     my $input_files = join ("\t",
@@ -1444,7 +1450,8 @@ sub combine_trait_data_input {
     my $output_files = join ("\t",
                              $combined_pops_pheno_file,
                              $combined_pops_geno_file,
-                             $trait_raw_phenodatafile
+                             $trait_raw_phenodatafile,
+                             $analysis_report_file
         );
 
     my $temp_dir    = $c->stash->{solgs_tempfiles_dir};
