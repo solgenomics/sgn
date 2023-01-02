@@ -129,7 +129,7 @@ sub selection_prediction_download_urls {
     my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
 
 	my $page = $c->req->referer;
-	my $data_set_type = $page =~ /combined/ ? 'combined populations' : 'single population';
+	my $data_set_type = $page =~ /combined/ ? 'combined_populations' : 'single_population';
 	$url_args->{data_set_type} = $data_set_type;
 
 	my $sel_pop_page;
@@ -236,9 +236,9 @@ sub download_model_analysis_report_file {
 
 	my $page = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
 
-	if ($page =~ /training model/)
+	if ($page =~ /training_model/)
 	{
-		$c->stash->{analysis_type} =  'training model';
+		$c->stash->{analysis_type} =  'training_model';
 	}
 
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
@@ -256,12 +256,8 @@ sub download_selection_prediction_report_file {
 	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
 	my $page = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
-
-	if ($page =~ /selection/)
-	{
-		$c->stash->{analysis_type} =  'selection prediction';
-	}
-
+	$c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
+	
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
 	#$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
 

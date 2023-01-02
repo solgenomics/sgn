@@ -116,7 +116,7 @@ sub get_markers_count {
 
 		if (!-s $geno_file)
 		{
-			if ($pop_hash->{data_set_type} =~ /combined populations/)
+			if ($pop_hash->{data_set_type} =~ /combined_populations/)
 			{
 				$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $training_pop_id);
 				my $pops_list = $c->stash->{combined_pops_list};
@@ -249,7 +249,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
-    $c->stash->{data_set_type} = 'single population';
+    $c->stash->{data_set_type} = 'single_population';
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
@@ -260,7 +260,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		'trait_id' => $trait_id,
 		'training_pop_id' => $training_pop_id,
 		'genotyping_protocol_id' => $protocol_id,
-		'data_set_type' => 'single population'
+		'data_set_type' => 'single_population'
 	};
 
 	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
@@ -415,7 +415,7 @@ sub trait :Path('/solgs/trait') Args(5) {
     my $args = {
       'training_pop_id' => $pop_id,
       'genotyping_protocol_id' => $protocol_id,
-      'data_set_type' => 'single population'
+      'data_set_type' => 'single_population'
     };
 
     my $training_pop_url = $c->controller('solGS::Path')->training_page_url($args);
@@ -496,7 +496,7 @@ sub save_model_info_file {
 sub input_files {
     my ($self, $c) = @_;
 
-    if ($c->stash->{data_set_type} =~ /combined populations/i)
+    if ($c->stash->{data_set_type} =~ /combined_populations/i)
     {
 	$c->controller('solGS::combinedTrials')->combined_pops_gs_input_files($c);
 	my $input_file = $c->stash->{combined_pops_gs_input_files};
@@ -637,7 +637,7 @@ sub top_blups {
 sub predict_selection_pop_single_trait {
     my ($self, $c) = @_;
 
-    if ($c->stash->{data_set_type} =~ /single population/)
+    if ($c->stash->{data_set_type} =~ /single_population/)
     {
 	$self->predict_selection_pop_single_pop_model($c)
     }
@@ -757,7 +757,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
     {
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
 
-        $c->stash->{data_set_type}     = "combined populations";
+        $c->stash->{data_set_type}     = "combined_populations";
         $c->stash->{combo_pops_id}     = $combo_pops_id;
         $c->stash->{trait_id}          = $trait_id;
 
@@ -771,7 +771,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
 			'trait_id' => $trait_id,
 			'training_pop_id' => $combo_pops_id,
 			'genotyping_protocol_id' => $protocol_id,
-			'data_set_type' => 'combined populations'
+			'data_set_type' => 'combined_populations'
 		};
 
 		my $model_page = $c->controller('solGS::Path')->model_page_url($args);
@@ -782,7 +782,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
     {
         my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
 
-        $c->stash->{data_set_type} = "single population";
+        $c->stash->{data_set_type} = "single_population";
         $c->stash->{trait_id}      = $trait_id;
 
 		$self->predict_selection_pop_single_pop_model($c);
@@ -794,7 +794,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
 			 'trait_id' => $trait_id,
 			 'training_pop_id' => $pop_id,
 			 'genotyping_protocol_id' => $protocol_id,
-			 'data_set_type' => 'single population'
+			 'data_set_type' => 'single_population'
 		 };
 
 	 	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
@@ -804,7 +804,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
     }
     elsif ($referer =~ /solgs\/models\/combined\/trials/)
     {
-        $c->stash->{data_set_type}     = "combined populations";
+        $c->stash->{data_set_type}     = "combined_populations";
         $c->stash->{combo_pops_id}     = $training_pop_id;
 
 		$self->traits_with_valid_models($c);
@@ -822,7 +822,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
     }
     elsif ($referer =~ /solgs\/traits\/all\/population\//)
     {
-		$c->stash->{data_set_type}  = "single population";
+		$c->stash->{data_set_type}  = "single_population";
 
 		$self->predict_selection_pop_multi_traits($c);
 
@@ -972,7 +972,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 my $args = {
 		  'training_pop_id' => $training_pop_id,
 		  'genotyping_protocol_id' => $protocol_id,
-		  'data_set_type' => 'single population'
+		  'data_set_type' => 'single_population'
 	  };
 
 	 my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
@@ -998,7 +998,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
   		   	'trait_id' => $trait_id,
      		'training_pop_id' => $training_pop_id,
   			'genotyping_protocol_id' => $protocol_id,
-  			'data_set_type' => 'single population'
+  			'data_set_type' => 'single_population'
   		};
 
         my $model_page = $c->controller('solGS::Path')->model_page_url($args);
@@ -1439,7 +1439,7 @@ sub get_rrblup_output {
 		   	'trait_id' => $trait_id,
    			'training_pop_id' => $pop_id,
 			'genotyping_protocol_id' => $protocol_id,
-			'data_set_type' => 'single population'
+			'data_set_type' => 'single_population'
 		};
 
         my $model_page = $c->controller('solGS::Path')->model_page_url($args);
@@ -1452,7 +1452,7 @@ sub get_rrblup_output {
 
     no warnings 'uninitialized';
 
-    if ($data_set_type !~ /combined populations/)
+    if ($data_set_type !~ /combined_populations/)
     {
         if (scalar(@traits) == 1)
         {

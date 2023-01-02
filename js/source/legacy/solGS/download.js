@@ -241,7 +241,7 @@ jQuery(document).ready(function () {
       });
 
 
-    } else if (res.page_type.match(/training model/)) {
+    } else if (res.page_type.match(/training_model/)) {
       solGS.download.getModelInputDataFiles().done(function (res) {
         solGS.download.createModelInputDownloadLinks(res);
       });
