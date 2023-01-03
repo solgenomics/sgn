@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::CrossWishlist - a REST controller class to provide the
+SGN::Controller::AJAX::Cross::CrossWishlist - a REST controller class to provide the
 functions for managing cross wishlist
 
 =head1 DESCRIPTION
@@ -12,7 +12,7 @@ functions for managing cross wishlist
 
 =cut
 
-package SGN::Controller::AJAX::CrossWishlist;
+package SGN::Controller::AJAX::Cross::CrossWishlist;
 
 use Moose;
 use Try::Tiny;

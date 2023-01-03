@@ -92,15 +92,15 @@ sub _validate_with_plugin {
     }
 
     if (!$seed_target_number_head || $seed_target_number_head ne 'seed_target_number' ) {
-        push @error_messages, "Cell A2: male_accession is missing from the header";
+        push @error_messages, "Cell A3: seed_target_number is missing from the header";
     }
 
     if (!$progeny_target_number_head || $progeny_target_number_head ne 'progeny_target_number' ) {
-        push @error_messages, "Cell A2: male_accession is missing from the header";
+        push @error_messages, "Cell A4: progeny_target_number is missing from the header";
     }
 
     if (!$note_head || $note_head ne 'notes' ) {
-        push @error_messages, "Cell A2: notes is missing from the header";
+        push @error_messages, "Cell A5: notes is missing from the header";
     }
 
 
@@ -147,21 +147,21 @@ sub _validate_with_plugin {
     }
 
 
-    my @female_accessions = keys %seen_female_accessions;
-    my $female_accession_validator = CXGN::List::Validate->new();
-    my @female_accession_missing = @{$female_accession_validator->validate($schema,'uniquename',\@female_accessions)->{'missing'}};
+#    my @female_accessions = keys %seen_female_accessions;
+#    my $female_accession_validator = CXGN::List::Validate->new();
+#    my @female_accession_missing = @{$female_accession_validator->validate($schema,'uniquename',\@female_accessions)->{'missing'}};
 
-    if (scalar(@female_accession_missing) > 0){
-        push @error_messages, "The following female accessions are not in the database as uniquenames : ".join(',',@female_accession_missing);
-    }
+#    if (scalar(@female_accession_missing) > 0){
+#        push @error_messages, "The following female accessions are not in the database as uniquenames : ".join(',',@female_accession_missing);
+#    }
 
-    my @male_accessions = keys %seen_male_accessions;
-    my $male_accession_validator = CXGN::List::Validate->new();
-    my @male_accession_missing = @{$male_accession_validator->validate($schema,'uniquename',\@male_accessions)->{'missing'}};
+#    my @male_accessions = keys %seen_male_accessions;
+#    my $male_accession_validator = CXGN::List::Validate->new();
+#    my @male_accession_missing = @{$male_accession_validator->validate($schema,'uniquename',\@male_accessions)->{'missing'}};
 
-    if (scalar(@male_accession_missing) > 0){
-        push @error_messages, "The following male accessions are not in the database as uniquenames : ".join(',',@male_accession_missing);
-    }
+#    if (scalar(@male_accession_missing) > 0){
+#        push @error_messages, "The following male accessions are not in the database as uniquenames : ".join(',',@male_accession_missing);
+#    }
 
 
     #store any errors found in the parsed file to parse_errors accessor

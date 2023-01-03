@@ -1,6 +1,6 @@
 =head1 NAME
 
-SGN::Controller::AJAX::Intercross - a REST controller class to provide the
+SGN::Controller::AJAX::Cross::Intercross - a REST controller class to provide the
 functions for download and upload Intercross files
 
 =head1 DESCRIPTION
@@ -12,7 +12,7 @@ Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
-package SGN::Controller::AJAX::Intercross;
+package SGN::Controller::AJAX::Cross::Intercross;
 use Moose;
 use Try::Tiny;
 use DateTime;

@@ -22,3 +22,5 @@ sub BUILD {
 
     $self->load();
 }
+
+1;

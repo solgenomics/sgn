@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::Cross - a REST controller class to provide the
+SGN::Controller::AJAX::Cross::Cross - a REST controller class to provide the
 functions for adding crosses
 
 =head1 DESCRIPTION
@@ -12,10 +12,11 @@ Add a new cross or upload a file containing crosses to add
 
 Jeremy Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
+Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
-package SGN::Controller::AJAX::Cross;
+package SGN::Controller::AJAX::Cross::Cross;
 
 use Moose;
 use Try::Tiny;

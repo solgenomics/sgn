@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::ODK - a REST controller class to provide the
+SGN::Controller::AJAX::Cross::ODK - a REST controller class to provide the
 backend for ODK services
 
 =head1 DESCRIPTION
@@ -10,7 +10,7 @@ backend for ODK services
 
 =cut
 
-package SGN::Controller::AJAX::ODK;
+package SGN::Controller::AJAX::Cross::ODK;
 
 use Moose;
 use List::MoreUtils qw /any /;
