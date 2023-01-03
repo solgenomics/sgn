@@ -9,7 +9,7 @@ $trial_name
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTargetNumbersDialog">Upload Target Numbers of Seed/progenies </h4>
+                <h4 class="modal-title" id="uploadTargetNumbersDialog">Upload Target Numbers of Seeds/progenies </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -20,10 +20,10 @@ $trial_name
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_target_numbers_form" name="upload_target_numbers_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Target Numbers of Seed/progenies of crosses in Crossing Experiment: </label>
+                            <label class="col-sm-4 control-label">Target Numbers of Seeds/progenies of crosses in Crossing Experiment: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" name="intercross_experiment_name" id="intercross_experiment_name" disabled value="<% $trial_name %>">
-                                <input name="intercross_experiment_id" id="intercross_experiment_id" type="hidden" value="<% $trial_id %>">
+                                <input class="form-control" name="target_numbers_experiment_name" id="target_numbers_experiment_name" disabled value="<% $trial_name %>">
+                                <input name="target_numbers_experiment_id" id="target_numbers_experiment_id" type="hidden" value="<% $trial_id %>">
                             </div>
                         </div>
                         <div class="form-group">
@@ -75,7 +75,7 @@ $trial_name
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The target numbers of seed/progenies were saved successfully.
+                        The target numbers of Seeds/progenies were saved successfully.
                     </p>
                 </div>
             </div>
@@ -95,7 +95,7 @@ $trial_name
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Target numbers of seed/progenies may be uploaded in an Excel file (.xls or .xlsx)
+                    <b>Target numbers of seeds/progenies may be uploaded in an Excel file (.xls or .xlsx)
                     <br><br>
                     <b>Header:</b>
                     <br>
@@ -107,9 +107,9 @@ $trial_name
                             <tr>
                                 <td>female_accession</td>
                                 <td>male_accession</td>
-                                <td>target_number_of_seed</td>
+                                <td>target_number_of_seeds</td>
                                 <td>target_number_of_progenies</td>
-                                <td>Note</td>
+                                <td>notes</td>
                             </tr>
                         </tbody>
                     </table>
@@ -117,9 +117,9 @@ $trial_name
                     <ul>
                         <li>female_accession (must exist as uniquename in the database.)</li>
                         <li>male_accession (must exist as uniquename in the database.)</li>
-                        <li>target_number_of_seed ()</li>
+                        <li>target_number_of_seeds ()</li>
                         <li>target_number_of_progenies () )</li>
-                        <li>note (optional)</li>
+                        <li>notes (optional)</li>
                     </ul>
                     <br>
                 </div>

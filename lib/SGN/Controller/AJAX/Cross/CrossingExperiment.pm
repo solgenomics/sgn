@@ -59,7 +59,7 @@ sub upload_target_numbers_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $crossing_experiment_id = $c->req->param('intercross_experiment_id');
+    my $crossing_experiment_id = $c->req->param('target_numbers_experiment_id');
     my $upload = $c->req->upload('target_numbers_file');
     my $parser;
     my $parsed_data;
@@ -163,8 +163,27 @@ sub upload_target_numbers_POST : Args(0) {
         });
         my $file_id = $file_row->file_id();
         my %target_numbers = %{$parsed_data};
+        print STDERR "TARGET NUMBERS 1 =".Dumper(\%target_numbers)."\n";
 
+        my $experiment_prop_id;
+        $target_numbers_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'target_numbers_json', 'project_property');
+        my $experiment_prop_rs = $schema->resultset("Project::Projectprop")->find({project_id => $target_numbers_experiment_id, type_id => $target_numbers_cvterm->cvterm_id()});
+        if ($experiment_prop_rs){
+            $experiment_prop_id = $experiment_prop_rs->projectprop_id();
+            my $previous_value = $experiment_prop_rs->value();
+            my $previous_target_info = decode_json $previous_value;
+            $target_numbers = $previous_target_info;
+        }
 
+        print STDERR "TARGET NUMBERS 2 =".Dumper(\%target_numbers)."\n";
+        my $targets = CXGN::Pedigree::TargetNumbers->new({ bcs_schema => $schema });
+        $targets->target_numbers(\%target_numbers);
+        $targets->parent_id($target_numbers_experiment_id);
+        $targets->projectprop_id($experiment_prop_id);
+
+    	my $project_prop_id = $targets->store();
+        print STDERR "EXPERIMENT ID =".Dumper($target_numbers_experiment_id)."\n";
+        print STDERR "EXPERIMENT PROP ID =".Dumper($project_prop_id)."\n";
 
     }
 

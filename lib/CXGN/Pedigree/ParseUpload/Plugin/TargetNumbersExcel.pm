@@ -99,8 +99,8 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A2: male_accession is missing from the header";
     }
 
-    if (!$note_head || $note_head ne 'note' ) {
-        push @error_messages, "Cell A2: note is missing from the header";
+    if (!$note_head || $note_head ne 'notes' ) {
+        push @error_messages, "Cell A2: notes is missing from the header";
     }
 
 
@@ -211,7 +211,7 @@ sub _parse_with_plugin {
         my $male_accession;
         my $seed_target_number;
         my $progeny_target_number;
-        my $note;
+        my $notes;
 
         if ($worksheet->get_cell($row,0)){
             $female_accession = $worksheet->get_cell($row,0)->value();
@@ -232,14 +232,13 @@ sub _parse_with_plugin {
             $progeny_target_number =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)){
-            $note = $worksheet->get_cell($row,4)->value();
-            $note =~ s/^\s+|\s+$//g;
+            $notes = $worksheet->get_cell($row,4)->value();
         }
 
 
         $target_number_info{$female_accession}{$male_accession}{'target_number_of_seeds'} = $seed_target_number;
         $target_number_info{$female_accession}{$male_accession}{'target_number_of_progenies'} = $progeny_target_number;
-        $target_number_info{$female_accession}{$male_accession}{'note'} = $note;
+        $target_number_info{$female_accession}{$male_accession}{'notes'} = $notes;
 
     }
 
