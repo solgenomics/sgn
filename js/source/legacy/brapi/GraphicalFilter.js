@@ -110,27 +110,35 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
    * @param  {string/selector} filter_selector selector of filter div   
    * @param  {string/selector} table_selector  selector of datatable div    
    */   
-  gfilter.draw = function(filter_selector,table_selector){
+  gfilter.draw = function(filter_selector,table_selector, buttons){
     data_node.all(function(data){
       var canv = d3.select(filter_selector);
       canv.html("");
-      
+
       //create the root filter group
       gfilter.root = new FilterGroup(null,0,"init");
       gfilter.rangeTraits = rangeTraits;
-      
+
       //draw the filter
       gfilter.root.draw(canv.node());
-      
+
       //create the output table
-      gfilter.results_table = $(table_selector).DataTable({
-        data: data,
-        "columns": tableCols
-      });
-      
+      if (buttons) {
+        gfilter.results_table = $(table_selector).DataTable({
+              data: data,
+              dom: 'Bfrtip',
+              "columns": tableCols,
+              "buttons": buttons
+        });
+      } else {
+        gfilter.results_table = $(table_selector).DataTable({
+            data: data,
+            "columns": tableCols,
+        });
+      }
+
       gfilter.data = data;
-      
-      
+
       /**    
        * gfilter - Redraws everything      
        */     
