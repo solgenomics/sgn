@@ -120,7 +120,7 @@ cloneFilter <- 0.8
 logHeading <- paste0("Genomic Prediction Analysis Log for ", traitAbbr,  ".\n")
 logHeading <- append(logHeading,  paste0("Date: ", format(Sys.time(), "%d %b %Y %H:%M"), "\n\n\n"))
 logHeading <- format(logHeading, width=80, justify="c")
-trainingLog <- paste0("#Preprocessing training population genotype data.\n\n")
+trainingLog <- paste0("\n\n#Preprocessing training population genotype data.\n\n")
 trainingLog <- append(trainingLog, "The following data filtering will be applied to the genotype dataset:\n\n")
 trainingLog <- append(trainingLog, paste0("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  will be removed.\n"))
 trainingLog <- append(trainingLog, paste0("\nMarkers with greater or equal to ", markerFilter * 100, "% missing values will be removed.\n"))

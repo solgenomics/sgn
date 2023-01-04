@@ -122,6 +122,7 @@ logHeading <- append(logHeading,  paste0("Date: ", format(Sys.time(), "%d %b %Y 
 logHeading <- format(logHeading, width=80, justify="c")
 
 anovaLog <- paste0("#Preprocessing training population phenotype data.\n\n")
+anovaLog <- append(anovaLog, paste0("This training population is composed of ", length(allPhenoFiles), " trials. Adjusted means or arithmetic trait values for each trial will be calculated as described below. After that, single trait values for the entries will be calculated by averaging trait adjusted means/arithmetic averages across the trials.\n\n"))
 
 for (popPhenoFile in allPhenoFiles) {
 
