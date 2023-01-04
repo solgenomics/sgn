@@ -10,11 +10,11 @@ use Data::Dumper;
 use JSON;
 
 has 'chado_schema' => (
-	    is       => 'rw',
-		isa      => 'DBIx::Class::Schema',
-		predicate => 'has_chado_schema',
-		required => 1,
-	);
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+	predicate => 'has_chado_schema',
+	required => 1,
+);
 
 has 'crossing_experiment_id' => (
     isa =>'Int',
