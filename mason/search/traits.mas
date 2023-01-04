@@ -237,3 +237,10 @@ async function copy(name, accession, id) {
 }
 
 </script>
+
+
+<style type="text/css">
+    #trait_search_results td:nth-child(2) {
+        vertical-align: middle;
+    }
+</style>
