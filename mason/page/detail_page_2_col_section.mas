@@ -397,7 +397,7 @@ $analytics_protocol_result_summary => {}
 % } #End crossingtrial_details
 
 % if ($info_section_id eq 'target_numbers_crossingtrial_section'){
-                                <& /breeders_toolbox/cross/taget_numbers.mas, trial_id=>$trial_id &>
+                                <& /breeders_toolbox/cross/target_numbers.mas, trial_id=>$trial_id &>
 % } #End target_numbers_crossingtrial_section
 
 % if ($info_section_id eq 'crosses_in_crossingtrial_section'){

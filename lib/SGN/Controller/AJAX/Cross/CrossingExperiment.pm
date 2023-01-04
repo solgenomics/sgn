@@ -174,5 +174,20 @@ sub upload_target_numbers_POST : Args(0) {
     $c->stash->{rest} = {success => "1",};
 }
 
+sub get_target_numbers_and_progress :Path('/ajax/cross/target_numbers_and_progress') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $crossing_experiment_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $target_numbers = CXGN::Pedigree::TargetNumbers->new({ chado_schema => $schema, crossing_experiment_id => $crossing_experiment_id});
+    my $target_info = $target_numbers->get_target_numbers_and_progress();
+    print STDERR "AJAX TARGET NUMBERS =".Dumper($target_info)."\n";
+
+
+    $c->stash->{rest} = { data => $target_info };
+
+}
+
 
 1;

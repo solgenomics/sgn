@@ -14,10 +14,11 @@ $trial_id
                         <tr>
                             <th>Female Accession</th>
                             <th>Male Accession</th>
-                            <th>Target Number of Seeds</th>
-                            <th>Actual Numbers of Seeds</th>
-                            <th>Target Numbers of Progenies</th>
-                            <th>Actual Numbers of Progenies</th>
+                            <th>Target No. of Seeds</th>
+                            <th>Actual No. of Seeds</th>
+                            <th>Target No. of Progenies</th>
+                            <th>Actual No. of Progenies</th>
+                            <th>Notes</th>
                         </tr>
                     </thead>
                 </table>
@@ -25,8 +26,6 @@ $trial_id
         </div>
     </div>
 </div>
-
-<& /breeders_toolbox/cross/add_progenies_dialogs.mas &>
 
 
 <script>
@@ -36,7 +35,8 @@ jQuery(document).ready(function(){
     jQuery('#target_numbers_crossingtrial_section_onswitch').click(function(){
         jQuery('#target_numbers_and_progress_table').DataTable({
             'destroy': true,
-//            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
+            'ajax': '/ajax/cross/target_numbers_and_progress/'+ <% $trial_id %>,
+
         });
     });
 
