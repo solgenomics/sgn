@@ -31,6 +31,8 @@ sub _validate_with_plugin {
     }
 
     my $header_row = <$fh>;
+    chomp($header_row);
+    $header_row =~ s/\r//g; # remove windows line endings
     my @columns;
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
@@ -57,6 +59,9 @@ sub _validate_with_plugin {
     my %seen_accession_names;
     my %seen_new_plot_names;
     while ( my $row = <$fh> ){
+	chomp($row);
+	$row =~ s/\r//g; # remove windows line endings
+
         my @columns;
         if ($csv->parse($row)) {
             @columns = $csv->fields();
@@ -192,9 +197,13 @@ sub _parse_with_plugin {
         or die "Could not open file '$filename' $!";
 
     my $header_row = <$fh>;
-
+    chomp($header_row);
+    $header_row =~ s/\r//g;
     my $counter = 1;
     while ( my $row = <$fh> ){
+	chomp($row);
+	$row =~ s/\r//g; # remove windows line endings!
+
         my @columns;
         if ($csv->parse($row)) {
             @columns = $csv->fields();
