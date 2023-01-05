@@ -63,7 +63,7 @@ sub check_success {
     {
 	$output_details = $self->check_population_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /(training_|multiple_) model/ )
+    elsif ( $analysis_profile->{analysis_type} =~ /(training_|multiple_)model/ )
     {
 	if ($output_details->{data_set_type} =~ /combined_populations/)
 	{
@@ -1118,7 +1118,6 @@ sub log_analysis_status {
     my $status = $output_details->{status};
 
     my @contents = read_file($log_file, {binmode => ':utf8'});
-
     map{ $contents[$_] =~ m/$analysis_name\s+-*/
 	     ? $contents[$_] =~ s/error|submitted/$status/ig
 	     : $contents[$_] } 0..$#contents;
