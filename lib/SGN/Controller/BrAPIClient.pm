@@ -11,7 +11,9 @@ BEGIN { extends 'Catalyst::Controller' };
 sub authorize_client :Path('/brapi/authorize') QueryParam('redirect_uri') { #breedbase.org/brapi/authorize?success_url=fieldbook://&client_id=Field%20Book
     my $self = shift;
     my $c = shift;
-
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
     my $authorized_clients = decode_json $c->get_conf('authorized_clients_JSON');
 
 	my %authorized_clients = %$authorized_clients;
