@@ -414,11 +414,20 @@ for my $extension ("xls", "xlsx") {
 	my $gp_rs = $chado_schema->resultset('Project::Project')->find({ name => 'test_genotyping_project_2' });
 	my $genotyping_project_id = $gp_rs->project_id();
 	my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $genotyping_project_id });
+
+	#editing genotyping project details
+	my $new_year = '2021';
+	my $new_description = 'new genotyping project for test';
+	$trial->set_year($new_year);
+	$trial->set_description($new_description);
+
 	my $location_data = $trial->get_location();
 	my $location_name = $location_data->[1];
 	my $description = $trial->get_description();
 	my $genotyping_facility = $trial->get_genotyping_facility();
 	my $plate_year = $trial->get_year();
+	is($plate_year, '2021');
+	is($description, 'new genotyping project for test');
 
 	my $program_object = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema });
 	my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
@@ -975,6 +984,7 @@ for my $extension ("xls", "xlsx") {
 		sample_type                => 'DNA',
 		plate_format               => '96'
 	};
+
 
 	$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id" => $sgn_session_id, plate_data => encode_json($plate_data) ]);
 	$response = decode_json $mech->content;

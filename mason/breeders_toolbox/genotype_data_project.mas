@@ -43,6 +43,7 @@ $phenotypes_fully_uploaded => undef
 $identifier_prefix => 'SGN'
 $genotyping_facility => undef
 $genotype_data_type => undef
+$has_plate => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -51,7 +52,7 @@ $genotype_data_type => undef
 
 <& /page/page_title.mas, title=>"Genotyping Data Project: ".$trial_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.',buttons_html => '<button class="btn btn-primary btn-sm" id="edit_genotyping_project_details" style="margin:3px">Edit Genotyping Project Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Plates</h4>", info_section_subtitle => 'View information about genotyping plates in this project or move genotyping plates to this project.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_existing_genotyping_plate_link">Move Genotyping Plate(s) to this Project</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "genotyping_project_plates" &>
 
@@ -68,7 +69,7 @@ $genotype_data_type => undef
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/genotyping_data_project/add_existing_genotyping_plate_dialog.mas, breeding_program_id => $breeding_program_id, breeding_program_name => $breeding_program_name, trial_id => $trial_id, trial_name => $trial_name &>
-
+<& /breeders_toolbox/genotyping_data_project/edit_genotyping_project_details_dialog.mas, breeding_program_id => $breeding_program_id, breeding_program_name => $breeding_program_name, trial_id => $trial_id, trial_name => $trial_name, trial_description => $trial_description, year => $year, genotyping_facility => $genotyping_facility, has_plate => $has_plate &>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
@@ -78,7 +79,13 @@ $genotype_data_type => undef
 
 jQuery(document).ready(function () {
 
-  trial_detail_page_setup_dialogs();
+    trial_detail_page_setup_dialogs();
+
+    jQuery('#edit_genotyping_project_details').click(function(){
+        jQuery('#edit_genotyping_project_details_dialog').modal("show");
+        edit_genotyping_project_details();
+    });
+
 
 });
 
