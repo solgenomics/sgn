@@ -36,12 +36,18 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('redirect_uri') { #bre
             return;
         } else {
             my $user_name = $c->user()->get_object()->get_username();
+            my $user_id = $c->user()->get_object()->get_sp_person_id();
+            my $first_name = $c->user()->get_object()->get_first_name();
+            my $last_name = $c->user()->get_object()->get_last_name();
             my $access_token = CXGN::Login->new($c->dbc->dbh)->get_login_cookie();
             my $authorize_url = $redirect_uri . ( (index($redirect_uri, '?') != -1)?"&status=200&access_token=":"?status=200&access_token=") . $access_token;
             my $deny_url = $redirect_uri . "?status=401";
             $c->stash->{authorize_url} = $authorize_url;
             $c->stash->{deny_url} = $deny_url;
             $c->stash->{user_name} = $user_name;
+            $c->stash->{user_id} = $user_id;
+            $c->stash->{first_name} = $first_name;
+            $c->stash->{last_name} = $last_name;
             $c->stash->{client_id} = $client_id;
             $c->stash->{database_name} = $c->config->{project_name};
             $c->stash->{template} = '/brapi/authorize.mas';
