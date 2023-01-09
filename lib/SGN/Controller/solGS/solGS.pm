@@ -53,9 +53,9 @@ The root page (/)
 
 
 sub population : Path('/solgs/population') Args() {
-    my ($self, $c, $pop_id, $gp, $protocol_id) = @_;
+    my ($self, $c, $training_pop_id, $gp, $protocol_id) = @_;
 
-    if (!$pop_id)
+    if (!$training_pop_id)
     {
 	$c->stash->{message} = "You can not access this page with out population id.";
 	$c->stash->{template} = "/generic_message.mas";
@@ -63,19 +63,18 @@ sub population : Path('/solgs/population') Args() {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
-    $c->stash->{training_pop_id} = $pop_id;
-    #$c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id;
 
-    if ($pop_id =~ /dataset/)
+    if ($training_pop_id =~ /dataset/)
     {
-		$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+		$c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;
     }
-    elsif ($pop_id =~ /list/)
+    elsif ($training_pop_id =~ /list/)
     {
-		$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
+		$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
     }
 
-    my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
+    my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $training_pop_id, $protocol_id);
 
     if (!$cached)
     {
@@ -88,12 +87,14 @@ sub population : Path('/solgs/population') Args() {
     else
     {
 		$c->controller('solGS::Utils')->save_metadata($c);
-	    $c->controller('solGS::Trait')->get_all_traits($c, $pop_id);
+	    $c->controller('solGS::Trait')->get_all_traits($c, $training_pop_id);
 
-		$c->controller('solGS::Search')->project_description($c, $pop_id);
-
+		$c->controller('solGS::Search')->project_description($c, $training_pop_id);
 		$c->stash->{training_pop_name} = $c->stash->{project_name};
 		$c->stash->{training_pop_desc} = $c->stash->{project_desc};
+       
+        my $trial_page_url = $c->controller('solGS::Path')->trial_page_url($training_pop_id);
+        $c->stash->{trial_detail_page} = $c->controller('solGS::Path')->create_hyperlink($trial_page_url, 'See trial detail');
 
 	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
     }
@@ -387,41 +388,43 @@ sub build_single_trait_model {
 
 
 sub trait :Path('/solgs/trait') Args(5) {
-    my ($self, $c, $trait_id, $key, $pop_id, $gp, $protocol_id) = @_;
+    my ($self, $c, $trait_id, $key, $training_pop_id, $gp, $protocol_id) = @_;
 
-    if ($pop_id =~ /dataset/)
+    if (!$training_pop_id || !$trait_id)
     {
-	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+	    $c->stash->{message} = "You can not access this page with out population id or trait id.";
+	    $c->stash->{template} = "/generic_message.mas";
     }
-    elsif ($pop_id =~ /list/)
+
+    if ($training_pop_id =~ /dataset/)
     {
-	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
+	    $c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;
+    }
+    elsif ($training_pop_id =~ /list/)
+    {
+	    $c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
     }
 
     # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $c->stash->{genotyping_protocol_id} = $protocol_id;
-    $c->stash->{training_pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{trait_id} = $trait_id;
 
-	my $pop_name;
-	my $training_pop_page;
-    if ($pop_id && $trait_id)
-    {
-	$c->controller('solGS::Search')->project_description($c, $pop_id);
-	$pop_name = $c->stash->{project_name};
-	$c->stash->{training_pop_name} = $pop_name;
+	$c->controller('solGS::Search')->project_description($c, $training_pop_id);
+	my $training_pop_name = $c->stash->{project_name};
+	$c->stash->{training_pop_name} = $training_pop_name;
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
     my $args = {
-      'training_pop_id' => $pop_id,
+      'training_pop_id' => $training_pop_id,
       'genotyping_protocol_id' => $protocol_id,
       'data_set_type' => 'single_population'
     };
 
     my $training_pop_url = $c->controller('solGS::Path')->training_page_url($args);
-    $training_pop_page= $c->controller('solGS::Path')->create_hyperlink($training_pop_url, $pop_name);
+    my $training_pop_page= $c->controller('solGS::Path')->create_hyperlink($training_pop_url, $training_pop_name);
 
-	my $cached = $c->controller('solGS::CachedResult')->check_single_trial_model_output($c, $pop_id, $trait_id, $protocol_id);
+	my $cached = $c->controller('solGS::CachedResult')->check_single_trial_model_output($c, $training_pop_id, $trait_id, $protocol_id);
 
 	if (!$cached)
 	{
@@ -432,23 +435,30 @@ sub trait :Path('/solgs/trait') Args(5) {
 	}
 	else
 	{
+       
 	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
-	    $self->gs_modeling_files($c);
-	    $c->controller('solGS::modelAccuracy')->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
-	    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
+        my $trait_abbr = $c->stash->{trait_abbr};
+
+        $self->gs_modeling_files($c);
+
+	    $c->controller('solGS::modelAccuracy')->cross_validation_stat($c, $training_pop_id, $trait_abbr);
+	    $c->controller('solGS::Files')->traits_acronym_file($c, $training_pop_id);
 	    my $acronym_file = $c->stash->{traits_acronym_file};
 
 	    if (!-e $acronym_file || !-s $acronym_file)
 	    {
-		$c->controller('solGS::Trait')->get_all_traits($c, $pop_id);
+		    $c->controller('solGS::Trait')->get_all_traits($c, $training_pop_id);
 	    }
 
 	    $self->model_phenotype_stat($c);
 
 		$c->stash->{training_pop_url} = $training_pop_page;
+
+         my $trial_page_url = $c->controller('solGS::Path')->trial_page_url($training_pop_id);
+        $c->stash->{trial_detail_page} = $c->controller('solGS::Path')->create_hyperlink($trial_page_url, 'See trial detail');
+
 	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
-    }
 
 }
 
