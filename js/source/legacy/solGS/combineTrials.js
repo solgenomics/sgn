@@ -224,8 +224,8 @@ solGS.combinedTrials = {
     	    delete Array.prototype.toJSON;
     	}
 
-    	args['analysis_type'] = 'combine populations';
-    	args['data_set_type'] = 'multiple populations';
+    	args['analysis_type'] = 'combine_populations';
+    	args['data_set_type'] = 'multiple_populations';
 
     	var comboPopsId = args.combo_pops_id;
     	comboPopsId = comboPopsId[0];
