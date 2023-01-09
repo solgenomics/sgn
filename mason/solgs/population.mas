@@ -4,12 +4,13 @@ $pop_id => ''
 $training_pop_id
 $training_pop_name
 $training_pop_desc
+$trial_detail_page => 'NA'
 $show_data => 1;
 $training_pop_traits_details =>''
 $stocks_no
 $markers_no
 $traits_no
-$owner=>''
+$owner =>''
 $protocol_url => ''
 $acronym
 $genotyping_protocol_id
@@ -47,6 +48,7 @@ $training_pop_id = $pop_id;
     training_pop_id   => $training_pop_id,
     training_pop_name => $training_pop_name,
     training_pop_desc => $training_pop_desc,
+    trial_detail_page => $trial_detail_page,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
