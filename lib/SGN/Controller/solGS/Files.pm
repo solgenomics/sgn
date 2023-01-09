@@ -287,10 +287,11 @@ sub analysis_error_file {
 sub analysis_report_file {
     my ($self, $c) = @_;
 
-    my $type      = $c->stash->{analysis_type};
-    $type =~ s/\s+/_/g;
+    my $page_type = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
+    my $analysis_type = $c->stash->{analysis_type}  || $page_type;
+    my $analysis_type      = $c->stash->{analysis_type};
+    $analysis_type =~ s/\s+/_/g;
 
-    print STDERR "\nanalysis_report_file: type -- $type\n";
     my $cache_dir = $c->stash->{cache_dir} || $c->stash->{solgs_cache_dir};
     my $file_id   = $c->stash->{file_id};
 
@@ -300,7 +301,7 @@ sub analysis_report_file {
         my $trait_abbr = $c->stash->{trait_abbr};
         my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-        if ($type =~ /selection_prediction/) 
+        if ($analysis_type =~ /selection_prediction/) 
         {     
             $pop_id .= "_" . $c->stash->{selection_pop_id};
         }
@@ -308,12 +309,12 @@ sub analysis_report_file {
         $file_id  = "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     }
 
-    my	$name = "${type}_report_${file_id}";
+    my	$name = "${analysis_type}_report_${file_id}";
 
     my $cache_data = { key       => $name,
 		       file      => $name,
 		       cache_dir => $cache_dir,
-		       stash_key => "${type}_report_file",
+		       stash_key => "${analysis_type}_report_file",
     };
 
     $self->cache_file($c, $cache_data);
