@@ -8,6 +8,7 @@ use SGN::Model::Cvterm;
 use Bio::Chado::Schema;
 use Data::Dumper;
 use JSON;
+use CXGN::Stock::StockLookup;
 
 has 'chado_schema' => (
     is => 'rw',
@@ -101,16 +102,88 @@ sub get_target_numbers_and_progress {
                 my $seed_target_number = $female_hash{$male_accession}{'target_number_of_seeds'};
                 my $progeny_target_number = $female_hash{$male_accession}{'target_number_of_progenies'};
                 my $notes = $female_hash{$male_accession}{'notes'};
-                my $actual_seed_number;
+                my $cross_info = $self->_get_cross_and_info($crossing_experiment_id, $female_accession, $male_accession);
+                print STDERR "CROSS INFO =".Dumper($cross_info)."\n";
+                my @cross_array = @$cross_info;
+                my $total_number_of_seeds;
+                foreach my $cross (@cross_array) {
+                    $total_number_of_seeds += $cross->[2];
+                }
                 my $actual_progeny_number;
-                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $actual_seed_number, $progeny_target_number, $actual_progeny_number, $notes];
+                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $actual_progeny_number, $notes];
             }
         }
     }
 
-    print STDERR "TARGET NUMBERS =".Dumper(\@crossing_experiment_target_numbers)."\n";
+#    print STDERR "TARGET NUMBERS =".Dumper(\@crossing_experiment_target_numbers)."\n";
     return \@crossing_experiment_target_numbers;
 
+}
+
+
+sub _get_cross_and_info {
+    my $self = shift;
+    my $crossing_experiment_id = shift;
+    my $female_accession = shift;
+    my $male_accession = shift;
+    my $schema = $self->get_chado_schema();
+    my $female;
+    my $female_id;
+    my $male;
+    my $male_id;
+    my $cross_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $female_parent_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id=  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $cross_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+
+    my $female_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+    $female_lookup->set_stock_name($female_accession);
+    $female = $female_lookup->get_accession_exact();
+    if (!$female) {
+        print STDERR "female accession name does not exist\n";
+        return;
+    } else {
+        $female_id =  $female->stock_id();
+    }
+
+    my $male_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+    $male_lookup->set_stock_name($male_accession);
+    $male = $male_lookup->get_accession_exact();
+
+    if (!$male) {
+        print STDERR "male accession name does not exist\n";
+        return;
+    } else {
+        $male_id =  $male->stock_id();
+    }
+
+    my $q = "SELECT project.name, cross_entry.uniquename, stockprop.value
+        FROM project
+        LEFT JOIN nd_experiment_project ON (nd_experiment_project.project_id = project.project_id)
+        LEFT JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+        LEFT JOIN stock AS cross_entry ON (cross_entry.stock_id = nd_experiment_stock.stock_id) AND cross_entry.type_id = ?
+        LEFT JOIN stockprop ON (cross_entry.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        LEFT JOIN stock_relationship AS female_relationship ON (female_relationship.object_id = cross_entry.stock_id) AND female_relationship.type_id = ?
+        LEFT JOIN stock_relationship AS male_relationship ON (male_relationship.object_id = cross_entry.stock_id) AND male_relationship.type_id = ?
+        WHERE project.project_id = ? AND female_relationship.subject_id = ? AND male_relationship.subject_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($cross_experiment_type_id, $cross_type_id, $cross_info_type_id, $female_parent_type_id, $male_parent_type_id, $crossing_experiment_id, $female_id, $male_id);
+
+    my @cross_details = ();
+    while (my ($project_name, $cross_name, $cross_info) = $h->fetchrow_array()){
+        my $number_of_seeds;
+        if ($cross_info) {
+            my $info_hash = decode_json $cross_info;
+            $number_of_seeds = $info_hash->{'Number of Seeds'};
+        }
+        push @cross_details, [$project_name, $cross_name, $number_of_seeds]
+    }
+#    print STDERR Dumper(\@cross_details);
+
+    return \@cross_details;
 }
 
 
