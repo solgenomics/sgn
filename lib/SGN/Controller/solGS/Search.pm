@@ -904,7 +904,7 @@ sub get_project_owners {
     my $owners = $self->model($c)->get_stock_owners($pr_id);
     my $owners_names;
 
-    if ($owners)
+    if (@$owners)
     {
         for (my $i=0; $i < scalar(@$owners); $i++)
         {
