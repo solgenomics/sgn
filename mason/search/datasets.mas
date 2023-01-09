@@ -11,12 +11,19 @@ $location_id => 'not_provided'
     <div class="panel panel-default">
         <div class="panel-body">
             <table id="dataset_search_results" width="100%" class="table table-hover table-striped">
-            <thead>
+            <&| /util/user.mas:logged_in &>
+              <thead>
+                <tr>
+                  <th>Dataset name</th>
+                  <th>Description</th>
+              </tr>
+              </thead>
+            </&>
+            <&| /util/user.mas:logged_out &>
               <tr>
-                <th>Dataset name</th>
-                <th>Description</th>
-            </tr>
-            </thead>
+                <td><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to see Datasets.</td>
+              </tr>
+            </&>
             </table>
         </div>
     </div>
