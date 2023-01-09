@@ -10,7 +10,7 @@ extends 'CXGN::JSONProp';
 has 'images' => ( isa => 'Maybe[ArrayRef]', is => 'rw' );
 
 # list of hashrefs like { stock_center => { name => ..., count_available => ..., delivery_time => } }
-has 'order_source' => ( isa => 'ArrayRef', is => 'rw');
+has 'order_source' => ( isa => 'Maybe[ArrayRef]', is => 'rw');
 
 # item type such as single accession or a set of 10 accessions
 has 'item_type' => ( isa => 'Str', is => 'rw');
@@ -19,17 +19,17 @@ has 'item_type' => ( isa => 'Str', is => 'rw');
 has 'material_type' => ( isa => 'Str', is => 'rw');
 
 # center that generates clones or seed
-has 'material_source' => ( isa => 'Str', is => 'rw');
+has 'material_source' => ( isa => 'Maybe[Str]', is => 'rw');
 
 has 'category' => ( isa => 'Str', is => 'rw' );
 
 has 'species' => ( isa => 'Str', is => 'rw' );
 
-has 'variety' => ( isa => 'Str', is => 'rw', required => 0);
+has 'variety' => ( isa => 'Maybe[Str]', is => 'rw' );
 
 has 'breeding_program' => ( isa => 'Int', is => 'rw');
 
-has 'additional_info' => ( isa => 'Str', is => 'rw', required => 0 );
+has 'additional_info' => ( isa => 'Maybe[Str]', is => 'rw' );
 
 has 'contact_person_id' => ( isa => 'Int', is => 'rw') ;
 
