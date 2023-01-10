@@ -106,14 +106,15 @@ sub get_target_numbers_and_progress {
                 my $progeny_target_number = $female_hash{$male_accession}{'target_number_of_progenies'};
                 my $notes = $female_hash{$male_accession}{'notes'};
                 my $cross_info = $self->_get_cross_and_info($crossing_experiment_id, $female_accession, $male_accession);
-                print STDERR "CROSS INFO =".Dumper($cross_info)."\n";
+                print STDERR "GET CROSS INFO =".Dumper($cross_info)."\n";
                 my @cross_array = @$cross_info;
                 my $total_number_of_seeds;
+                my $total_number_of_progenies;
                 foreach my $cross (@cross_array) {
-                    $total_number_of_seeds += $cross->[2];
+                    $total_number_of_seeds += $cross->[3];
+                    $total_number_of_progenies += $cross->[4];
                 }
-                my $actual_progeny_number;
-                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $actual_progeny_number, $notes];
+                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $total_number_of_progenies, $notes];
             }
         }
     }
@@ -139,6 +140,7 @@ sub _get_cross_and_info {
     my $male_parent_type_id=  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $cross_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
     my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
 
     my $female_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
     $female_lookup->set_stock_name($female_accession);
@@ -161,7 +163,9 @@ sub _get_cross_and_info {
         $male_id =  $male->stock_id();
     }
 
-    my $q = "SELECT project.name, cross_entry.uniquename, stockprop.value
+    my $q = "SELECT info_table.project_name, info_table.cross_name, info_table.cross_id, info_table.prop_value, progenies_table.number_of_progenies
+        FROM
+        (SELECT project.name AS project_name, cross_entry.uniquename AS cross_name, cross_entry.stock_id AS cross_id, stockprop.value AS prop_value
         FROM project
         LEFT JOIN nd_experiment_project ON (nd_experiment_project.project_id = project.project_id)
         LEFT JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
@@ -169,20 +173,27 @@ sub _get_cross_and_info {
         LEFT JOIN stockprop ON (cross_entry.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
         LEFT JOIN stock_relationship AS female_relationship ON (female_relationship.object_id = cross_entry.stock_id) AND female_relationship.type_id = ?
         LEFT JOIN stock_relationship AS male_relationship ON (male_relationship.object_id = cross_entry.stock_id) AND male_relationship.type_id = ?
-        WHERE project.project_id = ? AND female_relationship.subject_id = ? AND male_relationship.subject_id = ?";
+        WHERE project.project_id = ? AND female_relationship.subject_id = ? AND male_relationship.subject_id = ?) AS info_table
+        LEFT JOIN
+        (SELECT DISTINCT stock.stock_id AS cross_id, COUNT (stock_relationship.subject_id) AS number_of_progenies
+        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS progenies_table
+        ON (info_table.cross_id = progenies_table.cross_id) ORDER BY cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($cross_experiment_type_id, $cross_type_id, $cross_info_type_id, $female_parent_type_id, $male_parent_type_id, $crossing_experiment_id, $female_id, $male_id);
+    $h->execute($cross_experiment_type_id, $cross_type_id, $cross_info_type_id, $female_parent_type_id, $male_parent_type_id, $crossing_experiment_id, $female_id, $male_id, $offspring_of_type_id, $crossing_experiment_id);
 
     my @cross_details = ();
-    while (my ($project_name, $cross_name, $cross_info) = $h->fetchrow_array()){
+    while (my ($project_name, $cross_name, $cross_id, $cross_info, $number_of_progenies) = $h->fetchrow_array()){
         my $number_of_seeds;
         if ($cross_info) {
             my $info_hash = decode_json $cross_info;
             $number_of_seeds = $info_hash->{'Number of Seeds'};
         }
-        push @cross_details, [$project_name, $cross_name, $number_of_seeds]
+        push @cross_details, [$project_name, $cross_name, $cross_id,  $number_of_seeds, $number_of_progenies]
     }
 #    print STDERR Dumper(\@cross_details);
 
