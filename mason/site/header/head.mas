@@ -16,6 +16,7 @@
     '/css/ladda-themeless.min.css',
     '/css/daterangepicker.css',
     '/css/buttons/buttons.bootstrap.min.css',
+    '/css/buttons/buttons.dataTables.css',
     '/css/bootstrap3-xl-class.css',
     '/css/bootstrap-select.min.css'
   ] &>

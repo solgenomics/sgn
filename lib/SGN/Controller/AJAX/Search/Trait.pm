@@ -116,6 +116,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
         push @result,
             [
                 '',
+                "<button class='btn btn-info btn-$_->{trait_id}' onclick='copy(\"$_->{trait_name}\", \"$trait_accession\", $_->{trait_id})'><span class='glyphicon glyphicon-copy'></span></button>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
                 $_->{trait_definition},
