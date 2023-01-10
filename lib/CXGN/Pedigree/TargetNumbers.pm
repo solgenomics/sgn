@@ -110,16 +110,20 @@ sub get_target_numbers_and_progress {
                 my @cross_array = @$cross_info;
                 my $total_number_of_seeds;
                 my $total_number_of_progenies;
+                my @crosses = ();
                 foreach my $cross (@cross_array) {
-                    $total_number_of_seeds += $cross->[3];
-                    $total_number_of_progenies += $cross->[4];
+                    $total_number_of_seeds += $cross->[2];
+                    $total_number_of_progenies += $cross->[3];
+                    my $cross_link = qq{<a href="/cross/$cross->[1]">$cross->[0]</a>};
+                    push @crosses, $cross_link;
                 }
-                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $total_number_of_progenies, $notes];
+                my $crosses_string = join("<br>", @crosses);
+                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $total_number_of_progenies, $crosses_string, $notes];
             }
         }
     }
 
-#    print STDERR "TARGET NUMBERS =".Dumper(\@crossing_experiment_target_numbers)."\n";
+    print STDERR "CROSSING EXPERIMENT TARGET NUMBERS =".Dumper(\@crossing_experiment_target_numbers)."\n";
     return \@crossing_experiment_target_numbers;
 
 }
@@ -163,17 +167,15 @@ sub _get_cross_and_info {
         $male_id =  $male->stock_id();
     }
 
-    my $q = "SELECT info_table.project_name, info_table.cross_name, info_table.cross_id, info_table.prop_value, progenies_table.number_of_progenies
+    my $q = "SELECT info_table.cross_name, info_table.cross_id, info_table.prop_value, progenies_table.number_of_progenies
         FROM
-        (SELECT project.name AS project_name, cross_entry.uniquename AS cross_name, cross_entry.stock_id AS cross_id, stockprop.value AS prop_value
-        FROM project
-        LEFT JOIN nd_experiment_project ON (nd_experiment_project.project_id = project.project_id)
-        LEFT JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+        (SELECT cross_entry.uniquename AS cross_name, cross_entry.stock_id AS cross_id, stockprop.value AS prop_value
+        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
         LEFT JOIN stock AS cross_entry ON (cross_entry.stock_id = nd_experiment_stock.stock_id) AND cross_entry.type_id = ?
         LEFT JOIN stockprop ON (cross_entry.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
         LEFT JOIN stock_relationship AS female_relationship ON (female_relationship.object_id = cross_entry.stock_id) AND female_relationship.type_id = ?
         LEFT JOIN stock_relationship AS male_relationship ON (male_relationship.object_id = cross_entry.stock_id) AND male_relationship.type_id = ?
-        WHERE project.project_id = ? AND female_relationship.subject_id = ? AND male_relationship.subject_id = ?) AS info_table
+        WHERE nd_experiment_project.project_id = ? AND female_relationship.subject_id = ? AND male_relationship.subject_id = ?) AS info_table
         LEFT JOIN
         (SELECT DISTINCT stock.stock_id AS cross_id, COUNT (stock_relationship.subject_id) AS number_of_progenies
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -187,13 +189,13 @@ sub _get_cross_and_info {
     $h->execute($cross_experiment_type_id, $cross_type_id, $cross_info_type_id, $female_parent_type_id, $male_parent_type_id, $crossing_experiment_id, $female_id, $male_id, $offspring_of_type_id, $crossing_experiment_id);
 
     my @cross_details = ();
-    while (my ($project_name, $cross_name, $cross_id, $cross_info, $number_of_progenies) = $h->fetchrow_array()){
+    while (my ($cross_name, $cross_id, $cross_info, $number_of_progenies) = $h->fetchrow_array()){
         my $number_of_seeds;
         if ($cross_info) {
             my $info_hash = decode_json $cross_info;
             $number_of_seeds = $info_hash->{'Number of Seeds'};
         }
-        push @cross_details, [$project_name, $cross_name, $cross_id,  $number_of_seeds, $number_of_progenies]
+        push @cross_details, [$cross_name, $cross_id,  $number_of_seeds, $number_of_progenies]
     }
 #    print STDERR Dumper(\@cross_details);
 

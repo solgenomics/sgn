@@ -15,6 +15,7 @@ $trial_id
                 <th>Actual No. of Seeds</th>
                 <th>Target No. of Progenies</th>
                 <th>Actual No. of Progenies</th>
+                <th>Cross Unique IDs</th>                
                 <th>Notes</th>
             </tr>
         </thead>
