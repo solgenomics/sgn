@@ -91,6 +91,7 @@ sub get_target_numbers_and_progress {
     my $target_numbers_json;
     my $target_numbers_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'target_numbers_json', 'project_property');
     my $crossing_experiment_prop_rs = $schema->resultset("Project::Projectprop")->find({project_id => $crossing_experiment_id, type_id => $target_numbers_cvterm->cvterm_id()});
+    my $checkmark = qq{<img src="/img/checkmark_green.jpg"/>};
 
     my @crossing_experiment_target_numbers;
     if ($crossing_experiment_prop_rs){
@@ -106,7 +107,7 @@ sub get_target_numbers_and_progress {
                 my $progeny_target_number = $female_hash{$male_accession}{'target_number_of_progenies'};
                 my $notes = $female_hash{$male_accession}{'notes'};
                 my $cross_info = $self->_get_cross_and_info($crossing_experiment_id, $female_accession, $male_accession);
-                print STDERR "GET CROSS INFO =".Dumper($cross_info)."\n";
+
                 my @cross_array = @$cross_info;
                 my $total_number_of_seeds;
                 my $total_number_of_progenies;
@@ -118,12 +119,20 @@ sub get_target_numbers_and_progress {
                     push @crosses, $cross_link;
                 }
                 my $crosses_string = join("<br>", @crosses);
+
+                if ($total_number_of_seeds >= $seed_target_number) {
+                    $seed_target_number = $seed_target_number.$checkmark;
+                }
+
+                if ($total_number_of_progenies >= $progeny_target_number) {
+                    $progeny_target_number = $progeny_target_number.$checkmark;
+                }
+
                 push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $total_number_of_progenies, $crosses_string, $notes];
             }
         }
     }
 
-    print STDERR "CROSSING EXPERIMENT TARGET NUMBERS =".Dumper(\@crossing_experiment_target_numbers)."\n";
     return \@crossing_experiment_target_numbers;
 
 }
