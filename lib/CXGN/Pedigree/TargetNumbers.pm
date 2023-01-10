@@ -35,9 +35,8 @@ sub store {
     my $schema = $self->get_chado_schema();
     my $crossing_experiment_id = $self->get_crossing_experiment_id();
     my $target_numbers = $self->get_target_numbers();
-    my %target_numbers_hash = %{$target_numbers};
+    my %new_target_numbers_hash = %{$target_numbers};
     my $transaction_error;
-
     my $coderef = sub {
 
         my $experiment_rs = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id });
@@ -53,13 +52,17 @@ sub store {
             my $experiment_prop_id = $experiment_prop_rs->projectprop_id();
             my $previous_value = $experiment_prop_rs->value();
             my $previous_target_info = decode_json $previous_value;
-            %target_numbers_hash = %{$previous_target_info};
-            $target_numbers_json = encode_json \%target_numbers_hash;
+            print STDERR "PREVIOUS TARGET INFO =".Dumper($previous_target_info)."\n";
+            my %target_values_hash = %{$previous_target_info};
+            %target_values_hash = %new_target_numbers_hash;
+            print STDERR "UPDATED TARGET INFO =".Dumper(\%target_values_hash)."\n";
+            $target_numbers_json = encode_json \%target_values_hash;
+
 
             $experiment_prop_rs->update({value=>$target_numbers_json});
 
         } else {
-            $target_numbers_json = encode_json \%target_numbers_hash;
+            $target_numbers_json = encode_json \%new_target_numbers_hash;
             $experiment_rs->create_projectprops({$target_numbers_cvterm->name() => $target_numbers_json});
         }
     };

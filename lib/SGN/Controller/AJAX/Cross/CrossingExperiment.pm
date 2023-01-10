@@ -165,7 +165,7 @@ sub upload_target_numbers_POST : Args(0) {
         my $file_id = $file_row->file_id();
         my %target_numbers = %{$parsed_data};
 
-        print STDERR "TARGET NUMBERS=".Dumper(\%target_numbers)."\n";
+#        print STDERR "UPLOAD TARGET NUMBERS=".Dumper(\%target_numbers)."\n";
         my $targets = CXGN::Pedigree::TargetNumbers->new({ chado_schema => $schema, crossing_experiment_id => $target_numbers_experiment_id, target_numbers => \%target_numbers });
     	$targets->store();
     }
@@ -182,7 +182,7 @@ sub get_target_numbers_and_progress :Path('/ajax/cross/target_numbers_and_progre
 
     my $target_numbers = CXGN::Pedigree::TargetNumbers->new({ chado_schema => $schema, crossing_experiment_id => $crossing_experiment_id});
     my $target_info = $target_numbers->get_target_numbers_and_progress();
-    print STDERR "AJAX TARGET NUMBERS =".Dumper($target_info)."\n";
+#    print STDERR "AJAX TARGET NUMBERS =".Dumper($target_info)."\n";
 
 
     $c->stash->{rest} = { data => $target_info };
