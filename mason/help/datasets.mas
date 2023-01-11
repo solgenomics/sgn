@@ -1,0 +1,44 @@
+
+<& /page/page_title.mas, title => "Dataset Help" &>
+
+<p><b>Working with Datasets</b></p>
+
+<p>Datasets are collections of identifiers that are stored in
+the database. Datasets can be composed of accessions, plots, traits, locations,
+and trials. Datasets are attached to the individual user’s account, and can
+only be created and seen by the user while logged in. SGN databases use 
+Datasets in analysis tools on the website such as Wizard, GWAS, GS,
+Heritability, and Stability tools.</p>
+
+<p><b>Creating Datasets</b></p>
+
+<p>Datasets are generated in the Wizard. Up to 4 identifiers
+can be selected. First select the categories and entries in each column. In
+this example we have selected Trials, Accessions, and Genotyping Protocols.
+Then enter a name in the “Create New Dataset” section. In this example we have
+used “Tinker QTL 2021”. After creating the dataset, you can make it public for
+others to use by first selecting the dataset using the “Load Dataset”
+list then selecting the “Make Public” button.</p>
+<img src="/static/documents/help/screenshots/DatasetHelpImage001.png" width="1000px">
+<img src="/static/documents/help/screenshots/DatasetHelpImage002.png" width="600px">
+
+<p><b>Retrieving Datasets</b></p>
+
+<p>To retrieve a dataset in the Wizard, select the dataset in
+the “Load Dataset” input then select the “Load” button. This will populate the
+columns in the Wizard and then allow you to download and analyze the dataset.</p><br>
+<img src="/static/documents/help/screenshots/DatasetHelpImage003.png" width="600px">
+
+<p><b>Searching Datasets</b></p>
+
+<p>To search for a dataset, select the “Datasets” link in the
+toolbar at the top right of the website. Selecting the Dataset name will
+give you a Dataset Detail page</p><br>
+<img src="/static/documents/help/screenshots/DatasetHelpImage004.png" width="800px">
+<img src="/static/documents/help/screenshots/DatasetHelpImage005.png" width="800px">
+
+<br><br>
+<p>Datasets can also be used in publications for linking available
+data. Copy the URL from the detail page found in the Search Datasets
+page.</p>
+
