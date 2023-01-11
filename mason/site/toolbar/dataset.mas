@@ -1,0 +1,1 @@
+<span id="navbar_datasets" style="white-space:nowrap;width:200;float:right"><button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px" onclick="window.location='/search/datasets';">Dataset</button></span>
