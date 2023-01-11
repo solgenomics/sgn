@@ -2051,6 +2051,7 @@ jQuery(document).ready(function ($) {
         var max_block_size = jQuery('#max_block_size').val();
         var plot_prefix = jQuery('#plot_prefix').val();
         var start_number = jQuery('#start_number').val();
+	var consecutive_or_block_based_number = jQuery('input[name="consecutive_or_black_based_number"]:checked').val();
         var increment = jQuery('#increment').val();
         var breeding_program_name = jQuery('#select_breeding_program').val();
         var fieldmap_col_number = jQuery('#fieldMap_col_number').val();
@@ -2104,6 +2105,7 @@ jQuery(document).ready(function ($) {
                 'block_size': block_size,
                 'max_block_size': max_block_size,
                 'plot_prefix': plot_prefix,
+                'consecutive_or_block_based_number' : consecutive_or_block_based_number,
                 'start_number': start_number,
                 'increment': increment,
                 'design_json': design_json,

@@ -171,6 +171,7 @@ ok($trial_design->set_plot_start_number(1), "set plot start number");
 ok($trial_design->set_plot_number_increment(1), "set plot increment");
 ok($trial_design->set_number_of_reps(2), "set rep number");
 ok($trial_design->set_design_type("CRD"), "set design type");
+ok($trial_design->set_consecutive_or_block_based_numbers('consecutive_plot_numbers'));
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
@@ -567,7 +568,7 @@ ok($trial_design->set_num_plants_per_plot(4), "set num plants per plot");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
-#print STDERR Dumper $design;
+print STDERR Dumper $design;
 
 $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 
