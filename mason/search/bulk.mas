@@ -159,7 +159,7 @@ function bulkSearch() {
 
     jQuery.ajax({
         url: "/list/validate/temp",
-        method: 'GET',
+        method: 'POST',
         data: {
             "type": type_name,
             "items": JSON.stringify(names),
