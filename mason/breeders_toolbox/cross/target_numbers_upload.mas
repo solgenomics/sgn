@@ -117,8 +117,7 @@ $trial_name
                     <ul>
                         <li>female_accession (must exist as uniquename in the database.)</li>
                         <li>male_accession (must exist as uniquename in the database.)</li>
-                        <li>seed_target_number ()</li>
-                        <li>progeny_target_number () )</li>
+                        <li>Please indicate target number of seeds and/or target number of progenies</li>
                         <li>notes (optional)</li>
                     </ul>
                     <br>
