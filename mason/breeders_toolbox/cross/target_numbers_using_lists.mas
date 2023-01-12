@@ -1,0 +1,223 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<style>
+@media (min-width: 768px) {
+    .modal-xl {
+        width: 90%;
+        max-width:1200px;
+    }
+}
+</style>
+
+<div class="modal fade" id="record_target_numbers_using_lists_dialog" name="record_target_numbers_using_lists_dialog" tabindex="-1" role="dialog" aria-labelledby="recordTargetNumbersUsingListsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="recordTargetNumbersUsingListsDialog">Record Target Numbers of Seeds and/or Progenies</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <&| /page/explanation.mas, title=>'Information' &>
+                                <p>
+                                    <b>File Information</b>
+                                    <br>
+                                    <a id="target_number_info">Target Numbers</a>
+                                    <br>
+                                </p>
+                            </&>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Female parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="target_numbers_female_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Male parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="target_numbers_male_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id ="target_numbers_form_div">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="wishlist_footer" style="display:none" >
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="target_numbers_submit" name="wishlist_submit">Record Target Numbers</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="record_target_numbers_message" name="record_target_numbers_message" tabindex="-1" role="dialog" aria-labelledby="recordTargetNumbersMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="recordTargetNumberMessage">Target Numbers</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The target numbers were recorded successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="record_target_numbers_close_button" id="record_target_numbers_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="target_numbers_info_dialog" name="target_numbers_info_dialog" tabindex="-1" role="dialog" aria-labelledby="targetNumbersInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="targetNumbersInfoDialog">Target Numbers</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <ul>
+                        <li><b>femaleDbId:</b> stock_id of female parent in the database.</li>
+                        <li><b>maleDbId:</b> stock_id of male parent in the database</li>
+                        <li><b>femaleName:</b> female uniquename in the database.</li>
+                        <li><b>maleName:</b> male uniquename in the database.</li>
+                        <li><b>wishType:</b> type of field crossing data (must be one of these types: flower, fruit, seed).</li>
+                        <li><b>wishMin:</b> expected minimum number of the specified type.</li>
+                        <li><b>wishMax:</b> expected maximum number of the specified type.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var crossing_experiment_id = "<% $trial_id %>";
+    var lo = new CXGN.List();
+
+    jQuery('#target_numbers_female_list_select').html(lo.listSelect('target_numbers_female_list_select', ['accessions'], 'Select a list of female parents', undefined, undefined));
+    jQuery('#target_numbers_male_list_select').html(lo.listSelect('target_numbers_male_list_select', ['accessions'], 'Select a list of male parents', undefined, undefined));
+
+    jQuery('#record_target_numbers_using_lists').click(function(){
+        jQuery('#record_target_numbers_using_lists_dialog').modal("show");
+    });
+
+    jQuery("#target_numbers_submit_info").click(function(){
+        jQuery("#target_numbers_info_dialog").modal("show");
+    });
+
+    var female_list_id;
+    var male_list_id;
+    jQuery("#target_numbers_female_list_select").change(function() {
+        female_list_id = jQuery('#target_numbers_female_list_select').val();
+        if (female_list_id){
+            var female_accession_validation = 1;
+            female_accession_validation = lo.legacy_validate(female_list_id, 'uniquenames', true);
+            if (female_accession_validation != 1) {
+                alert("The female list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else if (female_list_id && male_list_id) {
+                target_numbers_form();
+            }
+        }
+    })
+
+    jQuery("#target_numbers_male_list_select").change(function() {
+        male_list_id = jQuery('#target_numbers_male_list_select').val();
+        if (male_list_id){
+            var male_accession_validation = 1;
+            male_accession_validation = lo.legacy_validate(male_list_id, 'uniquenames', true);
+            if (male_accession_validation != 1) {
+                alert("The male list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else if (!female_list_id) {
+                alert("Please select female list");
+                return;
+            } else if (female_list_id && male_list_id) {
+                target_numbers_form();
+            }
+        }
+    });
+
+    function target_numbers_form () {
+        var female_list_id = jQuery('#wishlist_female_list_select').val();
+        var female_list = lo.getList(female_list_id);
+
+        var male_list_id = jQuery('#wishlist_male_list_select').val();
+        var male_list = lo.getList(male_list_id);
+
+        var html = '<table class="table table-bordered" id="target_numbers_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Info (type,min,max). Supported types:seeds,progenies.</th></tr></thead><tbody>';
+        for(var i=0; i<female_list.length; i++){
+            html = html + '<tr><td>' + female_list[i] + '</td><td><div name="target_numbers_male_selects" id="target_numbers_male_select_' +i+ '"></div></td><td><span id="target_numbers_male_accession_id_'+ i +'_info" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
+        };
+        html = html + '</tbody></table>';
+
+        jQuery('#target_numbers_form_div').html(html);
+
+        var target_numbers_male_parents = jQuery('#target_numbers_male_select_table')
+            .find("div")
+            .map(function() { return this.id; })
+            .get();
+        for(var i=0; i<target_numbers_male_parents.length; i++){
+            var female_id = jQuery('#target_numbers_male_accession_id_'+ i +'_info').data('related');
+            get_select_box('items', target_numbers_male_parents[i], { 'name' : 'target_numbers_male_accession_id_select', 'id' : 'target_numbers_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'list_items':male_list, 'names_as_select':1, 'data-related':female_id});
+        };
+    };
+
+    jQuery(document).on('change', "select[name='target_numbers_male_accession_id_select']", function() {
+        var div_id = '#' + this.id;
+        var male_names = jQuery(div_id).val();
+        if (male_names.length > 0){
+            target_numbers_change_males(div_id, div_id + '_info');
+        }
+
+        jQuery('#target_numbers_footer').show();
+    });
+
+    function target_numbers_change_males(div_id, select_id){
+        var male_names = jQuery(div_id).val();
+        var female_name = jQuery(div_id).data('related');
+        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Type, Min, Max (e.g. flower, 5, 30)</th></tr></thead><tbody>';
+        for (var i=0; i<male_names.length; i++){
+            html = html + '<tr><td>' + male_names[i] + '</td><td><input class="form-control" male_name="' + male_names[i] + '" female_name="' + female_name + '" name ="wishlist_activity_info" id="wishlist_activity_info_'+ i +'" value="" placeholder=""/></td></tr>';
+        };
+        html = html + '</tbody></table>';
+        jQuery(select_id).html(html);
+    };
+
+
+
+});
+
+</script>
