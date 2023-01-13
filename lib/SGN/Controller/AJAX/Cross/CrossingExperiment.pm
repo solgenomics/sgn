@@ -185,9 +185,18 @@ sub record_target_numbers_using_lists_POST : Args(0) {
     my $number_of_seeds = decode_json $c->req->param('number_of_seeds');
     my $number_of_progenies = decode_json $c->req->param('number_of_progenies');
 
-    print STDERR "EXPERIMENT ID =".Dumper($crossing_experiment_id)."\n";
-    print STDERR "NUMBER OF SEEDS =".Dumper($number_of_seeds)."\n";
-    print STDERR "NUMBER OF PROGENIES =".Dumper($number_of_progenies)."\n";
+    my %target_numbers_hash;
+    foreach my$seed_info_hash (@$number_of_seeds) {
+        $target_numbers_hash{$seed_info_hash->{female_name}}{$seed_info_hash->{male_name}}{'target_number_of_seeds'} = $seed_info_hash->{number_of_seeds};
+    }
+
+    foreach my$progeny_info_hash (@$number_of_progenies) {
+        $target_numbers_hash{$progeny_info_hash->{female_name}}{$progeny_info_hash->{male_name}}{'target_number_of_progenies'} = $progeny_info_hash->{number_of_progenies};
+    }
+
+    print STDERR "TARGET NUMBERS HASH =".Dumper(\%target_numbers_hash)."\n";
+    my $targets = CXGN::Pedigree::TargetNumbers->new({ chado_schema => $schema, crossing_experiment_id => $crossing_experiment_id, target_numbers => \%target_numbers_hash });
+    $targets->store();
 
     $c->stash->{rest} = {success => "1",};
 

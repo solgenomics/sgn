@@ -264,6 +264,10 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery("#record_target_numbers_close_button").click(function(){
+        location.reload();
+    });
+
 
 
 
