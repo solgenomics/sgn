@@ -56,9 +56,9 @@ $trial_id
                             </div>
                         </div>
                     </div>
-                    <div id="wishlist_footer" style="display:none" >
+                    <div id="target_numbers_footer" style="display:none" >
                         <div class="modal-footer">
-                            <button class="btn btn-primary" id="target_numbers_submit" name="wishlist_submit">Record Target Numbers</button>
+                            <button class="btn btn-primary" id="target_numbers_submit" name="target_numbers_submit">Record Target Numbers</button>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         </div>
                     </div>
@@ -177,7 +177,7 @@ jQuery(document).ready(function(){
         var male_list_id = jQuery('#target_numbers_male_list_select').val();
         var male_list = lo.getList(male_list_id);
 
-        var html = '<table class="table table-bordered" id="target_numbers_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Info (type,min,max). Supported types:seeds,progenies.</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="target_numbers_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Target Numbers of Seeds and/or Progenies</th></tr></thead><tbody>';
         for(var i=0; i<female_list.length; i++){
             html = html + '<tr><td>' + female_list[i] + '</td><td><div name="target_numbers_male_selects" id="target_numbers_male_select_' +i+ '"></div></td><td><span id="target_numbers_male_accession_id_'+ i +'_info" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
         };
@@ -208,13 +208,62 @@ jQuery(document).ready(function(){
     function target_numbers_change_males(div_id, select_id){
         var male_names = jQuery(div_id).val();
         var female_name = jQuery(div_id).data('related');
-        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Type, Min, Max (e.g. flower, 5, 30)</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>No. of Seeds</th><th>No. of Progenies</th></tr></thead><tbody>';
         for (var i=0; i<male_names.length; i++){
-            html = html + '<tr><td>' + male_names[i] + '</td><td><input class="form-control" male_name="' + male_names[i] + '" female_name="' + female_name + '" name ="wishlist_activity_info" id="wishlist_activity_info_'+ i +'" value="" placeholder=""/></td></tr>';
+            html = html + '<tr><td>' + male_names[i] + '</td><td><input class="form-control" male_name="' + male_names[i] + '" female_name="' + female_name + '" name ="seed_target_number" id="seed_target_number_'+ i +'" value="" placeholder=""/></td><td><input class="form-control" male_name="' + male_names[i] + '" female_name="' + female_name + '" name ="progeny_target_number" id="progeny_target_number_'+ i +'" value="" placeholder=""/></td></tr>';
         };
         html = html + '</tbody></table>';
         jQuery(select_id).html(html);
     };
+
+    jQuery('#target_numbers_submit').click(function(e){
+        e.preventDefault();
+        number_of_seeds = [];
+        number_of_progenies = [];
+
+        jQuery('input[name="seed_target_number"]').each(function() {
+            value = this.value;
+            var male_name = jQuery(this).attr('male_name');
+            var female_name = jQuery(this).attr('female_name');
+            number_of_seeds.push({ 'female_name':female_name, 'male_name':male_name, 'number_of_seeds':value });
+        });
+
+        jQuery('input[name="progeny_target_number"]').each(function() {
+            value = this.value;
+            var male_name = jQuery(this).attr('male_name');
+            var female_name = jQuery(this).attr('female_name');
+            number_of_progenies.push({ 'female_name':female_name, 'male_name':male_name, 'number_of_progenies':value });
+        });
+
+        jQuery.ajax({
+            url: '/ajax/crossing_experiment/record_target_numbers',
+            method: 'POST',
+            data: {
+                'number_of_seeds': JSON.stringify(number_of_seeds),
+                'number_of_progenies': JSON.stringify(number_of_progenies),
+                'crossing_experiment_id': crossing_experiment_id
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#record_target_numbers_message").modal("show");
+                    jQuery('#record_target_numbers_using_lists_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred storing target numbers.');
+                jQuery('#record_target_numbers_using_lists_dialog').modal("hide");
+            },
+        });
+    });
+
 
 
 

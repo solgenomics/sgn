@@ -174,7 +174,26 @@ sub upload_target_numbers_POST : Args(0) {
     $c->stash->{rest} = {success => "1",};
 }
 
-sub get_target_numbers_and_progress :Path('/ajax/cross/target_numbers_and_progress') Args(1) {
+
+sub record_target_numbers_using_lists : Path('/ajax/crossing_experiment/record_target_numbers') : ActionClass('REST') { }
+
+sub record_target_numbers_using_lists_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $crossing_experiment_id = $c->req->param('crossing_experiment_id');
+    my $number_of_seeds = decode_json $c->req->param('number_of_seeds');
+    my $number_of_progenies = decode_json $c->req->param('number_of_progenies');
+
+    print STDERR "EXPERIMENT ID =".Dumper($crossing_experiment_id)."\n";
+    print STDERR "NUMBER OF SEEDS =".Dumper($number_of_seeds)."\n";
+    print STDERR "NUMBER OF PROGENIES =".Dumper($number_of_progenies)."\n";
+
+    $c->stash->{rest} = {success => "1",};
+
+}
+
+sub get_target_numbers_and_progress :Path('/ajax/crossing_experiment/target_numbers_and_progress') Args(1) {
     my $self = shift;
     my $c = shift;
     my $crossing_experiment_id = shift;

@@ -15,7 +15,7 @@ $trial_id
                 <th>Actual No. of Seeds</th>
                 <th>Target No. of Progenies</th>
                 <th>Actual No. of Progenies</th>
-                <th>Cross Unique IDs</th>                
+                <th>Cross Unique IDs</th>
                 <th>Notes</th>
             </tr>
         </thead>
@@ -30,7 +30,7 @@ jQuery(document).ready(function(){
     jQuery('#target_numbers_crossingtrial_section_onswitch').click(function(){
         jQuery('#target_numbers_and_progress_table').DataTable({
             'destroy': true,
-            'ajax': '/ajax/cross/target_numbers_and_progress/'+ <% $trial_id %>,
+            'ajax': '/ajax/crossing_experiment/target_numbers_and_progress/'+ <% $trial_id %>,
 
         });
     });
