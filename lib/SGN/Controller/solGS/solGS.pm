@@ -514,15 +514,15 @@ sub input_files {
     }
     else
     {
-	my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+	my $training_pop_id = $c->stash->{training_pop_id};
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
 
 	$self->save_model_info_file($c);
 
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
 	my $geno_file   = $c->stash->{genotype_file_name};
 
-	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	my $pheno_file  = $c->stash->{phenotype_file_name};
 
 	$c->controller('solGS::Files')->model_info_file($c);
@@ -539,7 +539,9 @@ sub input_files {
 	    $selection_population_file = $c->stash->{selection_population_file};
 	}
 
+    my $trait_abbr    = $c->stash->{trait_abbr};
 	my $traits_file = $c->stash->{selected_traits_file};
+
 	no warnings 'uninitialized';
 
 	my $input_files = join ("\t",
@@ -551,7 +553,7 @@ sub input_files {
 				$selection_population_file,
 	    );
 
-	my $name = "input_files_${pop_id}";
+	my $name = "input_files_${trait_abbr}_${training_pop_id}";
 	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
 	my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
 	write_file($tempfile, {binmode => ':utf8'}, $input_files);
@@ -569,7 +571,7 @@ sub output_files {
     my $page_type = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
     my $analysis_type = $c->stash->{analysis_type}  || $page_type;
     $analysis_type =~ s/\s+/_/g;
-    my $trait    = $c->stash->{trait_abbr};
+    my $trait_abbr    = $c->stash->{trait_abbr};
     my $trait_id = $c->stash->{trait_id};
     $c->stash->{cache_dir} =  $c->stash->{solgs_cache_dir};
     $c->controller('solGS::Files')->marker_effects_file($c);
@@ -619,7 +621,7 @@ sub output_files {
                           $c->stash->{genotype_filtering_log_file},
         );
 
-    my $name = "output_files_${trait}_${training_pop_id}";
+    my $name = "output_files_${trait_abbr}_${training_pop_id}";
     $name .= "_${selection_pop_id}" if $selection_pop_id;
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);

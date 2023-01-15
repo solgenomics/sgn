@@ -1198,18 +1198,18 @@ sub combined_pops_gs_input_files {
 
     #$c->controller('solGS::solGS')->save_model_info_file($c);
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $trait_abbr = $c->stash->{trait_abbr};
-    my $trait_id   = $c->stash->{trait_id};
-
     $c->controller('solGS::Files')->model_info_file($c);
     my $model_info_file = $c->stash->{model_info_file};
 
-    my $dataset_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "dataset_info_${trait_id}");
+    my $trait_abbr = $c->stash->{trait_abbr};
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $dataset_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "dataset_info_${trait_abbr}");
     write_file($dataset_file, {binmode => ':utf8'}, 'combined_populations');
 
+    my $training_pop_id = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
     my $selection_population_file;
+
     if ($selection_pop_id)
     {
 		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
@@ -1224,7 +1224,7 @@ sub combined_pops_gs_input_files {
 			   $selection_population_file,
 	);
 
-    my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_combo_${trait_abbr}");
+    my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_${trait_abbr}_${training_pop_id}");
     write_file($input_file, {binmode => ':utf8'}, $input_files);
 
     $c->stash->{combined_pops_gs_input_files} = $input_file;
@@ -1455,10 +1455,10 @@ sub combine_trait_data_input {
         );
 
     my $temp_dir    = $c->stash->{solgs_tempfiles_dir};
-    my $tempfile_input = $c->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_${trait_id}_combine");
+    my $tempfile_input = $c->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_${trait_abbr}_${combo_pops_id}_combine");
     write_file($tempfile_input, {binmode => ':utf8'}, $input_files);
 
-    my $tempfile_output = $c->controller('solGS::Files')->create_tempfile($temp_dir, "output_files_${trait_id}_combine");
+    my $tempfile_output = $c->controller('solGS::Files')->create_tempfile($temp_dir, "output_files_${trait_abbr}_${combo_pops_id}_combine");
     write_file($tempfile_output, {binmode => ':utf8'}, $output_files);
 
     die "\nCan't call combine populations R script without a trait id." if !$trait_id;
@@ -1467,7 +1467,7 @@ sub combine_trait_data_input {
 
     $c->stash->{combine_input_files}  = $tempfile_input;
     $c->stash->{combine_output_files} = $tempfile_output;
-    $c->stash->{combine_r_temp_file}  = "combine-pops-${combo_pops_id}_${trait_id}";
+    $c->stash->{combine_r_temp_file}  = "combine-pops-${combo_pops_id}_${trait_abbr}";
 }
 
 
