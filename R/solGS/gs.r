@@ -63,7 +63,7 @@ if (length(datasetInfoFile) != 0 ) {
     datasetInfo <- scan(datasetInfoFile, what = "character")
     datasetInfo <- paste(datasetInfo, collapse = " ")
   } else {
-    datasetInfo <- c('single population')
+    datasetInfo <- c('single_population')
   }
 
 #validationTrait <- paste("validation", trait, sep = "_")
@@ -173,7 +173,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
 
 } else {
 
-    if (datasetInfo == 'combined populations') {
+    if (datasetInfo == 'combined_populations') {
 
          phenoFile <- grep("model_phenodata", inputFiles, value = TRUE)
     } else {
@@ -201,7 +201,7 @@ phenoTrait <- c()
 traitRawPhenoData <- c()
 anovaLog <- paste0("#Preprocessing training population phenotype data.\n\n")
 
-if (datasetInfo == 'combined populations') {
+if (datasetInfo == 'combined_populations') {
    anovaLog <- scan(analysisReportFile, what = "character", sep="\n")
   anovaLog <- paste0(anovaLog, collapse="\n")
 
