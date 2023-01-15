@@ -225,7 +225,7 @@ jQuery(document).ready(function () {
 
   var downloadMsgDiv = "#download_message";
   solGS.checkPageType().done(function (res) {
-    if (res.page_type.match(/training population/)) {
+    if (res.page_type.match(/training_population/)) {
       solGS.download.getTrainingPopRawDataFiles().done(function (res) {
         solGS.download.createTrainingPopDownloadLinks(res);
       });
@@ -269,7 +269,7 @@ jQuery(document).ready(function () {
         solGS.showMessage("#marker_effects_download_message", errorMsg);
 
       });
-    } else if (res.page_type.match(/selection population/)) {
+    } else if (res.page_type.match(/selection_population/)) {
         solGS.download.getSelectionPopRawDataFiles().done(function (res) {
           solGS.download.createSelectionPopDownloadLinks(res);
         });
