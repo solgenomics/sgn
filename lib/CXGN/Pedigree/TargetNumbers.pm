@@ -117,11 +117,11 @@ sub get_target_numbers_and_progress {
                 }
                 my $crosses_string = join("<br>", @crosses);
 
-                if ($total_number_of_seeds >= $seed_target_number) {
+                if (($total_number_of_seeds) && ($total_number_of_seeds >= $seed_target_number)) {
                     $seed_target_number = $seed_target_number.$checkmark;
                 }
 
-                if ($total_number_of_progenies >= $progeny_target_number) {
+                if (($total_number_of_progenies) && ($total_number_of_progenies >= $progeny_target_number)) {
                     $progeny_target_number = $progeny_target_number.$checkmark;
                 }
 

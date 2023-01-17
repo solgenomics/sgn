@@ -51,7 +51,7 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
 );
 
-sub upload_target_numbers : Path('/ajax/cross/upload_target_numbers') : ActionClass('REST'){ }
+sub upload_target_numbers : Path('/ajax/crossing_experiment/upload_target_numbers') : ActionClass('REST'){ }
 
 sub upload_target_numbers_POST : Args(0) {
     my $self = shift;

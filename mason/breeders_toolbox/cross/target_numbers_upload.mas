@@ -145,7 +145,7 @@ jQuery(document).ready(function(){
     jQuery("#upload_target_numbers_submit").click(function(){
         var uploadFile = jQuery("#target_numbers_file").val();
 
-        jQuery('#upload_target_numbers_form').attr("action", "/ajax/cross/upload_target_numbers");
+        jQuery('#upload_target_numbers_form').attr("action", "/ajax/crossing_experiment/upload_target_numbers");
 
 
         if (uploadFile === ''){
