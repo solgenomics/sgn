@@ -183,7 +183,7 @@ sub _retrieve_VectorType {
     my $self = shift;
     $self->VectorType($self->_retrieve_stockprop('VectorType'));
 }
-sub _retrieveGene_ {
+sub _retrieve_Gene {
     my $self = shift;
     $self->Gene($self->_retrieve_stockprop('Gene'));
 }

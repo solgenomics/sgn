@@ -41,6 +41,7 @@ use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
 use Try::Tiny;
+use CXGN::Metadata::Metadbdata;
 
 =head2 accessor schema()
 
