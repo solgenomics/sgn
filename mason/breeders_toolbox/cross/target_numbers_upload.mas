@@ -109,7 +109,6 @@ $trial_name
                                 <td>male_accession</td>
                                 <td>seed_target_number</td>
                                 <td>progeny_target_number</td>
-                                <td>notes</td>
                             </tr>
                         </tbody>
                     </table>
@@ -117,8 +116,7 @@ $trial_name
                     <ul>
                         <li>female_accession (must exist as uniquename in the database.)</li>
                         <li>male_accession (must exist as uniquename in the database.)</li>
-                        <li>Please indicate target number of seeds and/or target number of progenies</li>
-                        <li>notes (optional)</li>
+                        <li>Please indicate target number of seeds and/or target number of progenies for each cross combination</li>
                     </ul>
                     <br>
                 </div>

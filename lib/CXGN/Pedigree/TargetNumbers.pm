@@ -102,7 +102,6 @@ sub get_target_numbers_and_progress {
             foreach my $male_accession (keys %female_hash) {
                 my $seed_target_number = $female_hash{$male_accession}{'target_number_of_seeds'};
                 my $progeny_target_number = $female_hash{$male_accession}{'target_number_of_progenies'};
-                my $notes = $female_hash{$male_accession}{'notes'};
                 my $cross_info = $self->_get_cross_and_info($crossing_experiment_id, $female_accession, $male_accession);
 
                 my @cross_array = @$cross_info;
@@ -110,22 +109,27 @@ sub get_target_numbers_and_progress {
                 my $total_number_of_progenies;
                 my @crosses = ();
                 foreach my $cross (@cross_array) {
-                    $total_number_of_seeds += $cross->[2];
-                    $total_number_of_progenies += $cross->[3];
+                    if ($seed_target_number) {
+                        $total_number_of_seeds += $cross->[2];
+                    }
+                    if ($progeny_target_number) {
+                        $total_number_of_progenies += $cross->[3];
+                    }
+
                     my $cross_link = qq{<a href="/cross/$cross->[1]">$cross->[0]</a>};
                     push @crosses, $cross_link;
                 }
                 my $crosses_string = join("<br>", @crosses);
 
-                if (($total_number_of_seeds) && ($total_number_of_seeds >= $seed_target_number)) {
+                if (($seed_target_number) && ($total_number_of_seeds >= $seed_target_number)) {
                     $seed_target_number = $seed_target_number.$checkmark;
                 }
 
-                if (($total_number_of_progenies) && ($total_number_of_progenies >= $progeny_target_number)) {
+                if (($progeny_target_number) && ($total_number_of_progenies >= $progeny_target_number)) {
                     $progeny_target_number = $progeny_target_number.$checkmark;
                 }
 
-                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $total_number_of_progenies, $crosses_string, $notes];
+                push @crossing_experiment_target_numbers, [$female_accession, $male_accession, $seed_target_number, $total_number_of_seeds, $progeny_target_number, $total_number_of_progenies, $crosses_string];
             }
         }
     }
