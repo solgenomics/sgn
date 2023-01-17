@@ -96,10 +96,10 @@ sub get_target_numbers_and_progress {
         my $target_info = decode_json $prop_value;
         my %target_numbers_hash = %{$target_info};
 
-        foreach my $female_accession(keys %target_numbers_hash) {
+        foreach my $female_accession( sort keys %target_numbers_hash) {
             my $female_details = $target_numbers_hash{$female_accession};
             my %female_hash = %{$female_details};
-            foreach my $male_accession (keys %female_hash) {
+            foreach my $male_accession (sort keys %female_hash) {
                 my $seed_target_number = $female_hash{$male_accession}{'target_number_of_seeds'};
                 my $progeny_target_number = $female_hash{$male_accession}{'target_number_of_progenies'};
                 my $cross_info = $self->_get_cross_and_info($crossing_experiment_id, $female_accession, $male_accession);

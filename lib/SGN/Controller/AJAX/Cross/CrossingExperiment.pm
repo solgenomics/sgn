@@ -58,7 +58,6 @@ sub upload_target_numbers_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $target_numbers_experiment_id = $c->req->param('target_numbers_experiment_id');
     my $upload = $c->req->upload('target_numbers_file');
