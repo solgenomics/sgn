@@ -41,6 +41,7 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('redirect_uri') { #bre
             $c->stash->{client_id} = $client_id;
             $c->stash->{database_name} = $c->config->{project_name};
             $c->stash->{template} = '/brapi/authorize.mas';
+            return;
         }
     } else {
         $c->throw_404("No authorized client found with return url $redirect_uri. If you are an app developer please contact the BreedBase development team to become an authorized client.");
