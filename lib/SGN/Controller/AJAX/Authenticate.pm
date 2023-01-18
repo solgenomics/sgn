@@ -18,7 +18,7 @@ __PACKAGE__->config(
 sub authenticate_cookie  : Path('/authenticate/check/token') : ActionClass('REST') { }
 
 #
-sub authenticate_cookie_GET { 
+sub authenticate_cookie_GET {
     my $self = shift;
     my $c = shift;
     my $sgn_session_id = $c->req->param("cookie");
@@ -31,10 +31,10 @@ sub authenticate_cookie_GET {
 
     #my $person_id = CXGN::Login->new($dbh)->has_session();
     #my $p = CXGN::People::Login->new($dbh, $person_id);
-    #my @user_info = ({person_id=>$p->get_sp_person_id(), username=>$p->get_username(), role=>$p->get_roles()}); 
+    #my @user_info = ({person_id=>$p->get_sp_person_id(), username=>$p->get_username(), role=>$p->get_roles()});
 
     if ($cookie_info) {
-	my $q = "SELECT sp_person_id, username, first_name, last_name FROM sgn_people.sp_person WHERE cookie_string=?";
+	my $q = "SELECT sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN sgn_people.sp_token using(sp_person_id) WHERE sp_token.cookie_string=?";
 	my $sth = $dbh->prepare($q);
 	if ($sth->execute($sgn_session_id)) {
 	    while (my ($person_id, $username, $first_name, $last_name) = $sth->fetchrow_array ) {
@@ -42,7 +42,7 @@ sub authenticate_cookie_GET {
 	    }
 
 	    my @user_roles_list;
-	    my $q = "SELECT name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person as p using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id) WHERE p.cookie_string=?";
+	    my $q = "SELECT name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person as p using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id) JOIN sgn_people.sp_token as t on (p.sp_person_id = t.sp_person_id) WHERE t.cookie_string=?";
 	    my $sth = $dbh->prepare($q);
 	    if ($sth->execute($sgn_session_id)) {
 		while (my ($user_type) = $sth->fetchrow_array ) {
@@ -50,7 +50,7 @@ sub authenticate_cookie_GET {
 		}
 		@user_info = {person_id=>$user_info_list[0], username=>$user_info_list[1], first_name=>$user_info_list[2], last_name=>$user_info_list[3], roles=>\@user_roles_list};
 		$status = 'OK';
-		
+
 	    } else {
 		$status = 'Roles Not Found For User';
 	    }

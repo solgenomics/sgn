@@ -31,6 +31,7 @@ sub supported_features {
 
 sub get_object {
     my $self = shift;
+    my $c = shift;
     return $self->{user};
 }
 
