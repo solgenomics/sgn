@@ -214,5 +214,7 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_experiment_
 $response = decode_json $mech->content;
 is_deeply($message_hash, {'success' => 1});
 
+$f->clean_up_db();
+
 
 done_testing();
