@@ -49,11 +49,47 @@ sub store {
         my $target_numbers_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'target_numbers_json', 'project_property');
         my $experiment_prop_rs = $schema->resultset("Project::Projectprop")->find({project_id => $crossing_experiment_id, type_id => $target_numbers_cvterm->cvterm_id()});
         if ($experiment_prop_rs){
+            my %all_info;
             my $experiment_prop_id = $experiment_prop_rs->projectprop_id();
             my $previous_value = $experiment_prop_rs->value();
             my $previous_target_info = decode_json $previous_value;
-            my %all_target_info = (%{$previous_target_info}, %new_target_numbers_hash);
-            $target_numbers_json = encode_json \%all_target_info;
+            my %previous_hash = %{$previous_target_info};
+            foreach my $previous_female (keys %previous_hash) {
+                my %male_hash = ();
+                %male_hash = %{$previous_hash{$previous_female}};
+                foreach my $previous_male (keys %male_hash) {
+                    my %previous_details = ();
+                    %previous_details = %{$male_hash{$previous_male}};
+                    my $target_seeds = $previous_details{'target_number_of_seeds'};
+                    my $target_progenies = $previous_details{'target_number_of_progenies'};
+                    if ($target_seeds) {
+                        $all_info{$previous_female}{$previous_male}{'target_number_of_seeds'} = $target_seeds;
+                    }
+                    if ($target_progenies) {
+                        $all_info{$previous_female}{$previous_male}{'target_number_of_progenies'} = $target_progenies;
+                    }
+                }
+            }
+
+            foreach my $new_female (keys %new_target_numbers_hash) {
+                my %new_male_hash = ();
+                %new_male_hash = %{$new_target_numbers_hash{$new_female}};
+                foreach my $new_male (keys %new_male_hash) {
+                    my %new_details = ();
+                    %new_details = %{$new_male_hash{$new_male}};
+                    my $new_target_seeds = $new_details{'target_number_of_seeds'};
+                    my $new_target_progenies = $new_details{'target_number_of_progenies'};
+
+                    if ($new_target_seeds) {
+                        $all_info{$new_female}{$new_male}{'target_number_of_seeds'} = $new_target_seeds;
+                    }
+                    if ($new_target_progenies) {
+                        $all_info{$new_female}{$new_male}{'target_number_of_progenies'} = $new_target_progenies;
+                    }
+                }
+            }
+
+            $target_numbers_json = encode_json \%all_info;
             $experiment_prop_rs->update({value=>$target_numbers_json});
 
         } else {
