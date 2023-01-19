@@ -37,21 +37,6 @@ has 'owner_sp_person' => (
     builder => '_build_owner_sp_person',
 );
 
-has 'accessionNumber' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-    lazy     => 1,
-    builder  => '_retrieve_accessionNumber',
-);
-
-has 'synonyms' => (
-    isa => 'Maybe[ArrayRef[Str]]',
-    is => 'rw',
-    lazy     => 1,
-    builder  => '_retrieve_synonyms',
-);
-
-
 has 'Strain' => (
     isa => 'Maybe[Str]',
     is => 'rw',
@@ -123,13 +108,6 @@ has 'Terminators' => (
 );
 
 
-has 'transgenic' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-    lazy     => 1,
-    builder  => '_retrieve_transgenic',
-);
-
 has 'other_editable_stock_props' => (
     isa => 'Maybe[HashRef]',
     is => 'rw'
@@ -140,17 +118,6 @@ sub BUILD {
 
 }
 
-
-sub _retrieve_accessionNumber {
-    my $self = shift;
-    $self->accessionNumber($self->_retrieve_stockprop('accession number'));
-}
-
-sub _retrieve_synonyms {
-    my $self = shift;
-    my @synonyms = $self->_retrieve_stockprop('stock_synonym') ? split ',', $self->_retrieve_stockprop('stock_synonym') : ();
-    $self->synonyms(\@synonyms);
-}
 
 
 sub _retrieve_Strain {
@@ -199,12 +166,6 @@ sub _retrieve_Terminators {
 
 
 
-sub _retrieve_transgenic {
-    my $self = shift;
-    $self->transgenic($self->_retrieve_stockprop('transgenic'));
-}
-
-
 =head2 store()
 
  Usage:        my $stock_id = $vector->store();
@@ -222,16 +183,6 @@ sub store {
     print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
 
     my $id = $self->SUPER::store();
-
-    if ($self->accessionNumber){
-        $self->_store_stockprop('accession number', $self->accessionNumber);
-    }
-    if ($self->synonyms){
-        foreach (@{$self->synonyms}){
-            $self->_store_stockprop('stock_synonym', $_);
-        }
-    }
-
 
     if ($self->Strain){
         $self->_store_stockprop('Strain', $self->Strain);
@@ -266,11 +217,6 @@ sub store {
     }
     if ($self->Terminators){
         $self->_store_stockprop('Terminators', $self->Terminators);
-    }
-
-
-    if ($self->transgenic){
-        $self->_store_stockprop('transgenic', $self->transgenic);
     }
 
     if ($self->other_editable_stock_props){
