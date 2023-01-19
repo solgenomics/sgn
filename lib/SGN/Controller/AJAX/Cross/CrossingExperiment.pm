@@ -185,15 +185,21 @@ sub record_target_numbers_using_lists_POST : Args(0) {
     my $number_of_progenies = decode_json $c->req->param('number_of_progenies');
 
     my %target_numbers_hash;
-    foreach my$seed_info_hash (@$number_of_seeds) {
-        $target_numbers_hash{$seed_info_hash->{female_name}}{$seed_info_hash->{male_name}}{'target_number_of_seeds'} = $seed_info_hash->{number_of_seeds};
+    foreach my $seed_info_hash (@$number_of_seeds) {
+        my $number_of_seeds = $seed_info_hash->{'number_of_seeds'};
+        if ($number_of_seeds) {
+            $target_numbers_hash{$seed_info_hash->{'female_name'}}{$seed_info_hash->{'male_name'}}{'target_number_of_seeds'} = $number_of_seeds;
+        }
     }
 
-    foreach my$progeny_info_hash (@$number_of_progenies) {
-        $target_numbers_hash{$progeny_info_hash->{female_name}}{$progeny_info_hash->{male_name}}{'target_number_of_progenies'} = $progeny_info_hash->{number_of_progenies};
+    foreach my $progeny_info_hash (@$number_of_progenies) {
+        my $number_of_progenies = $progeny_info_hash->{'number_of_progenies'};
+        if ($number_of_progenies) {
+            $target_numbers_hash{$progeny_info_hash->{'female_name'}}{$progeny_info_hash->{'male_name'}}{'target_number_of_progenies'} = $number_of_progenies;
+        }
     }
 
-    print STDERR "TARGET NUMBERS HASH =".Dumper(\%target_numbers_hash)."\n";
+#    print STDERR "TARGET NUMBERS HASH =".Dumper(\%target_numbers_hash)."\n";
     my $targets = CXGN::Pedigree::TargetNumbers->new({ chado_schema => $schema, crossing_experiment_id => $crossing_experiment_id, target_numbers => \%target_numbers_hash });
     $targets->store();
 

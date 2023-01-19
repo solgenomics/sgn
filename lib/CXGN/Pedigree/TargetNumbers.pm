@@ -52,9 +52,7 @@ sub store {
             my $experiment_prop_id = $experiment_prop_rs->projectprop_id();
             my $previous_value = $experiment_prop_rs->value();
             my $previous_target_info = decode_json $previous_value;
-            print STDERR "PREVIOUS TARGET INFO =".Dumper($previous_target_info)."\n";
             my %all_target_info = (%{$previous_target_info}, %new_target_numbers_hash);
-            print STDERR "UPDATED TARGET INFO =".Dumper(\%all_target_info)."\n";
             $target_numbers_json = encode_json \%all_target_info;
             $experiment_prop_rs->update({value=>$target_numbers_json});
 

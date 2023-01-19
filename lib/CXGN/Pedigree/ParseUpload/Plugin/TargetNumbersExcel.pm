@@ -48,7 +48,7 @@ sub _validate_with_plugin {
 
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of target number info
+    if (($col_max - $col_min)  < 3 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of target number info
         push @error_messages, "Spreadsheet is missing header or no target number data";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -63,18 +63,22 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $female_accession_head  = $worksheet->get_cell(0,0)->value();
+        $female_accession_head =~ s/^\s+|\s+$//g;
     }
 
     if ($worksheet->get_cell(0,1)) {
         $male_accession_head  = $worksheet->get_cell(0,1)->value();
+        $male_accession_head =~ s/^\s+|\s+$//g;
     }
 
     if ($worksheet->get_cell(0,2)) {
         $seed_target_number_head  = $worksheet->get_cell(0,2)->value();
+        $seed_target_number_head =~ s/^\s+|\s+$//g;
     }
 
     if ($worksheet->get_cell(0,3)) {
         $progeny_target_number_head  = $worksheet->get_cell(0,3)->value();
+        $progeny_target_number_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$female_accession_head || $female_accession_head ne 'female_accession' ) {
@@ -219,8 +223,12 @@ sub _parse_with_plugin {
             $progeny_target_number =~ s/^\s+|\s+$//g;
         }
 
-        $target_number_info{$female_accession}{$male_accession}{'target_number_of_seeds'} = $seed_target_number;
-        $target_number_info{$female_accession}{$male_accession}{'target_number_of_progenies'} = $progeny_target_number;
+        if ($seed_target_number) {
+            $target_number_info{$female_accession}{$male_accession}{'target_number_of_seeds'} = $seed_target_number;
+        }
+        if ($progeny_target_number) {
+            $target_number_info{$female_accession}{$male_accession}{'target_number_of_progenies'} = $progeny_target_number;
+        }
 
     }
 
