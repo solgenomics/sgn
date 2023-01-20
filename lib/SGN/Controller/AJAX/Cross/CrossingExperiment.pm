@@ -26,23 +26,16 @@ use File::Spec::Functions;
 use Digest::MD5;
 use List::MoreUtils qw /any /;
 use List::MoreUtils 'none';
-use Bio::GeneticRelationships::Pedigree;
-use Bio::GeneticRelationships::Individual;
 use CXGN::UploadFile;
 use CXGN::Pedigree::ParseUpload;
-use CXGN::List::Validate;
-use CXGN::List;
 use CXGN::Pedigree::TargetNumbers;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
-use CXGN::Cross;
 use JSON;
-use SGN::Model::Cvterm;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use URI::Encode qw(uri_encode uri_decode);
-use Sort::Key::Natural qw(natsort);
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(

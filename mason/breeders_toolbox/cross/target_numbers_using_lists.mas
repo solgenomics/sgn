@@ -26,17 +26,16 @@ $trial_id
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-11">
-                            <&| /page/explanation.mas, title=>'Information' &>
+                            <&| /page/explanation.mas, title=>'' &>
                                 <p>
-                                    <b>File Information</b>
                                     <br>
-                                    <a id="target_number_info">Target Numbers</a>
+                                    <a id="target_numbers_list_info">List Information   </a>
                                     <br>
                                 </p>
                             </&>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="control-label col-sm-3">Female parents:</label>
+                                    <label class="control-label col-sm-3">Female Parents:</label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
                                             <select class="form-control" id="target_numbers_female_list_select"></select>
@@ -44,7 +43,7 @@ $trial_id
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="control-label col-sm-3">Male parents:</label>
+                                    <label class="control-label col-sm-3">Male Parents:</label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
                                             <select class="form-control" id="target_numbers_male_list_select"></select>
@@ -90,25 +89,19 @@ $trial_id
     </div>
 </div>
 
-<div class="modal fade" id="target_numbers_info_dialog" name="target_numbers_info_dialog" tabindex="-1" role="dialog" aria-labelledby="targetNumbersInfoDialog">
+<div class="modal fade" id="target_numbers_list_info_dialog" name="target_numbers_list_info_dialog" tabindex="-1" role="dialog" aria-labelledby="targetNumbersListInfoDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="targetNumbersInfoDialog">Target Numbers</h4>
+                <h4 class="modal-title" id="targetNumbersListInfoDialog">List Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-
-                    <ul>
-                        <li><b>femaleDbId:</b> stock_id of female parent in the database.</li>
-                        <li><b>maleDbId:</b> stock_id of male parent in the database</li>
-                        <li><b>femaleName:</b> female uniquename in the database.</li>
-                        <li><b>maleName:</b> male uniquename in the database.</li>
-                        <li><b>wishType:</b> type of field crossing data (must be one of these types: flower, fruit, seed).</li>
-                        <li><b>wishMin:</b> expected minimum number of the specified type.</li>
-                        <li><b>wishMax:</b> expected maximum number of the specified type.</li>
-                    </ul>
+                    <h4>
+                        List of Female Parents and List of Male Parents:
+                    </h4>
+                    <p>Lists must be 'accessions' list type and all of the female and male parents in the lists must exist as uniquenames in the database.</p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -122,6 +115,10 @@ $trial_id
 <script>
 
 jQuery(document).ready(function(){
+
+    jQuery('#target_numbers_list_info').click(function(){
+        jQuery("#target_numbers_list_info_dialog").modal("show");
+    });
 
     var crossing_experiment_id = "<% $trial_id %>";
     var lo = new CXGN.List();

@@ -3,8 +3,6 @@ package CXGN::Pedigree::ParseUpload::Plugin::TargetNumbersExcel;
 use Moose::Role;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
-use CXGN::Stock::StockLookup;
-use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
