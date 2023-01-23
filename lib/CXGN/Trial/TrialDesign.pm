@@ -232,7 +232,6 @@ sub _convert_plot_numbers {
 	  }
       }
   }
-
   else {
       print STDERR "consecutive plot numbers selected - generating consecutive numbers...\n";
       
@@ -257,7 +256,6 @@ sub _convert_plot_numbers {
 	  }
 	  $plot_numbers[$i] = $plot_number;
       }
-
   }
 
   print STDERR "PLOT NUMBERS GENERATED: ".Dumper(\@plot_numbers);
