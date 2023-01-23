@@ -790,3 +790,12 @@ project_md_image	image_analysis_necrosis_solomon_nsumba	Image analysis necrosis 
 project_md_image	image_analysis_white_fly_count_solomon_nsumba	Image analysis white fly count as implemented in Solomon's service	08/19/2019	nm529	00114
 project_md_image	standard_process_interactive_match_temporary_drone_imagery	Standard interactive process for drone imagery showing the match of captures	07/06/2020	nm529	00126
 project_md_image	standard_process_interactive_align_temporary_drone_imagery	Standard interactive process for drone imagery showing the alignment of captures	07/06/2020	nm529	00126
+stock_property strain	Vector property 1/19/2023	mrf252	00164	
+stock_property Backbone	Vector property 1/19/2023	mrf252	00164	
+stock_property CloningOrganism	Vector property 1/19/2023	mrf252	00164	
+stock_property InherentMarker	Vector property 1/19/2023	mrf252	00164	
+stock_property SelectionMarker	Vector property 1/19/2023	mrf252	00164	
+stock_property CassetteName	Vector property 1/19/2023	mrf252	00164	
+stock_property Gene	Vector property 1/19/2023	mrf252	00164	
+stock_property Promotors	Vector property 1/19/2023	mrf252	00164	
+stock_property Terminators	Vector property 1/19/2023	mrf252	00164	
