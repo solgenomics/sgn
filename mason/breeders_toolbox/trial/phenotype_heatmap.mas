@@ -671,6 +671,7 @@ jQuery(document).ready( function() {
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
             method: 'GET',
             url: '/brapi/v2/observationunits',
+            timeout: 100000,
             data: {
                 studyDbIds: trial_ids,
                 observationUnitLevelName: 'plot',
@@ -717,6 +718,7 @@ jQuery(document).ready( function() {
             jQuery.ajax({
                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
                 url: '/brapi/v2/observations?studyDbId='+trial_id+'&pageSize=10000',
+                timeout: 100000,
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -1050,6 +1052,7 @@ jQuery(document).ready( function() {
         jQuery.ajax ( {
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
             url: '/brapi/v1/studies/'+ <% $trial_id %> +'/observationvariables?pageSize=1000000',
+            timeout: 100000,
             //url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
             beforeSend: function() {
               jQuery("#working_modal").modal("show");
