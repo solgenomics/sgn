@@ -61,7 +61,7 @@ sub _validate_with_plugin {
     }
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 3 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
+    if (($col_max - $col_min)  < 4 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
         push @error_messages, "Spreadsheet is missing header or contains no row";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -77,18 +77,23 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $cross_name_head  = $worksheet->get_cell(0,0)->value();
+        $cross_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $cross_combination_head  = $worksheet->get_cell(0,1)->value();
+        $cross_combination_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $cross_type_head  = $worksheet->get_cell(0,2)->value();
+        $cross_type_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $female_parent_head  = $worksheet->get_cell(0,3)->value();
+        $female_parent_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $male_parent_head  = $worksheet->get_cell(0,4)->value();
+        $male_parent_head =~ s/^\s+|\s+$//g;
     }
 
 
@@ -117,8 +122,9 @@ sub _validate_with_plugin {
     for my $column (5 .. $col_max){
         if ($worksheet->get_cell(0, $column)) {
             my $header_string = $worksheet->get_cell(0,$column)->value();
+            $header_string =~ s/^\s+|\s+$//g;
 
-            if (!$valid_additional_info{$header_string}){
+            if (($header_string) && (!$valid_additional_info{$header_string})){
                 push @error_messages, "Invalid info type: $header_string";
             }
         }
@@ -141,9 +147,11 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,1)) {
             $cross_combination =  $worksheet->get_cell($row,1)->value();
+            $cross_combination =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $cross_type = $worksheet->get_cell($row,2)->value();
+            $cross_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $female_parent =  $worksheet->get_cell($row,3)->value();
@@ -290,13 +298,15 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $cross_name = $worksheet->get_cell($row,0)->value();
-            $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
+            $cross_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $cross_combination =  $worksheet->get_cell($row,1)->value();
+            $cross_combination =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $cross_type = $worksheet->get_cell($row,2)->value();
+            $cross_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $female_parent =  $worksheet->get_cell($row,3)->value();

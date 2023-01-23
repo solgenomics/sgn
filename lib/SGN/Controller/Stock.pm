@@ -248,6 +248,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
 	my $editable_stockprops = $c->get_conf('editable_stock_props');
 	$editable_stockprops .= ",PUI,organization";
+    my $editable_vectorprops = $c->get_conf('editable_vector_props');
 
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
@@ -284,7 +285,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		has_descendants => $c->stash->{has_descendants},
 		trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
 		editable_stock_props   => $editable_stockprops,
-
+		editable_vector_props   => $editable_vectorprops,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
