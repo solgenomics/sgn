@@ -58,6 +58,7 @@ jQuery(document).ready(function ($) {
         var stock_type = $("#select_stock_type").val();
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
+	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_block_based_numbers"]:checked').val();
         plants_per_plot = $("#add_plant_entries").val();
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
@@ -482,6 +483,7 @@ jQuery(document).ready(function ($) {
 
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
+
     function generate_experimental_design() {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
@@ -496,6 +498,7 @@ jQuery(document).ready(function ($) {
         var row_number_per_block=$('#row_number_per_block').val();
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
+	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_block_based_numbers"]:checked').val();
        // alert(row_number);
 
         var stock_list_id;
@@ -635,6 +638,8 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
+	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_block_based_numbers"]:checked').val();
+	alert('Consecutive? '+consecutive_or_block_based_numbers);
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -686,7 +691,8 @@ jQuery(document).ready(function ($) {
                 'field_size': field_size,
                 'plot_width': plot_width,
                 'plot_length': plot_length,
-                'use_same_layout' : use_same_layout
+                'use_same_layout' : use_same_layout,
+		'consecutive_or_block_based_numbers' : consecutive_or_block_based_numbers
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -2051,7 +2057,6 @@ jQuery(document).ready(function ($) {
         var max_block_size = jQuery('#max_block_size').val();
         var plot_prefix = jQuery('#plot_prefix').val();
         var start_number = jQuery('#start_number').val();
-	var consecutive_or_block_based_number = jQuery('input[name="consecutive_or_black_based_number"]:checked').val();
         var increment = jQuery('#increment').val();
         var breeding_program_name = jQuery('#select_breeding_program').val();
         var fieldmap_col_number = jQuery('#fieldMap_col_number').val();
@@ -2081,6 +2086,8 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
+	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_black_based_numbers"]:checked').val();
+
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,
@@ -2105,7 +2112,7 @@ jQuery(document).ready(function ($) {
                 'block_size': block_size,
                 'max_block_size': max_block_size,
                 'plot_prefix': plot_prefix,
-                'consecutive_or_block_based_number' : consecutive_or_block_based_number,
+                'consecutive_or_block_based_numbers' : consecutive_or_block_based_numbers,
                 'start_number': start_number,
                 'increment': increment,
                 'design_json': design_json,

@@ -64,6 +64,7 @@ sub create_design {
 
   my $plot_start = $self->get_plot_start_number();
   my $serie;
+
   if($plot_start == 1){
       $serie = 1;
   }elsif($plot_start == 101){
@@ -72,6 +73,11 @@ sub create_design {
       $serie = 3;
   }
 
+  if ($self->get_consecutive_or_block_based_numbers() ne "block_based_plot_numbers") {
+      $plot_start = 1;
+      $serie = 1;
+  }
+  
   $r_block = $rbase->create_block('r_block');
   $stock_data_matrix->send_rbase($rbase, 'r_block');
   $r_block->add_command('library(agricolae)');

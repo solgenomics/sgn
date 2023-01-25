@@ -83,6 +83,11 @@ sub generate_experimental_design_POST : Args(0) {
     my $design_layout_view_html;
     my $design_info_view_html;
     my $design_map_view;
+
+    my $consecutive_or_block_based_names = $c->req->param('consecutive_or_block_based_names') || 'block_based_plot_names';
+    print STDERR "Setting consecutive_or_block_based_names to $consecutive_or_block_based_names\n";
+    $trial_design->set_consecutive_or_block_based_names($consecutive_or_block_based_names);
+    
     if ($c->req->param('stock_list')) {
 	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -110,7 +115,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
     my $start_number =  $c->req->param('start_number');
-    my $consecutive_or_plot_based_number = $c->req->param('consecutive_or_plot_based_number');
+    my $consecutive_or_plot_based_numbers = $c->req->param('consecutive_or_plot_based_numbers');
     my $increment =  $c->req->param('increment') ? $c->req->param('increment') : 1;
     my $trial_location = $c->req->param('trial_location');
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');

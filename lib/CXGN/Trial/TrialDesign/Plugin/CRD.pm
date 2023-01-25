@@ -87,12 +87,16 @@ sub create_design {
         $r_block->add_command('rep_vector <- rep('.$number_of_reps.',each='.$number_of_stocks.')');
         $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
 
+	my $serie = 1;
+	if ($self->get_consecutive_or_block_based_numbers() eq "block_based_plot_numbers") {
+	    $serie = 3;
+	}
         if ($self->has_randomization_seed()){
             $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=3,kinds=randomization_method, seed=randomization_seed)');
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie='.$serie.',kinds=randomization_method, seed=randomization_seed)');
         }
         else {
-            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=3,kinds=randomization_method)');
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie='.$serie.',kinds=randomization_method)');
         }
         $r_block->add_command('crd<-crd$book'); #added for agricolae 1.1-8 changes in output
         $r_block->add_command('crd<-as.matrix(crd)');
