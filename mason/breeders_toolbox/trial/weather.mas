@@ -7,7 +7,7 @@ $location
 <script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
 
-  jQuery.getJSON("http://weather.rtbbase.org/rest/locations",function(data){
+  jQuery.getJSON("https://weather.rtbbase.org/rest/locations",function(data){
     console.log("got data back, here it is: "+data);
     var trial_location = "<% $location %>";
     var locations = data;
