@@ -151,12 +151,30 @@ sub validate {
         return \%parse_result;
     }
 
-    if ( $columns[0] ne "transcript_name" ||
-        $columns[1] ne "chromosome" ||
-        $columns[2] ne "start_position" ||
-        $columns[3] ne "end_position" ||
-        $columns[4] ne "gene_description" ||
-        $columns[5] ne "notes") {
+    my $transcript_name_head = $columns[0];
+    $transcript_name_head =~ s/^\s+|\s+$//g;
+
+    my $chromosome_head = $columns[1];
+    $chromosome_head =~ s/^\s+|\s+$//g;
+
+    my $start_position_head = $columns[2];
+    $start_position_head =~ s/^\s+|\s+$//g;
+
+    my $end_position_head = $columns[3];
+    $end_position_head =~ s/^\s+|\s+$//g;
+
+    my $gene_description_head = $columns[4];
+    $gene_description_head =~ s/^\s+|\s+$//g;
+
+    my $notes_head = $columns[5];
+    $notes_head =~ s/^\s+|\s+$//g; 
+
+    if ($transcript_name_head  ne "transcript_name" ||
+        $chromosome_head ne "chromosome" ||
+        $start_position_head ne "start_position" ||
+        $end_position_head ne "end_position" ||
+        $gene_description_head ne "gene_description" ||
+        $notes_head ne "notes") {
       $parse_result{'error'} = "Header row must be 'transcript_name', 'chromosome', 'start_position', 'end_position', 'gene_description', 'notes'. Please, check your file.";
       return \%parse_result;
     }
