@@ -75,10 +75,12 @@ sub validate {
     my $name_head;
     if ($worksheet->get_cell(6,0)) {
       $name_head  = $worksheet->get_cell(6,0)->value();
+      $name_head =~ s/^\s+|\s+$//g;
     }
     my $design_type;
     if ($worksheet->get_cell(3,3)) {
       $design_type  = $worksheet->get_cell(3,3)->value();
+      $design_type =~ s/^\s+|\s+$//g;
     }
     if (!$design_type ) {
         $parse_result{'error'} = "No design type in header. Make sure you are using the correct spreadsheet format. It may help to recreate your spreadsheet from the website.";

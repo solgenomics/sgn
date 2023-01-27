@@ -86,6 +86,7 @@ sub validate {
     }
 
     my $header_col_1 = shift @columns;
+    $header_col_1 =~ s/^\s+|\s+$//g;
     if ( $header_col_1 ne "sample_name" ) {
       $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
       print STDERR "First cell must be 'sample_name'\n";
@@ -93,6 +94,7 @@ sub validate {
     }
 
     my $header_col_2 = shift @columns;
+    $header_col_2 =~ s/^\s+|\s+$//g;
     if ($header_col_2 ne "device_id") {
         $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
         print STDERR "Second cell must be 'device_id'\n";
@@ -100,6 +102,7 @@ sub validate {
     }
 
     my $header_col_3 = shift @columns;
+    $header_col_3 =~ s/^\s+|\s+$//g;
     if ($header_col_3 ne "comments") {
         $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
         print STDERR "Third cell must be 'comments'\n";
@@ -115,6 +118,7 @@ sub validate {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        $sample_name =~ s/^\s+|\s+$//g;
         my $device_id = shift @fields;
         my $comments = shift @fields;
         push @samples, $sample_name;
