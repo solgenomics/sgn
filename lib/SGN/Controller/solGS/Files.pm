@@ -619,7 +619,7 @@ sub rrblup_training_gebvs_file {
     my $file_id = "$identifier-${trait_abbr}-GP-${protocol_id}";
 
     my $cache_data = {key       => 'rrblup_training_gebvs_' . $file_id,
-                      file      => 'rrblup_training_gebvs_' . $file_id ,
+                      file      => 'rrblup_training_gebvs_' . $file_id,
                       stash_key => 'rrblup_training_gebvs_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -751,14 +751,20 @@ sub cache_file {
     unless (-s $file)
     { 
         $file = catfile($cache_dir, $cache_data->{file});
-        my $ext = $cache_data->{ext};
-        if ($ext) {
-            if ($ext !~ /^\./) { $ext = '.' . $ext}
-        } else {
-            $ext = '.txt';
-        }
 
-        $file = $file . $ext;
+         if ($file !~ /(\.\w+)/) 
+        {
+            my $ext = $cache_data->{ext};
+            if ($ext) 
+            {
+                if ($ext !~ /^\./) { $ext = '.' . $ext}
+            } 
+            else 
+            {          
+                $ext = '.txt';
+            }
+            $file = $file . $ext;
+        }
         write_file($file, {binmode => ':utf8'});
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }
