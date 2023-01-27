@@ -573,17 +573,15 @@ HTML
     my $sp_person_id = $c->user->get_object->get_sp_person_id;
     my $username = $c->user->get_username();
     $html = <<HTML;
-  <li>
       <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
 	<button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
 	<button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
-        Lists <span class="glyphicon glyphicon-list-alt" ></span>
-	</button>
-	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
-	</button>
+        Lists <span class="glyphicon glyphicon-list-alt" ></span></button>
+	<button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
+              <span class="glyphicon glyphicon-list-alt" ></span>&nbsp;<span class="hidden-sm">Datasets</span></button>
+	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span></button>
 	<button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
       </div>
-  </li>
 HTML
 
   } else {
