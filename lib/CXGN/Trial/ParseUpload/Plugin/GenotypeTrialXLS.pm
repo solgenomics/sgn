@@ -468,7 +468,7 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,12)) {
             $volume = $worksheet->get_cell($row,12)->value();
-            $volumn =~ s/^\s+|\s+$//g;
+            $volume =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,13)) {
             $is_blank = $worksheet->get_cell($row,13)->value();
