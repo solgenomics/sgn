@@ -89,9 +89,9 @@ $training_pop_id = $pop_id;
   &>
 
 
-  <& /tools/heritability/heritability.mas,
+  <!-- <& /tools/heritability/heritability.mas,
      pop_id  => $training_pop_id,
-    &>
+    &> -->
 
 %}
 
