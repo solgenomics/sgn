@@ -100,10 +100,6 @@ sub create_hyperlink {
 sub page_type {
 	my ($self, $c, $url) = @_;
 
-	# my $path = $c->req->path;
-	my $type;
-
-    print STDERR "\nurl: $url\n";
     my $model_pages = '/solgs/trait'
     . '|/solgs/traits/all/'
     . '|/solgs/model/combined/trials/'
@@ -115,13 +111,14 @@ sub page_type {
 	my $training_pop_pages = '/solgs/population/'
 	. '|/solgs/populations/combined/';
 
+	my $type;
 	if ($url =~ $model_pages)
 	{
 		$type = 'training_model';
 	}
 	elsif ($url =~ $selection_pop_pages)
 	{
-		$type = 'selection_population';
+		$type = 'selection_prediction';
 	}
 	elsif ($url =~ $training_pop_pages) {
 		$type = 'training_population';
