@@ -825,6 +825,7 @@ solGS.getTrainingPopArgs = function () {
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
     genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
+    data_set_type: jQuery("#data_set_type").val()
   };
 
   return args;
