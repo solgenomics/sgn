@@ -2169,4 +2169,23 @@ sub get_accessions_with_pedigree_GET {
 }
 
 
+sub get_accessions_missing_pedigree : Path('/ajax/stock/accessions_missing_pedigree') : ActionClass('REST') { }
+
+sub get_accessions_missing_pedigree_GET {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $result = CXGN::Cross->get_accessions_missing_pedigree($schema);
+
+    my @accessions_missing_pedigree;
+    foreach my $accession_info (@$result){
+        my ($accession_id, $accession_name) =@$accession_info;
+        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>},
+    }
+    $c->stash->{rest} = { data => \@accessions_missing_pedigree };
+}
+
+
+
 1;
