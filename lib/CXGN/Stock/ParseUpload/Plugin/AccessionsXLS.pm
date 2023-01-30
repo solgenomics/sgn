@@ -66,18 +66,23 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $accession_name_head  = $worksheet->get_cell(0,0)->value();
+        $accession_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $species_name_head  = $worksheet->get_cell(0,1)->value();
+        $species_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $population_name_head  = $worksheet->get_cell(0,2)->value();
+        $population_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $organization_name_head  = $worksheet->get_cell(0,3)->value();
+        $organization_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $synonyms_head  = $worksheet->get_cell(0,4)->value();
+        $synonyms_head =~ s/^\s+|\s+$//g;
     }
     push @$editable_stockprops, ('location_code(s)','ploidy_level(s)','genome_structure(s)','variety(s)','donor(s)','donor_institute(s)','donor_PUI(s)','country_of_origin(s)','state(s)','institute_code(s)','institute_name(s)','biological_status_of_accession_code(s)','notes(s)','accession_number(s)','PUI(s)','seed_source(s)','type_of_germplasm_storage_code(s)','acquisition_date(s)','transgenic','introgression_parent','introgression_backcross_parent','introgression_map_version','introgression_chromosome','introgression_start_position_bp','introgression_end_position_bp');
     my %allowed_stockprops_head = map { $_ => 1 } @$editable_stockprops;
@@ -303,12 +308,15 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,1)) {
             $species_name = $worksheet->get_cell($row,1)->value();
+            $species_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $population_name = $worksheet->get_cell($row,2)->value();
+            $population_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $organization_name = $worksheet->get_cell($row,3)->value();
+            $organization_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
             @synonyms = split ',', $worksheet->get_cell($row,4)->value();
@@ -385,6 +393,7 @@ sub _parse_with_plugin {
     #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
+    s/^\s+|\s+$//g for @synonyms_list;
 
     if ($do_fuzzy_search) {
         my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
@@ -435,7 +444,7 @@ sub _parse_with_plugin {
         fuzzy_organisms => $fuzzy_organisms,
         absent_organisms => $absent_organisms
     );
-    print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";             
+    print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";
 
     $self->_set_parsed_data(\%return_data);
     return 1;

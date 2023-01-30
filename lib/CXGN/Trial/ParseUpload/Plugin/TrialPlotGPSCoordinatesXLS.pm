@@ -68,30 +68,39 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
+        $plot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $WGS84_bottom_left_x_head  = $worksheet->get_cell(0,1)->value();
+        $WGS84_bottom_left_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $WGS84_bottom_left_y_head  = $worksheet->get_cell(0,2)->value();
+        $WGS84_bottom_left_y_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $WGS84_bottom_right_x_head  = $worksheet->get_cell(0,3)->value();
+        $WGS84_bottom_right_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $WGS84_bottom_right_y_head  = $worksheet->get_cell(0,4)->value();
+        $WGS84_bottom_right_y_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $WGS84_top_right_x_head  = $worksheet->get_cell(0,5)->value();
+        $WGS84_top_right_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $WGS84_top_right_y_head  = $worksheet->get_cell(0,6)->value();
+        $WGS84_top_right_y_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
         $WGS84_top_left_x_head  = $worksheet->get_cell(0,7)->value();
+        $WGS84_top_left_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,8)) {
         $WGS84_top_left_y_head  = $worksheet->get_cell(0,8)->value();
+        $WGS84_top_left_y_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
@@ -137,6 +146,7 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $WGS84_bottom_left_x = $worksheet->get_cell($row,1)->value();
@@ -254,6 +264,7 @@ sub _parse_with_plugin {
         my $plot_name;
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
             $seen_plot_names{$plot_name}++;
         }
     }
@@ -279,6 +290,7 @@ sub _parse_with_plugin {
         my $WGS84_top_left_y;
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $WGS84_bottom_left_x = $worksheet->get_cell($row,1)->value();
