@@ -289,7 +289,6 @@ sub analysis_report_file {
 
     my $page_type = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
     my $analysis_type = $c->stash->{analysis_type}  || $page_type;
-    my $analysis_type      = $c->stash->{analysis_type};
     $analysis_type =~ s/\s+/_/g;
 
     my $cache_dir = $c->stash->{cache_dir} || $c->stash->{solgs_cache_dir};
