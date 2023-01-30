@@ -86,6 +86,7 @@ sub validate {
     }
 
     my $header_col_1 = shift @columns;
+    $header_col_1 =~ s/^\s+|\s+$//g;
     if ( $header_col_1 ne "sample_name" ) {
       $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
       print STDERR "First cell must be 'sample_name'\n";
@@ -93,6 +94,7 @@ sub validate {
     }
 
     my $header_col_2 = shift @columns;
+    $header_col_2 =~ s/^\s+|\s+$//g;
     if ($header_col_2 ne "device_id") {
         $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
         print STDERR "Second cell must be 'device_id'\n";
@@ -100,6 +102,7 @@ sub validate {
     }
 
     my $header_col_3 = shift @columns;
+    $header_col_3 =~ s/^\s+|\s+$//g;
     if ($header_col_3 ne "comments") {
         $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
         print STDERR "Third cell must be 'comments'\n";
@@ -115,6 +118,7 @@ sub validate {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        $sample_name =~ s/^\s+|\s+$//g;
         my $device_id = shift @fields;
         my $comments = shift @fields;
         push @samples, $sample_name;
@@ -147,12 +151,30 @@ sub validate {
         return \%parse_result;
     }
 
-    if ( $columns[0] ne "transcript_name" ||
-        $columns[1] ne "chromosome" ||
-        $columns[2] ne "start_position" ||
-        $columns[3] ne "end_position" ||
-        $columns[4] ne "gene_description" ||
-        $columns[5] ne "notes") {
+    my $transcript_name_head = $columns[0];
+    $transcript_name_head =~ s/^\s+|\s+$//g;
+
+    my $chromosome_head = $columns[1];
+    $chromosome_head =~ s/^\s+|\s+$//g;
+
+    my $start_position_head = $columns[2];
+    $start_position_head =~ s/^\s+|\s+$//g;
+
+    my $end_position_head = $columns[3];
+    $end_position_head =~ s/^\s+|\s+$//g;
+
+    my $gene_description_head = $columns[4];
+    $gene_description_head =~ s/^\s+|\s+$//g;
+
+    my $notes_head = $columns[5];
+    $notes_head =~ s/^\s+|\s+$//g; 
+
+    if ($transcript_name_head  ne "transcript_name" ||
+        $chromosome_head ne "chromosome" ||
+        $start_position_head ne "start_position" ||
+        $end_position_head ne "end_position" ||
+        $gene_description_head ne "gene_description" ||
+        $notes_head ne "notes") {
       $parse_result{'error'} = "Header row must be 'transcript_name', 'chromosome', 'start_position', 'end_position', 'gene_description', 'notes'. Please, check your file.";
       return \%parse_result;
     }

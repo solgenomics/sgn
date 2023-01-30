@@ -65,24 +65,31 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
+        $seedlot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $cross_name_head  = $worksheet->get_cell(0,1)->value();
+        $cross_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $operator_name_head  = $worksheet->get_cell(0,2)->value();
+        $operator_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $amount_head  = $worksheet->get_cell(0,3)->value();
+        $amount_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $weight_head  = $worksheet->get_cell(0,4)->value();
+        $weight_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $description_head  = $worksheet->get_cell(0,5)->value();
+        $description_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $box_name_head  = $worksheet->get_cell(0,6)->value();
+        $box_name_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
@@ -299,18 +306,22 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,2)) {
             $operator_name =  $worksheet->get_cell($row,2)->value();
+            $operator_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $amount =  $worksheet->get_cell($row,3)->value();
+            $amount =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
             $weight =  $worksheet->get_cell($row,4)->value();
+            $weight =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
             $description =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
             $box_name =  $worksheet->get_cell($row,6)->value();
+            $box_name =~ s/^\s+|\s+$//g;
         }
 
         #skip blank lines

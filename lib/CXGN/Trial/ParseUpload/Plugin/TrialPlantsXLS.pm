@@ -60,9 +60,11 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
+        $plot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $plant_name_head  = $worksheet->get_cell(0,1)->value();
+        $plant_name_head =~ s/^\s+|\s+$//g;
     }
     if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
         push @error_messages, "Cell A1: plot_name is missing from the header";
@@ -80,9 +82,11 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $plant_name = $worksheet->get_cell($row,1)->value();
+            $plant_name =~ s/^\s+|\s+$//g;
         }
 
         if (!$plot_name || $plot_name eq '' ) {
@@ -172,11 +176,13 @@ sub _parse_with_plugin {
         my $plot_name;
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
             $seen_plot_names{$plot_name}++;
         }
         my $plant_name;
         if ($worksheet->get_cell($row,1)) {
             $plant_name = $worksheet->get_cell($row,1)->value();
+            $plant_name =~ s/^\s+|\s+$//g;
             $seen_plant_names{$plant_name}++;
         }
     }
@@ -196,9 +202,11 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $plant_name = $worksheet->get_cell($row,1)->value();
+            $plant_name =~ s/^\s+|\s+$//g;
         }
 
         #skip blank lines

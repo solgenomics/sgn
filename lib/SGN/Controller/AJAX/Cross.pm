@@ -12,6 +12,7 @@ Add a new cross or upload a file containing crosses to add
 
 Jeremy Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
+Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
