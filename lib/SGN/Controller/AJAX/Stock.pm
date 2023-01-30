@@ -35,12 +35,12 @@ use CXGN::BreederSearch;
 use CXGN::Genotype::Search;
 use JSON;
 use CXGN::Cross;
-
 use Bio::Chado::Schema;
 
 use Scalar::Util qw(looks_like_number);
 use DateTime;
 use SGN::Model::Cvterm;
+use CXGN::People::Person;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2175,15 +2175,23 @@ sub get_accessions_missing_pedigree_GET {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh();
 
     my $result = CXGN::Cross->get_accessions_missing_pedigree($schema);
 
     my @accessions_missing_pedigree;
     foreach my $accession_info (@$result){
         my ($accession_id, $accession_name) =@$accession_info;
-        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>},
+        my $owner_rs = $phenome_schema->resultset("StockOwner")->find({stock_id => $accession_id});
+        my $owner_id = $owner_rs->sp_person_id();
+        my $person= CXGN::People::Person->new($dbh, $owner_id);
+        my $submitter_info = $person->get_first_name()." ".$person->get_last_name();
+
+        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $submitter_info],
     }
-    $c->stash->{rest} = { data => \@accessions_missing_pedigree };
+
+    $c->stash->{rest} = {data => \@accessions_missing_pedigree};
 }
 
 

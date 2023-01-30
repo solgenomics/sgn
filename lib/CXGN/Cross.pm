@@ -1549,5 +1549,37 @@ sub get_cross_transaction_ids_in_experiment {
 }
 
 
+=head2 get_accessions_missing_pedigree
+
+    Class method.
+    Returns all accessions missing pedigree.
+    Example: my @accessions = CXGN::Cross->get_accessions_missing_pedigree ($schema);
+
+=cut
+
+sub get_accessions_missing_pedigree {
+    my $self = shift;
+    my $schema = shift;
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+
+    my $all_accessions_rs = $schema->resultset("Stock::Stock")->search({type_id => $accession_type_id, is_obsolete => 'f'});
+
+    my @accessions_missing_pedigree;
+
+    while (my $each_accession = $all_accessions_rs->next()) {
+        my $accession_id = $each_accession->stock_id();
+        my $accession_name = $each_accession->uniquename();
+
+        my $female_parent_relationship_rs = $schema->resultset("Stock::StockRelationship")->find({ object_id => $accession_id, type_id => $female_parent_type_id});
+        if (!$female_parent_relationship_rs) {            
+            push @accessions_missing_pedigree, [$accession_id, $accession_name];
+        }
+    }
+
+    return \@accessions_missing_pedigree;
+}
+
 
 1;

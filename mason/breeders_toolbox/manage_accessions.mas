@@ -72,10 +72,11 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 
 <div class="well">
     <&| /page/info_section.mas, title=>"Accessions Missing Pedigree Information", id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
-        table class="table table-hover table-bordered" id="accessions_missing_pedigree_table">
+        <table class="table table-hover table-bordered" id="accessions_missing_pedigree_table">
             <thead>
                 <tr>
                     <th>Accession Name</th>
+                    <th>Submitter</th>
                 </tr>
             </thead>
         </table>
@@ -173,7 +174,7 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
             }
         });
     });
-    
+
 });
 
 
