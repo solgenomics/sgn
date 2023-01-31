@@ -24,7 +24,6 @@ package CXGN::MixedModels;
 
 use Moose;
 use Data::Dumper;
-use File::Slurp qw| slurp |;
 use File::Basename;
 use File::Copy;
 use CXGN::Tools::Run;
@@ -323,6 +322,8 @@ sub run_model {
 
     my $dependent_variables_R = make_R_variable_name($dependent_variables);
 
+    
+
     # generate params_file
     #
     my $param_file = $self->tempfile().".params";
@@ -359,6 +360,25 @@ sub run_model {
     while ($ctr->alive()) {
 	sleep(1);
     }
+
+    # replace the R-compatible traits with original trait names
+    #
+
+    foreach my $f (
+	$self->tempfile().".adjustedBLUPs",
+	$self->tempfile().".BLUPs",
+	$self->tempfile().".BLUEs",
+	$self->tempfile().".adjustedBLUEs",
+	$self->tempfile().".anova",
+	$self->tempfile().".varcomp",
+	) {
+
+	my $conversion_matrix = read_conversion_matrix($self->tempfile());
+	$self->convert_file_headers_back_to_breedbase_traits($f, $conversion_matrix);
+    }
+
+    
+    
 }
 
 =head2 make_R_variable_name
@@ -392,6 +412,9 @@ sub clean_file {
     open(my $PF, "<", $file) || die "Can't open pheno file ".$file."_phenotype.txt";
     open(my $CLEAN, ">", $file.".clean") || die "Can't open ".$file.".clean for writing";
 
+    open(my $TRAITS, ">", $file.".traits") || die "Can't open ".$file.".traits for writing";
+
+    
     my $header = <$PF>;
     chomp($header);
 
@@ -403,7 +426,9 @@ sub clean_file {
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
     foreach my $t (@file_traits) {
-	$t = make_R_variable_name($t);
+	my $R_t = make_R_variable_name($t);
+	print $TRAITS "$R_t\t$t\n";
+	$t = $R_t;
     }
 
     print STDERR "FILE TRAITS: ".Dumper(\@file_traits);
@@ -421,6 +446,50 @@ sub clean_file {
     return $file;
 }
 
+sub convert_file_headers_back_to_breedbase_traits {
+    my $self = shift;
+    my $file = shift;
+    my $conversion_matrix = shift;
 
+    open(my $F, "<", $file) ||  die "Can't open $file\n";
+
+    open(my $G, ">", $self->tempfile().".original_traits") || die "Can't open $file.original_traits";
+    
+    my $header = <$F>;
+    chomp($header);
+    
+    my @fields = split /\t/, $header;
+    
+    foreach my $f (@fields) {
+	if ($conversion_matrix->{$f}) {
+	    $f = $conversion_matrix->{$f};
+	}
+    }
+
+    
+    print $G join("\t", @fields)."\n";
+    while(<$F>) {
+	chomp;
+	print $_."\n";
+    }
+}
+
+sub read_conversion_matrix {
+    my $self = shift;
+    my $file = shift;
+
+    my $conversion_file = $file.".original_traits";
+    
+    open(my $F, "<", $conversion_file) || die "Can't open file $conversion_file";
+
+    my %conversion_matrix;
+    
+    while (<$F>) {
+	chomp;
+	my ($new, $old) = split "\t";
+	$conversion_matrix{$new} = $old;
+    }
+    return \%conversion_matrix;
+}
 
 1;
