@@ -55,7 +55,6 @@ sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) 
 	$c->stash->{rest}{model_pheno_data_file} = $pheno_file;
 	$c->stash->{rest}{model_analysis_report_file} = $log_file;
 
-
 }
 
 
@@ -168,16 +167,67 @@ sub selection_prediction_download_urls {
 
 }
 
+sub download_raw_pheno_data_file {
+	my ($self, $c) = @_;
+
+	my $pop_id = $c->stash->{training_pop_id};
+	my $data_set_type = $c->stash->{data_set_type};
+
+	my @trials_ids;
+	if ($data_set_type =~ /combined_populations/) 
+	{
+		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $pop_id);
+		@trials_ids = @$trials_ids;
+	}
+	else 
+	{
+		push @trials_ids, $pop_id;
+	}
+
+	my @files;
+
+	foreach my $trial_id (@trials_ids) 
+	{
+		my $file = $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
+		$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+		push @files, $file;
+	}
+
+	return \@files;
+
+}
+
+
 sub download_raw_geno_data_file {
 	my ($self, $c) = @_;
 
 	my $pop_id = $c->stash->{training_pop_id};
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $data_set_type = $c->stash->{data_set_type};
 
-	my $file = $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	my @trials_ids;
+	if ($data_set_type =~ /combined_populations/) 
+	{
+		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $pop_id);
+		@trials_ids = @$trials_ids;
+	}
+	else 
+	{
+		push @trials_ids, $pop_id;
+	}
 
-	return $file;
+	my @files;
+
+	foreach my $trial_id (@trials_ids) 
+	{
+		my $file = $c->controller('solGS::Files')->genotype_file_name($c, $trial_id, $protocol_id);
+		$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+		push @files, $file;
+	}
+
+	return \@files;
 
 }
 
@@ -186,18 +236,7 @@ sub download_selection_pop_filtered_geno_data_file {
 
 	$c->controller('solGS::Files')->filtered_selection_genotype_file($c);
 	my $file = $c->stash->{filtered_selection_genotype_file};
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
-
-	return $file;
-
-}
-
-sub download_raw_pheno_data_file {
-	my ($self, $c) = @_;
-
-	my $pop_id = $c->stash->{training_pop_id};
-	my $file = $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
 	return $file;
 
@@ -210,7 +249,7 @@ sub download_model_geno_data_file {
 	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
 	my $file = $c->controller('solGS::Files')->model_genodata_file($c);
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
 	return $file;
 
@@ -223,7 +262,7 @@ sub download_model_pheno_data_file {
 	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 	
 	my $file = $c->controller('solGS::Files')->model_phenodata_file($c);
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
 	return $file;
 
@@ -244,7 +283,7 @@ sub download_model_analysis_report_file {
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
 	#$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
 
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
 	return $file;
 
@@ -255,13 +294,11 @@ sub download_selection_prediction_report_file {
 
 	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
-	my $page = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
-	$c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
+	my $referer = $c->req->referer;
+	$c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c, $referer);
 	
 	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
-	#$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
-
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
 	return $file;
 
@@ -277,7 +314,7 @@ sub download_training_gebvs_file {
 	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id, $protocol_id);
 	my $gebvs_file = $c->stash->{rrblup_training_gebvs_file};
 
-	$gebvs_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $gebvs_file, 'solgs' );
+	$gebvs_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $gebvs_file, 'solgs');
 
 	return $gebvs_file;
 
@@ -295,7 +332,7 @@ sub download_selection_gebvs_file {
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id);
 	my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
-	$gebvs_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $gebvs_file, 'solgs' );
+	$gebvs_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $gebvs_file, 'solgs');
 
 	return $gebvs_file;
 
@@ -308,7 +345,7 @@ sub download_marker_effects_file {
 	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 	
 	my $file = $c->controller('solGS::Files')->marker_effects_file($c);
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
 	return $file;
 }
@@ -320,7 +357,7 @@ sub download_traits_acronym_file {
 	 $c->controller('solGS::Files')->traits_acronym_file($c, $c->stash->{training_pop_id});
     my $file = $c->stash->{traits_acronym_file};
 
-	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir( $c, $file, 'solgs' );
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
 	return $file;
 }

@@ -57,16 +57,37 @@ solGS.download = {
   },
 
   createTrainingPopDownloadLinks: function (res) {
-    var genoFile = res.training_pop_raw_geno_file;
-    var phenoFile = res.training_pop_raw_pheno_file;
+    var genoFiles = res.training_pop_raw_geno_file;
+    var phenoFiles = res.training_pop_raw_pheno_file;
+    var genoFileLink = '';
+    var cnt = 1;
+    
+    genoFiles.forEach(function(genoFile) {
+      var genoFileName = genoFile.split("/").pop();
+      var genoTxt =  "Genotype data"; 
+       if (genoFiles.length > 1) { genoTxt =  genoTxt + "-"  + cnt};
+       if ( cnt > 1) { genoFileLink += ' | '};
+   
+      genoFileLink +=
+        '<a href="' + genoFile + '" download=' + genoFileName + '">' + genoTxt + "</a>";
 
-    var genoFileName = genoFile.split("/").pop();
-    var genoFileLink =
-      '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+        cnt++;
+    })
+    
+    var phenoFileLink = '';
+    var cnt = 1;
+    
+    phenoFiles.forEach(function(phenoFile) {
+      var phenoFileName = phenoFile.split("/").pop();
+      var phenoTxt =  "Phenotype data"; 
+      if (phenoFiles.length > 1) { phenoTxt =  phenoTxt + "-"  + cnt};
+      if ( cnt > 1) { phenoFileLink += ' | '};
+    
+      phenoFileLink +=
+        '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + phenoTxt + "</a>";
 
-    var phenoFileName = phenoFile.split("/").pop();
-    var phenoFileLink =
-      '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
+        cnt++;
+    })
 
     var traitsAcronymLink = this.createTraitsAcronymLinks(res);
 
@@ -269,7 +290,7 @@ jQuery(document).ready(function () {
         solGS.showMessage("#marker_effects_download_message", errorMsg);
 
       });
-    } else if (res.page_type.match(/selection_population/)) {
+    } else if (res.page_type.match(/selection_prediction/)) {
         solGS.download.getSelectionPopRawDataFiles().done(function (res) {
           solGS.download.createSelectionPopDownloadLinks(res);
         });
