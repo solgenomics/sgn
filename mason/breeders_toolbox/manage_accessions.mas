@@ -163,7 +163,7 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){
-                        html += json.data[i][4]+"\n";
+                        html += json.data[i][2]+"\n";
                     }
                     jQuery("#accession_names_missing_pedigree").html(html);
                     addToListMenu("accessions_missing_pedigree_to_list_menu", "accession_names_missing_pedigree", {

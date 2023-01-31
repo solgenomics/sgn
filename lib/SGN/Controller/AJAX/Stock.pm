@@ -2189,7 +2189,7 @@ sub get_accessions_missing_pedigree_GET {
         my $submitter_info = $person->get_first_name()." ".$person->get_last_name();
         my $owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_info</a>};
 
-        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $owner_link],
+        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $owner_link, $accession_name],
     }
 
     $c->stash->{rest} = {data => \@accessions_missing_pedigree};
