@@ -3026,6 +3026,457 @@ CREATE TRIGGER stockprop_pub_audit_trig
        ON public.stockprop_pub
        FOR EACH ROW
        EXECUTE PROCEDURE public.stockprop_pub_audit_trig();
+
+CREATE TABLE audit.list_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.list_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.list_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.list_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.list_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.list_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER list_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.list
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.list_audit_trig();
+
+CREATE TABLE audit.list_item_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.list_item_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.list_item_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.list_item_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.list_item_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.list_item_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER list_item_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.list_item
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.list_item_audit_trig();
+
+CREATE TABLE audit.sp_dataset_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_dataset_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_dataset_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_dataset_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_dataset_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_dataset_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_dataset_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_dataset
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_dataset_audit_trig();
+
+CREATE TABLE audit.sp_order_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_order_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_order_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_order_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_order_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_order_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_order_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_order
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_order_audit_trig();
+
+CREATE TABLE audit.sp_orderprop_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_orderprop_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_orderprop_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_orderprop_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_orderprop_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_orderprop_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_orderprop_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_orderprop
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_orderprop_audit_trig();
+
+CREATE TABLE audit.sp_person_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_person_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_person_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_person_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_person_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_person_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_person_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_person
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_person_audit_trig();
+
+CREATE TABLE audit.sp_roles_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_roles_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_roles_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_roles_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_roles_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_roles_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_roles_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_roles
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_roles_audit_trig();
+
+CREATE TABLE audit.sp_token_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_token_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_token_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_token_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_token_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_token_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_token_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_token
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_token_audit_trig();
+
+CREATE TABLE audit.sp_person_roles_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_person_roles_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_person_roles_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_person_roles_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_person_roles_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_person_roles_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_person_roles_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_person_roles
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_person_roles_audit_trig();
+
+CREATE TABLE audit.sp_organization_audit(
+       audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       operation VARCHAR(10) NOT NULL,
+       username TEXT NOT NULL DEFAULT "current_user"(),
+       before JSONB,
+       after JSONB
+);
+
+ALTER TABLE audit.sp_organization_audit OWNER TO web_usr;
+
+CREATE OR REPLACE FUNCTION sgn_people.sp_organization_audit_trig()
+RETURNS trigger
+LANGUAGE plpgsql
+AS \$function\$
+BEGIN
+
+IF TG_OP = 'INSERT'
+THEN
+INSERT INTO audit.sp_organization_audit (operation, after)
+VALUES (TG_OP, to_jsonb(NEW));
+RETURN NEW;
+
+ELSIF TG_OP = 'UPDATE'
+THEN
+IF NEW != OLD THEN
+INSERT INTO audit.sp_organization_audit (operation, before, after)
+VALUES (TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+END IF;
+RETURN NEW;
+
+ELSIF TG_OP = 'DELETE'
+THEN
+INSERT INTO audit.sp_organization_audit (operation, before)
+VALUES (TG_OP, to_jsonb(OLD));
+RETURN OLD;
+END IF;
+END;
+\$function\$ ;
+
+CREATE TRIGGER sp_organization_audit_trig
+       BEFORE INSERT OR UPDATE OR DELETE
+       ON sgn_people.sp_organization
+       FOR EACH ROW
+       EXECUTE PROCEDURE sgn_people.sp_organization_audit_trig();
+
 --
 
 EOSQL
