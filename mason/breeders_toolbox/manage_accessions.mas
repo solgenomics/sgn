@@ -71,23 +71,23 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 </div><!-- closes well -->
 
 <div class="well">
-    <&| /page/info_section.mas, title=>"Accessions Missing Pedigree Information", id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
-        <table class="table table-hover table-bordered" id="accessions_missing_pedigree_table">
-            <thead>
-                <tr>
-                    <th>Accession Name</th>
-                    <th>Submitter</th>
-                </tr>
-            </thead>
-        </table>
-        <br>
-        <br>
-        <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
-            <br>
-            <div style="text-align:right" id="accessions_missing_pedigree_to_list_menu"></div>
-            <div id="accession_names_missing_pedigree" style="display: none;"></div>
-        </&>
+  <&| /page/info_section.mas, title=>"Accessions Missing Pedigree Information", id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
+    <table class="table table-hover table-bordered" id="accessions_missing_pedigree_table">
+      <thead>
+        <tr>
+          <th>Accession Name</th>
+          <th>Submitter</th>
+        </tr>
+      </thead>
+    </table>
+    <br>
+    <br>
+    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+      <br>
+      <div style="text-align:right" id="accessions_missing_pedigree_to_list_menu"></div>
+      <div id="accession_names_missing_pedigree" style="display: none;"></div>
     </&>
+  </&>
 </div><!-- closes well -->
 
 <div class="well">
