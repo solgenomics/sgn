@@ -76,7 +76,7 @@ $collapsed = 1;
 
 % if ($url =~ /kinship\/analysis|breeders\/trial\//) {
 
-  <& /solgs/genotyping_protocol.mas &>
+  <& /solgs/genotyping_protocol/index.mas &>
 
 %}
 

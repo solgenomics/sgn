@@ -43,7 +43,7 @@ $training_pop_id = $pop_id;
     title       => "Training population summary",
   &>
 
- <& population/summary.mas,
+ <& /solgs/population/summary.mas,
     training_pop_id   => $training_pop_id,
     training_pop_name => $training_pop_name,
     training_pop_desc => $training_pop_desc,
@@ -66,7 +66,7 @@ $training_pop_id = $pop_id;
       title       => "Train model"
 &>
 
-<& population/traits_list.mas,
+<& /solgs/population/traits_list.mas,
    training_pop_id    => $training_pop_id,
   training_pop_traits_details => $training_pop_traits_details,
   genotyping_protocol_id => $genotyping_protocol_id,

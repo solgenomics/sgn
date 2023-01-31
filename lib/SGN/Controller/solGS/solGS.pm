@@ -95,7 +95,7 @@ sub population : Path('/solgs/population') Args() {
 		$c->stash->{training_pop_name} = $c->stash->{project_name};
 		$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
-	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
+	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/population.mas');
     }
 
 }
