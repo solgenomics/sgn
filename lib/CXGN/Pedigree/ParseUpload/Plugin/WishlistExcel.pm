@@ -47,7 +47,7 @@ sub _validate_with_plugin {
 
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of cross combination
+    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of cross combination
         push @error_messages, "Spreadsheet is missing header or no cross combination data";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -61,12 +61,15 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $female_accession_head  = $worksheet->get_cell(0,0)->value();
+        $female_accession_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $male_accession_head  = $worksheet->get_cell(0,1)->value();
+        $male_accession_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $priority_head  = $worksheet->get_cell(0,2)->value();
+        $priority_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$female_accession_head || $female_accession_head ne 'female_accession' ) {

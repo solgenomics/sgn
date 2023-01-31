@@ -1,5 +1,5 @@
 crossDbId,femaleObsUnitDbId,maleObsUnitDbId,timestamp,person,experiment,type,fruits,flowers,seeds
-transaction_id_0004,UG120001,UG120002,2020-09-05_18_16_01_676,titima,intercross_upload,BIPARENTAL,0,5,0
-transaction_id_0003,UG120002,UG120003,2020-09-05_18_15_10_003,titima,intercross_upload,BIPARENTAL,0,3,0
-transaction_id_0002,UG120002,UG120003,2020-09-02_13_13_19_006,titima,intercross_upload,BIPARENTAL,0,7,0
-transaction_id_0001,UG120001,UG120002,2020-09-01_13_13_19_006,titima,intercross_upload,BIPARENTAL,0,10,0
+transaction_id_0004,UG120001,UG120002,2020-09-05_18_16_01_676,titima,intercross_upload,BIPARENTAL,0,5,10
+transaction_id_0003,UG120002,UG120003,2020-09-05_18_15_10_003,titima,intercross_upload,BIPARENTAL,0,3,5
+transaction_id_0002,UG120002,UG120003,2020-09-02_13_13_19_006,titima,intercross_upload,BIPARENTAL,0,7,20
+transaction_id_0001,UG120001,UG120002,2020-09-01_13_13_19_006,titima,intercross_upload,BIPARENTAL,0,10,25

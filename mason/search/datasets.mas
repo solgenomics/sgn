@@ -1,0 +1,48 @@
+
+<%args>
+$location_id => 'not_provided'
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title => "Dataset Search -<a class='btn btn-link' href=/help/datasets>Help <span class='glyphicon glyphicon-question-sign'></a>" &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table id="dataset_search_results" width="100%" class="table table-hover table-striped">
+            <&| /util/user.mas:logged_in &>
+              <thead>
+                <tr>
+                  <th>Dataset name</th>
+                  <th>Description</th>
+              </tr>
+              </thead>
+            </&>
+            <&| /util/user.mas:logged_out &>
+              <tr>
+                <td><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to see Datasets.</td>
+              </tr>
+            </&>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+   var trial_table = jQuery('#dataset_search_results').DataTable( {
+       'ajax': '/ajax/dataset/by_user_html',
+       "scrollX": true
+   });
+
+   jQuery('#dataset_search_results').on( 'draw.dt', function () {
+     var name_links = trial_table.column( 0, {page:'current'} ).data();
+     var names = [];
+   });
+
+});
+
+</script>

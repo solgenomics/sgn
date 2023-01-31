@@ -15,7 +15,7 @@ use CXGN::Stock::OrderBatch;
 use CXGN::UploadFile;
 use CXGN::Stock::ParseUpload;
 use CXGN::List;
-
+use Test::WWW::Mechanize;
 use DateTime;
 
 use Data::Dumper;
@@ -27,43 +27,66 @@ my $schema = $f->bcs_schema();
 my $people_schema = $f->people_schema;
 my $dbh = $f->dbh();
 
+my $mech = Test::WWW::Mechanize->new;
+
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username" => "janedoe", "password" => "secretpw", "grant_type" => "password" ]);
+my $response = decode_json $mech->content;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id . "\n";
+
+#add vendor role for johndoe
+my $johndoe_id = CXGN::People::Person->get_person_by_username($dbh, 'johndoe');
+my $role_rs = $people_schema->resultset("SpRole")->find({ name => 'vendor' });
+my $vendor_id = $role_rs->sp_role_id();
+my $person_roles = CXGN::People::Roles->new({ bcs_schema => $schema });
+my $add_role = $person_roles->add_sp_person_role($johndoe_id, $vendor_id);
+
+#test adding catalog item
+my $catalog_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "stock_catalog_json", "stock_property")->cvterm_id();
+my $before_adding_catalog_item = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $all_stockprop_before_adding = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+my $program_id = $schema->resultset('Project::Project')->find({ name => 'test' })->project_id();
+
+my $item_rs = $schema->resultset("Stock::Stock")->find({ name => 'UG120001' });
+my $item_id = $item_rs->stock_id();
+my $stock_catalog = CXGN::Stock::Catalog->new({
+    bcs_schema => $schema,
+    parent_id  => $item_id,
+});
+
+my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+my $organism_id = $item_rs->organism_id();
+my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+my $item_species = $organism->species();
+my $item_variety;
+my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $variety_type_id});
+if ($item_stockprop) {
+    $item_variety = $item_stockprop->value();
+} else {
+    $item_variety = 'NA';
+}
+
+$stock_catalog->item_type('single item');
+$stock_catalog->material_type('plant');
+$stock_catalog->material_source('BTI');
+$stock_catalog->category('released variety');
+$stock_catalog->species($item_species);
+$stock_catalog->variety($item_variety);
+$stock_catalog->breeding_program($program_id);
+$stock_catalog->additional_info('test adding info');
+$stock_catalog->contact_person_id($johndoe_id);
+
+ok($stock_catalog->store(), "check adding catalog");
+
+my $after_adding_catalog_item = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $after_adding_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+is($after_adding_catalog_item, $before_adding_catalog_item + 1);
+is($after_adding_all_stockprop, $all_stockprop_before_adding + 1);
+
 for my $extension ("xls", "xlsx") {
-
-    #add vendor role for johndoe
-    my $johndoe_id = CXGN::People::Person->get_person_by_username($dbh, 'johndoe');
-    my $role_rs = $people_schema->resultset("SpRole")->find({ name => 'vendor' });
-    my $vendor_id = $role_rs->sp_role_id();
-    my $person_roles = CXGN::People::Roles->new({ bcs_schema => $schema });
-    my $add_role = $person_roles->add_sp_person_role($johndoe_id, $vendor_id);
-
-    #test adding catalog item
-    my $catalog_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "stock_catalog_json", "stock_property")->cvterm_id();
-    my $before_adding_catalog_item = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
-    my $all_stockprop_before_adding = $schema->resultset("Stock::Stockprop")->search({})->count();
-
-    my $program_id = $schema->resultset('Project::Project')->find({ name => 'test' })->project_id();
-
-    my $item_id = $schema->resultset("Stock::Stock")->find({ name => 'UG120001' })->stock_id();
-    my $stock_catalog = CXGN::Stock::Catalog->new({
-        bcs_schema => $schema,
-        parent_id  => $item_id,
-    });
-
-    $stock_catalog->item_type('single item');
-    $stock_catalog->category('released variety');
-    $stock_catalog->description('test item');
-    $stock_catalog->material_source('Sendusu');
-    $stock_catalog->breeding_program($program_id);
-    $stock_catalog->availability('in stock');
-    $stock_catalog->contact_person_id($johndoe_id);
-
-    ok($stock_catalog->store(), "check adding catalog");
-
-    my $after_adding_catalog_item = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
-    my $after_adding_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
-
-    is($after_adding_catalog_item, $before_adding_catalog_item + 1);
-    is($after_adding_all_stockprop, $all_stockprop_before_adding + 1);
 
     #test uploading catalog items
     my $before_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
@@ -107,10 +130,10 @@ for my $extension ("xls", "xlsx") {
             bcs_schema        => $schema,
             item_type         => $catalog_info_hash{item_type},
             category          => $catalog_info_hash{category},
-            description       => $catalog_info_hash{description},
+            material_type       => $catalog_info_hash{material_type},
             material_source   => $catalog_info_hash{material_source},
             breeding_program  => $catalog_info_hash{breeding_program},
-            availability      => $catalog_info_hash{availability},
+            additional_info      => $catalog_info_hash{additional_info},
             contact_person_id => $catalog_info_hash{contact_person_id},
             parent_id         => $stock_id
         });
@@ -123,93 +146,73 @@ for my $extension ("xls", "xlsx") {
 
     is($after_uploading_catalog_items, $before_uploading_catalog_items + 2);
     is($after_uploading_all_stockprop, $before_uploading_all_stockprop + 2);
-
-    #creating shopping cart with 'catalog_items' list type
-    my $janedoe_id = CXGN::People::Person->get_person_by_username($dbh, 'janedoe');
-    my $your_cart_id = CXGN::List::create_list($dbh, 'your_cart', 'test shopping cart', $janedoe_id);
-    my $list = CXGN::List->new({ dbh => $dbh, list_id => $your_cart_id });
-    my $your_cart_type = $list->type('catalog_items');
-    my $item1 = $list->add_element("UG120001,Quantity: 2");
-    my $item2 = $list->add_element("UG120002,Quantity: 3");
-
-    #test storing an order from janedoe, to johndoe
-    my $new_order = CXGN::Stock::Order->new({ people_schema => $people_schema, dbh => $dbh });
-    $new_order->order_from_id($janedoe_id);
-    $new_order->order_to_id($johndoe_id);
-    $new_order->order_status("submitted");
-    $new_order->create_date($timestamp);
-    ok(my $order_id = $new_order->store(), "check storing order");
-
-    #test storing orderprop
-    my $your_cart = CXGN::List->new({ dbh => $dbh, list_id => $your_cart_id });
-    my $items = $list->elements();
-    is_deeply($items, [ 'UG120001,Quantity: 2', 'UG120002,Quantity: 3' ], 'check items');
-
-    my @all_items = @$items;
-    my @clone_list;
-    foreach my $ordered_item (@all_items) {
-        my %item_hash;
-        my @ordered_item_split = split /,/, $ordered_item;
-        my $item_name = $ordered_item_split[0];
-
-        my $quantity_string = $ordered_item_split[1];
-        my @quantity_info = split /:/, $quantity_string;
-        my $quantity = $quantity_info[1];
-        $quantity =~ s/^\s+|\s+$//g;
-        $item_hash{$item_name}{'quantity'} = $quantity;
-        push @clone_list, \%item_hash;
-    }
-
-    my @history;
-    my $history_info = {};
-    $history_info->{'submitted'} = $timestamp;
-    push @history, $history_info;
-
-    my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema });
-    $order_prop->clone_list(\@clone_list);
-    $order_prop->parent_id($order_id);
-    $order_prop->history(\@history);
-    ok(my $order_prop_id = $order_prop->store_sp_orderprop(), "check storing orderprop");
-
-    #delete your cart
-    CXGN::List::delete_list($dbh, $your_cart_id);
-
-    #test retrieving order from janedoe
-    my $buyer_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $janedoe_id });
-    my $buyer_orders = $buyer_order_obj->get_orders_from_person_id();
-    is($buyer_orders->[0][0], '1');
-    is($buyer_orders->[0][2], 'UG120001, quantity:2<br>UG120002, quantity:3');
-    is($buyer_orders->[0][3], 'submitted');
-    is($buyer_orders->[0][4], undef);
-    is($buyer_orders->[0][5], 'John Doe');
-    is($buyer_orders->[0][6], undef);
-
-    #test retrieving order to johndoe
-    my $vendor_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $johndoe_id });
-    my $vendor_orders = $vendor_order_obj->get_orders_to_person_id();
-    my $order = $vendor_orders->[0];
-    is($order->{'order_id'}, '1');
-    is($order->{'item_list'}, 'UG120001, quantity:2<br>UG120002, quantity:3');
-    is($order->{'order_status'}, 'submitted');
-    is($order->{'order_from_name'}, 'Jane Doe');
-    is($order->{'completion_date'}, undef);
-    is($order->{'contact_person_comments'}, undef);
-
-    #test deleting catalog
-    my $catalog_rs = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id });
-
-    while (my $catalog = $catalog_rs->next()) {
-        my $catalog_stockprop_id = $catalog->stockprop_id();
-        my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema, prop_id => $catalog_stockprop_id });
-        $catalog_obj->delete();
-    }
-
-    my $after_deleting_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
-    my $all_stockprop_after_deleting_catalog = $schema->resultset("Stock::Stockprop")->search({})->count();
-
-    is($after_deleting_catalog_items, $before_adding_catalog_item);
-    is($all_stockprop_after_deleting_catalog, $all_stockprop_before_adding);
-
 }
+
+#creating shopping cart with 'catalog_items' list type
+my $janedoe_id = CXGN::People::Person->get_person_by_username($dbh, 'janedoe');
+my $your_cart_id = CXGN::List::create_list($dbh, 'your_cart', 'test shopping cart', $janedoe_id);
+my $list = CXGN::List->new({ dbh => $dbh, list_id => $your_cart_id });
+my $your_cart_type = $list->type('catalog_items');
+my $item1 = $list->add_element('{"Item Name":"UG120001","Quantity":"2","Comments":""}');
+my $item2 = $list->add_element('{"Item Name":"UG120002","Quantity":"3","Comments":""}');
+
+my $list_items = $list->elements();
+
+#test storing an order from janedoe, to johndoe
+
+$mech->post_ok('http://localhost:3010/ajax/order/submit', ['list_id' => $your_cart_id,]);
+$response = decode_json $mech->content;
+is($response->{'success'}, 'Your order has been submitted successfully and the vendor has been notified.');
+
+#delete your cart
+CXGN::List::delete_list($dbh, $your_cart_id);
+
+#test retrieving order from janedoe
+my $buyer_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $janedoe_id });
+my $buyer_orders = $buyer_order_obj->get_orders_from_person_id();
+my $first_order_info = $buyer_orders->[0];
+is($first_order_info->{'order_id'}, '1');
+is($first_order_info->{'order_status'}, 'submitted');
+is($first_order_info->{'order_to_name'}, 'John Doe');
+
+my $items = $first_order_info->{'clone_list'};
+my $buyer_num_items = @$items;
+is($buyer_num_items, '2');
+
+#test retrieving order to johndoe
+my $vendor_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $johndoe_id });
+my $vendor_orders = $vendor_order_obj->get_orders_to_person_id();
+
+my $order = $vendor_orders->[0];
+is($order->{'order_id'}, '1');
+is($order->{'order_status'}, 'submitted');
+is($order->{'order_from_name'}, 'Jane Doe');
+is($order->{'completion_date'}, undef);
+is($order->{'contact_person_comments'}, undef);
+
+my $clone_list = $order->{'clone_list'};
+my $vendor_num_items = @$clone_list;
+is($vendor_num_items, '2');
+
+#test_single_step_submission
+$mech->post_ok('http://localhost:3010/ajax/order/single_step_submission', ['item_name' => 'UG120001', 'order_details' => '{"Quantity":"2","Comments":""}']);
+$response = decode_json $mech->content;
+is($response->{'success'}, 'Your request has been submitted successfully and the vendor has been notified.');
+
+#test deleting catalog
+my $catalog_rs = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id });
+
+while (my $catalog = $catalog_rs->next()) {
+    my $catalog_stockprop_id = $catalog->stockprop_id();
+    my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema, prop_id => $catalog_stockprop_id });
+    $catalog_obj->delete();
+}
+
+my $after_deleting_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $all_stockprop_after_deleting_catalog = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+is($after_deleting_catalog_items, $before_adding_catalog_item);
+is($all_stockprop_after_deleting_catalog, $all_stockprop_before_adding);
+
 
 done_testing();
