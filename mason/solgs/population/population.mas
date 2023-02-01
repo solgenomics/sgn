@@ -84,12 +84,11 @@ $training_pop_id = $pop_id;
      data_set_type => $data_set_type
   &>
 
-% if ($training_pop_id !~ /list|dataset/  && $data_set_type !~ /combined/) {
+% unless ($training_pop_id =~ /list|dataset/ || $data_set_type =~ /combined/) {
 
     <& /solgs/tools/anova/analysis.mas,
    training_pop_id => $training_pop_id,
   &>
-
 
   <& /tools/heritability/heritability.mas,
      pop_id  => $training_pop_id,
