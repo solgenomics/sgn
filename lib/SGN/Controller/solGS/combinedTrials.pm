@@ -167,7 +167,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 		$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 
 		$self->combined_pops_summary($c);
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/population.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/training_population.mas');
     }
 }
 
