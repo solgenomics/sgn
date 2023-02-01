@@ -2182,12 +2182,17 @@ sub get_accessions_missing_pedigree_GET {
 
     my @accessions_missing_pedigree;
     foreach my $accession_info (@$result){
+        my @owners = ();
         my ($accession_id, $accession_name) =@$accession_info;
-        my $owner_rs = $phenome_schema->resultset("StockOwner")->find({stock_id => $accession_id});
-        my $owner_id = $owner_rs->sp_person_id();
-        my $person= CXGN::People::Person->new($dbh, $owner_id);
-        my $submitter_info = $person->get_first_name()." ".$person->get_last_name();
-        my $owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_info</a>};
+        my $owner_rs = $phenome_schema->resultset("StockOwner")->search({stock_id => $accession_id});
+        while (my $owner = $owner_rs->next()) {
+            my $owner_id = $owner->sp_person_id();
+            my $person= CXGN::People::Person->new($dbh, $owner_id);
+            my $submitter_info = $person->get_first_name()." ".$person->get_last_name();
+            my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_info</a>};
+            push @owners, $each_owner_link,
+        }
+        my $owner_link = join(",",@owners);
 
         push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $owner_link, $accession_name],
     }
