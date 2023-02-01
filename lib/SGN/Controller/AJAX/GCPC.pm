@@ -431,7 +431,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     my $statsfile = $pheno_filepath.".clean.summary";
     
- g   copy($pheno_filepath.".clean.out", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$basename);
+    copy($pheno_filepath.".clean.out", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$basename);
 
     copy($pheno_filepath.".clean.png", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$imagename);
     
