@@ -74,6 +74,7 @@
       </div>
 </&>
 
+<div id="cross_predicted_merit_histogram"></div>
 
 <div id="gcpc_results_download_link"></div>
 
@@ -253,6 +254,9 @@ jQuery(document).ready(function() {
         column_headers += `{ "data": ${headers[i]} },`
       }
       //alert (column_headers);
+
+      var histogram_html = '<img src="'+data.histogram+'" />';
+      jQuery('#cross_predicted_merit_histogram').html(histogram_html);
 
       //alert('JSON data retrieved: '+JSON.stringify(data));
 	jQuery('#working_modal').modal('hide');
