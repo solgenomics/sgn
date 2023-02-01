@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/population/selection_trait.mas - displays trait GEBV prediction output for selection population using single trial model.
+/solgs/population/selection_prediction_detail.mas - displays trait GEBV prediction output for selection population using single trial model.
 
 =AUTHOR
 

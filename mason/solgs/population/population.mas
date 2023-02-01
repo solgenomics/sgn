@@ -1,6 +1,7 @@
 <%args>
 
 $pop_id => ''
+$combo_pops_id => ''
 $training_pop_id
 $training_pop_name
 $training_pop_desc
@@ -11,15 +12,15 @@ $markers_no
 $traits_no
 $owner=>''
 $protocol_url => ''
-$acronym
+$acronym => ''
 $genotyping_protocol_id
+$data_set_type => ''
 
 </%args>
 
 <%perl>
 
-#my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
-
+if (!$training_pop_id) {$training_pop_id = $combo_pops_id;}
 if ($pop_id && !$training_pop_id) {
 $training_pop_id = $pop_id;
 }
@@ -47,6 +48,7 @@ $training_pop_id = $pop_id;
     training_pop_id   => $training_pop_id,
     training_pop_name => $training_pop_name,
     training_pop_desc => $training_pop_desc,
+    combo_pops_id => $combo_pops_id,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
@@ -69,6 +71,7 @@ $training_pop_id = $pop_id;
 <& /solgs/population/traits_list.mas,
    training_pop_id    => $training_pop_id,
   training_pop_traits_details => $training_pop_traits_details,
+  data_set_type => $data_set_type,
   genotyping_protocol_id => $genotyping_protocol_id,
 &>
 
@@ -78,9 +81,10 @@ $training_pop_id = $pop_id;
 
   <& /solgs/tools/correlation/correlation.mas,
      corre_pop_id  => $training_pop_id,
+     data_set_type => $data_set_type
   &>
 
-% if ($training_pop_id !~ /list|dataset/) {
+% if ($training_pop_id !~ /list|dataset/  && $data_set_type !~ /combined/) {
 
     <& /solgs/tools/anova/analysis.mas,
    training_pop_id => $training_pop_id,
@@ -127,6 +131,8 @@ $training_pop_id = $pop_id;
       training_pop_id  => $training_pop_id,
      training_pop_name => $training_pop_name,
      training_pop_desc => $training_pop_desc,
+     combo_pops_id => $combo_pops_id,
      genotyping_protocol_id => $genotyping_protocol_id,
+     data_set_type => $data_set_type,
 
    &>

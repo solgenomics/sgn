@@ -372,7 +372,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		$model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
 		$c->stash->{model_page_url} = $model_page;
 
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_prediction_detail.mas');
 
     }
 
@@ -450,7 +450,7 @@ sub trait :Path('/solgs/trait') Args(5) {
 	    $self->model_phenotype_stat($c);
 
 		$c->stash->{training_pop_url} = $training_pop_page;
-	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
+	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/model_detail.mas");
 	}
     }
 
@@ -1448,7 +1448,7 @@ sub get_rrblup_output {
         if (scalar(@traits) == 1)
         {
             $self->gs_modeling_files($c);
-            $c->stash->{template} = $c->controller('solGS::Files')->template('population/trait.mas');
+            $c->stash->{template} = $c->controller('solGS::Files')->template('population/model_detail.mas');
         }
 
         if (scalar(@traits) > 1)

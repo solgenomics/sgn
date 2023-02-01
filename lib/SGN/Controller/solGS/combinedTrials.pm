@@ -167,7 +167,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 		$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 
 		$self->combined_pops_summary($c);
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/population.mas');
     }
 }
 
@@ -349,7 +349,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	    $c->controller('solGS::solGS')->model_parameters($c);
 
 	    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/trait.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/model_detail.mas');
 	}
 }
 
@@ -437,7 +437,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     # $model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
     # $c->stash->{model_page_url} = $model_page;
 
-    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
+    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_prediction_detail.mas');
 
 }
 
