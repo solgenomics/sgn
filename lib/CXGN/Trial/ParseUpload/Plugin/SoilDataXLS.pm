@@ -58,10 +58,12 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $soil_data_type_header  = $worksheet->get_cell(0,0)->value();
+        $soil_data_type_header =~ s/^\s+|\s+$//g;
     }
 
     if ($worksheet->get_cell(0,1)) {
         $soil_data_value_header  = $worksheet->get_cell(0,1)->value();
+        $soil_data_value_header =~ s/^\s+|\s+$//g;
     }
 
     if (!$soil_data_type_header || $soil_data_type_header ne 'soil_data_type' ) {

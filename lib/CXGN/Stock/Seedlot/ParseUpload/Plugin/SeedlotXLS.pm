@@ -67,24 +67,31 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
+        $seedlot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $accession_name_head  = $worksheet->get_cell(0,1)->value();
+        $accession_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $operator_name_head  = $worksheet->get_cell(0,2)->value();
+        $operator_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $amount_head  = $worksheet->get_cell(0,3)->value();
+        $amount_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $weight_head  = $worksheet->get_cell(0,4)->value();
+        $weight_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $description_head  = $worksheet->get_cell(0,5)->value();
+        $description_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $box_name_head  = $worksheet->get_cell(0,6)->value();
+        $box_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
 	$seedlot_quality = $worksheet->get_cell(0,7)->value();
@@ -130,8 +137,8 @@ sub _validate_with_plugin {
         my $weight = 'NA';
         my $description;
         my $box_name;
-	my $quality;
-	my $source;
+        my $quality;
+        my $source;
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -154,12 +161,13 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $box_name =  $worksheet->get_cell($row,6)->value();
         }
-	if ($seedlot_quality && $worksheet->get_cell($row, 7)) {
-	    $quality = $worksheet->get_cell($row, 7)-> value();
-	}
-	if ($seedlot_source && $worksheet->get_cell($row, 8)) {
-	    $source = $worksheet->get_cell($row, 8)->value();
-	}
+        if ($seedlot_quality && $worksheet->get_cell($row, 7)) {
+            $quality = $worksheet->get_cell($row, 7)-> value();
+        }
+        if ($seedlot_source && $worksheet->get_cell($row, 8)) {
+            $source = $worksheet->get_cell($row, 8)->value();
+            $source =~ s/^\s+|\s+$//g;
+        }
         if (!$seedlot_name || $seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: seedlot_name missing.";
         }
@@ -338,8 +346,8 @@ sub _parse_with_plugin {
         my $weight = 'NA';
         my $description;
         my $box_name;
-	my $quality;
-	my $source;
+        my $quality;
+        my $source;
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -362,16 +370,16 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $box_name =  $worksheet->get_cell($row,6)->value();
         }
-	if ($worksheet->get_cell($row,7)) {
-	    $quality = $worksheet->get_cell($row,7)->value();
-	}
-	if ($worksheet->get_cell($row,8)) {
-	    $source = $worksheet->get_cell($row, 8)->value();
-	}
+        if ($worksheet->get_cell($row,7)) {
+            $quality = $worksheet->get_cell($row,7)->value();
+        }
+        if ($worksheet->get_cell($row,8)) {
+            $source = $worksheet->get_cell($row, 8)->value();
+        }
 
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-	$source =~ s/^\s+|\s+$//g; # also trim
+        $source =~ s/^\s+|\s+$//g; # also trim
 
         #skip blank lines
         if (!$seedlot_name && !$accession_name && !$description) {
@@ -390,14 +398,14 @@ sub _parse_with_plugin {
             $accession_stock_id = $accession_lookup{$accession_name};
         }
 
-	my $source_id;
+        my $source_id;
 
-	if ($source) {
-	    my $source_row = $self->get_chado_schema->resultset("Stock::Stock")->find( { uniquename => $source });
-	    if ($source_row) {
-		$source_id = $source_row->stock_id();
-	    }
-	}
+        if ($source) {
+            my $source_row = $self->get_chado_schema->resultset("Stock::Stock")->find( { uniquename => $source });
+            if ($source_row) {
+                $source_id = $source_row->stock_id();
+            }
+        }
 
         $parsed_seedlots{$seedlot_name} = {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
