@@ -2188,16 +2188,23 @@ sub get_accessions_missing_pedigree_GET {
     my @accessions_missing_pedigree;
     foreach my $accession_info (@$result){
         my @owners = ();
+        my $owner_link;
         my ($accession_id, $accession_name) =@$accession_info;
         my $owner_info = $owners_hash->{$accession_id};
-        my @list_of_owners = @$owner_info;
-        foreach my $each_owner (@list_of_owners) {
-            my $owner_id = $each_owner->[0];
-            my $first_name = $each_owner->[2];
-            my $last_name = $each_owner->[3];
-            my $name = $first_name." ".$last_name;
-            my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$name</a>};
-            push @owners, $each_owner_link,
+        print STDERR "OWNER INFO =".Dumper($owner_info)."\n";
+        if (@$owner_info){
+            my @list_of_owners = @$owner_info;
+            foreach my $each_owner (@list_of_owners) {
+                my $owner_id = $each_owner->[0];
+                my $first_name = $each_owner->[2];
+                my $last_name = $each_owner->[3];
+                my $name = $first_name." ".$last_name;
+                my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$name</a>};
+                push @owners, $each_owner_link,
+            }
+            $owner_link = join(",",@owners);
+            print STDERR "OWNER LINK =".Dumper($owner_link)."\n";
+
         }
 
 #        my $owner_rs = $phenome_schema->resultset("StockOwner")->search({stock_id => $accession_id});
@@ -2208,7 +2215,6 @@ sub get_accessions_missing_pedigree_GET {
 #            my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_info</a>};
 #            push @owners, $each_owner_link,
 #        }
-        my $owner_link = join(",",@owners);
 
         push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $owner_link, $accession_name],
     }
