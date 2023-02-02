@@ -41,6 +41,7 @@ use Scalar::Util qw(looks_like_number);
 use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
+use CXGN::Stock::StockLookup;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2180,18 +2181,33 @@ sub get_accessions_missing_pedigree_GET {
 
     my $result = CXGN::Cross->get_accessions_missing_pedigree($schema);
 
+    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+    my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+
+
     my @accessions_missing_pedigree;
     foreach my $accession_info (@$result){
         my @owners = ();
         my ($accession_id, $accession_name) =@$accession_info;
-        my $owner_rs = $phenome_schema->resultset("StockOwner")->search({stock_id => $accession_id});
-        while (my $owner = $owner_rs->next()) {
-            my $owner_id = $owner->sp_person_id();
-            my $person= CXGN::People::Person->new($dbh, $owner_id);
-            my $submitter_info = $person->get_first_name()." ".$person->get_last_name();
-            my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_info</a>};
+        my $owner_info = $owners_hash->{$accession_id};
+        my @list_of_owners = @$owner_info;
+        foreach my $each_owner (@list_of_owners) {
+            my $owner_id = $each_owner->[0];
+            my $first_name = $each_owner->[2];
+            my $last_name = $each_owner->[3];
+            my $name = $first_name." ".$last_name;
+            my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$name</a>};
             push @owners, $each_owner_link,
         }
+
+#        my $owner_rs = $phenome_schema->resultset("StockOwner")->search({stock_id => $accession_id});
+#        while (my $owner = $owner_rs->next()) {
+#            my $owner_id = $owner->sp_person_id();
+#            my $person= CXGN::People::Person->new($dbh, $owner_id);
+#            my $submitter_info = $person->get_first_name()." ".$person->get_last_name();
+#            my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_info</a>};
+#            push @owners, $each_owner_link,
+#        }
         my $owner_link = join(",",@owners);
 
         push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $owner_link, $accession_name],

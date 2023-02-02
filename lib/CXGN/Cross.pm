@@ -1564,21 +1564,44 @@ sub get_accessions_missing_pedigree {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
 
-    my $all_accessions_rs = $schema->resultset("Stock::Stock")->search({type_id => $accession_type_id, is_obsolete => 'f'});
+#    my $all_accessions_rs = $schema->resultset("Stock::Stock")->search({type_id => $accession_type_id, is_obsolete => 'f'});
 
-    my @accessions_missing_pedigree;
+#    my @accessions_missing_pedigree;
 
-    while (my $each_accession = $all_accessions_rs->next()) {
-        my $accession_id = $each_accession->stock_id();
-        my $accession_name = $each_accession->uniquename();
+#    while (my $each_accession = $all_accessions_rs->next()) {
+#        my $accession_id = $each_accession->stock_id();
+#        my $accession_name = $each_accession->uniquename();
 
-        my $female_parent_relationship_rs = $schema->resultset("Stock::StockRelationship")->find({ object_id => $accession_id, type_id => $female_parent_type_id});
-        if (!$female_parent_relationship_rs) {            
-            push @accessions_missing_pedigree, [$accession_id, $accession_name];
-        }
+#        my $female_parent_relationship_rs = $schema->resultset("Stock::StockRelationship")->find({ object_id => $accession_id, type_id => $female_parent_type_id});
+#        if (!$female_parent_relationship_rs) {
+#            push @accessions_missing_pedigree, [$accession_id, $accession_name];
+#        }
+#    }
+
+#    return \@accessions_missing_pedigree;
+
+
+    my $q = "SELECT table_1.stock_id, table_1.stock_name
+        FROM
+        (SELECT stock.stock_id AS stock_id, stock.uniquename AS stock_name
+        FROM stock WHERE stock.type_id = ? and stock.is_obsolete <> 't') AS table_1
+        LEFT JOIN
+        (SELECT DISTINCT stock.stock_id AS stock_id, stock.uniquename AS stock_name
+        FROM stock
+        JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) WHERE stock.type_id = ? AND stock_relationship.type_id = ?) AS table_2
+        ON (table_1.stock_id = table_2.stock_id) WHERE table_2.stock_id IS NULL";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($accession_type_id, $accession_type_id, $female_parent_type_id);
+
+    my @accessions_missing_pedigree =();
+    while(my($stock_id, $stock_name) = $h->fetchrow_array()){
+        push @accessions_missing_pedigree, [$stock_id, $stock_name],
     }
-
+    print STDERR "MISSING PEDIGREE =".Dumper(\@accessions_missing_pedigree)."\n";
     return \@accessions_missing_pedigree;
+
 }
 
 
