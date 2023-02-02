@@ -2192,7 +2192,7 @@ sub get_accessions_missing_pedigree_GET {
         my ($accession_id, $accession_name) =@$accession_info;
         my $owner_info = $owners_hash->{$accession_id};
         print STDERR "OWNER INFO =".Dumper($owner_info)."\n";
-        if (@$owner_info){
+        if (defined $owner_info){
             my @list_of_owners = @$owner_info;
             foreach my $each_owner (@list_of_owners) {
                 my $owner_id = $each_owner->[0];
