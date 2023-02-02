@@ -3815,7 +3815,7 @@ sub observations_PUT {
 	my $version = $c->request->captures->[0];
 	my $brapi_package_result;
 	if ($version eq 'v2'){
-		my $force_authenticate = 0;
+		my $force_authenticate = $c->config->{brapi_observations_require_login};
 		my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
 	    my $clean_inputs = $c->stash->{clean_inputs};
 	    my %observations = %$clean_inputs;
@@ -3873,7 +3873,7 @@ sub observations_GET {
 sub observations_POST {
 	my $self = shift;
 	my $c = shift;
-    my $force_authenticate = 1;
+    my $force_authenticate = $c->config->{brapi_observations_require_login};
 	my ($auth,$user_id,$user_type) = _authenticate_user($c, $force_authenticate);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
