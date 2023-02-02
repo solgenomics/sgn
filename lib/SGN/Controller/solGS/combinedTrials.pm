@@ -346,7 +346,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	    # $c->controller('solGS::Download')->training_prediction_download_urls($c);
 	    $c->controller('solGS::Files')->marker_effects_file($c);
 	    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
-	    $c->controller('solGS::solGS')->model_parameters($c);
+	    $c->controller('solGS::solGS')->variance_components($c);
 
 	    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/model_detail.mas');

@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-model/model_parameters.mas - displays model variance components and SNP heritability
+/solgs/model/variance_components.mas - displays model variance components and SNP heritability
 
 =AUTHOR
 

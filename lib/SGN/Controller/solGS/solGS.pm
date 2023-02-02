@@ -465,7 +465,7 @@ sub gs_modeling_files {
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
     $self->top_markers($c, $c->stash->{marker_effects_file});
-    $self->model_parameters($c);
+    $self->variance_components($c);
 
 }
 
@@ -854,14 +854,14 @@ sub list_predicted_selection_pops {
 }
 
 
-sub model_parameters {
+sub variance_components {
     my ($self, $c) = @_;
 
     $c->controller("solGS::Files")->variance_components_file($c);
     my $file = $c->stash->{variance_components_file};
 
     my $params = $c->controller('solGS::Utils')->read_file_data($file, {binmode => ':utf8'});
-    $c->stash->{model_parameters} = $params;
+    $c->stash->{variance_components} = $params;
 
 }
 

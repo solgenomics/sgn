@@ -2,8 +2,7 @@
 
 =head1 NAME
 
-/mode/gebvs.mas - displays a plot of the gebvs of a trait for all genotypes; displays top 10 genotypes in tablar form with download function for the entire genotypes set.
-
+/solgs/mode/gebvs.mas - displays a plot of the gebvs and download links.
 =AUTHOR
 
 Isaak Y Tecle (iyt2@cornell.edu)

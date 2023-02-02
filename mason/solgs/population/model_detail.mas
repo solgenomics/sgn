@@ -5,7 +5,7 @@ $training_pop_name
 $training_pop_desc =>''
 $show_data => 1;
 $accuracy_report
-$model_parameters
+$variance_components
 $top_marker_effects
 $trait_abbr
 $trait_name
@@ -90,8 +90,8 @@ $training_pop_url
 % if ($show_data)
 %{
 
-<& /solgs/model/model_parameters.mas,
-   model_parameters => $model_parameters,
+<& /solgs/model/variance_components.mas,
+   variance_components => $variance_components,
 &>
 
 <& /solgs/model/accuracy.mas,
