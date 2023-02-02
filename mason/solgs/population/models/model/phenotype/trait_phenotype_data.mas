@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/model/phenotype/trait_phenotype_data.mas - displays plots of trait phenotype data.
+/solgs/population/models/model/phenotype/trait_phenotype_data.mas - displays plots of trait phenotype data.
 
 =AUTHOR
 

@@ -118,7 +118,7 @@ $training_pop_url
    top_marker_effects          => $top_marker_effects,
 &>
 
-<& /solgs/population/selection_populations.mas,
+<& /solgs/search/selection_populations.mas,
    selection_prediction_download     => $selection_prediction_download,
    training_pop_analyzed_traits         => $training_pop_analyzed_traits,
    training_pop_id        => $training_pop_id,

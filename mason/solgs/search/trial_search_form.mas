@@ -44,7 +44,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <div id="searched_trials_div" style="display:none;"></div>
  <br />
 
-<& /solgs/population/project_details_form.mas &>
+<& /solgs/search/trials_search_result.mas &>
 <& /solgs/search/combine_trials_table.mas &>
 
 

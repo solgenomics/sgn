@@ -55,7 +55,7 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 &>
 
 
-<& /solgs/population/model/model_summary.mas,
+<& /solgs/population/models/models_summary.mas,
      model_data => $model_data
   &>
 
@@ -69,7 +69,7 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
     training_traits_code => $training_traits_code
    &>
 
-<& /solgs/population/selection_populations.mas,
+<& /solgs/search/selection_populations.mas,
    selection_prediction_download  => $selection_prediction_download,
    training_pop_analyzed_traits                => $training_pop_analyzed_traits,
    training_pop_id               => $training_pop_id,
