@@ -48,7 +48,7 @@ $training_pop_url
   title       => "Training population summary",
   &>
 
- <& summary.mas,
+ <& /solgs/population/summary.mas,
     training_pop_id   => $training_pop_id,
    	training_pop_name => $training_pop_name,
     training_pop_desc => $training_pop_desc,
@@ -77,7 +77,7 @@ $training_pop_url
   title       => "Trait phenotype data"
 &>
 
-<& /solgs/model/phenotype/trait_phenotype_data.mas,
+<& phenotype/trait_phenotype_data.mas,
    model_pheno_means_descriptive_stat => $model_pheno_means_descriptive_stat,
    model_pheno_raw_descriptive_stat => $model_pheno_raw_descriptive_stat
  &>
@@ -90,27 +90,27 @@ $training_pop_url
 % if ($show_data)
 %{
 
-<& /solgs/model/variance_components.mas,
+<& variance_components.mas,
    variance_components => $variance_components,
 &>
 
-<& /solgs/model/accuracy.mas,
+<& accuracy.mas,
    accuracy_report        => $accuracy_report,
 &>
 
-<& /solgs/model/gebvs.mas,
+<& gebvs.mas,
    pop_id             => $training_pop_id,
   trait_id            => $trait_id
   &>
 
-  <& /solgs/population/gebv_pheno_regression.mas,
+  <& gebv_pheno_regression.mas,
         pop_id       => $training_pop_id,
        trait_id      => $trait_id,
        combo_pops_id => $combo_pops_id,
 &>
 
 
-<& /solgs/tools/kinship/analysis.mas,
+<& kinship/analysis.mas,
    pop_id  => $training_pop_id,
   &>
 
@@ -118,7 +118,7 @@ $training_pop_url
    top_marker_effects          => $top_marker_effects,
 &>
 
-<& selection_populations.mas,
+<& /solgs/population/selection_populations.mas,
    selection_prediction_download     => $selection_prediction_download,
    training_pop_analyzed_traits         => $training_pop_analyzed_traits,
    training_pop_id        => $training_pop_id,

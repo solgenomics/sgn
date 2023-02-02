@@ -1026,7 +1026,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 
 	 $c->controller('solGS::Trait')->get_acronym_pairs($c, $training_pop_id);
 
-	 $c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
+	 $c->stash->{template} = '/solgs/population/models/detail.mas';
      }
 
 }

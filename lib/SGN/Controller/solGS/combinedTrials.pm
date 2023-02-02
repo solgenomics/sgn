@@ -284,7 +284,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	$c->stash->{model_data} = \@training_pop_data;
 
 	$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
-	$c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
+	$c->stash->{template} = '/solgs/population/models/detail.mas';
     }
 }
 
