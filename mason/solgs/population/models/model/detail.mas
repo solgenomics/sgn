@@ -110,11 +110,11 @@ $training_pop_url
 &>
 
 
-<& kinship/analysis.mas,
+<& /solgs/tools/kinship/analysis.mas,
    pop_id  => $training_pop_id,
   &>
 
-<& /solgs/model/marker_effects.mas,
+<& marker_effects.mas,
    top_marker_effects          => $top_marker_effects,
 &>
 

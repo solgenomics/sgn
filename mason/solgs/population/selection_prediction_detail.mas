@@ -71,7 +71,7 @@ $data_set_type => ''
   title       => "Selection population summary",
   &>
 
- <& summary.mas,
+ <& /solgs/population/summary.mas,
     selection_pop_id   => $selection_pop_id,
     selection_pop_name => $selection_pop_name,
     selection_pop_desc => $selection_pop_desc,
@@ -101,7 +101,7 @@ $data_set_type => ''
 
 <& /solgs/tools/pca/analysis.mas &>
 
-<& /solgs/model/gebvs.mas &>
+<& /solgs/population/models/model/gebvs.mas &>
 
 <& /solgs/tools/genetic_gain/genetic_gain.mas,
    trait_id         => $trait_id,

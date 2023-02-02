@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/mode/gebvs.mas - displays a plot of the gebvs and download links.
+/solgs/population/models/model/gebvs.mas - displays a plot of the gebvs and download links.
 =AUTHOR
 
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -29,6 +29,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <br/>
 <br/>
 
-<& /solgs/model/save_gebvs.mas &>
+<& save_gebvs.mas &>
 
 </&>

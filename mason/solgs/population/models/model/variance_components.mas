@@ -14,7 +14,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$model_parameters
+$variance_components
 
 </%args>
 
@@ -29,7 +29,7 @@ $model_parameters
 &>     
   <& /page/columnar_table.mas,
      headings   => ["Variance Components", "Estimates"], 
-     data        => $model_parameters,
+     data        => $variance_components,
     __alt_freq   => 2,
     __alt_width  => 1,
     __alt_offset => 3,

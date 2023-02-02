@@ -349,7 +349,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	    $c->controller('solGS::solGS')->variance_components($c);
 
 	    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/model_detail.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/models/model/detail.mas');
 	}
 }
 

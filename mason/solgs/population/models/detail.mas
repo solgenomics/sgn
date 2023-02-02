@@ -92,12 +92,12 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 
 
 <& /solgs/tools/genetic_gain/genetic_gain.mas,
-     training_pop_analyzed_traits                => $training_pop_analyzed_traits,
-     training_pop_analyzed_traits_ids            => $training_pop_analyzed_traits_ids,
-     training_pop_id                         => $training_pop_id,
-     project_name                   => $training_pop_name,
-     selection_pop_id              => $selection_pop_id,
-     selection_pop_name            => $selection_pop_name,
+     training_pop_analyzed_traits => $training_pop_analyzed_traits,
+     training_pop_analyzed_traits_ids => $training_pop_analyzed_traits_ids,
+     training_pop_id => $training_pop_id,
+     project_name => $training_pop_name,
+     selection_pop_id => $selection_pop_id,
+     selection_pop_name => $selection_pop_name,
      selection_pop_analyzed_traits => $selection_pop_analyzed_traits,
 &>
 
