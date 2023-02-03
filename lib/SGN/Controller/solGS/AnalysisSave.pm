@@ -344,9 +344,12 @@ sub all_users_analyses_logs {
 	my ($self, $c) = @_;
 
 	my $dir = $c->stash->{analysis_log_dir};
-	my @files = File::Find::Rule->file()
-                                  ->name( '*.txt' )
-                                  ->in( $dir );
+	my $rule = File::Find::Rule->new;
+	$rule->file;
+	$rule->nonempty;
+	$rule->name('analysis_log');
+	
+	my @files = $rule->in($dir);
 
 	return \@files;
 
