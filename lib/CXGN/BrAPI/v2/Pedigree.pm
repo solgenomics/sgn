@@ -19,24 +19,32 @@ sub search {
     my $self = shift;
     my $params = shift;
     my $inputs = shift;
+
     my $status = $self->status;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
 
     my $depth_counter = 0;
 
     my $stock_id  = $params->{germplasmDbId}->[0];
-    my $depth = $params->{depth}->[0] || 1;
+    my $pedigree_depth = $params->{pedigreeDepth}->[0] || 1;
+    my $progeny_depth = $params->{progenyDepth}->[0] || 1;
+    my $full_tree = $params->{includeFullTree}->[0] || undef;
+    my $include_parents = $params->{includeParents}->[0] || 'true';
+    my $include_siblings = $params->{includeSiblings}->[0] || 'false';
+    my $include_progeny = $params->{includeProgeny}->[0] || 'true';
 
-    my $direct_descendant_ids;
-    my $result;
-    my $total_count = 0;
+    if($full_tree>0){
+        $pedigree_depth = 5;
+        $progeny_depth = 5;
+    }
+    
+    my $result = get_tree($self, $stock_id,$depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny);
+
     my @data_files;
-    my $parents = $stock_id;
-    my $progeny = $stock_id;
-
-    $result = get_tree($self, $stock_id,$depth_counter,$depth);
-
     my $data = {'data'=>$result};
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
+    my $total_count = $result ? scalar @{$result} : 0;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size, $page);
     return CXGN::BrAPI::JSONResponse->return_success($data, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
 }
 
@@ -44,51 +52,54 @@ sub get_tree {
     my $self = shift;
     my $stock_id = shift;
     my $depth_counter = shift;
-    my $depth = shift;
+    my $progeny_depth = shift;
+    my $pedigree_depth = shift;
+    my $include_parents = shift;
+    my $include_siblings = shift;
+    my $include_progeny = shift;
     my $results = shift;
 
-    my $result = get_pedigree($self, $stock_id);
-    push @$results, @$result;
+    my $result = get_pedigree_progeny($self, $stock_id,$include_parents,$include_siblings,$include_progeny);
+    if ($result) { push @$results, @$result; }
 
-    if($depth_counter < $depth){
-        $depth_counter++;
-        foreach (@$result){
+    $depth_counter++;
+    foreach (@$result){
+        if($depth_counter < $progeny_depth ){            
             foreach (@{$_->{progeny}}){
-                get_tree($self,$_->{germplasmDbId},$depth_counter,$depth,$results);
+                get_tree($self,$_->{germplasmDbId},$depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$results);
+                
             }
         }
-       
-    } 
-    
+
+        if($depth_counter < $pedigree_depth){
+            foreach (@{$_->{parents}}){
+                get_tree($self,$_->{germplasmDbId},$depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$results);
+                
+            }
+        }
+    }
     return $results;
 }
 
-sub get_pedigree {
+sub get_pedigree_progeny {
     my $self = shift;
     my $stock_id = shift;
-    my $depth_count = shift;
-    my $depth = shift;
+    my $include_parents = shift;
+    my $include_siblings = shift;
+    my $include_progeny = shift;
     my $status = $self->status;
-print STDERR "\n*stock_id:". Dumper \$stock_id;
-    my $direct_descendant_ids;
+
     my $result;
-    my $total_count = 0;
-    my @data_files;
 
-    push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
+    my $pedigree=germplasm_pedigree($self,$stock_id, $include_parents, $include_siblings);
 
-    my $stock = $self->bcs_schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
-    my $pedigree=germplasm_pedigree($self,$stock_id);
-    my $progeny=germplasm_progeny($self, $stock_id);
+    my $progeny_value=[];
+    if($include_progeny eq 'true'){
+        my $progeny=germplasm_progeny($self, $stock_id);
+        $progeny_value=$progeny->{progeny};
+    }
 
-    if ($stock) {
-        $total_count = 1;
-        my $stock_uniquename = $stock->uniquename();
-        my $stock_type = $stock->type_id();
-
-        my $mother;
-        my $father;
-
+    if ($pedigree) {
         push @$result, {
             additionalInfo=>{},
             breedingMethodDbId=>undef,
@@ -103,10 +114,10 @@ print STDERR "\n*stock_id:". Dumper \$stock_id;
             germplasmDbId=>$pedigree->{germplasmDbId},,
             germplasmName=>$pedigree->{germplasmName},
             germplasmPUI=>$pedigree->{germplasmPUI},
-            parents=>$pedigree->{parents},
-            pedigreeString=>$pedigree->{pedigree}, #"$mother/$father",
-            progeny=>$progeny->{progeny},
-            siblings=>$pedigree->{siblings}, #\@siblings
+            parents=>$include_parents eq 'true' ? $pedigree->{parents} : [],
+            pedigreeString=>$pedigree->{pedigree},
+            progeny=>$progeny_value, 
+            siblings=> $include_siblings eq 'true' ? $pedigree->{siblings} : [],
         };
     }
     return $result;
@@ -115,6 +126,8 @@ print STDERR "\n*stock_id:". Dumper \$stock_id;
 sub germplasm_pedigree {
     my $self = shift;
     my $stock_id = shift;
+    my $include_parents = shift;
+    my $include_siblings = shift;
     my $status = $self->status;
 
     my $direct_descendant_ids;
@@ -157,46 +170,49 @@ sub germplasm_pedigree {
         }
 
         ##Get sibblings
-        my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
-            FROM stock_relationship as stock_relationship1
-            INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
-            INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
-            LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-            LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) ";
-
-        my $h;
-
-        if($female_parent_stock_id && $male_parent_stock_id){
-            $q = $q . "WHERE female_parent.stock_id = ? AND male_parent.stock_id = ?";
-            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id, $male_parent_stock_id);
-        }
-        elsif ($female_parent_stock_id) {
-            $q = $q . "WHERE female_parent.stock_id = ? ORDER BY male_parent.stock_id";
-            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id);
-        }
-        elsif ($male_parent_stock_id) {
-            $q = $q . "WHERE male_parent.stock_id = ? ORDER BY female_parent.stock_id";
-            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $male_parent_stock_id);
-        }
-        else {
-            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent);
-        }
-
         my @siblings = ();
-        my $cross_plan;
+        if($include_siblings eq 'true'){
+            my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
+                FROM stock_relationship as stock_relationship1
+                INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
+                INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
+                LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+                LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) ";
 
-        while (my($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = $h->fetchrow_array()){
-             if ($progeny_id ne $stock_id){
-                push @siblings, {
-                    germplasmDbId => qq|$progeny_id|,
-                    germplasmName => $progeny_name
-                };
+            my $h;
+
+            if($female_parent_stock_id && $male_parent_stock_id){
+                $q = $q . "WHERE female_parent.stock_id = ? AND male_parent.stock_id = ?";
+                $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id, $male_parent_stock_id);
             }
-            $cross_plan = $cross_type;
+            elsif ($female_parent_stock_id) {
+                $q = $q . "WHERE female_parent.stock_id = ? ORDER BY male_parent.stock_id";
+                $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id);
+            }
+            elsif ($male_parent_stock_id) {
+                $q = $q . "WHERE male_parent.stock_id = ? ORDER BY female_parent.stock_id";
+                $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $male_parent_stock_id);
+            }
+            else {
+                $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent);
+            }
+
+            
+            my $cross_plan;
+
+            while (my($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = $h->fetchrow_array()){
+                if ($progeny_id ne $stock_id){
+                    push @siblings, {
+                        germplasmDbId => qq|$progeny_id|,
+                        germplasmName => $progeny_name
+                    };
+                }
+                $cross_plan = $cross_type;
+            }
         }
 
         #Cross information
@@ -231,20 +247,22 @@ sub germplasm_pedigree {
 
         #Add parents:
         my $parent = [];
-        if ($female_parent_stock_id){
-            push @$parent, {
-                germplasmDbId=>$female_parent_stock_id ? qq|$female_parent_stock_id| : $female_parent_stock_id ,
-                germplasmName=>$mother,
-                parentType=>'FEMALE',
-            };
-        }
-        if ($male_parent_stock_id){
-            push @$parent, {
-                germplasmDbId=>$male_parent_stock_id ? qq|$male_parent_stock_id| : $male_parent_stock_id,
-                germplasmName=>$father,
-                parentType=>'MALE',
+        if($include_parents eq 'true'){
+            if ($female_parent_stock_id){
+                push @$parent, {
+                    germplasmDbId=>$female_parent_stock_id ? qq|$female_parent_stock_id| : $female_parent_stock_id ,
+                    germplasmName=>$mother,
+                    parentType=>'FEMALE',
+                };
             }
+            if ($male_parent_stock_id){
+                push @$parent, {
+                    germplasmDbId=>$male_parent_stock_id ? qq|$male_parent_stock_id| : $male_parent_stock_id,
+                    germplasmName=>$father,
+                    parentType=>'MALE',
+                }
 
+            }
         }
 
         %result = (
@@ -259,8 +277,7 @@ sub germplasm_pedigree {
         );
     }
 
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
-    return \%result; #CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
+    return \%result;
 }
 
 sub germplasm_progeny {
@@ -269,60 +286,65 @@ sub germplasm_progeny {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my $result;
 
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({
         'type_id'=> $accession_cvterm,
         'stock_id'=> $stock_id,
     });
-    my $edges = $self->bcs_schema()->resultset("Stock::StockRelationship")->search(
-        [
+    if ($stock){
+        my $edges = $self->bcs_schema()->resultset("Stock::StockRelationship")->search(
+            [
+                {
+                    'me.subject_id' => $stock_id,
+                    'me.type_id' => $father_cvterm,
+                    'object.type_id'=> $accession_cvterm
+                },
+                {
+                    'me.subject_id' => $stock_id,
+                    'me.type_id' => $mother_cvterm,
+                    'object.type_id'=> $accession_cvterm
+                }
+            ],
             {
-                'me.subject_id' => $stock_id,
-                'me.type_id' => $father_cvterm,
-                'object.type_id'=> $accession_cvterm
-            },
-            {
-                'me.subject_id' => $stock_id,
-                'me.type_id' => $mother_cvterm,
-                'object.type_id'=> $accession_cvterm
+                join => 'object',
+                '+select' => ['object.uniquename'],
+                '+as' => ['progeny_uniquename']
             }
-        ],
-        {
-            join => 'object',
-            '+select' => ['object.uniquename'],
-            '+as' => ['progeny_uniquename']
+        );
+        my $full_data = [];
+        while (my $edge = $edges->next) {
+            if ($edge->type_id==$mother_cvterm){
+                push @{$full_data}, {
+                    germplasmDbId => "". $edge->object_id,
+                    germplasmName => $edge->get_column('progeny_uniquename'),
+                    parentType => "FEMALE"
+                };
+            } else {
+                push @{$full_data}, {
+                    germplasmDbId => "". $edge->object_id,
+                    germplasmName => $edge->get_column('progeny_uniquename'),
+                    parentType => "MALE"
+                };
+            }
         }
-    );
-    my $full_data = [];
-    while (my $edge = $edges->next) {
-        if ($edge->type_id==$mother_cvterm){
-            push @{$full_data}, {
-                germplasmDbId => "". $edge->object_id,
-                germplasmName => $edge->get_column('progeny_uniquename'),
-                parentType => "FEMALE"
-            };
-        } else {
-            push @{$full_data}, {
-                germplasmDbId => "". $edge->object_id,
-                germplasmName => $edge->get_column('progeny_uniquename'),
-                parentType => "MALE"
-            };
+        my $total_count = scalar @{$full_data};
+        my $last_item = $page_size*($page+1)-1;
+        if($last_item > $total_count-1){
+            $last_item = $total_count-1;
         }
-    }
-    my $total_count = scalar @{$full_data};
-    my $last_item = $page_size*($page+1)-1;
-    if($last_item > $total_count-1){
-        $last_item = $total_count-1;
-    }
-    my $result = {
-        germplasmName=>$stock->uniquename,
-        germplasmDbId=>$stock_id,
-        progeny=>[@{$full_data}[$page_size*$page .. $last_item]],
-    };
 
+        $result = {
+            germplasmName=>$stock->uniquename,
+            germplasmDbId=>$stock_id,
+            progeny=>[@{$full_data}[$page_size*$page .. $last_item]],
+        };
+
+    }
     return $result;
 }
 

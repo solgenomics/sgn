@@ -5317,7 +5317,12 @@ sub pedigree_GET {
 	my $brapi_module = $brapi->brapi_wrapper('Pedigree');
 	my $brapi_package_result = $brapi_module->search({
         germplasmDbId => $clean_inputs->{germplasmDbId},
-        depth => $clean_inputs->{depth},
+        pedigreeDepth => $clean_inputs->{pedigreeDepth},
+        progenyDepth => $clean_inputs->{progenyDepth},
+        includeFullTree => $clean_inputs->{includeFullTree},
+        includeSiblings => $clean_inputs->{includeSiblings},
+        includeParents => $clean_inputs->{includeParents},
+        includeProgeny => $clean_inputs->{includeProgeny},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
