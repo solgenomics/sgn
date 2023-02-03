@@ -762,7 +762,7 @@ rect.bordered {
 				      &nbsp;
 				    </div>
 				    <span class="col-sm-1 text-right">
-				      <input type="radio" name="consecutive_or_block_based_numbers"  id="block_based_plot_numbers" value="block_based_plot_numbers" checked="checked" />
+				      <input type="radio" name="plot_numbering_scheme"  id="block_based" value="block_based" checked="checked" />
 				    </span>
 				  
                                     <span class="col-sm-6 text-left">block based plot numbers (increment leading digit for every block)</span>
@@ -772,7 +772,7 @@ rect.bordered {
 				      &nbsp;
 				    </span>
 				    <span class="col-sm-1 text-right">
-				      <input type="radio" name="consecutive_or_block_based_numbers" id="consecutive_plot_numbers" value="consecutive_plot_numbers" />
+				      <input type="radio" name="plot_numbering_scheme" id="consecutive" value="consecutive" />
 				    </span>
 				    <span class="col-sm-6 text-left">
 				      consecutive plot numbers throughout the blocks

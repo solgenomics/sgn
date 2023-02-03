@@ -58,7 +58,8 @@ jQuery(document).ready(function ($) {
         var stock_type = $("#select_stock_type").val();
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
-	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_block_based_numbers"]:checked').val();
+	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	alert("VALIDATE: plot_numbering_scheme = "+plot_numbering_scheme);
         plants_per_plot = $("#add_plant_entries").val();
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
@@ -498,8 +499,8 @@ jQuery(document).ready(function ($) {
         var row_number_per_block=$('#row_number_per_block').val();
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
-	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_block_based_numbers"]:checked').val();
-       // alert(row_number);
+	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	alert("generate_experimental_design(): PLOT NUMBERING SCHEME = "+plot_numbering_scheme);
 
         var stock_list_id;
         var control_stock_list_id;
@@ -638,8 +639,9 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
-	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_block_based_numbers"]:checked').val();
-	alert('Consecutive? '+consecutive_or_block_based_numbers);
+	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
+	alert('Consecutive? '+plot_numbering_scheme);
+	
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -692,7 +694,7 @@ jQuery(document).ready(function ($) {
                 'plot_width': plot_width,
                 'plot_length': plot_length,
                 'use_same_layout' : use_same_layout,
-		'consecutive_or_block_based_numbers' : consecutive_or_block_based_numbers
+		'plot_numbering_scheme' : plot_numbering_scheme
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -2086,8 +2088,9 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
-	var consecutive_or_block_based_numbers = jQuery('input[name="consecutive_or_black_based_numbers"]:checked').val();
-
+	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	alert("PLOT NUMBERING SCHEME NOW: "+plot_numbering_scheme);
+	
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,
@@ -2112,7 +2115,7 @@ jQuery(document).ready(function ($) {
                 'block_size': block_size,
                 'max_block_size': max_block_size,
                 'plot_prefix': plot_prefix,
-                'consecutive_or_block_based_numbers' : consecutive_or_block_based_numbers,
+                'plot_numbering_scheme' : plot_numbering_scheme,
                 'start_number': start_number,
                 'increment': increment,
                 'design_json': design_json,

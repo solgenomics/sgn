@@ -88,7 +88,7 @@ sub create_design {
         $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
 
 	my $serie = 1;
-	if ($self->get_consecutive_or_block_based_numbers() eq "block_based_plot_numbers") {
+	if ($self->get_plot_numbering_scheme() eq "block_based") {
 	    $serie = 3;
 	}
         if ($self->has_randomization_seed()){

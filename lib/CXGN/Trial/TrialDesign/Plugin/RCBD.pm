@@ -73,7 +73,7 @@ sub create_design {
       $serie = 3;
   }
 
-  if ($self->get_consecutive_or_block_based_numbers() ne "block_based_plot_numbers") {
+  if ($self->get_plot_numbering_scheme() ne "block_based") {
       $plot_start = 1;
       $serie = 1;
   }

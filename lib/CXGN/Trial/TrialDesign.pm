@@ -75,7 +75,7 @@ has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_sta
 
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
 
-has 'consecutive_or_block_based_numbers' => (isa => 'Str', is => 'rw', default => 'block_based_plot_numbers');
+has 'plot_numbering_scheme' => (isa => 'Maybe[Str]', is => 'rw', default => 'block_based_plot_numbers'); # so far, either block_based or consecutive
 
 has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
 
@@ -200,7 +200,7 @@ sub _convert_plot_numbers {
   my $rep_plot_count = $total_plot_count / $number_of_reps;
   my $first_plot_number = 1;
 
-  if ($self->get_consecutive_or_block_based_numbers() eq "block_based_plot_numbers") {
+  if ($self->get_plot_numbering_scheme() eq "block_based") {
       print STDERR "Block based number selected - Providing plot based numbers.\n";
       my $plot_increment;
       if ($rep_plot_count > 999) {
