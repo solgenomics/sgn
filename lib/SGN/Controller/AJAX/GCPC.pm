@@ -268,9 +268,10 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
 	print STDERR "ACCESSIONS: ".Dumper($accessions);
 
-	my @accession_ids = map { $_->[0] } @$accessions;
+	my @accession_ids = map { $_->[0] } $accessions;
 	$accession_sex_scores = $self->get_trait_for_accessions($c, $plant_sex_cvterm_id, \@accession_ids);
-	$plant_sex_variable_name_R = make_R_trait_name($plant_sex_variable_name);
+	$plant_sex_variable_name_R = make_R_trait_name($plant_sex_variable_name);   
+    
     }
     else {
 	print STDERR "NOT RETRIEVING sEX DATA with $plant_sex_variable_name, $plant_sex_cvterm_id\n";
@@ -437,7 +438,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     
     my $download_url = '/documents/tempfiles/gcpc_files/'.$basename;
     my $histogram_image = '/documents/tempfiles/gcpc_files/'.$imagename;
-    my $download_link = "<a href=\"$download_url\" download>Download Results</a>";
+    my $download_link = "<a href=\"$histogram_image\" download>
+        <button class=\"btn btn-success\" >Download Histogram</button></a>";
 
 
     $c->stash->{rest} = {

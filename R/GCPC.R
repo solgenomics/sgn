@@ -324,6 +324,8 @@ write(paste("USER_ID COLUMN: ", userPheno[, userID]), stderr())
 userPheno[, dominanceEffectCol] <- userPheno[, userID]
 
 write(paste("USER PHENO userID2 COL", userPheno[, dominanceEffectCol]), stderr())
+uniq <- length(sapply(lapply(userPheno, unique), length))
+write(paste("UNIQUE", uniq), stderr())
 
 
 # Additional steps could be added here to remove outliers etc.
@@ -520,10 +522,10 @@ write("Done with calcCrossMean!!!!!!", stderr())
 
 # assign_hash(userPheno$germplasmName, userPheno$userSexes, hash)
 
-if (userSexes != "") { # "plant sex estimation 0-4"
+if (userSexes != "" && !is.na(sd(userPheno[, userSexes]))) { # "plant sex estimation 0-4"
   # !is.na(userSexes)
 
-  write(paste("userSexes", head(userSexes)), stderr())
+  write(paste("userSexes", sd(userPheno[, userSexes])), stderr())
 
   # Reformat the cross plan
   crossPlan <- as.data.frame(crossPlan)
@@ -544,7 +546,7 @@ if (userSexes != "") { # "plant sex estimation 0-4"
   crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$germplasmName), userSexes] # get sexes ordered by Parent2
 
   write(paste("PARENTS2 ", head(crossPlan)), stderr())
-
+  crossPlan <- na.omit(crossPlan)
   crossPlan <- crossPlan[!(crossPlan$P1Sex == 0 | crossPlan$P2Sex == 0), ] # remove the 0s
   crossPlan <- crossPlan[!(crossPlan$P1Sex == 1 & crossPlan$P2Sex == 1), ] # remove same sex crosses with score of 1
   crossPlan <- crossPlan[!(crossPlan$P1Sex == 2 & crossPlan$P2Sex == 2), ] # remove same sex crosses with score of 2
@@ -552,33 +554,31 @@ if (userSexes != "") { # "plant sex estimation 0-4"
   write(paste("CROSSPLAN FILTERED = ", head(crossPlan)), stderr())
   # crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
 
-  # get summary statistics for the cross prediction merit
-  sumstat <- crossPlan %>%
-    # Select and rename five variables
-    dplyr::select(
-      `CrossPredictedMerit` = CrossPredictedMerit
-    ) %>%
-    # Find the mean, st. dev., min, and max for each variable
-    summarise_each(funs(mean, sd, min, max)) %>%
-    # Move summary stats to columns
-    gather(key, value, everything()) %>%
-    separate(key, into = c("variable", "stat"), sep = "_") %>%
-    spread(stat, value) %>%
-    # Set order of summary statistics
-    # dplyr::select(variable, mean, sd, min, max) %>%
-    # Round all numeric variables to one decimal point
-    mutate_each(funs(round(., 3)), -variable)
+  ## replace plant sex numbers to male, female etc
+  col_repl <- c("P1Sex", "P2Sex")
+  crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% 1, "Male"))
+  crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% 2, "Female"))
+  crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% 3, "Monoecious male (m>f)"))
+  crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% 4, "Monoecious female(f>m)"))
 
-  write(paste("summary stats = ", head(sumstat)), stderr())
-
-  summaryFile <- paste(phenotypeFile, ".summary", sep = "")
-  write.csv(sumstat, summaryFile)
+  # ** summary statistics for the cross prediction merit
+  avg <- round(mean(crossPlan$CrossPredictedMerit), digits = 3)
+  max <- round(max(crossPlan$CrossPredictedMerit), digits = 3)
+  min <- round(min(crossPlan$CrossPredictedMerit), digits = 3)
+  std <- round(sd(crossPlan$CrossPredictedMerit), digits = 3)
+  leng <- length(crossPlan$CrossPredictedMerit)
 
   ## histogram
   histogra <- paste(phenotypeFile, ".png", sep = "")
   png(file = histogra, width = 600, height = 350)
   hist(crossPlan$CrossPredictedMerit, xlab = "Cross Predicted Merit", main = "Distribution")
+  mtext(paste("Mean =", avg), side = 3, adj = 1, line = 0)
+  mtext(paste("Standard Deviation = ", std), side = 3, adj = 1, line = -1)
+  mtext(paste("Range = (", min, " to ", max, ")"), side = 3, adj = 1, line = -2)
+  mtext(paste("No. of predictions = ", leng), side = 3, adj = 1, line = -3)
   dev.off()
+
+
 
   # subset the number of crosses the user wishes to output
   crossPlan[1:userNCrosses, ]
@@ -586,44 +586,31 @@ if (userSexes != "") { # "plant sex estimation 0-4"
   outputFile <- paste(phenotypeFile, ".out", sep = "")
 
   write.csv(finalcrosses, outputFile)
-}
-
-
-if (userSexes == "") {
+} else {
   # only subset the number of crosses the user wishes to output
   crossPlan <- as.data.frame(crossPlan)
-
+  crossPlan <- na.omit(crossPlan)
   crossPlan <- crossPlan[order(crossPlan[, 3], decreasing = TRUE), ] # orders the plan by predicted merit
   crossPlan[, 1] <- rownames(GP)[crossPlan[, 1]] # replaces internal ID with genotye file ID
   crossPlan[, 2] <- rownames(GP)[crossPlan[, 2]] # replaces internal ID with genotye file ID
   colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
 
   # get summary statistics for the cross prediction merit
-  sumstat <- crossPlan %>%
-    # Select and rename five variables
-    dplyr::select(
-      `CrossPredictedMerit` = CrossPredictedMerit
-    ) %>%
-    # Find the mean, st. dev., min, and max for each variable
-    summarise_each(funs(mean, sd, min, max)) %>%
-    # Move summary stats to columns
-    gather(key, value, everything()) %>%
-    separate(key, into = c("variable", "stat"), sep = "_") %>%
-    spread(stat, value) %>%
-    # Set order of summary statistics
-    # dplyr::select(variable, mean, sd, min, max) %>%
-    # Round all numeric variables to one decimal point
-    mutate_each(funs(round(., 3)), -variable)
+  avg <- round(mean(crossPlan$CrossPredictedMerit), digits = 3)
+  max <- round(max(crossPlan$CrossPredictedMerit), digits = 3)
+  min <- round(min(crossPlan$CrossPredictedMerit), digits = 3)
+  std <- round(sd(crossPlan$CrossPredictedMerit), digits = 3)
+  leng <- length(crossPlan$CrossPredictedMerit)
 
-  write(paste("summary stats = ", head(sumstat)), stderr())
-
-  summaryFile <- paste(phenotypeFile, ".summary", sep = "")
-  write.csv(sumstat, summaryFile)
 
   ## histogram
   histogra <- paste(phenotypeFile, ".png", sep = "")
   png(file = histogra, width = 600, height = 350)
   hist(crossPlan$CrossPredictedMerit, xlab = "Cross Predicted Merit", main = "Distribution")
+  mtext(paste("Mean =", avg), side = 3, adj = 1, line = 0)
+  mtext(paste("Standard Deviation = ", std), side = 3, adj = 1, line = -1)
+  mtext(paste("Range = (", min, " to ", max, ")"), side = 3, adj = 1, line = -2)
+  mtext(paste("No. of predictions = ", leng), side = 3, adj = 1, line = -3)
   dev.off()
 
   ## save the best 100 predictions
