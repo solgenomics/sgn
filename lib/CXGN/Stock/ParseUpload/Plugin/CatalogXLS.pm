@@ -95,27 +95,35 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $item_name_header  = $worksheet->get_cell(0,0)->value();
+        $item_name_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $item_type_header  = $worksheet->get_cell(0,1)->value();
+        $item_type_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $material_type_header  = $worksheet->get_cell(0,2)->value();
+        $material_type_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $category_header  = $worksheet->get_cell(0,3)->value();
+        $category_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $additional_info_header  = $worksheet->get_cell(0,4)->value();
+        $additional_info_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $material_source_header  = $worksheet->get_cell(0,5)->value();
+        $material_source_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $breeding_program_header  = $worksheet->get_cell(0,6)->value();
+        $breeding_program_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
         $contact_person_header  = $worksheet->get_cell(0,7)->value();
+        $contact_person_header =~ s/^\s+|\s+$//g;
     }
 
     if (!$item_name_header || $item_name_header ne 'item_name' ) {
@@ -182,10 +190,10 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,5)) {
             $material_source =  $worksheet->get_cell($row,5)->value();
-            $material_source =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
             $breeding_program =  $worksheet->get_cell($row,6)->value();
+            $breeding_program =~ s/^\s+|\s+$//g;
         }
 #        if ($worksheet->get_cell($row,6)) {
 #            $availability =  $worksheet->get_cell($row,6)->value();
@@ -193,6 +201,7 @@ sub _validate_with_plugin {
 #        }
         if ($worksheet->get_cell($row,7)) {
             $contact_person_username =  $worksheet->get_cell($row,7)->value();
+            $contact_person_username =~ s/^\s+|\s+$//g;
         }
 
 
@@ -244,12 +253,10 @@ sub _validate_with_plugin {
         }
 
         if ($item_name){
-            $item_name =~ s/^\s+|\s+$//g;
             $seen_stock_names{$item_name}++;
         }
 
         if ($breeding_program){
-            $breeding_program =~ s/^\s+|\s+$//g;
             $seen_program_names{$breeding_program}++;
         }
 
@@ -332,30 +339,38 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $item_name = $worksheet->get_cell($row,0)->value();
+            $item_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $item_type =  $worksheet->get_cell($row,1)->value();
+            $item_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $material_type =  $worksheet->get_cell($row,2)->value();
+            $material_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $category = $worksheet->get_cell($row,3)->value();
+            $category =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
             $additional_info =  $worksheet->get_cell($row,4)->value();
+            $additional_info =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
             $material_source =  $worksheet->get_cell($row,5)->value();
+            $material_source =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
             $breeding_program =  $worksheet->get_cell($row,6)->value();
+            $breeding_program =~ s/^\s+|\s+$//g;
         }
 #        if ($worksheet->get_cell($row,6)) {
 #            $availability =  $worksheet->get_cell($row,6)->value();
 #        }
         if ($worksheet->get_cell($row,7)) {
             $contact_person_username =  $worksheet->get_cell($row,7)->value();
+            $contact_person_username =~ s/^\s+|\s+$//g;
         }
 
         my $contact_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_username);
