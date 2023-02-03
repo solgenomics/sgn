@@ -77,13 +77,13 @@ md = data.frame(missingData)
 
 
 #Removing traits with more than 60% of missing data
-z=0
-for (i in 40:ncol(phenoData)){
-  if (md[i,1]/nrow(phenoData)>0.6){
-    phenoData[[i-z]] <- NULL
-    z = z+1
-  }
-}
+# z=0
+# for (i in 40:ncol(phenoData)){
+#   if (nrow(phenoData)>0 & md[i,1]/nrow(phenoData)>0.6){
+#     phenoData[[i-z]] <- NULL
+#     z = z+1
+#   }
+# }
 
 #Removing non numeric data
 z=0
@@ -138,32 +138,22 @@ for (i in 40:(ncol(phenoData))) {
     outcome = colnames(phenoData)[i]    
 
     print(paste0('outcome ', outcome))
-    if (szreps == 1){
-      model <- lmer(get(outcome)~(1|germplasmName)+(1|blockNumber),
-        na.action = na.exclude,
-        data=phenoData)
-    }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|blockNumber),
-        na.action = na.exclude,
-        data=phenoData)
-    }
- 
-    #model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
     
+    model <- lmer(get(outcome)~ 1 + (1|germplasmName),
+      na.action = na.exclude,
+      data=phenoData)
+
     
     # variance = as.data.frame(VarCorr(model))
-    variance = VarCorr(model)
-    gvar = variance [[1]][1]
-    envar = variance [[2]][1]
-    resvar = attr(variance,"sc")^2
+    variance = data.frame(VarCorr(model))
     
-    H2 = gvar/ (gvar + (envar) + (resvar))
+    H2 = variance$vcov[1]/ (variance$vcov[1] + variance$vcov[2])
     #H2 = gvar/(gvar + (envar))
     H2nw = format(round(H2, 4), nsmall = 4)
     her[numb] = round(as.numeric(H2nw), digits =3)
-    Vg[numb] = round(as.numeric(gvar), digits = 3)
-    Ve[numb] = round(as.numeric(envar), digits = 3)
-    Vres[numb] = round(as.numeric(resvar), digits = 3)
+    Vg[numb] = round(as.numeric(variance$vcov[1]), digits = 3)
+    Ve[numb] = round(as.numeric(variance$vcov[2]), digits = 3)
+    # Vres[numb] = round(as.numeric(resvar), digits = 3)
     resp_var[numb] = colnames(phenoData)[i]
     
     numb = numb + 1
@@ -176,7 +166,7 @@ for (i in 40:(ncol(phenoData))) {
 }
 
 #Prepare information to export data
-Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
+Heritability = data.frame(resp_var,Vg, Ve, her)
 print(Heritability)
 #library(tidyverse)
 Heritability = Heritability %>% 
@@ -184,8 +174,8 @@ Heritability = Heritability %>%
     trait = resp_var,
     Hert = her,
     Vg = Vg,
-    Ve = Ve,
-    Vres = Vres
+    Ve = Ve
+    # Vres = Vres
   )
 print(Heritability)
 
