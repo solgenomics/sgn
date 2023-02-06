@@ -1,0 +1,140 @@
+<%args>
+
+</%args>
+
+
+<div class="modal fade" id="upload_tissue_culture_inventory_dialog" name="upload_tissue_culture_inventory_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTissueCultureInventoryDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTissueCultureInventoryDialog">Upload Tissue Culture Status</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Tissue Culture Upload Information' &>
+                        <p>
+                            <a id="tissue_culture_progress_spreadsheet_format_info">Upload Information</a>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_tissue_culture_form" name="upload_tissue_culture_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Breeding Program: </label>
+                            <div class="col-sm-8" >
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <div class="col-sm-8">
+                                <input type="file" name="tissue_culture_file" id="tissue_culture_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_tissue_culture_submit" id="upload_tissue_culture_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_tissue_culture_error_display" name="upload_tissue_culture_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTissueCultureErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTissueCultureErrorDialog">Upload Tissue Culture Status Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tissue_culture_status_saved_dialog_message" name="tissue_culture_status_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="tissueCultureSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tissueCultureSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The tissue culture status was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_tissue_culture_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tissue_culture_spreadsheet_info_dialog" name="tissue_culture_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="tissueCultureFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tissueCultureFileInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Tissue culture status may be uploaded in an Excel file (.xls or .xlsx)
+                    <br><br>
+                    <b>Header:</b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td> </td>
+                                <td> </td>
+                                <td> </td>
+                                <td> </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Field Info:</b>
+                    <ul>
+                        <li> </li>
+                        <li> </li>
+                        <li> </li>
+                    </ul>
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_tissue_culture_inventory_button').click(function(){
+        jQuery('#upload_tissue_culture_inventory_dialog').modal("show");
+    });
+
+
+});
+
+</script>
