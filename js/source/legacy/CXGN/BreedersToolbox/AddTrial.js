@@ -59,7 +59,7 @@ jQuery(document).ready(function ($) {
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
 	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-	alert("VALIDATE: plot_numbering_scheme = "+plot_numbering_scheme);
+	//alert("VALIDATE: plot_numbering_scheme = "+plot_numbering_scheme);
         plants_per_plot = $("#add_plant_entries").val();
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
@@ -500,7 +500,7 @@ jQuery(document).ready(function ($) {
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
 	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-	alert("generate_experimental_design(): PLOT NUMBERING SCHEME = "+plot_numbering_scheme);
+	//alert("generate_experimental_design(): PLOT NUMBERING SCHEME = "+plot_numbering_scheme);
 
         var stock_list_id;
         var control_stock_list_id;
@@ -640,7 +640,7 @@ jQuery(document).ready(function ($) {
         }
 
 	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
-	alert('Consecutive? '+plot_numbering_scheme);
+	//alert('Consecutive? '+plot_numbering_scheme);
 	
         $.ajax({
             type: 'POST',
