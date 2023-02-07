@@ -138,7 +138,7 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_new_tissue_culture_info_submit").click(function(){
         var uploadFile = jQuery("#new_tissue_culture_info_file").val();
-        jQuery('#upload_new_tissue_culture_info_form').attr("action", "/ajax/cross/upload_info");
+        jQuery('#upload_new_tissue_culture_info_form').attr("action", "/ajax/stock/upload_tissue_culture_info");
         if (uploadFile === ''){
             alert("Please select a file");
             return;
