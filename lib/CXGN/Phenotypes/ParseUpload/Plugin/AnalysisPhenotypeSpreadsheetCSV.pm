@@ -65,7 +65,10 @@ sub validate {
         return \%parse_result;
     }
 
-    if ( $columns[0] ne "stock_names" ) {
+    my $stock_names_header = $columns[0];
+    $stock_names_header =~ s/^\s+|\s+$//g;
+
+    if ( $stock_names_header ne "stock_names" ) {
             $parse_result{'error'} = 'File contents incorrect. Header row must contain: "stock_names" followed by all measured traits.';
             print STDERR "File contents incorrect.\n";
             return \%parse_result;
@@ -94,7 +97,9 @@ sub validate {
             return \%parse_result;
         }
 
-        $seen_stock_names{$columns[0]}++;
+        my $stock_name = $columns[0];
+        $stock_name =~ s/^\s+|\s+$//g;
+        $seen_stock_names{$stock_name}++;
 
         for my $col_num ($num_col_before_traits .. $num_cols-1) {
             my $value_string = $columns[$col_num];
@@ -190,12 +195,14 @@ sub parse {
         }
 
         my $observation_unit_name = $columns[0];
+        $observation_unit_name =~ s/^\s+|\s+$//g;
         $observation_units_seen{$observation_unit_name} = 1;
 
         for my $col_num ($num_col_before_traits .. $num_cols-1) {
 
             my $trait_name = $header_columns[$col_num];
             if ($trait_name) {
+                $trait_name =~ s/^\s+|\s+$//g;
                 $traits_seen{$trait_name} = 1;
                 my $value_string = '';
                 if ($columns[$col_num]){

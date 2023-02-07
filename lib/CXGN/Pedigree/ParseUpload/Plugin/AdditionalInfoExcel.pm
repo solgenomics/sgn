@@ -61,6 +61,7 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $cross_name_head  = $worksheet->get_cell(0,0)->value();
+        $cross_name_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
@@ -75,6 +76,7 @@ sub _validate_with_plugin {
 
     for my $column (1 .. $col_max){
         my $header_string = $worksheet->get_cell(0,$column)->value();
+        $header_string =~ s/^\s+|\s+$//g;
 
         if (!$valid_headers{$header_string}){
             push @error_messages, "Invalid info type: $header_string";

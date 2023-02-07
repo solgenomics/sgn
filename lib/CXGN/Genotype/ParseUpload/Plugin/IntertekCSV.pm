@@ -32,35 +32,65 @@ sub _validate_with_plugin {
                 @header_info = $csv->fields();
             }
 
+        my $intertek_snp_id_header = $header_info[0];
+        $intertek_snp_id_header =~ s/^\s+|\s+$//g;
+
+        my $customer_snp_id_header = $header_info[1];
+        $customer_snp_id_header =~ s/^\s+|\s+$//g;
+
+        my $ref_header = $header_info[2];
+        $ref_header =~ s/^\s+|\s+$//g;
+
+        my $alt_header = $header_info[3];
+        $alt_header =~ s/^\s+|\s+$//g;
+
+        my $chrom_header = $header_info[4];
+        $chrom_header =~ s/^\s+|\s+$//g;
+
+        my $position_header = $header_info[5];
+        $position_header =~ s/^\s+|\s+$//g;
+
+        my $quality_header = $header_info[6];
+        $quality_header =~ s/^\s+|\s+$//g;
+
+        my $filter_header = $header_info[7];
+        $filter_header =~ s/^\s+|\s+$//g;
+
+        my $info_header = $header_info[8];
+        $info_header =~ s/^\s+|\s+$//g;
+
+        my $format_header = $header_info[9];
+        $format_header =~ s/^\s+|\s+$//g;
+
         # Check that the columns in the marker info file are what we expect
-        if ($header_info[0] ne 'IntertekSNPID'){
+        if ($intertek_snp_id_header ne 'IntertekSNPID'){
             push @error_messages, 'Column 1 header must be "IntertekSNPID" in the SNP Info File.';
         }
-        if ($header_info[1] ne 'CustomerSNPID'){
+        if ($customer_snp_id_header ne 'CustomerSNPID'){
             push @error_messages, 'Column 2 header must be "CustomerSNPID" in the SNP Info File.';
         }
-        if ($header_info[2] ne 'Reference'){
+        if ($ref_header ne 'Reference'){
             push @error_messages, 'Column 3 header must be "Reference" in the SNP Info File.';
         }
-        if ($header_info[3] ne 'Alternate'){
+        if ($alt_header ne 'Alternate'){
             push @error_messages, 'Column 4 header must be "Alternate" in the SNP Info File.';
         }
-        if ($header_info[4] ne 'Chromosome'){
+        if ($chrom_header ne 'Chromosome'){
             push @error_messages, 'Column 5 header must be "Chromosome" in the SNP Info File.';
         }
-        if ($header_info[5] ne 'Position'){
+        if ($position_header ne 'Position'){
             push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
         }
-        if ($header_info[6] ne 'Quality'){
+        if ($quality_header ne 'Quality'){
             push @error_messages, 'Column 7 header must be "Quality" in the SNP Info File.';
         }
-        if ($header_info[7] ne 'Filter'){
+        if ($filter_header ne 'Filter'){
             push @error_messages, 'Column 8 header must be "Filter" in the SNP Info File.';
         }
-        if ($header_info[8] ne 'Info'){
+        if ($info_header ne 'Info'){
             push @error_messages, 'Column 9 header must be "Info" in the SNP Info File.';
         }
-        if ($header_info[9] ne 'Format'){
+        if ($format_header ne 'Format'){
             push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
         }
 

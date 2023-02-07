@@ -63,18 +63,23 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
+        $seedlot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $plot_name_head  = $worksheet->get_cell(0,1)->value();
+        $plot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $amount_head  = $worksheet->get_cell(0,2)->value();
+        $amount_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $weight_head  = $worksheet->get_cell(0,3)->value();
+        $weight_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $description_head  = $worksheet->get_cell(0,4)->value();
+        $description_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
@@ -106,9 +111,11 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $plot_name = $worksheet->get_cell($row,1)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $amount =  $worksheet->get_cell($row,2)->value();
@@ -216,11 +223,13 @@ sub _parse_with_plugin {
         my $seedlot_name;
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g;
             $seen_seedlot_names{$seedlot_name}++;
         }
         my $plot_name;
         if ($worksheet->get_cell($row,1)) {
             $plot_name = $worksheet->get_cell($row,1)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
             $seen_plot_names{$plot_name}++;
         }
     }
@@ -252,9 +261,11 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $plot_name = $worksheet->get_cell($row,1)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $amount =  $worksheet->get_cell($row,2)->value();
