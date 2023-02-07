@@ -7,7 +7,7 @@
 
 <& /page/page_title.mas, title=>"Manage Inventories" &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Tissue Culture Inventory</h4>", info_section_subtitle => 'View tissue culture status',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_tissue_culture_inventory_button">Upload Tissue Culture Inventory</button>', icon_class => "glyphicon glyphicon-grain", info_section_id => "tissue_culture_inventory_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Tissue Culture Inventory</h4>", info_section_subtitle => 'View tissue culture information',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_new_tissue_culture_info_button">Upload New Tissue Culture Info</button>', icon_class => "glyphicon glyphicon-grain", info_section_id => "new_tissue_culture_info_file_section" &>
 
 <& /breeders_toolbox/tissue_culture_upload.mas &>
 
