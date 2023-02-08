@@ -44,8 +44,11 @@ sub search {
     my $level_code_arrayref = $params->{observationUnitLevelCode} || ($params->{observationUnitLevelCodes} || ());
     my $levels_relation_arrayref = $params->{observationLevelRelationships} || ();
     my $levels_arrayref = $params->{observationLevels} || ();
-    # externalReferenceID
-    # externalReferenceSource
+
+
+    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+    my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
+
 
     #TODO: Use materialized_view_stockprop or construct own query. Materialized phenotype jsonb takes too long when there is data in the db
     if ($levels_arrayref){
@@ -135,9 +138,26 @@ sub search {
                     season => undef,
                     seasonDbId => undef
                 };
+                
+                my $additional_info;
+                my $external_references;
+                #get additional info
+                my $rs = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $additional_info_type_id, phenotype_id => $_->{phenotype_id}  });
+                if ($rs->count() > 0){
+                    my $additional_info_json = $rs->first()->value();
+                    $additional_info  = $additional_info_json ? decode_json($additional_info_json) : undef;
+                }
+
+                #get external references
+                my $rs2 = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $external_references_type_id, phenotype_id => $_->{phenotype_id} });
+                if ($rs2->count() > 0){
+                    my $external_references_json = $rs2->first()->value();
+                    $external_references  = $external_references_json ? decode_json($external_references_json) : undef;
+                }
+
                 push @brapi_observations, {
-                    additionalInfo => {},
-                    externalReferences => [],
+                    additionalInfo => $additional_info,
+                    externalReferences => $external_references,
                     observationDbId => qq|$_->{phenotype_id}|,
                     observationVariableDbId => qq|$_->{trait_id}|,
                     observationVariableName => $_->{trait_name},
