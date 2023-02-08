@@ -5,7 +5,7 @@
 
 <%args>
 
-$ajaxRequestString => ""
+    $ajaxRequestString => ""
 
 </%args>
 
@@ -13,53 +13,56 @@ $ajaxRequestString => ""
 
 <& '/page/page_title.mas', title => "Graphical Filtering" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'jquery.dataTables-buttons-min', 'jquery.dataTables-buttons-html5-min', 'jszip-min', 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
 
 <div id="select_div" class="row" hidden="true">
-  <!-- form for selecting a list -->
-  <p>Choose a list of <!--plant, plots, or -->trials to filter.</p>
-  <form class="tc-form">
-    <div class="form-group">
-        <!-- list select -->
-        <div id="filter_list_select_container" class="select_container col-md-6">
-          <select disabled class="form-control input-sm" id="filter_list_select">
-            <option selected="selected">Loading...</option>
-          </select>
+    <!-- form for selecting a list -->
+    <p>Choose a list of <!--plant, plots, or -->trials to filter.</p>
+    <form class="tc-form">
+        <div class="form-group">
+            <!-- list select -->
+            <div id="filter_list_select_container" class="select_container col-md-6">
+                <select disabled class="form-control input-sm" id="filter_list_select">
+                    <option selected="selected">Loading...</option>
+                </select>
+            </div>
+            <div id="type_list_select_container" class="select_container col-md-2">
+                <select disabled class="form-control input-sm" id="type_list_select">
+                    <option selected disabled value="">Select Type</option>
+                    <option value="plot">Plots</option>
+                    <option value="plant">Plants</option>
+                </select>
+            </div>
+            <div class="checkbox col-md-2">
+                <label>
+                    <input type="checkbox" id="accession_group"> Group By Accession
+                </label>
+            </div>
+            <div class="select_container col-md-2">
+                <button id="confirm_list_select" type="button" class="btn btn-primary">Confirm</button>
+            </div>
         </div>
-        <div id="type_list_select_container" class="select_container col-md-3">
-          <select disabled class="form-control input-sm" id="type_list_select">
-            <option selected disabled value="">Select Type</option>
-            <option value="plot">Plots</option>
-            <option value="plant">Plants</option>
-          </select>
-        </div>
-        <div class="checkbox col-md-3">
-          <label>
-            <input type="checkbox" id="accession_group"> Group By Accession
-          </label>
-        </div>
-    </div>
-  </form>
+    </form>
 </div>
 <!-- spinner to show during ajax call -->
 <div class="row">
-  <center>
-    <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
-  </center>
+    <center>
+        <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
+    </center>
 </div>
 <br>
 <!-- div in which to draw filters -->
 <div id="filter_div" class="row"></div>
 <!-- div with table of filtered results and an option to save the output as a list -->
 <div id="filtered_results_wrap" hidden="true" class="row dataTables_wrapper">
-  <&| /page/info_section.mas, title => 'Filtered Results', collapsible=>0, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Filtered Results', collapsible=>0, collapsed=>0 &>
     <table id="filtered_results" width="100%" class="table table-hover table-striped dataTable no-footer" role="grid" style="width: 100%;"></table>
-  </&>
-  <&| /page/info_section.mas, title => 'Save Accessions results as List', collapsible=>1, collapsed=>1 &>
+</&>
+<&| /page/info_section.mas, title => 'Save Accessions results as List', collapsible=>1, collapsed=>1 &>
     <div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
     <div id="graphical_filter_result_names" style="display: none;"></div>
 
-  </&>
+</&>
 </div>
 
 <script>
@@ -74,10 +77,8 @@ $ajaxRequestString => ""
       auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
       if (!auth_token){ alert("Login required to display graphical filtering"); }
   }
-  
-  $('#accession_group').change(function(){$('#type_list_select').trigger("change");})
-  
-  $('#type_list_select').change(function(){
+
+  $('#confirm_list_select').on("click", function() {
     var list_id = $("#filter_list_select").val(),
         unit = $("#type_list_select").val(),
         group = $('#accession_group').is(":checked"),
@@ -123,7 +124,24 @@ $ajaxRequestString => ""
         group? ["Accession"] : ["Study","Unit","Accession"],
         group? groupByAccession : undefined
       );
-    currentGFilter.draw("#filter_div","#filtered_results");
+    currentGFilter.draw(
+        "#filter_div",
+        "#filtered_results",
+        [
+            {
+                 extend: 'csvHtml5',
+                 filename: "graph_filtering",
+            },
+            {
+                 extend: 'excelHtml5',
+                 filename: "graph_filtering",
+            },
+             {
+                 extend: 'copyHtml5',
+                 text: "Copy to Clipboard",
+            },
+        ]
+        );
   }
 
   $(document).ready(function(){

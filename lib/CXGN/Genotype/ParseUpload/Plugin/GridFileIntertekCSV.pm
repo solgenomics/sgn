@@ -50,7 +50,9 @@ sub _validate_with_plugin {
     close($F);
 
     # Check that the first column in the header is equal to 'SampleName.LabID'
-    if ($fields[0] ne 'SampleName.LabID'){
+    my $column_1_header = $fields[0];
+    $column_1_header =~ s/^\s+|\s+$//g;
+    if ($column_1_header ne 'SampleName.LabID'){
         push @error_messages, 'Column 1 header must be "SampleName.LabID" in the Grid File.';
     }
 

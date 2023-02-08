@@ -45,11 +45,27 @@ sub _validate_with_plugin {
         return;
     }
 
-    if ( $columns[0] ne "box_id" &&
-        $columns[1] ne "seed_id" &&
-        $columns[2] ne "inventory_date" &&
-        $columns[3] ne "inventory_person" &&
-        $columns[4] ne "weight_gram" ) {
+
+    my $box_id_head = $columns[0];
+    $box_id_head =~ s/^\s+|\s+$//g;
+
+    my $seed_id_head = $columns[1];
+    $seed_id_head =~ s/^\s+|\s+$//g;
+
+    my $inventory_date_head = $columns[2];
+    $inventory_date_head =~ s/^\s+|\s+$//g;
+
+    my $inventory_person_head = $columns[3];
+    $inventory_person_head =~ s/^\s+|\s+$//g;
+
+    my $weight_gram_head = $columns[4];
+    $weight_gram_head =~ s/^\s+|\s+$//g;
+
+    if ( $box_id_head ne "box_id" ||
+        $seed_id_head ne "seed_id" ||
+        $inventory_date_head ne "inventory_date" ||
+        $inventory_person_head ne "inventory_person" ||
+        $weight_gram_head ne "weight_gram" ) {
             push @error_messages, 'File contents incorrect. Header row must contain: "box_id","seed_id","inventory_date","inventory_person","weight_gram"';
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
