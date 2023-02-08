@@ -61,14 +61,6 @@ sub search {
     my $page_obj = CXGN::Page->new();
     my $main_production_site_url = $page_obj->get_hostname();
 
-    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-        bcs_schema => $self->bcs_schema,
-        table_name => 'stock',
-        table_id_key => 'stock_id',
-        id => $observation_unit_db_id
-    });
-    my $reference_result = $references->search();
-
     my $lt = CXGN::List::Transform->new();
     
     if (!$trait_ids_arrayref && $trait_list_arrayref) {
@@ -219,9 +211,14 @@ sub search {
         if ($replicate) {
             push @observationLevelRelationships, {
                 levelCode => $replicate,
+                levelName => "rep",
+                levelOrder => _order("replicate"),
+            };
+            push @observationLevelRelationships, {
+                levelCode => $replicate,
                 levelName => "replicate",
                 levelOrder => _order("replicate"),
-            }
+            };
         }
         if ($block) {
             push @observationLevelRelationships, {
@@ -264,28 +261,14 @@ sub search {
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
         #Get external references
-        my @references;
-
-        if (%$reference_result{$obs_unit->{observationunit_stock_id}}){
-            foreach (@{%$reference_result{$obs_unit->{observationunit_stock_id}}}){
-                my $reference_source = $_->[0] || undef;
-                my $url = $_->[1];
-                my $accession = $_->[2];
-                my $reference_id;
-
-                if($reference_source eq 'DOI') { 
-                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
-                } else {
-                    $reference_id = ($accession) ? "$url$accession" : $url;
-                }
-
-                push @references, {
-                    referenceID => $reference_id,
-                    referenceSource => $reference_source
-                };
-                
-            }
-        }
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            table_name => 'stock',
+            table_id_key => 'stock_id',
+            id => qq|$obs_unit->{observationunit_stock_id}|
+        });
+        my $external_references = $references->search();
+        my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
 
         my @plot_image_ids;
 			eval {
@@ -302,7 +285,7 @@ sub search {
         
 
         push @data_window, {
-            externalReferences => \@references,
+            externalReferences => @formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
@@ -425,8 +408,9 @@ sub observationunits_update {
             if($_->{levelName} eq 'block'){
                 $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
             }
-            if($_->{levelName} eq 'replicate'){
+            if($_->{levelName} eq 'replicate' || $_->{levelName} eq 'rep'){
                 $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
+                $_->{levelName} = 'replicate';
             }
         }
         if (defined $raw_additional_info) {
@@ -627,6 +611,7 @@ sub observationunits_store {
         my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
         my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
         my $ou_level = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
+        my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $raw_additional_info = $params->{additionalInfo} || undef;
         my %specific_keys = map { $_ => 1 } ("observationUnitParent","control");
         my %additional_info;
@@ -666,8 +651,9 @@ sub observationunits_store {
             if($_->{levelName} eq 'block'){
                 $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
             }
-            if($_->{levelName} eq 'replicate'){
+            if($_->{levelName} eq 'replicate' || $_->{levelName} eq 'rep'){
                 $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
+                $_->{levelName} = 'replicate';
             }
         }
 
@@ -687,19 +673,20 @@ sub observationunits_store {
             }
 
             $plot_hash = {
-                plot_name => $plot_parent_name,
-                plant_names => [$plot_name],
+                plot_name       => $plot_parent_name,
+                plant_names     => [ $plot_name ],
                 # accession_name => $accession_name,
-                stock_name => $accession_name,
-                plot_number => $plot_number,
-                block_number => $block_number,
-                is_a_control => $is_a_control,
-                rep_number => $rep_number,
-                range_number => $range_number,
-                row_number => $row_number,
-                col_number => $col_number,
+                stock_name      => $accession_name,
+                plot_number     => $plot_number,
+                block_number    => $block_number,
+                is_a_control    => $is_a_control,
+                rep_number      => $rep_number,
+                range_number    => $range_number,
+                row_number      => $row_number,
+                col_number      => $col_number,
                 # plot_geo_json => $plot_geo_json,
-                additional_info => \%additional_info
+                additional_info => \%additional_info,
+                external_refs   => $observationUnit_x_ref
             };
         } else {
             $plot_hash = {
@@ -714,7 +701,8 @@ sub observationunits_store {
                 row_number => $row_number,
                 col_number => $col_number,
                 # plot_geo_json => $plot_geo_json,
-                additional_info => \%additional_info
+                additional_info => \%additional_info,
+                external_refs   => $observationUnit_x_ref
             };
         }
 
@@ -791,7 +779,21 @@ sub observationunits_store {
                     $param{experiment_type} = 'field_layout';
                 }
                 my $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
-                $trial_layout->generate_and_cache_layout();
+                my $design = $trial_layout->generate_and_cache_layout();
+
+                foreach my $plot_num (keys %{$design}) {
+                    my $observationUnit_x_ref = $study->{$plot_num}->{external_refs};
+                    if ($observationUnit_x_ref){
+                        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                            bcs_schema => $self->bcs_schema,
+                            table_name => 'stock',
+                            table_id_key => 'stock_id',
+                            external_references => $observationUnit_x_ref,
+                            id => $design->{$plot_num}->{plot_id}
+                        });
+                        my $reference_result = $references->store();
+                    }
+                }
             }
         }
     };
