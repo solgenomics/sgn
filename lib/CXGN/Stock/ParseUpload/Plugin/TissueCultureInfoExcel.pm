@@ -13,6 +13,8 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $tissue_culture_properties = $self->get_editable_stock_props();
+
 
     my $dbh = $self->get_chado_schema()->storage()->dbh();
 
@@ -80,7 +82,7 @@ sub _validate_with_plugin {
     }
 
     my %valid_properties;
-    my @properties = @{$cross_properties};
+    my @properties = @{$tissue_culture_properties};
     foreach my $property(@properties){
         $valid_properties{$property} = 1;
     }
