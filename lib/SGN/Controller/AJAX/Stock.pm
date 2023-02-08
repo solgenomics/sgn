@@ -2287,7 +2287,8 @@ sub upload_tissue_culture_info_POST : Args(0) {
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my @stock_props = ('tissue_culture_data_json');
+    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
     $parser->load_plugin('TissueCultureInfoExcel');
     $parsed_data = $parser->parse();
     #print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
