@@ -74,11 +74,11 @@ sub _validate_with_plugin {
         $tissue_culture_id_header =~ s/^\s+|\s+$//g;
     }
 
-    if (!$stock_name_header || $stock_name_header ne 'stock_name' ) {
-        push @error_messages, "Cell A1: stock_name is missing from the header";
+    if (!$stock_name_header || $stock_name_header ne 'Stock Name' ) {
+        push @error_messages, "Cell A1: Stock Name is missing from the header";
     }
-    if (!$tissue_culture_id_header || $tissue_culture_id_header ne 'tissue_culture_id') {
-        push @error_messages, "Cell B1: tissue_culture_id is missing from the header";
+    if (!$tissue_culture_id_header || $tissue_culture_id_header ne 'Tissue Culture ID') {
+        push @error_messages, "Cell B1: Tissue Culture ID is missing from the header";
     }
 
     my %valid_properties;
@@ -115,11 +115,11 @@ sub _validate_with_plugin {
         }
 
         if (!$stock_name || $stock_name eq '') {
-            push @error_messages, "Cell A$row_name: item_name missing";
+            push @error_messages, "Cell A$row_name: stock name missing";
         }
 
         if (!$tissue_culture_id || $tissue_culture_id eq '') {
-            push @error_messages, "Cell B$row_name: tissue_culture_id missing";
+            push @error_messages, "Cell B$row_name: tissue culture id missing";
         }
 
         if ($stock_name){
@@ -135,7 +135,7 @@ sub _validate_with_plugin {
     my @stock_names = keys %seen_stock_names;
     my $stock_validator = CXGN::List::Validate->new();
 
-    my @stocks_missing = @{$stock_validator->validate($schema,'stocks',\@catalog_items)->{'missing'}};
+    my @stocks_missing = @{$stock_validator->validate($schema,'stocks',\@stock_names)->{'missing'}};
 
     if (scalar(@stocks_missing) > 0){
         push @error_messages, "The following stock names are not in the database: ".join(',',@stocks_missing);
