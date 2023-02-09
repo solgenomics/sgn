@@ -2328,8 +2328,14 @@ sub upload_tissue_culture_info_POST : Args(0) {
         my %tissue_culture_info = %{$parsed_data};
 
 #        print STDERR "UPLOAD TISSUE CULTURE INFO".Dumper(\%tissue_culture_info)."\n";
-        my $info = CXGN::STOCK::TissueCulture->new({ chado_schema => $schema, tissue_culture_info => \%tissue_culture_info });
-    	$info->store();
+        foreach my $stock_name (keys %tissue_culture_info) {
+            my %each_info = ()
+            %each_info = %{$tissue_culture_info{$stock_name}};
+            print STDERR "STOCK NAME =".Dumper($stock_name)."\n";
+            print STDERR "EACH INFO =".Dumper(\%each_info)."\n";
+            my $info = CXGN::STOCK::TissueCultureInfo->new({ chado_schema => $schema, stock_name => $stock_name, tissue_culture_info => \%each_info });
+        	$info->store();
+        }
     }
 
     $c->stash->{rest} = {success => "1",};
