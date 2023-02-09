@@ -474,7 +474,7 @@ sub studies_observation_variables {
 					reference=>""
 				},
 				name => $trait->name . "|" . $trait->term,
-				observationVariableDbId => $trait->name . "|" . $trait->term,
+				observationVariableDbId => $trait_id,
 				observationVariableName => $trait->name,
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
@@ -659,7 +659,9 @@ sub observation_units {
             trait_list=>\@trait_ids_array,
             include_timestamp=>1,
             limit=>$limit,
-            offset=>$offset
+            offset=>$offset,
+			# Order by plot_number, account for non-numeric plot numbers
+			order_by=>'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::int',
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
@@ -696,16 +698,17 @@ sub observation_units {
         }
 
 		# Get the pedigree of the germplasm
-		my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
+		# TODO: Improve performance and re-enable at some point
+		#my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
 		my $pedigree_string = "";
-		if ($s) {
-			$pedigree_string = $s->get_pedigree_string('Parents');
-		}
+		#if ($s) {
+		#	$pedigree_string = $s->get_pedigree_string('Parents');
+		#}
 
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
         push @data_window, {
-			X => $obs_unit->{obsunit_col_number},
-			Y => $obs_unit->{obsunit_row_number},
+			X => $obs_unit->{obsunit_row_number},
+			Y => $obs_unit->{obsunit_col_number},
 			blockNumber => $obs_unit->{obsunit_block_number},
 			entryNumber => '',
 			entryType => $entry_type,

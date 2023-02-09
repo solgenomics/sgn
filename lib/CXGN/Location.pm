@@ -23,6 +23,7 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -90,6 +91,11 @@ has 'noaa_station_id' => (
 	is => 'rw',
 );
 
+has 'external_references' => (
+    isa => 'Maybe[ArrayRef[HashRef[Str]]]',
+    is  => 'rw'
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -112,6 +118,7 @@ sub BUILD {
         $self->longitude( $self->longitude || $location->longitude);
         $self->altitude( $self->altitude || $location->altitude);
         $self->noaa_station_id( $self->noaa_station_id || $self->_get_ndgeolocationprop('noaa_station_id', 'geolocation_property'));
+        $self->external_references($self->external_references);
     }
 
     print STDERR "Breeding programs are: ".$self->breeding_programs()."\n";
@@ -135,6 +142,7 @@ sub store_location {
     my $longitude = $self->longitude();
     my $altitude = $self->altitude();
     my $noaa_station_id = $self->noaa_station_id();
+    my $external_references = $self->external_references();
 
     # Validate properties
 
@@ -187,7 +195,7 @@ sub store_location {
     # Add new location if no id supplied
     if (!$nd_geolocation_id) {
         print STDERR "Checks completed, adding new location $name\n";
-    	try {
+        my $coderef = sub {
             my $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
               ->new({
         	     description => $name,
@@ -219,14 +227,36 @@ sub store_location {
             if ($noaa_station_id){
                 $self->_store_ndgeolocationprop('noaa_station_id', 'geolocation_property', $noaa_station_id);
             }
-        }
-        catch {
-            $error =  $_;
+
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $schema,
+                    external_references => $external_references,
+                    table_name          => 'nd_geolocation',
+                    table_id_key         => 'nd_geolocation_id',
+                    id             => $self->location()->nd_geolocation_id()
+                });
+
+                $references->store();
+
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
+            }
         };
 
-        if ($error) {
-            print STDERR "Error creating location $name: $error\n";
-            return { error => $error };
+        my $transaction_error;
+
+        try {
+            $schema->txn_do($coderef);
+        } catch {
+            $transaction_error =  $_;
+        };
+
+        if ($transaction_error) {
+            print STDERR "Error creating location $name: $transaction_error\n";
+            return { error => $transaction_error };
         } else {
             print STDERR "Location $name added successfully\n";
             return { success => "Location $name added successfully\n", nd_geolocation_id=>$self->location()->nd_geolocation_id() };
