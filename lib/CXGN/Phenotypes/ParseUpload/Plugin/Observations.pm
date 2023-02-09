@@ -139,6 +139,7 @@ sub parse {
         my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
         my $value = $obs->{'value'};
         my $additional_info = $obs->{'additionalInfo'} ? $obs->{'additionalInfo'} : undef;
+        my $external_references = $obs->{'externalReferences'} ? $obs->{'externalReferences'} : undef;
         my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $variable_db_id,"extended");
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 
@@ -168,8 +169,7 @@ sub parse {
         push @values, $value;
 
         # track data for store
-        push @{$data{$obsunit_db_id}->{$trait_name}}, [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info];
-
+        $data{$obsunit_db_id}->{$trait_name} = [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info,$external_references];
     }
     #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;

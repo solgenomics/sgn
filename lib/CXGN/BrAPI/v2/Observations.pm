@@ -99,7 +99,7 @@ sub search {
                 if ($counter >= $start_index && $counter <= $end_index) {
                     push @data_window, {
                         additionalInfo=>$_->{additional_info},
-                        externalReferences=>undef,
+                        externalReferences=>$_->{external_references},
                         germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
                         germplasmName => $obs_unit->{germplasm_uniquename},
                         observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
@@ -194,8 +194,8 @@ sub detail {
             if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
 
             push @data_window, {
-                additionalInfo=>$_->{additional_info},,
-                externalReferences=>undef,
+                additionalInfo=>$_->{additional_info},
+                externalReferences => $_->{external_references},
                 germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
                 germplasmName => $obs_unit->{germplasm_uniquename},
                 observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
@@ -400,6 +400,8 @@ sub _search_observation_id {
     my $trait_list;
    
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+    my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
@@ -579,11 +581,16 @@ sub _search_observation_id {
                 }
             }
             #get additional info
-            my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
             my $rs = $schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $additional_info_type_id, phenotype_id => $pheno_id });
             if ($rs->count() > 0){
                 my $additional_info_json = $rs->first()->value();
                 $o->{additional_info}  = $additional_info_json ? decode_json($additional_info_json) : undef;
+            }
+            #get external references
+            my $rs2 = $schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $external_references_type_id, phenotype_id => $pheno_id });
+            if ($rs2->count() > 0){
+                my $external_references_json = $rs2->first()->value();
+                $o->{external_references}  = $external_references_json ? decode_json($external_references_json) : undef;
             }
 
             push @return_observations, $o;

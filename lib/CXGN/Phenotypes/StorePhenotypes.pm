@@ -471,6 +471,7 @@ sub store {
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $analysis_instance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my $phenotype_addtional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+    my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
     my %experiment_ids;
     my @stored_details;
     my %nd_experiment_md_images;
@@ -567,7 +568,8 @@ sub store {
                     $operator = $value->[2] ? $value->[2] : $operator;
                     my $observation = $value->[3];
                     my $image_id = $value->[4];
-                    my $additional_info = $value_array->[5] || undef;
+                    my $additional_info = $value->[5] || undef;
+	                my $external_references = $value->[6] || undef;
                     my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA' . $upload_date;
 
                     if (defined($trait_value) && length($trait_value)) {
@@ -599,7 +601,12 @@ sub store {
                             $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                         }
                         else {
-                            $new_count++;
+                            if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+	                            $skip_count++;
+	                            next;
+	                        } else {
+	                            $new_count++;
+	                        }
                         }
 
                         my $phenotype;
@@ -672,6 +679,14 @@ sub store {
                                 value => encode_json $additional_info,
                             });
                         }
+
+	                    if($external_references){
+	                        my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->create({
+	                            phenotype_id => $phenotype->phenotype_id,
+	                            type_id      => $external_references_type_id,
+	                            value => encode_json $external_references,
+	                        });
+	                    }
 
                         my $observationVariableDbId = $trait_cvterm->cvterm_id;
                         my %details = (
