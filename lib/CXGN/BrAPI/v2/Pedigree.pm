@@ -94,12 +94,12 @@ sub get_pedigree_progeny {
     my $pedigree=germplasm_pedigree($self,$stock_id, $include_parents, $include_siblings);
 
     my $progeny_value=[];
-    if($include_progeny eq 'true'){
+    if(lc $include_progeny eq 'true'){
         my $progeny=germplasm_progeny($self, $stock_id);
         $progeny_value=$progeny->{progeny};
     }
 
-    if ($pedigree) {
+    if (keys(%$pedigree) > 0) {
         push @$result, {
             additionalInfo=>{},
             breedingMethodDbId=>undef,
@@ -136,6 +136,8 @@ sub germplasm_pedigree {
     my @data_files;
 
     push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my $vector_construct_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vector_construct', 'stock_type')->cvterm_id();
 
     my $stock = $self->bcs_schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
 
@@ -143,6 +145,7 @@ sub germplasm_pedigree {
         $total_count = 1;
         my $stock_uniquename = $stock->uniquename();
         my $stock_type = $stock->type_id();
+        if( $stock_type == $accession_cvterm || $stock_type == $vector_construct_cvterm){
 
         my $mother;
         my $father;
@@ -150,8 +153,6 @@ sub germplasm_pedigree {
         ## Get parents relationships
         my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
-        my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-
         #get the stock relationships for the stock
         my $female_parent_stock_id;
         my $male_parent_stock_id;
@@ -175,7 +176,7 @@ sub germplasm_pedigree {
             my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
                 FROM stock_relationship as stock_relationship1
                 INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
-                INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
+                INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND ( progeny.type_id = ? OR progeny.type_id= ? )
                 LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
                 LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) ";
 
@@ -184,21 +185,21 @@ sub germplasm_pedigree {
             if($female_parent_stock_id && $male_parent_stock_id){
                 $q = $q . "WHERE female_parent.stock_id = ? AND male_parent.stock_id = ?";
                 $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id, $male_parent_stock_id);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $vector_construct_cvterm, $cvterm_male_parent, $female_parent_stock_id, $male_parent_stock_id);
             }
             elsif ($female_parent_stock_id) {
                 $q = $q . "WHERE female_parent.stock_id = ? ORDER BY male_parent.stock_id";
                 $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $vector_construct_cvterm, $cvterm_male_parent, $female_parent_stock_id);
             }
             elsif ($male_parent_stock_id) {
                 $q = $q . "WHERE male_parent.stock_id = ? ORDER BY female_parent.stock_id";
                 $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $male_parent_stock_id);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $vector_construct_cvterm, $cvterm_male_parent, $male_parent_stock_id);
             }
             else {
                 $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-                $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent);
+                $h->execute($cvterm_female_parent, $accession_cvterm, $vector_construct_cvterm, $cvterm_male_parent);
             }
 
             
@@ -276,6 +277,7 @@ sub germplasm_pedigree {
             siblings=>\@siblings
         );
     }
+    }
 
     return \%result;
 }
@@ -289,11 +291,12 @@ sub germplasm_progeny {
 
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();my $vector_construct_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vector_construct', 'stock_type')->cvterm_id();
+
     my $result;
 
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({
-        'type_id'=> $accession_cvterm,
+        'type_id'=> [ $accession_cvterm, $vector_construct_cvterm ],
         'stock_id'=> $stock_id,
     });
     if ($stock){
@@ -341,7 +344,7 @@ sub germplasm_progeny {
         $result = {
             germplasmName=>$stock->uniquename,
             germplasmDbId=>$stock_id,
-            progeny=>[@{$full_data}[$page_size*$page .. $last_item]],
+            progeny=>[@{$full_data}],
         };
 
     }
