@@ -182,6 +182,14 @@ sub new_account :Path('/ajax/user/new') Args(0) {
         }
     }
 
+    # Add additional user details for admin confirmation
+    my $user_details = '';
+    if ( $c->config->{user_registration_admin_confirmation} && $c->config->{user_registration_admin_confirmation_email} ) {
+        $user_details .= "Name: $first_name $last_name\n";
+        $user_details .= "Email: $email_address\n";
+        $user_details .= "Organization(s): $organization\n";
+    }
+
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
     my $subject="[$project_name] Email Address Confirmation Request";
@@ -189,6 +197,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 
 This message is sent to confirm the email address for community user
 \"$username\"
+$user_details
 
 Please click (or cut and paste into your browser) the following link to
 confirm your account and email address:
@@ -204,12 +213,22 @@ $host/contact/form
 
 END_HEREDOC
 
-CXGN::Contact::send_email($subject,$body,$email_address);
-    $c->stash->{rest} = { message => qq | <table summary="" width="80%" align="center">
-<tr><td><p>Account was created with username \"$username\". To continue, you must confirm that SGN staff can reach you via email address \"$email_address\". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.</p></td></tr>
-<tr><td><br /></td></tr>
-</table>
-| };
+    # Send confirmation email to admin
+    my $message = "";
+    if ( $c->config->{user_registration_admin_confirmation} && $c->config->{user_registration_admin_confirmation_email} ) {
+        CXGN::Contact::send_email($subject,$body,'user_registration_admin_confirmation_email');
+        $message = "Your account has been created but first must be confirmed by the site administrators.  You will receive an email once your account has been confirmed.";
+    }
+
+    # Send confirmation email to user
+    else {
+        CXGN::Contact::send_email($subject,$body,$email_address);
+        $message = "To continue, you must confirm that we can reach you via email address \"$email_address\". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.";
+    }
+
+    $c->stash->{rest} = {
+        message => "Account was created with username \"$username\".\n\n$message\n\nYou will be able to login once your account has been confirmed."
+    };
 }
 
 
