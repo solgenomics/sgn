@@ -42,6 +42,7 @@ use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::TissueCultureInfo;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2311,29 +2312,18 @@ sub upload_tissue_culture_info_POST : Args(0) {
     }
 
     if ($parsed_data){
-
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-        $md_row->insert();
-        my $upload_file = CXGN::UploadFile->new();
-        my $md5 = $upload_file->get_md5($archived_filename_with_path);
-        my $md5checksum = $md5->hexdigest();
-        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'tissue_culture_info_upload',
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-        my $file_id = $file_row->file_id();
         my %tissue_culture_info = %{$parsed_data};
 
 #        print STDERR "UPLOAD TISSUE CULTURE INFO".Dumper(\%tissue_culture_info)."\n";
         foreach my $stock_name (keys %tissue_culture_info) {
-            my %each_info = ()
+            my %each_info = ();
             %each_info = %{$tissue_culture_info{$stock_name}};
+            foreach my $id (keys %each_info) {
+                $each_info{$id}{'breeding_program_id'} = $breeding_program_id;
+            }
             print STDERR "STOCK NAME =".Dumper($stock_name)."\n";
             print STDERR "EACH INFO =".Dumper(\%each_info)."\n";
-            my $info = CXGN::STOCK::TissueCultureInfo->new({ chado_schema => $schema, stock_name => $stock_name, tissue_culture_info => \%each_info });
+            my $info = CXGN::Stock::TissueCultureInfo->new({ chado_schema => $schema, stock_name => $stock_name, tissue_culture_info => \%each_info });
         	$info->store();
         }
     }

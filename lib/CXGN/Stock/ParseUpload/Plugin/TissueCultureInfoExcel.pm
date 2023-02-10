@@ -54,8 +54,8 @@ sub _validate_with_plugin {
 
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 6 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of info
-        push @error_messages, "Spreadsheet is missing header or no catalog info";
+    if (($col_max - $col_min)  < 3 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of info
+        push @error_messages, "Spreadsheet is missing header or no tissue culture info";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -106,7 +106,7 @@ sub _validate_with_plugin {
         my $tissue_culture_id;
 
         if ($worksheet->get_cell($row,0)) {
-            $item_name = $worksheet->get_cell($row,0)->value();
+            $stock_name = $worksheet->get_cell($row,0)->value();
             $stock_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
@@ -193,7 +193,7 @@ sub _parse_with_plugin {
         }
 
         if ($worksheet->get_cell($row,1)){
-            $tissue_culture_id = $worksheet->get_cell($row,0)->value();
+            $tissue_culture_id = $worksheet->get_cell($row,1)->value();
             $tissue_culture_id =~ s/^\s+|\s+$//g;
         }
 

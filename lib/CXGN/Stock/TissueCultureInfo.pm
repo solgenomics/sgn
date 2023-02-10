@@ -39,14 +39,14 @@ sub store {
     my $transaction_error;
     my $coderef = sub {
         my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $stock_name });
-        if (!stock_rs) {
+        if (!$stock_rs) {
             print STDERR "Stock name: $stock_name does not exist or does not exist as uniquename in the database\n";
             return;
         }
 
         my $tissue_culture_info_json;
         my $tissue_culture_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_culture_data_json', 'stock_property');
-        my $stock_prop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $tissue_culture_data_cvterm->cvterm_id()});
+        my $stock_prop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_rs->stock_id(), type_id => $tissue_culture_data_cvterm->cvterm_id()});
         if ($stock_prop_rs){
             my %updated_info;
             my $previous_value = $stock_prop_rs->value();
@@ -58,9 +58,12 @@ sub store {
             foreach my $new_tissue_culture_id (keys %new_tissue_culture_info_hash) {
                 $updated_info{$new_tissue_culture_id} = $new_tissue_culture_info_hash{$new_tissue_culture_id};
             }
+            $tissue_culture_info_json = encode_json \%updated_info;
+            $stock_prop_rs->first->update({value=>$tissue_culture_info_json});            
+
         } else {
-            $tissue_culture_json = encode_json \%new_tissue_culture_info_hash;
-            $stock_rs->create_stockprops({$tissue_culture_data_cvterm->name() => $tissue_culture_json});
+            $tissue_culture_info_json = encode_json \%new_tissue_culture_info_hash;
+            $stock_rs->create_stockprops({$tissue_culture_data_cvterm->name() => $tissue_culture_info_json});
         }
     };
 
