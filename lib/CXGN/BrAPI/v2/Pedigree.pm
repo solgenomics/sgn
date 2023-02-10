@@ -29,12 +29,12 @@ sub search {
     my $stock_id  = $params->{germplasmDbId}->[0];
     my $pedigree_depth = $params->{pedigreeDepth}->[0] || 1;
     my $progeny_depth = $params->{progenyDepth}->[0] || 1;
-    my $full_tree = $params->{includeFullTree}->[0] || undef;
+    my $full_tree = $params->{includeFullTree}->[0] || 'false';
     my $include_parents = $params->{includeParents}->[0] || 'true';
     my $include_siblings = $params->{includeSiblings}->[0] || 'false';
     my $include_progeny = $params->{includeProgeny}->[0] || 'true';
 
-    if($full_tree>0){
+    if(lc $full_tree ne 'false'){
         $pedigree_depth = 5;
         $progeny_depth = 5;
     }
