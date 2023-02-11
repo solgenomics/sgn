@@ -1049,6 +1049,7 @@ sub trials_search_process {
 		searchDateRangeEnd  => $clean_inputs->{searchDateRangeEnd},
 		trialPUIs => $clean_inputs->{trialPUI},
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceIds => $clean_inputs->{externalReferenceId},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		active  => $clean_inputs->{active},
 		commonCropNames  => $clean_inputs->{commonCropName},
