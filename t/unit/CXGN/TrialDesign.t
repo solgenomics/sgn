@@ -63,8 +63,8 @@ ok($trial_design->calculate_design(), "Calculate CRD trial design");
 ok(%design = %{$trial_design->get_design()}, "Get CRD trial design");
 ok($design{$plot_start_number}->{block_number} == 1, "Block number for first plot in CRD is 1");
 ok($design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}->{block_number} == 1, "Block number for last plot in CRD is 1");
-ok($design{'101'}->{row_number} == 1, "First plot row_number is 1");
-ok($design{'101'}->{col_number} == 1, "First plot col_number is 1");
+ok($design{'101'}->{row_number} == 1, "CRD: First plot row_number is 1");
+ok($design{'101'}->{col_number} == 1, "CRD: First plot col_number is 1");
 
 # tests for RCBD
 #
@@ -78,9 +78,19 @@ foreach my $k (sort keys %design) {
     print STDERR $k." ".Dumper($design{$k});
 }
 
-is($design{'101'}->{row_number}, 1, "First plot row_number is 1");
-is($design{'101'}->{col_number}, 1, "First plot col_number is 1");
+is($design{'101'}->{row_number}, 1, "RCBD: First plot row_number is 1");
+is($design{'101'}->{col_number}, 1, "RCBD: First plot col_number is 1");
 is(scalar(keys %design), scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");
+
+ok($trial_design->set_plot_numbering_scheme('consecutive'), "Set plot numbering scheme to consecutive");
+ok($trial_design->calculate_design(), "recalculate the trial design using consecutive plot numbers.");
+
+print STDERR "CONDSECUTIVE NUMBERS DESIGN: ".Dumper(\%design);
+is($design{'101'}->{row_number}, 1, "RCBD: First plot row_number is 1 with consecutive plot numbers");
+is($design{'101'}->{col_number}, 1, "RCBD: First plot col_number is 1 with consecutive plot numbers");
+
+$trial_design->set_plot_numbering_scheme('block_based');
+
 
 print STDERR $stock_names[0] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
 #ok($design{$plot_start_number}->{stock_name} eq $stock_names[0],"First plot has correct stock name");
@@ -128,9 +138,8 @@ ok(%design = %{$trial_design->get_design()}, "Get trial design with a negative p
 #ok($design{0}->{stock_name} eq $stock_names[2],"Third plot has correct stock name with a negative plot start number");
 #ok($design{1}->{stock_name} eq $stock_names[3],"Fourth plot has correct stock name with a negative plot start number");
 
-
-
-#tests for Alpha Lattice design (fail)
+# tests for Alpha Lattice design (fail)
+#
 ok($trial_design->set_design_type("Alpha"), "Set design type to Alpha Lattice");
 ok($trial_design->set_block_size($block_size), "Set block size for trial design");
 is_deeply($trial_design->get_block_size(),$block_size, "Get block size for trial design");
@@ -148,7 +157,8 @@ $trial_design->set_number_of_reps(1);
 throws_ok { $trial_design->calculate_design() } '/Number of reps for alpha lattice design must be 2 or greater/', 'Does not allow less than 2 reps for alpha lattice design';
 $trial_design->set_number_of_reps($number_of_reps);
 
-#tests for Alpha Lattice design (pass)
+# tests for Alpha Lattice design (pass)
+#
 @stock_names = ("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T");
 ok($trial_design->set_stock_list(\@stock_names), "Set stock names for trial design");
 is_deeply($trial_design->get_stock_list(),\@stock_names, "Get stock names for trial design");
@@ -163,12 +173,13 @@ ok($trial_design->set_plot_number_increment($plot_number_increment), "Set plot n
 is_deeply($trial_design->get_plot_number_increment(),$plot_number_increment, "Get plot number increment for trial design");
 ok($trial_design->calculate_design(), "Calculate Alpha Lattice trial design");
 ok(%design = %{$trial_design->get_design()}, "Get Alpha trial design");
-ok($design{'101'}->{row_number} == 1, "First plot row_number is 1");
-ok($design{'101'}->{col_number} == 1, "First plot col_number is 1");
+ok($design{'101'}->{row_number} == 1, "Alpha Lattice: First plot row_number is 1");
+ok($design{'101'}->{col_number} == 1, "Alpha Lattice: First plot col_number is 1");
 #print STDERR "Alpha Lattice". Dumper \%design;
 
 
-#tests for Augmented design
+# tests for Augmented design
+#
 $trial_design->set_number_of_blocks(5);
 ok($trial_design->set_design_type("Augmented"), "Set design type to Augmented");
 ok($trial_design->set_control_list(\@control_names), "Set control names for trial design");
