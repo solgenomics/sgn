@@ -59,7 +59,6 @@ jQuery(document).ready(function ($) {
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
 	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-	//alert("VALIDATE: plot_numbering_scheme = "+plot_numbering_scheme);
         plants_per_plot = $("#add_plant_entries").val();
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
@@ -491,16 +490,13 @@ jQuery(document).ready(function ($) {
         var desc = $('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
-        //console.log("Trial location is "+trial_location);
         var trial_stock_type = jQuery('#select_stock_type').val();
         var block_number = $('#block_number').val();
-        //alert(block_number);
         var row_number= $('#row_number').val();
         var row_number_per_block=$('#row_number_per_block').val();
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
 	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-	//alert("generate_experimental_design(): PLOT NUMBERING SCHEME = "+plot_numbering_scheme);
 
         var stock_list_id;
         var control_stock_list_id;
@@ -640,7 +636,6 @@ jQuery(document).ready(function ($) {
         }
 
 	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
-	//alert('Consecutive? '+plot_numbering_scheme);
 	
         $.ajax({
             type: 'POST',
@@ -2052,8 +2047,6 @@ jQuery(document).ready(function ($) {
             //console.log(greenhouse_num_plants);
         }
 
-        //alert(design_type);
-
         var rep_count = jQuery('#rep_count').val();
         var block_size = jQuery('#block_size').val();
         var max_block_size = jQuery('#max_block_size').val();
@@ -2089,7 +2082,6 @@ jQuery(document).ready(function ($) {
         }
 
 	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-	alert("PLOT NUMBERING SCHEME NOW: "+plot_numbering_scheme);
 	
         jQuery.ajax({
            type: 'POST',
@@ -2144,7 +2136,6 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    //alert('Trial design saved');
                     refreshTrailJsTree(0);
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
