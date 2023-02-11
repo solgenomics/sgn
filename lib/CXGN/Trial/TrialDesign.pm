@@ -75,7 +75,14 @@ has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_sta
 
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
 
-has 'plot_numbering_scheme' => (isa => 'Maybe[Str]', is => 'rw', default => 'block_based_plot_numbers'); # so far, either block_based or consecutive
+
+subtype 'PlotNumberingSchemeType',
+    as 'Str',
+    where { $_ eq "block_based" || $_ eq "consecutive" },
+    message { "The string $_ is not a valid plot numbering scheme. Currently allowed are 'block_based' or 'consecutive'"};
+
+has 'plot_numbering_scheme' => (isa => 'Maybe[PlotNumberingSchemeType]', is => 'rw', default => 'block_based'); # so far, either block_based or consecutive
+
 
 has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
 
