@@ -50,7 +50,7 @@ $pop_id = $trial_id if $trial_id;
 
 
   <div id="kinship_message"  class="message"> </div>
-  <& /solgs/spinner.mas &>
+  <& /solgs/spinner/spinner.mas &>
 
   <div id="kinship_plot" >
 

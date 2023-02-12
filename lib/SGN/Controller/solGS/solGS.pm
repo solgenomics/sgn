@@ -95,7 +95,7 @@ sub population : Path('/solgs/population') Args() {
 		$c->stash->{training_pop_name} = $c->stash->{project_name};
 		$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
-	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
+	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/training_population.mas');
     }
 
 }
@@ -372,7 +372,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		$model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
 		$c->stash->{model_page_url} = $model_page;
 
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_prediction_detail.mas');
 
     }
 
@@ -450,7 +450,7 @@ sub trait :Path('/solgs/trait') Args(5) {
 	    $self->model_phenotype_stat($c);
 
 		$c->stash->{training_pop_url} = $training_pop_page;
-	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
+	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/models/model/detail.mas");
 	}
     }
 
@@ -465,7 +465,7 @@ sub gs_modeling_files {
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
     $self->top_markers($c, $c->stash->{marker_effects_file});
-    $self->model_parameters($c);
+    $self->variance_components($c);
 
 }
 
@@ -854,14 +854,14 @@ sub list_predicted_selection_pops {
 }
 
 
-sub model_parameters {
+sub variance_components {
     my ($self, $c) = @_;
 
     $c->controller("solGS::Files")->variance_components_file($c);
     my $file = $c->stash->{variance_components_file};
 
     my $params = $c->controller('solGS::Utils')->read_file_data($file, {binmode => ':utf8'});
-    $c->stash->{model_parameters} = $params;
+    $c->stash->{variance_components} = $params;
 
 }
 
@@ -1026,7 +1026,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 
 	 $c->controller('solGS::Trait')->get_acronym_pairs($c, $training_pop_id);
 
-	 $c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
+	 $c->stash->{template} = '/solgs/population/models/detail.mas';
      }
 
 }
@@ -1448,7 +1448,7 @@ sub get_rrblup_output {
         if (scalar(@traits) == 1)
         {
             $self->gs_modeling_files($c);
-            $c->stash->{template} = $c->controller('solGS::Files')->template('population/trait.mas');
+            $c->stash->{template} = $c->controller('solGS::Files')->template('population/models/model/detail.mas');
         }
 
         if (scalar(@traits) > 1)

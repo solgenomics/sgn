@@ -167,7 +167,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 		$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 
 		$self->combined_pops_summary($c);
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/training_population.mas');
     }
 }
 
@@ -284,7 +284,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	$c->stash->{model_data} = \@training_pop_data;
 
 	$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
-	$c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
+	$c->stash->{template} = '/solgs/population/models/detail.mas';
     }
 }
 
@@ -346,10 +346,10 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	    # $c->controller('solGS::Download')->training_prediction_download_urls($c);
 	    $c->controller('solGS::Files')->marker_effects_file($c);
 	    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
-	    $c->controller('solGS::solGS')->model_parameters($c);
+	    $c->controller('solGS::solGS')->variance_components($c);
 
 	    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
-		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/trait.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/models/model/detail.mas');
 	}
 }
 
@@ -437,7 +437,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     # $model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
     # $c->stash->{model_page_url} = $model_page;
 
-    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
+    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_prediction_detail.mas');
 
 }
 
