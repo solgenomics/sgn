@@ -295,6 +295,13 @@ accession identifiers in the first column, with the remaining columns being the
 adjusted BLUEs, BLUEs, adjusted BLUPs or BLUPs for all the initially selected
 traits.
 
+The files from the dataset will contain trait names that are incompatible with R. These names are converted using the clean_file subroutine. The conversion takes place and is saved in a file with a .clean extension. Then, the .clean file is moved to the previous file name, such that there is not difference in file naming.
+
+
+The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The inital result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete. 
+  
+
+
 =cut
 
 sub run_model {
@@ -363,7 +370,7 @@ sub run_model {
 
     # replace the R-compatible traits with original trait names
     #
-
+    print STDERR "Converting files back to non-R headers...\n";
     foreach my $f (
 	$self->tempfile().".adjustedBLUPs",
 	$self->tempfile().".BLUPs",
@@ -373,8 +380,14 @@ sub run_model {
 	$self->tempfile().".varcomp",
 	) {
 
-	my $conversion_matrix = read_conversion_matrix($self->tempfile());
-	$self->convert_file_headers_back_to_breedbase_traits($f, $conversion_matrix);
+	my $conversion_matrix = $self->read_conversion_matrix($self->tempfile().".traits");
+
+	if (-e $f) { 
+	    $self->convert_file_headers_back_to_breedbase_traits($f, $conversion_matrix);
+	}
+	else {
+	    print STDERR "File $f does not exist, not converting. This may be normal.\n";
+	}
     }
 
     
@@ -440,11 +453,16 @@ sub clean_file {
 	print $CLEAN $_;
     }
 
+    close($PF);
+    print STDERR "moving $file to $file.before_clean...\n";
     move($file, $file.".before_clean");
+
+    print STDERR "moving $file.clean to $file...\n";
     move($file.".clean", $file);
 
     return $file;
 }
+
 
 sub convert_file_headers_back_to_breedbase_traits {
     my $self = shift;
@@ -453,7 +471,8 @@ sub convert_file_headers_back_to_breedbase_traits {
 
     open(my $F, "<", $file) ||  die "Can't open $file\n";
 
-    open(my $G, ">", $self->tempfile().".original_traits") || die "Can't open $file.original_traits";
+    print STDERR "Opening ".$self->tempfile().".original_traits for writing...\n";
+    open(my $G, ">", $file.".original_traits") || die "Can't open $file.original_traits";
     
     my $header = <$F>;
     chomp($header);
@@ -462,6 +481,7 @@ sub convert_file_headers_back_to_breedbase_traits {
     
     foreach my $f (@fields) {
 	if ($conversion_matrix->{$f}) {
+	    print STDERR "Converting $f to $conversion_matrix->{$f}...\n";
 	    $f = $conversion_matrix->{$f};
 	}
     }
@@ -470,15 +490,29 @@ sub convert_file_headers_back_to_breedbase_traits {
     print $G join("\t", @fields)."\n";
     while(<$F>) {
 	chomp;
-	print $_."\n";
+
+	# replace NA or . with undef throughout the file
+	# (strings are not accepted by store phenotypes routine
+	# used in analysis storage).
+	#
+	my @fields = split /\t/;
+	foreach my $f (@fields) {
+	    if ($f eq "NA" || $f eq '.') { $f = undef; }
+	}
+	my $line = join("\t", @fields);
+	print $G "$line\n";
     }
+    close($G);
+
+    print STDERR "move file $file.original_traits back to $file...\n";
+    move($file.".original_traits", $file);
 }
 
 sub read_conversion_matrix {
     my $self = shift;
     my $file = shift;
 
-    my $conversion_file = $file.".original_traits";
+    my $conversion_file = $file;
     
     open(my $F, "<", $conversion_file) || die "Can't open file $conversion_file";
 
