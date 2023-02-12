@@ -6,7 +6,9 @@ $management_factor_types => ()
 $design_types => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker', 'calendar.bootstrap_datepicker_min' ] &>
+
+<& /util/import_css.mas, paths => ['/css/datepicker.css'] &>
 
 <style>
 #container_field_map_view {display: none; }
@@ -138,11 +140,19 @@ rect.bordered {
                                         <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
                                     </div>
                                 </div>
+                                <div class="form-group date" >
+                                    <label class="col-sm-3 control-label">Planting date: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control"  id="add_project_planting_date" name="add_project_planting_date" type="date"></input>
+					 <p><i>Can be added later if not yet known.</i></p>
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Width (m): </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_project_plot_width" name="add_project_plot_width" type="text" />
-
+`
                                         <!-- <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
                                             <option value="">NA</option>
                                             <option value="0.1">0.1</option>
