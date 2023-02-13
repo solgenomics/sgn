@@ -114,7 +114,7 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
 
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
-    if ($args->{data_set_type} =~ /combined populations/)
+    if ($args->{data_set_type} =~ /combined_populations/)
     {
 	 $c->stash->{combo_pops_id}  = $training_pop_id;
     }

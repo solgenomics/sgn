@@ -3,6 +3,7 @@
 $training_pop_id
 $training_pop_name
 $training_pop_desc =>''
+$trial_detail_page => ''
 $show_data => 1;
 $accuracy_report
 $variance_components
@@ -12,16 +13,16 @@ $trait_name
 
 $stocks_no
 $markers_no
-$traits_no =>''
+$traits_no => 'NA'
 $trait_id
 $model_pheno_means_descriptive_stat
-$model_pheno_raw_descriptive_stat =>''
+$model_pheno_raw_descriptive_stat => ''
 $selection_prediction_download =>''
 $selection_pop_id => ''
 $selection_pop_name => ''
 $list_of_prediction_pops=> ''
 $training_pop_analyzed_traits => ''
-$owner=>''
+$owner => ''
 $protocol_url => ''
 $combo_pops_id => ''
 $genotyping_protocol_id => ''
@@ -52,7 +53,8 @@ $training_pop_url
     training_pop_id   => $training_pop_id,
    	training_pop_name => $training_pop_name,
     training_pop_desc => $training_pop_desc,
-	training_pop_url    => $training_pop_url,
+	  training_pop_url    => $training_pop_url,
+    trial_detail_page => $trial_detail_page,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
