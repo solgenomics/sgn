@@ -258,18 +258,17 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
     my $cvterm =  $c->stash->{cvterm};
     my $cvterm_id  = $cvterm->cvterm_id;
 
-    my $q = "SELECT DISTINCT stock_id,  stock.uniquename, stock.description, type.name
+    my $q = "SELECT DISTINCT acc.stock_id,  pathdistance, acc.uniquename, acc.description, type.name
              FROM cvtermpath
-              JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id
-                            OR cvtermpath.subject_id = cvterm.cvterm_id )
-               JOIN phenotype on cvterm.cvterm_id = phenotype.observable_id
-               JOIN nd_experiment_phenotype USING (phenotype_id)
-               JOIN nd_experiment_stock USING (nd_experiment_id)
-               JOIN stock USING (stock_id)
-               JOIN cvterm as type on type.cvterm_id = stock.type_id
-
-             WHERE pathdistance > 0
-             AND cvtermpath.object_id = ? ORDER BY stock_id " ;
+             JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id
+                         OR cvtermpath.subject_id = cvterm.cvterm_id )
+             JOIN phenotype on cvterm.cvterm_id = phenotype.observable_id
+             JOIN nd_experiment_phenotype USING (phenotype_id)
+             JOIN nd_experiment_stock USING (nd_experiment_id)
+             JOIN stock USING (stock_id)
+             JOIN stock_relationship on(plot.stock_id=stock_relationship.subject_id) join stock as acc on(stock_relationship.object_id=acc.stock_id)
+             JOIN cvterm as type on type.cvterm_id = stock.type_id      
+             WHERE cvtermpath.object_id = ? ORDER BY stock_id " ;
 
 
     my $sth = $c->dbc->dbh->prepare($q);
