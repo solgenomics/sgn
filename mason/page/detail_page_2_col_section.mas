@@ -531,6 +531,11 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
 % } #End program_product_profile_section
 
+% if ($info_section_id eq 'tissue_culture_info_section'){
+                                <& /breeders_toolbox/tissue_culture_info.mas &>
+% } #End tissue_culture_info_section
+
+
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }

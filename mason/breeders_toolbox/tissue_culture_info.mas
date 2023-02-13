@@ -1,0 +1,39 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="tissue_culture_info_table">
+        <thead>
+            <tr>
+                <th>Accession Name</th>
+                <th>Tissue Culture ID</th>
+% my $tissue_culture_properties = $c->config->{tissue_culture_properties};
+% my @column_header = split ',',$tissue_culture_properties;
+% foreach my $column_header(@column_header){
+                <th><%$column_header%></th>
+%}
+            </tr>
+        </thead>
+    </table>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#tissue_culture_info_section_onswitch').click(function(){
+        jQuery('#tissue_culture_info_table').DataTable({
+            'destroy': true,
+            'ajax': '/ajax/stock/tissue_culture_info',
+
+        });
+    });
+
+});
+
+</script>

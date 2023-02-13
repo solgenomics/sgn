@@ -21,7 +21,6 @@ has 'stock_name' => (
     isa =>'Str',
     is => 'rw',
     predicate => 'has_stock_name',
-    required => 1
 );
 
 has 'tissue_culture_info' => (
@@ -59,7 +58,7 @@ sub store {
                 $updated_info{$new_tissue_culture_id} = $new_tissue_culture_info_hash{$new_tissue_culture_id};
             }
             $tissue_culture_info_json = encode_json \%updated_info;
-            $stock_prop_rs->first->update({value=>$tissue_culture_info_json});            
+            $stock_prop_rs->first->update({value=>$tissue_culture_info_json});
 
         } else {
             $tissue_culture_info_json = encode_json \%new_tissue_culture_info_hash;

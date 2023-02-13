@@ -2333,4 +2333,19 @@ sub upload_tissue_culture_info_POST : Args(0) {
 }
 
 
+sub get_tissue_culture_info :Path('/ajax/stock/tissue_culture_info') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $tissue_culture_obj = CXGN::Stock::TissueCultureInfo->new({ chado_schema => $schema});
+    my $tissue_culture_info = $tissue_culture_obj->get_tissue_culture_info();
+#    print STDERR "TISSUE CULTURE INFO =".Dumper($tissue_culture_info)."\n";
+
+
+    $c->stash->{rest} = { data => $tissue_culture_info };
+
+}
+
+
 1;
