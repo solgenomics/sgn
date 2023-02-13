@@ -2339,11 +2339,17 @@ sub get_tissue_culture_info :Path('/ajax/stock/tissue_culture_info') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $tissue_culture_obj = CXGN::Stock::TissueCultureInfo->new({ chado_schema => $schema});
-    my $tissue_culture_info = $tissue_culture_obj->get_tissue_culture_info();
-#    print STDERR "TISSUE CULTURE INFO =".Dumper($tissue_culture_info)."\n";
+    my $info = $tissue_culture_obj->tissue_culture_info();
+    my @all_tissue_culture_info = @$info;
+    my @data;
+    foreach my $info (@all_tissue_culture_info) {
+        my $accession = qq{<a href="/stock/$info->[0]/view">$info->[1]</a>};
+        my $program = qq{<a href="/breeders/program/$info->[3]">$info->[4]</a>};
+        push @data, [$accession, $info->[2], $program, $info->[5], $info->[6], $info->[7], $info->[8], $info->[9], $info->[10]]
+    }
 
-
-    $c->stash->{rest} = { data => $tissue_culture_info };
+#    print STDERR "TISSUE CULTURE INFO =".Dumper(\@data)."\n";
+    $c->stash->{rest} = { data => \@data };
 
 }
 

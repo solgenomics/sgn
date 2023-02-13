@@ -82,5 +82,44 @@ sub store {
 }
 
 
+sub tissue_culture_info {
+    my $self = shift;
+    my $schema = $self->get_chado_schema();
+
+    my $tissue_culture_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_culture_data_json', 'stock_property');
+
+    my $data_rs = $schema->resultset("Stock::Stockprop")->search({type_id => $tissue_culture_data_cvterm->cvterm_id()}, { order_by => {-asc => 'stock_id'} });
+    my @all_info;
+    while (my $each_info = $data_rs->next()){
+        my %info_hash = ();
+        my $stock_id = $each_info->stock_id();
+        my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
+        my $stock_name = $stock_rs->uniquename();
+        my $data_value = $each_info->value();
+        my $info = decode_json $data_value;
+        %info_hash = %{$info};
+        foreach my $tissue_culture_id (keys %info_hash) {
+            my %each_info = ();
+            %each_info = %{$info_hash{$tissue_culture_id}};
+            my $program_id = $each_info{'breeding_program_id'};
+            my $subculture_date = $each_info{'Subculture Date'};
+            my $number_of_copies = $each_info{'Number of Copies'};
+            my $rooting_date = $each_info{'Rooting Date'};
+            my $number_of_rooted_plantlets = $each_info{'Number of Rooted Plantlets'};
+            my $hardening_date = $each_info{'Hardening Date'};
+            my $number_of_hardened_plantlets = $each_info{'Number of Hardened Plantlets'};
+
+            my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
+            my $program_name = $program_rs->name();
+            push @all_info, [$stock_id, $stock_name, $tissue_culture_id, $program_id, $program_name, $subculture_date, $number_of_copies, $rooting_date, $number_of_rooted_plantlets, $hardening_date, $number_of_hardened_plantlets ];
+        }
+    }
+
+    print STDERR "ALL INFO =".Dumper(\@all_info)."\n";
+    return \@all_info;
+
+}
+
+
 
 1;

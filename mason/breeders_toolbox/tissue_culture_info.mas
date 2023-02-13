@@ -11,6 +11,7 @@
             <tr>
                 <th>Accession Name</th>
                 <th>Tissue Culture ID</th>
+                <th>Breeding Program</th>
 % my $tissue_culture_properties = $c->config->{tissue_culture_properties};
 % my @column_header = split ',',$tissue_culture_properties;
 % foreach my $column_header(@column_header){
