@@ -859,7 +859,7 @@ solGS.getPopulationDetails = function () {
     dataSetType = "single_population";
   }
 
-  var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+  var protocolId = jQuery("#genotyping_protocol_id").val();
   return {
     training_pop_id: trainingPopId,
     population_name: trainingPopName,

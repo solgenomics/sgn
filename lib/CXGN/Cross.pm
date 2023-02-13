@@ -1549,5 +1549,43 @@ sub get_cross_transaction_ids_in_experiment {
 }
 
 
+=head2 get_accessions_missing_pedigree
+
+    Class method.
+    Returns all accessions missing pedigree.
+    Example: my @accessions = CXGN::Cross->get_accessions_missing_pedigree ($schema);
+
+=cut
+
+sub get_accessions_missing_pedigree {
+    my $self = shift;
+    my $schema = shift;
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT table_1.stock_id, table_1.stock_name
+        FROM
+        (SELECT stock.stock_id AS stock_id, stock.uniquename AS stock_name
+        FROM stock WHERE stock.type_id = ? and stock.is_obsolete <> 't') AS table_1
+        LEFT JOIN
+        (SELECT DISTINCT stock.stock_id AS stock_id, stock.uniquename AS stock_name
+        FROM stock
+        JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) WHERE stock.type_id = ? AND stock_relationship.type_id = ?) AS table_2
+        ON (table_1.stock_id = table_2.stock_id) WHERE table_2.stock_id IS NULL ORDER BY table_1.stock_id ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($accession_type_id, $accession_type_id, $female_parent_type_id);
+
+    my @accessions_missing_pedigree =();
+    while(my($stock_id, $stock_name) = $h->fetchrow_array()){
+        push @accessions_missing_pedigree, [$stock_id, $stock_name],
+    }
+
+    return \@accessions_missing_pedigree;
+
+}
+
 
 1;

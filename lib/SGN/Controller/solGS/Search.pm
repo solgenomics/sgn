@@ -42,7 +42,7 @@ sub solgs : Path('/solgs'){
 sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) {
     my ($self, $c) = @_;
     $c->stash->{referer}  = $c->req->referer();
-    $c->stash->{template} = '/solgs/breeder_search_solgs.mas';
+    $c->stash->{template} = '/solgs/search/breeder_search_solgs.mas';
 }
 
 sub solgs_login_message :Path('/solgs/login/message') Args(0) {
