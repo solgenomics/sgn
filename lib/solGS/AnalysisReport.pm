@@ -59,26 +59,26 @@ sub check_success {
     my $analysis_profile = $output_details->{analysis_profile};
     my $type = $analysis_profile->{analysis_type};
 
-    if ( $analysis_profile->{analysis_type} =~ /training dataset/ )
+    if ( $analysis_profile->{analysis_type} =~ /training_dataset/ )
     {
 	$output_details = $self->check_population_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /(single|multiple) model/ )
+    elsif ( $analysis_profile->{analysis_type} =~ /(training_|multiple_)model/ )
     {
-	if ($output_details->{data_set_type} =~ /combined populations/)
+	if ($output_details->{data_set_type} =~ /combined_populations/)
 	{
 	    $output_details = $self->check_combined_pops_trait_modeling($output_details);
 	}
-	elsif ($output_details->{data_set_type} =~ /single population/)
+	elsif ($output_details->{data_set_type} =~ /single_population/)
 	{
 	    $output_details = $self->check_trait_modeling($output_details);
 	}
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /combine populations/ )
+    elsif ( $analysis_profile->{analysis_type} =~ /combine_populations/ )
     {
 	$output_details = $self->check_multi_pops_data_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /selection prediction/ )
+    elsif ( $analysis_profile->{analysis_type} =~ /selection_prediction/ )
     {
 	my $st_type = $output_details->{data_set_type};
 
@@ -87,7 +87,7 @@ sub check_success {
 	  # $output_details = $self->check_combined_pops_trait_modeling($output_details);
 	   $output_details = $self->check_selection_prediction($output_details);
 	}
-	elsif ($output_details->{data_set_type} =~ /single population/)
+	elsif ($output_details->{data_set_type} =~ /single_population/)
 	{
 	    $output_details = $self->check_selection_prediction($output_details);
 	}
@@ -740,23 +740,23 @@ sub  email_body {
 
     my $msg;
 
-    if ($analysis_type =~ /multiple models/)
+    if ($analysis_type =~ /multiple_models/)
     {
 	    $msg = $self->multi_modeling_message($output_details);
     }
-    elsif ($analysis_type =~ /single model/)
+    elsif ($analysis_type =~ /training_model/)
     {
     	$msg = $self->single_modeling_message($output_details);
     }
-    elsif ($analysis_type =~ /training dataset/  )
+    elsif ($analysis_type =~ /training_dataset/  )
     {
     	$msg = $self->population_download_message($output_details);
     }
-    elsif ($analysis_type =~ /combine populations/  )
+    elsif ($analysis_type =~ /combine_populations/  )
     {
     	$msg = $self->combine_populations_message($output_details);
     }
-    elsif ($analysis_type =~ /selection prediction/  )
+    elsif ($analysis_type =~ /selection_prediction/  )
     {
     	$msg = $self->selection_prediction_message($output_details);
     }
@@ -1118,7 +1118,6 @@ sub log_analysis_status {
     my $status = $output_details->{status};
 
     my @contents = read_file($log_file, {binmode => ':utf8'});
-
     map{ $contents[$_] =~ m/$analysis_name\s+-*/
 	     ? $contents[$_] =~ s/error|submitted/$status/ig
 	     : $contents[$_] } 0..$#contents;

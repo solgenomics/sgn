@@ -126,7 +126,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     $c->stash->{training_pop_id}        = $pop_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
-    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    $c->stash->{data_set_type} = 'combined_populations' if $combo_pops_id;
 
     $c->controller("solGS::Files")->model_phenodata_file($c);
 

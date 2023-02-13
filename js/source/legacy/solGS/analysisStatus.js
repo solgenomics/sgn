@@ -17,12 +17,7 @@ solGS.log = {
             dataType: 'json',
             url: '/solgs/display/analysis/status/',
             success: function(res) {
-                if (res.data[0]) {
-    		        solGS.log.displayUserAnalyses(res.data);
-                } else {
-    		              jQuery('#analyses_status_message')
-                            .html( '<p>No analyses found.</p>');
-                }
+    		    solGS.log.displayUserAnalyses(res.data);            
     	    }
         });
 

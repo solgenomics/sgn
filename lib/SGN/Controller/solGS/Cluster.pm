@@ -369,7 +369,8 @@ sub cluster_result_file {
     if ( $cluster_type =~ /hierarchical/i ) {
         my $cache_json = {
             key       => "${cluster_type}_result_json_${file_id}",
-            file      => "${cluster_type}_result_json_${file_id}.json",
+            file      => "${cluster_type}_result_json_${file_id}",
+            ext => 'json',
             stash_key => "${cluster_type}_result_json_file"
         };
 
@@ -377,7 +378,8 @@ sub cluster_result_file {
 
         my $cache_newick = {
             key       => "${cluster_type}_result_newick_${file_id}",
-            file      => "${cluster_type}_result_newick_${file_id}.tree",
+            file      => "${cluster_type}_result_newick_${file_id}",
+            ext => 'tree',
             stash_key => "${cluster_type}_result_newick_file"
         };
 
@@ -386,7 +388,7 @@ sub cluster_result_file {
     else {
         my $cache_kmeans = {
             key       => "${cluster_type}_result_${file_id}",
-            file      => "${cluster_type}_result_${file_id}.txt",
+            file      => "${cluster_type}_result_${file_id}",
             stash_key => "${cluster_type}_result_file"
         };
 
@@ -399,13 +401,13 @@ sub cluster_plot_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    print STDERR "\ncluster plot file id: $file_id\n";
     my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
     my $cache_data = {
         key       => "${cluster_type}_plot_${file_id}",
-        file      => "${cluster_type}_plot_${file_id}.png",
+        file      => "${cluster_type}_plot_${file_id}",
+        ext => 'png',
         stash_key => "${cluster_type}_plot_file"
     };
 
@@ -418,13 +420,13 @@ sub cluster_elbow_plot_file {
 
     my $file_id = $c->stash->{file_id};
     $file_id =~ s/-k-\d//;
-    print STDERR "\nelbowplot file id: $file_id\n";
     my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
     my $cache_data = {
         key       => "${cluster_type}_elbow_plot_${file_id}",
-        file      => "${cluster_type}_elbow_plot_${file_id}.png",
+        file      => "${cluster_type}_elbow_plot_${file_id}",
+        ext => 'png',
         stash_key => "${cluster_type}_elbow_plot_file"
     };
 
@@ -441,7 +443,7 @@ sub cluster_means_file {
 
     my $cache_data = {
         key       => "${cluster_type}_means_${file_id}",
-        file      => "${cluster_type}_means_${file_id}.txt",
+        file      => "${cluster_type}_means_${file_id}",
         stash_key => "${cluster_type}_means_file"
     };
 
@@ -458,7 +460,7 @@ sub cluster_variances_file {
 
     my $cache_data = {
         key       => "${cluster_type}_variances_${file_id}",
-        file      => "${cluster_type}_variances_${file_id}.txt",
+        file      => "${cluster_type}_variances_${file_id}",
         stash_key => "${cluster_type}_variances_file"
     };
 
@@ -475,7 +477,8 @@ sub kcluster_plot_pam_file {
 
     my $cache_data = {
         key       => "${cluster_type}_plot_pam_${file_id}",
-        file      => "${cluster_type}_plot_pam_${file_id}.png",
+        file      => "${cluster_type}_plot_pam_${file_id}",
+        ext => 'png',
         stash_key => "${cluster_type}_plot_pam_file"
     };
 
@@ -491,7 +494,7 @@ sub hierarchical_result_file {
 
     my $cache_data = {
         key       => "hierarchical_result_${file_id}",
-        file      => "hierarchical_result_${file_id}.txt",
+        file      => "hierarchical_result_${file_id}",
         stash_key => 'hierarchical_result_file'
     };
 
@@ -511,7 +514,7 @@ sub cluster_options_file {
 
     my $cache_data = {
         key       => "${cluster_type}_options_${file_id}",
-        file      => "${cluster_type}_options_${file_id}.txt",
+        file      => "${cluster_type}_options_${file_id}",
         stash_key => "${cluster_type}_options_file"
     };
 
@@ -571,7 +574,7 @@ sub prep_cluster_download_files {
         $json_file = $c->controller('solGS::Files')
           ->copy_to_tempfiles_subdir( $c, $json_file, 'cluster' );
     }
-
+    $c->stash->{analysis_type} = $cluster_type;
     $c->controller('solGS::Files')->analysis_report_file($c);
     my $report_file = $c->stash->{"${cluster_type}_report_file"};
     $report_file = $c->controller('solGS::Files')
