@@ -214,7 +214,7 @@ sub _convert_plot_numbers {
 	  $first_plot_number = 101;
       } else {
 	  $plot_increment = 10;
-	  $first_plot_number = 1;
+	  $first_plot_number = 10; # otherwise first block will have 1 digit numbers, and second block will start with 10
       }
       my $idx = 0;
       for (my $i = 0; $i < $number_of_reps; $i++) {
