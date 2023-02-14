@@ -1,0 +1,139 @@
+<%args>
+
+$pop_id => ''
+$combo_pops_id => ''
+$training_pop_id
+$training_pop_name
+$training_pop_desc
+$trial_detail_page => 'NA'
+$show_data => 1;
+$training_pop_traits_details =>''
+$stocks_no
+$markers_no
+$traits_no
+$owner =>''
+$protocol_url => ''
+$acronym => ''
+$genotyping_protocol_id
+$data_set_type => ''
+
+</%args>
+
+<%perl>
+
+if (!$training_pop_id) {$training_pop_id = $combo_pops_id;}
+if ($pop_id && !$training_pop_id) {
+$training_pop_id = $pop_id;
+}
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ['solGS.solGS', 'solGS.genotypingProtocol'] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+
+<br />
+<br />
+
+<& /page/page_title.mas,
+   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
+&>
+
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
+    title       => "Training population summary",
+  &>
+
+ <& /solgs/population/summary.mas,
+    training_pop_id   => $training_pop_id,
+    training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
+    trial_detail_page => $trial_detail_page,
+    combo_pops_id => $combo_pops_id,
+    stocks_no    => $stocks_no,
+    markers_no   => $markers_no,
+    traits_no    => $traits_no,
+    owner        => $owner,
+    protocol_url => $protocol_url,
+ &>
+
+</&>
+
+% if ($show_data) {
+% if ($markers_no > 1) {
+
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
+      title       => "Train model"
+&>
+
+<& /solgs/population/traits_list.mas,
+   training_pop_id    => $training_pop_id,
+  training_pop_traits_details => $training_pop_traits_details,
+  data_set_type => $data_set_type,
+  genotyping_protocol_id => $genotyping_protocol_id,
+&>
+
+
+</&>
+
+
+  <& /solgs/tools/correlation/correlation.mas,
+     corre_pop_id  => $training_pop_id,
+     data_set_type => $data_set_type
+  &>
+
+% unless ($training_pop_id =~ /list|dataset/ || $data_set_type =~ /combined/) {
+
+    <& /solgs/tools/anova/analysis.mas,
+   training_pop_id => $training_pop_id,
+  &>
+
+  <& /tools/heritability/heritability.mas,
+     pop_id  => $training_pop_id,
+    &>
+
+%}
+
+  <& /solgs/population/trait_acronyms.mas &>
+  <& /solgs/population/download.mas &>
+  
+%} else {
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
+      title       => "Genotype Data"
+&>
+
+  <div id="traits_list_message"  class="message">
+    <p>There is no genotype data for this population.</p>
+  </div>
+
+</&>
+%}
+%} else {
+
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
+    title       => "Data Accessibility",
+  &>
+
+<p>This is private data.</p>
+
+</&>
+%}
+
+ <& /solgs/population/hidden_input.mas,
+      training_pop_id  => $training_pop_id,
+     training_pop_name => $training_pop_name,
+     training_pop_desc => $training_pop_desc,
+     combo_pops_id => $combo_pops_id,
+     genotyping_protocol_id => $genotyping_protocol_id,
+     data_set_type => $data_set_type,
+
+   &>

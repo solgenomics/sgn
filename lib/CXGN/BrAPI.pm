@@ -60,6 +60,8 @@ use CXGN::BrAPI::v2::Traits;
 use CXGN::BrAPI::v2::Trials;
 use CXGN::BrAPI::v2::Variants;
 use CXGN::BrAPI::v2::VariantSets;
+use CXGN::BrAPI::v2::Pedigree;
+
 
 
 has 'version' => (
