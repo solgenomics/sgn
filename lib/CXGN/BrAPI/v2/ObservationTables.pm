@@ -69,7 +69,7 @@ sub search {
     my @trait_names = @header_names[39 .. $#header_names];
     my @variables;
     foreach my $t (@trait_names) {
-        if ($t eq 'notes') { next; }
+        if ($t eq 'notes') { last; }
         my $t_id=SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
         push @variables, {
             observationVariableDbId=>qq|$t_id|,
@@ -152,7 +152,7 @@ sub search_observationunit_tables {
     my @trait_names = @header_names[39 .. $#header_names];
     my @variables;
     foreach my $t (@trait_names) {
-        if ($t eq 'notes') { next; }
+        if ($t eq 'notes') { last; }
         my $t_id=SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
         push @variables, {
             observationVariableDbId=>qq|$t_id|,

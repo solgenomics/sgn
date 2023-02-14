@@ -72,7 +72,8 @@ sub structure_gebvs_result_details {
 	my $trait_names		= $self->analysis_traits($c);
 	my $model_details = $self->model_details($c);
 	my $app_details		= $self->app_details();
-	my $log					 = $self->analysis_log($c);
+	my $log					 = $self->get_analysis_job_info($c);
+	my $analysis_name = $log->{analysis_name};
 
     my $details = {
 		'analysis_to_save_boolean' => 'yes',
@@ -122,7 +123,7 @@ sub app_details {
 sub analysis_traits {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $trait_ids = $log->{trait_id};
 	my @trait_names;
 
@@ -140,7 +141,7 @@ sub analysis_traits {
 sub analysis_breeding_prog {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 
 	my $trial_id = $log->{training_pop_id}[0];
 	if ($log->{data_set_type} =~ /combined/)
@@ -171,7 +172,7 @@ sub model_details {
 	my $model_type = 'gblup_model_rrblup';
 	my $stat_ont_term = 'GEBVs using GBLUP from rrblup R package|SGNSTAT:0000038';
 	my $protocol = "GBLUP model from RRBLUP R Package";
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $model_page = $log->{analysis_page};
 	my $model_desc= qq | <a href="$model_page">Go to model detail page</a>|;
 	#my $model_desc = 'test desc';
@@ -192,7 +193,7 @@ sub model_details {
 sub analysis_year {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $time = $log->{analysis_time};
 
 	$time= (split(/\s+/, $time))[0];
@@ -206,7 +207,7 @@ sub analysis_year {
 sub check_stored_analysis {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $analysis_name = $log->{analysis_name};
 
 	if ($analysis_name)
@@ -303,26 +304,33 @@ sub structure_gebvs_values {
 }
 
 
-sub analysis_log {
+sub get_analysis_job_info {
 	my ($self, $c) = @_;
 
 	my $files = $self->all_users_analyses_logs($c);
-	my $ref = $c->req->referer;
+	my $analysis_page = $c->req->referer;
 	my $base = $c->req->base;
-	$ref =~ s/$base//;
+	$base =~ s/(https?)|(:\d+)|\/|://g;
+
+	$base =~ s/(www\.)//;
+	$analysis_page =~ s/(https?:\/\/)//;
+	$analysis_page =~ s/(www\.)//;
+	$analysis_page =~ s/$base//;
+	$analysis_page =~ s/:\d+//;
 
 	my @log;
 	foreach my $log_file (@$files)
 	{
 		my @logs = read_file($log_file, {binmode => ':utf8'});
-		my ($log) = grep{ $_ =~ /$ref/} @logs;
-
+		my ($log) = grep{ $_ =~ /$analysis_page/} @logs;
 		@log = split(/\t/, $log);
+		last if $log;
 	}
 
 	if (@log)
 	{
-		return decode_json($log[5]);
+		my $analysis_info = decode_json($log[5]);
+		return $analysis_info;
 	}
 	else
 	{
@@ -340,7 +348,7 @@ sub all_users_analyses_logs {
 	$rule->file;
 	$rule->nonempty;
 	$rule->name('analysis_log');
-
+	
 	my @files = $rule->in($dir);
 
 	return \@files;

@@ -31,6 +31,8 @@ use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
 use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
+use CXGN::BreedersToolbox::SoilData;
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -146,6 +148,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
     elsif ($datatype eq 'crossing_experiment') {
         $error = $c->stash->{trial}->delete_empty_crossing_experiment();
+    }
+    elsif ($datatype eq 'genotyping_project') {
+        $error = $c->stash->{trial}->delete_empty_genotyping_project();
     }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
@@ -3022,7 +3027,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
-    
+
     $c->stash->{rest} = {success => 1};
 }
 
@@ -4668,7 +4673,7 @@ sub create_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/crea
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = "entry_numbers_XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-    $rel_file = $rel_file . ".xls";
+    $rel_file = $rel_file . ".xlsx";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
     my $download = CXGN::Trial::Download->new({
@@ -4876,12 +4881,166 @@ sub update_trial_design_type_POST : Args(0) {
 
     my $trial = $c->stash->{trial};
 
-    $trial->set_design_type($trial_design_type); 
+    $trial->set_design_type($trial_design_type);
 
     $c->stash->{rest} = {success => 1 };
-    
+
     return;
 
+}
+
+
+sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trial_id = $c->stash->{trial_id};
+
+    my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id });
+    my $soil_data = $soil_data_obj->get_all_soil_data();
+    my @soil_data_list = @$soil_data;
+    my @formatted_soil_data;
+    foreach my $info_ref (@soil_data_list) {
+        my @all_soil_data = ();
+        my @info = @$info_ref;
+        my $trial_id = pop @info;
+        my $soil_data_details = pop @info;
+        my $order_ref = pop @info;
+        my @data_type_order = @$order_ref;
+        foreach my $type(@data_type_order) {
+            my $soil_data = $soil_data_details->{$type};
+            my $soil_data_string = $type.":"." ".$soil_data;
+            push @all_soil_data, $soil_data_string;
+        }
+        my $soil_data_details_string = join("<br>", @all_soil_data);
+        push @info, ($soil_data_details_string, "<a href='/breeders/trial/$trial_id/download/soil_data?format=soil_data_xls&dataLevel=soil_data&prop_id=$info[0]'>Download</a>");
+        push @formatted_soil_data, {
+            trial_id => $trial_id,
+            prop_id => $info[0],
+            description => $info[1],
+            date => $info[2],
+            gps => $info[3],
+            type_of_sampling => $info[4],
+            soil_data => $info[5],
+            download_link => $info[6]
+        };
+    }
+
+    $c->stash->{rest} = { data => \@formatted_soil_data };
+}
+
+
+sub delete_soil_data : Chained('trial') PathPart('delete_soil_data') : ActionClass('REST'){ }
+
+sub delete_soil_data_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $prop_id = $c->req->param("prop_id");
+    my $trial_id = $c->stash->{trial_id};
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to delete soil data!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to delete soil data!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = {error=>'Only a curator can delete soil data'};
+        $c->detach();
+    }
+
+    my $soil_data_obj = CXGN::BreedersToolbox::SoilData->new({ bcs_schema => $schema, parent_id => $trial_id, prop_id => $prop_id });
+    my $error = $soil_data_obj->delete_soil_data();
+
+    print STDERR "ERROR = $error\n";
+
+    if ($error) {
+	    $c->stash->{rest} = { error => "An error occurred attempting to delete soil data. ($@)"};
+	    return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
+sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_all_genotyping_plates_in_project') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my $genotyping_project_id = $c->stash->{trial_id};
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete genotyping plates" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete genotyping plates. Please contact us." };
+        $c->detach();
+    }
+
+    my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $schema,
+        project_id => $genotyping_project_id
+    });
+    my ($data, $total_count) = $plate_info->get_plate_info();
+    my @genotyping_plate_ids;
+    foreach  my $plate(@$data){
+        my $plate_id = $plate->{trial_id};
+        push @genotyping_plate_ids, $plate_id;
+    }
+
+    my $number_of_plates = @genotyping_plate_ids;
+    my $error;
+    if ($number_of_plates > 0){
+        foreach my $plate_id (@genotyping_plate_ids) {
+            my $trial = CXGN::Trial->new({
+                bcs_schema => $schema,
+                metadata_schema => $metadata_schema,
+                phenome_schema => $phenome_schema,
+                trial_id => $plate_id
+            });
+            $error = $trial->delete_metadata();
+            $error .= $trial->delete_field_layout();
+            $error .= $trial->delete_project_entry();
+
+        }
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 

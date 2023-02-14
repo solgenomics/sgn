@@ -32,7 +32,6 @@ use File::Path qw / mkpath /;
 use File::Spec::Functions;
 use List::MoreUtils qw / uniq /;
 use JSON::Any;
-use Math::Round::Var;
 use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
@@ -370,6 +369,25 @@ sub all_projects {
     return $projects_rs;
 }
 
+sub get_trial_accessions {
+    my ($self, $trial_id, $limit) = @_;
+
+    $limit = $limit ?  " LIMIT  $limit" : '';
+    my $q = "SELECT accession_id FROM accessionsXtrials WHERE trial_id = ? $limit";
+
+    my $sth = $self->schema->storage->dbh->prepare($q);
+    $sth->execute($trial_id);
+
+    my @accessions_ids;
+    while (my $accession_id = $sth->fetchrow_array()) {
+        push @accessions_ids, $accession_id;
+    }
+
+    return \@accessions_ids;
+
+}
+
+
 sub has_phenotype {
     my ( $self, $pr_id ) = @_;
 
@@ -394,23 +412,29 @@ sub has_phenotype {
 }
 
 sub has_genotype {
-    my ( $self, $pr_id, $protocol_id ) = @_;
+    my ($self, $trial_id, $protocol_id) = @_;
 
-    my $protocol_detail = $self->protocol_detail($protocol_id);
-    my $protocol_name   = $protocol_detail->{name};
-
+    my $has_genotype;
     my $q = "SELECT genotyping_protocol_name, genotyping_protocol_id
                  FROM genotyping_protocolsXtrials
                  JOIN genotyping_protocols USING (genotyping_protocol_id)
                  WHERE trial_id = ?
-                 AND genotyping_protocols.genotyping_protocol_name ILIKE ?";
+                 AND genotyping_protocols.genotyping_protocol_id = ?";
 
     my $sth = $self->schema->storage->dbh->prepare($q);
-    $sth->execute( $pr_id, $protocol_name );
+    $sth->execute($trial_id, $protocol_id);
 
-    ( $protocol_name, $protocol_id ) = $sth->fetchrow_array();
+   my ($protocol_name, $protocol_id_geno ) = $sth->fetchrow_array();
+    $has_genotype = 1 if $protocol_name;
 
-    return $protocol_id;
+    if (!$has_genotype) {
+        my $accessions_ids = $self->get_trial_accessions($trial_id, 10);
+        my $geno_data = $self->first_stock_genotype_data($accessions_ids, $protocol_id);
+
+        $has_genotype = 1 if $$geno_data;    
+    }
+
+    return $has_genotype;
 
 }
 
@@ -672,7 +696,7 @@ sub get_population_type {
 sub get_stock_owners {
     my ( $self, $stock_id ) = @_;
 
-    my $owners;
+    my @owners;
 
     no warnings 'uninitialized';
 
@@ -686,7 +710,8 @@ sub get_stock_owners {
         $sth->execute($stock_id);
 
         while ( my ( $id, $fname, $lname ) = $sth->fetchrow_array ) {
-            push @$owners,
+
+            push @owners,
               {
                 'id'         => $id,
                 'first_name' => $fname,
@@ -696,7 +721,7 @@ sub get_stock_owners {
         }
     }
 
-    return $owners;
+    return \@owners;
 
 }
 
@@ -732,35 +757,25 @@ sub search_stock_using_plot_name {
 
 }
 
-# sub first_stock_genotype_data {
-#     my ($self, $pr_id) = @_;
+sub first_stock_genotype_data {
+    my ($self, $accessions_ids, $protocol_id) = @_;
 
-#     my $protocol_id = $self->protocol_id();
+    my $geno_data = do { \my $geno_data};
+    my $geno_search = $self->genotypes_list_genotype_data($accessions_ids, $protocol_id);
+    my $count = 1;
+    
+    while (my $geno = $geno_search->get_next_genotype_info())
+    {
+        my $geno_hash = $geno->{selected_genotype_hash};
+	    my $marker_headers = $self->get_dataset_markers($geno_hash);
+	    $geno_data  = $self->structure_genotype_data($geno, $marker_headers, $count);
+        $count++;
+    	last if $$geno_data;
+    }
 
-#     my $geno_data = {};
+    return $geno_data;
 
-#     my $geno_search = CXGN::Genotype::Search->new({
-# 		bcs_schema => $self->schema,
-# 		trial_list => [$pr_id],
-# 		protocol_id_list => [$protocol_id],
-# 		genotypeprop_hash_select=> ['DS'],
-# 		protocolprop_top_key_select=>[],
-# 		protocolprop_top_key_select=>[],
-# 		return_only_first_genotypeprop_for_stock=> 1,
-# 		});
-
-#     $geno_search->init_genotype_iterator();
-#     my $count = 0;
-#     while (my $geno = $geno_search->get_next_genotype_info())
-#     {
-#     	$count++;
-#     	$geno_data  = $self->structure_genotype_data($geno, $count);
-#     	last if $$geno_data;
-#     }
-
-#     return $geno_data;
-
-# }
+}
 
 sub genotype_data {
     my ( $self, $args ) = @_;
@@ -792,16 +807,16 @@ sub genotype_data {
 }
 
 sub structure_genotype_data {
-    my ( $self, $dataref, $markers, $iter_no ) = @_;
+    my ( $self, $dataref, $markers, $headers ) = @_;
 
     my $geno_data;
 
     if ($dataref) {
         my $geno_hash = $dataref->{selected_genotype_hash};
 
-        if ( $iter_no == 1 ) {
-            my $headers = $self->create_genotype_dataset_headers($markers);
-            $geno_data = "\t" . $headers . "\n";
+        if ($headers ) {
+            my $header_markers = $self->create_genotype_dataset_headers($markers);
+            $geno_data = "\t" . $header_markers. "\n";
 
         }
 
@@ -834,7 +849,8 @@ sub genotypes_list_genotype_data {
         return_only_first_genotypeprop_for_stock => 1,
     );
 
-    $geno_search->init_genotype_iterator();
+    
+   $geno_search->init_genotype_iterator();
     return $geno_search;
 
 }
@@ -1075,7 +1091,8 @@ sub create_genotype_row {
     foreach my $marker (@$markers) {
         no warnings 'uninitialized';
 
-        $geno_values .= $genotype_hash->{$marker}->{'DS'};
+        my $dosage = $genotype_hash->{$marker}->{'DS'};
+        $geno_values .= $self->round_allele_dosage_values($dosage);
         $geno_values .= "\t" unless $marker eq $markers->[-1];
     }
 
@@ -1517,7 +1534,7 @@ sub phenotype_data {
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema  => $self->schema,
-        search_type => 'MaterializedViewTable',
+        search_type => 'Native',
         trial_list  => [$project_id],
         data_level  => 'plot',
     );
@@ -2027,8 +2044,6 @@ sub get_all_genotyping_protocols {
         $where = ' WHERE trial_id = ?';
         $q     = 'SELECT distinct(genotyping_protocol_id)
                     FROM genotyping_protocolsXtrials' . $where;
-
-        print STDERR "\nthere is trial id: $trial_id -- $q\n";
     }
     else {
         $q = 'SELECT distinct(genotyping_protocol_id)

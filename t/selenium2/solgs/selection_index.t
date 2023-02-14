@@ -12,7 +12,9 @@ my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
-# my $solgs_data = SGN::Test::solGSData->new();
+my $cache_dir = $solgs_data->site_cluster_shared_dir();
+print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
+
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 # my $accessions_list = $solgs_data->get_list_details('accessions');
@@ -55,14 +57,14 @@ print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
 print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
-`rm -r /tmp/localhost/`;
+`rm -r $cache_dir`;
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->get('/solgs', 'solgs home page');
     sleep(4);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -78,7 +80,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(90);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(5);
@@ -179,11 +181,11 @@ $d->while_logged_in_as("submitter", sub {
     # sleep(2);
 
 
-    `rm -r /tmp/localhost/`;
+    `rm -r $cache_dir`;
     $d->get('/solgs');
 
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
@@ -214,7 +216,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(3);

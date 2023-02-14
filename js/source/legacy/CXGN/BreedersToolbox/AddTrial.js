@@ -58,6 +58,7 @@ jQuery(document).ready(function ($) {
         var stock_type = $("#select_stock_type").val();
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
+	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
         plants_per_plot = $("#add_plant_entries").val();
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
@@ -482,21 +483,20 @@ jQuery(document).ready(function ($) {
 
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
+
     function generate_experimental_design() {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
-        //console.log("Trial location is "+trial_location);
         var trial_stock_type = jQuery('#select_stock_type').val();
         var block_number = $('#block_number').val();
-        //alert(block_number);
         var row_number= $('#row_number').val();
         var row_number_per_block=$('#row_number_per_block').val();
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
-       // alert(row_number);
+	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
 
         var stock_list_id;
         var control_stock_list_id;
@@ -524,8 +524,12 @@ jQuery(document).ready(function ($) {
             unreplicated_stock_list_id = $('#list_of_unrep_family_name_list_select').val();
         }
 
-        var stock_list_array = list.getList(stock_list_id);
-        var stock_list = JSON.stringify(stock_list_array);
+        var stock_list;
+        var stock_list_array;
+        if (stock_list_id) {
+            stock_list_array = list.getList(stock_list_id);
+            stock_list = JSON.stringify(stock_list_array);
+        }
 
         var control_list;
         var control_list_array;
@@ -536,7 +540,6 @@ jQuery(document).ready(function ($) {
 
         var control_list_crbd;
         var control_list_crbd_array;
-
         if (control_stock_list_id_crbd) {
             control_list_crbd_array = list.getList(control_stock_list_id_crbd);
             control_list_crbd = JSON.stringify(control_list_crbd_array);
@@ -632,6 +635,8 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
+	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
+	
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -683,7 +688,8 @@ jQuery(document).ready(function ($) {
                 'field_size': field_size,
                 'plot_width': plot_width,
                 'plot_length': plot_length,
-                'use_same_layout' : use_same_layout
+                'use_same_layout' : use_same_layout,
+		'plot_numbering_scheme' : plot_numbering_scheme
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -1989,7 +1995,7 @@ jQuery(document).ready(function ($) {
                   'inherits_plot_treatments' : inherits_plot_treatments,
                 },
                 success: function(response) {
-                    console.log(response);
+                    //console.log(response);
                   if (response.error) {
                     alert(response.error);
                   }
@@ -2041,8 +2047,6 @@ jQuery(document).ready(function ($) {
             //console.log(greenhouse_num_plants);
         }
 
-        //alert(design_type);
-
         var rep_count = jQuery('#rep_count').val();
         var block_size = jQuery('#block_size').val();
         var max_block_size = jQuery('#max_block_size').val();
@@ -2077,6 +2081,8 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
+	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,
@@ -2101,6 +2107,7 @@ jQuery(document).ready(function ($) {
                 'block_size': block_size,
                 'max_block_size': max_block_size,
                 'plot_prefix': plot_prefix,
+                'plot_numbering_scheme' : plot_numbering_scheme,
                 'start_number': start_number,
                 'increment': increment,
                 'design_json': design_json,
@@ -2129,7 +2136,6 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    //alert('Trial design saved');
                     refreshTrailJsTree(0);
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
@@ -2264,12 +2270,15 @@ jQuery(document).ready(function ($) {
             html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
             var design_hash = JSON.parse(design_array[i]);
             //console.log(design_hash);
-            for (var key in design_hash){
+            var keys = Object.keys(design_hash);
+            keys.sort();
+            keys.forEach(function(key){
                 if (key != 'treatments'){
                     var plot_obj = design_hash[key];
+                    //console.log(plot_obj);
                     html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"'  data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-subplot_names='"+JSON.stringify(plot_obj.subplots_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
                 }
-            }
+            });
             html += "</tbody></table>";
         }
         html += "<br/><br/>";

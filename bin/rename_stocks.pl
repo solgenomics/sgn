@@ -40,7 +40,7 @@ test mode, do not commit changes.
 
 =head1 DESCRIPTION
 
-This script renames stocks in bulk using an xls file as input with two columns: the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header line. Both stock.name and stock.uniquename fields will be changed to the new name.
+This script renames stocks in bulk using an xls and xlsx files as input with two columns: the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header line. Both stock.name and stock.uniquename fields will be changed to the new name.
 
 The oldname will be stored as a synonym unless option -n is given.
 
@@ -63,6 +63,7 @@ use Data::Dumper;
 use Carp qw /croak/ ;
 use Pod::Usage;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
@@ -79,7 +80,18 @@ if (!$opt_H || !$opt_D || !$opt_i) {
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $stock_type = $opt_s || "accession";
-my $parser   = Spreadsheet::ParseExcel->new();
+
+# Match a dot, extension .xls / .xlsx
+my ($extension) = $opt_i =~ /(\.[^.]+)$/;
+my $parser;
+
+if ($extension eq '.xlsx') {
+	$parser = Spreadsheet::ParseXLSX->new();
+}
+else {
+	$parser = Spreadsheet::ParseExcel->new();
+}
+
 my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({ 

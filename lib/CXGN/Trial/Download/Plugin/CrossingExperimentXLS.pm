@@ -36,6 +36,7 @@ $c->res->body($output);
 use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Cross;
 
 sub verify {
@@ -53,13 +54,24 @@ sub download {
         push @trial_ids, @{$self->trial_list};
     }
 
-    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $ss;
+
+    if ($extension eq '.xlsx') {
+        $ss = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $ss = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws = $ss->add_worksheet();
 
     my @header = ('Cross Unique ID', 'Cross Combination', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Male Parent', 'Male Ploidy', 'Female Plot', 'Male Plot', 'Female Plant', 'Male Plant', 'Seedlot Name', 'Family Name', 'Number of Progenies');
     my $field_crossing_data_order = $self->field_crossing_data_order;
     my @field_crossing_data_header = @$field_crossing_data_order;
     push @header, @field_crossing_data_header;
+    push @header, 'Transaction IDs';
 
     my $col_count = 0;
     foreach (@header){
@@ -98,7 +110,6 @@ sub download {
             $cross_id_hash{$progeny_cross_id}{'progeny_info'} = \@each_row_progeny_info;
         }
 
-        my @all_field_data;
         my $field_info_ref = $crosses->get_cross_properties_trial();
         my @field_info = @$field_info_ref;
         foreach my $each_field_info (@field_info){
@@ -109,6 +120,19 @@ sub download {
                 push @each_row_field_info, $field_info_hash->{$field_info_key};
             }
             $cross_id_hash{$field_info_cross_id}{'field_info'} = \@each_row_field_info
+        }
+
+        my $transaction_ids_ref = $crosses->get_cross_transaction_ids_in_experiment();
+        my @all_transaction_ids = @$transaction_ids_ref;
+        foreach my $each_cross_transactions (@all_transaction_ids) {
+            my $transaction_cross_id = $each_cross_transactions->[0];
+            my $transactions = $each_cross_transactions->[2];
+            if ($transactions) {
+                my @transactions_array = @$transactions;
+                my @sorted_ids = sort(@transactions_array);
+                my $transaction_ids_string = join(",", @sorted_ids);
+                $cross_id_hash{$transaction_cross_id}{'transaction_ids'} = $transaction_ids_string;
+            }
         }
     }
 
@@ -124,6 +148,8 @@ sub download {
         push @each_row, @$progenies;
         my $field_info = $cross_id_hash{$cross_id}{'field_info'};
         push @each_row, @$field_info;
+        my $transaction_ids = $cross_id_hash{$cross_id}{'transaction_ids'};
+        push @each_row, $transaction_ids;
 
         push @all_rows, [@each_row];
     }

@@ -80,6 +80,7 @@ sub validate {
     }
 
     my $header_col_1 = shift @columns;
+    $header_col_1 =~ s/^\s+|\s+$//g;
     if ( $header_col_1 ne "sample_name" ) {
       $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
       print STDERR "First cell must be 'sample_name'\n";
@@ -87,6 +88,7 @@ sub validate {
     }
 
     my $header_col_2 = shift @columns;
+    $header_col_2 =~ s/^\s+|\s+$//g;
     if ($header_col_2 ne "device_id") {
         $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
         print STDERR "Second cell must be 'device_id'\n";
@@ -94,6 +96,7 @@ sub validate {
     }
 
     my $header_col_3 = shift @columns;
+    $header_col_3 =~ s/^\s+|\s+$//g;
     if ($header_col_3 ne "comments") {
         $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
         print STDERR "Third cell must be 'comments'\n";
@@ -109,6 +112,7 @@ sub validate {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        $sample_name =~ s/^\s+|\s+$//g;
         my $device_id = shift @fields;
         my $comments = shift @fields;
         push @samples, $sample_name;
@@ -142,8 +146,26 @@ sub validate {
     }
 
     if ( $columns[0] ne "metabolite_name" ||
-        $columns[1] ne "inchi_key" ||
-        $columns[2] ne "compound_name") {
+        $columns[1] ne "chebi_id" ||
+        $columns[2] ne "inchi_id" ||
+        $columns[3] ne "inchi_key" ||
+        $columns[4] ne "pubchem_id" ||
+        $columns[5] ne "smiles_id" ||
+        $columns[6] ne "chemical_formula" ||
+        $columns[7] ne "putative_metabolite_identification" ||
+        $columns[8] ne "putative_metabolite_identification_synonyms" ||
+        $columns[9] ne "mass_to_charge" ||
+        $columns[10] ne "retention_time" ||
+        $columns[11] ne "charge" ||
+        $columns[12] ne "fragmentation" ||
+        $columns[13] ne "modifications" ||
+        $columns[14] ne "metabolite_species" ||
+        $columns[15] ne "met_database" ||
+        $columns[16] ne "met_database_version" ||
+        $columns[17] ne "met_reliability" ||
+        $columns[18] ne "met_search_engine" ||
+        $columns[19] ne "met_search_engine_score" ||
+        $columns[20] ne "compound_name") {
       $parse_result{'error'} = "Header row must be 'metabolite_name', 'inchi_key', 'compound_name'. Please, check your file.";
       return \%parse_result;
     }
@@ -153,11 +175,65 @@ sub validate {
             @fields = $csv->fields();
         }
         my $metabolite_name = $fields[0];
-        my $inchi_key = $fields[1];
-        my $compound_name = $fields[2];
+        my $chebi_id = $fields[1];
+        my $inchi_id = $fields[2];
+        my $inchi_key = $fields[3];
+        my $pubchem_id = $fields[4];
+        my $smiles_id = $fields[5];
+        my $chemical_formula = $fields[6];
+        my $putative_metabolite_identification = $fields[7];
+        my $putative_metabolite_identification_synonyms = $fields[8];
+        my $mass_to_charge = $fields[9];
+        my $retention_time = $fields[10];
+        my $charge = $fields[11];
+        my $fragmentation = $fields[12];
+        my $modifications = $fields[13];
+        my $metabolite_species = $fields[14];
+        my $met_database = $fields[15];
+        my $met_database_version = $fields[16];
+        my $met_reliability = $fields[17];
+        my $met_search_engine = $fields[18];
+        my $met_search_engine_score = $fields[19];
+        my $compound_name = $fields[20];
 
         if (!$metabolite_name){
             $parse_result{'error'}= "Metabolite name is required!";
+            return \%parse_result;
+        }
+        if (!$chemical_formula){
+            $parse_result{'error'}= "Chemical formula is required!";
+            return \%parse_result;
+        }
+        if (!$putative_metabolite_identification){
+            $parse_result{'error'}= "Putative metabolite identification is required!";
+            return \%parse_result;
+        }
+        if (!$mass_to_charge){
+            $parse_result{'error'}= "Mass to charge is required!";
+            return \%parse_result;
+        }
+        if (!$retention_time){
+            $parse_result{'error'}= "Retention time is required!";
+            return \%parse_result;
+        }
+        if (!$met_database){
+            $parse_result{'error'}= "Met database is required!";
+            return \%parse_result;
+        }
+        if (!$met_database_version){
+            $parse_result{'error'}= "Met database version is required!";
+            return \%parse_result;
+        }
+        if (!$met_reliability){
+            $parse_result{'error'}= "Met reliability is required!";
+            return \%parse_result;
+        }
+        if (!$met_search_engine){
+            $parse_result{'error'}= "Met search engine is required!";
+            return \%parse_result;
+        }
+        if (!$met_search_engine_score){
+            $parse_result{'error'}= "Met search engine score is required!";
             return \%parse_result;
         }
     }
@@ -258,6 +334,7 @@ sub parse {
         }
 
         my $observationunit_name = $columns[0];
+        $observationunit_name =~ s/^\s+|\s+$//g;
         my $device_id = $columns[1];
         my $comments = $columns[2];
         $observation_units_seen{$observationunit_name} = 1;

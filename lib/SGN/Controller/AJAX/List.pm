@@ -671,12 +671,13 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
     }
     $c->stash->{rest} = { invalid_lists => \@invalid_lists };
 }
+
 #
 # Validate a temp list of names for a specified data type
 # - Validate the temp list
 # - Return lists of missing and existing items
 #
-# PATH: GET /list/validate/temp
+# PATH: POST /list/validate/temp
 #
 # BODY:
 #   type: the name of a supported list type (accessions, trials, seedlots, etc...)
@@ -687,8 +688,8 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 #   missing: array list item names not in the database
 #   existing: array list item names found in the database
 #
-
-sub temp_validate :Path('/list/validate/temp') Args(0) {
+sub temp_validate : Path('/list/validate/temp') ActionClass('REST') {};
+sub temp_validate_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $type = $c->req->param("type");
@@ -1315,7 +1316,7 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
                 box_name => $seedlot->[5],
                 current_count => $seedlot->[6],
                 current_weight => $seedlot->[7],
-                quality => $seedlot->[8]
+                quality => $seedlot->[8],
             }
         }
     }

@@ -39,6 +39,7 @@ use Image::Size;
 use Math::Round;
 use URI::Encode qw(uri_encode uri_decode);
 use Array::Utils qw(:all);
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -230,7 +231,19 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_field_trials = $c->req->param("get_field_trials");
     my $get_crossing_trials = $c->req->param("get_crossing_trials");
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
+    my $get_genotyping_projects = $c->req->param("get_genotyping_projects");
     my $include_analyses = $c->req->param("include_analyses");
+    my $excluded_plates_in_project_id = $c->req->param("excluded_plates_in_project_id");
+
+    my @genotyping_plate_ids;
+    if ($excluded_plates_in_project_id) {
+        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $excluded_plates_in_project_id
+        });
+        my $genotyping_plates = $plate_info->get_genotyping_plate_ids();
+        @genotyping_plate_ids = @$genotyping_plates;
+    }
 
     my $projects;
     if (!$breeding_program_id && !$breeding_program_name) {
@@ -250,7 +263,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 
     my @projects;
     foreach my $project (@$projects) {
-        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects) = $p->get_trials_by_breeding_program($project->[0]);
+        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects) = $p->get_trials_by_breeding_program($project->[0]);
         if ($get_field_trials){
             if ($field_trials && scalar(@$field_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
@@ -264,9 +277,19 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
             }
         }
         if ($get_genotyping_trials){
+            my @all_projects;
             if ($genotyping_trials && scalar(@$genotyping_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$genotyping_trials;
-                push @projects, @trials;
+                push @all_projects, @trials;
+            }
+            if ($excluded_plates_in_project_id && scalar(@genotyping_plate_ids)>0) {
+                print STDERR "SUBSTRACTING..."."\n";
+                foreach my $project (@all_projects) {
+                    next if ($project->[0] ~~ @genotyping_plate_ids);
+                    push @projects, $project;
+                }
+            } else {
+                @projects = @all_projects;
             }
         }
         if ($include_analyses) {
@@ -275,12 +298,20 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
                 push @projects, @analyses;
             }
         }
+        if ($get_genotyping_projects){
+            if ($genotyping_projects && scalar(@$genotyping_projects)>0){
+                my @g_projects = sort { $a->[1] cmp $b->[1] } @$genotyping_projects;
+                push @projects, @g_projects;
+            }
+        }
     }
 
 #    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
     if ($empty) {
         if ($get_crossing_trials) {
             unshift @projects, [ "", "Please select a crossing experiment" ];
+        } elsif ($get_genotyping_projects) {
+            unshift @projects, [ "", "Please select a genotyping project" ];
         } else {
             unshift @projects, [ "", "Please select a trial" ];
         }
@@ -2147,6 +2178,31 @@ sub get_items_select : Path('/ajax/html/select/items') Args(0) {
 
     $c->stash->{rest} = { select => $html };
 
+}
+
+
+sub get_genotyping_facility_select : Path('/ajax/html/select/genotyping_facilities') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "facility_select";
+    my $name = $c->req->param("name") || "facility_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    if ($empty) { unshift @facilities, [ "", "Select Facility" ] }
+
+    my $default = $c->req->param("default") || @facilities[0]->[0];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@facilities,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
 }
 
 

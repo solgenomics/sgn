@@ -41,6 +41,8 @@ use CXGN::Calendar;
 use JSON;
 use File::Basename qw | basename dirname|;
 use Scalar::Util qw | looks_like_number |;
+use CXGN::Genotype::GenotypingProject;
+use CXGN::Genotype::Protocol;
 
 =head2 accessor bcs_schema()
 
@@ -2641,7 +2643,7 @@ sub obsolete_additional_uploaded_file {
     # check ownership of that image
     my $q = "SELECT metadata.md_metadata.create_person_id, metadata.md_metadata.metadata_id, metadata.md_files.file_id FROM metadata.md_metadata join metadata.md_files using(metadata_id) where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
 
-    my $dbh = $self->bcs_schema->storage()->dbh(); 
+    my $dbh = $self->bcs_schema->storage()->dbh();
     my $h = $dbh->prepare($q);
 
     $h->execute($file_id, $user_id);
@@ -2655,19 +2657,19 @@ sub obsolete_additional_uploaded_file {
 	else {
 	    push @errors, "Only the owner of the uploaded file, or a curator, can delete this file.";
 	}
-	
+
     }
     else {
 	push @errors, "No such file currently exists.";
     }
- 
+
     if (@errors >0) {
 	return { errors => \@errors };
     }
 
     return { success => 1 };
-    
-		
+
+
 
 }
 
@@ -5095,6 +5097,12 @@ sub delete_empty_crossing_experiment {
 	return 'Cannot delete crossing experiment with associated crosses.';
     }
 
+    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {$self->bcs_schema->storage->dbh()},{on_connect_do => ['SET search_path TO public,phenome;']});
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+    if ($project_owner_row) {
+        $project_owner_row->delete();
+    }
+
     eval {
 	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
 	$row->delete();
@@ -5181,15 +5189,117 @@ sub delete_genotyping_plate_from_field_trial_linkage {
     } else {
         push @errors, "Project relationship does not exists or has more than 1 occurrence.";
     }
- 
+
     if (@errors >0) {
     return { errors => \@errors };
     }
 
     return { success => 1 };
-        
+
 
 }
+
+
+=head2 function delete_empty_genotyping_project()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_empty_genotyping_project {
+    my $self = shift;
+
+    if ($self->genotyping_plate_count() > 0) {
+        return 'Cannot delete genotyping project with associated genotyping plates.';
+    }
+
+    if ($self->genotyping_protocol_count() > 0) {
+        return 'Cannot delete genotyping project with associated genotyping protocol.';
+    }
+
+    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {$self->bcs_schema->storage->dbh()},{on_connect_do => ['SET search_path TO public,phenome;']});
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+    if ($project_owner_row) {
+        $project_owner_row->delete();
+    }
+
+    eval {
+        my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
+        $row->delete();
+        print STDERR "deleted project ".$self->get_trial_id."\n";
+    };
+    if ($@) {
+        print STDERR "An error occurred during deletion: $@\n";
+        return $@;
+    }
+}
+
+
+=head2 function genotyping_plate_count()
+
+ Usage:
+ Desc: The number of genotyping plates associated with this genotyping project
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub genotyping_plate_count {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_project_id = $self->get_trial_id();
+
+    my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $schema,
+        project_id => $genotyping_project_id
+    });
+    my ($data, $total_count) = $plate_info->get_plate_info();
+    my $plate_count;
+    if ($data) {
+        $plate_count = scalar(@$data);
+    }
+
+    return $plate_count;
+
+}
+
+
+=head2 function genotyping_protocol_count()
+
+ Usage:
+ Desc: The number of genotyping protocols associated with this genotyping project
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub genotyping_protocol_count {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_project_id = $self->get_trial_id();
+    my @project_list = ($genotyping_project_id);
+    my $protocol_search_result = CXGN::Genotype::Protocol::list($schema, undef, undef, undef, undef, undef ,\@project_list);
+
+    my $protocol_count;
+    if ($protocol_search_result) {
+        $protocol_count = scalar(@$protocol_search_result);
+    }
+
+    return $protocol_count;
+
+}
+
+
+
 
 1;
 

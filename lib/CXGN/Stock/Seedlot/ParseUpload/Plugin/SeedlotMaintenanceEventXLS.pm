@@ -2,6 +2,7 @@ package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotMaintenanceEventXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use CXGN::Onto;
@@ -12,7 +13,17 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $event_ontology_root = $self->get_event_ontology_root();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
 
     # Errors in validation
     my @error_messages;
@@ -65,7 +76,7 @@ sub _validate_with_plugin {
     # Get row/col counts
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if (($col_max - $col_min) != 5 || ($row_max - $row_min) < 1 ) { 
+    if (($col_max - $col_min) != 5 || ($row_max - $row_min) < 1 ) {
         push(@error_messages, "Spreadsheet is missing header or contains no rows");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -82,21 +93,27 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $seedlot_head  = $worksheet->get_cell(0,0)->value();
+        $seedlot_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $type_head  = $worksheet->get_cell(0,1)->value();
+        $type_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $value_head  = $worksheet->get_cell(0,2)->value();
+        $value_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $notes_head  = $worksheet->get_cell(0,3)->value();
+        $notes_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $operator_head  = $worksheet->get_cell(0,4)->value();
+        $operator_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $timestamp_head  = $worksheet->get_cell(0,5)->value();
+        $timestamp_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$seedlot_head || $seedlot_head ne 'seedlot' ) {
@@ -130,9 +147,11 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot = $worksheet->get_cell($row,0)->value();
+            $seedlot =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $type = $worksheet->get_cell($row,1)->value();
+            $type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $value = $worksheet->get_cell($row,2)->value();
@@ -213,7 +232,17 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $event_ontology_root = $self->get_event_ontology_root();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
 
     print STDERR "===> PARSE SME FILE: $filename\n";
 
@@ -280,15 +309,18 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,1)) {
             $type = $worksheet->get_cell($row,1)->value();
+            $type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $value = $worksheet->get_cell($row,2)->value();
+            $value =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $notes =  $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
             $operator =  $worksheet->get_cell($row,4)->value();
+            $operator =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
             $timestamp =  $worksheet->get_cell($row,5)->value();
@@ -302,7 +334,7 @@ sub _parse_with_plugin {
             operator => $operator,
             timestamp => $timestamp
         );
-        push( @{$events_by_seedlot{$seedlot_id}}, \%event ); 
+        push( @{$events_by_seedlot{$seedlot_id}}, \%event );
     }
 
     $self->_set_parsed_data(\%events_by_seedlot);

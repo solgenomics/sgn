@@ -24,9 +24,10 @@ $selection_pop_desc => ''
 
 $model_page_url =>''
 $training_pop_url =>''
+$trial_detail_page => 'NA'
 $stocks_no
 $markers_no
-$traits_no
+$traits_no => 'NA'
 $trait_name => ''
 $protocol_url
 $list_reference => ''
@@ -34,16 +35,14 @@ $owner => ''
 $combined_populations => ''
 
 </%args>
-
+  
 <%perl>
 
 $owner = 'NA' if !$owner;
-$traits_no = 'NA' if !$traits_no;
-
 $training_pop_url = $training_pop_name if !$training_pop_url;
 my $pop_desc = $selection_pop_desc ? $selection_pop_desc : $training_pop_desc;
 my $pop_name = $selection_pop_name ? $selection_pop_name : $training_pop_url;
-my @data_c1 = (['Name', $pop_name],  ['Description', $pop_desc], ['Owner', $owner]);
+my @data_c1 = (['Name', $pop_name],  ['Description', $pop_desc], ['Owner', $owner], ['Trial detail page', $trial_detail_page]);
 my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol_url]);
 
 push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;

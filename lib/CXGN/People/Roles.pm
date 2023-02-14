@@ -53,6 +53,30 @@ sub add_sp_role {
 	}
 }
 
+sub update_sp_role {
+	my $self = shift;
+	my $new_name = shift;
+    my $old_name = shift;
+	my $dbh = $self->bcs_schema->storage->dbh;
+
+	my $q="SELECT sp_role_id FROM sgn_people.sp_roles where name=?;";
+	my $sth = $dbh->prepare($q);
+	$sth->execute($old_name);
+	my $count = $sth->rows;
+	if ($count < 1){
+		print STDERR "No role with that name exists.\n";
+		return;
+	}
+	eval {
+		my $q="UPDATE sgn_people.sp_roles SET name = ? WHERE name = ?;";
+		my $sth = $dbh->prepare($q);
+		$sth->execute($new_name,$old_name);
+	};
+	if ($@) {
+		return "An error occurred while updating an existing role. ($@)";
+	}
+}
+
 sub get_breeding_program_roles {
 	my $self = shift;
 	my $ascii_chars = shift;

@@ -19,6 +19,10 @@ BEGIN {use_ok('CXGN::Trial::TrialDesign');}
 BEGIN {use_ok('CXGN::Trial::TrialLayoutDownload');}
 BEGIN {use_ok('CXGN::Trial::TrialLookup');}
 BEGIN {use_ok('CXGN::TrialStatus');}
+BEGIN {use_ok('CXGN::Genotype::StoreGenotypingProject');}
+BEGIN {use_ok('CXGN::Trial');}
+BEGIN {use_ok('CXGN::BreedersToolbox::Projects');}
+BEGIN {use_ok('CXGN::Genotype::GenotypingProject');}
 
 ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
@@ -167,6 +171,7 @@ ok($trial_design->set_plot_start_number(1), "set plot start number");
 ok($trial_design->set_plot_number_increment(1), "set plot increment");
 ok($trial_design->set_number_of_reps(2), "set rep number");
 ok($trial_design->set_design_type("CRD"), "set design type");
+ok($trial_design->set_plot_numbering_scheme('consecutive'));
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
@@ -225,16 +230,37 @@ foreach my $acc (@$accession_names) {
 #               }
 # ]
 
+#adding genotyping project
+
+my $location_rs = $chado_schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
+my $location_id = $location_rs->first->nd_geolocation_id;
+
+my $bp_rs = $chado_schema->resultset('Project::Project')->find({name => 'test'});
+my $breeding_program_id = $bp_rs->project_id();
+
+my $add_genotyping_project = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema => $chado_schema,
+    dbh => $dbh,
+    project_name => 'test_genotyping_project_1',
+    breeding_program_id => $breeding_program_id,
+    project_facility => 'igd',
+    data_type => 'snp',
+    year => '2022',
+    project_description => 'genotyping project for test',
+    nd_geolocation_id => $location_id,
+    owner_id => 41
+});
+ok(my $store_return = $add_genotyping_project->store_genotyping_project(), "store genotyping project");
+
+my $gp_rs = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_1'});
+my $genotyping_project_id = $gp_rs->project_id();
+
 my $plate_info = {
     elements => \@genotyping_stock_names,
     plate_format => 96,
     blank_well => 'A02',
     name => 'test_genotyping_trial_name',
-    description => "test description",
-    year => '2015',
-    project_name => 'NextGenCassava',
     genotyping_facility_submit => 'no',
-    genotyping_facility => 'igd',
     sample_type => 'DNA'
 };
 
@@ -339,24 +365,36 @@ is_deeply($geno_design, {
                    }
         }, 'check genotyping plate design');
 
+#store genotyping plate
+my $trial = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $genotyping_project_id });
+my $location_data = $trial->get_location();
+my $location_name = $location_data->[1];
+my $description = $trial->get_description();
+my $genotyping_facility = $trial->get_genotyping_facility();
+my $plate_year = $trial->get_year();
+
+my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $chado_schema });
+my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
+my $breeding_program_name = $breeding_program_data->[0]->[1];
+
 my $genotyping_trial_create;
 ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     owner_id => 41,
-    program => "test",
-    trial_location => "test_location_for_trial",
+    program => $breeding_program_name,
+    trial_location => $location_name,
     operator => "janedoe",
-    trial_year => $plate_info->{year},
-    trial_description => $plate_info->{description},
+    trial_year => $plate_year,
+    trial_description => $description,
     design_type => 'genotyping_plate',
     design => $geno_design,
     trial_name => $plate_info->{name},
     is_genotyping => 1,
     genotyping_user_id => 41,
-    genotyping_project_name => $plate_info->{project_name},
+    genotyping_project_id => $genotyping_project_id,
     genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
-    genotyping_facility => $plate_info->{genotyping_facility},
+    genotyping_facility => $genotyping_facility,
     genotyping_plate_format => $plate_info->{plate_format},
     genotyping_plate_sample_type => $plate_info->{sample_type},
 }), "create genotyping plate");
@@ -387,6 +425,50 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$save->{'trial_id'}.'
 my $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 is(scalar(keys %{$response->{design}}), 11);
+
+#test moving genotyping plate to another project
+my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+
+my $relationship_rs_1 = $chado_schema->resultset("Project::ProjectRelationship")->find ({
+    subject_project_id => $genotyping_trial_id,
+    type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+});
+my $project_id_before_moving = $relationship_rs_1->object_project_id();
+is($project_id_before_moving, $genotyping_project_id);
+
+my $add_genotyping_project_2 = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema => $chado_schema,
+    dbh => $dbh,
+    project_name => 'test_genotyping_project_3',
+    breeding_program_id => $breeding_program_id,
+    project_facility => 'igd',
+    data_type => 'snp',
+    year => '2022',
+    project_description => 'genotyping project for test',
+    nd_geolocation_id => $location_id,
+    owner_id => 41
+});
+ok(my $store_return_2 = $add_genotyping_project_2->store_genotyping_project(), "store genotyping project");
+
+my $gp_rs_2 = $chado_schema->resultset('Project::Project')->find({name => 'test_genotyping_project_3'});
+my $genotyping_project_id_2 = $gp_rs_2->project_id();
+my @genotyping_plate_ids = ($genotyping_trial_id);
+
+my $genotyping_project_obj = CXGN::Genotype::GenotypingProject->new({
+    bcs_schema => $chado_schema,
+    project_id => $genotyping_project_id_2,
+    new_genotyping_plate_list => \@genotyping_plate_ids
+});
+
+ok(my $new_associated_project =$genotyping_project_obj->set_project_for_genotyping_plate(), "move plate to new project");
+
+my $relationship_rs_2 = $chado_schema->resultset("Project::ProjectRelationship")->find ({
+    subject_project_id => $genotyping_trial_id,
+    type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+});
+my $project_id_after_moving = $relationship_rs_2->object_project_id();
+is($project_id_after_moving, $genotyping_project_id_2);
+
 
 #create westcott trial design_type
 
@@ -486,7 +568,7 @@ ok($trial_design->set_num_plants_per_plot(4), "set num plants per plot");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
-#print STDERR Dumper $design;
+print STDERR Dumper $design;
 
 $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 

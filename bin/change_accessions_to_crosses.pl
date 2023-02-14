@@ -17,7 +17,7 @@ change_accessions_to_crosses.pl -H [dbhost] -D [dbname] -i [infile]
 =head1 DESCRIPTION
 Use case: Previously, users were not able to use cross stock type in trials because cross stock type was not allowed. As a result, some of the cross names were uploaded as accession stock type. After an improvement by allowing cross stock type in trials, users would like to change those names with accession stock type to cross stock type.
 
-This script changes stocks with type accession to type cross, then links each cross to parents,a cross type, an nd_experiment and a project.  The infile provided has 5 columns. The first column contains stock uniquenames stored as accession stock type. The second column contains female parent uniquenames. The third column contains male parent uniquenames. The forth column contains cross type info. The fifth column contains crossing experiment names. There is no header on the infile and the infile is .xls.
+This script changes stocks with type accession to type cross, then links each cross to parents,a cross type, an nd_experiment and a project.  The infile provided has 5 columns. The first column contains stock uniquenames stored as accession stock type. The second column contains female parent uniquenames. The third column contains male parent uniquenames. The forth column contains cross type info. The fifth column contains crossing experiment names. There is no header on the infile and the infile is .xls and .xlsx.
 =head1 AUTHOR
 
 Titima Tantikanjana <tt15@cornell.edu>
@@ -31,6 +31,7 @@ use Data::Dumper;
 use Carp qw /croak/ ;
 use Pod::Usage;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
@@ -46,7 +47,18 @@ if (!$opt_H || !$opt_D || !$opt_i) {
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
-my $parser   = Spreadsheet::ParseExcel->new();
+
+# Match a dot, extension .xls / .xlsx
+my ($extension) = $opt_i =~ /(\.[^.]+)$/;
+my $parser;
+
+if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+}
+else {
+    $parser = Spreadsheet::ParseExcel->new();
+}
+
 my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({

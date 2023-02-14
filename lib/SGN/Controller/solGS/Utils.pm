@@ -73,6 +73,18 @@ sub read_file_data_cols {
 
 }
 
+sub count_data_rows {
+    my ($self, $file) = @_;
+
+    my $geno = qx /wc -l $file/;
+    my ($geno_lines, $g_file) = split(" ", $geno);
+    my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+
+    return $count;
+
+}
+
+
 sub structure_downloadable_data {
     my ($self, $file, $row_name) = @_;
 
@@ -147,7 +159,7 @@ sub abbreviate_term {
 	    elsif ($word =~/^[0-9]/)
 	    {
 		my $str_wrd = $word;
-		my @str = $str_wrd =~ /[\d+-\d+]/g;
+		my @str = $str_wrd =~ /[\d+\-\d+]/g;
 		my $str = join("", @str);
 		my @wrd = $word =~ /[A-Za-z]/g;
 		my $wrd = join("", @wrd);

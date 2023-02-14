@@ -254,14 +254,14 @@ sub create_itemized_prediction_log_entries {
         $url_args->{trait_id} = $trait_id;
 
         my $analysis_page;
-        if ( $analysis_type =~ /selection prediction/ ) {
+        if ( $analysis_type =~ /selection_prediction/ ) {
             $analysis_page =
               $c->controller('solGS::Path')->selection_page_url($url_args);
         }
         else {
             $analysis_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
-            $analysis_type = 'single model';
+            $analysis_type = $c->controller('solGS::Path')->page_type($c, $analysis_page);
         }
 
         my $analysis_name =
@@ -437,8 +437,7 @@ sub parse_arguments {
 
     my $analysis_data = $c->stash->{analysis_profile};
     my $arguments     = $analysis_data->{arguments};
-    my $data_set_type = $analysis_data->{data_set_type};
-
+  
     if ($arguments) {
         $c->controller('solGS::Utils')->stash_json_args( $c, $arguments );
     }
@@ -451,7 +450,7 @@ sub structure_output_details {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $referer        = $c->req->referer;
+    my $referer        = $c->req->referer || $analysis_page;
     my $base           = $c->controller('solGS::Path')->clean_base_name($c);
     my $output_details = {};
 
@@ -560,28 +559,24 @@ sub structure_pca_analysis_output {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $pop_id = $c->stash->{pca_pop_id};
-
     my $base = $c->controller('solGS::Path')->clean_base_name($c);
 
     my $pca_page = $base . $analysis_page;
     $analysis_data->{analysis_page} = $pca_page;
-
-    my %output_details = ();
-
-# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-    my $geno_file = $c->stash->{genotype_file_name};
-
+    my $pop_id = $c->stash->{pca_pop_id};
+    
     $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
+    my $input_file = $c->controller('solGS::pca')->pca_data_input_files($c);
+    
     $c->controller('solGS::pca')->pca_scores_file($c);
     my $scores_file = $c->stash->{pca_scores_file};
 
-    $output_details{ 'pca_' . $pop_id } = {
+    my %output_details = ('pca_' . $pop_id  => {
         'output_page'   => $pca_page,
         'pca_pop_id'    => $pop_id,
-        'genotype_file' => $geno_file,
+        'input_file' => $input_file,
         'scores_file'   => $scores_file,
-    };
+    });
 
     return \%output_details;
 
@@ -600,11 +595,8 @@ sub structure_cluster_analysis_output {
     $analysis_data->{analysis_page} = $cluster_page;
     my $cluster_type = $c->stash->{cluster_type};
 
-    my %output_details = ();
-
-# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-# my $geno_file = $c->stash->{genotype_file_name};
-    my $input_file;
+    my $input_file =$c->controller('solGS::Cluster')->cluster_data_input_files($c);
+   
     $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
     $c->controller('solGS::Cluster')->cluster_result_file($c);
 
@@ -615,13 +607,13 @@ sub structure_cluster_analysis_output {
     else {
         $result_file = $c->stash->{"${cluster_type}_result_newick_file"};
     }
-
-    $output_details{ 'cluster_' . $pop_id } = {
+    
+    my %output_details = ( 'cluster_' . $pop_id  => {
         'output_page'    => $cluster_page,
         'cluster_pop_id' => $pop_id,
         'input_file'     => $input_file,
         'result_file'    => $result_file,
-    };
+    });
 
     return \%output_details;
 
@@ -633,8 +625,7 @@ sub structure_training_modeling_output {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $pop_id        = $c->stash->{pop_id};
-    my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $training_pop_id = $c->stash->{training_pop_id};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
     my @traits_ids = @{ $c->stash->{training_traits_ids} }
@@ -643,7 +634,7 @@ sub structure_training_modeling_output {
 
     my $base     = $c->controller('solGS::Path')->clean_base_name($c);
     my $url_args = {
-        'training_pop_id'        => $pop_id,
+        'training_pop_id'        => $training_pop_id,
         'genotyping_protocol_id' => $protocol_id,
     };
 
@@ -661,7 +652,7 @@ sub structure_training_modeling_output {
         my $trait_page;
 
         if ( $referer =~ m/solgs\/population\// ) {
-            $url_args->{data_set_type} = 'single population';
+            $url_args->{data_set_type} = 'single_population';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
@@ -673,7 +664,7 @@ sub structure_training_modeling_output {
                 $analysis_data->{analysis_page} =
                     $base
                   . "solgs/traits/all/population/"
-                  . $pop_id
+                  . $training_pop_id
                   . '/traits/'
                   . $traits_selection_id . '/gp/'
                   . $protocol_id;
@@ -686,7 +677,7 @@ sub structure_training_modeling_output {
         if (   $referer =~ m/solgs\/search\/trials\/trait\//
             && $analysis_page =~ m/solgs\/trait\// )
         {
-            $url_args->{data_set_type} = 'single population';
+            $url_args->{data_set_type} = 'single_population';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
@@ -694,7 +685,7 @@ sub structure_training_modeling_output {
         }
 
         if ( $referer =~ m/solgs\/populations\/combined\// ) {
-            $url_args->{data_set_type} = 'combined populations';
+            $url_args->{data_set_type} = 'combined_populations';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
@@ -706,7 +697,7 @@ sub structure_training_modeling_output {
                 $analysis_data->{analysis_page} =
                     $base
                   . "solgs/models/combined/trials/"
-                  . $combo_pops_id
+                  . $training_pop_id
                   . '/traits/'
                   . $traits_selection_id . '/gp/'
                   . $protocol_id;
@@ -717,26 +708,33 @@ sub structure_training_modeling_output {
         }
 
         if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) {
-            $url_args->{data_set_type} = 'combined populations';
+            $url_args->{data_set_type} = 'combined_populations';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
 
             $trait_page = $base . $model_page;
 
-            $c->stash->{combo_pops_id} = $combo_pops_id;
+            $c->stash->{combo_pops_id} = $training_pop_id;
             $c->controller('solGS::combinedTrials')
               ->cache_combined_pops_data($c);
         }
+    
+      $c->controller('solGS::Files')->model_phenodata_file($c);
+       my $model_pheno_file = $c->stash->{model_phenodata_file};
 
+       $c->controller('solGS::Files')->model_genodata_file($c);
+       my $model_geno_file = $c->stash->{model_genodata_file};
+
+      
         $output_details{ 'trait_id_' . $trait_abbr } = {
             'trait_id'       => $trait_id,
             'trait_name'     => $c->stash->{trait_name},
             'trait_page'     => $trait_page,
             'gebv_file'      => $c->stash->{rrblup_training_gebvs_file},
-            'pop_id'         => $pop_id,
-            'phenotype_file' => $c->stash->{trait_combined_pheno_file},
-            'genotype_file'  => $c->stash->{trait_combined_geno_file},
+            'pop_id'         => $training_pop_id,
+            'phenotype_file' => $model_pheno_file,
+            'genotype_file'  => $model_geno_file,
             'data_set_type'  => $c->stash->{data_set_type},
         };
     }
@@ -754,7 +752,7 @@ sub structure_training_single_pop_data_output {
     my $args = {
         'training_pop_id'        => $pop_id,
         'genotyping_protocol_id' => $protocol_id,
-        'data_set_type'          => 'single population'
+        'data_set_type'          => 'single_population'
     };
 
     my $training_pop_page =
@@ -823,7 +821,7 @@ sub structure_training_combined_pops_data_output {
     my $args = {
         'training_pop_id'        => $combo_pops_id,
         'genotyping_protocol_id' => $protocol_id,
-        'data_set_type'          => 'combined populations'
+        'data_set_type'          => 'combined_populations'
     };
 
     my $training_pop_page =
@@ -851,7 +849,7 @@ sub structure_training_combined_pops_data_output {
         $args = {
             'training_pop_id'        => $pop_id,
             'genotyping_protocol_id' => $protocol_id,
-            'data_set_type'          => 'single population'
+            'data_set_type'          => 'single_population'
         };
 
         my $training_pop_page =
@@ -918,7 +916,7 @@ sub structure_selection_prediction_output {
             'data_set_type'          => $data_set_type,
         };
 
-        if ( $data_set_type =~ /combined populations/ ) {
+        if ( $data_set_type =~ /combined_populations/ ) {
             $tr_pop_page =
               $c->controller('solGS::Path')->training_page_url($url_args);
 
@@ -1063,7 +1061,7 @@ sub run_analysis {
         }
         else {
             $c->stash->{status} = 'Error: Unknown job';
-            print STDERR "\n Uknown job.\n";
+            print STDERR "\n Unknown job.\n";
         }
     };
 
@@ -1134,7 +1132,7 @@ sub predict_training_traits {
     elsif ( $analysis_page =~
         /solgs\/models\/combined\/trials\/|solgs\/model\/combined\/trials\// )
     {
-        if ( $c->stash->{data_set_type} =~ /combined populations/ ) {
+        if ( $c->stash->{data_set_type} =~ /combined_populations/ ) {
             $c->controller('solGS::combinedTrials')
               ->combine_data_build_multiple_traits_models($c);
         }
@@ -1166,7 +1164,7 @@ sub predict_selection_traits {
         $c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
     }
     elsif ( $referer =~ /\/combined\// ) {
-        $c->stash->{data_set_type} = 'combined populations';
+        $c->stash->{data_set_type} = 'combined_populations';
         $c->controller('solGS::combinedTrials')
           ->predict_selection_pop_combined_pops_model($c);
     }
@@ -1283,13 +1281,13 @@ sub analysis_log_file {
 }
 
 sub get_confirm_msg {
-    my ( $self, $c, $job ) = @_;
+  my ( $self, $c, $job ) = @_;
 
-    $job =~ s/[_|-]/ /g;
-    $job = lc($job);
+  $job =~ s/[_|-]/ /g;
+  $job = lc($job);
 
-    my $msg = "Your $job job is submitted.";
-    return $msg;
+  my $msg = "Your $job job is submitted.";
+  return $msg;
 
 }
 
