@@ -1,0 +1,37 @@
+<%doc>
+
+=head1 NAME 
+/solgs/model/accuracy.mas - displays cross-validation output of the prediction model
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$accuracy_report
+
+</%args>
+
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "Model accuracy statistics -- K-fold cross-validation method" 
+&> 
+
+<& /page/columnar_table.mas,
+  headings     => [" ", " "], 
+  data         => $accuracy_report,
+  __alt_freq   => 2,
+  __alt_width  => 1,
+  __alt_offset => 3,
+  __align      => 'll',
+&>
+
+<div id="validation_download"></div>
+<div id="valdiation_download_message"  class="message"></div>
+</&>

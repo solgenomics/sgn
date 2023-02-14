@@ -1,0 +1,36 @@
+<%doc>
+
+=head1 NAME
+ 
+population/trait_phenotype_scatter.mas - displays scatter plot of trait phenotype data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id => ''
+$trait_id
+$combo_pops_id => ''
+
+</%args>
+
+
+<div id="phenoPlot"></div>
+      
+<button class="button" id="phenozoom-reset">Reset zoom</button>
+<br/>
+<br/>
+<!-- <h3 style="text-align:center">Overview</h3> -->
+<!-- <div id="phenoPlotOverview"> </div> -->
+
+  
+<input type="hidden"  id="trait_id" value="<% $trait_id %>" />
+<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+
+

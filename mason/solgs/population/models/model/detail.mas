@@ -1,0 +1,145 @@
+<%args>
+
+$training_pop_id
+$training_pop_name
+$training_pop_desc =>''
+$trial_detail_page => ''
+$show_data => 1;
+$accuracy_report
+$variance_components
+$top_marker_effects
+$trait_abbr
+$trait_name
+
+$stocks_no
+$markers_no
+$traits_no => 'NA'
+$trait_id
+$model_pheno_means_descriptive_stat
+$model_pheno_raw_descriptive_stat => ''
+$selection_prediction_download =>''
+$selection_pop_id => ''
+$selection_pop_name => ''
+$list_of_prediction_pops=> ''
+$training_pop_analyzed_traits => ''
+$owner => ''
+$protocol_url => ''
+$combo_pops_id => ''
+$genotyping_protocol_id => ''
+$training_pop_url
+</%args>
+
+<%perl>
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.genotypingProtocol", "statistics/simple_statistics"] &>
+
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+
+<& /page/page_title.mas,
+   title => "Genomic selection model for $trait_name ($trait_abbr) in $training_pop_name"
+&>
+
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
+  title       => "Training population summary",
+  &>
+
+ <& /solgs/population/summary.mas,
+    training_pop_id   => $training_pop_id,
+   	training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
+	  training_pop_url    => $training_pop_url,
+    trial_detail_page => $trial_detail_page,
+    stocks_no    => $stocks_no,
+    markers_no   => $markers_no,
+    traits_no    => $traits_no,
+    owner        => $owner,
+    protocol_url => $protocol_url,
+ &>
+
+   <& /solgs/population/hidden_input.mas,
+      training_pop_id  => $training_pop_id,
+     training_pop_name => $training_pop_name,
+     training_pop_desc => $training_pop_desc,
+     trait_id => $trait_id,
+     combo_pops_id => $combo_pops_id,
+     genotyping_protocol_id => $genotyping_protocol_id,
+
+     &>
+</&>
+
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
+  title       => "Trait phenotype data"
+&>
+
+<& phenotype/trait_phenotype_data.mas,
+   model_pheno_means_descriptive_stat => $model_pheno_means_descriptive_stat,
+   model_pheno_raw_descriptive_stat => $model_pheno_raw_descriptive_stat
+ &>
+
+</&>
+
+<& /solgs/tools/pca/analysis.mas &>
+<& /solgs/tools/cluster/analysis.mas &>
+
+% if ($show_data)
+%{
+
+<& variance_components.mas,
+   variance_components => $variance_components,
+&>
+
+<& accuracy.mas,
+   accuracy_report        => $accuracy_report,
+&>
+
+<& gebvs.mas,
+   pop_id             => $training_pop_id,
+  trait_id            => $trait_id
+  &>
+
+  <& gebv_pheno_regression.mas,
+        pop_id       => $training_pop_id,
+       trait_id      => $trait_id,
+       combo_pops_id => $combo_pops_id,
+&>
+
+
+<& /solgs/tools/kinship/analysis.mas,
+   pop_id  => $training_pop_id,
+  &>
+
+<& marker_effects.mas,
+   top_marker_effects          => $top_marker_effects,
+&>
+
+<& /solgs/search/selection_populations.mas,
+   selection_prediction_download     => $selection_prediction_download,
+   training_pop_analyzed_traits         => $training_pop_analyzed_traits,
+   training_pop_id        => $training_pop_id,
+   training_pop_name   => $training_pop_name,
+   selection_pop_id       => $selection_pop_id,
+   selection_pop_name     => $selection_pop_name,
+    list_of_prediction_pops => $list_of_prediction_pops,
+&>
+
+<& /solgs/population/download.mas &>
+
+%}
+% else
+%{
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
+  title       => "Data Accessibility",
+  &>
+<p>This is private data.</p>
+</&>
+%}
