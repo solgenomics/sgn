@@ -57,16 +57,37 @@ solGS.download = {
   },
 
   createTrainingPopDownloadLinks: function (res) {
-    var genoFile = res.training_pop_raw_geno_file;
-    var phenoFile = res.training_pop_raw_pheno_file;
+    var genoFiles = res.training_pop_raw_geno_file;
+    var phenoFiles = res.training_pop_raw_pheno_file;
+    var genoFileLink = '';
+    var cnt = 1;
+    
+    genoFiles.forEach(function(genoFile) {
+      var genoFileName = genoFile.split("/").pop();
+      var genoTxt =  "Genotype data"; 
+       if (genoFiles.length > 1) { genoTxt =  genoTxt + "-"  + cnt};
+       if ( cnt > 1) { genoFileLink += ' | '};
+   
+      genoFileLink +=
+        '<a href="' + genoFile + '" download=' + genoFileName + '">' + genoTxt + "</a>";
 
-    var genoFileName = genoFile.split("/").pop();
-    var genoFileLink =
-      '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+        cnt++;
+    })
+    
+    var phenoFileLink = '';
+    var cnt = 1;
+    
+    phenoFiles.forEach(function(phenoFile) {
+      var phenoFileName = phenoFile.split("/").pop();
+      var phenoTxt =  "Phenotype data"; 
+      if (phenoFiles.length > 1) { phenoTxt =  phenoTxt + "-"  + cnt};
+      if ( cnt > 1) { phenoFileLink += ' | '};
+    
+      phenoFileLink +=
+        '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + phenoTxt + "</a>";
 
-    var phenoFileName = phenoFile.split("/").pop();
-    var phenoFileLink =
-      '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
+        cnt++;
+    })
 
     var traitsAcronymLink = this.createTraitsAcronymLinks(res);
 
@@ -95,14 +116,19 @@ solGS.download = {
 
   createSelectionPopDownloadLinks: function (res) {
     var genoFile = res.selection_pop_filtered_geno_file;
+    var reportFile = res.selection_prediction_report_file;
 
     var genoFileName = genoFile.split("/").pop();
     var genoFileLink =
-      '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+    '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+      
+    var reportFileName = reportFile.split("/").pop();
+    var reportFileLink =
+      '<a href="' + reportFile + '" download=' + reportFileName + '">' + "Analysis log" + "</a>";
 
     var downloadLinks =
       " <strong>Download selection population</strong>: " +
-      genoFileLink;
+      genoFileLink + ' | ' + reportFileLink;
 
     jQuery("#selection_pop_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
@@ -128,9 +154,11 @@ solGS.download = {
   createModelInputDownloadLinks: function (res) {
     var genoFile = res.model_geno_data_file;
     var phenoFile = res.model_pheno_data_file;
+    var logFile = res.model_analysis_report_file;
 
     console.log("geno file: " + genoFile);
     console.log("pheno file: " + phenoFile);
+    console.log("log file: " + logFile);
 
     var genoFileName = genoFile.split("/").pop();
     var genoFileLink =
@@ -140,8 +168,11 @@ solGS.download = {
     var phenoFileLink =
       '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
+    var logFileName = logFile.split("/").pop();
+      var logFileLink =
+      '<a href="' + logFile + '" download=' + logFileName + '">' + "Analysis log" + "</a>";
     var downloadLinks =
-      " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink;
+      " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink  + " | " + logFileLink;
 
     jQuery("#model_input_data_download").prepend(
       '<p style="margin-top: 20px">' + downloadLinks + "</p>"
@@ -215,7 +246,7 @@ jQuery(document).ready(function () {
 
   var downloadMsgDiv = "#download_message";
   solGS.checkPageType().done(function (res) {
-    if (res.page_type.match(/training population/)) {
+    if (res.page_type.match(/training_population/)) {
       solGS.download.getTrainingPopRawDataFiles().done(function (res) {
         solGS.download.createTrainingPopDownloadLinks(res);
       });
@@ -231,7 +262,7 @@ jQuery(document).ready(function () {
       });
 
 
-    } else if (res.page_type.match(/training model/)) {
+    } else if (res.page_type.match(/training_model/)) {
       solGS.download.getModelInputDataFiles().done(function (res) {
         solGS.download.createModelInputDownloadLinks(res);
       });
@@ -259,7 +290,7 @@ jQuery(document).ready(function () {
         solGS.showMessage("#marker_effects_download_message", errorMsg);
 
       });
-    } else if (res.page_type.match(/selection population/)) {
+    } else if (res.page_type.match(/selection_prediction/)) {
         solGS.download.getSelectionPopRawDataFiles().done(function (res) {
           solGS.download.createSelectionPopDownloadLinks(res);
         });

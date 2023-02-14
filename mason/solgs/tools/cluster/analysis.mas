@@ -75,7 +75,7 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 % if ($url =~ /cluster\/analysis|breeders\/trial\//) {
 
-  <& /solgs/genotyping_protocol.mas &>
+  <& /solgs/genotyping_protocol/index.mas &>
 
 %}
 

@@ -60,7 +60,7 @@ $training_pop_name
       <input class="button" type="submit" value="Run correlation" id="run_genetic_correlation" />
     </div>
 
-    <& /solgs/spinner.mas &>
+    <& /solgs/spinner/spinner.mas &>
     <div id="correlation_message"  class="message">
     </div>
 

@@ -298,9 +298,7 @@ sub _check_selection_pop_all_traits_output {
 sub _check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
 
-    my $data_set_type = $c->stash->{data_set_type};
-
-    if ($data_set_type =~ 'combined populations')
+    if ($c->stash->{data_set_type} =~ 'combined_populations')
     {
 	$self->_check_combined_trials_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
     }
