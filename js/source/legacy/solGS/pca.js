@@ -137,7 +137,6 @@ solGS.pca = {
 			dataType = jQuery('#pca_data_type_select').val();
 		}
 
-		var protocolId = jQuery('#genotyping_protocol_id').val();
 		var traitId = jQuery('#trait_id').val();
 		var popDetails = solGS.getPopulationDetails();
 
@@ -178,6 +177,7 @@ solGS.pca = {
 				}
 			}
 
+			var protocolId = popDetails.genotyping_protocol_d;
 			var pcaArgs = {
 				'training_pop_id': [popDetails.training_pop_id],
 				'selection_pop_id': [popDetails.selection_pop_id],

@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialPlotGPSCoordinatesXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -13,7 +14,18 @@ sub _validate_with_plugin {
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my @error_messages;
     my %errors;
     my %missing_accessions;
@@ -56,30 +68,39 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
+        $plot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $WGS84_bottom_left_x_head  = $worksheet->get_cell(0,1)->value();
+        $WGS84_bottom_left_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $WGS84_bottom_left_y_head  = $worksheet->get_cell(0,2)->value();
+        $WGS84_bottom_left_y_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $WGS84_bottom_right_x_head  = $worksheet->get_cell(0,3)->value();
+        $WGS84_bottom_right_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $WGS84_bottom_right_y_head  = $worksheet->get_cell(0,4)->value();
+        $WGS84_bottom_right_y_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $WGS84_top_right_x_head  = $worksheet->get_cell(0,5)->value();
+        $WGS84_top_right_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $WGS84_top_right_y_head  = $worksheet->get_cell(0,6)->value();
+        $WGS84_top_right_y_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
         $WGS84_top_left_x_head  = $worksheet->get_cell(0,7)->value();
+        $WGS84_top_left_x_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,8)) {
         $WGS84_top_left_y_head  = $worksheet->get_cell(0,8)->value();
+        $WGS84_top_left_y_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
@@ -125,6 +146,7 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $WGS84_bottom_left_x = $worksheet->get_cell($row,1)->value();
@@ -212,7 +234,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parsed_entries;
@@ -231,6 +264,7 @@ sub _parse_with_plugin {
         my $plot_name;
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
             $seen_plot_names{$plot_name}++;
         }
     }
@@ -256,6 +290,7 @@ sub _parse_with_plugin {
         my $WGS84_top_left_y;
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $WGS84_bottom_left_x = $worksheet->get_cell($row,1)->value();

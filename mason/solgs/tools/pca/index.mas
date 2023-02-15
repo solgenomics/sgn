@@ -42,7 +42,7 @@ my $url = $c->req->path;
 
 % if ($url =~ /pca\/analysis/) {
 
-<& /solgs/genotyping_protocol.mas &>
+<& /solgs/genotyping_protocol/index.mas &>
 
 %}
 

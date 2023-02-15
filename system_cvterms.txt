@@ -168,6 +168,7 @@ project_property	sampling_trial_sample_type	For saving the sample type of a samp
 project_property    file_metadata_json For recording metadata of intercross files (downloaded and uploaded files) tt15 00155
 project_property    trial_status_json For recording trial activities tt15 00157
 project_property    soil_data_json For storing soil data tt15 00160
+project_property    target_numbers_json For storing target numbers of seeds and/or progenies of crosses in a crossing experiment tt15 00164
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -256,6 +257,7 @@ stock_property	imaging_event_vehicle_json	For saving imaging event vehicle infor
 stock_property	released_variety_name		For providing the official released name of a variety	   11/18/2020	nm249		00132
 stock_property  cross_transaction_json  For storing crossing activities, then the summary of these data is stored as crossing_metadata_json  11/30/2020  tt15  00132
 stock_property  cross_additional_info  For storing additional parent info for each cross. 2/24/2020  tt15  00138
+stock_property  stock_catalog_json For storing catalog info tt15 00143
 stock_property  facility_identifier For storing assigned facility identifier when genotyping plate is sent to a sequencing facility  tt15  00161
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052
@@ -295,6 +297,7 @@ stock_type	seedlot				00077
 stock_type	subplot				00084
 stock_type	grafted_accession		00079
 stock_type  family_name            00111
+sp_order_property  order_batch_json For storing ordering details tt15 00143
 trait_property	trait_categories
 trait_property	trait_default_value
 trait_property	trait_details
@@ -791,3 +794,12 @@ project_md_image	image_analysis_necrosis_solomon_nsumba	Image analysis necrosis 
 project_md_image	image_analysis_white_fly_count_solomon_nsumba	Image analysis white fly count as implemented in Solomon's service	08/19/2019	nm529	00114
 project_md_image	standard_process_interactive_match_temporary_drone_imagery	Standard interactive process for drone imagery showing the match of captures	07/06/2020	nm529	00126
 project_md_image	standard_process_interactive_align_temporary_drone_imagery	Standard interactive process for drone imagery showing the alignment of captures	07/06/2020	nm529	00126
+stock_property strain	Vector property 1/19/2023	mrf252	00164	
+stock_property Backbone	Vector property 1/19/2023	mrf252	00164	
+stock_property CloningOrganism	Vector property 1/19/2023	mrf252	00164	
+stock_property InherentMarker	Vector property 1/19/2023	mrf252	00164	
+stock_property SelectionMarker	Vector property 1/19/2023	mrf252	00164	
+stock_property CassetteName	Vector property 1/19/2023	mrf252	00164	
+stock_property Gene	Vector property 1/19/2023	mrf252	00164	
+stock_property Promotors	Vector property 1/19/2023	mrf252	00164	
+stock_property Terminators	Vector property 1/19/2023	mrf252	00164	

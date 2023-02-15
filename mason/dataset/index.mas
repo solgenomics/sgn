@@ -1,0 +1,137 @@
+
+<%args>
+$dataset_id 
+$dataset_name => ''
+$dataset_description => ''
+$dataset_contents => ''
+
+</%args>
+
+<& /page/page_title.mas, title => "Dataset $dataset_name" &>
+<& /util/import_javascript.mas, entries => ['dataset_scatterplot'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
+<& /util/import_javascript.mas, entries => ['dataset'] &>
+<& /util/import_css.mas, paths => ['wizard.css'] &>
+
+<style>
+  .slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 20px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  border-radius: 5px;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+  }
+
+  .slider:hover {
+    opacity: 1;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: #04AA6D;
+    cursor: pointer;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: darkslategrey;
+    cursor: pointer;
+  }
+  #top-row {
+    display: flex;
+    justify-content: center;
+
+  }
+
+  #pagefooter {
+    min-height: 150px !important;
+  }
+
+  #trait_selection {
+    font-size: 15px;
+  }
+  #trait_selections {
+    float: left;
+    max-width: 400px;
+    height: 100px;
+    font-size: 15px;
+  }
+
+  #store_outliers {
+    float: right;
+    padding: 5px;
+  }
+
+  #dataset_slider {
+    margin: 0 auto;
+    padding: 10px;
+    width: 200px;
+  }
+
+  #trait_graph {
+
+    width: 65%;
+  }
+  table, th, td {
+    padding: 15px;
+  }
+
+</style>
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dataset Details</title>
+</head>
+
+<%perl>
+ my $wizard_link = '<a href=\'/breeders/search?dataset_id=' . $dataset_id . '\'>' . $dataset_name . '</a>';
+</%perl>
+
+<body>
+
+  <div id="wizard" class="row">
+
+  <div class="wizard-datasets">
+  <table id="dataset_results"; border="1">
+         <tr><td>Name<td><% $dataset_name %>
+         <tr><td>Description<td><% $dataset_description %>
+         <tr><td>Contents<td><% $dataset_contents %>
+%        if ($c->user()) {
+             <tr><td>Edit<td>
+             <span class="input-group-btn">
+               <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-public">Make Public</button></span>
+               <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-private">Make Private</button></span>
+               <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" id="wizard-dataset-delete">Delete</button></span>
+             </span>
+%        }
+         <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
+  </table>
+  </div>
+  </div>
+
+  <script>
+
+    jQuery('#info_table').click(function() {
+      $.ajax({
+      url: '/ajax/dataset/by_user/<% $dataset_id %>',
+      success: function(response) {
+        alert(response.options);
+      },
+      error: function(response) {
+        alert("An error occurred");
+      }  
+    });
+    });
+    
+  </script>
+</body>

@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::GenotypeTrialXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -14,7 +15,20 @@ sub _validate_with_plugin {
     my %errors;
     my @error_messages;
     my %missing_accessions;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, followed by any number of non-dots until the
+    # end of the line.
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %seen_plot_names;
@@ -31,7 +45,7 @@ sub _validate_with_plugin {
 
     $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls or .xlsx) file";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -64,49 +78,64 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $date_head  = $worksheet->get_cell(0,0)->value();
+        $date_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $sample_id_head  = $worksheet->get_cell(0,1)->value();
+        $sample_id_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $well_A01_head  = $worksheet->get_cell(0,2)->value();
+        $well_A01_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $row_head  = $worksheet->get_cell(0,3)->value();
+        $row_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $column_head  = $worksheet->get_cell(0,4)->value();
+        $column_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $source_observation_unit_name_head  = $worksheet->get_cell(0,5)->value();
+        $source_observation_unit_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $ncbi_taxonomy_id_head  = $worksheet->get_cell(0,6)->value();
+        $ncbi_taxonomy_id_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
         $dna_person_head  = $worksheet->get_cell(0,7)->value();
+        $dna_person_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,8)) {
         $notes_head  = $worksheet->get_cell(0,8)->value();
+        $notes_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,9)) {
         $tissue_type_head  = $worksheet->get_cell(0,9)->value();
+        $tissue_type_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,10)) {
         $extraction_head  = $worksheet->get_cell(0,10)->value();
+        $extraction_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,11)) {
         $concentration_head = $worksheet->get_cell(0,11)->value();
+        $concentration_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,12)) {
         $volume_head = $worksheet->get_cell(0,12)->value();
+        $volume_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,13)) {
         $is_blank_head = $worksheet->get_cell(0,13)->value();
+        $is_blank_head =~ s/^\s+|\s+$//g;
     }
     if ($include_facility_identifiers){
         if ($worksheet->get_cell(0,14)) {
             $facility_identifier_head = $worksheet->get_cell(0,14)->value();
+            $facility_identifier_head =~ s/^\s+|\s+$//g;
         }
     }
 
@@ -208,6 +237,7 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,9)) {
             $tissue_type  = $worksheet->get_cell($row,9)->value();
+            $tissue_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,10)) {
             $extraction  = $worksheet->get_cell($row,10)->value();
@@ -220,6 +250,7 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,13)) {
             $is_blank = $worksheet->get_cell($row,13)->value();
+            $is_blank =~ s/^\s+|\s+$//g;
         }
         if ($include_facility_identifiers) {
             if ($worksheet->get_cell($row,14)) {
@@ -257,6 +288,8 @@ sub _validate_with_plugin {
         #well_A01 must not be blank
         if (!$well_A01 || $well_A01 eq '') {
             push @error_messages, "Cell C$row_name: well_A01 missing";
+        } else {
+            $well_A01 =~ s/^\s+|\s+$//g;
         }
         #well A01 must be unique in file
         if (exists($seen_well_numbers{$well_A01})){
@@ -339,12 +372,25 @@ sub _validate_with_plugin {
 
 
 sub _parse_with_plugin {
-    print STDERR "Parsing genotype trial file upload\n";
+
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $include_facility_identifiers = $self->get_facility_identifiers_included();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, followed by any number of non-dots until the
+    # end of the line.
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %design;
@@ -384,39 +430,49 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,2)) {
             $well_A01  = $worksheet->get_cell($row,2)->value();
+            $well_A01 =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $row_val  = $worksheet->get_cell($row,3)->value();
+            $row_val =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
             $column  = $worksheet->get_cell($row,4)->value();
+            $column =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
             $source_observation_unit_name  = $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
             $ncbi_taxonomy_id  = $worksheet->get_cell($row,6)->value();
+            $ncbi_taxonomy_id =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,7)) {
             $dna_person  = $worksheet->get_cell($row,7)->value();
+            $dna_person =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,8)) {
             $notes  = $worksheet->get_cell($row,8)->value();
         }
         if ($worksheet->get_cell($row,9)) {
             $tissue_type  = $worksheet->get_cell($row,9)->value();
+            $tissue_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,10)) {
             $extraction  = $worksheet->get_cell($row,10)->value();
+            $extraction =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,11)) {
             $concentration = $worksheet->get_cell($row,11)->value();
+            $concentration =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,12)) {
             $volume = $worksheet->get_cell($row,12)->value();
+            $volume =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,13)) {
             $is_blank = $worksheet->get_cell($row,13)->value();
+            $is_blank =~ s/^\s+|\s+$//g;
         }
         if ($include_facility_identifiers) {
             if ($worksheet->get_cell($row,14)) {

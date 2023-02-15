@@ -105,7 +105,6 @@ $trial_owner
                     </div>
                 </td>
             </tr>
-
             <tr><td><b>Created by</b></td>
                 <td>
                     <div id="trial_owner">
@@ -117,9 +116,8 @@ $trial_owner
                     </div>
                 </td>
             </tr>
-
         </table>
-
+        
     </div>
     <div class="col-sm-4">
         <div class="well well-sm">

@@ -13,8 +13,7 @@ $trial_name => undef
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <b>Trial Entry Numbers may be uploaded in an Excel file (.xls)</b><br>
-          (.xlsx format not supported)
+          <b>Trial Entry Numbers may be uploaded in an Excel file (.xls or .xlsx)</b><br>
           <br><br>
           <b>Header:</b><br>
           The first row (header) must contain the following:

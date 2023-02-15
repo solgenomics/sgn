@@ -1678,14 +1678,14 @@ sub get_cached_file_VCF {
                 $genotype_string .= "POS\t";
                 foreach my $m (@all_marker_objects) {
 		    my $pos = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos};
-		    if (! $pos) {
+		    if ($pos eq "") {
 			(undef, $pos) = split /\_/, $m->{name};
-			if ($pos) {
-			    #print STDERR "Warning! No position data, using $pos extracted from $m->{name}\n";
-		        } else {
+			if (! $pos) {
 			    $pos = 0;
 			    print STDERR "Warning! No position data, using 0\n";
 			}
+		    } elsif ($pos eq ".") { # pos must be an integer
+			$pos = 0;
 		    }
                     #$genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
 		    $genotype_string .= $pos ."\t";

@@ -22,9 +22,9 @@ $program_name
                             <ul>
                                 <li>Product profiles can be stored in the database for downstream variety selection process for each breeding program.</li>
                                 <li>To facilitate data curation, targeted trait names and trait IDs can be retrieved directly from the database.</li>
-                                <li>Please use the product profile template generated from our database to fill out product profile details.</l>
-                                <li>You can find the link for creating the template in the product profile section, simply provide a file name and a list of traits.</l>
-                                <li>Instructions for filling out the form are on the next page</l>
+                                <li>Please use the product profile template generated from our database to fill out product profile details.</li>
+                                <li>You can find the link for creating the template in the product profile section, simply provide a file name and a list of traits.</li>
+                                <li>Instructions for filling out the form are on the next page</li>
                             </ul>
                             <br/><br/>
                             <center>
@@ -68,7 +68,7 @@ $program_name
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                    <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
                                     <div class="col-sm-9" >
                                         <input type="file" name="profile_uploaded_file" id="profile_uploaded_file" encoding="multipart/form-data" />
                                     </div>
@@ -133,7 +133,7 @@ $program_name
                         Product Profile Template
                     </b>
                     <ul>
-                        <li>Product profile template is an Excel file (.xls format)</li>
+                        <li>Product profile template is an Excel file (.xls)</li>
                         <li>After filling out the product profile details, please also save the spreadsheet in the .xls format</li>
                         <li>Please do not modify or delete any column header in the template.
                     </ul>
