@@ -25,9 +25,12 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     my $login = CXGN::Login->new($dbh);
     if (my ($person_id, $user_type) = $login->has_session()) {
         my $user_id = CXGN::People::Person->new($dbh,$person_id);
+        my $login_info = $login->get_login_info();
         my $user = $c->user();
-    	$c->stash->{rest} = {first_name => $user->get_object->get_first_name(),
-    	    last_name => $user->get_object->get_last_name(),
+        $c->stash->{rest} = $login -> get_login_info;
+        $c->stash->{rest} = {
+            first_name => $user->get_object->get_first_name(),
+            last_name => $user->get_object->get_last_name(),
     	    username => $user->get_object->get_username(),
             user_id => $person_id,
     	};
