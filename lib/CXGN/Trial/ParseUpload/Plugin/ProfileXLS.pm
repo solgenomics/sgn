@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::ProfileXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -13,7 +14,18 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
     my @error_messages;
     my %errors;
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -53,21 +65,27 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $trait_name_header  = $worksheet->get_cell(0,0)->value();
+        $trait_name_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $target_value_header  = $worksheet->get_cell(0,1)->value();
+        $target_value_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $benchmark_variety_header  = $worksheet->get_cell(0,2)->value();
+        $benchmark_variety_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $performance_header  = $worksheet->get_cell(0,3)->value();
+        $performance_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $weight_header  = $worksheet->get_cell(0,4)->value();
+        $weight_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $trait_type_header  = $worksheet->get_cell(0,5)->value();
+        $trait_type_header =~ s/^\s+|\s+$//g;
     }
 
     if (!$trait_name_header || $trait_name_header ne 'Trait Name' ) {
@@ -182,7 +200,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parsed_result;
@@ -208,24 +237,30 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $trait_name = $worksheet->get_cell($row,0)->value();
+            $trait_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $target_value =  $worksheet->get_cell($row,1)->value();
+            $target_value =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $benchmark_variety = $worksheet->get_cell($row,2)->value();
+            $benchmark_variety =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $performance =  $worksheet->get_cell($row,3)->value();
+            $performance =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
             $weight =  $worksheet->get_cell($row,4)->value();
+            $weight =~ s/^\s+|\s+$//g;
         } else {
             $weight = 1;
         }
 
         if ($worksheet->get_cell($row,5)) {
             $trait_type =  $worksheet->get_cell($row,5)->value();
+            $trait_type =~ s/^\s+|\s+$//g;
         }
 
         $parsed_result{$trait_name} = {

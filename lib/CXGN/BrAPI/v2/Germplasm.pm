@@ -192,7 +192,7 @@ sub search {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
             additionalInfo=>undef,
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
             collection=>undef,
@@ -274,6 +274,10 @@ sub germplasm_pedigree {
         ## Get parents relationships
         my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+	my $cvterm_rootstock_of = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'rootstock_of', 'stock_relationship')->cvterm_id();
+        my $cvterm_scion_of = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'scion_of', 'stock_relationship')->cvterm_id();
+	
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
 
         #get the stock relationships for the stock
@@ -282,12 +286,12 @@ sub germplasm_pedigree {
 
         my $stock_relationships = $stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
 
-        my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent, subject_id => {'not_in' => $direct_descendant_ids}});
+        my $female_parent_relationship = $stock_relationships->find({type_id => { in => [ $cvterm_female_parent, $cvterm_scion_of ]}, subject_id => {'not_in' => $direct_descendant_ids}});
         if ($female_parent_relationship) {
             $female_parent_stock_id = $female_parent_relationship->subject_id();
             $mother = $self->bcs_schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
         }
-        my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent, subject_id => {'not_in' => $direct_descendant_ids}});
+        my $male_parent_relationship = $stock_relationships->find({type_id => { in => [ $cvterm_male_parent, $cvterm_rootstock_of ]}, subject_id => {'not_in' => $direct_descendant_ids}});
         if ($male_parent_relationship) {
             $male_parent_stock_id = $male_parent_relationship->subject_id();
             $father = $self->bcs_schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
@@ -553,7 +557,7 @@ sub germplasm_mcpd {
             ancestralData=>$_->{pedigree},
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
             countryOfOrigin=>$_->{'country of origin'},
             storageTypeCodes=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},
@@ -1052,7 +1056,7 @@ sub _simple_search {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
             additionalInfo=>undef,
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
             collection=>undef,

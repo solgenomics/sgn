@@ -131,8 +131,10 @@ inbreeding <- inbreeding - 1
 diag(relationshipMatrix) <- inbreeding
 
 relationshipMatrix <- relationshipMatrix %>% replace(., . < 0, 0)
+relationshipMatrix <- relationshipMatrix %>% replace(., . >  1, 0.99)
 
 inbreeding <- inbreeding %>% replace(., . < 0, 0)
+inbreeding <- inbreeding %>% replace(., . > 1,  . - 1)
 inbreeding <- data.frame(inbreeding)
 
 inbreeding <- inbreeding %>%

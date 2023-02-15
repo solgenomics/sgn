@@ -33,7 +33,7 @@ $training_pop_id   => undef,
   <div id="anova_canvas">
 
     <div id="anova_select_a_trait_div" style="float:left; z-index:10; position:absolute; "></div>
-    <input  style="position:absolute;margin-left:300px" id="run_anova" class="button" type="button" value="Run ANOVA" />
+    <input  style="position:absolute;margin-left:300px;" id="run_anova" class="btn btn-success" type="button" value="Run ANOVA" />
 
     <div id="anova_selected_trait_div" style="display:none">
 
@@ -43,7 +43,7 @@ $training_pop_id   => undef,
     </div>
 
     <div id="anova_message"  class="message"></div>
-    <& /solgs/spinner.mas &>
+    <& /solgs/spinner/spinner.mas &>
     <div id="anova_table"> </div>
     <input type="hidden" id="trial_id" value="<% $trial_id %>" />
 

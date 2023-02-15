@@ -2,13 +2,14 @@
 $item_id
 $item_name
 $species
+$variety
+$material_type
 $item_type
 $category
-$description
+$additional_info
 $material_source
 $breeding_program
 $program_id
-$availability
 $contact_person_username
 $item_prop_id
 </%args>
@@ -32,6 +33,17 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_type">Item Type: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_item_type" value="<%$item_type%>">
+                                        <option value="single item">single item</option>
+                                        <option value="set of items">set of items</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label" for="edit_item_species">Species: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
@@ -40,12 +52,21 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_type">Item Type: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_variety">Variety: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_type" value="<%$item_type%>">
-                                        <option value="single item">single item</option>
-                                        <option value="set of items">set of items</option>
+                                    <input class="form-control col-sm-8" id="edit_item_variety" type="text" value="<%$variety%>" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_material_type">Material Type: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_material_type" value="<%$material_type%>">
+                                        <option value="plant">plant</option>
+                                        <option value="seed">seed</option>
+                                        <option value="construct">construct</option>
                                     </select>
                                 </div>
                             </div>
@@ -58,15 +79,8 @@ $item_prop_id
                                         <option value="released variety">released variety</option>
                                         <option value="pathogen assay ">pathogen assay</option>
                                         <option value="control">control</option>
+                                        <option value="transgenic line">transgenic line</option>
                                     </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_description">Description: </label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <textarea class="form-control" id="edit_item_description" rows="3" maxlength="250"><% $description %></textarea>
                                 </div>
                             </div>
                         </div>
@@ -74,11 +88,15 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_material_source">Material Source: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_material_source" value="<%$material_source%>">
-                                        <option value="Arusha">Arusha</option>
-                                        <option value="Sendusu">Sendusu</option>
-                                        <option value="Kawanda">Kawanda</option>
-                                    </select>
+                                    <input class="form-control col-sm-8" id="edit_item_material_source" type="text" value="<%$material_source%>" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_item_additional_info">Additional Info: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_item_additional_info" type="text" value="<%$additional_info%>" />
                                 </div>
                             </div>
                         </div>
@@ -87,18 +105,6 @@ $item_prop_id
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_item_breeding_program" value="<%$program_id%>"></select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_availability">Availability: </label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <select class="form-control" id="edit_item_availability" value="<%$availability%>">
-                                        <option value="in stock">in stock</option>
-                                        <option value="out of stock">out of stock</option>
-                                        <option value="available in 3 months">available in 3 months</option>
-                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -164,35 +170,37 @@ jQuery(document).ready( function() {
         var default_category = document.getElementById("edit_item_category").getAttribute("value");
         jQuery('#edit_item_category option[value="'+default_category+'"]').prop("selected", true);
 
-        var default_source = document.getElementById("edit_item_material_source").getAttribute("value");
-        jQuery('#edit_item_material_source option[value="'+default_source+'"]').prop("selected", true);
+        var default_material_type = document.getElementById("edit_material_type").getAttribute("value");
+        jQuery('#edit_material_type option[value="'+default_material_type+'"]').prop("selected", true);
 
-        var default_availability = document.getElementById("edit_item_availability").getAttribute("value");
-        jQuery('#edit_item_availability option[value="'+default_availability+'"]').prop("selected", true);
 
     });
 
     jQuery('#save_item_details').click( function() {
-        var name = jQuery('#edit_item_name').val();
-        var type = jQuery('#edit_item_type').val();
+        var item_name = jQuery('#edit_item_name').val();
+        var item_type = jQuery('#edit_item_type').val();
+        var species = jQuery('#edit_item_species').val();
+        var variety = jQuery('#edit_item_variety').val();
+        var material_type = jQuery('#edit_material_type').val();
         var category = jQuery('#edit_item_category').val();
-        var description = jQuery('#edit_item_description').val();
+        var additional_info = jQuery('#edit_item_additional_info').val();
         var material_source = jQuery('#edit_item_material_source').val();
         var breeding_program = jQuery('#edit_item_breeding_program').val();
-        var availability = jQuery('#edit_item_availability').val();
         var contact_person = jQuery('#edit_contact_person').val();
         jQuery.ajax({
             url: '/ajax/catalog/add_item',
             dataType: "json",
             type: 'POST',
             data : {
-                'item_name': name,
-                'item_type': type,
-                'item_category': category,
-                'item_description': description,
-                'item_material_source': material_source,
-                'item_breeding_program': breeding_program,
-                'item_availability': availability,
+                'name': item_name,
+                'type': item_type,
+                'species': species,
+                'variety': variety,
+                'material_type': material_type,
+                'category': category,
+                'additional_info': additional_info,
+                'material_source': material_source,
+                'breeding_program_id': breeding_program,
                 'contact_person': contact_person,
                 'item_prop_id': item_prop_id
             },

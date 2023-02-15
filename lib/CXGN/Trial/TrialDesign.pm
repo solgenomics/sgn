@@ -75,6 +75,15 @@ has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_sta
 
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
 
+
+subtype 'PlotNumberingSchemeType',
+    as 'Str',
+    where { $_ eq "block_based" || $_ eq "consecutive" },
+    message { "The string $_ is not a valid plot numbering scheme. Currently allowed are 'block_based' or 'consecutive'"};
+
+has 'plot_numbering_scheme' => (isa => 'Maybe[PlotNumberingSchemeType]', is => 'rw', default => 'block_based'); # so far, either block_based or consecutive
+
+
 has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
 
 has 'blank' => ( isa => 'Str', is => 'rw', predicate=> 'has_blank' );
@@ -123,7 +132,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RRC" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -132,6 +141,13 @@ has 'replicated_accession_no' => (isa => 'Int', is => 'rw', predicate => 'has_re
 
 has 'unreplicated_accession_no' => (isa => 'Maybe[Int]', is => 'rw', predicate => 'has_unreplicated_accession_no');
 
+has 'tempfile' => (isa => "Str", is => 'rw', required => 0);
+
+has 'backend' => (isa => "Str", is => 'rw', required => 0);
+
+has 'submit_host' => (isa => "Str", is => 'rw', required => 0);
+
+has 'temp_base' => (isa => "Str", is => 'rw', required => 0);
 
 sub get_design {
     my $self = shift;
@@ -171,7 +187,7 @@ sub isint{
 sub validate_field_colNumber {
     my $colNum = shift;
     if (isint($colNum)){
-	
+
 	return $colNum;
     } else {
 	die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
@@ -189,27 +205,67 @@ sub _convert_plot_numbers {
   my @rep_numbers = @{$rep_numbers_ref};
   my $total_plot_count = scalar(@plot_numbers);
   my $rep_plot_count = $total_plot_count / $number_of_reps;
-  for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
-    my $plot_number;
-    my $first_plot_number;
-    if($self->has_plot_start_number || $self->has_plot_number_increment){
-        if ($self->has_plot_start_number()){
-          $first_plot_number = $self->get_plot_start_number();
-        } else {
-          $first_plot_number = 1;
-        }
-        if ($self->has_plot_number_increment()){
-          $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
-        }
-        else {
-          $plot_number = $first_plot_number + $i;
-        }
-    }
-    else {
-        $plot_number = $plot_numbers[$i];
-    }
-    $plot_numbers[$i] = $plot_number;
+  my $first_plot_number = 1;
+
+  if ($self->get_plot_numbering_scheme() eq "block_based") {
+      print STDERR "Block based number selected - Providing plot based numbers.\n";
+      my $plot_increment;
+      if ($rep_plot_count > 999) {
+	  $plot_increment = 10000;
+	  $first_plot_number = 10001;
+      } elsif ($rep_plot_count > 99) {
+	  $plot_increment = 1000;
+	  $first_plot_number = 1001;
+      } elsif ($rep_plot_count > 9) {
+	  $plot_increment = 100;
+	  $first_plot_number = 101;
+      } else {
+	  $plot_increment = 10;
+	  $first_plot_number = 1;
+      }
+      my $idx = 0;
+      for (my $i = 0; $i < $number_of_reps; $i++) {
+	  for (my $j = 0; $j < $rep_plot_count; $j++) {
+	      if ($i == 0) {
+		  $plot_numbers[$idx] = $first_plot_number + $j;
+		  $idx++;
+	      } else {
+		  $plot_numbers[$idx] = $plot_increment + $first_plot_number + $j;
+		  $idx++;
+	      }
+	  }
+	  if ($i > 0) {
+	      $plot_increment += $plot_increment;
+	  }
+      }
   }
+  else {
+      print STDERR "consecutive plot numbers selected - generating consecutive numbers...\n";
+      
+      for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
+	  my $plot_number;
+	  my $first_plot_number;
+	  if($self->has_plot_start_number || $self->has_plot_number_increment){
+	      if ($self->has_plot_start_number()){
+		  $first_plot_number = $self->get_plot_start_number();
+	      } else {
+		  $first_plot_number = 1;
+	      }
+	      if ($self->has_plot_number_increment()){
+		  $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
+	      }
+	      else {
+		  $plot_number = $first_plot_number + $i;
+	      }
+	  }
+	  else {
+	      $plot_number = $plot_numbers[$i];
+	  }
+	  $plot_numbers[$i] = $plot_number;
+      }
+  }
+
+  print STDERR "PLOT NUMBERS GENERATED: ".Dumper(\@plot_numbers);
   return \@plot_numbers;
 }
 
@@ -237,20 +293,23 @@ sub _build_plot_names {
 	my $rep_number = $design{$key}->{rep_number};
 	$design{$key}->{plot_number} = $key;
 
-	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
+	if ($self->get_design_type() eq "RCBD") {  # as requested by IITA (Prasad)
 	    my $plot_num_per_block = $design{$key}->{plot_num_per_block};
 	    $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
 	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
         $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
-	    $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-".$stock_name."".$suffix;
+      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+	    $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-block".$block_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
     elsif ($self->get_design_type() eq "greenhouse") {
         $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;
     }
 	else {
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
+      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+      $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
+	    #$design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
 	}
 
         if($design{$key}->{subplots_names}){

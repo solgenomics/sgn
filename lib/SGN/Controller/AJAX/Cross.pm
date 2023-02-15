@@ -12,6 +12,7 @@ Add a new cross or upload a file containing crosses to add
 
 Jeremy Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
+Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
@@ -73,7 +74,14 @@ sub upload_cross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
+    my $manage_page_crossing_experiment_id = $c->req->param('upload_crosses_crossing_experiment_id');
+    my $experiment_page_crossing_experiment_id = $c->req->param('experiment_id');
+    my $crossing_trial_id;
+    if ($manage_page_crossing_experiment_id) {
+        $crossing_trial_id = $manage_page_crossing_experiment_id;
+    } elsif ($experiment_page_crossing_experiment_id) {
+        $crossing_trial_id = $experiment_page_crossing_experiment_id;
+    }
     my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
     my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
     my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
@@ -133,6 +141,11 @@ sub upload_cross_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload crosses'};
+        $c->detach();
+    }
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -179,6 +192,20 @@ sub upload_cross_file_POST : Args(0) {
         $c->detach();
     }
 
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'crosses',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+    my $file_id = $file_row->file_id();
+
     my $cross_add = CXGN::Pedigree::AddCrosses->new({
         chado_schema => $chado_schema,
         phenome_schema => $phenome_schema,
@@ -187,8 +214,7 @@ sub upload_cross_file_POST : Args(0) {
         crossing_trial_id => $crossing_trial_id,
         crosses =>  $parsed_data->{crosses},
         user_id => $user_id,
-        archived_filename => $archived_filename_with_path,
-        archived_file_type => 'crosses'
+        file_id => $file_id
     });
 
     #validate the crosses
@@ -882,29 +908,30 @@ sub add_crossingtrial_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
-    print STDERR Dumper $c->req->params();
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
     my $breeding_program_id = $c->req->param('crossingtrial_program_id');
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
 
-    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
-    $geolocation_lookup->set_location_name($location);
-    if(!$geolocation_lookup->get_geolocation()){
-        $c->stash->{rest}={error => "Location not found"};
-        return;
-    }
-
     if (!$c->user()){
-        print STDERR "User not logged in... not adding a crossingtrial.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial."};
+        print STDERR "User not logged in... not adding a crossing experiment.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to add a crossing experiment."};
         return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
         print STDERR "User does not have sufficient privileges.\n";
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossing experiment." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+    $geolocation_lookup->set_location_name($location);
+    if(!$geolocation_lookup->get_geolocation()){
+        $c->stash->{rest}={error => "Location not found"};
         return;
     }
 
@@ -914,10 +941,11 @@ sub add_crossingtrial_POST :Args(0){
             chado_schema => $schema,
             dbh => $dbh,
             breeding_program_id => $breeding_program_id,
-            year => $c->req->param('year'),
-            project_description => $c->req->param('project_description'),
+            year => $year,
+            project_description => $project_description,
             crossingtrial_name => $crossingtrial_name,
-            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
+            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
+            owner_id => $user_id
         });
         my $store_return = $add_crossingtrial->save_crossingtrial();
         if ($store_return->{error}){
@@ -1435,11 +1463,27 @@ sub upload_family_names_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('family_name_upload_file');
+    my $same_parents_upload = $c->req->upload('same_parents_file');
+    my $reciprocal_parents_upload = $c->req->upload('reciprocal_parents_file');
+
+    my $upload_original_name;
+    my $upload_tempfile;
+    my $family_type;
+
+    if ($same_parents_upload) {
+        $upload_original_name = $same_parents_upload->filename();
+        $upload_tempfile = $same_parents_upload->tempname;
+        $family_type = 'same_parents';
+    }
+
+    if ($reciprocal_parents_upload) {
+        $upload_original_name = $reciprocal_parents_upload->filename();
+        $upload_tempfile = $reciprocal_parents_upload->tempname;
+        $family_type = 'reciprocal_parents';
+    }
+
     my $parser;
     my $parsed_data;
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $subdirectory = "cross_upload";
     my $archived_filename_with_path;
     my $md5;
@@ -1534,6 +1578,7 @@ sub upload_family_names_POST : Args(0) {
                 cross_name => $cross_name,
                 family_name => $family_name,
                 owner_name => $user_name,
+                family_type => $family_type
             });
 
             my $return = $family_name_add->add_family_name();
@@ -1618,283 +1663,6 @@ sub delete_cross_POST : Args(0) {
 }
 
 
-sub upload_intercross_file : Path('/ajax/cross/upload_intercross_file') : ActionClass('REST'){ }
-
-sub upload_intercross_file_POST : Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $dbh = $c->dbc->dbh;
-    my $cross_id_format = $c->req->param('cross_id_format_option');
-    my $upload = $c->req->upload('intercross_file');
-    my $parser;
-    my $parsed_data;
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "cross_upload";
-    my $archived_filename_with_path;
-    my $md5;
-    my $validate_file;
-    my $parsed_file;
-    my $parse_errors;
-    my %parsed_data;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_role;
-    my $user_id;
-    my $user_name;
-    my $owner_name;
-    my $session_id = $c->req->param("sgn_session_id");
-    my @error_messages;
-
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
-
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-
-    ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
-    $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        return;
-    }
-    unlink $upload_tempfile;
-
-    #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('IntercrossCSV');
-    $parsed_data = $parser->parse();
-#    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
-
-    if (!$parsed_data){
-        my $return_error = '';
-        my $parse_errors;
-        if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
-        } else {
-            $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
-
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
-            }
-        }
-        $c->stash->{rest} = {error_string => $return_error};
-        $c->detach();
-    }
-    if ($parsed_data){
-        my %intercross_data = %{$parsed_data};
-        my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};
-        my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
-        my $crossing_experiment_id = $crossing_experiment_rs->project_id();
-
-        my $crosses_ref = $intercross_data{'crosses'};
-        my %crosses_hash = %{$crosses_ref};
-        my @intercross_identifier_list = keys %crosses_hash;
-
-        my $crosses = CXGN::Cross->new({schema => $schema, trial_id => $crossing_experiment_id});
-        my $identifiers = $crosses->get_cross_identifiers_in_crossing_experiment();
-        my %existing_identifier_hash = %{$identifiers};
-
-        my @new_cross_identifiers;
-        if (%existing_identifier_hash) {
-            my @existing_identifier_list = keys %existing_identifier_hash;
-
-            foreach my $intercross_identifier(@intercross_identifier_list) {
-                if (none {$_ eq $intercross_identifier} @existing_identifier_list) {
-                    push @new_cross_identifiers, $intercross_identifier;
-                }
-            }
-        } else {
-            @new_cross_identifiers = @intercross_identifier_list;
-        }
-        print STDERR "NEW CROSS IDENTIFIER ARRAY =".Dumper(\@new_cross_identifiers)."\n";
-
-        my @new_crosses;
-        my %new_stockprop;
-        if (scalar(@new_cross_identifiers) > 0) {
-            if ($cross_id_format eq 'customized_id') {
-                foreach my $new_identifier (@new_cross_identifiers) {
-                    my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
-                    my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
-                    push @error_messages, "Cross between $intercross_female_parent and $intercross_male_parent has no associated cross unique ID in crossing experiment: $crossing_experiment_name";
-                }
-
-                my $formatted_error_messages = join("<br>", @error_messages);
-                $c->stash->{rest} = {error_string => $formatted_error_messages};
-                return;
-            } elsif ($cross_id_format eq 'auto_generated_id') {
-                my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-                my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-                my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-                my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-                my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-
-                my $generated_cross_unique_id;
-
-                if (%existing_identifier_hash) {
-                    my @existing_cross_unique_ids = values %existing_identifier_hash;
-                    my @sorted_existing_cross_unique_ids = natsort @existing_cross_unique_ids;
-                    $generated_cross_unique_id = $sorted_existing_cross_unique_ids[-1];
-                } else {
-                    $generated_cross_unique_id = $crossing_experiment_name.'_'.'0';
-                }
-#                print STDERR "STARTING GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
-
-                foreach my $new_identifier (@new_cross_identifiers) {
-                    $generated_cross_unique_id =~ s/(\d+)$/$1 + 1/e;
-#                    print STDERR "GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
-                    my $validate_new_cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $generated_cross_unique_id});
-                    if ($validate_new_cross_rs->count() > 0) {
-                        $c->stash->{rest} = {error_string => "Error creating new cross unique id",};
-                        return;
-                    }
-
-                    my $intercross_cross_type = $crosses_hash{$new_identifier}{'cross_type'};
-                    my $cross_type;
-                    if ($intercross_cross_type eq 'BIPARENTAL') {
-                        $cross_type = 'biparental';
-                    } elsif ($intercross_cross_type eq 'SELF') {
-                        $cross_type = 'self';
-                    } elsif ($intercross_cross_type eq 'OPEN') {
-                        $cross_type = 'open';
-                    } elsif ($intercross_cross_type eq 'POLY') {
-                        $cross_type = 'polycross';
-                    }
-
-                    my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $generated_cross_unique_id, cross_type =>$cross_type);
-
-                    my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
-                    my $intercross_female_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
-                    my $intercross_female_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->type_id();
-
-                    my $female_parent_name;
-                    my $female_parent_stock_id;
-
-                    if ($intercross_female_type_id == $plot_stock_type_id) {
-                        $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plot_of_type_id})->object_id();
-                        $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
-                        my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
-                        $pedigree->set_female_plot($female_plot_individual);
-                    } elsif ($intercross_female_type_id == $plant_stock_type_id) {
-                        $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plant_of_type_id})->object_id();
-                        $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
-                        my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
-                        $pedigree->set_female_plant($female_plant_individual);
-                    } else {
-                        $female_parent_name = $intercross_female_parent;
-                    }
-
-                    my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent_name);
-                    $pedigree->set_female_parent($female_parent_individual);
-
-                    my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
-                    my $male_parent_name;
-                    if ($intercross_male_parent) {
-                        my $male_parent_stock_id;
-                        my $intercross_male_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
-                        my $intercross_male_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->type_id();
-
-                        if ($intercross_male_type_id == $plot_stock_type_id) {
-                            $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plot_of_type_id})->object_id();
-                            $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
-                            my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
-                            $pedigree->set_male_plot($male_plot_individual);
-                        } elsif ($intercross_male_type_id == $plant_stock_type_id) {
-                            $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plant_of_type_id})->object_id();
-                            $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
-                            my $male_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
-                            $pedigree->set_male_plant($male_plant_individual);
-                        } else {
-                            $male_parent_name = $intercross_male_parent
-                        }
-
-                        my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent_name);
-                        $pedigree->set_male_parent($male_parent_individual);
-                    }
-
-                    my $cross_combination = $female_parent_name.'/'.$male_parent_name;
-                    $pedigree->set_cross_combination($cross_combination);
-
-                    push @new_crosses, $pedigree;
-
-                    $new_stockprop{$generated_cross_unique_id} = $new_identifier;
-                    $existing_identifier_hash{$new_identifier} = $generated_cross_unique_id;
-                }
-
-                my $cross_add = CXGN::Pedigree::AddCrosses->new({
-                    chado_schema => $schema,
-                    phenome_schema => $phenome_schema,
-                    metadata_schema => $metadata_schema,
-                    dbh => $dbh,
-                    crossing_trial_id => $crossing_experiment_id,
-                    crosses => \@new_crosses,
-                    user_id => $user_id
-                });
-
-                if (!$cross_add->validate_crosses()){
-                    $c->stash->{rest} = {error_string => "Error validating crosses",};
-                    return;
-                }
-
-                if (!$cross_add->add_crosses()){
-                    $c->stash->{rest} = {error_string => "Error adding crosses",};
-                    return;
-                }
-            }
-        }
-
-        foreach my $cross_identifier(keys %crosses_hash) {
-            my $cross_transaction_info = $crosses_hash{$cross_identifier}{'activities'};
-            my $db_cross_unique_id = $existing_identifier_hash{$cross_identifier};
-            my $cross_transaction = CXGN::Pedigree::AddCrossTransaction->new({
-                chado_schema => $schema,
-                cross_unique_id => $db_cross_unique_id,
-                transaction_info => $cross_transaction_info
-            });
-
-            my $return = $cross_transaction->add_intercross_transaction();
-
-            if (!$return) {
-                  $c->stash->{rest} = {error_string => "Error adding cross transaction",};
-                  return;
-            }
-        }
-    }
-
-    $c->stash->{rest} = {success => "1",};
-}
-
-
 sub get_cross_transactions :Path('/ajax/cross/transactions') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -1933,7 +1701,6 @@ sub get_cross_additional_info :Path('/ajax/cross/additional_info') Args(1) {
     my $cross_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_additional_info', 'stock_property')->cvterm_id();
     my $cross_additional_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_additional_info_cvterm});
 

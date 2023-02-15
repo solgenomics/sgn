@@ -222,15 +222,13 @@ jQuery(document).ready(function() {
             if (response.error) {
               alert(response.error);
             }
-            else {
-              var fig1_response = response.h2Table;
-              var fig2_response = response.figure3;
-        //alert("Response ID: "+temp_response);
-            //alert("Response ID: "+fig1_response);
+            var fig1_response = response.h2Table;
+            var fig2_response = response.figure3;
+      //alert("Response ID: "+temp_response);
+          //alert("Response ID: "+fig1_response);
 
-              $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
-              $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
-            }
+            $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
+            $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
           },
           error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");

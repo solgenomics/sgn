@@ -458,6 +458,7 @@ sub store {
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $analysis_instance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my $phenotype_addtional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+    my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
     my %experiment_ids;
     my @stored_details;
     my %nd_experiment_md_images;
@@ -513,18 +514,21 @@ sub store {
             my $nirs_hashref = $plot_trait_value{$plot_name}->{'nirs'};
             if (defined $nirs_hashref) {
                 $self->store_high_dimensional_data($nirs_hashref, $experiment->nd_experiment_id(), 'nirs_spectra');
+                $new_count++;
             }
 
             # Check if there is transcriptomics data for this plot
             my $transcriptomics_hashref = $plot_trait_value{$plot_name}->{'transcriptomics'};
             if (defined $transcriptomics_hashref) {
                 $self->store_high_dimensional_data($transcriptomics_hashref, $experiment->nd_experiment_id(), 'transcriptomics');
+                $new_count++;
             }
 
             # Check if there is metabolomics data for this plot
             my $metabolomics_hashref = $plot_trait_value{$plot_name}->{'metabolomics'};
             if (defined $metabolomics_hashref) {
                 $self->store_high_dimensional_data($metabolomics_hashref, $experiment->nd_experiment_id(), 'metabolomics');
+                $new_count++;
             }
 
             foreach my $trait_name (@trait_list) {
@@ -539,6 +543,7 @@ sub store {
                 my $observation = $value_array->[3];
                 my $image_id = $value_array->[4];
                 my $additional_info = $value_array->[5] || undef;
+                my $external_references = $value_array->[6] || undef;
                 my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
                 if (defined($trait_value) && length($trait_value)) {
@@ -637,12 +642,20 @@ sub store {
                             $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                         }
                     }
-                    
+
                     if($additional_info){
                         my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->create({
                             phenotype_id => $phenotype->phenotype_id,
                             type_id       => $phenotype_addtional_info_type_id,
                             value => encode_json $additional_info,
+                        });
+                    }
+
+                    if($external_references){
+                        my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->create({
+                            phenotype_id => $phenotype->phenotype_id,
+                            type_id      => $external_references_type_id,
+                            value => encode_json $external_references,
                         });
                     }
 

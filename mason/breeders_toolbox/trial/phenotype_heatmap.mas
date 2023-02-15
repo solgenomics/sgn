@@ -19,15 +19,15 @@ $data_level => 'plot'
 
 
     #tooltip {	
-        position: absolute;			
-        width: 220px;					
-        height: 100px;					
-        padding: 2px;				
-        font: 12px sans-serif;		
-        background: lightsteelblue;	
-        border: 0px;		
-        border-radius: 8px;			
-        pointer-events: none;		
+        position: absolute;
+        max-width: 400px;
+        max-height: 200px;
+        padding: 5px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 0px;
+        border-radius: 8px;
+        pointer-events: none;
     }
     
     #container_heatmap {
@@ -43,12 +43,27 @@ $data_level => 'plot'
         /*border:2px dashed #000;*/
         height: 100%;
         /*width: 390px;*/
-        width: 90%;
+        width: 100%;
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
         margin: 10px;
         transition: all 1s ease-in-out;
+    }
+
+    #fieldmap_wrapper {
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+        overflow-x: scroll;
+        margin-top: 1%;
+    }
+
+    .interactive_fieldmap_buttons {
+        margin-top: 4%;
+        width: 405px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     rect.bordered {
@@ -74,11 +89,13 @@ $data_level => 'plot'
       .legend li { float: left; margin-right: 10px; }
       .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
 
+      .legend .border_plots { background-color: #d3d3d3}
       .legend .block_even_number { background-color: #c7e9b4; }
       .legend .block_odd_number { background-color: #41b6c4; }
       .legend .checks { background-color: #6a5acd; }
       .legend .rep_even_number { background-color: red;}
       .legend .rep_odd_number { background-color: green;}
+      .legend .overlapping_plot { background-color: #000; }
       
       .rotated {
           transform: rotate(-180deg);
@@ -88,18 +105,25 @@ $data_level => 'plot'
 </style>
 
 <div class="well well-sm">
-    <div class="form-group form-group-sm" id="traitdiv" style="display:inline-block">
-        <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
-        <div class="col-sm-12">
-            <div id="heatmap_traits_assayed_dropdown">
-                Loading Traits Assayed...
+    <div style="display: flex; gap: 25px">
+        <div class="form-group form-group-sm" id="traitdiv" style="display:inline-block">
+            <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label><br />
+            <div class="col-sm-12">
+                <div id="heatmap_traits_assayed_dropdown">
+                    Loading Traits Assayed...
+                </div>
             </div>
+        </div>
+        <!-- TODO: Enable the display of linked trials -->
+        <div id="include_linked_trials" class="form-group form-group-sm" style="display: none">
+            <label for="include_linked_trials_checkmark" class="control-label">Display Linked Trials:</label><br />
+            <input type="checkbox" id="include_linked_trials_checkmark" name="invert_row_checkmark">
         </div>
     </div>
 </div>
 
 <div class="form-group form-group-sm" id="ctrldiv" style="diaplay:none">
-    <label for="check_list_dropdown" class="col-sm-2 control-label">View Check Plots:</label></br>
+    <label for="check_list_dropdown" class="col-sm-2 control-label">View Check Plots:</label><br />
     <div class="col-sm-12">
         <div id="heatmap_trial_checks_dropdown">
         </div>
@@ -107,7 +131,6 @@ $data_level => 'plot'
         </div>
     </div>
     <br>
-    
 </div>
 
 <div id="view_ctrl_button" style="display:none">
@@ -117,52 +140,88 @@ $data_level => 'plot'
 <div id="container_heatmap" ></div>
 <div>
     <ul class="legend">
+        <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
         <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
         <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
         <li><span class="checks"></span> Checks</li>
         <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
         <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)</li>
         <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
     </ul>
 </div>
 <br><br>
 <div id="container_fm">
-    <div>
-        <button class="btn btn-primary" style="margin-left: 2%;" id="planting_order_button"> Planting Order </button>
-        <select name="planting_order" id="planting_order">
-            <option value="">--Select Layout--</option>
-            <option value="by_col_serpentine">By Column: Serpentine</option>
-            <option value="by_col_zigzag">By Column: Zigzag</option>
-            <option value="by_row">By Row: Current Layout</option>
-        </select>
-        <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Harvesting Order </button>
-        <select name="harvesting_order" id="harvesting_order">
-            <option value="">--Select Layout--</option>
-            <option value="by_col_serpentine">By Column: Serpentine</option>
-            <option value="by_col_zigzag">By Column: Zigzag</option>
-            <option value="by_row">By Row: Current Layout</option>
-        </select>
-        <button style="margin-left: 20%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
-        <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button><br><br>
-        <div style="display: inline;">
-            <label style="margin-left: 2%;" for="invert_rows">Invert Rows</label>
-            <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
-            <label style="margin-left: 3%;" for="top_border_selection">Top Border</label>                       
-            <input type="checkbox" id="top_border_selection" name="top_border_selection" value="yes">
-            <label style="margin-left: 3%;" for="left_border_selection">Left Border</label>                       
-            <input type="checkbox" id="left_border_selection" name="left_border_selection" value="yes">
-            <label style="margin-left: 3%;" for="right_border_selection">Right Border</label>                       
-            <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes">
-            <label style="margin-left: 3%;" for="bottom_border_selection">Bottom Border</label>                       
-            <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes">
-            <label style="margin-left: 3%;">Plot Layout</label>
-            <select name="plot_layout" id="plot_layout">
-                <option value="">--Select Layout--</option>
-                <option value="serpentine">Serpentine</option>
-                <option value="zigzag">Zigzag</option>
+    <div style="margin-top: 2%; position: relative">
+        <div style="display: flex; flex-wrap: wrap; gap: 25px" class="form-inline">
+            <div class="form-inline">
+                <label>Download Plot Order</label>
+                <select class="form-control form-inline" name="plot_download_type" id="plot_download_type">
+                    <option value="">--Select Type--</option>
+                    <option value="planting">Planting Order</option>
+                    <option value="harvest">Harvest Order</option>
+                </select>
+            </div>
+            <select class="form-control" name="plot_download_order" id="plot_download_order">
+                <option value="">--Select Plot Layout--</option>
+                <option value="by_col_serpentine">By Column: Serpentine</option>
+                <option value="by_col_zigzag">By Column: Zigzag</option>
+                <option value="by_row_serpentine">By Row: Serpentine</option>
+                <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
+            <div clas="form-inline">
+                <label for="plot_download_borders">Include Borders</label>
+                <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
+            </div>
+            <button class="btn btn-primary" id="plot_download_button">Download</button>
         </div>
-    </div>  
+        <br />
+        <div style="display: flex; flex-wrap: wrap; gap: 25px">
+            <div class="form-inline">
+                <label>Plot Layout</label>
+                <select class="form-control fieldmap_edit" name="plot_layout" id="plot_layout">
+                    <option value="">--Select Plot Layout--</option>
+                    <option value="serpentine">Serpentine</option>
+                    <option value="zigzag">Zigzag</option>
+                </select>
+            </div>
+            <div clas="form-inline">
+                <label for="invert_row_checkmark">Invert Rows</label>
+                <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
+            </div>
+        </div>
+        <br />
+        <div style="display: flex; flex-wrap: wrap; gap: 25px">
+            <div class="form-inline">
+                <label for="top_border_selection">Top Border</label>                       
+                <input type="checkbox" id="top_border_selection" name="top_border_selection" value="yes" class="fieldmap_edit">
+            </div>
+            <div class="form-inline">
+                <label for="left_border_selection">Left Border</label>                       
+                <input type="checkbox" id="left_border_selection" name="left_border_selection" value="yes" class="fieldmap_edit">
+            </div>
+            <div class="form-inline">
+                <label for="right_border_selection">Right Border</label>                       
+                <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes" class="fieldmap_edit">
+            </div>
+            <div class="form-inline">
+                <label for="bottom_border_selection">Bottom Border</label>                       
+                <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes" class="fieldmap_edit">
+            </div>
+        </div>
+        <div id="fieldmap_edit_info" style="display: none">
+            <p style="font-style: italic">NOTE: Field Map cannot be modified and borders are not shown when linked trials are displayed.</p>
+        </div>
+        <br>
+        <div class="interactive_fieldmap_buttons">
+            <button type="button" class="btn btn-primary fieldmap_edit" id="transpose_fieldmap">Transpose</button>
+            <button type="button" class="btn btn-primary fieldmap_edit" id="change_dimensions_button">Change Dimensions</button>
+            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit">Submit Field Layout</button>  
+        </div>
+    </div>
+    <div id="fieldmap_wrapper">
+        <div id="fieldmap_chart"></div>
+    </div>
 </div>
 
 
@@ -424,14 +483,14 @@ $data_level => 'plot'
             </div>
             <div class="modal-body">
                 <div style="text-align: center;" class="container-fluid">
-
-                    <p3> Field Plot layout submitted successfully!</p3>
-
+                    <p> Field Plot layout submitted successfully!</p>
+                </div>
+                <div>
+                    <p><strong>NOTE:</strong> It may take a few minutes for the database to update and the changes to be reflected on the website.</p>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="close_fp_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-
             </div>
         </div>
     </div>
@@ -558,9 +617,26 @@ var changed_dim_cols;
 var num_real_plots;
 
 
+var trial_ids = [trial_id];
+
+// TODO: Remove this when we get fetch the linked trials from the DB
+var linked_trial_ids = [];
+function display_linked_trials(trials) {
+    if ( trials ) {
+        linked_trial_ids = trials;
+        jQuery("#include_linked_trials").css("display", "block");
+        jQuery("#include_linked_trials_checkmark").prop('checked', false);
+        jQuery("#include_linked_trials_checkmark").click();
+    }
+    else {
+        linked_trials = [];
+        jQuery("#include_linked_trials_checkmark").prop('checked', true);
+        jQuery("#include_linked_trials_checkmark").click();
+        jQuery("#include_linked_trials").css("display", "none");
+    }
+}
+
 jQuery(document).ready( function() {
-    // document.getElementById("invert_row_checkmark").checked = false;
-    retrieve_additional_info = true;
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
@@ -590,35 +666,32 @@ jQuery(document).ready( function() {
    
 
     function field_map_view() {
-        
         jQuery("#ctrldiv").css("display", "none");
         jQuery.ajax({
-             //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&observationUnitLevelName=plot&pageSize=10000',
-            // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
-             beforeSend: function() {
-               jQuery("#working_modal").modal("show");
-             },
-             success: function(response) {
+            method: 'GET',
+            url: '/brapi/v2/observationunits',
+            data: {
+                studyDbIds: trial_ids,
+                observationUnitLevelName: 'plot',
+                pageSize: 10000
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
                 data = response.result.data;
-                if (data[0].additionalInfo) {
-                    FieldMap.check_elements(data[0].additionalInfo);
-                    if (data[0].additionalInfo.plot_layout) {
-                        document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
-                        FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
+                if (data[0]) {
+                    if (data[0].additionalInfo) {
+                        FieldMap.check_elements(data[0].additionalInfo);
+                        if (data[0].additionalInfo.plot_layout) {
+                            document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
+                            FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
+                        }
                     }
+                    FieldMap.filter_data(data);
+                    FieldMap.set_meta_data();
                 }
-                FieldMap.filter_data(data);
-                FieldMap.set_meta_data();
-                FieldMap.load();
-
-                // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
-	            //       // Ascending: first plotNumber less than the previous
-	            //     return FieldMap.plot_object[plot_ou_1].observationUnitPosition.observationLevel.levelCode - FieldMap.plot_object[plot_ou_2].observationUnitPosition.observationLevel.levelCode
-                // });
-                
-
             },
             error: function(response) {
                 alert('Error displaying traits assayed heatmap');   
@@ -628,6 +701,10 @@ jQuery(document).ready( function() {
         .then(
             function() {
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
+                    FieldMap.fill_holes();
+                    FieldMap.meta_data.retain_layout = true;
+                    FieldMap.meta_data.transpose = false;
+                    FieldMap.load();
             }
         )
     }
@@ -706,16 +783,12 @@ jQuery(document).ready( function() {
 
     jQuery('#submit_dimensions_change').click(function() {
         jQuery('#working_modal').modal("show");
-        retrieve_additional_info = false;
         changed_dim_rows = jQuery("#row-dims").val();
         changed_dim_cols = jQuery("#col-dims").val();
         var filler_accession_name = jQuery("#filler_accession").val();
         if (changed_dim_rows * changed_dim_cols < num_real_plots) {
             jQuery('#working_modal').modal("hide");
             alert('Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.');
-        } else if (!filler_accession_name && changed_dim_rows * changed_dim_cols > num_real_plots) {
-            jQuery('#working_modal').modal("hide");
-            alert('Please select an accession for filler plots.');
         } else if (filler_accession_name) {
             jQuery("#change_dimensions_dialog").modal("hide");
             new jQuery.ajax({
@@ -730,11 +803,11 @@ jQuery(document).ready( function() {
                     if (response.error) {
                         alert(response.error)
                     } else if (response.success) {
-                        FieldMap.meta_data.filler_accession_id = response.success;           
+                        FieldMap.meta_data.filler_accession_id = response.success;
                         FieldMap.meta_data.filler_accession_name = filler_accession_name;
                         FieldMap.meta_data.num_rows = changed_dim_rows;
                         FieldMap.meta_data.num_cols = changed_dim_cols;
-                        
+                        FieldMap.meta_data.retain_layout = false;
                         FieldMap.load();         
                     }
                 },
@@ -744,10 +817,13 @@ jQuery(document).ready( function() {
                 }
             });
         } else {
+            FieldMap.meta_data.filler_accession_id = undefined;
+            FieldMap.meta_data.filler_accession_name = undefined;
             FieldMap.meta_data.num_rows = changed_dim_rows;
             FieldMap.meta_data.num_cols = changed_dim_cols;
             jQuery('#working_modal').modal("hide");
             jQuery("#change_dimensions_dialog").modal("hide");
+            FieldMap.meta_data.retain_layout = false;
             FieldMap.load();
         }
     })
@@ -758,6 +834,7 @@ jQuery(document).ready( function() {
 
     jQuery("#plot_layout").change(function() {
         FieldMap.meta_data.plot_layout = jQuery("#plot_layout").val();
+        FieldMap.meta_data.retain_layout = false;
         FieldMap.load();
     });
 
@@ -787,42 +864,51 @@ jQuery(document).ready( function() {
         FieldMap.load();
     });
 
-    jQuery("#planting_order_button").click(function() {
-        if (jQuery('#planting_order').val() == "") {
-            alert("Please select an order layout.")
-        } else {
-            FieldMap.meta_data.planting_order_layout = jQuery('#planting_order').val();
-            FieldMap.get_planting_order();
+    jQuery("#plot_download_button").click(() => {
+        let type = jQuery("#plot_download_type").val();
+        let order = jQuery("#plot_download_order").val();
+        let include_borders = jQuery("#plot_download_borders").is(":checked");
+        if ( !type || type === '' ) {
+            alert("Please select a type");
+            return;
         }
+        if ( !order || order === '' ) {
+            alert("Please select a plot layout");
+            return;
+        }
+        FieldMap.get_plot_order(type, order, include_borders)
     });
 
-    jQuery('#harvesting_order_button').click(function() {
-        if (jQuery('#harvesting_order').val() == "") {
-            alert("Please select an order layout.")
-        } else {
-            FieldMap.meta_data.harvesting_order_layout = jQuery('#harvesting_order').val();
-            FieldMap.get_harvesting_order();
-        }
-    })
     jQuery("#invert_row_checkmark").change(function() {
         FieldMap.meta_data.invert_row_checkmark = document.getElementById("invert_row_checkmark").checked;
         FieldMap.load();
     });
     jQuery('#submit_fieldmap').click( function() {
-        var answer = window.confirm(`You are about to save this plot layout to the database.
-        Filler plots will be added to your trial if they exist in the display below. Are you sure you would like to continue?`);
-        if (answer) {
-            submit_fieldmap_metadata();
-        } else {
-            jQuery('#working_modal').modal("hide");
-        }
-
+        new jQuery.ajax({
+            type: "POST",
+            url: '/ajax/breeders/trial/<% $trial_id %>/check_curator_privileges',
+            dataType: "json",
+            data: { 
+                'trial_id': trial_id,
+            },
+            success: function(response) {
+                if (response.success) {
+                    var answer = window.confirm(`You are about to save this plot layout to the database. Are you sure you would like to continue?`);
+                    if (answer) {
+                        submit_fieldmap_metadata();
+                    } else {
+                        jQuery('#working_modal').modal("hide");
+                    }
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                alert(response);
+            }
+        });
         
     });
-
-    jQuery('#close_fp_success_dialog').click(function() {
-        location.reload();
-    })
 
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
@@ -830,6 +916,11 @@ jQuery(document).ready( function() {
     
     jQuery("#hm_accession").autocomplete({
         appendTo: "#hm_replace_plot_accessions_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    });
+
+    jQuery("#filler_accession").autocomplete({
+        appendTo: "#change_dimensions_dialog",
         source: '/ajax/stock/accession_autocomplete',
     });
 
@@ -846,10 +937,32 @@ jQuery(document).ready( function() {
       hm_replace_plotAccession_fieldMap('override');
     });
 
+    function refresh_cache() {
+        new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/breeders/trial/<% $trial_id %>/refresh_cache',
+            dataType: "json",
+            data: {
+                'trial_id': trial_id,
+            },
+
+            success: function(response) {},
+            error: function(response) {
+                alert('Error refreshing cache');
+            },
+        })
+        .then(
+            function() {
+                jQuery('#working_modal').modal("hide");
+                jQuery('#fieldplot_layout_success_dialog').modal("show");
+            }
+        )
+    };
+
     function submit_fieldmap_metadata() {
-        jQuery('#working_modal').modal("show");
+        jQuery('#working_modal').modal("show");  
         let filler_plot_object = FieldMap.format_brapi_post_object();
-        var stringifiedPostData = JSON.stringify(filler_plot_object);            
+        var stringifiedPostData = JSON.stringify(filler_plot_object);
         if (FieldMap.meta_data.post) {
             new jQuery.ajax({
                 type: 'POST',
@@ -859,7 +972,6 @@ jQuery(document).ready( function() {
                 data: stringifiedPostData,
                 success: function(response) {
                     put_brapi_plots();
-                    
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
@@ -881,10 +993,7 @@ jQuery(document).ready( function() {
             url: '/brapi/v2/observationunits/',
             data: stringifiedData,
             success: function(response) {
-                // refresh_cache();
-                jQuery('#working_modal').modal("hide");
-                jQuery('#fieldplot_layout_success_dialog').modal("show");
-                
+                refresh_cache();
             },
             error: function(response) {
                 jQuery('#working_modal').modal("hide");
@@ -1006,39 +1115,100 @@ jQuery(document).ready( function() {
         jQuery("#d3legend").css("display", "none");
     });
 
-  jQuery(document).on('change', '#trait_list_dropdown', function () {
-    selected = jQuery("#trait_list_dropdown").val();
-    if (selected == 'fieldmap'){
-        d3.select("svg").remove();
-        jQuery("#view_ctrl_button").css("display", "none");
-        jQuery("#container_heatmap").css("display", "none");
-        jQuery("#ctrldiv").css("display", "none");
-        d3.select("#container_heatmap_geo_div").remove();
-        FieldMap.heatmap_selected = false;
-        FieldMap.load();
-    } else if (selected == 'geofieldmap'){
-        jQuery('#working_modal').modal("show");
-        d3.select("svg").remove();
-        d3.select("#container_heatmap_geo_div").remove();
-        d3.select('#container_heatmap_geo').append('div').attr("id","container_heatmap_geo_div");
-        jQuery("#container_heatmap").css("display", "none");
-        jQuery("#d3legend").css("display", "none");
-        jQuery("#container_fm").css("display", "none");
-        jQuery("#delete_button_fm").css("display", "none");
-        jQuery("#view_ctrl_button").css("display", "none");
-        jQuery("#ctrldiv").css("display", "none");
-        geo_field_map_view();
-        jQuery('#working_modal').modal("hide");
-    } else  if (selected != ''){
-        d3.select("svg").remove();
-        d3.select("#container_heatmap_geo_div").remove();
-        jQuery("#delete_button_fm").css("display", "none");
-        jQuery("#ctrldiv").css("display", "none");
-        jQuery("#view_ctrl_button").show();
-        FieldMap.heatmap_selected = true;
-        FieldMap.heatmap_selection = selected;
-        heatmap(selected);
+    jQuery(document).on('change', '#trait_list_dropdown', function () {
+        selected = jQuery("#trait_list_dropdown").val();
+        if (selected == 'fieldmap'){
+            d3.select("svg").remove();
+            jQuery("#view_ctrl_button").css("display", "none");
+            jQuery("#container_heatmap").css("display", "none");
+            jQuery("#ctrldiv").css("display", "none");
+            d3.select("#container_heatmap_geo_div").remove();
+            FieldMap.heatmap_selected = false;
+            FieldMap.load();
+        } else if (selected == 'geofieldmap'){
+            jQuery('#working_modal').modal("show");
+            d3.select("svg").remove();
+            d3.select("#container_heatmap_geo_div").remove();
+            d3.select('#container_heatmap_geo').append('div').attr("id","container_heatmap_geo_div");
+            jQuery("#container_heatmap").css("display", "none");
+            jQuery("#d3legend").css("display", "none");
+            jQuery("#container_fm").css("display", "none");
+            jQuery("#delete_button_fm").css("display", "none");
+            jQuery("#view_ctrl_button").css("display", "none");
+            jQuery("#ctrldiv").css("display", "none");
+            geo_field_map_view();
+            jQuery('#working_modal').modal("hide");
+        } else  if (selected != ''){
+            d3.select("svg").remove();
+            d3.select("#container_heatmap_geo_div").remove();
+            jQuery("#delete_button_fm").css("display", "none");
+            jQuery("#ctrldiv").css("display", "none");
+            jQuery("#view_ctrl_button").show();
+            FieldMap.heatmap_selected = true;
+            FieldMap.heatmap_selection = selected;
+            heatmap(selected);
+        }
+    });
+
+    jQuery(document).on('change', '#include_linked_trials_checkmark', () => {
+        trial_ids = [trial_id];
+
+        let include_linked_trials = jQuery("#include_linked_trials_checkmark").is(":checked");
+        if ( include_linked_trials ) {
+            // TODO: Get actual list of additional trials
+            trial_ids = trial_ids.concat(linked_trial_ids);
+        }
+        
+        jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
+        jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
+
+        field_map_view();
+    });
+
+  jQuery("#trial_fieldmap_download_layout_button").click( function () {
+    let cols_csv_header = [];
+    for (let i = FieldMap.meta_data.min_col; i <= FieldMap.meta_data.max_col; i++) {
+        cols_csv_header.push(i);
     }
+    let csv = '\n';
+    csv += ['Rows/Columns',cols_csv_header];
+    csv += "\n";
+    // if (FieldMap.meta_data.top_border_selection) {
+    //     csv += ['',FieldMap.meta_data.left_border_selection ? 'border' : '', ...Array(FieldMap.meta_data.num_cols).fill('border'), FieldMap.meta_data.right_border_selection ? 'border': ''];
+    // }
+    let coord_matrix = [];
+    let row = "positionCoordinateY";
+    let col = "positionCoordinateX";
+    let temp_plot_arr = [...FieldMap.plot_arr];
+    for (let plot of temp_plot_arr.filter(plot => plot.type != "border")) {
+        if (!coord_matrix[plot.observationUnitPosition[row] - 1]) {
+            coord_matrix[plot.observationUnitPosition[row] - 1] = [];
+            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
+        } else {
+            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
+        }
+    }
+    if (!FieldMap.meta_data.invert_row_checkmark) {
+        coord_matrix.reverse();
+    }
+    let increment = 1;
+    let row_number;
+    for (let plot_arr of coord_matrix.filter(plot_arr => Array.isArray(plot_arr))) {
+        if (!FieldMap.meta_data.invert_row_checkmark) {
+            row_number = FieldMap.meta_data.max_row - increment + 1;
+        } else {
+            row_number = increment;
+        }
+        increment++;
+        csv += [row_number, plot_arr] + '\n';
+
+    }
+    let hiddenElement = document.createElement('a');
+        hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+        hiddenElement.target = '_blank';
+        
+        hiddenElement.download = `Trial_${FieldMap.trial_id}_spatial_layout.csv`;
+        hiddenElement.click();  
   });
 
   jQuery(document).on('click', '#trial_phenotype_heatmap_download', function(){

@@ -26,11 +26,11 @@ is($response->{message}, 'Login successful');
 $mech->get_ok('http://localhost:3010/ajax/user/new?first_name=testfirst&last_name=testlast&username=testusername&password=testpass&confirm_password=testpass&email_address=test@testcassavabase.com');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'message' => ' <table summary="" width="80%" align="center">
-<tr><td><p>Account was created with username "testusername". To continue, you must confirm that SGN staff can reach you via email address "test@testcassavabase.com". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.</p></td></tr>
-<tr><td><br /></td></tr>
-</table>
-'});
+is_deeply($response, {'message' => 'Account was created with username "testusername".
+
+To continue, you must confirm that we can reach you via email address "test@testcassavabase.com". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.
+
+You will be able to login once your account has been confirmed.'});
 
 $mech->get_ok('http://localhost:3010/ajax/user/new?first_name=testfirst&last_name=testlast&username=testusername&password=testpass&confirm_password=testpass&email_address=test@testcassavabase.com&organization=testorg');
 $response = decode_json $mech->content;

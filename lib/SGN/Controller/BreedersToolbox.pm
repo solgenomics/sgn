@@ -150,6 +150,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
+    $c->stash->{show_grafting_interface} = $c->config->{show_grafting_interface};
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 }
 
@@ -278,13 +279,13 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     my $locations = $crossingtrial->get_all_locations_by_breeding_program();
 
+    my $odk_service = $c->config->{odk_crossing_data_service_name};
+
+    $c->stash->{odk_service} = $odk_service;
+
     $c->stash->{locations} = $locations;
 
     $c->stash->{programs} = \@breeding_programs;
-
-    #$c->stash->{locations} = $bp->get_all_locations($c);
-
-    #$c->stash->{programs} = $breeding_programs;
 
     $c->stash->{crossing_trials} = $crossing_trials;
 
@@ -498,6 +499,7 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
     $c->stash->{filename} = $file_name;
     $c->stash->{template} = '/breeders_toolbox/view_file.mas';
 }
+
 
 sub make_cross_form :Path("/stock/cross/new") :Args(0) {
     my ($self, $c) = @_;
@@ -853,6 +855,12 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 sub manage_markers : Path("/breeders/markers") Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
 
     $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
 }

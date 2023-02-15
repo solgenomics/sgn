@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::SamplingTrialXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -13,7 +14,18 @@ sub _validate_with_plugin {
     my %errors;
     my @error_messages;
     my %missing_accessions;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %seen_plot_names;
@@ -61,39 +73,51 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $date_head  = $worksheet->get_cell(0,0)->value();
+        $date_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $sample_name_head  = $worksheet->get_cell(0,1)->value();
+        $sample_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $source_observation_unit_name_head  = $worksheet->get_cell(0,2)->value();
+        $source_observation_unit_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $sample_number_head  = $worksheet->get_cell(0,3)->value();
+        $sample_number_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $replicate_head  = $worksheet->get_cell(0,4)->value();
+        $replicate_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $tissue_type_head  = $worksheet->get_cell(0,5)->value();
+        $tissue_type_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $ncbi_taxonomy_id_head  = $worksheet->get_cell(0,6)->value();
+        $ncbi_taxonomy_id_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
         $person_head  = $worksheet->get_cell(0,7)->value();
+        $person_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,8)) {
         $notes_head  = $worksheet->get_cell(0,8)->value();
+        $notes_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,9)) {
         $extraction_head  = $worksheet->get_cell(0,9)->value();
+        $extraction_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,10)) {
         $concentration_head  = $worksheet->get_cell(0,10)->value();
+        $concentration_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,11)) {
         $volume_head  = $worksheet->get_cell(0,11)->value();
+        $volume_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$date_head || $date_head ne 'date' ) {
@@ -168,6 +192,7 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,5)) {
             $tissue_type  = $worksheet->get_cell($row,5)->value();
+            $tissue_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
             $ncbi_taxonomy_id  = $worksheet->get_cell($row,6)->value();
@@ -234,8 +259,8 @@ sub _validate_with_plugin {
         }
 
         #tissue_type must not be blank and must be either leaf, root, or step
-        if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem')) {
-            push @error_messages, "Cell F$row_name: column tissue type and must be either stem, leaf, or root";
+        if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem' && $tissue_type ne 'fruit' && $tissue_type ne 'seed')) {
+            push @error_messages, "Cell F$row_name: column tissue type and must be either stem, leaf, seed, fruit, or root";
         }
 
     }
@@ -285,7 +310,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %design;
@@ -331,18 +367,22 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,5)) {
             $tissue_type  = $worksheet->get_cell($row,5)->value();
+            $tissue_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
             $ncbi_taxonomy_id  = $worksheet->get_cell($row,6)->value();
+            $ncbi_taxonomy_id =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,7)) {
             $person  = $worksheet->get_cell($row,7)->value();
+            $person =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,8)) {
             $notes  = $worksheet->get_cell($row,8)->value();
         }
         if ($worksheet->get_cell($row,9)) {
             $extraction  = $worksheet->get_cell($row,9)->value();
+            $extraction =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,10)) {
             $concentration  = $worksheet->get_cell($row,10)->value();

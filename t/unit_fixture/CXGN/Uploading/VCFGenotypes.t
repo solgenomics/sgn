@@ -233,8 +233,8 @@ print STDERR Dumper $data->[0];
 print STDERR Dumper $data->[0]->{germplasmName};
 my $accession_name_1 = $data->[0]->{germplasmName};
 my $accession_name_2 = $data->[3]->{germplasmName};
-
-is_deeply($data->[0]->{selected_genotype_hash}, {'S1_27739' => {'DP' => '3','GT' => '0/0','GQ' => '88','PL' => '0,9,108','NT' => 'A,A','AD' => '3,0','DS' => '0'},'S1_84628' => {'AD' => '0,0','NT' => '','DS' => '0','GQ' => '.','PL' => '.','DP' => '0','GT' => './.'},'S1_21597' => {'GQ' => '98','PL' => '0,18,216','AD' => '6,0','NT' => 'G,G','DS' => '0','DP' => '6','GT' => '0/0'},'S1_21594' => {'PL' => '.','GQ' => '.','DS' => '1','NT' => '','AD' => '0,0','GT' => './.','DP' => '0'},'S1_26659' => {'DP' => '4','GT' => '0/0','GQ' => '94','PL' => '0,12,144','NT' => 'C,C','DS' => '0','AD' => '4,0'},'S1_75465' => {'GT' => './.','DP' => '0','NT' => '','DS' => '0','AD' => '0,0','PL' => '.','GQ' => '.'},'S1_26674' => {'DP' => '1','GT' => '0/0','NT' => 'A,A','AD' => '1,0','DS' => '0','GQ' => '66','PL' => '0,3,36'},'S1_26662' => {'GT' => '0/0','DP' => '4','NT' => 'C,C','DS' => '0','AD' => '4,0','PL' => '0,12,144','GQ' => '94'},'S1_27746' => {'GQ' => '99','PL' => '0,24,255','NT' => 'A,A','AD' => '8,0','DS' => '0','DP' => '8','GT' => '0/0'},'S1_27720' => {'AD' => '1,0','NT' => 'C,C','DS' => '0','GQ' => '66','PL' => '0,3,36','DP' => '1','GT' => '0/0'},'S1_75644' => {'PL' => '.','GQ' => '.','NT' => '','AD' => '0,0','DS' => '0','GT' => './.','DP' => '0'},'S1_27874' => {'DP' => '0','GT' => './.','GQ' => '.','PL' => '.','NT' => '','DS' => '0','AD' => '0,0'},'S1_75629' => {'DS' => '0','NT' => '','AD' => '0,0','PL' => '.','GQ' => '.','GT' => './.','DP' => '0'},'S1_26646' => {'GT' => '0/0','DP' => '4','PL' => '0,12,144','GQ' => '94','DS' => '0','NT' => 'A,A','AD' => '4,0'},'S1_27724' => {'NT' => 'T,T','DS' => '0','AD' => '3,0','PL' => '0,9,108','GQ' => '88','GT' => '0/0','DP' => '3'},'S1_27861' => {'NT' => 'C,C','AD' => '8,0','DS' => '0','GQ' => '99','PL' => '0,24,255','DP' => '8','GT' => '0/0'},'S1_26576' => {'GQ' => '94','PL' => '0,12,144','NT' => 'A,A','AD' => '4,0','DS' => '0','DP' => '4','GT' => '0/0'},'S1_26624' => {'GQ' => '94','PL' => '0,12,144','DS' => '0','NT' => 'T,T','AD' => '4,0','DP' => '4','GT' => '0/0'}}, 'test genotype search');
+#print STDERR "SELECTED GENOTYPE HASH =".Dumper($data->[0]->{selected_genotype_hash})."\n";
+is_deeply($data->[0]->{selected_genotype_hash}, {'S1_27739' => {'DP' => '3','GT' => '0/0','GQ' => '88','PL' => '0,9,108','NT' => 'A,A','AD' => '3,0','DS' => '0'},'S1_84628' => {'AD' => '0,0','NT' => '','DS' => '0','GQ' => '.','PL' => '.','DP' => '0','GT' => './.'},'S1_21597' => {'GQ' => '98','PL' => '0,18,216','AD' => '6,0','NT' => 'G,G','DS' => '0','DP' => '6','GT' => '0/0'},'S1_21594' => {'PL' => '.','GQ' => '.','DS' => '0.889','NT' => '','AD' => '0,0','GT' => './.','DP' => '0'},'S1_26659' => {'DP' => '4','GT' => '0/0','GQ' => '94','PL' => '0,12,144','NT' => 'C,C','DS' => '0','AD' => '4,0'},'S1_75465' => {'GT' => './.','DP' => '0','NT' => '','DS' => '0.03','AD' => '0,0','PL' => '.','GQ' => '.'},'S1_26674' => {'DP' => '1','GT' => '0/0','NT' => 'A,A','AD' => '1,0','DS' => '0','GQ' => '66','PL' => '0,3,36'},'S1_26662' => {'GT' => '0/0','DP' => '4','NT' => 'C,C','DS' => '0','AD' => '4,0','PL' => '0,12,144','GQ' => '94'},'S1_27746' => {'GQ' => '99','PL' => '0,24,255','NT' => 'A,A','AD' => '8,0','DS' => '0','DP' => '8','GT' => '0/0'},'S1_27720' => {'AD' => '1,0','NT' => 'C,C','DS' => '0','GQ' => '66','PL' => '0,3,36','DP' => '1','GT' => '0/0'},'S1_75644' => {'PL' => '.','GQ' => '.','NT' => '','AD' => '0,0','DS' => '0','GT' => './.','DP' => '0'},'S1_27874' => {'DP' => '0','GT' => './.','GQ' => '.','PL' => '.','NT' => '','DS' => '0','AD' => '0,0'},'S1_75629' => {'DS' => '0.026','NT' => '','AD' => '0,0','PL' => '.','GQ' => '.','GT' => './.','DP' => '0'},'S1_26646' => {'GT' => '0/0','DP' => '4','PL' => '0,12,144','GQ' => '94','DS' => '0','NT' => 'A,A','AD' => '4,0'},'S1_27724' => {'NT' => 'T,T','DS' => '0.001','AD' => '3,0','PL' => '0,9,108','GQ' => '88','GT' => '0/0','DP' => '3'},'S1_27861' => {'NT' => 'C,C','AD' => '8,0','DS' => '0','GQ' => '99','PL' => '0,24,255','DP' => '8','GT' => '0/0'},'S1_26576' => {'GQ' => '94','PL' => '0,12,144','NT' => 'A,A','AD' => '4,0','DS' => '0','DP' => '4','GT' => '0/0'},'S1_26624' => {'GQ' => '94','PL' => '0,12,144','DS' => '0','NT' => 'T,T','AD' => '4,0','DP' => '4','GT' => '0/0'}}, 'test genotype search');
 is_deeply($data->[0]->{selected_protocol_hash}->{markers_array}, [{'format' => 'GT:AD:DP:GQ:DS:PL','pos' => '21594','filter' => 'PASS','alt' => 'A','ref' => 'G','qual' => '.','name' => 'S1_21594','info' => 'AR2=0.29;DR2=0.342;AF=0.375','chrom' => '1'},{'qual' => '.','ref' => 'G','filter' => 'PASS','alt' => 'A','chrom' => '1','info' => 'AR2=0;DR2=0.065;AF=0.001','name' => 'S1_21597','format' => 'GT:AD:DP:GQ:DS:PL','pos' => '21597'},{'format' => 'GT:AD:DP:GQ:DS:PL','pos' => '26576','name' => 'S1_26576','chrom' => '1','info' => 'AR2=0.833;DR2=0.852;AF=0.009','filter' => 'PASS','alt' => 'C','ref' => 'A','qual' => '.'},{'pos' => '26624','format' => 'GT:AD:DP:GQ:DS:PL','chrom' => '1','info' => 'AR2=0.93;DR2=0.948;AF=0.022','name' => 'S1_26624','ref' => 'T','qual' => '.','filter' => 'PASS','alt' => 'C'},{'qual' => '.','ref' => 'A','filter' => 'PASS','alt' => 'G','info' => 'AR2=0;DR2=0;AF=0','chrom' => '1','name' => 'S1_26646','format' => 'GT:AD:DP:GQ:DS:PL','pos' => '26646'},{'pos' => '26659','format' => 'GT:AD:DP:GQ:DS:PL','name' => 'S1_26659','info' => 'AR2=0.93;DR2=0.948;AF=0.022','chrom' => '1','filter' => 'PASS','alt' => 'G','qual' => '.','ref' => 'C'},{'pos' => '26662','format' => 'GT:AD:DP:GQ:DS:PL','name' => 'S1_26662','chrom' => '1','info' => 'AR2=0.94;DR2=0.953;AF=0.023','filter' => 'PASS','alt' => 'T','ref' => 'C','qual' => '.'},{'format' => 'GT:AD:DP:GQ:DS:PL','pos' => '26674','qual' => '.','ref' => 'A','filter' => 'PASS','alt' => 'G','info' => 'AR2=0;DR2=0;AF=0','chrom' => '1','name' => 'S1_26674'},{'name' => 'S1_27720','chrom' => '1','info' => 'AR2=0.753;DR2=0.807;AF=0.019','filter' => 'PASS','alt' => 'A','ref' => 'C','qual' => '.','format' => 'GT:AD:DP:GQ:DS:PL','pos' => '27720'},{'pos' => '27724','format' => 'GT:AD:DP:GQ:DS:PL','name' => 'S1_27724','chrom' => '1','info' => 'AR2=0.251;DR2=0.367;AF=0.002','filter' => 'PASS','alt' => 'A','ref' => 'T','qual' => '.'},{'ref' => 'A','qual' => '.','filter' => 'PASS','alt' => 'G','info' => 'AR2=0.205;DR2=0.229;AF=0','chrom' => '1','name' => 'S1_27739','pos' => '27739','format' => 'GT:AD:DP:GQ:DS:PL'},{'pos' => '27746','format' => 'GT:AD:DP:GQ:DS:PL','chrom' => '1','info' => 'AR2=0.976;DR2=0.98;AF=0.026','name' => 'S1_27746','qual' => '.','ref' => 'A','filter' => 'PASS','alt' => 'G'},{'info' => 'AR2=0.876;DR2=0.897;AF=0.003','chrom' => '1','name' => 'S1_27861','ref' => 'C','qual' => '.','filter' => 'PASS','alt' => 'T','format' => 'GT:AD:DP:GQ:DS:PL','pos' => '27861'},{'name' => 'S1_27874','chrom' => '1','info' => 'AR2=0.965;DR2=0.971;AF=0.029','alt' => 'A','filter' => 'PASS','ref' => 'G','qual' => '.','format' => 'GT:AD:DP:GQ:DS:PL','pos' => '27874'},{'filter' => 'PASS','alt' => 'T','qual' => '.','ref' => 'C','name' => 'S1_75465','info' => 'AR2=0.752;DR2=0.778;AF=0.361','chrom' => '1','pos' => '75465','format' => 'GT:AD:DP:GQ:DS:PL'},{'name' => 'S1_75629','info' => 'AR2=0.799;DR2=0.817;AF=0.377','chrom' => '1','alt' => 'A','filter' => 'PASS','ref' => 'T','qual' => '.','pos' => '75629','format' => 'GT:AD:DP:GQ:DS:PL'},{'format' => 'GT:AD:DP:GQ:DS:PL','pos' => '75644','qual' => '.','ref' => 'C','alt' => 'T','filter' => 'PASS','chrom' => '1','info' => 'AR2=0.816;DR2=0.834;AF=0.023','name' => 'S1_75644'},{'qual' => '.','ref' => 'C','filter' => 'PASS','alt' => 'A','chrom' => '1','info' => 'AR2=0;DR2=0;AF=0','name' => 'S1_84628','pos' => '84628','format' => 'GT:AD:DP:GQ:DS:PL'}], 'test genotype search');
 
 
@@ -289,8 +289,8 @@ my $genotypes_search = CXGN::Genotype::Search->new({
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
 is($total_count, 91);
-print STDERR Dumper $data->[0];
-is_deeply($data->[0]->{selected_genotype_hash}, {'S1_26674' => {'DS' => '0','NT' => 'A|A','AD' => '6,0','GT' => '0|0','DP' => '6','PL' => '0,18,216','GQ' => '98'},'S1_26662' => {'DS' => '0','NT' => 'C|C','AD' => '6,0','GT' => '0|0','GQ' => '98','PL' => '0,18,216','DP' => '6'},'S1_27724' => {'DS' => '0','NT' => 'T|T','AD' => '1,0','GT' => '0|0','PL' => '0,3,36','DP' => '1','GQ' => '66'},'S1_27720' => {'NT' => 'C|C','DS' => '0','DP' => '6','PL' => '0,18,216','GQ' => '98','AD' => '6,0','GT' => '0|0'},'S1_27739' => {'GT' => '0|0','AD' => '1,0','DP' => '1','PL' => '0,3,36','GQ' => '66','DS' => '0','NT' => 'A|A'},'S1_26646' => {'GQ' => '98','DP' => '6','PL' => '0,18,216','AD' => '6,0','GT' => '0|0','NT' => 'A|A','DS' => '0'},'S1_21594' => {'DS' => '0','NT' => 'G|G','GT' => '0|0','AD' => '0,0','GQ' => '.','PL' => '.','DP' => '0'},'S1_26624' => {'GQ' => '99','PL' => '0,27,255','DP' => '9','GT' => '0|0','AD' => '9,0','NT' => 'T|T','DS' => '0'},'S1_26659' => {'AD' => '6,0','GT' => '0|0','GQ' => '98','DP' => '6','PL' => '0,18,216','DS' => '0','NT' => 'C|C'},'S1_26576' => {'PL' => '.','DP' => '0','GQ' => '.','GT' => '0|0','AD' => '0','NT' => 'A|A','DS' => '0'}});
+#print STDERR "DATA 2=".Dumper($data->[0]);
+is_deeply($data->[0]->{selected_genotype_hash}, {'S1_26674' => {'DS' => '0','NT' => 'A|A','AD' => '6,0','GT' => '0|0','DP' => '6','PL' => '0,18,216','GQ' => '98'},'S1_26662' => {'DS' => '0','NT' => 'C|C','AD' => '6,0','GT' => '0|0','GQ' => '98','PL' => '0,18,216','DP' => '6'},'S1_27724' => {'DS' => '0.016','NT' => 'T|T','AD' => '1,0','GT' => '0|0','PL' => '0,3,36','DP' => '1','GQ' => '66'},'S1_27720' => {'NT' => 'C|C','DS' => '0.001','DP' => '6','PL' => '0,18,216','GQ' => '98','AD' => '6,0','GT' => '0|0'},'S1_27739' => {'GT' => '0|0','AD' => '1,0','DP' => '1','PL' => '0,3,36','GQ' => '66','DS' => '0','NT' => 'A|A'},'S1_26646' => {'GQ' => '98','DP' => '6','PL' => '0,18,216','AD' => '6,0','GT' => '0|0','NT' => 'A|A','DS' => '0'},'S1_21594' => {'DS' => '0.444','NT' => 'G|G','GT' => '0|0','AD' => '0,0','GQ' => '.','PL' => '.','DP' => '0'},'S1_26624' => {'GQ' => '99','PL' => '0,27,255','DP' => '9','GT' => '0|0','AD' => '9,0','NT' => 'T|T','DS' => '0'},'S1_26659' => {'AD' => '6,0','GT' => '0|0','GQ' => '98','DP' => '6','PL' => '0,18,216','DS' => '0','NT' => 'C|C'},'S1_26576' => {'PL' => '.','DP' => '0','GQ' => '.','GT' => '0|0','AD' => '0','NT' => 'A|A','DS' => '0'}});
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_grid.csv";
 my $snp_info_file = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_info.csv";
@@ -333,9 +333,9 @@ SKIP: {
     my $skip_hdf5_tests = ! (has_java() && (free_memory() > 12));
 
     print STDERR "SKIP HDF5 TESTS: $skip_hdf5_tests\n";
-    
+
     skip "No java installed or not enough memory", 7 if $skip_hdf5_tests;
-    
+
 #test upload with file where sample names are not in the database
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
@@ -718,6 +718,16 @@ $message = $response->decoded_content;
 #print STDERR Dumper $message;
 ok($message);
 
+#test deleting genotyping project with protocol
+my $before_deleting_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'error'}, 'Cannot delete genotyping project with associated genotyping protocol.');
+
+my $after_deleting_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+is($after_deleting_genotyping_project, $before_deleting_genotyping_project);
+
 ## DELETE genotyping protocol and data
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
@@ -731,6 +741,14 @@ $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$protocol_i
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {success=>1});
+
+#test deleting empty genotyping project
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+my $after_deleting_empty_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
+is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project-1);
+
 
 }
 
@@ -755,5 +773,3 @@ sub has_java {
     	return 0;
     }
 }
-       
-    

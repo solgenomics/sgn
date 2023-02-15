@@ -42,8 +42,7 @@ sub retrieve {
     my %design = %{$self->design};
     my $trial = $self->trial;
     my @output;
-
-    my @possible_cols = ('genotyping_project_name', 'genotyping_facility', 'trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'accession_id', 'synonyms', 'pedigree', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank', 'year', 'location_name');
+    my @possible_cols = ('genotyping_project_name', 'genotyping_facility', 'trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'accession_id', 'synonyms', 'pedigree', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank', 'year', 'location_name', 'facility_identifier');
 
     my @header;
     foreach (@possible_cols){
@@ -52,7 +51,6 @@ sub retrieve {
         }
     }
     push @output, \@header;
-
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';

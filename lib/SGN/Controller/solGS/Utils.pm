@@ -73,6 +73,18 @@ sub read_file_data_cols {
 
 }
 
+sub count_data_rows {
+    my ($self, $file) = @_;
+
+    my $geno = qx /wc -l $file/;
+    my ($geno_lines, $g_file) = split(" ", $geno);
+    my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+
+    return $count;
+
+}
+
+
 sub structure_downloadable_data {
     my ($self, $file, $row_name) = @_;
 
@@ -124,6 +136,7 @@ sub abbreviate_term {
     $term =~ s/-/_/g;
     $term =~ s/\%/percent/g;
     $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
+    $term =~ s/"|\://g;
 
     my @words = split(/\s/, $term);
 
@@ -146,7 +159,7 @@ sub abbreviate_term {
 	    elsif ($word =~/^[0-9]/)
 	    {
 		my $str_wrd = $word;
-		my @str = $str_wrd =~ /[\d+-\d+]/g;
+		my @str = $str_wrd =~ /[\d+\-\d+]/g;
 		my $str = join("", @str);
 		my @wrd = $word =~ /[A-Za-z]/g;
 		my $wrd = join("", @wrd);
@@ -218,7 +231,8 @@ sub clean_traits {
     $terms =~ s/(\|\w+:\d+)//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
-
+    $terms =~ s/"|\://g;
+    
     return $terms;
 }
 
@@ -245,7 +259,7 @@ sub remove_ontology {
 sub get_clean_trial_trait_names {
     my ($self, $c, $trial_id) = @_;
 
-    my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+    my $traits = $c->controller('solGS::Search')->model($c)->trial_traits($trial_id);
     my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
     my @trait_names;
 
@@ -266,7 +280,7 @@ sub save_metadata {
 
     if (!-s $metadata_file)
     {
-	my $metadata   = $c->model('solGS::solGS')->trial_metadata();
+	my $metadata   = $c->controller('solGS::Search')->model($c)->trial_metadata();
 	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
     }
 

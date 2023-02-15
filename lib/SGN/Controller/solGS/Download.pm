@@ -4,183 +4,101 @@ package SGN::Controller::solGS::Download;
 use Moose;
 use namespace::autoclean;
 
-use Carp qw/ carp confess croak /;
-use File::Slurp qw /write_file read_file/;
+
+BEGIN { extends 'Catalyst::Controller::REST' }
 
 
-BEGIN { extends 'Catalyst::Controller' }
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON' },
+    );
 
 
+sub download_training_pop_data :Path('/solgs/download/training/pop/data') Args(0) {
+	my ($self, $c) = @_;
 
-# __PACKAGE__->config(
-#     default   => 'application/json',
-#     stash_key => 'rest',
-#     map       => { 'application/json' => 'JSON' },
-#     );
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-
-
-sub download_validation :Path('/solgs/download/validation/pop') Args() {
-    my ($self, $c, $training_pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;
-
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    $c->controller('solGS::Files')->validation_file($c);
-    my $validation_file = $c->stash->{validation_file};
-
-    unless (!-s $validation_file)
-    {
-        my @validation = read_file($validation_file, {binmode => ':utf8'});
-
-        $c->res->content_type("text/plain");
-        $c->res->body(join("", @validation));
-    }
+	$c->stash->{rest}{training_pop_raw_geno_file} = $self->download_raw_geno_data_file($c);
+	$c->stash->{rest}{training_pop_raw_pheno_file} = $self->download_raw_pheno_data_file($c);
+	$c->stash->{rest}{traits_acronym_file} = $self->download_traits_acronym_file($c);
 
 }
 
 
-sub download_gebvs :Path('/solgs/download/gebvs/pop') Args() {
-    my ($self, $c, $gebvs_id, $trait, $trait_id, $gp, $protocol_id) = @_;
+sub download_selection_pop_data :Path('/solgs/download/selection/pop/data') Args(0) {
+	my ($self, $c) = @_;
 
-	my @pops_ids;
-	if ($gebvs_id =~ /-/)
-	{
-		@pops_ids = split(/-/, $gebvs_id);
-	}
-	else
-	{
-		@pops_ids = $gebvs_id;
-	}
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-	my $training_pop_id = $pops_ids[0];
-	my $selection_pop_id = $pops_ids[1];
+	my $geno_file = $self->download_selection_pop_filtered_geno_data_file($c);
+	my $log_file = $self->download_selection_prediction_report_file($c);
 
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->stash->{rest}{selection_pop_filtered_geno_file} = $geno_file;
+	$c->stash->{rest}{selection_prediction_report_file} = $log_file;
+}
 
-	my $gebvs_file;
-	if ($selection_pop_id)
-	{
-		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
-    	$gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-	}
-	else
-	{
-		$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
-		$gebvs_file = $c->stash->{rrblup_training_gebvs_file};
-	}
+sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) {
+	my ($self, $c) = @_;
 
-    unless (!-s $gebvs_file)
-    {
-        my @gebvs = read_file($gebvs_file, {binmode => ':utf8'});
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-        $c->res->content_type("text/plain");
-        $c->res->body(join("", @gebvs));
-    }
+	my $geno_file = $self->download_model_geno_data_file($c);
+	my $pheno_file = $self->download_model_pheno_data_file($c);
+	my $log_file = $self->download_model_analysis_report_file($c);
+
+	$c->stash->{rest}{model_geno_data_file} = $geno_file;
+	$c->stash->{rest}{model_pheno_data_file} = $pheno_file;
+	$c->stash->{rest}{model_analysis_report_file} = $log_file;
 
 }
 
 
-sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
-    my ($self, $c, $training_pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;
-
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    $c->controller('solGS::Files')->marker_effects_file($c);
-    my $markers_file = $c->stash->{marker_effects_file};
-
-    unless (!-s $markers_file)
-    {
-        my @effects = read_file($markers_file, {binmode => ':utf8'});
-
-        $c->res->content_type("text/plain");
-        $c->res->body(join("", @effects));
-    }
-
-}
-
-
-sub training_prediction_download_urls {
+sub download_gebvs :Path('/solgs/download/gebvs/pop') Args(0) {
     my ($self, $c) = @_;
 
-    my $data_set_type = $c->stash->{data_set_type};
-    my $pop_id = $c->stash->{training_pop_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $trait_id = $c->stash->{trait_id};
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-	my $gebvs_url = $self->gebvs_download_url($c);
-	my $gebvs_link = $c->controller('solGS::Path')->create_hyperlink($gebvs_url, 'Download GEBVs');
+	my $gebvs_file;
+	if ($c->stash->{selection_pop_id})
+	{
+		$gebvs_file = $self->download_selection_gebvs_file($c);
+	}
+	else
+	{
+		$gebvs_file = $self->download_training_gebvs_file($c);
+	}
 
-	my $marker_url = $self->marker_effects_download_url($c);
-	my $marker_link = $c->controller('solGS::Path')->create_hyperlink($marker_url, 'Download marker effects');
-
-	my $val_url = $self->validation_download_url($c);
-	my $val_link = $c->controller('solGS::Path')->create_hyperlink($val_url, 'Download model accuracy');
-
-    $c->stash(
-		blups_download_url          => $gebvs_link,
-		marker_effects_download_url => $marker_link,
-		validation_download_url     => $val_link
-	);
+	$c->stash->{rest}{gebvs_file} = $gebvs_file;
 
 }
 
 
-sub gebvs_download_url {
-	my ($self, $c) = @_;
+sub download_marker_effects :Path('/solgs/download/model/marker/effects') Args(0) {
+    my ($self, $c) = @_;
 
-	my $data_set_type = $c->stash->{data_set_type};
-	my $protocol_id = $c->stash->{genotyping_protocol_id};
-	my $trait_id = $c->stash->{trait_id};
-	my $selection_pop_id = $c->stash->{selection_pop_id};
-	my $pop_id = $c->stash->{training_pop_id};
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-	$pop_id .= '-' . $selection_pop_id if $selection_pop_id;
-
-	my $url = "/solgs/download/gebvs/pop/$pop_id/trait/$trait_id/"
-	. "gp/$protocol_id";
-
-	return $url;
-
+	my $marker_effects_file = $self->download_marker_effects_file($c);
+	$c->stash->{rest}{marker_effects_file} = $marker_effects_file;
+    
 }
 
+sub download_traits_acronym :Path('/solgs/download/traits/acronym') Args(0) {
+    my ($self, $c) = @_;
 
-sub marker_effects_download_url {
-	my ($self, $c) = @_;
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-	my $data_set_type = $c->stash->{data_set_type};
-	my $protocol_id = $c->stash->{genotyping_protocol_id};
-	my $trait_id = $c->stash->{trait_id};
-	my $pop_id = $c->stash->{training_pop_id};
-
-	my $url = "/solgs/download/marker/pop/$pop_id/trait/$trait_id/"
-	. "gp/$protocol_id";
-
-	return $url;
-
-}
-
-sub validation_download_url {
-	my ($self, $c) = @_;
-
-	my $data_set_type = $c->stash->{data_set_type};
-	my $protocol_id = $c->stash->{genotyping_protocol_id};
-	my $trait_id = $c->stash->{trait_id};
-	my $pop_id = $c->stash->{training_pop_id};
-
-	my $url = "/solgs/download/validation/pop/$pop_id/trait/$trait_id/"
-   . "gp/$protocol_id";
-
-	return $url;
-
+	my $acronyms_file = $self->download_traits_acronym_file($c);
+	$c->stash->{rest}{traits_acronym_file} = $acronyms_file;
+    
 }
 
 
@@ -210,7 +128,7 @@ sub selection_prediction_download_urls {
     my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
 
 	my $page = $c->req->referer;
-	my $data_set_type = $page =~ /combined/ ? 'combined populations' : 'single population';
+	my $data_set_type = $page =~ /combined/ ? 'combined_populations' : 'single_population';
 	$url_args->{data_set_type} = $data_set_type;
 
 	my $sel_pop_page;
@@ -222,7 +140,7 @@ sub selection_prediction_download_urls {
 		{
 			$url_args->{trait_id} = $trait_id;
 
-		    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+		    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 		    my $trait_abbr = $c->stash->{trait_abbr};
 
 			$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
@@ -249,6 +167,200 @@ sub selection_prediction_download_urls {
 
 }
 
+sub download_raw_pheno_data_file {
+	my ($self, $c) = @_;
+
+	my $pop_id = $c->stash->{training_pop_id};
+	my $data_set_type = $c->stash->{data_set_type};
+
+	my @trials_ids;
+	if ($data_set_type =~ /combined_populations/) 
+	{
+		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $pop_id);
+		@trials_ids = @$trials_ids;
+	}
+	else 
+	{
+		push @trials_ids, $pop_id;
+	}
+
+	my @files;
+
+	foreach my $trial_id (@trials_ids) 
+	{
+		my $file = $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
+		$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+		push @files, $file;
+	}
+
+	return \@files;
+
+}
+
+
+sub download_raw_geno_data_file {
+	my ($self, $c) = @_;
+
+	my $pop_id = $c->stash->{training_pop_id};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $data_set_type = $c->stash->{data_set_type};
+
+	my @trials_ids;
+	if ($data_set_type =~ /combined_populations/) 
+	{
+		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $pop_id);
+		@trials_ids = @$trials_ids;
+	}
+	else 
+	{
+		push @trials_ids, $pop_id;
+	}
+
+	my @files;
+
+	foreach my $trial_id (@trials_ids) 
+	{
+		my $file = $c->controller('solGS::Files')->genotype_file_name($c, $trial_id, $protocol_id);
+		$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+		push @files, $file;
+	}
+
+	return \@files;
+
+}
+
+sub download_selection_pop_filtered_geno_data_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Files')->filtered_selection_genotype_file($c);
+	my $file = $c->stash->{filtered_selection_genotype_file};
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+	return $file;
+
+}
+
+
+sub download_model_geno_data_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+
+	my $file = $c->controller('solGS::Files')->model_genodata_file($c);
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+	return $file;
+
+}
+
+
+sub download_model_pheno_data_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+	
+	my $file = $c->controller('solGS::Files')->model_phenodata_file($c);
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+	return $file;
+
+}
+
+sub download_model_analysis_report_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+
+	my $page = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
+
+	if ($page =~ /training_model/)
+	{
+		$c->stash->{analysis_type} =  'training_model';
+	}
+
+	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
+	#$file = $c->controller('solGS::Files')->convert_txt_pdf($file);
+
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+	return $file;
+
+}
+
+sub download_selection_prediction_report_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+
+	my $referer = $c->req->referer;
+	$c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c, $referer);
+	
+	my $file = $c->controller('solGS::Files')->analysis_report_file($c);
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+	return $file;
+
+}
+
+sub download_training_gebvs_file {
+	my ($self, $c) = @_;
+
+	my $training_pop_id = $c->stash->{training_pop_id};
+	my $trait_id = $c->stash->{trait_id};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	
+	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id, $protocol_id);
+	my $gebvs_file = $c->stash->{rrblup_training_gebvs_file};
+
+	$gebvs_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $gebvs_file, 'solgs');
+
+	return $gebvs_file;
+
+}
+
+
+sub download_selection_gebvs_file {
+	my ($self, $c) = @_;
+
+	my $training_pop_id = $c->stash->{training_pop_id};
+	my $selection_pop_id = $c->stash->{selection_pop_id};
+	my $trait_id = $c->stash->{trait_id};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	
+	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id);
+	my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+
+	$gebvs_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $gebvs_file, 'solgs');
+
+	return $gebvs_file;
+
+}
+
+
+sub download_marker_effects_file {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+	
+	my $file = $c->controller('solGS::Files')->marker_effects_file($c);
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+	return $file;
+}
+
+sub download_traits_acronym_file {
+	my ($self, $c) = @_;
+
+
+	 $c->controller('solGS::Files')->traits_acronym_file($c, $c->stash->{training_pop_id});
+    my $file = $c->stash->{traits_acronym_file};
+
+	$file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
+
+	return $file;
+}
 
 sub begin : Private {
     my ($self, $c) = @_;

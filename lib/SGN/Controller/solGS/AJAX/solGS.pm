@@ -35,7 +35,7 @@ sub solgs_trait_search_autocomplete_GET :Args(0) {
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
-    my $traits = $c->model("solGS::solGS")->search_trait($term);
+    my $traits = $c->controller('solGS::Search')->model($c)->search_trait($term);
 
     $c->{stash}->{rest} = $traits;
 
@@ -52,17 +52,29 @@ sub solgs_population_search_autocomplete_GET :Args() {
     $term =~ s/\s+/ /g;
 
     my @response_list;
-    my $rs = $c->model("solGS::solGS")->project_details_by_name($term);
+    my $rs = $c->controller('solGS::Search')->model($c)->project_details_by_name($term);
 
     while (my $row = $rs->next)
     {
-        my $pop_id = $row->id;
+        my $pop_id = $row->id;    
+        my $page_type = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
         my $is_computation = $c->controller('solGS::Search')->check_saved_analysis_trial($c, $pop_id);
-
-		if (!$is_computation)
-		{
+        
+        if ($page_type =~ /training_model/) 
+        {
+            if (!$is_computation)
+            {
+                push @response_list, $row->name;
+            }           
+        }  
+    else
+	{  
+        my $has_phenotype = $c->controller('solGS::Search')->model($c)->has_phenotype($pop_id);            
+        if ($has_phenotype && !$is_computation)
+        {
             push @response_list, $row->name;
-		}
+        }
+     }
     }
 
     $c->{stash}->{rest} = \@response_list;

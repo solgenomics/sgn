@@ -30,6 +30,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
 
     my $params = $c->req->params() || {};
     my $seedlot_name = $params->{seedlot_name} || '';
+    my $description = $params->{description};
     my $breeding_program = $params->{breeding_program} || '';
     my $location = $params->{location} || '';
     my $box_name = $params->{box_name} || '';
@@ -66,6 +67,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $offset,
         $limit,
         $seedlot_name,
+        $description,
         $breeding_program,
         $location,
         $minimum_count,
@@ -102,7 +104,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             owners_string => $sl->{owners_string},
             organization => $sl->{organization},
             box => $sl->{box},
-	    seedlot_quality => $sl->{seedlot_quality},
+	        seedlot_quality => $sl->{seedlot_quality},
         };
     }
 
@@ -131,6 +133,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
     $c->stash->{rest} = {
         success => 1,
         uniquename => $c->stash->{seedlot}->uniquename(),
+        description => $c->stash->{seedlot}->description(),
         seedlot_id => $c->stash->{seedlot}->seedlot_id(),
         current_count => $c->stash->{seedlot}->current_count(),
         current_weight => $c->stash->{seedlot}->current_weight(),
@@ -161,6 +164,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     my $saved_seedlot_name = $seedlot->uniquename;
     my $seedlot_name = $c->req->param('uniquename');
+    my $description = $c->req->param('description');
     my $breeding_program_name = $c->req->param('breeding_program');
     my $organization = $c->req->param('organization');
     my $population = $c->req->param('population');
@@ -182,7 +186,8 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
     if ($saved_seedlot_name ne $seedlot_name){
-        my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name, type_id=>$seedlot_cvterm_id});
+       #make sure the seedlot name is unique across the entire stock table
+        my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name }); #type_id=>$seedlot_cvterm_id});
         if ($previous_seedlot){
             $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
             $c->detach();
@@ -215,6 +220,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     $seedlot->name($seedlot_name);
     $seedlot->uniquename($seedlot_name);
+    $seedlot->description($description);
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);
     $seedlot->location_code($location);
@@ -269,7 +275,7 @@ sub seedlot_verify_delete_by_list :Path('/ajax/seedlots/verify_delete_by_list') 
     }
 
     print STDERR "DELETE VERIFY USING LIST!\n";
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($ok, $errors) = CXGN::Stock::Seedlot->delete_verify_using_list($schema, $phenome_schema, $list_id);
@@ -297,7 +303,7 @@ sub seedlot_confirm_delete_by_list :Path('/ajax/seedlots/confirm_delete_by_list'
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($total_count, $delete_count, $errors) = CXGN::Stock::Seedlot->delete_using_list($schema, $phenome_schema, $list_id);
 
-    if (@$errors) { 
+    if (@$errors) {
 	$c->stash->{rest} = { error => join("\n", @$errors), total_count => $total_count, delete_count => $delete_count }
     }
     else {
@@ -314,6 +320,10 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
         $c->detach();
     }
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to add seedlots. Please contact us." };
+        $c->detach();
+    }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $seedlot_uniquename = $c->req->param("seedlot_name");
@@ -324,13 +334,14 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $plot_uniquename = $c->req->param("seedlot_plot_uniquename");
     my $origin_seedlot_uniquename = $c->req->param("origin_seedlot_uniquename");
     my $seedlot_quality = $c->req->param("seedlot_quality");
+    my $description = $c->req->param("seedlot_description");
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $no_refresh = $c->req->param("no_refresh");
 
-    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename, type_id=>$seedlot_cvterm_id});
+    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename }); #type_id=>$seedlot_cvterm_id});
     if ($previous_seedlot){
         $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
         $c->detach();
@@ -391,7 +402,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $amount = $c->req->param("seedlot_amount");
     my $weight = $c->req->param("seedlot_weight");
     my $timestamp = $c->req->param("seedlot_timestamp");
-    my $description = $c->req->param("seedlot_description");
+    my $transaction_description = $c->req->param("seedlot_transaction_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
     if (!$weight && !$amount){
@@ -420,6 +431,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     eval {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
+        $sl->description($description);
         $sl->location_code($location_code);
         $sl->box_name($box_name);
         $sl->accession_stock_id($accession_id);
@@ -427,7 +439,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->organization_name($organization);
         $sl->population_name($population_name);
         $sl->breeding_program_id($breeding_program_id);
-	$sl->quality($seedlot_quality);
+	    $sl->quality($seedlot_quality);
         my $return = $sl->store();
         my $seedlot_id = $return->{seedlot_id};
 
@@ -442,7 +454,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
             $transaction->weight_gram($weight);
         }
         $transaction->timestamp($timestamp);
-        $transaction->description($description);
+        $transaction->description($transaction_description);
         $transaction->operator($operator);
         $transaction->store();
 
@@ -601,7 +613,7 @@ sub upload_seedlots_POST : Args(0) {
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
-	    $sl->quality($val->{quality});
+	          $sl->quality($val->{quality});
             $sl->check_name_exists(0); #already validated
             my $return = $sl->store();
             if ( defined $return->{error} ) {
@@ -806,6 +818,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
+            $sl->description($val->{description});
 
 	    print STDERR "QUALITY: $val->{quality}\n";
 	    $sl->quality($val->{quality});
@@ -1012,6 +1025,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             my $amount = $c->req->param('to_new_seedlot_amount');
             my $weight = $c->req->param('to_new_seedlot_weight');
             my $timestamp = $c->req->param('to_new_seedlot_timestamp');
+            my $transaction_description = $c->req->param('to_new_seedlot_transaction_description');
             my $description = $c->req->param('to_new_seedlot_description');
 
             my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -1052,6 +1066,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
             $sl->box_name($box_name);
+            $sl->description($description);
             $sl->accession_stock_id($accession_id);
             $sl->cross_stock_id($cross_id);
             $sl->organization_name($organization);
@@ -1072,7 +1087,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->amount($amount);
             $transaction->weight_gram($weight);
             $transaction->timestamp($timestamp);
-            $transaction->description($description);
+            $transaction->description($transaction_description);
             $transaction->operator($operator);
             $transaction->store();
 
@@ -1226,7 +1241,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 #           - value: value of the seedlot maintenance event
 #           - notes: additional notes/comments about the event
 #           - operator: username of the person creating the event
-#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
 #
 sub seedlot_maintenance_event_search : Path('/ajax/breeders/seedlot/maintenance/search') : ActionClass('REST') { }
 sub seedlot_maintenance_event_search_POST {
@@ -1303,8 +1318,8 @@ sub seedlot_maintenance_event_overdue_POST {
 #           - value: value of the seedlot maintenance event
 #           - notes: additional notes/comments about the event
 #           - operator: username of the person creating the event
-#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
-# 
+#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
+#
 sub seedlot_maintenance_events : Chained('seedlot_base') PathPart('maintenance') Args(0) : ActionClass('REST') { }
 sub seedlot_maintenance_events_GET {
     my $self = shift;
@@ -1329,10 +1344,10 @@ sub seedlot_maintenance_events_GET {
 #       - notes: (optional) additional notes/comments about the event
 #       - operator: (optional, default=username of user making request) username of the person creating the event
 #       - timestamp: (optional, default=now) timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
-# RETURNS: 
+# RETURNS:
 #   events: the processed events stored in the database, an array of objects with the following keys:
 #       - stock_id: stock id of the seedlot
-#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - stockprop_id: seedlot maintenance event id (stockprop_id)
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - cvterm_name: name of seedlot maintenance event ontology term
 #       - value: value of seedlot maintenance event
@@ -1368,7 +1383,7 @@ sub seedlot_maintenance_events_POST {
 
     # Process each Event
     my @args = ();
-    foreach my $event (@$events) {        
+    foreach my $event (@$events) {
 
         # Set operator
         my $operator = $event->{operator} || $c->user()->get_object()->get_username();
@@ -1382,7 +1397,7 @@ sub seedlot_maintenance_events_POST {
             my $d = DateTime->now(time_zone => 'local');
             $timestamp = $d->strftime("%Y-%m-%d %H:%M:%S");
         }
-        
+
         # Build event arguments
         my %arg = (
             cvterm_id => $event->{cvterm_id},
@@ -1409,14 +1424,14 @@ sub seedlot_maintenance_events_POST {
 }
 
 
-# 
+#
 # Get the details of the single specified Maintenance Event from the specified Seedlot
 # PATH: GET /ajax/breeders/seedlot/{seedlot id}/maintenance/{event id}
 # RETURNS:
 #   event: the details of the specified event, with the following keys:
 #       - stock_id: the unique id of the seedlot
 #       - uniquename: the unique name of the seedlot
-#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - stockprop_id: seedlot maintenance event id (stockprop_id)
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - cvterm_name: name of seedlot maintenance event ontology term
 #       - value: value of seedlot maintenance event
@@ -1435,7 +1450,7 @@ sub seedlot_maintenance_event_GET {
     $c->stash->{rest} = { event => $event };
 }
 
-# 
+#
 # Delete the specified event from the database
 # PATH: DELETE /ajax/breeders/seedlot/{seedlot id}/maintenance/{event id}
 # RETURNS:
@@ -1523,8 +1538,8 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
 
         # Parse the file
         my $parser = CXGN::Stock::Seedlot::ParseUpload->new(
-            chado_schema => $schema, 
-            filename => $archived_filepath, 
+            chado_schema => $schema,
+            filename => $archived_filepath,
             event_ontology_root => $c->config->{seedlot_maintenance_event_ontology_root}
         );
         $parser->load_plugin('SeedlotMaintenanceEventXLS');
@@ -1542,10 +1557,10 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
                 foreach my $error_string(@{$parse_errors->{'error_messages'}}) {
                     $return_error .= $error_string."<br>";
                 }
-                $c->stash->{rest} = { 
-                    error => $return_error, 
+                $c->stash->{rest} = {
+                    error => $return_error,
                     missing_seedlots => $parse_errors->{'missing_seedlots'},
-                    missing_events => $parse_errors->{'missing_events'} 
+                    missing_events => $parse_errors->{'missing_events'}
                 };
                 $c->detach();
             }

@@ -303,7 +303,7 @@ sub gebvs_selection_index_file {
     my $dir = $c->stash->{selection_index_cache_dir};
 
     my $cache_data = { key       => $name,
-		       file      => $name . '.txt',
+		       file      => $name,
 		       stash_key => 'gebvs_selection_index_file',
 		       cache_dir => $dir
     };
@@ -326,7 +326,7 @@ sub selection_index_file {
     my $dir = $c->stash->{selection_index_cache_dir};
 
     my $cache_data = { key       => $name,
-		       file      => $name . '.txt',
+		       file      => $name,
 		       stash_key => 'selection_index_only_file',
 		       cache_dir => $dir
     };
@@ -345,7 +345,7 @@ sub rel_weights_file {
     my $name =  "rel_weights_${file_id}";
 
     my $cache_data = { key       => $name,
-    		       file      => $name . '.txt',
+    		       file      => $name,
     		       stash_key => 'rel_weights_file',
     		       cache_dir => $dir
     };

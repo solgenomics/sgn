@@ -126,6 +126,7 @@ function updateDataTypes() {
         success: function(data) {
             if ( data && data.length > 0 ) {
                 let html = "";
+                data.sort((a,b) => a[1].toUpperCase().localeCompare(b[1].toUpperCase())); 
                 for ( let i = 0; i < data.length; i++ ) {
                     let id = data[i][0];
                     let name = data[i][1];
@@ -158,7 +159,7 @@ function bulkSearch() {
 
     jQuery.ajax({
         url: "/list/validate/temp",
-        method: 'GET',
+        method: 'POST',
         data: {
             "type": type_name,
             "items": JSON.stringify(names),

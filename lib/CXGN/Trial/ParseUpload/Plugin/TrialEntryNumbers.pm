@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialEntryNumbers;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Data::Dumper;
 use CXGN::List::Validate;
 use CXGN::Trial::TrialLookup;
@@ -11,13 +12,23 @@ sub _validate_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
-  
+
   my %errors;
   my @error_messages;
   my %warnings;
   my @warning_messages;
 
-  my $parser = Spreadsheet::ParseExcel->new();
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
   my %seen_accession_names;
@@ -58,12 +69,15 @@ sub _validate_with_plugin {
 
   if ($worksheet->get_cell(0,0)) {
     $accession_name_head  = $worksheet->get_cell(0,0)->value();
+    $accession_name_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,1)) {
     $trial_names_head  = $worksheet->get_cell(0,1)->value();
+    $trial_names_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,2)) {
     $entry_number_head  = $worksheet->get_cell(0,2)->value();
+    $entry_number_head =~ s/^\s+|\s+$//g;
   }
 
   if (!$accession_name_head || $accession_name_head ne 'accession_name' ) {
@@ -114,7 +128,7 @@ sub _validate_with_plugin {
       foreach my $trial_name (@trial_names) {
         $trial_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_trial_names{$trial_name} = 1;
-        
+
         ##
         ## SET PARSED DATA
         ##
@@ -185,7 +199,7 @@ sub _validate_with_plugin {
 sub _parse_with_plugin {
   my $self = shift;
   my $schema = $self->get_chado_schema();
-  
+
   # Parse Trial and Stock Names to IDs
   my $validated_data = $self->_parsed_data();
   my %parsed_data;

@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-/solgs/kinship/plot.mas - kinship and inbreeding analysis plot template  
+
+/solgs/kinship/plot.mas - kinship and inbreeding analysis plot template
 
 =AUTHOR
 
@@ -47,16 +47,17 @@ $pop_id = $trial_id if $trial_id;
 
 
 <div id='kinship_canvas'>
-  <& /solgs/spinner.mas &>
-    
+
+
   <div id="kinship_message"  class="message"> </div>
+  <& /solgs/spinner/spinner.mas &>
 
   <div id="kinship_plot" >
+
     <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
     <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
     <input type="hidden"  id="data_structure" value="<% $data_structure %>" />
   </div>
-    
+
 </div>
-  

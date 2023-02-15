@@ -155,11 +155,19 @@ sub get_cluster_genotype_query_job_args {
 		or croak "data queryscript: $! serializing model details to $args_file ";
 
 	    my $check_data_exists =  $c->stash->{check_data_exists} ? 1 : 0;
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $dbpass = $c->config->{dbpass};
+        my $dbuser = $c->config->{dbuser};
 
-	    my $cmd = 'mx-run solGS::queryJobs '
-	    	. ' --data_type genotype '
-	    	. ' --population_type trial '
-	    	. ' --args_file ' . $args_file
+       my $cmd = 'mx-run solGS::queryJobs '
+        . ' --dbhost ' . $dbhost
+        .' --dbname ' .$dbname
+        .' --dbuser ' .$dbuser
+        .' --dbpass ' . $dbpass
+	    . ' --data_type genotype '
+	    . ' --population_type trial '
+	    . ' --args_file ' . $args_file
 		. ' --check_data_exists ' . $check_data_exists;
 
 	    my $config_args = {
@@ -190,15 +198,15 @@ sub get_cluster_phenotype_query_job_args {
     my ($self, $c, $trials) = @_;
 
     my @queries;
-    
+
     $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials);
     $c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
 
     foreach my $trial_id (@$trials)
     {
-	$c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
+    my $cached = $c->controller('solGS::CachedResult')->check_cached_phenotype_data($c, $c->stash->{trial_id});
 
-	if (!-s $c->stash->{phenotype_file_name})
+	if (!$cached)
 	{
 	    my $args = $self->phenotype_trial_query_args($c, $trial_id);
 
@@ -215,7 +223,16 @@ sub get_cluster_phenotype_query_job_args {
 	    nstore $args, $args_file
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
 
-	    my $cmd = 'mx-run solGS::queryJobs '
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $dbpass = $c->config->{dbpass};
+        my $dbuser = $c->config->{dbuser};
+
+        my $cmd = 'mx-run solGS::queryJobs '
+            . ' --dbhost ' . $dbhost
+            .' --dbname ' .$dbname
+            .' --dbuser ' .$dbuser
+            .' --dbpass ' . $dbpass
 	    	. ' --data_type phenotype '
 	    	. ' --population_type trial '
 	    	. ' --args_file ' . $args_file;
@@ -278,7 +295,7 @@ sub genotype_trial_query_args {
 sub phenotype_trial_query_args {
     my ($self, $c, $pop_id) = @_;
 
-    $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $pop_id = $c->stash->{training_pop_id} || $c->stash->{trial_id} if !$pop_id;
 
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
@@ -465,8 +482,17 @@ sub get_cluster_query_job_args {
 	nstore $query_args, $args_file
 	    or croak "data query script: $! serializing model details to $args_file ";
 
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $dbpass = $c->config->{dbpass};
+        my $dbuser = $c->config->{dbuser};
+
 	my $cmd = 'mx-run solGS::queryJobs '
-	    . ' --data_type ' . $data_type
+        . ' --dbhost ' .  $dbhost
+        .' --dbname ' .$dbname
+        .' --dbuser ' . $dbuser
+        .' --dbpass ' . $dbpass
+        . ' --data_type ' . $data_type
 	    . ' --population_type ' . $pop_type
 	    . ' --args_file ' . $args_file;
 
@@ -665,7 +691,7 @@ sub modeling_jobs {
 	foreach my $trait_id (@$modeling_traits)
 	{
 	    $c->stash->{trait_id} = $trait_id;
-	    $c->controller('solGS::solGS')->get_trait_details($c);
+	    $c->controller('solGS::Trait')->get_trait_details($c);
 
 	    $c->controller('solGS::solGS')->input_files($c);
 	    $c->controller('solGS::solGS')->output_files($c);
@@ -703,7 +729,7 @@ sub get_gs_r_temp_file {
     $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
     my $identifier = $selection_pop_id ? $pop_id . '-' . $selection_pop_id : $pop_id;
 
-    if ($data_set_type =~ /combined populations/)
+    if ($data_set_type =~ /combined_populations/)
     {
 	my $combo_identifier = $c->stash->{combo_pops_id};
         $c->stash->{r_temp_file} = "gs-rrblup-combo-${identifier}-${trait_id}";

@@ -34,12 +34,14 @@ use CXGN::Stock::RelatedStocks;
 use CXGN::BreederSearch;
 use CXGN::Genotype::Search;
 use JSON;
-
+use CXGN::Cross;
 use Bio::Chado::Schema;
 
 use Scalar::Util qw(looks_like_number);
 use DateTime;
 use SGN::Model::Cvterm;
+use CXGN::People::Person;
+use CXGN::Stock::StockLookup;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1793,7 +1795,7 @@ sub get_pedigree_string_ :Chained('/stock/get_stock') PathPart('pedigreestring')
     my $c = shift;
     my $level = $c->req->param("level");
     my $stock_id = $c->stash->{stock}->get_stock_id();
-    my $stock_name = $c->stash->{stock}->get_name();
+    my $stock_name = $c->stash->{stock}->get_uniquename();
 
     my $pedigree_string;
 
@@ -1951,6 +1953,32 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     }
 
     $c->stash->{rest}={data=>\@stocks};
+}
+
+sub get_siblings:Chained('/stock/get_stock') PathPart('datatables/siblings') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$stock_id});
+    my $parents = $stock->get_parents();
+    my $female_parent = $parents->{'mother'};
+    my $male_parent = $parents->{'father'};
+
+    my @siblings;
+    if ($female_parent) {
+        my $family = CXGN::Cross->get_progeny_info($schema, $female_parent, $male_parent);
+        foreach my $sib(@$family){
+            my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $sibling_id, $sibling_name, $cross_type) = @$sib;
+            if ($sibling_id != $stock_id) {
+                push @siblings, [ qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
+                qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+                qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type, $sibling_name ];
+            }
+        }
+    }
+    $c->stash->{rest}={data=>\@siblings};
 }
 
 sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
@@ -2118,6 +2146,69 @@ sub stock_obsolete_GET {
 	}
 
     #$c->stash->{rest} = { message => 'success' };
+}
+
+
+sub get_accessions_with_pedigree : Path('/ajax/stock/accessions_with_pedigree') : ActionClass('REST') { }
+
+sub get_accessions_with_pedigree_GET {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $result = CXGN::Cross->get_progeny_info($schema);
+
+    my @accessions_with_pedigree;
+    foreach my $accession_info (@$result){
+        my ($female_id, $female_name, $male_id, $male_name, $accession_id, $accession_name, $cross_type) =@$accession_info;
+        push @accessions_with_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>},
+            qq{<a href="/stock/$female_id/view">$female_name</a>},
+            qq{<a href="/stock/$male_id/view">$male_name</a>}, $cross_type, $accession_name ];
+    }
+    print STDERR "ACCESSIONS =".Dumper(\@accessions_with_pedigree)."\n";
+    $c->stash->{rest} = { data => \@accessions_with_pedigree };
+}
+
+
+sub get_accessions_missing_pedigree : Path('/ajax/stock/accessions_missing_pedigree') : ActionClass('REST') { }
+
+sub get_accessions_missing_pedigree_GET {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh();
+
+    my $result = CXGN::Cross->get_accessions_missing_pedigree($schema);
+
+    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+    my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+
+    my @accessions_missing_pedigree;
+    foreach my $accession_info (@$result){
+        my @owners = ();
+        my $owner_link;
+        my ($accession_id, $accession_name) =@$accession_info;
+        my $owner_info = $owners_hash->{$accession_id};
+        print STDERR "OWNER INFO =".Dumper($owner_info)."\n";
+        if (defined $owner_info){
+            my @list_of_owners = @$owner_info;
+            foreach my $each_owner (@list_of_owners) {
+                my $owner_id = $each_owner->[0];
+                my $first_name = $each_owner->[2];
+                my $last_name = $each_owner->[3];
+                my $name = $first_name." ".$last_name;
+                my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$name</a>};
+                push @owners, $each_owner_link,
+            }
+            $owner_link = join(",",@owners);
+            print STDERR "OWNER LINK =".Dumper($owner_link)."\n";
+
+        }
+        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $owner_link, $accession_name],
+    }
+
+    $c->stash->{rest} = {data => \@accessions_missing_pedigree};
 }
 
 

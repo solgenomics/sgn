@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/cluster/index.mas - a template with menu for selecting list or dataset to run the cluster.
+/solgs/tools/cluster/index.mas - a template with menu for selecting list or dataset to run the cluster.
 
 =AUTHOR
 
@@ -41,7 +41,7 @@ my $url = $c->req->path;
 
 <!-- % if ($url =~ /cluster\/analysis/) { -->
 
-<!-- <& /solgs/genotyping_protocol.mas &> -->
+<!-- <& /solgs/genotyping_protocol/index.mas &> -->
 
 <!-- %} -->
 

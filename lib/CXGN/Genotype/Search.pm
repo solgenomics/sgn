@@ -1646,6 +1646,7 @@ sub get_cached_file_VCF {
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         my $counter = 0;
+	my $usingGT;
         while (my $geno = $self->get_next_genotype_info) {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
@@ -1677,9 +1678,14 @@ sub get_cached_file_VCF {
                 $genotype_string .= "POS\t";
                 foreach my $m (@all_marker_objects) {
 		    my $pos = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos};
-		    if (! $pos) {
+		    if ($pos eq "") {
 			(undef, $pos) = split /\_/, $m->{name};
-			#print STDERR "Warning! No position data, using $pos extracted from $m->{name}\n";
+			if (! $pos) {
+			    $pos = 0;
+			    print STDERR "Warning! No position data, using 0\n";
+			}
+		    } elsif ($pos eq ".") { # pos must be an integer
+			$pos = 0;
 		    }
                     #$genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
 		    $genotype_string .= $pos ."\t";
@@ -1777,11 +1783,14 @@ sub get_cached_file_VCF {
 
 		#VCF requires the GT field to be first
 		if (defined($geno->{selected_genotype_hash}->{$m->{name}}->{'GT'})) {
+		    $usingGT = 1;
 		    my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
-		    if ($val eq '') {
-                        $val = './.';
-                    }
+		    #if ($val eq '') {
+		    #    $val = './.';
+		    #}
 		    push @current_geno, $val;
+		} elsif ($usingGT) {
+		    push @current_geno, './.';
 		}
                 foreach my $format_key (@format) {
                     my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};

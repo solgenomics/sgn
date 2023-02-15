@@ -5,21 +5,39 @@ $preferred_species => ""
 $list_id => undef
 $editable_stock_props => {}
 $editable_stock_props_definitions => {}
+$show_grafting_interface => ''
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'CXGN.BreedersToolbox.UploadGrafts', 'CXGN.BreedersToolbox.UploadRenameAccessions' ] &>
 
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
 <div class="container-fluid">
 
 <div class="well">
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a name="add_accessions_link">Add Accessions Or Upload Accession Info</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
+
+<%perl>
+my $grafting_button = "";
+
+if ($show_grafting_interface) {
+
+$grafting_button = '<button class="btn btn-default" id="upload_grafts_link" >Upload Grafts</button>';
+
+}
+
+my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button> '.$grafting_button.'</div>';
+
+</%perl>
+
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=> $subtitle  &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/upload_pedigrees_dialogs.mas &>
+<& /breeders_toolbox/upload_accession_rename_dialog.mas &>
+<& /breeders_toolbox/upload_graft_dialogs.mas &>
 <& /breeders_toolbox/manage_populations_dialogs.mas &>
 
 <div>
@@ -31,17 +49,60 @@ $editable_stock_props_definitions => {}
 </div><!-- closes well -->
 
 <div class="well">
-<&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
-
-<& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
-
-</&>
+  <&| /page/info_section.mas, title=>"Accessions with Pedigree Information", id=> "accessions_with_pedigree", collapsible=>1, collapsed=>1&>
+    <table class="table table-hover table-bordered" id="accessions_with_pedigree_table">
+      <thead>
+        <tr>
+          <th>Accession Name</th>
+          <th>Female Parent</th>
+          <th>Male Parent</th>
+          <th>Cross Type</th>
+        </tr>
+      </thead>
+    </table>
+    <br>
+    <br>
+    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+      <br>
+      <div style="text-align:right" id="accessions_with_pedigree_to_list_menu"></div>
+      <div id="accession_names_with_pedigree" style="display: none;"></div>
+    </&>
+  </&>
 </div><!-- closes well -->
 
 <div class="well">
-<&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<a id='manage_accessions_populations_new'>[Create Population]</a>"&>
-<div class="panel-group" id="accordion"></div>
-</&>
+  <&| /page/info_section.mas, title=>"Accessions Missing Pedigree Information", id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
+    <table class="table table-hover table-bordered" id="accessions_missing_pedigree_table">
+      <thead>
+        <tr>
+          <th>Accession Name</th>
+          <th>Submitter</th>
+        </tr>
+      </thead>
+    </table>
+    <br>
+    <br>
+    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+      <br>
+      <div style="text-align:right" id="accessions_missing_pedigree_to_list_menu"></div>
+      <div id="accession_names_missing_pedigree" style="display: none;"></div>
+    </&>
+  </&>
+</div><!-- closes well -->
+
+<div class="well">
+  <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
+
+  <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
+
+  </&>
+
+</div><!-- closes well -->
+
+<div class="well">
+  <&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<a id='manage_accessions_populations_new'>[Create Population]</a>"&>
+    <div class="panel-group" id="accordion"></div>
+  </&>
 </div><!-- closes well -->
 
 </div>
@@ -67,9 +128,55 @@ $editable_stock_props_definitions => {}
 </style>
 
 <script>
-jQuery(document).ready(function (){
+  jQuery(document).ready(function (){
 %  if ($list_id){
     verify_accession_list(<% $list_id %>);
 %  }
+
+    jQuery('#accessions_with_pedigree_onswitch').one("click", function(){
+        var result_table = jQuery('#accessions_with_pedigree_table').DataTable({
+            'ajax': { 'url': '/ajax/stock/accessions_with_pedigree' },
+            "fnInitComplete": function(oSettings, json) {
+                if (!isLoggedIn()) {
+                    jQuery('#accessions_with_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][4]+"\n";
+                    }
+                    jQuery("#accession_names_with_pedigree").html(html);
+                    addToListMenu("accessions_with_pedigree_to_list_menu", "accession_names_with_pedigree", {
+                        selectText: true,
+                        listType:'accessions'
+                    });
+                }
+            }
+        });
+    });
+
+    jQuery('#accessions_missing_pedigree_onswitch').one("click", function(){
+        var result_table = jQuery('#accessions_missing_pedigree_table').DataTable({
+            'ajax': { 'url': '/ajax/stock/accessions_missing_pedigree' },
+            "fnInitComplete": function(oSettings, json) {
+                if (!isLoggedIn()) {
+                    jQuery('#accessions_missing_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][2]+"\n";
+                    }
+                    jQuery("#accession_names_missing_pedigree").html(html);
+                    addToListMenu("accessions_missing_pedigree_to_list_menu", "accession_names_missing_pedigree", {
+                        selectText: true,
+                        listType:'accessions'
+                    });
+                }
+            }
+        });
+    });
+
 });
+
+
+
 </script>

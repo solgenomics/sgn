@@ -41,6 +41,7 @@ use CXGN::BrAPI::v2::Images;
 use CXGN::BrAPI::v2::Lists;
 use CXGN::BrAPI::v2::Locations;
 use CXGN::BrAPI::v2::MarkerPositions;
+use CXGN::BrAPI::v2::Nirs;
 use CXGN::BrAPI::v2::Observations;
 use CXGN::BrAPI::v2::ObservationTables;
 use CXGN::BrAPI::v2::ObservationUnits;
@@ -59,6 +60,8 @@ use CXGN::BrAPI::v2::Traits;
 use CXGN::BrAPI::v2::Trials;
 use CXGN::BrAPI::v2::Variants;
 use CXGN::BrAPI::v2::VariantSets;
+use CXGN::BrAPI::v2::Pedigree;
+
 
 
 has 'version' => (

@@ -180,7 +180,7 @@ has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predi
 #
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
-has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
+has 'genotyping_project_id' => (isa => 'Int', is => 'rw');
 has 'genotyping_facility_submitted' => (isa => 'Str', is => 'rw');
 has 'genotyping_facility' => (isa => 'Str', is => 'rw');
 has 'genotyping_plate_format' => (isa => 'Str', is => 'rw');
@@ -344,7 +344,7 @@ sub save_trial {
         #print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
         $nd_experiment->create_nd_experimentprops({
             $genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
-            $genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
+#            $genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
         });
 
         $project->create_projectprops({
@@ -353,6 +353,14 @@ sub save_trial {
             $genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
             $genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
         });
+
+		my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
+		my $relationship_row = $chado_schema->resultset("Project::ProjectRelationship")->create ({
+			object_project_id => $self->get_genotyping_project_id(),
+			subject_project_id => $project->project_id(),
+			type_id => $genotyping_project_relationship_cvterm->cvterm_id()
+		});
+		$relationship_row->insert();
 
         my $source_field_trial_ids = $t->set_source_field_trials_for_genotyping_trial($self->get_genotyping_trial_from_field_trial);
     }

@@ -78,7 +78,7 @@ $mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.
 $response = decode_json $mech->content;
 is($response->[0],'SUCCESS');
 
-$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"marker_name":"S1_21594", "allele_dosage":"0"}');
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"marker_name":"S1_21597", "allele_dosage":"0"}');
 $response = decode_json $mech->content;
 is($response->[0],'SUCCESS');
 
@@ -116,7 +116,7 @@ $response = decode_json $mech->content;
 my %result_hash1 = %{$response};
 my $selected_accessions_dosage = $result_hash1{'data'};
 my $number_of_accessions_dosage = scalar@$selected_accessions_dosage;
-is($number_of_accessions_dosage,9);
+is($number_of_accessions_dosage,16);
 
 #test searching accessions with snp
 $mech->get_ok('http://localhost:3010/ajax/search/search_stocks_using_markerset?stock_list_id='.$accession_list_id.'&markerset_id='.$markerset2_list_id);
@@ -137,5 +137,7 @@ CXGN::List::delete_list($schema->storage->dbh, $markerset_list_id);
 CXGN::List::delete_list($schema->storage->dbh, $markerset2_list_id);
 CXGN::List::delete_list($schema->storage->dbh, $accession_list_id);
 $schema->resultset("Project::Project")->find({project_id=>$project_id})->delete();
+
+$f->clean_up_db();
 
 done_testing();

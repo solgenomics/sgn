@@ -27,68 +27,77 @@ sub validate {
     my @synonyms;
     my @multiple_synonyms;
     
-    foreach my $item (@$list) {
+    # First filter out exact matches
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => {
+            in => $list
+        },
+        'me.type_id' => $accession_type_id,
+        is_obsolete => 'F'
+    });
+    my @exact = $rs->get_column('uniquename')->all();
+    my %exact_map = map { $_=>1 } @exact;
+    my @missing = grep { !exists $exact_map{$_} } @$list;
 
-	# first match case sensitively to catch all the missing ones 
-	my $rs = $schema->resultset("Stock::Stock")->search(
-	    { uniquename => $item,
-	      'me.type_id' => $accession_type_id,
-	      is_obsolete => 'F' },
-	    );
+    # Now do more searches on the non-exact matches
+    foreach my $item (@missing) {
 
-	if ($rs->count() == 0) {
-	    push @missing, $item;
-	}
+        # find case-insensitive matches
+        my $rs = $schema->resultset("Stock::Stock")->search({
+            'lower(uniquename)' => lc($item),
+            'me.type_id' => $accession_type_id,
+            is_obsolete => 'F'
+        });
 
+        if ($rs->count() == 1) {
+            my $row = $rs->next();
+            if ($row->uniquename() ne $item) {
+                push @wrong_case, [ $item, $row->uniquename() ];
+            }
+        }
 
-	
-	my $rs = $schema->resultset("Stock::Stock")->search(
-	    { 'lower(uniquename)' => lc($item),
-		  'me.type_id' => $accession_type_id,
-		  is_obsolete => 'F' },
-	    );
-	
-	if ($rs->count() == 1) {
-	    my $row = $rs->next();
-	    if ($row->uniquename() ne $item) {
-		push @wrong_case, [ $item, $row->uniquename() ];
-	    }
-	}
-	
-	elsif ($rs->count() > 1) {
-	    while(my $row = $rs->next()) { 
-		push @multiple_wrong_case, [ $item, $row->uniquename() ];
-	    }
-	}
-	
-    
-	my $rs = $schema->resultset("Stock::Stock")->search( 
-	    { 'lower(stockprops.value)' => lc($item),
-		  'stockprops.type_id' => $synonym_type_id,
-	    }, { join => 'stockprops', '+select' => [ 'stockprops.value' ], '+as' => [ 'stockprops_value' ]} );
+        elsif ($rs->count() > 1) {
+            while(my $row = $rs->next()) { 
+                push @multiple_wrong_case, [ $item, $row->uniquename() ];
+            }
+        }
 
-	if ($rs->count() == 1) { 
-	    my $row = $rs->next();
-	    push @synonyms, { uniquename =>  $row->uniquename(), synonym => $row->get_column('stockprops_value') };
-	}
-	elsif($rs->count() > 1)  {
-	    my $row = $rs->next();
-	    push @multiple_synonyms, [ $row->uniquename(), $row->get_column('stockprops_value') ];
-	}
-	  
+        # find case-insensitive synonyms
+        my $rs = $schema->resultset("Stock::Stock")->search(
+            {
+                'lower(stockprops.value)' => lc($item),
+                'stockprops.type_id' => $synonym_type_id,
+            }, 
+            { 
+                join => 'stockprops', '+select' => [ 'stockprops.value' ], '+as' => [ 'stockprops_value' ] 
+            }
+        );
+
+        if ($rs->count() == 1) { 
+            my $row = $rs->next();
+            if ($row->uniquename() ne $item) { ## allow stocks to have the a synonym that is their own name - these synonyms should be removed from the dbs  
+                push @synonyms, { uniquename =>  $row->uniquename(), synonym => $row->get_column('stockprops_value') };
+            }
+        }
+        elsif($rs->count() > 1)  {
+            while (my $row = $rs->next()) {
+                push @multiple_synonyms, [ $row->uniquename(), $row->get_column('stockprops_value') ];
+            }
+        }
     }
+    
     my $valid = 0;
     if ( (@multiple_synonyms ==0)  && (@synonyms == 0)  && (@wrong_case == 0) && (@missing == 0) && (@multiple_wrong_case ==0)) {
-	$valid = 1;
+        $valid = 1;
     }
     
     return {
-	missing => \@missing,
-	wrong_case => \@wrong_case,
-	multiple_wrong_case => \@multiple_wrong_case,
-	synonyms => \@synonyms,
-	multiple_synonyms => \@multiple_synonyms,
-	valid => $valid,
+        missing => \@missing,
+        wrong_case => \@wrong_case,
+        multiple_wrong_case => \@multiple_wrong_case,
+        synonyms => \@synonyms,
+        multiple_synonyms => \@multiple_synonyms,
+        valid => $valid,
     };
 }
 

@@ -223,9 +223,9 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Search Accessions Using Genotype', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Search Accessions Using Genotypes', collapsible=>1, collapsed=>1 &>
         <div class="row">
-            <a href="/search/stocks_using_genotypes"><p>Go to Search Accessions Page.</p></a>
+            <a href="/search/stocks_using_genotypes"><p>Go to Search Accessions Using Genotypes Page.</p></a>
         </div>
     </&>
 
@@ -253,7 +253,7 @@ my $breeding_programs_select = simple_selectbox_html(
               <div class="input-group">
                 <span class="input-group-btn">
                   <select class="form-control" id="editable_stockprop_view_column_term" name="editable_stockprop_view_column_term">
-%  foreach my $stockprop (@$editable_stock_props){
+%  foreach my $stockprop (sort { "\L$a" cmp "\L$b" } @$editable_stock_props){
                     <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
                   </select>
@@ -416,7 +416,6 @@ jQuery(document).ready(function () {
     });
 
     parseArgs(editable_stockprops_search);
-    _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
       var name_links = stock_table.column(0).data();

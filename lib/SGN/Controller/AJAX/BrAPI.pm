@@ -3533,7 +3533,8 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->res->redirect("https://accounts.google.com/o/oauth2/auth?scope=profile&response_type=code&client_id=1068256137120-62dvk8sncnbglglrmiroms0f5d7lg111.apps.googleusercontent.com&redirect_uri=https://cassavabase.org/oauth2callback");
+    my $host = $c->config->{main_production_site_url};
+    $c->res->redirect("https://accounts.google.com/o/oauth2/auth?scope=profile&response_type=code&client_id=1068256137120-62dvk8sncnbglglrmiroms0f5d7lg111.apps.googleusercontent.com&redirect_uri=$host/oauth2callback");
 
     $c->stash->{rest} = { success => 1 };
 
@@ -3773,7 +3774,8 @@ sub observations_GET {
 sub observations_POST {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+    my $force_authenticate = 1;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c, $force_authenticate);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
     my @all_observations;
@@ -5250,6 +5252,80 @@ sub breedingmethods_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub nirs : Chained('brapi') PathPart('nirs') Args(0) : ActionClass('REST') { }
+
+sub nirs_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Nirs');
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub nirs_single  : Chained('brapi') PathPart('nirs') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $nd_protocol_id = shift;
+
+	$c->stash->{nd_protocol_id} = $nd_protocol_id;
+}
+
+sub nirs_detail  : Chained('nirs_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub nirs_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Nirs');
+	my $brapi_package_result = $brapi_module->nirs_detail(
+		$c->stash->{nd_protocol_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub nirs_matrix  : Chained('nirs_single') PathPart('matrix') Args(0) : ActionClass('REST') { }
+
+sub nirs_matrix_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Nirs');
+	my $brapi_package_result = $brapi_module->nirs_matrix(
+		$c->stash->{nd_protocol_id},
+		$clean_inputs
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+
+sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST') { }
+
+sub pedigree_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Pedigree');
+	my $brapi_package_result = $brapi_module->search({
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        pedigreeDepth => $clean_inputs->{pedigreeDepth},
+        progenyDepth => $clean_inputs->{progenyDepth},
+        includeFullTree => $clean_inputs->{includeFullTree},
+        includeSiblings => $clean_inputs->{includeSiblings},
+        includeParents => $clean_inputs->{includeParents},
+        includeProgeny => $clean_inputs->{includeProgeny},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 #functions
 sub save_results {

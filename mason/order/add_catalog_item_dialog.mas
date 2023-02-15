@@ -1,5 +1,6 @@
 <%args>
 $timestamp => localtime()
+$ordering_type => undef
 </%args>
 
 <div class="modal fade" id="add_catalog_item_dialog" name="add_catalog_item_dialog" tabindex="-1" role="dialog" aria-labelledby="addCatalogItemDialog">
@@ -29,6 +30,17 @@ $timestamp => localtime()
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label">Material Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_material_type">
+                                    <option value="">Select a material type</option>
+                                    <option value="seed">seed</option>
+                                    <option value="plant">plant</option>
+                                    <option value="construct">construct</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">Category: </label>
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_category">
@@ -36,41 +48,26 @@ $timestamp => localtime()
                                     <option value="released variety">released variety</option>
                                     <option value="pathogen assay ">pathogen assay</option>
                                     <option value="control">control</option>
+                                    <option value="transgenic line">transgenic line</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Description: </label>
+                            <label class="col-sm-3 control-label">Additional Info: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_description" placeholder="">
+                                <input class="form-control" id="item_additional_info" placeholder="optional">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Material Source: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_material_source">
-                                    <option value="">Select a material source</option>
-                                    <option value="Arusha">Arusha</option>
-                                    <option value="Sendusu">Sendusu</option>
-                                    <option value="Kawanda">Kawanda</option>
-                                </select>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_material_source" placeholder="">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Breeding Program: </label>
                             <div class="col-sm-9" >
                                 <div id="item_breeding_program_div"></div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Availability: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_availability">
-                                    <option value="">Select availability</option>
-                                    <option value="in stock">in stock</option>
-                                    <option value="out of stock">out of stock</option>
-                                    <option value="available in 3 months">available in 3 months</option>
-                                </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -129,35 +126,51 @@ jQuery(document).ready(function(){
     jQuery('#submit_catalog_item').click( function() {
         var name = jQuery('#item_name').val();
         var type = jQuery('#item_type').val();
+        var material_type = jQuery('#item_material_type').val();
         var category = jQuery('#item_category').val();
-        var description = jQuery('#item_description').val();
+        var additional_info = jQuery('#item_additional_info').val();
         var material_source = jQuery('#item_material_source').val();
         var breeding_program = jQuery('#item_breeding_program_id').val();
-        var availability = jQuery('#item_availability').val();
         var contact_person = jQuery('#contact_person_name').val();
 
-        if (name == '') { alert("Please provide a name") };
-        if (type == '') { alert("Please select a type") };
-        if (category == '') { alert("Please select a category") };
-        if (description == '') { alert("Please provide a description") };
-        if (material_source == '') { alert("Please select a material source") };
-        if (breeding_program == '') { alert("Please select a breeding program") };
-        if (availability == '') { alert("Please indicate availability") };
-        if (contact_person == '') { alert("Please indicate contact person") };
+        if (name == '') {
+            alert("Please provide a name");
+            return;
+        }
+        if (type == '') {
+            alert("Please select an item type");
+            return;
+        }
+        if (material_type == '') {
+            alert("Please select a material type");
+            return;
+        }
+        if (category == '') {
+            alert("Please select a category");
+            return;
+        }
+        if (breeding_program == '') {
+            alert("Please select a program");
+            return;
+        }
+        if (contact_person == '') {
+            alert("Please provide contact username");
+            return;
+        }
 
         jQuery.ajax({
             url: '/ajax/catalog/add_item',
             dataType: "json",
             type: 'POST',
             data : {
-                'item_name' : name,
-                'item_type': type,
-                'item_category': category,
-                'item_description': description,
-                'item_material_source': material_source,
-                'item_breeding_program': breeding_program,
-                'item_availability': availability,
-                'contact_person': contact_person
+                'name' : name,
+                'type': type,
+                'material_type': material_type,
+                'category': category,
+                'additional_info': additional_info,
+                'material_source': material_source,
+                'breeding_program_id': breeding_program,
+                'contact_person': contact_person,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

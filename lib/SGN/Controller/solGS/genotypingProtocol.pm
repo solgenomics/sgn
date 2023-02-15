@@ -4,6 +4,8 @@ package SGN::Controller::solGS::genotypingProtocol;
 use Moose;
 use namespace::autoclean;
 
+use Data::Dumper;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -34,7 +36,7 @@ sub get_genotype_protocols: Path('/get/genotyping/protocols/') Args() {
 sub genotype_protocols {
     my ($self, $c) = @_;
 
-    my $protocol_ids = $c->model('solGS::solGS')->get_all_genotyping_protocols();
+    my $protocol_ids = $c->controller('solGS::Search')->model($c)->get_all_genotyping_protocols();
     my @protocols_details;
 
     foreach my $protocol_id (@$protocol_ids)
@@ -91,9 +93,9 @@ sub default_genotyping_protocol {
 sub protocol_detail {
     my ($self, $c, $protocol) = @_;
 
-    #my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
-   
-    my $protocol_detail= $c->model('solGS::solGS')->protocol_detail($protocol);
+
+    my $protocol_detail = $c->controller('solGS::Search')->model($c)->protocol_detail($protocol);
+
     return $protocol_detail;
 }
 ###

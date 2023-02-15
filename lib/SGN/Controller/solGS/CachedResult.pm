@@ -13,6 +13,8 @@ package SGN::Controller::solGS::CachedResult;
 
 use Moose;
 use namespace::autoclean;
+
+use File::Slurp qw /write_file read_file/;
 use JSON;
 #use Scalar::Util qw /weaken reftype/;
 
@@ -31,7 +33,7 @@ sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
     my ($self, $c) = @_;
 
     my $req_page = $c->req->param('page');
-    my $args     = $c->req->param('args');
+    my $args     = $c->req->param('arguments');
 
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
@@ -296,9 +298,7 @@ sub _check_selection_pop_all_traits_output {
 sub _check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
 
-    my $data_set_type = $c->stash->{data_set_type};
-
-    if ($data_set_type =~ 'combined populations')
+    if ($c->stash->{data_set_type} =~ 'combined_populations')
     {
 	$self->_check_combined_trials_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
     }
@@ -373,11 +373,8 @@ sub check_single_trial_training_data {
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
-    my $cached_pheno = -s $c->stash->{phenotype_file_name};
-
-    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-    my $cached_geno = -s $c->stash->{genotype_file_name};
+    my $cached_pheno = $self->check_cached_phenotype_data($c, $pop_id); 
+    my $cached_geno = $self->check_cached_genotype_data($c, $pop_id); 
 
     if ($cached_pheno && $cached_geno)
     {
@@ -387,6 +384,40 @@ sub check_single_trial_training_data {
     {
 	return 0;
     }
+
+}
+
+sub check_cached_genotype_data {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    my $file = $c->stash->{genotype_file_name};
+
+    my $cached; 
+    if (-s $file) 
+    {
+        my @rows = read_file($file,{binmode => ':utf8'});
+        $cached = 1 if $rows[1];
+    } 
+    
+    return $cached;
+
+}
+
+sub check_cached_phenotype_data {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+    my $file = $c->stash->{phenotype_file_name};
+
+    my $cached; 
+    if (-s $file) 
+    {
+        my @rows = read_file($file,{binmode => ':utf8'});
+        $cached = 1 if $rows[1];
+    } 
+    
+    return $cached;
 
 }
 
@@ -476,7 +507,7 @@ sub check_selection_pop_all_traits_output {
 sub check_combined_trials_training_data {
     my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
     $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
@@ -560,19 +591,18 @@ sub check_cluster_output {
         $c->stash->{file_id} = $file_id;
 
         my $cluster_type = $c->stash->{cluster_type};
-        my $result_file;
-        if ($cluster_type =~/k-means/i)
-        {
-            $c->controller('solGS::Cluster')->kcluster_result_file($c);
-            $result_file = $c->stash->{'k-means_result_file'};
-        }
-        else
-        {
-            $self->hierarchical_result_file($c);
-            $result_file = $c->stash->{hierarchical_result_file};
-        }
-
-    	if (-s $result_file)
+	my $cached_file;
+	if ($cluster_type =~ /k-means/i)
+	{
+        $c->controller('solGS::Cluster')->cluster_result_file($c);
+        $cached_file = $c->stash->{"${cluster_type}_result_file"};
+	}
+	else
+	{
+	    $c->controller('solGS::Cluster')->cluster_result_file($c);
+	    $cached_file = $c->stash->{"${cluster_type}_result_newick_file"};
+	}
+    	if (-s $cached_file)
     	{
     	    return 1;
     	}

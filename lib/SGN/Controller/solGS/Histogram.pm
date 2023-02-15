@@ -27,11 +27,11 @@ sub trait_pheno_means_data :Path('/trait/pheno/means/data/') Args(0) {
 
     if ($c->req->referer =~ /combined/)
     {
-	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{data_set_type} = 'combined_populations';
 	$c->stash->{combo_pops_id} = $c->req->param('combo_pops_id');
     }
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $c->stash->{trait_id});
+    $c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
     my $data = $self->get_trait_pheno_means_data($c);
     my $raw_data = $self->get_trait_pheno_raw_data($c);
@@ -66,11 +66,11 @@ sub trait_pheno_raw_data :Path('/trait/pheno/raw/data/') Args(0) {
 
     if ($c->req->referer =~ /combined/)
     {
-	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{data_set_type} = 'combined_populations';
 	$c->stash->{combo_pops_id} = $c->req->param('combo_pops_id');
     }
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $c->stash->{trait_id});
+    $c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
     my $data = $self->get_trait_pheno_raw_data($c);
 
@@ -98,7 +98,7 @@ sub get_trait_pheno_means_data {
     my ($self, $c) = @_;
 
     my $trait_id = $c->stash->{trait_id};
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     $c->controller('solGS::Files')->model_phenodata_file($c);
     my $model_pheno_file = $c->stash->{model_phenodata_file};
 
@@ -113,7 +113,7 @@ sub get_trait_pheno_raw_data {
     my ($self, $c) = @_;
 
     my $trait_id = $c->stash->{trait_id};
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     $c->controller('solGS::Files')->trait_raw_phenodata_file($c);
     my $trait_raw_pheno_file = $c->stash->{trait_raw_phenodata_file};
     my $trait_abbr = $c->stash->{trait_abbr};
@@ -221,7 +221,7 @@ sub histogram_output_files {
     my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $c->controller('solGS::Files')->trait_raw_phenodata_file($c);
     my $raw_pheno_file = $c->stash->{trait_raw_phenodata_file};

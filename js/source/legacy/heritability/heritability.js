@@ -294,7 +294,7 @@ function createHeritabilityTable (tableId) {
     
     var table = '<table id="' + tableId + '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th>Trait</th><th>VG</th><th>VE</th><th>VRes</th><th>Heritability</th>'; 
+    table    += '<th>Trait</th><th>VG</th><th>VE</th><th>Heritability</th>'; 
     table    += '</tr></thead>';
     table    += '</table>';
 

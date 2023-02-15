@@ -35,6 +35,7 @@ $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
 use Moose::Role;
 use JSON;
 use Data::Dumper;
+use Excel::Writer::XLSX;
 
 sub verify {
     my $self = shift;
@@ -50,7 +51,17 @@ sub download {
     my @trait_list = @{$self->trait_list()};
     my $spreadsheet_metadata = $self->file_metadata();
 
-    my $workbook = Spreadsheet::WriteExcel->new($self->filename());
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $workbook;
+
+    if ($extension eq '.xlsx') {
+        $workbook = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $workbook = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws = $workbook->add_worksheet();
 
     # generate worksheet headers

@@ -68,7 +68,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 
     if ($trait_id)
     {
-	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     $self->run_kinship($c);
@@ -84,15 +84,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 	$res->{kinship_pop_name} = $pop_name;
 
 	my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
-	#my $json_file;
-	#if ($trait_id)
-	#{
-	  my  $json_file = $kinship_files->{json_file_adj};
-#	}
-#	else
-#	{
-#	  $json_file = $kinship_files->{json_file_raw};
-#	}
+	my  $json_file = $kinship_files->{json_file_adj};
 
 	$res->{data} = read_file($json_file);
 	$self->add_output_links($c, $res);
@@ -128,7 +120,7 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
 
     if ($trait_id)
     {
-	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
@@ -182,7 +174,7 @@ sub get_kinship_coef_files {
 
     if ($trait_id)
     {
-    	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
@@ -258,7 +250,6 @@ sub kinship_input_files {
     write_file($tempfile, $files);
 
     $c->stash->{kinship_input_files} = $tempfile;
-
 
 }
 
@@ -365,8 +356,6 @@ sub create_kinship_genotype_data_query_jobs {
     if ($data_str =~ /list/)
     {
 	my $list_id = $c->stash->{list_id};
-#	$c->controller('solGS::List')->stash_list_metadata($c);
-    #my $list_type = $c->stash->{list_type};
 	my $file_id = $c->controller('solGS::Files')->create_file_id($c);
 	$c->stash->{file_id} = $file_id;
 

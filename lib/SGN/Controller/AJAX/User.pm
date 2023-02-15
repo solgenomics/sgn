@@ -25,6 +25,7 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $password = $c->req->param("password");
     my $goto_url = $c->req->param("goto_url");
 
+    $goto_url = $c->req->referer if $goto_url eq '/';
     print STDERR "Goto URL = $goto_url\n";
 
     my $login = CXGN::Login->new($c->dbc->dbh());
@@ -181,6 +182,14 @@ sub new_account :Path('/ajax/user/new') Args(0) {
         }
     }
 
+    # Add additional user details for admin confirmation
+    my $user_details = '';
+    if ( $c->config->{user_registration_admin_confirmation} && $c->config->{user_registration_admin_confirmation_email} ) {
+        $user_details .= "Name: $first_name $last_name\n";
+        $user_details .= "Email: $email_address\n";
+        $user_details .= "Organization(s): $organization\n";
+    }
+
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
     my $subject="[$project_name] Email Address Confirmation Request";
@@ -188,6 +197,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 
 This message is sent to confirm the email address for community user
 \"$username\"
+$user_details
 
 Please click (or cut and paste into your browser) the following link to
 confirm your account and email address:
@@ -197,18 +207,28 @@ $host/user/confirm?username=$username&confirm_code=$confirm_code
 Thank you,
 $project_name Team
 
-Please do *NOT* reply to this message. If you have any trouble confirming your 
+Please do *NOT* reply to this message. If you have any trouble confirming your
 email address or have any other questions, please use the contact form instead:
 $host/contact/form
 
 END_HEREDOC
 
-CXGN::Contact::send_email($subject,$body,$email_address);
-    $c->stash->{rest} = { message => qq | <table summary="" width="80%" align="center">
-<tr><td><p>Account was created with username \"$username\". To continue, you must confirm that SGN staff can reach you via email address \"$email_address\". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.</p></td></tr>
-<tr><td><br /></td></tr>
-</table>
-| };
+    # Send confirmation email to admin
+    my $message = "";
+    if ( $c->config->{user_registration_admin_confirmation} && $c->config->{user_registration_admin_confirmation_email} ) {
+        CXGN::Contact::send_email($subject,$body,'user_registration_admin_confirmation_email');
+        $message = "Your account has been created but first must be confirmed by the site administrators.  You will receive an email once your account has been confirmed.";
+    }
+
+    # Send confirmation email to user
+    else {
+        CXGN::Contact::send_email($subject,$body,$email_address);
+        $message = "To continue, you must confirm that we can reach you via email address \"$email_address\". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.";
+    }
+
+    $c->stash->{rest} = {
+        message => "Account was created with username \"$username\".\n\n$message\n\nYou will be able to login once your account has been confirmed."
+    };
 }
 
 
@@ -572,17 +592,15 @@ HTML
     my $sp_person_id = $c->user->get_object->get_sp_person_id;
     my $username = $c->user->get_username();
     $html = <<HTML;
-  <li>
       <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
 	<button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
 	<button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
-        Lists <span class="glyphicon glyphicon-list-alt" ></span>
-	</button>
-	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
-	</button>
+        Lists <span class="glyphicon glyphicon-list-alt" ></span></button>
+	<button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
+              <span class="glyphicon glyphicon-list-alt" ></span>&nbsp;<span class="hidden-sm">Datasets</span></button>
+	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span></button>
 	<button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
       </div>
-  </li>
 HTML
 
   } else {
