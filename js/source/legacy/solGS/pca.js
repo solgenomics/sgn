@@ -1,10 +1,10 @@
+
 /**
  * Principal component analysis and scores plotting
  * using d3js
  * Isaak Y Tecle <iyt2@cornell.edu>
  *
  */
-
 
 
 var solGS = solGS || function solGS() {};
@@ -230,8 +230,7 @@ solGS.pca = {
 			url: '/solgs/check/cached/result/',
 			success: function(res) {
 				args = JSON.parse(args);
-				if (res.cached) {
-					// solGS.submitJob.goToPage(page, args);
+				if (res.cached) {		
 					solGS.pca.runPcaAnalysis(args);
 				} else {
 					solGS.pca.selectAnalysisOption(page, args);
@@ -455,7 +454,7 @@ solGS.pca = {
 	},
 
 	pcaDownloadLinks: function(res) {
-
+	
 		var screePlotFile = res.scree_plot_file;
 		var scoresFile = res.scores_file;
 		var loadingsFile = res.loadings_file;
@@ -493,11 +492,15 @@ solGS.pca = {
 			variances +
 			">Variances</a>";
 
+		var plotId = res.pop_id.replace(/-/g, '_');
+		var pcaDownloadBtn = "download_pca_plot_" + plotId;
+		pcaPlot = "<a href='#'  onclick='event.preventDefault();' id='" + pcaDownloadBtn + "'>PCA plot</a>";
 
 		var downloadLinks = screePlotLink + ' | ' +
 			scoresLink + ' | ' +
 			variancesLink + ' | ' +
-			loadingsLink;
+			loadingsLink + ' | ' +  
+			pcaPlot;
 
 		return downloadLinks;
 	},
@@ -543,9 +546,9 @@ solGS.pca = {
 		var totalW = width + pad.left + pad.right + 400;
 
 		var pcaCanvasDivId = '#pca_canvas';
-		var pcaPlotDivId = 'pca_plot_' + plotData.pop_id;
-		pcaPlotDivId = pcaPlotDivId.replace(/-/g, '_');
-
+		var pcaPlotDivId = plotData.pop_id.replace(/-/g, '_');
+	    pcaPlotDivId= "pca_plot_" + pcaPlotDivId;
+		
 		jQuery(pcaCanvasDivId).append("<div id=" + pcaPlotDivId + "></div>");
 
 		var svg = d3.select('#' + pcaPlotDivId)
@@ -749,9 +752,9 @@ solGS.pca = {
 
 		popName = popName ? popName + ' (' + plotData.data_type + ')' : ' (' + plotData.data_type + ')';
 		var dld = 'Download PCA ' + popName + ': ';
-
+		
 		if (downloadLinks) {
-			jQuery('#' + pcaPlotDivId).append('<p style="margin-left: 40px">' + dld + downloadLinks + '</p>');
+			jQuery('#' + pcaPlotDivId).append('<p style="margin-left: 40px">' + dld + downloadLinks + '</p>');;
 		}
 
 		if (trialsNames && Object.keys(trialsNames).length > 1) {
@@ -833,7 +836,6 @@ solGS.pca = {
 				.attr("dominant-baseline", "middle")
 				.attr("text-anchor", "start");
 		}
-
 	},
 
 	////////
@@ -880,7 +882,12 @@ jQuery(document).ready(function() {
 	jQuery("#run_pca").click(function() {
 		solGS.pca.pcaRun();
 	});
-
+	
+	jQuery("#pca_canvas").on('click' , 'a', function(e) {
+		var buttonId = e.target.id;
+		var pcaPlotId = buttonId.replace(/download_/, '');
+		saveSvgAsPng(document.getElementById("#" + pcaPlotId),  pcaPlotId + ".png", {scale: 2});	
+	});
 });
 
 jQuery(document).ready(function() {
