@@ -108,6 +108,9 @@ sub page_type {
     . '|/solgs/model/combined/trials/'
     . '|/solgs/models/combined/trials/';
 
+  	my $selection_pop_pages = '/solgs/selection'
+    . '|/solgs/combined/model/';
+
 	my $training_pop_pages = 'solgs/population/'
 	. '|solgs/populations/combined/';
 

@@ -1162,7 +1162,7 @@ sub combined_pops_gs_input_files {
 
 
 sub count_combined_trials_lines {
-    my ($self, $c, $combo_pops_id, $trait_id) = @_;
+    my ($self, $c, $combo_pops_id, $trait_id, $protocol_id) = @_;
 
     $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
     $trait_id  = $c->stash->{trait_id} if !$trait_id;
@@ -1174,7 +1174,7 @@ sub count_combined_trials_lines {
     if ($c->req->path =~ /solgs\/model\/combined\/populations\//)
     {
 
-	$self->cache_combined_pops_data($c, $protocol_id);
+	$self->cache_combined_pops_data($c);
 	my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
 	if (-s $combined_pops_geno_file)

@@ -117,7 +117,6 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     my $genotypes_list = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
 
-    my $selection_pop_id = $c->stash->{selection_pop_id};
     my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     $self->genotypes_list_genotype_file($c, $selection_pop_id, $sel_pop_protocol_id);
     my $genotype_file = $c->stash->{genotypes_list_genotype_file};
