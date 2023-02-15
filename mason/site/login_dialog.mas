@@ -291,7 +291,8 @@ jQuery(document).ready( function() {
                 console.log(r);
                 if (r.error) { alert(r.error); }
                 else {
-                    alert('New account added. Check your email for the confirmation link - you must confirm your account before you can login.');
+                    let message = r.message || 'New account added. Check your email for the confirmation link - you must confirm your account before you can login.';
+                    alert(message);
                     jQuery('#site_login_new_user_dialog').modal('hide');
                     jQuery('#site_login_dialog').modal('hide');
                 }
