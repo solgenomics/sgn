@@ -24,13 +24,8 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     my $dbh = $c->dbic_schema("CXGN::People::Schema")->storage->dbh();;
     my $login = CXGN::Login->new($dbh);
     if (my ($person_id, $user_type) = $login->has_session()) {
-        my $user_id = CXGN::People::Person->new($dbh,$person_id);
+	my $login_info = $login->get_login_info();
     	$c->stash->{rest} = $login -> get_login_info;
-    	    # user_id => $user_id,
-    	    # username => $user->get_object->get_username(),
-    	    # first_name => $user->get_object->get_first_name(),
-    	    # last_name => $user->get_object->get_last_name(),
-    	# };
     	return;
     }
     $c->stash->{rest} = { user_id => 0 };
