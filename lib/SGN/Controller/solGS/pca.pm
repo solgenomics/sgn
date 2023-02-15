@@ -462,7 +462,7 @@ sub pca_scores_file {
     $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
 
     my $cache_data = {key       => "pca_scores_${file_id}",
-                      file      => "pca_scores_${file_id}.txt",
+                      file      => "pca_scores_${file_id}",
                       stash_key => 'pca_scores_file'
     };
 
@@ -478,7 +478,7 @@ sub pca_scree_data_file {
     $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
 
     my $cache_data = {key       => "pca_scree_data_${file_id}",
-                      file      => "pca_scree_data_${file_id}.txt",
+                      file      => "pca_scree_data_${file_id}",
                       stash_key => 'pca_scree_data_file'
     };
 
@@ -493,7 +493,8 @@ sub pca_scree_plot_file {
     $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
 
     my $cache_data = {key       => "pca_scree_plot_${file_id}",
-                      file      => "pca_scree_plot_${file_id}.png",
+                      file      => "pca_scree_plot_${file_id}",
+                      ext => 'png',
                       stash_key => 'pca_scree_plot_file'
     };
 
@@ -509,7 +510,7 @@ sub pca_variances_file {
     $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
 
     my $cache_data = {key       => "pca_variances_${file_id}",
-                      file      => "pca_variances_${file_id}.txt",
+                      file      => "pca_variances_${file_id}",
                       stash_key => 'pca_variances_file'
     };
 
@@ -525,7 +526,7 @@ sub pca_loadings_file {
     $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
 
     my $cache_data = {key       => "pca_loadings_${file_id}",
-                      file      => "pca_loadings_${file_id}.txt",
+                      file      => "pca_loadings_${file_id}",
                       stash_key => 'pca_loadings_file'
     };
 

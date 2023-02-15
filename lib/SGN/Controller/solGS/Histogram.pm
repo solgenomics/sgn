@@ -27,7 +27,7 @@ sub trait_pheno_means_data :Path('/trait/pheno/means/data/') Args(0) {
 
     if ($c->req->referer =~ /combined/)
     {
-	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{data_set_type} = 'combined_populations';
 	$c->stash->{combo_pops_id} = $c->req->param('combo_pops_id');
     }
 
@@ -66,7 +66,7 @@ sub trait_pheno_raw_data :Path('/trait/pheno/raw/data/') Args(0) {
 
     if ($c->req->referer =~ /combined/)
     {
-	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{data_set_type} = 'combined_populations';
 	$c->stash->{combo_pops_id} = $c->req->param('combo_pops_id');
     }
 
