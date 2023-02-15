@@ -2116,6 +2116,56 @@ sub get_drone_imagery_drone_run_band : Path('/ajax/html/select/drone_imagery_dro
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_items_select : Path('/ajax/html/select/items') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $params = _clean_inputs($c->req->params);
+    my $items = $params->{list_items},
+    my $size = $params->{size};
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
+    my $data_related = $c->req->param("data-related") || "";
+    my $names_as_select = $params->{names_as_select}->[0] || 0;
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+
+    my $html = simple_selectbox_html(
+        multiple => $multiple,
+        choices => $items,
+        size => $size,
+        data_related => $data_related,
+        id => $id,
+        name => $name
+    );
+
+    $c->stash->{rest} = { select => $html };
+
+}
+
+
+sub get_genotyping_facility_select : Path('/ajax/html/select/genotyping_facilities') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "facility_select";
+    my $name = $c->req->param("name") || "facility_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    if ($empty) { unshift @facilities, [ "", "Select Facility" ] }
+
+    my $default = $c->req->param("default") || @facilities[0]->[0];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@facilities,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 
 sub get_market_segment_select : Path('/ajax/html/select/market_segments') Args(0) {
     my $self = shift;
