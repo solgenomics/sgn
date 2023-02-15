@@ -17,6 +17,7 @@ BEGIN {use_ok('CXGN::Pedigree::AddPedigrees');}
 BEGIN {use_ok('CXGN::DB::Connection');}
 BEGIN {use_ok('Bio::GeneticRelationships::Pedigree');}
 BEGIN {use_ok('Bio::GeneticRelationships::Individual');}
+BEGIN {use_ok('CXGN::Cross');}
 BEGIN {require_ok('Moose');}
 
 my $test = SGN::Test::Fixture->new();
@@ -111,5 +112,11 @@ my $add_return = $add_open_polycross_pedigree->add_pedigrees();
 print STDERR Dumper $add_return;
 ok($add_return);
 ok(!exists($add_return->{error}));
+
+#check accessions missing pedigree
+my $missing_pedigree_result = CXGN::Cross->get_accessions_missing_pedigree($schema);
+my $number_of_accessions = scalar @$missing_pedigree_result;
+is($number_of_accessions, '456');
+
 
 done_testing();

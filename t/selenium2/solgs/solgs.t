@@ -92,6 +92,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
     sleep(3);
+    sleep(3);
    # #  #trial type training population: single trait modeling
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
@@ -148,7 +149,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download model phenotype data');
     sleep(3);
-   
+    $d->find_element_ok('Analysis log', 'partial_link_text',  'download analysis log');
+    sleep(3);
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
@@ -179,6 +181,8 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
     sleep(2);
     $d->find_element_ok('Genotype data', 'partial_link_text',  'download selection pop genotype data');
+    sleep(3);
+    $d->find_element_ok('Analysis log', 'partial_link_text',  'download analysis log');
     sleep(3);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(120);

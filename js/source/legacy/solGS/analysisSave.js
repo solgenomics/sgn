@@ -66,7 +66,17 @@ solGS.save = {
   },
 
   analysisResultType: function () {
-    var type = solGS.checkPageType();
+    var type;
+    var path = location.pathname;
+
+    if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
+      type = "training_model";
+    } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
+      type = "multiple_models";
+    } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
+      type = "selection_prediction";
+    }
+
     return type;
   },
 

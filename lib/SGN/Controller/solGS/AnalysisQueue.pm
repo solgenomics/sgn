@@ -255,14 +255,14 @@ sub create_itemized_prediction_log_entries {
         $url_args->{trait_id} = $trait_id;
 
         my $analysis_page;
-        if ( $analysis_type =~ /selection prediction/ ) {
+        if ( $analysis_type =~ /selection_prediction/ ) {
             $analysis_page =
               $c->controller('solGS::Path')->selection_page_url($url_args);
         }
         else {
             $analysis_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
-            $analysis_type = 'single model';
+            $analysis_type = $c->controller('solGS::Path')->page_type($c, $analysis_page);
         }
 
         my $analysis_name =
@@ -653,7 +653,7 @@ sub structure_training_modeling_output {
         my $trait_page;
 
         if ( $referer =~ m/solgs\/population\// ) {
-            $url_args->{data_set_type} = 'single population';
+            $url_args->{data_set_type} = 'single_population';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
@@ -678,7 +678,7 @@ sub structure_training_modeling_output {
         if (   $referer =~ m/solgs\/search\/trials\/trait\//
             && $analysis_page =~ m/solgs\/trait\// )
         {
-            $url_args->{data_set_type} = 'single population';
+            $url_args->{data_set_type} = 'single_population';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
@@ -686,7 +686,7 @@ sub structure_training_modeling_output {
         }
 
         if ( $referer =~ m/solgs\/populations\/combined\// ) {
-            $url_args->{data_set_type} = 'combined populations';
+            $url_args->{data_set_type} = 'combined_populations';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
@@ -709,7 +709,7 @@ sub structure_training_modeling_output {
         }
 
         if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) {
-            $url_args->{data_set_type} = 'combined populations';
+            $url_args->{data_set_type} = 'combined_populations';
 
             my $model_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
@@ -753,7 +753,7 @@ sub structure_training_single_pop_data_output {
     my $args = {
         'training_pop_id'        => $pop_id,
         'genotyping_protocol_id' => $protocol_id,
-        'data_set_type'          => 'single population'
+        'data_set_type'          => 'single_population'
     };
 
     my $training_pop_page =
@@ -822,7 +822,7 @@ sub structure_training_combined_pops_data_output {
     my $args = {
         'training_pop_id'        => $combo_pops_id,
         'genotyping_protocol_id' => $protocol_id,
-        'data_set_type'          => 'combined populations'
+        'data_set_type'          => 'combined_populations'
     };
 
     my $training_pop_page =
@@ -850,7 +850,7 @@ sub structure_training_combined_pops_data_output {
         $args = {
             'training_pop_id'        => $pop_id,
             'genotyping_protocol_id' => $protocol_id,
-            'data_set_type'          => 'single population'
+            'data_set_type'          => 'single_population'
         };
 
         my $training_pop_page =
@@ -919,7 +919,7 @@ sub structure_selection_prediction_output {
             'data_set_type'          => $data_set_type,
         };
 
-        if ( $data_set_type =~ /combined populations/ ) {
+        if ( $data_set_type =~ /combined_populations/ ) {
             $tr_pop_page =
               $c->controller('solGS::Path')->training_page_url($url_args);
 
@@ -1134,7 +1134,7 @@ sub predict_training_traits {
     elsif ( $analysis_page =~
         /solgs\/models\/combined\/trials\/|solgs\/model\/combined\/trials\// )
     {
-        if ( $c->stash->{data_set_type} =~ /combined populations/ ) {
+        if ( $c->stash->{data_set_type} =~ /combined_populations/ ) {
             $c->controller('solGS::combinedTrials')
               ->combine_data_build_multiple_traits_models($c);
         }
@@ -1164,7 +1164,11 @@ sub predict_selection_traits {
     my $referer = $c->req->referer;
     if ( $referer =~ /solgs\/trait\/|solgs\/traits\/all\/population\/|\/combined\// ) {
         $c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
-    
+    }
+    elsif ( $referer =~ /\/combined\// ) {
+        $c->stash->{data_set_type} = 'combined_populations';
+        $c->controller('solGS::combinedTrials')
+          ->predict_selection_pop_combined_pops_model($c);
     }
 
 }
@@ -1279,13 +1283,13 @@ sub analysis_log_file {
 }
 
 sub get_confirm_msg {
-    my ( $self, $c, $job ) = @_;
+  my ( $self, $c, $job ) = @_;
 
-    $job =~ s/[_|-]/ /g;
-    $job = lc($job);
+  $job =~ s/[_|-]/ /g;
+  $job = lc($job);
 
-    my $msg = "Your $job job is submitted.";
-    return $msg;
+  my $msg = "Your $job job is submitted.";
+  return $msg;
 
 }
 

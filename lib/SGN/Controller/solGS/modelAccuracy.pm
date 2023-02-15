@@ -156,11 +156,11 @@ sub create_model_summary {
 	if ($path =~ /solgs\/traits\/all\/population\//)
 	{
 
-	  	$data_set_type = 'single population';
+	  	$data_set_type = 'single_population';
 	}
 	elsif ($path =~ /solgs\/models\/combined\/trials\//)
 	{
-	 	$data_set_type = 'combined populations';
+	 	$data_set_type = 'combined_populations';
 	}
 
 	my $args = {

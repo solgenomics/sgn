@@ -176,8 +176,8 @@ function createTrainingReqArgs (listId) {
     var args = {
 	'list_name'       : listName,
 	'list_id'         : listId,
-	'analysis_type'   : 'training dataset',
-	'data_set_type'   : 'single population',
+	'analysis_type'   : 'training_dataset',
+	'data_set_type'   : 'single_population',
         'training_pop_id' : popId,
 	'population_type' : popType,
 	'genotyping_protocol_id': protocolId

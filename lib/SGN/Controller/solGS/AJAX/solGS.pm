@@ -60,7 +60,7 @@ sub solgs_population_search_autocomplete_GET :Args() {
         my $page_type = $c->controller('solGS::Path')->page_type($c, $c->req->referer);
         my $is_computation = $c->controller('solGS::Search')->check_saved_analysis_trial($c, $pop_id);
         
-        if ($page_type =~ /training model/) 
+        if ($page_type =~ /training_model/) 
         {
             if (!$is_computation)
             {

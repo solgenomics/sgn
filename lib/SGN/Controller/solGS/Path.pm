@@ -77,7 +77,8 @@ sub selection_page_url {
 	my $sel_protocol_id = $args->{selection_pop_genotyping_protocol_id};
 
 	$protocol_id .= '-' .$sel_protocol_id if $sel_protocol_id;
-	if ($args->{data_set_type} =~ /combined populations/)
+
+	if ($args->{data_set_type} =~ /combined_populations/)
 	{
 	   return "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
 	}
@@ -102,16 +103,10 @@ sub create_hyperlink {
 sub page_type {
 	my ($self, $c, $url) = @_;
 
-	my $base = $c->req->base;
-	$url =~ s/$base//;
-
-    my $model_pages = 'solgs/trait'
-    . '|solgs/traits/all/'
-    . '|solgs/model/combined/trials/'
-    . '|solgs/models/combined/trials/';
-
-    my $selection_pop_pages = 'solgs/selection'
-    . '|solgs/combined/model/';
+    my $model_pages = '/solgs/trait'
+    . '|/solgs/traits/all/'
+    . '|/solgs/model/combined/trials/'
+    . '|/solgs/models/combined/trials/';
 
 	my $training_pop_pages = 'solgs/population/'
 	. '|solgs/populations/combined/';
@@ -122,15 +117,14 @@ sub page_type {
 	my $type;
 	if ($url =~ $model_pages)
 	{
-		$type = 'training model';
+		$type = 'training_model';
 	}
 	elsif ($url =~ $selection_pop_pages)
 	{
-		$type = 'selection population';
+		$type = 'selection_prediction';
 	}
-	elsif ($url =~ $training_pop_pages) 
-	{
-		$type = 'training population';
+	elsif ($url =~ $training_pop_pages) {
+		$type = 'training_population';
 	}
 	elsif ($url =~ /^solgs\/search|^solgs$/) 
 	{

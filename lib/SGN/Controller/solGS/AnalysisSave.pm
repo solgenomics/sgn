@@ -73,8 +73,9 @@ sub structure_gebvs_result_details {
 	my $trait_names		= $self->analysis_traits($c);
 	my $model_details = $self->model_details($c);
 	my $app_details		= $self->app_details();
-	my $log					 = $self->analysis_log($c);
- 
+	my $log					 = $self->get_analysis_job_info($c);
+	my $analysis_name = $log->{analysis_name};
+
     my $details = {
 		'analysis_to_save_boolean' => 'yes',
 		'analysis_name' => $log->{analysis_name},
@@ -123,7 +124,7 @@ sub app_details {
 sub analysis_traits {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $trait_ids = $log->{trait_id};
 	my @trait_names;
 
@@ -141,7 +142,7 @@ sub analysis_traits {
 sub analysis_breeding_prog {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 
 	my $trial_id = $log->{training_pop_id}[0];
 	if ($log->{data_set_type} =~ /combined/)
@@ -172,7 +173,7 @@ sub model_details {
 	my $model_type = 'gblup_model_rrblup';
 	my $stat_ont_term = 'GEBVs using GBLUP from rrblup R package|SGNSTAT:0000038';
 	my $protocol = "GBLUP model from RRBLUP R Package";
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $model_page = $log->{analysis_page};
 	my $model_desc= qq | <a href="$model_page">Go to model detail page</a>|;
 	#my $model_desc = 'test desc';
@@ -193,7 +194,7 @@ sub model_details {
 sub analysis_year {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $time = $log->{analysis_time};
 
 	$time= (split(/\s+/, $time))[0];
@@ -207,9 +208,9 @@ sub analysis_year {
 sub check_stored_analysis {
 	my ($self, $c) = @_;
 
-	my $log = $self->analysis_log($c);
+	my $log = $self->get_analysis_job_info($c);
 	my $analysis_name = $log->{analysis_name};
-print STDERR "\ncheck_stored_analysis analysis name: $analysis_name\n";
+
 	if ($analysis_name)
 	{
 		my $schema = $self->schema($c);
@@ -303,7 +304,7 @@ sub structure_gebvs_values {
 }
 
 
-sub analysis_log {
+sub get_analysis_job_info {
 	my ($self, $c) = @_;
 
 	my $files = $self->all_users_analyses_logs($c);
@@ -328,7 +329,8 @@ sub analysis_log {
 
 	if (@log)
 	{
-		return decode_json($log[5]);
+		my $analysis_info = decode_json($log[5]);
+		return $analysis_info;
 	}
 	else
 	{
@@ -342,9 +344,12 @@ sub all_users_analyses_logs {
 	my ($self, $c) = @_;
 
 	my $dir = $c->stash->{analysis_log_dir};
-	my @files = File::Find::Rule->file()
-                                  ->name( '*.txt' )
-                                  ->in( $dir );
+	my $rule = File::Find::Rule->new;
+	$rule->file;
+	$rule->nonempty;
+	$rule->name('analysis_log');
+	
+	my @files = $rule->in($dir);
 
 	return \@files;
 

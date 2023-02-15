@@ -159,7 +159,7 @@ function createSelectionReqArgs(listId) {
     var args = {
       list_name: listName,
       list_id: listId,
-      analysis_type: "selection prediction",
+      analysis_type: "selection_prediction",
       data_set_type: dataSetType,
       training_pop_id: modelId,
       selection_pop_id: selectionPopId,
@@ -293,11 +293,11 @@ function trainingDataSetType() {
   var dataSetType;
   var referer = document.URL;
 
-  if (referer.match(/\/combined\//)) {
-    dataSetType = "combined populations";
-  } else {
-    dataSetType = "single population";
-  }
+    if ( referer.match(/\/combined\//) ) {
+        dataSetType = 'combined_populations';
+    } else {
+        dataSetType = 'single_population';
+    }
 
   return dataSetType;
 }

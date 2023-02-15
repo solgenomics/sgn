@@ -291,9 +291,7 @@ sub _check_selection_pop_output {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
 
-    my $data_set_type = $c->stash->{data_set_type};
-
-    if ($data_set_type =~ 'combined populations')
+    if ($c->stash->{data_set_type} =~ 'combined_populations')
     {
 	$self->_check_combined_trials_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id, $protocol_id, $sel_pop_protocol_id);
     }

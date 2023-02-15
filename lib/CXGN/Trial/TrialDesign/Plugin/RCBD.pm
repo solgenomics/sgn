@@ -64,6 +64,7 @@ sub create_design {
 
   my $plot_start = $self->get_plot_start_number();
   my $serie;
+
   if($plot_start == 1){
       $serie = 1;
   }elsif($plot_start == 101){
@@ -72,6 +73,11 @@ sub create_design {
       $serie = 3;
   }
 
+  if ($self->get_plot_numbering_scheme() ne "block_based") {
+      $plot_start = 1;
+      $serie = 1;
+  }
+  
   $r_block = $rbase->create_block('r_block');
   $stock_data_matrix->send_rbase($rbase, 'r_block');
   $r_block->add_command('library(agricolae)');
@@ -97,7 +103,7 @@ sub create_design {
   #print STDERR Dumper \@plot_numbers;
   @block_numbers = $result_matrix->get_column("block");
   @stock_names = $result_matrix->get_column("trt");
-  # @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $number_of_blocks)};
+  @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $number_of_blocks)};
 
   #generate col_number
 

@@ -34,8 +34,10 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
 
     if ($combo_pops_id)
     {
-        $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-        $c->stash->{data_set_type} = 'combined populations';
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	$c->stash->{data_set_type} = 'combined_populations';
+	$training_pop_id = $combo_pops_id;
+	$c->stash->{combo_pops_id} = $combo_pops_id;
     }
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);

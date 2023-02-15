@@ -73,6 +73,18 @@ sub read_file_data_cols {
 
 }
 
+sub count_data_rows {
+    my ($self, $file) = @_;
+
+    my $geno = qx /wc -l $file/;
+    my ($geno_lines, $g_file) = split(" ", $geno);
+    my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+
+    return $count;
+
+}
+
+
 sub structure_downloadable_data {
     my ($self, $file, $row_name) = @_;
 

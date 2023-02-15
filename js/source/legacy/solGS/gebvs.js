@@ -80,7 +80,7 @@ jQuery(document).ready(function () {
   });
 
   solGS.checkPageType().done(function (res) {
-    if (res.page_type.match(/training model|selection population/)) {
+    if (res.page_type.match(/training_model|selection_prediction/)) {
       solGS.gebvs.getGebvsFiles().done(function (res) {
         solGS.gebvs.createGebvsDownloadLinks(res);
       });

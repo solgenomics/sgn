@@ -734,7 +734,7 @@ sub get_gs_r_temp_file {
     $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
     my $identifier = $selection_pop_id ? $pop_id . '-' . $selection_pop_id : $pop_id;
 
-    if ($data_set_type =~ /combined populations/)
+    if ($data_set_type =~ /combined_populations/)
     {
 	my $combo_identifier = $c->stash->{combo_pops_id};
         $c->stash->{r_temp_file} = "gs-rrblup-combo-${identifier}-${trait_id}";
