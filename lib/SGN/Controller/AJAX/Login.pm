@@ -2,6 +2,7 @@
 package SGN::Controller::AJAX::Login;
 
 use Moose;
+use Data::Dumper;
 use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -20,12 +21,15 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
-    # if (my $user = $c->user()) {
-    my $dbh = $c->dbic_schema("CXGN::People::Schema")->storage->dbh();;
+
+    my $dbh = $c->dbic_schema("CXGN::People::Schema")->storage->dbh();
+    
     my $login = CXGN::Login->new($dbh);
+    
     if (my ($person_id, $user_type) = $login->has_session()) {
 	my $login_info = $login->get_login_info();
-    	$c->stash->{rest} = $login -> get_login_info;
+	#print STDERR "LOGIN INFO: ".Dumper($login_info);
+    	$c->stash->{rest} = $login_info;
     	return;
     }
     $c->stash->{rest} = { user_id => 0 };
