@@ -36,15 +36,23 @@
 	  <div id="dataset_select"></div>
 	  <br>
 
-      <div>
+      <div style="border-top: 1px solid #DEDEDE;">
           <h4>Choose Selection Index values</h4>
-          <div id="sin_list"></div>
           <i style="font-size:13px">This is a drop-down menu showing your pre-constructed selection indices.</i>
+          <div style= "display: flex;flex-direction: row;">
+            <div id="sin_list"></div>
+              <p style="margin-left: 30px;margin-right: 30px;">OR</p>
+              <button class="btn btn-success" >
+              <a href="http://localhost:8080/selection/index" target="_blank" rel="noopener noreferrer" style="color: white">Create a new one here</a>
+              </button>
+          </div>
+          
       </div>
 
       <br>
       <br>
-
+  <div style="border-top: 1px solid #DEDEDE;">
+  <br>
 	<button class="btn btn-success" id="select_dataset" type="submit" name="select_dataset" value="select_dataset">Proceed to Factor Selection</button>
 	<br>
 	<br>
@@ -56,6 +64,7 @@
 
       </div>
       <br>
+    </div>
     
       <center>
 	<div id="trait_histogram_plot">
@@ -227,6 +236,10 @@ jQuery(document).ready(function() {
         'method': "GET",
 	      'timeout': 60000000,
         'contentType': 'application/json',
+        error: function(error) {
+          jQuery('#working_modal').modal('hide');
+          alert("An error occured" +error.responseText);
+        },
         success:function(data) {
           jQuery('#working_modal').modal('hide');
           if (!data.histogram || data.histogram == "") {

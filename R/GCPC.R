@@ -522,8 +522,8 @@ write("Done with calcCrossMean!!!!!!", stderr())
 
 # assign_hash(userPheno$germplasmName, userPheno$userSexes, hash)
 
-if (userSexes != "" && !is.na(sd(userPheno[, userSexes]))) { # "plant sex estimation 0-4"
-  # !is.na(userSexes)
+if (userSexes != "") { # "plant sex estimation 0-4"
+  # !is.na(userSexes)  && !is.na(sd(userPheno[, userSexes]))
 
   write(paste("userSexes", sd(userPheno[, userSexes])), stderr())
 
@@ -546,16 +546,17 @@ if (userSexes != "" && !is.na(sd(userPheno[, userSexes]))) { # "plant sex estima
   crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$germplasmName), userSexes] # get sexes ordered by Parent2
 
   write(paste("PARENTS2 ", head(crossPlan)), stderr())
-  crossPlan <- na.omit(crossPlan)
-  crossPlan <- crossPlan[!(crossPlan$P1Sex == 0 | crossPlan$P2Sex == 0), ] # remove the 0s
-  crossPlan <- crossPlan[!(crossPlan$P1Sex == 1 & crossPlan$P2Sex == 1), ] # remove same sex crosses with score of 1
-  crossPlan <- crossPlan[!(crossPlan$P1Sex == 2 & crossPlan$P2Sex == 2), ] # remove same sex crosses with score of 2
+  col_repl <- c("P1Sex", "P2Sex")
+  crossPlan %>% filter(P1Sex == 0 | P2Sex == 0) # remove the 0s
+  crossPlan %>% filter(P1Sex == 1 & P2Sex == 1) # remove same sex crosses with score of 1
+  crossPlan %>% filter(P1Sex == 2 & P2Sex == 2) # remove same sex crosses with score of 2
 
-  write(paste("CROSSPLAN FILTERED = ", head(crossPlan)), stderr())
+  write(paste("CROSSPLAN FILTERED = ", crossPlan), stderr())
   # crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
 
   ## replace plant sex numbers to male, female etc
-  col_repl <- c("P1Sex", "P2Sex")
+
+  crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% "NA", "NA"))
   crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% 1, "Male"))
   crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% 2, "Female"))
   crossPlan[col_repl] <- sapply(crossPlan[col_repl], function(x) replace(x, x %in% 3, "Monoecious male (m>f)"))
