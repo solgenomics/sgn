@@ -1543,59 +1543,6 @@ sub wellsort {
     }
 }
 
-sub download_all_accessions_with_pedigree : Path('/breeders/download_all_accessions_with_pedigree') {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-
-    my $dl_token = "no_token";
-    my $dl_cookie = "download".$dl_token;
-
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
-
-    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
-
-    print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
-    my $accessions_found = 0;
-
-    my $result = CXGN::Cross->get_progeny_info($schema);
-
-    my @all_rows;
-    foreach my $accession_info (@$result){
-        my ($female_id, $female_name, $male_id, $male_name, $accession_id, $accession_name, $cross_type) =@$accession_info;
-        push @all_rows,"$accession_name\t$female_name\t$male_name\t$cross_type\n";
-    }
-
-    foreach my $row (@all_rows) {
-        print $FILE $row;
-        $accessions_found++;
-    }
-
-    unless ($accessions_found > 0) {
-        print $FILE "$accessions_found accessions in the database have pedigree information. \n";
-    }
-    close $FILE;
-
-    my $filename = "accessions_with_pedigree.txt";
-
-    $c->res->content_type("application/text");
-    $c->res->cookies->{$dl_cookie} = {
-      value => $dl_token,
-      expires => '+1m',
-    };
-
-    $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
-
-    my $output = "";
-    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
-    while (<$F>) {
-	$output .= $_;
-    }
-    close($F);
-
-    $c->res->body($output);
-}
-
 
 #=pod
 1;
