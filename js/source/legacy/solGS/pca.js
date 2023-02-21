@@ -534,10 +534,10 @@ solGS.pca = {
 			}
 		});
 
-		var height = 300;
-		var width = 500;
+		var height = 400;
+		var width = 400;
 		var pad = {
-			left: 40,
+			left: 60,
 			top: 20,
 			right: 40,
 			bottom: 20
@@ -550,15 +550,16 @@ solGS.pca = {
 	    pcaPlotDivId= "pca_plot_" + pcaPlotDivId;
 		
 		jQuery(pcaCanvasDivId).append("<div id=" + pcaPlotDivId + "></div>");
+		pcaPlotDivId= "#" + pcaPlotDivId;
 
-		var svg = d3.select('#' + pcaPlotDivId)
+		var svg = d3.select(pcaPlotDivId)
 			.insert("svg", ":first-child")
 			.attr("width", totalW)
 			.attr("height", totalH);
 
 		var pcaPlot = svg.append("g")
-			.attr("id", '#' + pcaPlotDivId)
-			.attr("transform", "translate(" + (pad.left) + "," + (pad.top) + ")");
+			.attr("id", pcaPlotDivId)
+			.attr("transform", "translate(0,0)");
 
 		var pc1Min = d3.min(pc1);
 		var pc1Max = d3.max(pc1);
@@ -595,7 +596,7 @@ solGS.pca = {
 		var pc1AxisMid = (0.5 * height) + pad.top;
 		var pc2AxisMid = (0.5 * width) + pad.left;
 
-		var yMidLineData = [{
+		var verMidLineData = [{
 				"x": pc2AxisMid,
 				"y": pad.top
 			},
@@ -605,12 +606,13 @@ solGS.pca = {
 			}
 		];
 
-		var xMidLineData = [{
+		var rightNudge = 5;
+		var horMidLineData = [{
 				"x": pad.left,
 				"y": pad.top + height / 2
 			},
 			{
-				"x": pad.left + width,
+				"x": pad.left + width + rightNudge,
 				"y": pad.top + height / 2
 			}
 		];
@@ -624,17 +626,10 @@ solGS.pca = {
 			})
 			.interpolate("linear");
 
-		pcaPlot.append("path")
-			.attr("d", lineFunction(yMidLineData))
-			.attr("stroke", "red")
-			.attr("stroke-width", 1)
-			.attr("fill", "none");
-
-		pcaPlot.append("path")
-			.attr("d", lineFunction(xMidLineData))
-			.attr("stroke", "green")
-			.attr("stroke-width", 1)
-			.attr("fill", "none");
+		var pc1Color = "green";
+		var pc2Color = "red";
+		var axisValColor =  "#86B404";
+		var labelFs = 12;
 
 		pcaPlot.append("g")
 			.attr("class", "PC1 axis")
@@ -645,11 +640,30 @@ solGS.pca = {
 			.attr("x", 10)
 			.attr("dy", ".1em")
 			.attr("transform", "rotate(90)")
-			.attr("fill", "green")
+			.attr("fill", pc1Color)
 			.style({
 				"text-anchor": "start",
-				"fill": "#86B404"
+				"fill": axisValColor
 			});
+
+		pcaPlot.append("g")
+			.attr("transform", "translate(" + pc1AxisMid  + "," +  height  +  ")")
+			.append("text")
+			.text("PC1 (" + variances[0][1] + "%)")
+			.attr("y", pad.top + 40)
+			.attr("x", 0)
+			.attr("font-size", labelFs)
+			.style("fill", pc1Color)
+	
+		pcaPlot.append("g")
+			.attr("transform", "translate(" + pad.left  + "," +   (pc2AxisMid) +  ")")
+			.append("text")
+			.text("PC2 (" + variances[1][1] + "%)")
+			.attr("y", -40)
+			.attr("x", 0)
+			.attr("transform", "rotate(-90)")
+			.attr("font-size", labelFs)
+			.style("fill", pc2Color);
 
 		pcaPlot.append("g")
 			.attr("class", "PC2 axis")
@@ -658,28 +672,20 @@ solGS.pca = {
 			.selectAll("text")
 			.attr("y", 0)
 			.attr("x", -10)
-			.attr("fill", "green")
-			.style("fill", "#86B404");
+			.style("fill", axisValColor);
 
-		pcaPlot.append("g")
-			.attr("id", "pc1_axis_label")
-			.append("text")
-			.text("PC1: " + variances[0][1] + "%")
-			.attr("y", pad.top + height + 55)
-			.attr("x", width / 2)
-			.attr("font-size", 12)
-			.style("fill", "green")
+		pcaPlot.append("path")
+		.attr("d", lineFunction(verMidLineData))
+		.attr("stroke", pc2Color)
+		.attr("stroke-width", 1)
+		.attr("fill", "none");
 
-		pcaPlot.append("g")
-			.attr("id", "pc2_axis_label")
-			.append("text")
-			.text("PC2: " + variances[1][1] + "%")
-			.attr("transform", "rotate(-90)")
-			.attr("y", -5)
-			.attr("x", -((pad.left + height / 2) + 10))
-			.attr("font-size", 12)
-			.style("fill", "red")
-
+		pcaPlot.append("path")
+			.attr("d", lineFunction(horMidLineData))
+			.attr("stroke", pc1Color)
+			.attr("stroke-width", 1)
+			.attr("fill", "none");
+			
 		var grpColor = d3.scale.category10();
 
 		pcaPlot.append("g")
@@ -711,12 +717,12 @@ solGS.pca = {
 			.on("mouseover", function(d) {
 				d3.select(this)
 					.attr("r", 5)
-					.style("fill", "#86B404")
+					.style("fill", axisValColor)
 				pcaPlot.append("text")
 					.attr("id", "dLabel")
-					.style("fill", "#86B404")
+					.style("fill", axisValColor)
 					.text(d[0].name + "(" + d[0].pc1 + "," + d[0].pc2 + ")")
-					.attr("x", width + pad.left + 5)
+					.attr("x", width + pad.left + rightNudge)
 					.attr("y", height / 2);
 			})
 			.on("mouseout", function(d) {
@@ -731,30 +737,22 @@ solGS.pca = {
 		pcaPlot.append("rect")
 			.attr("transform", "translate(" + pad.left + "," + pad.top + ")")
 			.attr("height", height)
-			.attr("width", width)
+			.attr("width", width + rightNudge)
 			.attr("fill", "none")
 			.attr("stroke", "#523CB5")
 			.attr("stroke-width", 1)
 			.attr("pointer-events", "none");
-
-		var id;
-		if (plotData.pop_id) {
-			id = plotData.pop_id;
-		} else {
-			id = plotData.list_id;
-		}
 
 		var popName = "";
 		if (plotData.list_name) {
 			popName = plotData.list_name;
 		}
 
-
 		popName = popName ? popName + ' (' + plotData.data_type + ')' : ' (' + plotData.data_type + ')';
 		var dld = 'Download PCA ' + popName + ': ';
 		
 		if (downloadLinks) {
-			jQuery('#' + pcaPlotDivId).append('<p style="margin-left: 40px">' + dld + downloadLinks + '</p>');;
+			jQuery(pcaPlotDivId).append('<p style="margin-left: 40px">' + dld + downloadLinks + '</p>');;
 		}
 
 		if (trialsNames && Object.keys(trialsNames).length > 1) {
@@ -764,7 +762,6 @@ solGS.pca = {
 
 			var legendValues = [];
 			var cnt = 0;
-
 			var allTrialsNames = [];
 
 			for (var tr in trialsNames) {
@@ -781,7 +778,7 @@ solGS.pca = {
 						groupName.push(trialsNames[id]);
 					});
 
-					groupName = 'common: ' + groupName.join(', ')
+					groupName = 'common: ' + groupName.join(",")
 				} else {
 					groupName = trialsNames[id];
 				}
@@ -792,10 +789,12 @@ solGS.pca = {
 
 			var recLH = 20;
 			var recLW = 20;
+			var legendXOrig = pad.left + 10 + width;
+			var legendYOrig = (height * 0.25);
 
 			var legend = pcaPlot.append("g")
 				.attr("class", "cell")
-				.attr("transform", "translate(" + (width + 60) + "," + (height * 0.25) + ")")
+				.attr("transform", "translate(" + legendXOrig + "," + legendYOrig+ ")")
 				.attr("height", 100)
 				.attr("width", 100);
 
@@ -817,7 +816,7 @@ solGS.pca = {
 				});
 
 			var legendTxt = pcaPlot.append("g")
-				.attr("transform", "translate(" + (width + 90) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
+				.attr("transform", "translate(" + (legendXOrig  + 30) + "," + (legendYOrig + (0.5 * recLW)) + ")")
 				.attr("id", "legendtext");
 
 			legendTxt.selectAll("text")
@@ -907,7 +906,6 @@ jQuery(document).ready(function() {
 
 	if (url.match(/pca\/analysis/)) {
 
-
 		var selectId;
 		var selectName;
 		var dataStructure;
@@ -933,10 +931,6 @@ jQuery(document).ready(function() {
 			}
 		});
 	}
-
-	// if (url.match(/pca\/analysis\/|solgs\/trait\/|breeders\/trial\/|solgs\/selection\//)) {
-	// 	checkPcaResult();
-	// }
 
 });
 
