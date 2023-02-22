@@ -395,13 +395,13 @@ jQuery(document).ready(function () {
   jQuery("#correlation_canvas").on('click' , 'a', function(e) {
 		var buttonId = e.target.id;
 		var corrPlotId = buttonId.replace(/download_/, '');
-		saveSvgAsPng(document.getElementById("#" + corrPlotId),  corrPlotId + ".png", {scale:1, left:12});	
+		saveSvgAsPng(document.getElementById("#" + corrPlotId),  corrPlotId + ".png", {scale:1});	
 	});
 
   jQuery("#si_canvas").on('click' , 'a', function(e) {
 		var buttonId = e.target.id;
 		var corrPlotId = buttonId.replace(/download_/, '');
-		saveSvgAsPng(document.getElementById("#" + corrPlotId),  corrPlotId + ".png", {scale: 1, left:10});	
+		saveSvgAsPng(document.getElementById("#" + corrPlotId),  corrPlotId + ".png", {scale: 1});	
 	});
 });
 
