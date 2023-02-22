@@ -359,12 +359,7 @@ sub genotype_file_name {
 sub relationship_matrix_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $data_set_type = $c->stash->{data_set_type};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    my $file_id = $pop_id . '_GP_' . $protocol_id;
-
+    my $file_id = $self->kinship_file_id($c);
     no warnings 'uninitialized';
 
     my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
@@ -389,23 +384,8 @@ sub relationship_matrix_file {
 sub relationship_matrix_adjusted_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $data_set_type = $c->stash->{data_set_type};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    my $file_id;
-    if ($trait_abbr)
-    {
-        $file_id = "${pop_id}_${trait_abbr}_GP_${protocol_id}";
-    }
-    else
-    {
-        $file_id = "${pop_id}_GP_${protocol_id}";
-    }
-
-    no warnings 'uninitialized';
-
+    my $file_id = $self->kinship_file_id($c);
+    
     my $cache_data = {key    => 'relationship_matrix_adjusted_table_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_table_' . $file_id,
 		      stash_key => 'relationship_matrix_adjusted_table_file',
@@ -424,17 +404,24 @@ sub relationship_matrix_adjusted_file {
 
 }
 
+sub kinship_file_id {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{kinship_pop_id} || $c->stash->{training_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $trait_abbr = $c->stash->{trait_abbr};
+
+    my $file_id =  $trait_abbr ? 
+        "${pop_id}_${trait_abbr}_GP_${protocol_id}" : 
+        "${pop_id}_GP_${protocol_id}";
+
+    return $file_id;
+}
 
 sub average_kinship_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $trait_abbr = $c->stash->{trait_abbr} || $pop_id;
-
-    my $file_id =  $trait_abbr ? "${pop_id}_${trait_abbr}_GP_${protocol_id}" : "${pop_id}_GP_${protocol_id}";
-
-    no warnings 'uninitialized';
+    my $file_id = $self->kinship_file_id($c);
 
     my $cache_data = {key    => 'average_kinship_file' . $file_id ,
 		      file      => 'average_kinship_file_' . $file_id,
@@ -450,10 +437,7 @@ sub average_kinship_file {
 sub inbreeding_coefficients_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    my $file_id = "${pop_id}_GP_${protocol_id}";
+    my $file_id = $self->kinship_file_id($c);
 
     no warnings 'uninitialized';
 
