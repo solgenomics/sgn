@@ -341,11 +341,11 @@ sub search {
         my %person_params;
         if ($owner_first_name) {
             $owner_first_name =~ s/\s+//g;
-            $person_params{first_name} = {'ilike' => '%'.$owner_first_name.'%'};
+            $person_params{first_name} = {'ilike' => $owner_first_name};
         }
         if ($owner_last_name) {
             $owner_last_name =~ s/\s+//g;
-            $person_params{last_name} = {'ilike' => '%'.$owner_last_name.'%'};
+            $person_params{last_name} = {'ilike' => $owner_last_name};
         }
 
         #$people_schema->storage->debug(1);
@@ -567,10 +567,10 @@ sub search {
         }
     }
     #print STDERR Dumper \%result_hash;
-    
+
     # Comma separated list of query placeholders for the result stock ids
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
-    
+
     # Get additional organism properties (species authority, subtaxa, subtaxa authority)
     my $organism_query = "SELECT op.organism_id, cvterm.name, op.value, op.rank
 FROM organismprop AS op
@@ -599,7 +599,7 @@ ORDER BY organism_id ASC;";
 
         push @{$organism_props{$organism_id}->{$prop_type}}, $prop_value;
     }
-    
+
     # Get additional stock properties (pedigree, synonyms, donor info)
     my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
@@ -613,7 +613,7 @@ ORDER BY organism_id ASC;";
         WHERE stock.stock_id IN ($id_ph);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
     $sth->execute(@result_stock_ids);
-    
+
     # Add additional organism and stock properties to the result hash for each stock
     while (my @r = $sth->fetchrow_array()) {
         my $stock_id = $r[0];
@@ -746,7 +746,7 @@ sub _refresh_materialized_stockprop {
                 });
                 $cvterm_id = $new_term->cvterm_id();
             }
-            
+
             $stockprop_refresh_q .= ",(''".$cvterm_id."'')";
         }
 
