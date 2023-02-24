@@ -612,6 +612,26 @@ sub rrblup_training_gebvs_file {
 }
 
 
+sub gebvs_file_id {
+    my ($self, $c) = @_;
+
+    my $identifier = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    if ($selection_pop_id) 
+    {
+        $identifier = "${identifier}-${selection_pop_id}";
+    }
+
+    my $trait_id  = $c->stash->{trait_id};
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
+    my $trait_abbr  = $c->stash->{trait_abbr};
+
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $file_id = "${identifier}-${trait_abbr}-GP-${protocol_id}";
+
+    return $file_id;
+}
+
 sub rrblup_selection_gebvs_file {
     my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
 
