@@ -60,6 +60,7 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     }
 
     my $gebvs_data = $c->controller("solGS::Utils")->read_file_data($gebvs_file);
+    my $gebvs_file_id = $c->controller('solGS::Files')->gebvs_file_id($c);
 
     my $ret->{status} = 'failed';
 
@@ -67,6 +68,7 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     {
         $ret->{status} = 'success';
         $ret->{gebvs_data} = $gebvs_data;
+        $ret->{gebvs_file_id} = $gebvs_file_id;
     }
 
     $ret = to_json($ret);
