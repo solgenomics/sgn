@@ -82,7 +82,7 @@ jQuery(document).ready(function () {
 
             } else {
                 var args = {
-                    'namedValues' : traitData,
+                    'named_values' : traitData,
                     'canvas' : '#pheno_means_histo_canvas',
                     'plot_id': '#pheno_means_histo_plot'
                 };
@@ -122,7 +122,7 @@ jQuery(document).ready(function () {
 
              } else {
                  var args = {
-                     'namedValues' : traitRawData,
+                     'named_values' : traitRawData,
                      'canvas' : '#pheno_raw_histo_canvas',
                      'plot_id': '#pheno_raw_histo_plot'
                  };
