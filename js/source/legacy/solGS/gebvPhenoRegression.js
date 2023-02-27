@@ -7,17 +7,7 @@
 
 
 jQuery(document).ready( function() {
-
-    var popDetails  = solGS.getPopulationDetails();
-    var traitId     = jQuery("#trait_id").val();
-    var protocolId  = jQuery('#genotyping_protocol_id').val();
-    
-    var args = {
-	'trait_id'       : traitId,
-	'training_pop_id': popDetails.training_pop_id,
-	'combo_pops_id'  : popDetails.combo_pops_id,
-	'genotyping_protocol_id': protocolId
-    };
+    var args = solGS.getModelArgs();
    
     checkDataExists(args);   
  
@@ -25,19 +15,17 @@ jQuery(document).ready( function() {
 
 
 function checkDataExists (args) {
-    
+
+    var regArgs = JSON.stringify(args);
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: args,
-        url: '/heritability/check/data/',
+        data: {'arguments': regArgs},
+        url: '/solgs/check/regression/data/',
         success: function(response) {
-            if(response.exists === 'yes') {
+            if(response.exists) {
                 getRegressionData(args);
-
-            } else {                
-                calculateVarianceComponents(args);
-            }
+             } 
         },
         error: function(response) {                    
             // alert('there is error in checking the dataset for heritability analysis.');     
@@ -47,38 +35,17 @@ function checkDataExists (args) {
 }
 
 
-function calculateVarianceComponents (args) {
- 
-    var gebvUrl = window.location.pathname;
-   
-    jQuery.ajax({
-        type: 'POST',
-        dataType: 'json',
-        data: {'source' : 'heritability'},
-        url: gebvUrl,
-        success: function(response) {
-            if(response.status === 'success') {
-                getRegressionData(args);
-            } else {
-              jQuery("#heritability_message").html('Error occured estimating breeding values for this trait.');   
-            }
-        },
-        error: function(response) { 
-            jQuery("#heritability_message").html('Error occured estimating breeding values for this trait.');            
-        }  
-    });
-}
-
-
 function getRegressionData (args) { 
        
+    var regArgs = JSON.stringify(args);
+
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: args,
-        url: '/heritability/regression/data/',
+        data: {'arguments': regArgs},
+        url: '/solgs/get/regression/data/',
         success: function(response) {
-            if(response.status === 'success') {
+            if(response.status) {
                 var regressionData = {
                     'breeding_values'     : response.gebv_data,
                     'phenotype_values'    : response.pheno_data,
@@ -103,7 +70,7 @@ function plotRegressionData(regressionData){
     var phenotypeDeviations = regressionData.phenotype_deviations;
     var heritability        = regressionData.heritability;
     var phenotypeValues     = regressionData.phenotype_values;
-
+console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
      var phenoRawValues = phenotypeValues.map( function (d) {
             d = d[1]; 
             return parseFloat(d); 
