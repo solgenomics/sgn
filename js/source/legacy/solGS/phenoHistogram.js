@@ -5,6 +5,11 @@ var solGS = solGS || function solGS () {};
 
 solGS.phenoHistogram =  {
 
+    PhenoRawHistoCanvas: '#pheno_raw_histo_canvas',
+    PhenoRawHistoPlotDiv: '#pheno_raw_histo_plot',
+    PhenoMeansHistoCanvas: '#pheno_means_histo_canvas',
+    PhenoMeansHistoPlotDiv: '#pheno_means_histo_plot',
+
     getTraitPhenoMeansData: function () {
 
 	var params = this.getHistogramParams();
@@ -49,6 +54,18 @@ solGS.phenoHistogram =  {
 	return params;
     },
 
+    createHistoDownloadLinks: function (phenoTypeHistoDivId) {
+
+        var phenoTypeHistoDivId = phenoTypeHistoDivId.replace(/#/, '');
+        var histoDownloadBtn = "download_" + phenoTypeHistoDivId;
+        var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram</a>";
+        var downloadLinks = `Download:  ${histoPlotLink}`;
+
+        return downloadLinks;
+    
+      },
+    
+
 
 ////////
 }
@@ -64,9 +81,13 @@ jQuery(document).ready(function() {
 
 
 jQuery(document).ready(function () {
-
-   var histMsgId = "#pheno_means_histogram_canvas #histogram_message";
-   solGS.phenoHistogram.getTraitPhenoMeansData().done(function(res) {
+    var PhenoRawHistoCanvas = solGS.phenoHistogram.PhenoRawHistoCanvas;
+    var PhenoRawHistoPlotDiv = solGS.phenoHistogram.PhenoRawHistoPlotDiv;
+    var PhenoMeansHistoCanvas = solGS.phenoHistogram.PhenoMeansHistoCanvas;
+    var PhenoMeansHistoPlotDiv = solGS.phenoHistogram.PhenoMeansHistoPlotDiv;
+  
+    var histMsgId = `${PhenoRawHistoCanvas} #histogram_message`;
+    solGS.phenoHistogram.getTraitPhenoMeansData().done(function(res) {
 
         if (res.status == 'success') {
            var traitData = res.data;
@@ -81,10 +102,12 @@ jQuery(document).ready(function () {
                 solGS.showMessage(histMsgId, msg);
 
             } else {
+                var phenoMeansPlotLinks= solGS.phenoHistogram.createHistoDownloadLinks(PhenoMeansHistoPlotDiv);
                 var args = {
                     'named_values' : traitData,
-                    'canvas' : '#pheno_means_histo_canvas',
-                    'plot_id': '#pheno_means_histo_plot'
+                    'canvas' : PhenoMeansHistoCanvas,
+                    'plot_id': PhenoMeansHistoPlotDiv,
+                    'download_links': phenoMeansPlotLinks
                 };
 
                 solGS.histogram.plotHistogram(args);
@@ -121,10 +144,12 @@ jQuery(document).ready(function () {
                  solGS.showMessage(histMsgIdRaw, msg);
 
              } else {
+                var phenoRawPlotLinks= solGS.phenoHistogram.createHistoDownloadLinks(PhenoRawHistoPlotDiv);
                  var args = {
                      'named_values' : traitRawData,
-                     'canvas' : '#pheno_raw_histo_canvas',
-                     'plot_id': '#pheno_raw_histo_plot'
+                     'canvas' : PhenoRawHistoCanvas,
+                     'plot_id': PhenoRawHistoPlotDiv,
+                     'download_links': phenoRawPlotLinks
                  };
 
                  solGS.histogram.plotHistogram(args);
@@ -142,4 +167,18 @@ jQuery(document).ready(function () {
          var msg = "<p>Error occured plotting histogram for this trait dataset.</p>";
          solGS.showMessage(histMsgIdRaw, msg);
      });
+
+
+     jQuery("#pheno_means_histo_canvas").on('click' , 'a', function(e) {
+		var buttonId = e.target.id;
+		var histoPlotId = buttonId.replace(/download_/, '');
+		saveSvgAsPng(document.getElementById("#" + histoPlotId),  histoPlotId + ".png", {scale:1});	
+	});
+
+    jQuery("#pheno_raw_histo_canvas").on('click' , 'a', function(e) {
+		var buttonId = e.target.id;
+		var histoPlotId = buttonId.replace(/download_/, '');
+		saveSvgAsPng(document.getElementById("#" + histoPlotId),  histoPlotId + ".png", {scale:1});	
+	});
+
 });
