@@ -802,6 +802,7 @@ solGS.getModelArgs = function () {
     args["training_traits_ids"] = trainingTraitsIds;
   }
 
+  if (trainingTraitsIds.length ==1) {args["trait_id"] = trainingTraitsIds[0]}
   return args;
 };
 
