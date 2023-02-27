@@ -590,16 +590,10 @@ sub phenotype_metadata_file {
 
 
 sub rrblup_training_gebvs_file {
-    my ($self, $c, $identifier, $trait_id, $protocol_id) = @_;
+    my ($self, $c, $training_pop_id, $trait_id, $protocol_id) = @_;
 
-    $identifier = $c->stash->{pop_id} || $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} if !$identifier;
-    $trait_id  = $c->stash->{trait_id} if !$trait_id;
-
-    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
-    my $trait_abbr  = $c->stash->{trait_abbr};
-
-    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
-    my $file_id = "$identifier-${trait_abbr}-GP-${protocol_id}";
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $file_id = $self->gebvs_file_id($c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id);
 
     my $cache_data = {key       => 'rrblup_training_gebvs_' . $file_id,
                       file      => 'rrblup_training_gebvs_' . $file_id,
@@ -613,10 +607,11 @@ sub rrblup_training_gebvs_file {
 
 
 sub gebvs_file_id {
-    my ($self, $c) = @_;
+    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
 
-    my $identifier = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
+    $training_pop_id = $c->stash->{training_pop_id} if !$training_pop_id;
+    $selection_pop_id = $c->stash->{selection_pop_id} if !$selection_pop_id ;
+    my $identifier = $training_pop_id;
     if ($selection_pop_id) 
     {
         $identifier = "${identifier}-${selection_pop_id}";
@@ -635,11 +630,7 @@ sub gebvs_file_id {
 sub rrblup_selection_gebvs_file {
     my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
 
-    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
-    my $trait_abbr  = $c->stash->{trait_abbr};
-
-    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
-    my $file_id = "${training_pop_id}_${selection_pop_id}-${trait_abbr}-GP-${protocol_id}";
+    my $file_id = $self->gebvs_file_id($c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id);
 
     my $cache_data = {key  => 'rrblup_selection_gebvs_' . $file_id,
                       file      => 'rrblup_selection_gebvs_' . $file_id,
