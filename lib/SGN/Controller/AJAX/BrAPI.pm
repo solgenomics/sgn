@@ -2245,24 +2245,17 @@ sub studies_info_PUT {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub studies_observation_variables : Chained('studies_single') PathPart('observationvariables') Args(0) : ActionClass('REST') {
-	print( "2,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
-	print( "2,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
-}
+sub studies_observation_variables : Chained('studies_single') PathPart('observationvariables') Args(0) : ActionClass('REST') { }
 
 sub studies_observation_variables_POST {
 	my $self = shift;
 	my $c = shift;
-	print( ",.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,#.,.,.,.,.,.,\n");
-	print( ",.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
 	#my $auth = _authenticate_user($c);
 }
 
 sub studies_observation_variables_GET {
 	my $self = shift;
 	my $c = shift;
-	print( "3,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,#.,.,.,.,.,.,\n");
-	print( "3,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
 	my ($auth) = _authenticate_user($c);
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
@@ -3301,8 +3294,6 @@ sub observationvariable_data_type_list : Chained('brapi') PathPart('variables/da
 sub observationvariable_data_type_list_POST {
 	my $self = shift;
 	my $c = shift;
-	print( "3,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
-	print( "3,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
 	#my $auth = _authenticate_user($c);
 }
 
@@ -3322,8 +3313,6 @@ sub observationvariable_ontologies : Chained('brapi') PathPart('ontologies') Arg
 sub observationvariable_ontologies_POST {
 	my $self = shift;
 	my $c = shift;
-	print( "4,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
-	print( "4,.,.,.,.,.,.,,.,.,.,.,.,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,\n");
 	#my $auth = _authenticate_user($c);
 }
 
@@ -3401,7 +3390,7 @@ sub variables_search_retrieve : Chained('brapi') PathPart('search/variables') Ar
     retrieve_results($self, $c, $search_id, 'ObservationVariables');
 }
 
-sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : ActionClass('REST') {}
+sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : ActionClass('REST') { }
 
 # Endpoint for POST variables
 sub observationvariable_list_POST {
