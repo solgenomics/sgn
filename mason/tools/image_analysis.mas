@@ -208,7 +208,8 @@ tr.shown td.details-control {
             </button>
           </div>
           <div class="modal-body" id="modelMetricsDialogBody">
-              <pre id="metrics_json"></pre>
+              <table class="display" style="width:100%" id="metrics_table">
+              </table>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -394,7 +395,6 @@ jQuery(document).ready(function(){
                             );
                         }
                         else {
-                            document.getElementById("metrics_json").textContent = JSON.stringify(item.result.analysis_info, undefined, 2);
                         }
                         results.push(item);
                     });
@@ -417,6 +417,17 @@ jQuery(document).ready(function(){
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
             // console.log("Results are:");
             // console.log(results);
+            var first = results[0];
+            let metricsData = Object.entries(first.result.analysis_info).map(( [key, value] ) => ({ key : value }));
+
+            jQuery('#metrics_table').DataTable({
+                "data": metricsData,
+                "columns": [
+                    { "data": "metric" },
+                    { "data": "value" },
+                ]
+            });
+
             if (results.length > 0) {
                 jQuery.ajax({
                     url: '/ajax/image_analysis/group',
