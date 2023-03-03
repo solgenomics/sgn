@@ -13,32 +13,36 @@ solGS.gebvs = {
   histoPlotId: "#gebvs_histo_plot",
 
   getGebvsParams: function () {
-    var popId = jQuery("#model_id").val();
     var traitId = jQuery("#trait_id").val();
     var comboPopsId = jQuery("#combo_pops_id").val();
     var selectionPopId = jQuery("#selection_pop_id").val();
     var protocolId = jQuery("#genotyping_protocol_id").val();
+    var trainingPopId = jQuery("#training_pop_id").val();
+    var datasetType = jQuery("#data_set_type").val();
 
     var params = {
-      training_pop_id: popId,
+      training_pop_id: trainingPopId,
       combo_pops_id: comboPopsId,
       selection_pop_id: selectionPopId,
       genotyping_protocol_id: protocolId,
       trait_id: traitId,
+      data_set_type: datasetType
     };
 
     return params;
   },
 
   getGebvsData: function () {
-    var action = "/solgs/trait/gebvs/data";
-    var params = this.getGebvsParams();
+    
+    var gebvsArgs = this.getGebvsParams();
+    gebvsArgs = JSON.stringify(gebvsArgs);
 
     var gebvsData = jQuery.ajax({
       async: false,
-      url: action,
+      type: "POST",
+      url: "/solgs/trait/gebvs/data",
       dataType: "json",
-      data: params,
+      data: {'arguments': gebvsArgs},
     });
 
     return gebvsData;
