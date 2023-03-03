@@ -13,10 +13,11 @@ solGS.phenoHistogram =  {
     getTraitPhenoMeansData: function () {
 
 	var params = this.getHistogramParams();
+    params = JSON.stringify(params);
 	var histoData = jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: params,
+            data: {'arguments': params},
             url: '/trait/pheno/means/data/',
         });
 
@@ -26,10 +27,11 @@ solGS.phenoHistogram =  {
     getTraitPhenoRawData: function () {
 
 	var params = this.getHistogramParams();
+    params = JSON.stringify(params);
 	var histoData = jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: params,
+            data: {'arguments': params},
             url: '/trait/pheno/raw/data/',
         });
 
@@ -64,8 +66,6 @@ solGS.phenoHistogram =  {
         return downloadLinks;
     
       },
-    
-
 
 ////////
 }
