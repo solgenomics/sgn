@@ -28,19 +28,31 @@ __PACKAGE__->config(
 sub check_analysis_result :Path('/solgs/check/stored/analysis/') Args() {
     my ($self, $c) = @_;
 
-    $self->check_stored_analysis($c);
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
+    my $analysis_id = $self->check_stored_analysis($c);
+	$c->stash->{rest} {analysis_id} = $analysis_id;
+
+	if ($analysis_id)
+	{
+    	$c->stash->{rest}{error} = "This model GEBVs are already in the database.";
+	} 
+		
 }
 
 
 sub result_details :Path('/solgs/analysis/result/details') Args() {
     my ($self, $c) = @_;
 
+	my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
 	my $stored = $self->check_stored_analysis($c);
 
 	if (!$stored)
 	{
-		my $params = $c->req->params;
+		my $params = decode_json($args);
 		my $analysis_details;
 
 		eval
@@ -55,7 +67,6 @@ sub result_details :Path('/solgs/analysis/result/details') Args() {
 		}
 		else
 		{
-
 		$c->stash->{rest}{analysis_details} = $analysis_details;
 		}
 	}
@@ -209,25 +220,20 @@ sub check_stored_analysis {
 
 	my $log = $self->get_analysis_job_info($c);
 	my $analysis_name = $log->{analysis_name};
-
+	my $analysis_id;
 	if ($analysis_name)
 	{
 		my $schema = $self->schema($c);
-        my $analysis= $schema->resultset("Project::Project")->find({ name => $analysis_name });
-
-	    if ($analysis)
+        my $analysis = $schema->resultset("Project::Project")->find({ name => $analysis_name });
+	    
+		if ($analysis)
 		{
-			my $analysis_id = $analysis->project_id;
-            $c->stash->{rest} = {
-				analysis_id =>  $analysis_id,
-				error => "This model GEBVs are already in the database."
-			};
-
-			return 1;
-		}
+			$analysis_id = $analysis->project_id;
+	 	} 
 	}
+	
+	return $analysis_id;
 
-	return;
 }
 
 
@@ -256,14 +262,14 @@ sub gebvs_values {
 
 	$c->stash->{genotyping_protocol_id} = $protocol_id;
 
-	my $ref = $c->req->referer;
-	my $path = $c->req->path;
+	my $analysis_page = $params->{analysis_page}; #$c->req->referer;
+	# my $path = $c->req->path;
 	my $gebvs_file;
-	if ($ref =~ /solgs\/trait\/|solgs\/model\/combined\/trials\//)
+	if ($analysis_page =~ /solgs\/trait\/|solgs\/model\/combined\/trials\//)
 	{
-			$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
+		$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
 	}
-	elsif ($ref =~ /solgs\/selection\/|solgs\/combined\/model\/\d+|\w+_\d+\/selection\//)
+	elsif ($analysis_page =~ /solgs\/selection\/|solgs\/combined\/model\/\d+|\w+_\d+\/selection\//)
 	{
 		$gebvs_file = $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	}
@@ -308,15 +314,7 @@ sub get_analysis_job_info {
 	my ($self, $c) = @_;
 
 	my $files = $self->all_users_analyses_logs($c);
-	my $analysis_page = $c->req->referer;
-	my $base = $c->req->base;
-	$base =~ s/(https?)|(:\d+)|\/|://g;
-
-	$base =~ s/(www\.)//;
-	$analysis_page =~ s/(https?:\/\/)//;
-	$analysis_page =~ s/(www\.)//;
-	$analysis_page =~ s/$base//;
-	$analysis_page =~ s/:\d+//;
+	my $analysis_page = $c->stash->{analysis_page};
 
 	my @log;
 	foreach my $log_file (@$files)
