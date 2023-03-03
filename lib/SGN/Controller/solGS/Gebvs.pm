@@ -24,29 +24,17 @@ BEGIN { extends 'Catalyst::Controller' }
 sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     my ($self, $c) = @_;
 
-    my $training_pop_id  = $c->req->param('training_pop_id');
-    my $trait_id         = $c->req->param('trait_id');
-    my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $protocol_id      = $c->req->param('genotyping_protocol_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-
-    if ($combo_pops_id)
-    {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-	$c->stash->{data_set_type} = 'combined_populations';
-	$training_pop_id = $combo_pops_id;
-	$c->stash->{combo_pops_id} = $combo_pops_id;
-    }
-
-    $c->stash->{pop_id} = $training_pop_id;
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{selectiion_pop_id} = $selection_pop_id;
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    my $trait_id = $c->stash->{'trait_id'};
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     my $gebvs_file;
     my $page = $c->req->referer();
+
+    my $training_pop_id = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
 
     if ($page =~ /solgs\/selection\//)
     {
