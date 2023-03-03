@@ -1,4 +1,4 @@
-package SGN::Controller::solGS::Heritability;
+package SGN::Controller::solGS::gebvPhenoRegression;
 
 use Moose;
 use namespace::autoclean;
