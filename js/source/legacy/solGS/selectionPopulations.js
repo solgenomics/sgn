@@ -15,39 +15,24 @@ jQuery(document).ready( function () {
 
 function checkSelectionPopulations () {
 
-    var popId =  getPopulationId();
-
-    var trainingTraitsIds = jQuery('#training_traits_ids').val();
-    var protocolId = jQuery('#genotyping_protocol_id').val();
-
-    if (trainingTraitsIds) {
-	trainingTraitsIds = trainingTraitsIds.split(',');
-    }
-
-    var traitId = jQuery('#trait_id').val();
-    if (traitId && !trainingTraitsIds) {
-	trainingTraitsIds = [traitId];
-    }
-
-    var args = {'training_traits_ids': trainingTraitsIds,
-		'genotyping_protocol_id': protocolId,
-		'training_pop_id': popId}
+	var args = solGS.getModelArgs();
+	args = JSON.stringify(args);
 
     jQuery.ajax({
         type: 'POST',
-	data: args,
+		data: {'arguments': args},
         dataType: 'json',
-        url: '/solgs/check/selection/populations/' + popId,
+        url: '/solgs/check/selection/populations/',
         success: function(response) {
             if (response.data) {
-		jQuery("#selection_populations").show();
-		jQuery("#search_all_selection_pops").show();
+			jQuery("#selection_populations").show();
+			jQuery("#search_all_selection_pops").show();
 
-		displaySelectionPopulations(response.data);
+			displaySelectionPopulations(response.data);
             } else {
-		jQuery("#search_all_selection_pops").show();
+				jQuery("#search_all_selection_pops").show();
             }
-	}
+		}
     });
 
 }
