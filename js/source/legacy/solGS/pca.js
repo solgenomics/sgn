@@ -177,7 +177,7 @@ solGS.pca = {
 				}
 			}
 
-			var protocolId = protocolId = solGS.genotypingProtocol.getGenotypingProtocolId('pca_div');
+			var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId('pca_div');
 			
 			var pcaArgs = {
 				'training_pop_id': [popDetails.training_pop_id],
