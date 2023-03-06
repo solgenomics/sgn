@@ -5,13 +5,19 @@ var solGS = solGS || function solGS(){};
 
 solGS.scatterPlot = {
 
-    plotRegression: function (regressionData) {
+    plotRegression: function (regData) {
   
-    var breedingValues      = regressionData.breeding_values;
-    var phenotypeDeviations = regressionData.phenotype_deviations;
-    var heritability        = regressionData.heritability;
-    var phenotypeValues     = regressionData.phenotype_values;
-console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
+    var breedingValues      = regData.breeding_values;
+    var phenotypeDeviations = regData.phenotype_deviations;
+    var heritability        = regData.heritability;
+    var phenotypeValues     = regData.phenotype_values;
+    var regPlotDivId = regData.gebv_pheno_regression_div_id;
+    var canvas = regData.canvas;
+    var downloadLinks = regData.download_links;
+
+    if (!canvas.match(/#/)) {canvas = '#' + canvas;}
+    if (!regPlotDivId.match(/#/)) {regPlotDivId = '#' + regPlotDivId;}
+
      var phenoRawValues = phenotypeValues.map( function (d) {
             d = d[1]; 
             return parseFloat(d); 
@@ -54,17 +60,17 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
      
     var height = 300;
     var width  = 500;
-    var pad    = {left:20, top:20, right:20, bottom: 20}; 
+    var pad    = {left:20, top:20, right:20, bottom: 40}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
-    var svg = d3.select("#gebv_pheno_regression_canvas")
+    var svg = d3.select(regPlotDivId)
         .append("svg")
         .attr("width", totalW)
         .attr("height", totalH);
 
-    var regressionPlot = svg.append("g")
-        .attr("id", "#gebv_pheno_regression_plot")
+    var regPlot = svg.append("g")
+        .attr("id", regPlotDivId)
         .attr("transform", "translate(" + (pad.left - 5) + "," + (pad.top - 5) + ")");
    
     var phenoMin = d3.min(phenoXValues);
@@ -102,7 +108,7 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
     var xAxisMid = 0.5 * (totalH); 
     var yAxisMid = 0.5 * (totalW);
  
-    regressionPlot.append("g")
+    regPlot.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(" + pad.left + "," + xAxisMid +")")
         .call(xAxis)
@@ -114,7 +120,7 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
         .attr("fill", "green")
         .style({"text-anchor":"start", "fill": "#86B404"});
        
-    regressionPlot.append("g")
+    regPlot.append("g")
         .attr("class", "y axis")
         .attr("transform", "translate(" + yAxisMid +  "," + pad.top  + ")")
         .call(yAxis)
@@ -124,7 +130,7 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
         .attr("fill", "green")
         .style("fill", "#86B404");
 
-    regressionPlot.append("g")
+    regPlot.append("g")
         .attr("id", "x_axis_label")
         .append("text")
         .text("Phenotype deviations")
@@ -133,7 +139,7 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
         .attr("font-size", 10)
         .style("fill", "#86B404")
 
-    regressionPlot.append("g")
+    regPlot.append("g")
         .attr("id", "y_axis_label")
         .append("text")
         .text("GEBVs")
@@ -142,7 +148,7 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
         .attr("font-size", 10)
         .style("fill", "#86B404")
 
-    regressionPlot.append("g")
+    regPlot.append("g")
         .selectAll("circle")
         .data(scatterData)
         .enter()
@@ -171,7 +177,7 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
             d3.select(this)
                 .attr("r", 5)
                 .style("fill", "#86B404")
-            regressionPlot.append("text")
+            regPlot.append("text")
                 .attr("id", "dLabel")
                 .style("fill", "#86B404")              
                 .text( d[0].name + "(" + d[0].pheno_dev + "," + d[0].gebv + ")")
@@ -235,13 +241,13 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
    
     });
       
-    regressionPlot.append("svg:path")
+    regPlot.append("svg:path")
         .attr("d", lsLine(lsPoints))
         .attr('stroke', '#86B404')
         .attr('stroke-width', 2)
         .attr('fill', 'none');
 
-     regressionPlot.append("g")
+     regPlot.append("g")
         .attr("id", "equation")
         .append("text")
         .text(equation)
@@ -250,7 +256,7 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
         .style("fill", "#86B404")
         .style("font-weight", "bold");  
     
-     regressionPlot.append("g")
+     regPlot.append("g")
         .attr("id", "rsquare")
         .append("text")
         .text(rq)
@@ -258,8 +264,16 @@ console.log(`plotRegressionData data: ${JSON.stringify(regressionData)}`)
         .attr("y", 50)
         .style("fill", "#86B404")
         .style("font-weight", "bold");  
+
+        if (downloadLinks) {
+            if (!regPlotDivId.match('#')) {
+                regPlotDivId = '#' + regPlotDivId;
+            }
+            jQuery(regPlotDivId).append('<p style="margin-left: 40px">' + downloadLinks + '</p>');
+        }
    
 }
+
 }
 
 
