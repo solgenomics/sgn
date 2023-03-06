@@ -262,14 +262,15 @@ sub gebvs_values {
 
 	$c->stash->{genotyping_protocol_id} = $protocol_id;
 
-	my $analysis_page = $params->{analysis_page}; #$c->req->referer;
-	# my $path = $c->req->path;
+	my $analysis_page = $params->{analysis_page}; 
+	$analysis_type = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+
 	my $gebvs_file;
-	if ($analysis_page =~ /solgs\/trait\/|solgs\/model\/combined\/trials\//)
+	if ($analysis_page =~ /training_model/)
 	{
 		$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
 	}
-	elsif ($analysis_page =~ /solgs\/selection\/|solgs\/combined\/model\/\d+|\w+_\d+\/selection\//)
+	elsif ($analysis_page =~ /selection_prediction/)
 	{
 		$gebvs_file = $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	}
