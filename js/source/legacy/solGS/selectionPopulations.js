@@ -7,12 +7,6 @@
 
 
 
-jQuery(document).ready( function () {
-    checkSelectionPopulations();
-
-});
-
-
 function checkSelectionPopulations () {
 
 	var args = solGS.getModelArgs();
@@ -73,32 +67,14 @@ jQuery(document).ready( function () {
 
 
 function checkSelectionPopulationRelevance (popName) {
-
-    var trainingPopId  =  getPopulationId();
-
-    var combinedPopsId = jQuery("#combo_pops_id").val();
-    var dataSetType;
-
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-    var protocolId = jQuery('#genotyping_protocol_id').val();
-
-    if (combinedPopsId) {
-	dataSetType = 'combined_populations';
-    }
+	var modelVars= solGS.getModelArgs();
+	modelVars['selection_pop_name'] = popName;
 
     jQuery("#selection_pops_message")
 	.html("Checking if the model can be used on " + popName + "...please wait...")
 	.show();
 
-    var popData = {
-	'selection_pop_name' : popName,
-	'training_pop_id'    : trainingPopId,
-	'training_traits_ids'   : trainingTraitsIds,
-	'data_set_type'      : dataSetType,
-	'genotyping_protocol_id': protocolId,
-    };
-
-	popData = JSON.stringify(popData);
+	var popData = JSON.stringify(modelVars);
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -159,26 +135,12 @@ function checkSelectionPopulationRelevance (popName) {
 
 
 function searchSelectionPopulations () {
-
-    var popId = getPopulationId();
-
-    var combinedPopsId = jQuery("#combo_pops_id").val();
-    var dataSetType;
-
-    if (combinedPopsId) {
-	dataSetType = 'combined_populations';
-    }
-    var protocolId = jQuery('#genotyping_protocol_id').val();
-
-    var args = {'data_set_type': dataSetType,
-	       	'genotyping_protocol_id': protocolId,
-		'training_pop_id': popId
-	       };
+    var args = solGS.getModelArgs();
 
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: args ,
+		data: args ,
         url: '/solgs/search/selection/populations/' + popId,
         success: function(res) {
 
@@ -224,6 +186,11 @@ function displaySelectionPopulations (data) {
 	jQuery('#selection_pops_list').dataTable().fnAddData(data);
     }
 }
+
+jQuery(document).ready( function () {
+    checkSelectionPopulations();
+
+});
 
 
 jQuery(document).ready( function() {
