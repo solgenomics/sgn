@@ -40,7 +40,6 @@ use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
 use CXGN::Accession;
 use CXGN::Stock::Seedlot::Maintenance;
-use CXGN::Cross;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
