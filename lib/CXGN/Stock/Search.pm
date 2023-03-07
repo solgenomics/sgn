@@ -250,7 +250,7 @@ sub search {
     my $matchtype = $self->match_type || 'contains';
     my $any_name = $self->match_name;
     my $organism_id = $self->organism_id;
-    my $stock_type_id = $self->stock_type_id;
+    my $stock_type_id = $self->stock_type_id ;
     my $stock_type_name = $self->stock_type_name;
     my $owner_first_name = $self->owner_first_name;
     my $owner_last_name = $self->owner_last_name;
@@ -485,7 +485,6 @@ sub search {
             push @stockprop_filtered_stock_ids, $stock_id;
         }
     }
-
     if ($advanced_search) {
       if ($stock_type_search  == $accession_cvterm_id){
           $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
@@ -493,6 +492,8 @@ sub search {
           $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
       }
     }
+    if ( !$and_conditions) {  $and_conditions = [ { 'me.type_id' => { '!=' => undef } } ] };
+
     #$schema->storage->debug(1);
     my $search_query = {
         -and => [
@@ -519,6 +520,7 @@ sub search {
     });
 
     my $records_total = $rs->count();
+    $any_name =~ s/^\s+|\s+$//g;
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
     }
