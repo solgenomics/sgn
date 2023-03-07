@@ -611,6 +611,25 @@ function germplasm_progeny (params,behavior){
     return this.simple_brapi_call(call);
 }
 
+/** `GET /pedigree/{germplasmDbId}`
+ * @alias BrAPINode.prototype.pedigree
+ * @param {Object} params Parameters to provide to the call
+ * @param {String} params.germplasmDbId germplasmDbId
+ * @return {BrAPI_Behavior_Node}
+ */
+ function pedigree (params){
+    var call = {
+        'defaultMethod': 'get',
+        'urlTemplate': '/pedigree/',
+        'params': params,
+        'behavior': 'map',
+    };
+    this.version.check(call.urlTemplate,{
+        introduced:"v2.0"
+    });
+    return this.simple_brapi_call(call);
+}
+
 /** `GET /germplasm/{germplasmDbId}/markerprofiles`
  * @alias BrAPINode.prototype.germplasm_markerprofiles
  * @param {Object} params Parameters to provide to the call
@@ -2256,6 +2275,7 @@ var brapiMethods = Object.freeze({
 	germplasm_attributes: germplasm_attributes,
 	germplasm_pedigree: germplasm_pedigree,
 	germplasm_progeny: germplasm_progeny,
+	pedigree: pedigree,
 	germplasm_markerprofiles: germplasm_markerprofiles,
 	search_germplasm: search_germplasm,
 	images: images,
