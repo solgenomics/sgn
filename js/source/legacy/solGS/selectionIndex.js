@@ -271,7 +271,7 @@ solGS.sIndex = {
                         let histo = {
                                canvas: '#si_canvas',
                                plot_id: `#${res.sindex_name}`,
-                               namedValues: res.indices,
+                               named_values: res.indices,
                                caption: caption
                            };
 
