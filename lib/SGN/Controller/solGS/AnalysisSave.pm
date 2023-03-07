@@ -137,7 +137,6 @@ sub analysis_traits {
 	my $log = $self->get_analysis_job_info($c);
 	my $trait_ids = $log->{trait_id};
 	my @trait_names;
-
 	foreach my $tr_id (@$trait_ids)
 	{
 		my $extended_name = $self->extended_trait_name($c, $tr_id);
@@ -263,7 +262,7 @@ sub gebvs_values {
 	$c->stash->{genotyping_protocol_id} = $protocol_id;
 
 	my $analysis_page = $params->{analysis_page}; 
-	$analysis_type = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+	$analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
 
 	my $gebvs_file;
 	if ($analysis_page =~ /training_model/)
@@ -316,12 +315,13 @@ sub get_analysis_job_info {
 
 	my $files = $self->all_users_analyses_logs($c);
 	my $analysis_page = $c->stash->{analysis_page};
-
 	my @log;
+
 	foreach my $log_file (@$files)
 	{
 		my @logs = read_file($log_file, {binmode => ':utf8'});
 		my ($log) = grep{ $_ =~ /$analysis_page/} @logs;
+
 		@log = split(/\t/, $log);
 		last if $log;
 	}
@@ -343,12 +343,9 @@ sub all_users_analyses_logs {
 	my ($self, $c) = @_;
 
 	my $dir = $c->stash->{analysis_log_dir};
-	my $rule = File::Find::Rule->new;
-	$rule->file;
-	$rule->nonempty;
-	$rule->name('analysis_log');
-	
-	my @files = $rule->in($dir);
+	my @files = File::Find::Rule->file()
+                            ->name( '*.txt' )
+                            ->in( $dir );
 
 	return \@files;
 
