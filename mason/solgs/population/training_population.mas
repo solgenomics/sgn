@@ -16,6 +16,7 @@ $protocol_url => ''
 $acronym => ''
 $genotyping_protocol_id
 $data_set_type => ''
+$analysis_type => ''
 
 </%args>
 
@@ -135,5 +136,6 @@ $training_pop_id = $pop_id;
      combo_pops_id => $combo_pops_id,
      genotyping_protocol_id => $genotyping_protocol_id,
      data_set_type => $data_set_type,
+     analysis_type => $analysis_type,
 
    &>

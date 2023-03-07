@@ -27,6 +27,7 @@ $protocol_url => ''
 $combo_pops_id => ''
 $genotyping_protocol_id => ''
 $training_pop_url
+$analysis_type => ''
 </%args>
 
 <%perl>
@@ -69,6 +70,7 @@ $training_pop_url
      trait_id => $trait_id,
      combo_pops_id => $combo_pops_id,
      genotyping_protocol_id => $genotyping_protocol_id,
+     analysis_type => $analysis_type,
 
      &>
 </&>
