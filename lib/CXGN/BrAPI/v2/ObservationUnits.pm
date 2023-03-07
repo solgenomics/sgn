@@ -45,6 +45,8 @@ sub search {
     my $level_code_arrayref = $params->{observationUnitLevelCode} || ($params->{observationUnitLevelCodes} || ());
     my $levels_relation_arrayref = $params->{observationLevelRelationships} || ();
     my $levels_arrayref = $params->{observationLevels} || ();
+    my $reference_ids_arrayref = $params->{externalReferenceId} || $params->{externalReferenceID} || ($params->{externalReferenceIds} || $params->{externalReferenceIDs} || ());
+    my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
 
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
@@ -93,6 +95,8 @@ sub search {
             # Order by plot_number, account for non-numeric plot numbers
             order_by=>'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::int',
             observation_unit_names_list=>$observation_unit_names_list,
+            xref_id_list=>$reference_ids_arrayref,
+            xref_source_list=>$reference_sources_arrayref
             # phenotype_min_value=>$phenotype_min_value,
             # phenotype_max_value=>$phenotype_max_value,
             # exclude_phenotype_outlier=>$exclude_phenotype_outlier
