@@ -142,7 +142,12 @@ sub get_login_status {
 
 sub get_login_info {
     my $self = shift;
-    return $self->{login_info};
+    if ($self->has_session()) { 
+	return $self->{login_info};
+    }
+    else {
+	return {};
+    }
 }
 
 =head2 verify_session
