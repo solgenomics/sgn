@@ -20,6 +20,7 @@ load_trait_props.pl
 =head2 DESCRIPTION
 
 The input file should have the following column headers:
+
   trait_name
   trait_format
   trait_default_value
@@ -28,11 +29,11 @@ The input file should have the following column headers:
   trait_categories
   trait_details
 
-trait_name: the name of the variable human readable form (e.g., "plant height in cm")
-trait_format can be numeric, qualitative, date or boolean
-trait_default_value is the value if no value is given
-trait_categories are the different possible names of the categories, separated by /, for example "1/2/3/4/5"
-trait_details string describing the trait categories 
+  trait_name: the name of the variable human readable form (e.g., "plant height in cm")
+  trait_format: can be numeric, qualitative, date or boolean
+  trait_default_value: is the value if no value is given
+  trait_categories: are the different possible names of the categories, separated by /, for example "1/2/3/4/5"
+  trait_details: string describing the trait categories 
 
 =head2 AUTHOR
 
