@@ -398,16 +398,19 @@ jQuery(document).ready(function () {
 		saveSvgAsPng(document.getElementById("#" + corrPlotId),  corrPlotId + ".png", {scale:1});	
 	});
 
-  jQuery("#si_canvas").on('click' , 'a', function(e) {
-		var buttonId = e.target.id;
-		var corrPlotId = buttonId.replace(/download_/, '');
-		saveSvgAsPng(document.getElementById("#" + corrPlotId),  corrPlotId + ".png", {scale: 1});	
-	});
-});
 
-jQuery(document).on("click", "#run_genetic_correlation", function () {
-  var popId = jQuery("#corre_selected_population_id").val();
-  var popType = jQuery("#corre_selected_population_type").val();
+  jQuery("#si_correlation_canvas").on('click' , 'a', function(e) {
+    var buttonId = e.target.id;
+    var corrPlotId = buttonId.replace(/download_/, '');
+  
+    saveSvgAsPng(document.getElementById("#" + corrPlotId),  corrPlotId + ".png", {scale: 1});	
+  });
 
-  solGS.correlation.formatGenCorInputData(popId, popType);
+  jQuery(document).on("click", "#run_genetic_correlation", function () {
+    var popId = jQuery("#corre_selected_population_id").val();
+    var popType = jQuery("#corre_selected_population_type").val();
+  
+    solGS.correlation.formatGenCorInputData(popId, popType);
+  });
+
 });
