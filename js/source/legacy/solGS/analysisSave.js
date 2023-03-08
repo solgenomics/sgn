@@ -48,24 +48,13 @@ solGS.save = {
     
     var analysisArgs = solGS.getSelectionPopArgs();
     analysisArgs['analysis_result_type'] = this.analysisResultType();
-    analysisArgs['analysis_page'] = window.location.pathname;
+    analysisArgs['analysis_page'] = location.pathname;
   
     return analysisArgs;
   },
 
   analysisResultType: function () {
-    var type;
-    var path = location.pathname;
-
-    if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
-      type = "training_model";
-    } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
-      type = "multiple_models";
-    } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
-      type = "selection_prediction";
-    }
-
-    return type;
+    return jQuery('#analysis_type').val();
   },
 
   checkUserStatus: function () {
