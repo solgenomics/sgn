@@ -611,17 +611,18 @@ sub gebvs_file_id {
 
     $training_pop_id = $c->stash->{training_pop_id} if !$training_pop_id;
     $selection_pop_id = $c->stash->{selection_pop_id} if !$selection_pop_id ;
+    $trait_id  = $c->stash->{trait_id} if !$trait_id;
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     my $identifier = $training_pop_id;
+
     if ($selection_pop_id) 
     {
         $identifier = "${identifier}-${selection_pop_id}";
     }
 
-    my $trait_id  = $c->stash->{trait_id};
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
 
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $file_id = "${identifier}-${trait_abbr}-GP-${protocol_id}";
 
     return $file_id;
@@ -906,7 +907,10 @@ sub create_file_id {
     }
 
     $file_id = $data_type ? $file_id . '-' . lc($data_type) : $file_id;
-    $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
+    if ($cluster_type !~ /hierarchical/i) 
+    {
+        $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
+    }
     $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-gp-' . $protocol_id : $file_id;
 
     if ($sindex_name)
