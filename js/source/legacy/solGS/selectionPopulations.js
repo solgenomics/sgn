@@ -98,7 +98,7 @@ function checkSelectionPopulationRelevance (popName) {
     var protocolId = jQuery('#genotyping_protocol_id').val();
 
     if (combinedPopsId) {
-	dataSetType = 'combined populations';
+	dataSetType = 'combined_populations';
     }
 
     jQuery("#selection_pops_message")
@@ -181,7 +181,7 @@ function searchSelectionPopulations () {
     var dataSetType;
 
     if (combinedPopsId) {
-	dataSetType = 'combined populations';
+	dataSetType = 'combined_populations';
     }
     var protocolId = jQuery('#genotyping_protocol_id').val();
 

@@ -213,12 +213,10 @@ export function init() {
             hiddenElement.click();    
         }
 
-        get_harvesting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'harvesting_order_layout');
-        }
-
-        get_planting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'planting_order_layout');
+        get_plot_order(type, order, include_borders) {
+            let k = type === 'planting' ? 'planting_order_layout' : 'harvesting_order_layout';
+            this.meta_data[k] = order;
+            this.traverse_map(this.plot_arr.filter(plot => include_borders || plot.type !== "border"), k);
         }
 
         set_meta_data() {
@@ -283,8 +281,18 @@ export function init() {
         }
 
         get_plot_format(type, x, y) {
-            return { 
-                type: type, observationUnitName: this.trial_id + ' ' + type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
+            // Use the first plot from the trial to get trial-level metadata to give to a border plot
+            // NOTE: this will break if plots from multiple trials are loaded
+            let p = this.plot_arr[0];
+            return {
+                type: type,
+                observationUnitName: this.trial_id + ' ' + type,
+                observationUnitPosition: {
+                    positionCoordinateX: x,
+                    positionCoordinateY: y
+                },
+                locationName: p.locationName,
+                studyName: p.studyName
             }
         }
 
@@ -536,8 +544,11 @@ export function init() {
             }
 
             var is_plot_overlapping = function(plot) {
-                let k = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
-                return Object.keys(local_this.meta_data.overlapping_plots).includes(k);
+                if ( plot.observationUnitPosition ) {
+                    let k = `${plot.observationUnitPosition.positionCoordinateX}-${plot.observationUnitPosition.positionCoordinateY}`;
+                    return Object.keys(local_this.meta_data.overlapping_plots).includes(k);
+                }
+                return false;
             }
 
             var get_fieldmap_plot_color = function(plot) {
@@ -590,7 +601,7 @@ export function init() {
             var get_plot_message = function(plot) {
                 let html = '';
                 if ( is_plot_overlapping(plot) ) {
-                    let k = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
+                    let k = `${plot.observationUnitPosition.positionCoordinateX}-${plot.observationUnitPosition.positionCoordinateY}`;
                     let plots = local_this.meta_data.overlapping_plots[k];
                     html += `<strong>Overlapping Plots:</strong> ${plots.join(', ')}`;
                 }
@@ -679,16 +690,18 @@ export function init() {
             this.meta_data.overlapping_plots = {};
             let plot_positions = {};
             this.plot_arr.forEach((plot) => {
-                let x = plot.observationUnitPosition?.positionCoordinateX;
-                let y = plot.observationUnitPosition?.positionCoordinateY;
-                let p = plot.observationUnitPosition?.observationLevel?.levelCode;
-                let t = plot.studyName;
-                if ( x && y ) {
-                    let k = `${x}-${y}`;
-                    if ( !plot_positions.hasOwnProperty(k) ) plot_positions[k] = [];
-                    plot_positions[k].push(jQuery("#include_linked_trials_checkmark").is(":checked") ? `${p} (${t})` : p);
-                    if ( plot_positions[k].length > 1 ) {
-                        this.meta_data.overlapping_plots[k] = plot_positions[k];
+                if ( plot.observationUnitPosition ) {
+                    let x = plot.observationUnitPosition.positionCoordinateX;
+                    let y = plot.observationUnitPosition.positionCoordinateY;
+                    let p = plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : '';
+                    let t = plot.studyName;
+                    if ( x && y ) {
+                        let k = `${x}-${y}`;
+                        if ( !plot_positions.hasOwnProperty(k) ) plot_positions[k] = [];
+                        plot_positions[k].push(jQuery("#include_linked_trials_checkmark").is(":checked") ? `${p} (${t})` : p);
+                        if ( plot_positions[k].length > 1 ) {
+                            this.meta_data.overlapping_plots[k] = plot_positions[k];
+                        }
                     }
                 }
             });

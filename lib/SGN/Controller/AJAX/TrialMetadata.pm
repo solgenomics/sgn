@@ -32,6 +32,7 @@ use CXGN::Phenotypes::StorePhenotypes;
 use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
+use CXGN::Genotype::GenotypingProject;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -147,6 +148,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
     elsif ($datatype eq 'crossing_experiment') {
         $error = $c->stash->{trial}->delete_empty_crossing_experiment();
+    }
+    elsif ($datatype eq 'genotyping_project') {
+        $error = $c->stash->{trial}->delete_empty_genotyping_project();
     }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
@@ -4669,7 +4673,7 @@ sub create_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/crea
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = "entry_numbers_XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-    $rel_file = $rel_file . ".xls";
+    $rel_file = $rel_file . ".xlsx";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
     my $download = CXGN::Trial::Download->new({
@@ -4978,6 +4982,65 @@ sub delete_soil_data_POST : Args(0) {
 
     $c->stash->{rest} = { success => 1 };
 
+}
+
+
+sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_all_genotyping_plates_in_project') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my $genotyping_project_id = $c->stash->{trial_id};
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete genotyping plates" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete genotyping plates. Please contact us." };
+        $c->detach();
+    }
+
+    my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $schema,
+        project_id => $genotyping_project_id
+    });
+    my ($data, $total_count) = $plate_info->get_plate_info();
+    my @genotyping_plate_ids;
+    foreach  my $plate(@$data){
+        my $plate_id = $plate->{trial_id};
+        push @genotyping_plate_ids, $plate_id;
+    }
+
+    my $number_of_plates = @genotyping_plate_ids;
+    my $error;
+    if ($number_of_plates > 0){
+        foreach my $plate_id (@genotyping_plate_ids) {
+            my $trial = CXGN::Trial->new({
+                bcs_schema => $schema,
+                metadata_schema => $metadata_schema,
+                phenome_schema => $phenome_schema,
+                trial_id => $plate_id
+            });
+            $error = $trial->delete_metadata();
+            $error .= $trial->delete_field_layout();
+            $error .= $trial->delete_project_entry();
+
+        }
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 

@@ -1,0 +1,40 @@
+<%doc>
+
+=head1 NAME
+ 
+/solgs/model/variance_components.mas - displays model variance components and SNP heritability
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$variance_components
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Variance components"
+&>     
+  <& /page/columnar_table.mas,
+     headings   => ["Variance Components", "Estimates"], 
+     data        => $variance_components,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'll',
+&>
+
+</&>
+

@@ -101,9 +101,9 @@ $trial_name => undef
                                     <div class="col-sm-9">
                                         <select class="form-control" id="cross_file_format_option">
                                             <option value="">Select a file format that you want to upload</option>
-                                            <option value="xls_cross_accession">Excel (.xls) file with only accession/population names for parents</option>
-                                            <option value="xls_cross_plot">Excel (.xls) file with accession and plot names for parents</option>
-                                            <option value="xls_cross_plant">Excel (.xls) file with accession and plant names for parents</option>
+                                            <option value="xls_cross_accession">Excel (.xls or .xlsx) file with only accession/population names for parents</option>
+                                            <option value="xls_cross_plot">Excel (.xls or .xlsx) file with accession and plot names for parents</option>
+                                            <option value="xls_cross_plant">Excel (.xls or .xlsx) file with accession and plant names for parents</option>
                                         </select>
                                     </div>
                                 </div>
@@ -281,11 +281,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
@@ -363,11 +360,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
@@ -446,11 +440,8 @@ $trial_name => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
-                    (.xlsx format not supported)
-
-                    <br><br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:

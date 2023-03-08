@@ -204,9 +204,9 @@ sub get_cluster_phenotype_query_job_args {
 
     foreach my $trial_id (@$trials)
     {
-	$c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
+    my $cached = $c->controller('solGS::CachedResult')->check_cached_phenotype_data($c, $c->stash->{trial_id});
 
-	if (!-s $c->stash->{phenotype_file_name})
+	if (!$cached)
 	{
 	    my $args = $self->phenotype_trial_query_args($c, $trial_id);
 
@@ -295,7 +295,7 @@ sub genotype_trial_query_args {
 sub phenotype_trial_query_args {
     my ($self, $c, $pop_id) = @_;
 
-    $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $pop_id = $c->stash->{training_pop_id} || $c->stash->{trial_id} if !$pop_id;
 
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
@@ -729,7 +729,7 @@ sub get_gs_r_temp_file {
     $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
     my $identifier = $selection_pop_id ? $pop_id . '-' . $selection_pop_id : $pop_id;
 
-    if ($data_set_type =~ /combined populations/)
+    if ($data_set_type =~ /combined_populations/)
     {
 	my $combo_identifier = $c->stash->{combo_pops_id};
         $c->stash->{r_temp_file} = "gs-rrblup-combo-${identifier}-${trait_id}";

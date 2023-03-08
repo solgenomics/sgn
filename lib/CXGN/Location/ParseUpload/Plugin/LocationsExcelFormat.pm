@@ -3,6 +3,7 @@ package CXGN::Location::ParseUpload::Plugin::LocationsExcelFormat;
 use Moose;
 use CXGN::Location;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
@@ -14,7 +15,18 @@ sub parse {
     my $self = shift;
     my $filename = shift;
     my $schema = shift;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $check = CXGN::Location->new({ bcs_schema => $schema });
     my (@errors, @rows, %parse_result);
 
@@ -44,6 +56,7 @@ sub parse {
         # check that name is defined and isn't already in database
         if ($worksheet->get_cell($row,0)) {
           $name = $worksheet->get_cell($row,0)->value();
+          $name =~ s/^\s+|\s+$//g;
         }
         if (!$name) {
             push @errors, "Row $row_num, column A: Name is undefined.\n";
@@ -55,6 +68,7 @@ sub parse {
         # check that abbreviation is defined and isn't already in database
         if ($worksheet->get_cell($row,1)) {
           $abbreviation = $worksheet->get_cell($row,1)->value();
+          $abbreviation =~ s/^\s+|\s+$//g;
         }
         if (!$abbreviation) {
             push @errors, "Row $row_num, column B: Abbreviation is undefined.\n";
@@ -105,6 +119,7 @@ sub parse {
         # check is defined, is one of approved types
         if ($worksheet->get_cell($row,5)) {
           $type = $worksheet->get_cell($row,5)->value();
+          $type =~ s/^\s+|\s+$//g;
         }
         if (!$type) {
             push @errors, "Row $row_num, column F: Type is undefined.\n";

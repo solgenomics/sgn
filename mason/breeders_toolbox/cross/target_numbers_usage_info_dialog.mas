@@ -1,0 +1,49 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="target_numbers_usage_info_dialog" name="target_numbers_usage_info_dialog" tabindex="-1" role="dialog" aria-labelledby="targetNumbersUsageInfoDialog">
+    <div class="modal-dialog modal-lg " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="targetNumbersUsageInfoDialog">How to Use Target Numbers Section</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <h4>
+                        Target Numbers of Seeds and/or Progenies:
+                    </h4>
+                    <p>You can set target numbers of seeds and/or target numbers of progenies for parental combinations that you plan to include in this cossing experiment. Once target numbers are stored in the database, this section will automatically track crossing acitvities in this crossing experiment. Target numbers can be added before or after actual crossing activities are stored in the database.</p>
+                    <br>
+                    <h4>
+                        How to Record Target Numbers:
+                    </h4>
+                    <li><b>Uploading Target Numbers</b>: Target numbers of seeds/progenies can be uploaded to the database using a spreadsheet. Please use "Upload Target Numbers" link in this section </li>
+                    <li><b>Using Lists of Accessions</b>: You can indicate target numbers of seeds and/or progenies by using a list of female accessions and a list of male accessions. Please use "Using Lists to Record Target Numbers" link in this section </li>
+                    <br>
+                    <h4>
+                        Tracking Progress of Each Parental Combination:
+                    </h4>
+                    <p>Crossing tool allows you to record crossing activities at accession, plot or plant level. As a result, the same parental combination can be associated with several cross unique ids depending on the number of female plots/plants and the number of male plots/plants. Once you set target numbers, this section will automatically track and aggregate actual numbers of seeds and/or numbers of progenies from different cross unique ids having the same parental combination. The progress will be updated every time you store new data in the database</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="close_target_numbers_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#target_numbers_usage_info').click(function(){
+        jQuery('#target_numbers_usage_info_dialog').modal("show");
+    });
+
+});
+
+</script>

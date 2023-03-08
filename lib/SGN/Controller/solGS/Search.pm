@@ -42,7 +42,7 @@ sub solgs : Path('/solgs'){
 sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) {
     my ($self, $c) = @_;
     $c->stash->{referer}  = $c->req->referer();
-    $c->stash->{template} = '/solgs/breeder_search_solgs.mas';
+    $c->stash->{template} = '/solgs/search/breeder_search_solgs.mas';
 }
 
 sub solgs_login_message :Path('/solgs/login/message') Args(0) {
@@ -511,7 +511,7 @@ sub projects_links {
 			my $args = {
 	   		  'training_pop_id' => $pr_id,
 	   		  'genotyping_protocol_id' => $protocol_id,
-	   		  'data_set_type' => 'single population'
+	   		  'data_set_type' => 'single_population'
 	   	  	};
 
 	   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
@@ -614,7 +614,7 @@ sub format_trait_gs_projects {
 				   	'trait_id' => $trait_id,
 		   			'training_pop_id' => $pr_id,
 					'genotyping_protocol_id' => $protocol_id,
-					'data_set_type' => 'single population'
+					'data_set_type' => 'single_population'
 				};
 
 		      	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
@@ -665,7 +665,7 @@ sub format_gs_projects {
 			   my $args = {
 		  		  'training_pop_id' => $pr_id,
 		  		  'genotyping_protocol_id' => $protocol_id,
-		  		  'data_set_type' => 'single population'
+		  		  'data_set_type' => 'single_population'
 		  	  	};
 
 	  	 		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
@@ -904,7 +904,7 @@ sub get_project_owners {
     my $owners = $self->model($c)->get_stock_owners($pr_id);
     my $owners_names;
 
-    if ($owners)
+    if (@$owners)
     {
         for (my $i=0; $i < scalar(@$owners); $i++)
         {

@@ -29,6 +29,15 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
     my $additional_order_info = $c->config->{additional_order_info};
     $c->stash->{additional_order_info} = $additional_order_info;
 
+    my $ordering_type = $c->config->{ordering_type};
+    $c->stash->{ordering_type} = $ordering_type;
+
+    my $order_properties = $c->config->{order_properties};
+    my $order_properties_dialog = $c->config->{order_properties_dialog};
+
+    $c->stash->{order_properties} = $order_properties;
+    $c->stash->{order_properties_dialog} = $order_properties_dialog;
+
     $c->stash->{template} = '/order/catalog.mas';
 
 }
@@ -62,7 +71,6 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
         return;
     } else {
         $item_prop_id = $stock_catalog_info->stockprop_id();
-#        print STDERR "STOCKPROP ID =".Dumper($item_prop_id)."\n";
     }
 
     my $stock_catalog_item = $schema->resultset("Stock::Stock")->find({stock_id => $item_id});
@@ -74,14 +82,17 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $item_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema, parent_id => $item_id});
     my $details_ref = $item_obj->get_item_details();
     my @item_details = @$details_ref;
+    print STDERR "ITEM DETAILS =".Dumper(\@item_details)."\n";
     my $item_type = $item_details[0];
-    my $category = $item_details[1];
-    my $description = $item_details[2];
-    my $material_source = $item_details[3];
-    my $program_id = $item_details[4];
-    my $availability = $item_details[5];
-    my $contact_person_id = $item_details[6];
-    my $images = $item_details[7];
+    my $species = $item_details[1];
+    my $variety = $item_details[2];
+    my $material_type = $item_details[3];
+    my $category = $item_details[4];
+    my $material_source = $item_details[5];
+    my $additional_info = $item_details[6];
+    my $program_id = $item_details[7];
+    my $contact_person_id = $item_details[8];
+    my $images = $item_details[9];
     my $image_id = $images->[0];
     my $image_obj = SGN::Image->new($dbh, $image_id);
     my $medium_image  = $image_obj->get_image_url("medium");
@@ -95,14 +106,15 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
 #    print STDERR "CONTACT PERSON NAME=".Dumper($contact_person_username)."\n";
     $c->stash->{item_id} = $item_id;
     $c->stash->{item_name} = $item_name;
-    $c->stash->{species} = $species;
     $c->stash->{item_type} = $item_type;
+    $c->stash->{species} = $species;
+    $c->stash->{variety} = $variety;
+    $c->stash->{material_type} = $material_type;
     $c->stash->{category} = $category;
-    $c->stash->{description} = $description;
     $c->stash->{material_source} = $material_source;
+    $c->stash->{additional_info} = $additional_info;
     $c->stash->{program_id} = $program_id;
     $c->stash->{breeding_program} = $program_name;
-    $c->stash->{availability} = $availability;
     $c->stash->{contact_person_username} = $contact_person_username;
     $c->stash->{item_prop_id} = $item_prop_id;
     $c->stash->{image} = qq|<a href="$medium_image" class="stock_image_group" rel="gallery-figures"><img src="$medium_image"/></a> |,

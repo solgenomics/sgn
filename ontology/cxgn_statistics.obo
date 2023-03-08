@@ -195,3 +195,23 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000038
 name: GEBVs using GBLUP from rrblup R package
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000039
+name: Adjusted means from BLUPs using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000040
+name: Phenotypic BLUPs using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000041
+name: Adjusted means from BLUEs using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000042
+name: Phenotypic BLUEs using Sommer R
+is_a: SGNSTAT:0000000

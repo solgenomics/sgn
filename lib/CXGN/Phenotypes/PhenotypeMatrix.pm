@@ -45,6 +45,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::SearchFactory;
+use CXGN::BreedersToolbox::Projects;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -212,6 +213,21 @@ sub get_phenotype_matrix {
             push @line, $trait;
         }
         push @line, 'notes';
+
+        # retrieve treatments and add treatment names to header
+        my %seen_obsunits = map { $_->{observationunit_stock_id} => 1 } @$data;
+        my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
+        my $treatment_info = {};
+        if ($self->trial_list) {
+            $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
+        }
+        my $treatment_names = $treatment_info->{treatment_names};
+        my $treatment_details = $treatment_info->{treatment_details};
+
+        foreach my $name (@$treatment_names) {
+            push @line, $name;
+        }
+
         push @info, \@line;
 
         foreach my $obs_unit (@$data){
@@ -260,6 +276,16 @@ sub get_phenotype_matrix {
                 push @line, $trait_observations{$trait};
             }
             push @line, $obs_unit->{notes};
+
+            # add treatment values to each obsunit line
+            my %unit_treatments;
+            if ($treatment_details->{$obs_unit->{observationunit_stock_id}}) {
+                %unit_treatments = %{$treatment_details->{$obs_unit->{observationunit_stock_id}}};
+            };
+            foreach my $name (@$treatment_names) {
+                push @line, $unit_treatments{$name};
+            }
+
             push @info, \@line;
         }
     } else {
@@ -341,6 +367,15 @@ sub get_phenotype_matrix {
         #print STDERR Dumper \%plot_data;
         #print STDERR Dumper \%traits;
 
+        # retrieve treatments
+        my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
+        my $treatment_info = {};
+        if ($self->trial_list) {
+            $treatment_info = $project_object->get_related_treatments($self->trial_list, \%seen_obsunits);
+        }
+        my $treatment_names = $treatment_info->{treatment_names};
+        my $treatment_details = $treatment_info->{treatment_details};
+
         my @line = @metadata_headers;
 
         my @sorted_traits = sort keys(%traits);
@@ -348,6 +383,12 @@ sub get_phenotype_matrix {
             push @line, $trait;
         }
         push @line, 'notes';
+
+        # add treatment names to header
+        foreach my $name (@$treatment_names) {
+            push @line, $name;
+        }
+
         push @info, \@line;
 
         foreach my $p (@unique_obsunit_list) {
@@ -357,6 +398,15 @@ sub get_phenotype_matrix {
                 push @line, $obsunit_data{$p}->{$trait};
             }
             push @line,  $obsunit_data{$p}->{'notes'};
+
+            # add treatment values to each obsunit line
+            my %unit_treatments;
+            if ($treatment_details->{$p}) {
+                %unit_treatments = %{$treatment_details->{$p}};
+            };
+            foreach my $name (@$treatment_names) {
+                push @line, $unit_treatments{$name};
+            }
             push @info, \@line;
         }
     }

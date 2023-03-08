@@ -18,6 +18,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::DataCollectorSpreadsheet;
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 
 sub name {
     return "datacollector spreadsheet";
@@ -36,7 +37,18 @@ sub validate {
     my $delimiter = ',';
     my $header;
     my @header_row;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parse_result;
@@ -68,6 +80,7 @@ sub validate {
     my $plot_name_head;
     if ($worksheet->get_cell(0,0)) {
       $plot_name_head  = $worksheet->get_cell(0,0)->value();
+      $plot_name_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$plot_name_head || $plot_name_head ne 'plot_name') {
@@ -79,6 +92,7 @@ sub validate {
     my $trial_stock_name_head;
     if ($worksheet->get_cell(0,1)) {
       $trial_stock_name_head  = $worksheet->get_cell(0,1)->value();
+      $trial_stock_name_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$trial_stock_name_head || (($trial_stock_name_head ne 'accession_name') && ($trial_stock_name_head ne 'family_name') && ($trial_stock_name_head ne 'cross_unique_id'))) {
@@ -90,6 +104,7 @@ sub validate {
     my $plot_num_head;
     if ($worksheet->get_cell(0,2)) {
       $plot_num_head  = $worksheet->get_cell(0,2)->value();
+      $plot_num_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$plot_num_head || $plot_num_head ne 'plot_number') {
@@ -101,6 +116,7 @@ sub validate {
     my $block_head;
     if ($worksheet->get_cell(0,3)) {
       $block_head  = $worksheet->get_cell(0,3)->value();
+      $block_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$block_head || $block_head ne 'block_number') {
@@ -112,6 +128,7 @@ sub validate {
     my $is_control_head;
     if ($worksheet->get_cell(0,4)) {
       $is_control_head  = $worksheet->get_cell(0,4)->value();
+      $is_control_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$is_control_head || $is_control_head ne 'is_a_control') {
@@ -123,6 +140,7 @@ sub validate {
     my $rep_head;
     if ($worksheet->get_cell(0,5)) {
       $rep_head  = $worksheet->get_cell(0,5)->value();
+      $rep_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$rep_head || $rep_head ne 'rep_number') {
@@ -159,7 +177,18 @@ sub parse {
     my @plots;
     my @traits;
     my %data;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -186,6 +215,7 @@ sub parse {
         my $cell_val;
         if ($worksheet->get_cell(0,$col)) {
             $cell_val = $worksheet->get_cell(0,$col)->value();
+            $cell_val =~ s/^\s+|\s+$//g;
         }
         if ($cell_val) {
             $header_column_info{$cell_val} = $col;
@@ -198,6 +228,7 @@ sub parse {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
             $plots_seen{$plot_name} = 1;
         }
 

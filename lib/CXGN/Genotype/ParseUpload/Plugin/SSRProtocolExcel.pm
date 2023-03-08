@@ -2,6 +2,7 @@ package CXGN::Genotype::ParseUpload::Plugin::SSRProtocolExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Data::Dumper;
 
 sub _validate_with_plugin {
@@ -10,7 +11,18 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
     my @error_messages;
     my %errors;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -52,27 +64,35 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $marker_name_header  = $worksheet->get_cell(0,0)->value();
+        $marker_name_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $forward_primer_header  = $worksheet->get_cell(0,1)->value();
+        $forward_primer_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $reverse_primer_header  = $worksheet->get_cell(0,2)->value();
+        $reverse_primer_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $annealing_temperature_header  = $worksheet->get_cell(0,3)->value();
+        $annealing_temperature_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $product_sizes_header  = $worksheet->get_cell(0,4)->value();
+        $product_sizes_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $sequence_motif_header  = $worksheet->get_cell(0,5)->value();
+        $sequence_motif_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $sequence_source_header  = $worksheet->get_cell(0,6)->value();
+        $sequence_source_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
         $linkage_group_header  = $worksheet->get_cell(0,7)->value();
+        $linkage_group_header =~ s/^\s+|\s+$//g;
     }
 
 
@@ -179,7 +199,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -206,27 +237,35 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $marker_name = $worksheet->get_cell($row,0)->value();
+            $marker_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $forward_primer =  $worksheet->get_cell($row,1)->value();
+            $forward_primer =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $reverse_primer = $worksheet->get_cell($row,2)->value();
+            $reverse_primer =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $annealing_temperature =  $worksheet->get_cell($row,3)->value();
+            $annealing_temperature =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
             $product_sizes =  $worksheet->get_cell($row,4)->value();
+            $product_sizes =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
             $sequence_motif =  $worksheet->get_cell($row,5)->value();
+            $sequence_motif =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
             $sequence_source =  $worksheet->get_cell($row,6)->value();
+            $sequence_source =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,7)) {
             $linkage_group =  $worksheet->get_cell($row,7)->value();
+            $linkage_group =~ s/^\s+|\s+$//g;
         }
 
 

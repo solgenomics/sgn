@@ -36,6 +36,7 @@ $c->res->body($output);
 
 use Moose::Role;
 use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 
 sub verify {
     1;
@@ -51,7 +52,18 @@ sub download {
 
     my $layout = $layout->get_design();
     print STDERR "FILENAME: ".$self->filename()."\n";
-    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+
+	# Match a dot, extension .xls / .xlsx
+	my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+	my $ss;
+
+	if ($extension eq '.xlsx') {
+		$ss = Excel::Writer::XLSX->new($self->filename());
+	}
+	else {
+		$ss = Spreadsheet::WriteExcel->new($self->filename());
+	}
+
     my $ws = $ss->add_worksheet();
 
     # write primary headers

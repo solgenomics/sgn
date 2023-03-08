@@ -696,7 +696,7 @@ sub get_population_type {
 sub get_stock_owners {
     my ( $self, $stock_id ) = @_;
 
-    my $owners;
+    my @owners;
 
     no warnings 'uninitialized';
 
@@ -710,7 +710,8 @@ sub get_stock_owners {
         $sth->execute($stock_id);
 
         while ( my ( $id, $fname, $lname ) = $sth->fetchrow_array ) {
-            push @$owners,
+
+            push @owners,
               {
                 'id'         => $id,
                 'first_name' => $fname,
@@ -720,7 +721,7 @@ sub get_stock_owners {
         }
     }
 
-    return $owners;
+    return \@owners;
 
 }
 
@@ -1533,7 +1534,7 @@ sub phenotype_data {
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema  => $self->schema,
-        search_type => 'MaterializedViewTable',
+        search_type => 'Native',
         trial_list  => [$project_id],
         data_level  => 'plot',
     );

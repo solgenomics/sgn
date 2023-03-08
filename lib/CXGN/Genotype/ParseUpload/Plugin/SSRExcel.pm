@@ -2,6 +2,7 @@ package CXGN::Genotype::ParseUpload::Plugin::SSRExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -13,7 +14,18 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
     my @error_messages;
     my %errors;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -48,6 +60,7 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $sample_name_head  = $worksheet->get_cell(0,0)->value();
+        $sample_name_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$sample_name_head || $sample_name_head ne 'sample_name' ) {
@@ -107,7 +120,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -136,7 +160,9 @@ sub _parse_with_plugin {
         for my $column (1 .. $col_max ){
             if ($worksheet->get_cell($row,$column)) {
                 my $marker_name = $worksheet->get_cell(0,$column)->value();
+                $marker_name =~ s/^\s+|\s+$//g;
                 my $product_size = $worksheet->get_cell(1,$column)->value();
+                $product_size =~ s/^\s+|\s+$//g;
                 $sample_marker_hash{$sample_name}{$marker_name}{$product_size} = $worksheet->get_cell($row,$column)->value();
             }
         }

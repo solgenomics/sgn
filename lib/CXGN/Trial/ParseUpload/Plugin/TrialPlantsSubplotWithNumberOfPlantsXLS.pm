@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialPlantsSubplotWithNumberOfPlantsXL
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -12,7 +13,18 @@ sub _validate_with_plugin {
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my @error_messages;
     my %errors;
     my %missing_accessions;
@@ -48,9 +60,11 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $subplot_name_head  = $worksheet->get_cell(0,0)->value();
+        $subplot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $num_plants_per_subplot_head  = $worksheet->get_cell(0,1)->value();
+        $num_plants_per_subplot_head =~ s/^\s+|\s+$//g;
     }
     if (!$subplot_name_head || $subplot_name_head ne 'subplot_name' ) {
         push @error_messages, "Cell A1: subplot_name is missing from the header";
@@ -68,6 +82,7 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $subplot_name = $worksheet->get_cell($row,0)->value();
+            $subplot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $num_plants_per_subplot = $worksheet->get_cell($row,1)->value();
@@ -133,7 +148,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parsed_entries;
@@ -152,6 +178,7 @@ sub _parse_with_plugin {
         my $subplot_name;
         if ($worksheet->get_cell($row,0)) {
             $subplot_name = $worksheet->get_cell($row,0)->value();
+            $subplot_name =~ s/^\s+|\s+$//g;
             $seen_subplot_names{$subplot_name}++;
         }
     }

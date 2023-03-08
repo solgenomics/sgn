@@ -24,6 +24,8 @@ study_trait <- args[2]
 figure3_file_name <- args[3]
 figure4_file_name <- args[4]
 h2File <- args[5]
+errorFile <- args[6]
+errorMessages <- c()
 
 cat("study trait is ", study_trait,"\n")
 
@@ -65,8 +67,10 @@ if (error1.occured == "TRUE"){
       n = n +1
     }
   }
-  }, error = function(e) {error1.occured <<- TRUE}
-  )
+  }, error = function(e) {
+    error1.occured <<- TRUE
+    errorMessages <<- c(errorMessages, as.character(e))
+  })
 }
 
 ncol(pheno)
@@ -82,7 +86,9 @@ for (i in 40:ncol(pheno)){
 rmtraits<-rmtraits[!is.na(rmtraits)]
 rmtraits
 ncol(pheno)
-if (length(rmtraits>0)){
+
+
+if (length(rmtraits)>0){
   for (i in 1:length(rmtraits)){
     z <- ncol(pheno)
     j = 40
@@ -323,9 +329,12 @@ tryCatch({ for (i in 40:(ncol(pheno))) {
   numb = numb + 1
   
 }
-}, error = function(e) {an.error.occured <<- TRUE}
-)
+}, error = function(e) {
+  an.error.occured <<- TRUE
+  errorMessages <<- c(errorMessages, as.character(e))
+})
 
+tryCatch({
 if (numb == 1){
   for (i in 40:(ncol(pheno))) {
     outcome = colnames(pheno)[i]    
@@ -350,34 +359,46 @@ if (numb == 1){
     numb = numb + 1
   }  
 }
+}, error = function(e) {
+  an.error.occured <<- TRUE
+  errorMessages <<- c(errorMessages, as.character(e))
+})
 
+
+#Prepare information to export data
+tryCatch({
+  library(tidyverse)
+  Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
+  Heritability = Heritability %>% 
+    rename(
+      trait = resp_var,
+      Hert = her,
+      Vg = Vg,
+      Ve = Ve,
+      Vres = Vres
+    )
+  Heritability = na.omit(Heritability)
+
+  print(Heritability)
+
+  pdf(NULL)
+  library(gridExtra)
+  png(h2File, height=(25*numb), width=800)
+  par(mar=c(4,4,2,2))
+  p<-tableGrob(Heritability)
+  grid.arrange(p)
+  dev.off()
+}, error = function(e) {
+  an.error.occured <<- TRUE
+  errorMessages <<- c(errorMessages, as.character(e))
+})
 
 cat("Was there an error? ", an.error.occured,"\n")
-#Prepare information to export data
-
-Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
-
-
-library(tidyverse)
-Heritability = Heritability %>% 
-  rename(
-    trait = resp_var,
-    Hert = her,
-    Vg = Vg,
-    Ve = Ve,
-    Vres = Vres
-  )
-Heritability = na.omit(Heritability)
-
-print(Heritability)
-
-pdf(NULL)
-library(gridExtra)
-png(h2File, height=(25*numb), width=800)
-par(mar=c(4,4,2,2))
-p<-tableGrob(Heritability)
-grid.arrange(p)
-dev.off()
+if ( length(errorMessages) > 0 ) {
+  print(sprintf("Writing Error Messages to file: %s", errorFile))
+  print(errorMessages)
+  write(errorMessages, errorFile)
+}
 
 
 #-------------------------------------------------------------------------

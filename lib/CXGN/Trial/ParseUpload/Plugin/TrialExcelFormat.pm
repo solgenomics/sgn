@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialExcelFormat;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -19,7 +20,18 @@ sub _validate_with_plugin {
   my %warnings;
   my @warning_messages;
   my %missing_accessions;
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
   my %seen_plot_names;
@@ -71,39 +83,51 @@ sub _validate_with_plugin {
 
   if ($worksheet->get_cell(0,0)) {
     $plot_name_head  = $worksheet->get_cell(0,0)->value();
+    $plot_name_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,1)) {
     $stock_name_head  = $worksheet->get_cell(0,1)->value();
+    $stock_name_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,2)) {
     $plot_number_head  = $worksheet->get_cell(0,2)->value();
+    $plot_number_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,3)) {
     $block_number_head  = $worksheet->get_cell(0,3)->value();
+    $block_number_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,4)) {
     $is_a_control_head  = $worksheet->get_cell(0,4)->value();
+    $is_a_control_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,5)) {
     $rep_number_head  = $worksheet->get_cell(0,5)->value();
+    $rep_number_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,6)) {
     $range_number_head  = $worksheet->get_cell(0,6)->value();
+    $range_number_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,7)) {
       $row_number_head  = $worksheet->get_cell(0,7)->value();
+      $row_number_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,8)) {
       $col_number_head  = $worksheet->get_cell(0,8)->value();
+      $col_number_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,9)) {
     $seedlot_name_head  = $worksheet->get_cell(0,9)->value();
+    $seedlot_name_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,10)) {
     $num_seed_per_plot_head = $worksheet->get_cell(0,10)->value();
+    $num_seed_per_plot_head =~ s/^\s+|\s+$//g;
   }
   if ($worksheet->get_cell(0,11)) {
     $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,11)->value();
+    $weight_gram_seed_per_plot_head =~ s/^\s+|\s+$//g;
   }
 
   my @treatment_names;
@@ -374,7 +398,7 @@ sub _validate_with_plugin {
         my $count = scalar(@{$plots});
         if ( $count > 1 ) {
             my @pos = split('-', $key);
-            push @error_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
+            push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
         }
     }
 
@@ -402,7 +426,18 @@ sub _parse_with_plugin {
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
   my $trial_stock_type = $self->get_trial_stock_type();
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
   my %design;

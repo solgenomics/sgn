@@ -53,7 +53,7 @@ $check_vendor_role
                                 <tr>
                                     <th>Order Number</th>
                                     <th>Submitted Date</th>
-                                    <th>Items</th>
+                                    <th>Order Details</th>
                                     <th>Status</th>
                                     <th>Send Order to</th>
                                     <th>Comments from Vendor</th>
@@ -76,7 +76,7 @@ $check_vendor_role
                                 <tr>
                                     <th>Order Number</th>
                                     <th>Submitted Date</th>
-                                    <th>Items</th>
+                                    <th>Order Details</th>
                                     <th>Status</th>
                                     <th>Completed Date</th>
                                     <th>Processed by</th>
@@ -156,7 +156,7 @@ $(window).ready( function() {
             { title: "Order Number", "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
             { title: "Ordered by", "data": "order_from_name" },
             { title: "Submitted Date", "data": "create_date" },
-            { title: "Items", "data": "item_list" },
+            { title: "Order Details", "data": "order_details" },
             { title: "Status", "data": "order_status" },
             { title: "Comments", "data": "contact_person_comments" },
             { title: "Update", "data": "null", "render": function ( data, type, row ) { return "<a onclick='updateOrder(\""+row.order_id+"\", \""+row.order_from_name+"\")' >Update</a>"; } },
@@ -170,7 +170,7 @@ $(window).ready( function() {
             { title: "Order Number", "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
             { title: "Ordered by", "data": "order_from_name" },
             { title: "Submitted Date", "data": "create_date" },
-            { title: "Items", "data": "item_list" },
+            { title: "Order Details", "data": "order_details" },
             { title: "Status", "data": "order_status" },
             { title: "Completion Date", "data": "completion_date" },
             { title: "Comments", "data": "contact_person_comments" },

@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::SoilDataXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Data::Dumper;
 
 sub _validate_with_plugin {
@@ -10,7 +11,18 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
     my @error_messages;
     my %errors;
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -46,10 +58,12 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $soil_data_type_header  = $worksheet->get_cell(0,0)->value();
+        $soil_data_type_header =~ s/^\s+|\s+$//g;
     }
 
     if ($worksheet->get_cell(0,1)) {
         $soil_data_value_header  = $worksheet->get_cell(0,1)->value();
+        $soil_data_value_header =~ s/^\s+|\s+$//g;
     }
 
     if (!$soil_data_type_header || $soil_data_type_header ne 'soil_data_type' ) {
@@ -97,7 +111,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 

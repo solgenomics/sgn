@@ -97,7 +97,7 @@ $facilities => ();
                                     <div class="col-sm-9">
                                         <select class="form-control" id="genotyping_trial_well_input_option">
                                             <option value="">Select a file format that you want to upload</option>
-                                            <option value="xls">I am uploading a plate design I made in Excel</option>
+                                            <option value="xlsx">I am uploading a plate design I made in Excel</option>
                                             <option value="coordinate">I am uploading a Default Coordinate Android Application plate design</option>
                                             <option value="coordinate_template">I am uploading a Custom Coordinate Android Application plate design</option>
                                             <option value="design">I need to design a completely new plate</option>
@@ -124,7 +124,7 @@ $facilities => ();
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select Plate Layout XLS File: </label>
+                                                            <label class="col-sm-6 control-label">Select Plate Layout XLSX File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="genotyping_trial_layout_upload" id="genotyping_trial_layout_upload" encoding="multipart/form-data" />
                                                             </div>
@@ -352,10 +352,8 @@ $facilities => ();
                 <div class="container-fluid">
                     <b>This is for uploading a pre-existing genotyping plate layout.</b>
                     <br/>
-                    <b>File must be Excel file (.xls)</b>
+                    <b>File must be Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -559,7 +557,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#genotyping_trial_well_input_option').change(function(){
-        if (jQuery(this).val() == 'xls'){
+        if (jQuery(this).val() == 'xlsx'){
             jQuery("#genotyping_trial_well_upload_section").show();
             jQuery('#next_upload_button').show();
             jQuery("#genotyping_trial_well_design_section").hide();

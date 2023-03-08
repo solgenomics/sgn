@@ -2,6 +2,7 @@ package CXGN::Pedigree::ParseUpload::Plugin::WishlistExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -13,7 +14,18 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
     my @error_messages;
     my %errors;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     #try to open the excel file and report any errors
@@ -35,7 +47,7 @@ sub _validate_with_plugin {
 
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of cross combination
+    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of cross combination
         push @error_messages, "Spreadsheet is missing header or no cross combination data";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -49,12 +61,15 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $female_accession_head  = $worksheet->get_cell(0,0)->value();
+        $female_accession_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $male_accession_head  = $worksheet->get_cell(0,1)->value();
+        $male_accession_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $priority_head  = $worksheet->get_cell(0,2)->value();
+        $priority_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$female_accession_head || $female_accession_head ne 'female_accession' ) {
@@ -123,6 +138,19 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
+
     my $excel_obj;
     my $worksheet;
 

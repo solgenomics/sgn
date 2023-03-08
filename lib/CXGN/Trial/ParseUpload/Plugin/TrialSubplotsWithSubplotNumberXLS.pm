@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::TrialSubplotsWithSubplotNumberXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -12,7 +13,18 @@ sub _validate_with_plugin {
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my @error_messages;
     my %errors;
     my %missing_accessions;
@@ -48,9 +60,11 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
+        $plot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $subplot_index_number_head  = $worksheet->get_cell(0,1)->value();
+        $subplot_index_number_head =~ s/^\s+|\s+$//g;
     }
     if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
         push @error_messages, "Cell A1: plot_name is missing from the header";
@@ -68,9 +82,11 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $subplot_index_number = $worksheet->get_cell($row,1)->value();
+            $subplot_index_number =~ s/^\s+|\s+$//g;
         }
 
         if (!$plot_name || $plot_name eq '' ) {
@@ -131,7 +147,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parsed_entries;
@@ -151,11 +178,13 @@ sub _parse_with_plugin {
         my $plot_name;
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
             $seen_plot_names{$plot_name}++;
         }
         my $subplot_index_number;
         if ($worksheet->get_cell($row,1)) {
             $subplot_index_number = $worksheet->get_cell($row,1)->value();
+            $subplot_index_number =~ s/^\s+|\s+$//g;
         }
         my $subplot_name = $plot_name."_subplot_".$subplot_index_number;
         $seen_subplot_names{$subplot_name}++;
@@ -176,9 +205,11 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
+            $plot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $subplot_index_number = $worksheet->get_cell($row,1)->value();
+            $subplot_index_number =~ s/^\s+|\s+$//g;
         }
         my $subplot_name = $plot_name."_subplot_".$subplot_index_number;
 

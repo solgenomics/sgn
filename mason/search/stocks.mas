@@ -416,7 +416,6 @@ jQuery(document).ready(function () {
     });
 
     parseArgs(editable_stockprops_search);
-    _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
       var name_links = stock_table.column(0).data();

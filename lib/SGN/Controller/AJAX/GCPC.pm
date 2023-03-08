@@ -444,11 +444,21 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         };
         return;
     }
+
+    print STDERR "FORMATTED DATA: ".Dumper(\@data);
+
+    my $basename = basename($pheno_filepath.".clean.out");
+    my $imagename = basename($pheno_filepath.".clean.png");
+
+    my $statsfile = $pheno_filepath.".clean.summary";
+    
+    copy($pheno_filepath.".clean.out", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$basename);
+
+    copy($pheno_filepath.".clean.png", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$imagename);
+    
     my $download_url = '/documents/tempfiles/gcpc_files/'.$basename;
     my $histogram_image = '/documents/tempfiles/gcpc_files/'.$imagename;
-    my $download_link = "<a href=\"$histogram_image\" download>
-        <button class=\"btn btn-success\" >Download Histogram</button></a>";
-
+    my $download_link = "<a href=\"$download_url\" download>Download Results</a>";
 
     $c->stash->{rest} = {
 	data => \@data,

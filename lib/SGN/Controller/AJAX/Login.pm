@@ -2,6 +2,7 @@
 package SGN::Controller::AJAX::Login;
 
 use Moose;
+use Data::Dumper;
 use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -16,16 +17,32 @@ __PACKAGE__->config(
 sub is_logged_in :Path('/user/logged_in') Args(0) { 
     my $self = shift;
     my $c = shift;
+
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+    $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
+
+    my $dbh = $c->dbic_schema("CXGN::People::Schema")->storage->dbh();
     
-    if (my $user = $c->user()) { 
-	my $user_id = $user->get_object->get_sp_person_id();
-	$c->stash->{rest} = { user_id => $user_id };
-	return;
+    my $login = CXGN::Login->new($dbh);
+    
+    if (my ($person_id, $user_type) = $login->has_session()) {
+	my $login_info = $login->get_login_info();
+	#print STDERR "LOGIN INFO: ".Dumper($login_info);
+    	$c->stash->{rest} = $login_info;
+    	return;
     }
     $c->stash->{rest} = { user_id => 0 };
 }
 
-sub get_roles :Path('/user/get_roles') Args(0) { 
+
+sub login_with_cookie :Path('/user/cookie_login') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cookie = shift
+}
+
+sub get_roles :Path('/user/get_roles') Args(0) {
     my $self = shift;
     my $c = shift;
     
