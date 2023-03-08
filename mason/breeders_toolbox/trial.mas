@@ -85,6 +85,28 @@ $latest_trial_activity => undef
     </div>
 </div>
 
+<div class="modal fade" id="calculate_spatial_correction_dialog" name="calculate_spatial_correction_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadLocationsDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="calculate_spatial_correction">Calculate Spatial Correction</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-primary" name="confirm_calculating_spatial_correction" id="confirm_calculating_spatial_correction">Confirm</button>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	       <button type="button" class="btn btn-primary" name="upload_locations_dialog_submit" id="upload_locations_dialog_submit">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 % my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
 % my $layout_buttons = '';
 % if ($has_col_and_row_numbers){
