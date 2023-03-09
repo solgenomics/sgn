@@ -1,0 +1,47 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/select_menu.mas -  analysis select menu of datasets or lists of trials or plots or accessions with phenotype data or genotype data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+$analysis_type
+
+</%args>
+
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.${analysis_type}", "solGS.Dataset", "CXGN.List"] &>
+
+<div class="fileupload-buttonbar">
+
+  <div class="list_upload" id="list_label">
+    <label for="<%$analysis_type%>_pops_list">Select</label>
+  </div>
+  <div class="list_upload" id="<%$analysis_type%>_pops_list">
+  </div>
+  <div class="list_upload" id="<%$analysis_type%>_go_btn">
+    <input type="button" value="Go" />
+  </div>
+
+  <div class="list_upload" style="margin-left:5px">
+    <i class="glyphicon-plus"></i>
+    <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list or dataset</a>
+  </div>
+
+  <br>
+  <br>
+
+    <!-- The container for the list of correlation populations -->
+    <div class="sub_infosectioncontent" id="<%$analysis_type%>_pops_selected" style="display:none"></div>
+    <br>
+
+</div>
