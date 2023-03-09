@@ -60,6 +60,7 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
         </tr>
       </thead>
     </table>
+    <a href="/search/download_all_accessions_with_pedigree" class="btn btn-sm btn-default">Download All Accessions and Pedigree Info</a>
     <br>
     <br>
     <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
