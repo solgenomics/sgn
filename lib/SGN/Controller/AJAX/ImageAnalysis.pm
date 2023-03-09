@@ -176,6 +176,7 @@ sub image_analysis_submit_POST : Args(0) {
                 }
                 print STDERR Dumper $message_hashref;
                 $res{'value'} = $message_hashref->{trait_value};
+                $res{'analysis_info'} = $message_hashref->{info};
                 $res{'trait'} = $trait;
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
             }

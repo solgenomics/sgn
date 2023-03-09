@@ -162,6 +162,9 @@ tr.shown td.details-control {
                                <th>Mean Value</th>
                            </tr>
                        </thead>
+                       <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;">
+                        <center> Analysis Service Details: <a id="model_metrics_link"  style="cursor: pointer;">Model Metrics</a> </center>
+                       </caption>
                     </table>
                     <hr>
                     <center><button class="btn btn-primary" id="image_analysis_save_results">Save Results</button></center>
@@ -193,6 +196,26 @@ tr.shown td.details-control {
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="modal fade" id="modelMetricsDialog" tabindex="-1" role="dialog" aria-labelledby="modelMetricsDialog" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modelMetricsDialogTitle">Model Metrics</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="modelMetricsDialogBody">
+              <table class="display" style="width:100%" id="metrics_table">
+              </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
@@ -227,6 +250,10 @@ var service_traits = {
 }
 
 jQuery(document).ready(function(){
+
+    jQuery('#model_metrics_link').click( function() {
+        jQuery('#modelMetricsDialog').modal("show");
+    });
 
     get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
 
@@ -368,7 +395,6 @@ jQuery(document).ready(function(){
                             );
                         }
                         else {
-                            // results.push(item);
                         }
                         results.push(item);
                     });
@@ -391,6 +417,17 @@ jQuery(document).ready(function(){
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
             // console.log("Results are:");
             // console.log(results);
+            var first = results[0];
+            let metricsData = Object.entries(first.result.analysis_info).map(( [key, value] ) => ({ key : value }));
+
+            jQuery('#metrics_table').DataTable({
+                "data": metricsData,
+                "columns": [
+                    { "data": "metric" },
+                    { "data": "value" },
+                ]
+            });
+
             if (results.length > 0) {
                 jQuery.ajax({
                     url: '/ajax/image_analysis/group',
