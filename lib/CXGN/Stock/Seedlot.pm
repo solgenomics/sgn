@@ -318,6 +318,7 @@ sub list_seedlots {
     my $offset = shift;
     my $limit = shift;
     my $seedlot_name = shift;
+    my $description = shift;
     my $breeding_program = shift;
     my $location = shift;
     my $minimum_count = shift;
