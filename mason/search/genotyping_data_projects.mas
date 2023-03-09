@@ -20,6 +20,7 @@
                         <th>Year</th>
                         <th>Location</th>
                         <th>Genotyping Facility</th>
+                        <th>Number of Plates</th>
                     </tr>
                 </thead>
             </table>

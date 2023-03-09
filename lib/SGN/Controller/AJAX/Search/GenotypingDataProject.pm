@@ -42,6 +42,14 @@ sub genotyping_data_project_search_GET : Args(0) {
     my ($data, $total_count) = $trial_search->search();
     my @result;
     foreach (@$data){
+        my $genotyping_project_id = $_->{trial_id};
+
+        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $bcs_schema,
+            project_id => $genotyping_project_id
+        });
+        my ($plate_data, $number_of_plates) = $plate_info->get_plate_info();
+
         my $folder_string = '';
         if ($_->{folder_name}){
             $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
@@ -63,7 +71,8 @@ sub genotyping_data_project_search_GET : Args(0) {
             $folder_string,
             $_->{year},
             $_->{location_name},
-            $_->{genotyping_facility}
+            $_->{genotyping_facility},
+            $number_of_plates
           ];
     }
     #print STDERR Dumper \@result;
