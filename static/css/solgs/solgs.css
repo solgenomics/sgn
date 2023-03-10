@@ -145,7 +145,7 @@
 .gg_dropdown dt a:hover, .gg_dropdown dt a:focus,
 .corre_dropdown dt a:hover, .corre_dropdown dt a:focus,
 .cluster_dropdown dt a:hover, .cluster_dropdown dt a:focus {
-    color: ##5d4617;
+    color: #5d4617;
     border: 1px solid #5d4617;
 }
 
@@ -193,7 +193,7 @@
 .si_dropdown dd ul li a,
 .gg_dropdown dd ul li a,
 .corre_dropdown dd ul li a,
-.cluster_dropdown dd ul li a, {
+.cluster_dropdown dd ul li a {
     padding:5px;
     display:block;
 }
@@ -205,45 +205,32 @@
     background-color:#efefef;
 }
 
-/* list inputs */
+/* select_menu inputs */
 
-#list_type_selection_pops_list,
-#list_type_training_pops_list,
-#pca_genotypes_list,
-#kinship_genotypes_list,
-#cluster_genotypes_list {
-    display: inline-block;
-    padding-top: 0px;
-    margin-right: 5px;
-}
-
-#list_type_selection_pop_load input,
-#list_type_training_pop_load input,
-#pca_go_btn input,
-#kinship_go_btn input,
-#cluster_go_btn input {
+.go_btn input{
+    height: 29px;
+    line-height:29px;
+    margin: 1px;
+    text-align: center;
     color: #ffffff;
     border: 1px solid #ffffff;
     background: #5cb85c;
 }
 
-#list_type_selection_pop_load input:hover,
-#list_type_training_pop_load input:hover,
-#pca_go_btn input:hover,
-#kinship_go_btn input:hover,
-#cluster_go_btn input:hover {
+.go_btn input:hover {
     background-color: #c6e6c6;
 }
 
 
-.list_upload {
-    height: 35px;
+.select_menu_block {
+    height: 31px;
+    line-height:31px;
+    text-align: center;
     color: #ffffff;
     float: left;
     background: #5cb85c;
     padding-left: 10px;
     padding-right: 10px;
-    padding-top:5px;
 }
 
 .glyphicon-plus:before {
