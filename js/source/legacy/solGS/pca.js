@@ -97,7 +97,7 @@ solGS.pca = {
 
 			if (pcaTable == false) {
 				pcaTable = this.createTable();
-				jQuery("#pca_pops_section").append(pcaTable).show();
+				jQuery("#pca_pops_selected").append(pcaTable).show();
 			}
 
 
