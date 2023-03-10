@@ -96,7 +96,7 @@ solGS.kinship = {
 
 			if (!kinshipTable) {
 				kinshipTable = this.createTable();
-				jQuery("#kinship_pops_section").append(kinshipTable).show();
+				jQuery("#kinship_pops_selected").append(kinshipTable).show();
 			}
 
 			var onClickVal = '<button type="button" id="run_kinship" class="btn btn-success" onclick="solGS.kinship.runKinship(' +

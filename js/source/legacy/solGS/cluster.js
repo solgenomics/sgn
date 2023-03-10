@@ -102,7 +102,7 @@ solGS.cluster = {
 			var clusterTable = jQuery('#' + tableId).doesExist();
 			if (clusterTable == false) {
 				clusterTable = this.getClusterPopsTable(tableId);
-				jQuery("#cluster_populations_list").append(clusterTable).show();
+				jQuery("#cluster_pops_selected").append(clusterTable).show();
 			}
 
 			var addRow = this.selectRow(selectId, selectName, dataStr);
@@ -1005,15 +1005,15 @@ jQuery(document).ready(function() {
 
 		var list = new CXGN.List();
 
-		var listMenu = list.listSelect("cluster_genotypes", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
+		var listMenu = list.listSelect("cluster_pops", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
 
 		var dType = ['accessions', 'trials'];
 
 		var dMenu = solGS.dataset.getDatasetsMenu(dType);
 
 		if (listMenu.match(/option/) != null) {
-			jQuery("#cluster_genotypes_list").append(listMenu);
-			jQuery("#cluster_genotypes_list_select").append(dMenu);
+			jQuery("#cluster_pops_list").append(listMenu);
+			jQuery("#cluster_pops_list_select").append(dMenu);
 
 			var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
 			var clusterPopId = clusterArgs.cluster_pop_id;
@@ -1023,7 +1023,7 @@ jQuery(document).ready(function() {
 			}
 
 		} else {
-			jQuery("#cluster_genotypes_list").append("<select><option>no lists found - Log in</option></select>");
+			jQuery("#cluster_pops_list").append("<select><option>no lists found - Log in</option></select>");
 		}
 	}
 
@@ -1073,9 +1073,9 @@ jQuery(document).ready(function() {
 		jQuery("<option>", {
 			value: '',
 			selected: true
-		}).prependTo("#cluster_genotypes_list_select");
+		}).prependTo("#cluster_pops_list_select");
 
-		jQuery("#cluster_genotypes_list_select").change(function() {
+		jQuery("#cluster_pops_list_select").change(function() {
 			var selectId = jQuery(this).find("option:selected").val();
 			var selectName = jQuery(this).find("option:selected").text();
 			var dataStr = jQuery(this).find("option:selected").attr('name');
