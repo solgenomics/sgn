@@ -54,7 +54,7 @@ jQuery(document).ready( function() {
 
         if (selectedId) {
 
-	    jQuery("#list_type_selection_pop_load").click(function() {
+	    jQuery("#list_type_selection_pops_go_btn").click(function() {
 
 		if (typeof selectedType === 'undefined'
 		    || !selectedType.match(/dataset/i))  {
@@ -389,7 +389,7 @@ function displayPredictedListTypeSelectionPops(args, output) {
             + output
             + '</td></tr></tbody></table>';
 
-	jQuery("#list_type_selection_populations").append(predictedListTypeSelectionTable).show();
+	jQuery("#list_type_selection_pops_selected").append(predictedListTypeSelectionTable).show();
 
     } else {
         var listIdArg = '\'' + listId +'\'';

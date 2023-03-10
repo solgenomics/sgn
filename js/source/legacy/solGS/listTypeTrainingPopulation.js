@@ -54,7 +54,7 @@ jQuery(document).ready( function() {
 		.text();
 	    
             if (selectedId) {  	
-		jQuery("#list_type_training_pop_load").click(function() {
+		jQuery("#list_type_training_pops_go_btn").click(function() {
 		    
 		    if (typeof selectedType === 'undefined'
 			|| !selectedType.match(/dataset/i)) {
