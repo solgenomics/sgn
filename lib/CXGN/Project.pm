@@ -5260,14 +5260,9 @@ sub genotyping_plate_count {
         bcs_schema => $schema,
         project_id => $genotyping_project_id
     });
-    my ($data, $total_count) = $plate_info->get_plate_info();
-    my $plate_count;
-    if ($data) {
-        $plate_count = scalar(@$data);
-    }
+    my ($data, $plate_count) = $plate_info->get_plate_info();
 
     return $plate_count;
-
 }
 
 
