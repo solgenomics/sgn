@@ -95,6 +95,19 @@ jQuery(document).ready(function($) {
         }
     });
 
+    jQuery("#genotyping_project_list").delegate("li", "dblclick", function(event){
+        var node = $("#genotyping_project_list").jstree("get_node", this);
+        if (node.id.substr(0,1) !== 'j') {
+            if (node.type == 'folder') {
+                window.open('/folder/'+node.id);
+                event.stopPropagation();
+            } else if (node.type == 'genotyping_project') {
+                window.open('/breeders_toolbox/trial/'+node.id);
+                event.stopPropagation();
+            }
+        }
+    });
+
 });
 
 </script>
