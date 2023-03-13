@@ -690,6 +690,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
         undef,
         undef,
         undef,
+        undef,
         $search_breeding_program_name,
         undef,
         undef,

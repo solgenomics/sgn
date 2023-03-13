@@ -67,6 +67,7 @@ my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
     $offset,
     $limit,
     $seedlot_name,
+    $description,
     $breeding_program,
     $location,
     $minimum_count,
@@ -360,7 +361,7 @@ sub list_seedlots {
         $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
     }
     if ($breeding_program) {
-	print STDERR "Addint breeding_program $breeding_program to query...\n";
+	print STDERR "Adding breeding_program $breeding_program to query...\n";
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
     if ($location) {
@@ -368,7 +369,7 @@ sub list_seedlots {
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
     if ($contents_accession && scalar(@$contents_accession)>0) {
-	print STDERR "Adding $contents_accession ...\n";
+	print STDERR "Adding contents accession: $contents_accession ...\n";
         $search_criteria{'subject.type_id'} = $accession_type_id;
         if ($exact_match_uniquenames){
             $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
@@ -379,6 +380,7 @@ sub list_seedlots {
         }
     }
     if ($accession_id && ref($accession_id) && scalar(@$accession_id)>0) {
+        print STDERR "Accession ID is ";
         print Dumper $accession_id;
         $search_criteria{'subject.type_id'} = $accession_type_id;
         $search_criteria{'subject.stock_id'} = { -in => $accession_id };
