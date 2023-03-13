@@ -36,11 +36,12 @@ $user_role => undef
 
                 <b><p>How do I inventory my seed?</p></b>
                 <ul>
-                <li>1) Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
-                <li>2) Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
-                <li>3) Use the "Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Inventory Android Application you can create your own CSV file and upload that.</li>
-                <li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li>
-                <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
+                <li>Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
+                <li>Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
+		<li>The inventory app is currently not available but you can continue using it if it is installed on your tablet device.
+                <!-- li>3) Use the "Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Inventory Android Application you can create your own CSV file and upload that.</li --><!-- the app is currently not available - re-instate when it is available again -->
+                <!-- li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li -->
+                It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
                 </ul>
             </div>
         </div>
