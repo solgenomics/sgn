@@ -442,23 +442,7 @@ jQuery(document).ready(function() {
 	var url = location.pathname;
 
 	if (url.match(/kinship\/analysis/)) {
-
-		var list = new CXGN.List();
-		var listMenu = list.listSelect("kinship_pops", ['accessions', 'trials'], undefined, undefined, undefined);
-
-		var dType = ['accessions', 'trials'];
-		var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-		if (listMenu.match(/option/) != null) {
-
-			jQuery("#kinship_pops_list").html(listMenu);
-			jQuery("#kinship_pops_list_select").append(dMenu);
-
-		} else {
-			jQuery("#kinship_pops_list")
-				.html("<select><option>no lists found - Log in</option></select>");
-		}
-
+		solGS.selectMenu.populateMenu("kinship_pops", ['accessions', 'trials'], ['accessions', 'trials'])
 		var args = solGS.kinship.getKinshipArgsFromUrl();
 
 		if (args.kinship_pop_id) {
@@ -479,28 +463,11 @@ jQuery(document).ready(function() {
 	var url = location.pathname;
 
 	if (url.match(/kinship\/analysis/)) {
-
-		var selectId;
-		var selectName;
-		var dataStructure;
-
-		jQuery("<option>", {
-			value: '',
-			selected: true
-		}).prependTo("#kinship_pops_list_select");
-
 		jQuery("#kinship_pops_list_select").change(function() {
-			selectId = jQuery(this).find("option:selected").val();
-			selectName = jQuery(this).find("option:selected").text();
-			dataStructure = jQuery(this).find("option:selected").attr('name');
-
-			if (dataStructure == undefined) {
-				dataStructure = 'list';
-			}
-
-			if (selectId) {
-				jQuery("#kinship_go_btn").click(function() {
-					solGS.kinship.loadKinshipPops(selectId, selectName, dataStructure);
+			var selectedPop = solGS.selectMenu.getSelectedPop('kinship_pops');
+			if (selectedPop.selected_id) {
+				jQuery("#kinship_pops_go_btn").click(function() {
+					solGS.kinship.loadKinshipPops(selectedPop.selected_id, selectedPop.selected_name, selectedPop.data_str);
 				});
 			}
 		});

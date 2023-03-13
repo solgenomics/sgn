@@ -846,82 +846,34 @@ jQuery(document).ready(function() {
 
 	if (url.match(/pca\/analysis/)) {
 
-		var list = new CXGN.List();
-		var listMenu = list.listSelect("pca_pops", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
+		solGS.selectMenu.populateMenu("pca_pops", ['accessions', 'plots', 'trials'],  ['accessions', 'trials'] );
+		var pcaArgs = solGS.pca.getPcaArgsFromUrl();
+		var pcaPopId = pcaArgs.pca_pop_id;
+		if (pcaPopId) {
 
-		var dType = ['accessions', 'trials'];
-		var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-		if (listMenu.match(/option/) != null) {
-
-			jQuery("#pca_pops_list").append(listMenu);
-			jQuery("#pca_pops_list_select").append(dMenu);
-
-			var pcaArgs = solGS.pca.getPcaArgsFromUrl();
-			var pcaPopId = pcaArgs.pca_pop_id;
-			if (pcaPopId) {
-
-				if (pcaArgs.data_structure && !pcaPopId.match(/list|dataset/)) {
-					pcaArgs['pca_pop_id'] = pcaArgs.data_structure + '_' + pcaPopId;
-				}
-				solGS.pca.checkCachedPca(url, pcaArgs);
+			if (pcaArgs.data_structure && !pcaPopId.match(/list|dataset/)) {
+				pcaArgs['pca_pop_id'] = pcaArgs.data_structure + '_' + pcaPopId;
 			}
-
-		} else {
-			jQuery("#pca_pops_list").append("<select><option>no lists found - Log in</option></select>");
+			solGS.pca.checkCachedPca(url, pcaArgs);
 		}
 	}
-
-});
-
-
-jQuery(document).ready(function() {
 
 	jQuery("#run_pca").click(function() {
 		solGS.pca.pcaRun();
 	});
 
-});
-
-jQuery(document).ready(function() {
-
-	var url = location.pathname;
-
 	if (url.match(/solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//)) {
 		jQuery('#pca_data_type_select').html('<option selected="genotype">Genotype</option>');
 	}
 
-});
-
-
-jQuery(document).ready(function() {
-
-	var url = location.pathname;
 
 	if (url.match(/pca\/analysis/)) {
 
-
-		var selectId;
-		var selectName;
-		var dataStructure;
-
-		jQuery("<option>", {
-			value: '',
-			selected: true
-		}).prependTo("#pca_pops_list_select");
-
 		jQuery("#pca_pops_list_select").change(function() {
-			selectId = jQuery(this).find("option:selected").val();
-			selectName = jQuery(this).find("option:selected").text();
-			dataStructure = jQuery(this).find("option:selected").attr('name');
-
-			if (dataStructure == undefined) {
-				dataStructure = 'list';
-			}
-
-			if (selectId) {
-				jQuery("#pca_go_btn").click(function() {
-					solGS.pca.loadPcaPops(selectId, selectName, dataStructure);
+			var selectedPop = solGS.selectMenu.getSelectedPop('pca_pops');
+			if (selectedPop.selected_id) {
+				jQuery("#pca_pops_go_btn").click(function() {
+					solGS.pca.loadPcaPops(selectedPop.selected_id, selectedPop.selected_name, selectedPop.data_str);
 				});
 			}
 		});

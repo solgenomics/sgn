@@ -1002,28 +1002,13 @@ jQuery(document).ready(function() {
 	var url = location.pathname;
 
 	if (url.match(/cluster\/analysis/)) {
-
-		var list = new CXGN.List();
-
-		var listMenu = list.listSelect("cluster_pops", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
-
-		var dType = ['accessions', 'trials'];
-
-		var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-		if (listMenu.match(/option/) != null) {
-			jQuery("#cluster_pops_list").append(listMenu);
-			jQuery("#cluster_pops_list_select").append(dMenu);
-
-			var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
-			var clusterPopId = clusterArgs.cluster_pop_id;
-			if (clusterPopId) {
-				
-				solGS.cluster.checkCachedCluster(url, clusterArgs);
-			}
-
-		} else {
-			jQuery("#cluster_pops_list").append("<select><option>no lists found - Log in</option></select>");
+		solGS.selectMenu.populateMenu("cluster_pops", ['accessions', 'plots', 'trials'], ['accessions', 'trials'])
+	
+		var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
+		var clusterPopId = clusterArgs.cluster_pop_id;
+		if (clusterPopId) {
+			
+			solGS.cluster.checkCachedCluster(url, clusterArgs);
 		}
 	}
 
@@ -1065,35 +1050,15 @@ jQuery(document).ready(function() {
 
 
 jQuery(document).ready(function() {
+	jQuery("#cluster_pops_list_select").change(function() {
+		var selectedPop = solGS.selectMenu.getSelectedPop('cluster_pops');
+		if (selectedPop.selected_id) {
+			jQuery("#cluster_pops_go_btn").click(function() {
+				solGS.cluster.loadClusterGenotypesList(selectedPop.selected_id, selectedPop.selected_name, selectedPop.data_str);
+			});
+		}
+	});
 
-	var url = location.pathname;
-
-	if (url.match(/cluster\/analysis/)) {
-
-		jQuery("<option>", {
-			value: '',
-			selected: true
-		}).prependTo("#cluster_pops_list_select");
-
-		jQuery("#cluster_pops_list_select").change(function() {
-			var selectId = jQuery(this).find("option:selected").val();
-			var selectName = jQuery(this).find("option:selected").text();
-			var dataStr = jQuery(this).find("option:selected").attr('name');
-
-			if (dataStr == undefined) {
-				dataStr = 'list';
-			}
-
-			if (selectId) {
-				jQuery("#cluster_go_btn").click(function() {
-					solGS.cluster.loadClusterGenotypesList(selectId, selectName, dataStr);
-
-				});
-			}
-		});
-
-		//checkClusterResult();
-	}
 });
 
 

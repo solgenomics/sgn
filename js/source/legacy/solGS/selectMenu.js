@@ -9,11 +9,11 @@ solGS.selectMenu = {
 
     divPrefix: function(div) {
 
-        if (!div.match(/pops/)) {
-            div = `${div}_pops`;
-        }
+    if (!div.match(/pops/)) {
+        div = `${div}_pops`;
+    }
 
-        return div;
+    return div;
 
     },
 
@@ -30,24 +30,24 @@ solGS.selectMenu = {
         div = this.divPrefix(div);
         
         var list = new CXGN.List();
-		var listMenu = list.listSelect(div, listTypes);
-		var dMenu = solGS.dataset.getDatasetsMenu(dsTypes);
+        var listMenu = list.listSelect(div, listTypes);
+        var dMenu = solGS.dataset.getDatasetsMenu(dsTypes);
 
-		if (listMenu.match(/option/) != null) {
+        if (listMenu.match(/option/) != null) {
             var divListId = this.divListId(div);
             var divListSelectId = this.divListSelectId(div);
 
-			jQuery( divListId).append(listMenu);
-			jQuery(divListSelectId).append(dMenu);
+            jQuery( divListId).append(listMenu);
+            jQuery(divListSelectId).append(dMenu);
 
             jQuery("<option>", {
-                value: '',
-                selected: true
+            value: '',
+            selected: true
             }).prependTo(divListSelectId);
-    
+
         } else {
-			jQuery(divListId).append("<select><option>no lists found - Log in</option></select>");
-		}
+            jQuery(divListId).append("<select><option>no lists found - Log in</option></select>");
+        }
     },
 
     getSelectedPop: function(div) {
