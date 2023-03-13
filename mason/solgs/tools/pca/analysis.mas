@@ -65,7 +65,7 @@ $collapsed = 1;
 
 %}
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.pca"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.pca", "solGS.selectMenu"] &>
 <&| /page/info_section.mas,
   collapsible => 1,
   collapsed   => $collapsed,

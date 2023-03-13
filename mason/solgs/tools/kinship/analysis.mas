@@ -55,7 +55,7 @@ $collapsed = 1;
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.kinship"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.kinship", "solGS.selectMenu"] &>
 
 % if ($url =~ /kinship\/analysis/) {
 

@@ -59,7 +59,7 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 % if ($url =~ /cluster\/analysis/) {
 
-  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster"] &>
+  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster", "solGS.selectMenu"] &>
 
 <& /page/page_title.mas,
    title => "Cluster Analysis"
