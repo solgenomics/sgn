@@ -260,7 +260,7 @@ sub search {
     my $matchtype = $self->match_type || 'contains';
     my $any_name = $self->match_name;
     my $organism_id = $self->organism_id;
-    my $stock_type_id = $self->stock_type_id;
+    my $stock_type_id = $self->stock_type_id ;
     my $stock_type_name = $self->stock_type_name;
     my $owner_first_name = $self->owner_first_name;
     my $owner_last_name = $self->owner_last_name;
@@ -282,12 +282,14 @@ sub search {
     my $limit = $self->limit;
     my $offset = $self->offset;
 
+    my $advanced_search = 0; #this is for joining nd_experiment and its related tables
+
     unless ($matchtype eq 'exactly') { #trim whitespace from both ends unless exact search was specified
         $any_name =~ s/^\s+|\s+$//g;
     }
 
     my ($or_conditions, $and_conditions);
-    $and_conditions->{'me.stock_id'} = { '>' => 0 };
+    #$and_conditions->{'me.stock_id'} = { '>' => 0 }; ##Is this needed here?
 
     my $start = '%';
     my $end = '%';
@@ -377,6 +379,7 @@ sub search {
     my $nd_experiment_joins = [];
 
     if (scalar(@trait_name_array)>0 || $minimum_phenotype_value || $maximum_phenotype_value){
+        $advanced_search=1;
         push @$nd_experiment_joins, {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }};
         foreach (@trait_name_array){
             if ($_){
@@ -392,6 +395,7 @@ sub search {
     }
 
     if (scalar(@location_name_array)>0){
+        $advanced_search=1;
         push @$nd_experiment_joins, 'nd_geolocation';
         foreach (@location_name_array){
             if ($_){
@@ -401,6 +405,7 @@ sub search {
     }
 
     if (scalar(@trial_name_array)>0 || scalar(@trial_id_array)>0 || scalar(@year_array)>0 || scalar(@program_id_array)>0){
+        $advanced_search=1;
         push @$nd_experiment_joins, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } };
         foreach (@trial_name_array){
             if ($_){
@@ -498,12 +503,14 @@ sub search {
             push @stockprop_filtered_stock_ids, $stock_id;
         }
     }
-
-    if ($stock_type_search == $accession_cvterm_id){
-        $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
-    } else {
-        $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
+    if ($advanced_search) {
+      if ($stock_type_search  == $accession_cvterm_id){
+          $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
+      } else  {
+          $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
+      }
     }
+    if ( !$and_conditions) {  $and_conditions = [ { 'me.type_id' => { '!=' => undef } } ] };
 
     #$schema->storage->debug(1);
     my $search_query = {
@@ -540,6 +547,8 @@ sub search {
         $search_query->{'me.stock_id'} = {'in'=>\$stock_xref_search_sql};
     }
 
+    print STDERR "**stock search q " . Dumper($search_query)  ."\n";
+    print STDERR "***stock_join= " . Dumper($stock_join) ." \n\n";
     my $rs = $schema->resultset("Stock::Stock")->search(
     $search_query,
     {
@@ -551,6 +560,7 @@ sub search {
     });
 
     my $records_total = $rs->count();
+    $any_name =~ s/^\s+|\s+$//g;
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
     }
