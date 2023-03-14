@@ -55,6 +55,7 @@ solGS.selectMenu = {
         var divId = this.divListSelectId(div);
 
         var selectedId = jQuery(divId).find("option:selected").val();
+        selectedId = parseInt(selectedId);
         var selectedName = jQuery(divId).find("option:selected").text();
         var dataStr = jQuery(divId).find("option:selected").attr('name');
 
