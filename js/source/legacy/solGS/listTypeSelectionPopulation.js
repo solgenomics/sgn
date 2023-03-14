@@ -14,64 +14,34 @@ JSAN.use("jquery.blockUI");
 
 
 jQuery(document).ready( function() {
-    var list = new CXGN.List();
-    var listMenu = list.listSelect("list_type_selection_pops", ["accessions"], undefined, undefined, undefined);
-    var relevant =[];
-
-    var dType = ['accessions', 'trials'];
-    var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-    if (listMenu.match(/option/) != null) {
-
-        jQuery("#list_type_selection_pops_list")
-	    .append(listMenu);
-
-	jQuery("#list_type_selection_pops_list_select")
-	    .append(dMenu);
-
-        } else {
-            jQuery("#list_type_selection_pops_list")
-		.append("<select><option>no lists found</option></select>");
-        }
-
-    });
+    solGS.selectMenu.populateMenu("list_type_selection_pops", ["accessions"], ['accessions', 'trials'] );
+          
+});
 
 
 jQuery(document).ready( function() {
-    var selectedId;
-    var selectedType;
-    var selectedName;
-
-    jQuery("<option>", {value: '', selected: true})
-	.prependTo("#list_type_selection_pops_list_select");
-
     jQuery("#list_type_selection_pops_list_select").change(function() {
 
-	selectedType = jQuery(this).find("option:selected").attr('name');
-        selectedId = jQuery(this).find("option:selected").val();
-	selectedId = parseInt(selectedId)
-	selectedName = jQuery(this).find("option:selected").text();
+        var selectedPop = solGS.selectMenu.getSelectedPop('list_type_selection_pops');
+        if (selectedPop.selected_id) {
 
-        if (selectedId) {
+	        jQuery("#list_type_selection_pops_go_btn").click(function() {
 
-	    jQuery("#list_type_selection_pops_go_btn").click(function() {
+                if (typeof selectedPop.data_str === 'undefined' || !selectedPop.data_str.match(/dataset/i)) {
+                    var listDetail = getListTypeSelectionPopDetail(selectedPop.selected_id);
 
-		if (typeof selectedType === 'undefined'
-		    || !selectedType.match(/dataset/i))  {
+                    if (listDetail.type.match(/accessions/)) {
+                        checkPredictedListSelection(selectedPop.selected_id);
+                    } else {
+                        //TO-DO
+                        //	var trialsList = listDetail.list;
+                        //	var trialsNames = listDetail.elementsNames;
 
-		    var listDetail = getListTypeSelectionPopDetail(selectedId);
-		    if (listDetail.type.match(/accessions/)) {
-			checkPredictedListSelection(selectedId);
-		    } else {
-			//TO-DO
-			//	var trialsList = listDetail.list;
-			//	var trialsNames = listDetail.elementsNames;
-
-			//	loadTrialListTypeSelectionPop(trialsNames);
-		    }
-		} else {
-		    solGS.dataset.checkPredictedDatasetSelection(selectedId, selectedName)
-		}
+                        //	loadTrialListTypeSelectionPop(trialsNames);
+                    }
+                } else {
+                    solGS.dataset.checkPredictedDatasetSelection(selectedPop.selected_id, selectedPop.selected_name)
+                }
             });
         }
     });
