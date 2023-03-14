@@ -215,21 +215,23 @@ solGS.cluster = {
 
 		var dataTypeOpts = [];
 		var page = location.pathname;
-		if (page.match(/cluster\/analysis/)) {
+	
+		if (isNaN(selectId)) {
+			selectId = selectId.replace(/\w+_/g, '');
+		}
 
+		if (page.match(/cluster\/analysis/)) {
 			if (dataStr.match(/list/)) {
-				selectId = selectId.replace('list_', '')
-				list = this.getListMetaData(selectId)
+				list = this.getListMetaData(selectId);
 
 				if (list.list_type.match(/accessions/)) {
-					dataTypeOpts = ['Genotype']
+					dataTypeOpts = ['Genotype'];
 				} else if (list.list_type.match(/plots/)) {
-					dataTypeOpts = ['Phenotype']
+					dataTypeOpts = ['Phenotype'];
 				} else if (list.list_type.match(/trials/)) {
-					dataTypeOpts = ['Genotype', 'Phenotype']
+					dataTypeOpts = ['Genotype', 'Phenotype'];
 				}
 			} else if (dataStr.match(/dataset/)) {
-				selectId = selectId.replace('dataset_', '')
 				var dataset = new CXGN.Dataset();
 				dt = dataset.getDataset(selectId)
 
@@ -719,7 +721,6 @@ solGS.cluster = {
 
 		var popName = res.cluster_pop_name || '';
 		var imageId = res.plot_name;
-		console.log('image id: ' + imageId)
 		imageId = 'id="' + imageId + '"';
 		var plot = '<img ' + imageId + ' src="' + res.cluster_plot + '">';
 
