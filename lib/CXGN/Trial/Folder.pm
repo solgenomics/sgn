@@ -612,12 +612,12 @@ sub get_jstree_html {
             if ($project_type_of_interest eq 'trial' && $children{$child}->{'analysis_experiment'}) {
                 $html .= _jstree_li_html($schema, 'analyses', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
-            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'genotype_data_project'}) {
-                $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
-            }
-			elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'pcr_genotype_data_project'}) {
-                $html .= _jstree_li_html($schema, 'pcr_genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
-            }
+#            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'genotype_data_project'}) {
+#                $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+#            }
+#			elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'pcr_genotype_data_project'}) {
+#                $html .= _jstree_li_html($schema, 'pcr_genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+#            }
             elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'sampling_trial'}) {
                 $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
@@ -633,7 +633,7 @@ sub get_jstree_html {
             elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && !$children{$child}->{'folder_for_genotyping_projects'} && $children{$child}->{'trial_folder'}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
-            elsif ($local_type_of_interest eq 'design' && $children{$child}->{'genotyping_plate'}){
+            elsif (($local_type_of_interest eq 'design' && $children{$child}->{'genotyping_plate'}) || ($local_type_of_interest eq 'design' && $children{$child}->{'genotype_data_project'}) || ($local_type_of_interest eq 'design' && $children{$child}->{'pcr_genotype_data_project'})){
                 next; #skip genotyping plates in field trial tree
             }
             elsif ($children{$child}->{$local_type_of_interest}) { #Only display $project of interest types.
