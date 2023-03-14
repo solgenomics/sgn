@@ -313,6 +313,21 @@ var stock_table;
 
 jQuery(document).ready(function () {
 
+    window.addEventListener('load', () => {
+      // Reset the form parameters
+      jQuery('#stock_search_form').reset();
+    });
+    const textFields = document.querySelectorAll('input[type="text"]');
+    // Loop through the text fields and set their values to an empty string
+      textFields.forEach(textField => {
+        textField.value = '';
+     });
+     // Get all the dropdown select elements in the form
+     const selectFields = document.querySelectorAll('select');
+     selectFields.forEach(selectField => {
+        selectField.selectedIndex = 0;
+     });
+
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'
      });

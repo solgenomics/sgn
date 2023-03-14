@@ -426,6 +426,20 @@ my $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 is(scalar(keys %{$response->{design}}), 11);
 
+
+#test genotyping project search
+$mech->get_ok('http://localhost:3010/ajax/genotyping_data_project/search');
+my $response = decode_json $mech->content;
+
+my $search_result = $response->{'data'};
+is($search_result->[0]->[1], 'SNP');
+is($search_result->[0]->[2], 'genotyping project for test');
+is($search_result->[0]->[5], '2022');
+is($search_result->[0]->[6], 'Cornell Biotech');
+is($search_result->[0]->[7], 'igd');
+is($search_result->[0]->[8], '1');
+is($search_result->[0]->[9], '11');
+
 #test moving genotyping plate to another project
 my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
 
