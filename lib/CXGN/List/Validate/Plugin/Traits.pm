@@ -24,6 +24,7 @@ sub validate {
 
         my @parts = split (/\|/ , $term);
         my ($db_name, $accession) = split ":", pop @parts;
+        my $trait_name = join '|', @parts;
 
         $accession =~ s/\s+$//;
         $accession =~ s/^\s+//;
@@ -36,11 +37,14 @@ sub validate {
             push @missing, $term;
         } else {
             my $db = $db_rs->first();
-            my $rs = $schema->resultset("Cv::Cvterm")->search( {
-            'dbxref.db_id' => $db->db_id(),
-            'dbxref.accession'=>$accession }, {
-                'join' => 'dbxref' }
-            );
+            my $query = {
+                'dbxref.db_id' => $db->db_id(),
+                'dbxref.accession' => $accession,
+            };
+            if ( $db_name eq 'COMP' ) {
+                $query->{'me.name'} = $trait_name;
+            }
+            my $rs = $schema->resultset("Cv::Cvterm")->search($query, {'join' => 'dbxref'});
 
             if ($rs->count == 0) {
                 #print STDERR "Problem found with term $term at cvterm rs from accession $accession point 2\n";
@@ -48,7 +52,7 @@ sub validate {
             } else {
                 my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
                 if ($rs_var->count == 0) {
-                    print STDERR "Problem found with term $term at variable check point 3\n";
+                    #print STDERR "Problem found with term $term at variable check point 3\n";
                     push @missing, $term;
                 }
             }
