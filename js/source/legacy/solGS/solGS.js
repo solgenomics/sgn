@@ -824,6 +824,7 @@ solGS.getSelectionPopArgs = function () {
 solGS.getTrainingPopArgs = function () {
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
+    training_pop_name:  jQuery("#training_pop_name").val(),
     genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
     data_set_type: jQuery("#data_set_type").val()
   };
