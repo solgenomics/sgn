@@ -9,15 +9,17 @@ $facilities => ();
 <& /page/page_title.mas, title=>"Manage Genotyping Plates" &>
 
 <div class="container-fluid">
-    <&| /page/explanation.mas, title=>'Important', collapsible=>1, collapsed=>0, &>
+    <&| /page/explanation.mas, title=>'Important Notice', collapsible=>1, collapsed=>0, &>
         <p>
-            <b>Important:</b> Manage Genotyping Plates page will soon be replaced by Manage Genotyping Projects page.
+            <b>Important notice:</b> Manage Genotyping Plates page will soon be removed and replaced by Manage Genotyping Projects page. Genotyping project can be used to organize both genotyping plates and associated genotyping data.
             <br/><br/>
-            <b>For previously created genotyping plates:</b>Please move your genotyping plates to a desired genotyping project. On each genotyping project details page, you will find genotyping plates section which displays all of the plates included in the project, as well as a link for <b>Move Genotyping Plates to this Project</b> dialog.
+            <b>For previously created genotyping plates:</b>Please move your genotyping plates to a desired genotyping project. On each genotyping project details page, you will find <b>Genotyping Plates</b> section which displays all of the plates included in the project, as well as a link for <b>Move Genotyping Plates to this Project</b> dialog.
             <br/><br/>
             <b>For new genotyping plates:</b>You can specify genotyping project during creating or uploading new genotyping plates.
             <br/><br/>
-            You can add new genotyping projects, add/upload genotyping plates or upload genotyping data by using links on Manage Genotyping Projects page.
+            Folders for genotyping plates are now obsoleted.
+            <br/><br/>
+            Links for adding/uploading genotyping plates and related data have been moved to Manage Genotyping Projects page.
             <a href="/breeders/genotyping_projects"><p>Go To Manage Genotyping Projects</p></a>
         </p>
     </&>

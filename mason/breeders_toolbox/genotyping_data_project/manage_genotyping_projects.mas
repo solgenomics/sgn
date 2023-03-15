@@ -8,11 +8,16 @@ $facilities
 <& /page/page_title.mas, title => "Manage Genotyping Projects" &>
 
 <div class="container-fluid">
-    <&| /page/info_section.mas, title=>"About Genotyping Projects",  collapsible => 1, collapsed=>1 &>
+    <&| /page/info_section.mas, title=>"About Genotyping Projects and Genotyping Plates",  collapsible => 1, collapsed=>1 &>
         <div class="well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <b><p>What are genotyping projects?</p></b>
+                    <ul>
+                        <li>Genotyping projects allow you to organize both genotyping plates and associated genotyping data on the same page.</li>
+                        <li>Please select a genotyping project previously stored in the database or create a new one before you add/upload a genotyping plate or genotyping data.
+                        <li>Several genotyping projects can be grouped together using genotyping project folders (Note: folders for genotyping plates are now obsoleted)</li>
+                    </ul>
 
                     <b><p>What are genotyping plates?</p></b>
                     <ul>
