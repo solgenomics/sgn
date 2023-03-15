@@ -527,10 +527,11 @@ sub _construct_variable_response {
     my $external_references_json;
     if (defined($variable->external_references)) {
         $external_references_json = $variable->external_references->search()->{$variable->cvterm_id};
+        print STDERR Dumper $external_references_json;
 
         if($c->config->{'brapi_include_CO_xref'}) {
-            push @external_references_json, {
-                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
+            push @{ $external_references_json }, {
+                referenceID => "http://www.cropontology.org/terms/".$variable->db.":".$variable->accession . "/",
                 referenceSource => "Crop Ontology"
             };
         }
