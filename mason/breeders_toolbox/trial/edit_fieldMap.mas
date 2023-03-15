@@ -272,6 +272,25 @@ jQuery(document).ready(function () {
 	    }
 	});
 
+jQuery('#calculate_spatial_correction').click(function() {
+   var trial_id = get_trial_id();
+   jQuery('#calculate_spatial_correction_dialog').modal("show");
+
+   jQuery("#confirm_calculating_spatial_correction").click(function() {
+     jQuery.ajax({
+       url: '/ajax/spatial_model/generate_results/'+trial_id,
+       success: function(response) {
+         if (response.error) {
+           alert(response.error);
+         } else {
+           alert('an error occurred');
+         }
+       }
+     });
+   });
+});
+
+
 
   jQuery('#edit_field_map_link').click(function () {
 
