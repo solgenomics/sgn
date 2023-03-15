@@ -5,9 +5,11 @@
 
 /breeders_toolbox/trial.mas - a mason component to display a trial detail page
 
-=head1 AUTHOR
+=head1 AUTHORS
 
 Jeremy D. Edwards
+Christine Nyaga
+
 
 =cut
 
@@ -94,13 +96,20 @@ $latest_trial_activity => undef
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+          <p>Would you like to calculate Spatial Correction?</p>
           <button type="button" class="btn btn-primary" name="confirm_calculating_spatial_correction" id="confirm_calculating_spatial_correction">Confirm</button>
+          <br />
+          <div id="calculate_spatial_correction_status_message"></div>
+          <br />
+          <br />
+          <select id="dropdown" style="display:none">  <option value="">All</option></select>
+          <table id= "spatial_correction_result_table" ></table>
+          <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction">Store Spatial Correction</button>
 
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	       <button type="button" class="btn btn-primary" name="upload_locations_dialog_submit" id="upload_locations_dialog_submit">Upload</button>
       </div>
     </div>
   </div>

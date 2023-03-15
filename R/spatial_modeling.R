@@ -86,9 +86,11 @@ for (i in 2:length(userResponse)) {
     blue <- summary(m2.sommer)$betas
     # output[[i]] <- blue
     output <- rbind(output, blue)
+
     # write(paste("blues:", blue), stderr())
   }
 }
+colnames(output)[1] <- "ID"
 write(paste("blues:", output), stderr())
 BLUE <- as.data.frame(output)
 write(paste("BLUE:", BLUE), stderr())

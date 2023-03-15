@@ -275,20 +275,54 @@ jQuery(document).ready(function () {
 jQuery('#calculate_spatial_correction').click(function() {
    var trial_id = get_trial_id();
    jQuery('#calculate_spatial_correction_dialog').modal("show");
-
-   jQuery("#confirm_calculating_spatial_correction").click(function() {
+});
+jQuery("#confirm_calculating_spatial_correction").click(function() {
      jQuery.ajax({
+      beforeSend: function (xhr, settings) {
+        jQuery("#calculate_spatial_correction_status_message").html("starting analysis");
+      },
        url: '/ajax/spatial_model/generate_results/'+trial_id,
        success: function(response) {
+        jQuery("#calculate_spatial_correction_status_message").html("Analysis complete");
          if (response.error) {
            alert(response.error);
          } else {
-           alert('an error occurred');
+            
+            var headers = response.headers;
+            jQuery("#spatial_correction_result_table").DataTable({
+                'destroy': true,
+                  'timeout': 6000000,
+                  'data' : response.data,
+                  'columns': headers,
+                  //'columns': ["ID","Trait", "Effect", "Estimate", "Std.Error", "t.value"],
+
+                  //"order": [[ 1, "desc" ]]
+            })
+
+            // Create custom dropdown menu
+            jQuery(document).ready(function() {
+                var columnValues = jQuery('#spatial_correction_result_table').DataTable().column(1).data().unique().toArray();
+                console.log(columnValues);
+                var dropdown = jQuery('#dropdown').show();
+                jQuery.each(columnValues, function(i, value) {
+                    dropdown.append(jQuery('<option>').text(value).attr('value', value));
+                });
+                jQuery('#example_wrapper').prepend(dropdown); // append dropdown to DataTable wrappe
+            });
+
+            // Filter DataTable based on selected value
+            jQuery(document).ready(function() {
+                jQuery('#dropdown').on('change', function() {
+                    var selectedValue = jQuery(this).val();
+                    jQuery('#spatial_correction_result_table').DataTable().column(1).search(selectedValue).draw();
+                });
+            });
+
          }
        }
      });
-   });
 });
+
 
 
 

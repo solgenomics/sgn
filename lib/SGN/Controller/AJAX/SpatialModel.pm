@@ -173,9 +173,16 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     open(my $F, "<", $pheno_filepath.".clean.out") || die "Can't open result file $pheno_filepath".".clean.out";
     my $header = <$F>;
+    my @h = split(/\s+/, $header);
+    #my @h = split(',', $header);
+    my @spl;
+    foreach my $item (@h) {
+    push  @spl, {title => $item};
+  }
+    print STDERR "Header: ".Dumper(\@spl);
     while (<$F>) {
 	chomp;
-	my @fields = split /\,/;
+	my @fields = split /\s+/;
 	foreach my $f (@fields) { $f =~ s/\"//g; }
 	push @data, \@fields;
     }
@@ -191,6 +198,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     $c->stash->{rest} = {
 	data => \@data,
+    headers => \@spl,
 	download_link => $download_link,
     };
 }

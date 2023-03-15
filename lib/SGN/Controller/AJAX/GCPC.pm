@@ -424,7 +424,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	push @data, \@fields;
     }
 
-    print STDERR "FORMATTED DATA: ".Dumper(\@data);
+    #print STDERR "FORMATTED DATA: ".Dumper(\@data);
 
     my $basename = basename($pheno_filepath.".clean.out");
 
