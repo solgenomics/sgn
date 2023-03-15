@@ -274,7 +274,13 @@ jQuery(document).ready(function () {
 
 jQuery('#calculate_spatial_correction').click(function() {
    var trial_id = get_trial_id();
-   jQuery('#calculate_spatial_correction_dialog').modal("show");
+   jQuery('#calculate_spatial_correction_dialog').modal({
+       backdrop: 'static',
+       keyboard: false
+   }).find('.modal-dialog').css({
+       width: '90%',
+       maxWidth: '95%'
+   });
 });
 jQuery("#confirm_calculating_spatial_correction").click(function() {
      jQuery.ajax({
@@ -303,7 +309,7 @@ jQuery("#confirm_calculating_spatial_correction").click(function() {
             jQuery(document).ready(function() {
                 var columnValues = jQuery('#spatial_correction_result_table').DataTable().column(1).data().unique().toArray();
                 console.log(columnValues);
-                var dropdown = jQuery('#dropdown').show();
+                var dropdown = jQuery('#dropdown');
                 jQuery.each(columnValues, function(i, value) {
                     dropdown.append(jQuery('<option>').text(value).attr('value', value));
                 });

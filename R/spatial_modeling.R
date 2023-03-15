@@ -90,7 +90,8 @@ for (i in 2:length(userResponse)) {
     # write(paste("blues:", blue), stderr())
   }
 }
-colnames(output)[1] <- "ID"
+print(colnames(output))
+colnames(output) <- c("ID", "Trait", "Genotype", "Estimate", "Std.Error")
 write(paste("blues:", output), stderr())
 BLUE <- as.data.frame(output)
 write(paste("BLUE:", BLUE), stderr())
