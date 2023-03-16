@@ -117,6 +117,16 @@ has 'observation_unit_names_list' => (
     is => 'rw',
 );
 
+has 'xref_id_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'xref_source_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -170,7 +180,16 @@ sub search {
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
+    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table
+                         LEFT JOIN (
+                            select stock.stock_id, array_agg(db.name)::text[] as xref_sources, array_agg(dbxref.accession)::text[] as xref_ids
+                            from stock
+                            join stock_dbxref sd on stock.stock_id = sd.stock_id
+                            join dbxref on sd.dbxref_id = dbxref.dbxref_id
+                            join db on dbxref.db_id = db.db_id
+                            group by stock.stock_id
+                         ) xref on xref.stock_id = materialized_phenotype_jsonb_table.observationunit_stock_id
+                        ";
     my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY trial_name, observationunit_uniquename";
 
     my @where_clause;
@@ -196,6 +215,12 @@ sub search {
     } elsif ($self->subplot_list && scalar(@{$self->subplot_list})>0) {
         my $subplot_sql = _sql_from_arrayref($self->subplot_list);
         push @where_clause, "observationunit_stock_id in ($subplot_sql)";
+    } elsif ($self->xref_id_list && scalar(@{$self->xref_id_list})>0) {
+        my $xref_id_sql = _sql_from_arrayref($self->xref_id_list);
+        push @where_clause, "xref.xref_ids && '{$xref_id_sql}'";
+    } elsif ($self->xref_source_list && scalar(@{$self->xref_source_list})>0) {
+        my $xref_source_sql = _sql_from_arrayref($self->xref_source_list);
+        push @where_clause, "xref.xref_sources && '{$xref_source_sql}'";
     }
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {

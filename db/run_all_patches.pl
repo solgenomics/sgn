@@ -46,7 +46,7 @@ my $db_patch_path = dirname(abs_path($0));
 chdir($db_patch_path);
 
 my @folders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
-my $cmd = "echo -ne \"$dbpass\n\" | psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
+my $cmd = "PGPASSWORD=$dbpass psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
 my @installed = grep {!/^$/} map {s/^\s+|\s+$//gr} `$cmd`;
 
 for (my $i = 0; $i < (scalar @folders); $i++) {

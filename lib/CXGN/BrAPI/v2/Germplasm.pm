@@ -635,7 +635,7 @@ sub store {
     # Check if pedigree parents don't exist
     my $missing_parents = '';
     foreach (@$pedigree_parents){
-        if (exists($accessions_missing_hash{$_})){
+        if (length($_) > 0 && exists($accessions_missing_hash{$_})){
             $missing_parents = $missing_parents . $_ ."," ;
         }
     }
@@ -708,7 +708,7 @@ sub store {
             }
             my $pedigree = $params->{pedigree} || undef;
             my $pedigree_array = _process_pedigree_string($pedigree);
-            my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
+            my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 && length(@$pedigree_array[0]) > 0 ? @$pedigree_array[0] : undef;
             my $father = defined $pedigree_array && scalar(@$pedigree_array) > 1 ? @$pedigree_array[1] : undef;
             my $synonyms = $params->{synonyms} || [];
             my @synonymNames;
