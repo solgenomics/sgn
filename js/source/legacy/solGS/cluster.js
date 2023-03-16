@@ -98,7 +98,7 @@ solGS.cluster = {
 			alert('The list is empty. Please select a list with content.');
 		} else {
 
-			var tableId = "cluster_populations_list_table";
+			var tableId = "cluster_pops_list_table";
 			var clusterTable = jQuery('#' + tableId).doesExist();
 			if (clusterTable == false) {
 				clusterTable = this.getClusterPopsTable(tableId);
