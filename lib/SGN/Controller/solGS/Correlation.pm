@@ -21,6 +21,17 @@ use Storable qw/ nstore retrieve /;
 
 BEGIN { extends 'Catalyst::Controller' }
 
+sub cluster_analysis : Path('/correlation/analysis/') Args() {
+    my ( $self, $c, $id ) = @_;
+
+    if ( $id && !$c->user ) {
+        $c->controller('solGS::Utils')->require_login($c);
+    }
+
+    $c->stash->{template} = '/solgs/tools/correlation/analysis.mas';
+
+}
+
 
 sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args() {
     my ($self, $c) = @_;
@@ -478,7 +489,6 @@ sub run_pheno_correlation_analysis {
     $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
 
     $self->run_correlation_analysis($c);
-
 
 }
 

@@ -27,6 +27,134 @@ solGS.correlation = {
     });
   },
 
+  loadCorrelationPopsList: function(selectId, selectName, dataStr) {
+    console.log(` loadCorrelationPopsList selectId: ${selectId} -- name: ${selectName} -- dt str: ${dataStr}`)
+		var corrPopId = this.getCorrPopId(selectId, dataStr);
+		if (selectId.length === 0) {
+			alert('The list is empty. Please select a list with content.');
+		} else {
+
+			var tableId = "correlation_pops_list_table";
+			var corrTable = jQuery('#' + tableId).doesExist();
+			if (corrTable == false) {
+				corrTable = this.getCorrPopsTable(tableId);
+				jQuery("#correlation_pops_selected").append(corrTable).show();
+			}
+
+			var addRow = this.selectRow(selectId, selectName, dataStr);
+			var tdId = '#list_corr_page_' + corrPopId;
+			var addedRow = jQuery(tdId).doesExist();
+
+			if (addedRow == false) {
+				jQuery('#' + tableId + ' tr:last').after(addRow);
+			}
+
+		}
+	},
+
+  getCorrPopId: function(selectId, dataStr) {
+		var corrPopId;
+		if (dataStr) {
+			corrPopId = `${dataStr}_${selectId}`;
+		} else {
+			corrPopId = selectId;
+		}
+
+		return corrPopId;
+	},
+
+  getCorrPopsTable: function(tableId) {
+		return this.createTable(tableId);
+	},
+
+  createTable: function(tableId) {
+
+		var table = '<table class="table table-striped" id="' + tableId + '">' +
+			'<thead>' +
+			'<tr>' +
+			'<th>Name</th>' +
+			'<th>Data structure</th>' +
+			'<th>Data type</th>' +
+			'<th>Run correlation</th>' +
+			'</tr>' +
+			'</thead></table>';
+
+		return table;
+
+	},
+
+  selectRow: function(selectId, selectName, dataStr) {
+		var corrPopId = this.getCorrPopId(selectId, dataStr);
+	
+		// var dataTypeOpts = this.getDataTypeOpts({
+		// 	'select_id': selectId,
+		// 	'data_str': dataStr
+		// })
+    var dataTypeOpts= ['Phenotype', 'GEBVs'];
+		dataTypeOpts = this.createDataTypeSelect(dataTypeOpts, corrPopId);
+
+		var runCorrId = this.corrRunCorrId(corrPopId);
+    var correArgs = {
+      'corre_pop_id': `${dataStr}_${selectId}`,
+      'data_structure': dataStr,
+      'corre_pop_name': selectName
+    }
+
+    correArgs = JSON.stringify(correArgs);
+    console.log(`correargs: ${correArgs}`)
+
+		var onClickVal = '<button type="button" id="' +  runCorrId + '" class="btn btn-success" data-selected-pop=\'' + correArgs +'\' onclick="solGS.correlation.runPhenoCorrelationAnalysis(\'' + runCorrId + '\')">Run correlation</button>';
+
+    // var onClickVal = '<button type="button" id="' + runCorrId + '" class="btn btn-success" onclick="solGS.correlation.runPhenoCorrelationAnalysis(' +
+		// 	selectId + ",'" + selectName + "'" + ",'" + dataStr +
+		// 	"'" + ')">Run correlation</button>';
+
+    console.log(`onclickVal ${onClickVal}`)
+		var row = '<tr name="' + dataStr + '"' + ' id="' + corrPopId + '">' +
+			'<td>' + selectName + '</td>' +
+			'<td>' + dataStr + '</td>' +
+			'<td>' + dataTypeOpts + '</td>' +
+			'<td>' + onClickVal + '</td>' +
+			'<tr>';
+
+		return row;
+
+	},
+
+  corrDataTypeSelectId: function(rowId) {
+		if (location.pathname.match(/correlation\/analysis/) && rowId) {
+			return `correlation_data_type_select_${rowId}`;
+		} else {
+			return 'correlation_data_type_select';
+		}
+
+	},
+
+  corrRunCorrId: function(rowId) {
+		if (location.pathname.match(/correlation\/analysis/) && rowId) {
+			return `run_correlation_${rowId}`;
+		} else {
+			return 'run_correlation';
+		}
+
+	},
+
+  createDataTypeSelect: function(opts, rowId) {
+		var corrDataTypeId = this.corrDataTypeSelectId(rowId);
+		var dataTypeGroup = '<select class="form-control" id="' + corrDataTypeId + '">';
+
+		for (var i = 0; i < opts.length; i++) {
+
+			dataTypeGroup += '<option value="' +
+				opts[i] + '">' +
+				opts[i] +
+				'</option>';
+		}
+		dataTypeGroup += '</select>';
+
+		return dataTypeGroup;
+	},
+
   listGenCorPopulations: function () {
     var modelData = solGS.sIndex.getTrainingPopulationData();
 
@@ -194,9 +322,26 @@ solGS.correlation = {
   },
 
   runPhenoCorrelationAnalysis: function (args) {
-    var correPopId = JSON.parse(args);
-    correPopId = correPopId.corre_pop_id;
+    console.log(`runPhenoCorrelationAnalysis arg: ${args}`)
+    
+  try {
+    var testArgs = JSON.parse(args);
 
+  } catch (err) {
+    console.log(`caught error ${err.message}`)
+    var selectedPopDiv = document.getElementById(args)
+    if (selectedPopDiv) {
+    console.log(`arg is: ${selectedPopDiv.dataset}`);
+    var selectedPopData = selectedPopDiv.dataset;
+    console.log(`arg is corre_pop_id arg: ${JSON.parse(selectedPopData.selectedPop)}`)
+    var selectedPop = JSON.parse(selectedPopData.selectedPop);
+    console.log(`arg is corre_pop_id arg: ${selectedPop.corre_pop_id}`)
+
+    args = selectedPopData.selectedPop;
+    console.log(`arguments args: ${args}`)
+  }
+  }
+  
     jQuery.ajax({
       type: "POST",
       dataType: "json",
@@ -204,6 +349,7 @@ solGS.correlation = {
       url: "/phenotypic/correlation/analysis/output",
       success: function (response) {
         if (response.data) {
+          console.log(`correlation data ${response.data}`)
           solGS.correlation.plotCorrelation(response.data, "#correlation_canvas");
 
           var corrDownload = solGS.correlation.createPhenoCorrDownloadLink(
@@ -390,4 +536,34 @@ jQuery(document).on("click", "#run_genetic_correlation", function () {
   //jQuery("#correlation_canvas").empty();
 
   solGS.correlation.formatGenCorInputData(popId, popType);
+});
+
+
+jQuery(document).ready(function() {
+
+	var url = location.pathname;
+
+	if (url.match(/correlation\/analysis/)) {
+
+    solGS.selectMenu.populateMenu("correlation_pops", ['plots', 'trials'], ['plots', 'trials'])
+	
+	}
+
+
+  
+  
+    if (url.match(/correlation\/analysis/)) {
+  
+      jQuery("#correlation_pops_list_select").change(function() {
+        var selectedPop = solGS.selectMenu.getSelectedPop('correlation_pops');
+        console.log(` SELECTED CorrelationPopsList selectId: ${selectedPop.selected_id} -- name: ${selectedPop.selected_name} -- dt str: ${selectedPop.data_str}`)
+
+        if (selectedPop.selected_id) {
+          jQuery("#correlation_pops_go_btn").click(function() {
+            solGS.correlation.loadCorrelationPopsList(selectedPop.selected_id, selectedPop.selected_name, selectedPop.data_str);
+          });
+        }
+      });
+      }
+
 });
