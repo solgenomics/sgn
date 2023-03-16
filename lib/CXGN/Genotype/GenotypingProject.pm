@@ -170,10 +170,10 @@ sub get_plate_info {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $plate_list = $self->genotyping_plate_list();
-    my $number_of_plate = scalar (@$plate_list);
+    my $number_of_plates = scalar (@$plate_list);
     my $data;
     my $total_count;
-    if ($number_of_plate > 0) {
+    if ($number_of_plates > 0) {
         my $trial_search = CXGN::Trial::Search->new({
             bcs_schema => $schema,
             trial_design_list => ['genotyping_plate'],
@@ -182,7 +182,7 @@ sub get_plate_info {
         ($data, $total_count) = $trial_search->search();
     }
 
-    return $data;
+    return ($data, $number_of_plates);
 
 }
 

@@ -40,6 +40,7 @@ sub search {
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     my $observation_unit_names_list = $params->{observationUnitName} || ($params->{observationUnitNames} || ());
     my $include_observations = $params->{includeObservations} || "False";
+    $include_observations = ref($include_observations) eq 'ARRAY' ? ${$include_observations}[0] : $include_observations;
     my $level_order_arrayref = $params->{observationUnitLevelOrder} || ($params->{observationUnitLevelOrders} || ());
     my $level_code_arrayref = $params->{observationUnitLevelCode} || ($params->{observationUnitLevelCodes} || ());
     my $levels_relation_arrayref = $params->{observationLevelRelationships} || ();
