@@ -481,6 +481,16 @@ has 'snp_vcf_cvterm_id' => (
     is => 'rw',
     );
 
+has 'vcf_genotyping_type' => (
+    isa => 'Str',
+    is => 'rw',
+    );
+
+has 'genotyping_type' => (
+    isa => 'Str',
+    is => 'rw',
+    );
+
 has 'vcf_map_details_id' => (
     isa => 'Int',
     is => 'rw',
@@ -537,6 +547,9 @@ sub validate {
     my $include_igd_numbers = $self->igd_numbers_included;
     my $include_lab_numbers = $self->lab_numbers_included;
     my $genotyping_data_type = $self->genotyping_data_type;
+    my $vcf_genotyping_type = $self->vcf_genotyping_type;
+    my $genotyping_type = $self->genotyping_type;
+
     my @error_messages;
     my @warning_messages;
 
@@ -551,9 +564,9 @@ sub validate {
         push @error_messages, "No observtaion_unit_names in file";
     }
 
-    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
     $self->snp_vcf_cvterm_id($snp_vcf_cvterm_id);
-    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
     $self->snp_genotype_id($snp_genotype_id);
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
@@ -783,6 +796,8 @@ sub store_metadata {
     my $organism_id = $self->organism_id;
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
     my $genotyping_data_type = $self->genotyping_data_type;
+    my $vcf_genotyping_type = $self->vcf_genotyping_type;
+    my $genotyping_type = $self->genotyping_type;
 
     $dbh->do('SET search_path TO public,sgn');
 
@@ -792,13 +807,13 @@ sub store_metadata {
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
     $self->igd_number_cvterm_id($igd_number_cvterm_id);
 
-    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
     $self->snp_vcf_cvterm_id($snp_vcf_cvterm_id);
 
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
 
-    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
     $self->snp_genotype_id($snp_genotype_id);
 
     my $pcr_marker_genotyping_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
@@ -1079,7 +1094,7 @@ sub store_identifiers {
                     $genotype_description = "SSR genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
                     $genotype_type_id = $self->pcr_marker_genotyping_type_id();
                 } else {
-                    $genotype_description = "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
+                    $genotype_description = "$genotyping_data_type genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
                     $genotype_type_id = $self->snp_genotype_id();
                 }
 
