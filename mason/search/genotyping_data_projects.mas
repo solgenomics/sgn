@@ -20,6 +20,8 @@
                         <th>Year</th>
                         <th>Location</th>
                         <th>Genotyping Facility</th>
+                        <th>Number of Plates</th>
+                        <th>Total Number of Accessions</th>
                     </tr>
                 </thead>
             </table>

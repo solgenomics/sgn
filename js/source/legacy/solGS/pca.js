@@ -177,7 +177,8 @@ solGS.pca = {
 				}
 			}
 
-			var protocolId = popDetails.genotyping_protocol_d;
+			var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId('pca_div');
+			
 			var pcaArgs = {
 				'training_pop_id': [popDetails.training_pop_id],
 				'selection_pop_id': [popDetails.selection_pop_id],
@@ -244,7 +245,6 @@ solGS.pca = {
 	},
 
 	selectAnalysisOption: function(page, args) {
-
 		var title = '<p>This analysis may take a long time. ' +
 			'Do you want to submit the analysis and get an email when it completes?</p>';
 
