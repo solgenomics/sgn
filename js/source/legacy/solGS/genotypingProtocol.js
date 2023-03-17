@@ -110,7 +110,7 @@ solGS.genotypingProtocol = {
     var selPopProtocolId = sessionStorage.getItem("selection_pop_genotyping_protocol_id");
     var selPopProtocolName = sessionStorage.getItem("selection_pop_genotyping_protocol_name");
     var divPlace = sessionStorage.getItem("selection_pop_genotyping_protocol_div");
-
+	
     var sessionData;
     if (selPopProtocolId) {
       sessionData = {
@@ -144,17 +144,18 @@ solGS.genotypingProtocol = {
     return divPlace;
   },
 
-  getGenotypingProtocolId: function () {
-
-    var protocolId =  jQuery("#genotyping_protocol_id").val();
-
+  getGenotypingProtocolId: function (divPlace) {
+    divPlace = solGS.genotypingProtocol.formatId(divPlace);
+		var protocolId = jQuery(divPlace + ' #genotyping_protocol #genotyping_protocol_id').val();
+		if (!protocolId) {
+			protocolId = jQuery('#genotyping_protocol_id').val();
+		}
+	
     if (!protocolId) {
       protocolId = sessionStorage.getItem("genotyping_protocol_id");
     }
-  
-    return protocolId;
-
-  },
+		return protocolId;
+	},
 
   getGenotypingProtocolName: function () {
     return  jQuery("#genotyping_protocol_name").val();
