@@ -273,12 +273,13 @@ jQuery(document).ready(function () {
 	});
 
 jQuery('#calculate_spatial_correction').click(function() {
+    jQuery('#trait_spatial_selector').hide();
    var trial_id = get_trial_id();
    jQuery('#calculate_spatial_correction_dialog').modal({
        backdrop: 'static',
        keyboard: false
    }).find('.modal-dialog').css({
-       width: '90%',
+       width: '60%',
        maxWidth: '95%'
    });
 });
@@ -292,14 +293,14 @@ jQuery("#confirm_calculating_spatial_correction").click(function() {
         jQuery("#calculate_spatial_correction_status_message").html("Analysis complete");
          if (response.error) {
            alert(response.error);
-         } else {
-            
+         } else {            
             var headers = response.headers;
             jQuery("#spatial_correction_result_table").DataTable({
                 'destroy': true,
                   'timeout': 6000000,
                   'data' : response.data,
                   'columns': headers,
+                  //'dom': '<"top"l>rt<"bottom"ip><"clear">', 
                   //'columns': ["ID","Trait", "Effect", "Estimate", "Std.Error", "t.value"],
 
                   //"order": [[ 1, "desc" ]]
@@ -313,7 +314,8 @@ jQuery("#confirm_calculating_spatial_correction").click(function() {
                 jQuery.each(columnValues, function(i, value) {
                     dropdown.append(jQuery('<option>').text(value).attr('value', value));
                 });
-                jQuery('#example_wrapper').prepend(dropdown); // append dropdown to DataTable wrappe
+                //dropdown.insertAfter(jQuery('#spatial_correction_result_table_wrapper .dataTables_length'));
+                jQuery('#trait_spatial_selector').show(); // append dropdown to DataTable wrapper
             });
 
             // Filter DataTable based on selected value

@@ -102,7 +102,7 @@ $latest_trial_activity => undef
           <div id="calculate_spatial_correction_status_message"></div>
           <br />
           <br />
-          <select id="dropdown" style="display:none">  <option value="">All</option></select>
+          <div id="trait_spatial_selector"><select id="dropdown" style="">  <option value="">All</option></select></div>
           <table id= "spatial_correction_result_table" ></table>
           <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction">Store Spatial Correction</button>
 
@@ -240,3 +240,4 @@ jQuery(document).ready(function () {
 });
 
 </script>
+
