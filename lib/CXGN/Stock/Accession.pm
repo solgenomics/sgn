@@ -408,13 +408,13 @@ sub store {
     if ($self->accessionNumber){
         $self->_update_stockprop('accession number', $self->accessionNumber);
     }
-    if ($self->germplasmPUI){
-        $self->_update_stockprop('PUI', $self->germplasmPUI);
-    }
 
     #Include the newly created entry in this database as a PUI
-    my $germplasm_pui = $self->main_production_site_url."/stock/".$id."/view";
-    $self->_update_stockprop('PUI', $germplasm_pui);
+    my @germplasm_pui = ($self->main_production_site_url."/stock/".$id."/view");
+    if ($self->germplasmPUI){
+        push @germplasm_pui, $self->germplasmPUI;
+    }
+    $self->_update_stockprop('PUI', join(',',@germplasm_pui));
 
     if ($self->germplasmSeedSource){
         $self->_update_stockprop('seed source', $self->germplasmSeedSource);
@@ -423,9 +423,7 @@ sub store {
     $self->_remove_stockprop_all_of_type('stock_synonym');
     # Reinsert
     if ($self->synonyms){
-        foreach (@{$self->synonyms}){
-            $self->_store_stockprop('stock_synonym', $_);
-        }
+        $self->_store_stockprop('stock_synonym', join(',', @{ $self->synonyms }));
     }
     if ($self->instituteCode){
         $self->_update_stockprop('institute code', $self->instituteCode);
@@ -446,11 +444,14 @@ sub store {
         $self->_update_stockprop('acquisition date', $self->acquisitionDate);
     }
     if ($self->donors){
+        $self->_remove_stockprop_all_of_type('donor');
+        $self->_remove_stockprop_all_of_type('donor institute');
+        $self->_remove_stockprop_all_of_type('donor PUI');
         foreach (@{$self->donors}){
             my $accession = $_->{donorAccessionNumber} || $_->{donorGermplasmName};
-            $self->_update_stockprop('donor', $accession);
-            $self->_update_stockprop('donor institute', $_->{donorInstituteCode});
-            $self->_update_stockprop('donor PUI', $_->{germplasmPUI});
+            $self->_store_stockprop('donor', $accession);
+            $self->_store_stockprop('donor institute', $_->{donorInstituteCode});
+            $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
     }
     $self->_remove_parent_relationship('female_parent');
