@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 61;
+use Test::More 'tests' => 77;
 
 use Data::Dumper;
 use SGN::Test::WWW::WebDriver;
@@ -70,7 +70,6 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->get_ok($href_to_trial);
     sleep(5);
-
 
 	# test uploading genotyping plate for both excel formats xls and xlsx
 	my @files = (["NEW_CASSAVA_GS_74Template.xls", "2018TestPlate02"], ["NEW_CASSAVA_GS_74Template_selenium.xlsx", "2018TestPlate03"]);
@@ -139,18 +138,21 @@ $t->while_logged_in_as("submitter", sub {
 		$t->find_element_ok('close_trial_button', 'id', 'find "close trial button" and click')->click();
 		sleep(3);
 
+        #New genotyping plate ID
+        my $genotyping_plate_id = $f->bcs_schema->resultset('Project::Project')->find({ name => $plate_name })->project_id();
+        $t->get_ok('/breeders/trial/' . $genotyping_plate_id);
+        sleep(5);
 
-#		my $trial_table_content = $t->find_element_ok('trial_plate_view_table', 'id', 'find table with created trial data')->get_attribute('innerHTML');
+        my $trial_table_content = $t->find_element_ok('trial_plate_view_table', 'id', 'find table with created trial data')->get_attribute('innerHTML');
+        ok($trial_table_content =~ /\Q${plate_name}_F07/, "Verify sample id in a table: ${plate_name}_F07");
+        ok($trial_table_content =~ /\Q${plate_name}_B04/, "Verify sample id in a table: ${plate_name}_B04");
+        ok($trial_table_content =~ /test_accession1/, "Verify accession id in a table: test_accession1");
 
-#		ok($trial_table_content =~ /\Q${plate_name}_F07/, "Verify sample id in a table: ${plate_name}_F07");
-#		ok($trial_table_content =~ /\Q${plate_name}_B04/, "Verify sample id in a table: ${plate_name}_B04");
-#		ok($trial_table_content =~ /test_accession1/, "Verify accession id in a table: test_accession1");
+        my $trial_plate_layout = $t->find_element_ok('trial_plate_layout_table', 'id', 'find table with plate layout')->get_attribute('innerHTML');
 
-#		my $trial_plate_layout = $t->find_element_ok('trial_plate_layout_table', 'id', 'find table with plate layout')->get_attribute('innerHTML');
-
-#		ok($trial_table_content =~ /A01/, "Verify well id in a table: A01");
-#		ok($trial_table_content =~ /A05/, "Verify well id in a table: A05");
-	}
+        ok($trial_table_content =~ /A01/, "Verify well id in a table: A01");
+        ok($trial_table_content =~ /A05/, "Verify well id in a table: A05");
+    }
 });
 
 $t->driver()->close();
