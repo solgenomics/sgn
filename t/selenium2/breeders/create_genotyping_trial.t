@@ -59,7 +59,7 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('add_new_genotyping_project_close_modal', 'id', 'New genotyping project close modal button find and click')->click();
 	sleep(1);
 
-
+    #manage genotyping projects
     $t->find_element_ok("refresh_genotyping_project_jstree_html_button", "id", "find and click 'refresh genotyping project jstree'")->click();
     sleep(5);
 
@@ -72,10 +72,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(5);
 
 
-
-
-
-	# test for both excel formats xls and xlsx
+	# test uploading genotyping plate for both excel formats xls and xlsx
 	my @files = (["NEW_CASSAVA_GS_74Template.xls", "2018TestPlate02"], ["NEW_CASSAVA_GS_74Template_selenium.xlsx", "2018TestPlate03"]);
 	for my $index (0 .. $#files) {
 
@@ -142,17 +139,6 @@ $t->while_logged_in_as("submitter", sub {
 		$t->find_element_ok('close_trial_button', 'id', 'find "close trial button" and click')->click();
 		sleep(3);
 
-		# CHECK RESULTS
-#		$t->find_element_ok("refresh_genotyping_project_jstree_html_button", "id", "find and click 'refresh genotyping project jstree'")->click();
-#		sleep(5);
-
-#		$t->find_element_ok('//div[@id="genotyping_project_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with genotyping project list')->click();
-#		sleep(5);
-
-#		my $href_to_trial = $t->find_element_ok("//div[\@id='genotyping_project_list']//a[contains(text(), '$plate_name')]", 'xpath', 'find created project and take link href')->get_attribute('href');
-
-#		$t->get_ok($href_to_trial);
-#		sleep(5);
 
 #		my $trial_table_content = $t->find_element_ok('trial_plate_view_table', 'id', 'find table with created trial data')->get_attribute('innerHTML');
 
