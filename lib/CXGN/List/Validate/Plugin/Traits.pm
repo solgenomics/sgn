@@ -12,6 +12,7 @@ sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
+    my $validator = shift;
     my @missing;
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
@@ -43,7 +44,7 @@ sub validate {
                 'dbxref.db_id' => $db->db_id(),
                 'dbxref.accession' => $accession,
             };
-            if ( $db_name eq 'COMP' ) {
+            if ( $db_name eq 'COMP' && $validator->{composable_validation_check_name} ) {
                 $query->{'me.name'} = $trait_name;
             }
             my $rs = $schema->resultset("Cv::Cvterm")->search($query, {'join' => 'dbxref'});

@@ -138,7 +138,8 @@ for my $extension ("xls", "xlsx") {
 		values_hash=>\%parsed_data,
 		has_timestamps=>1,
 		overwrite_values=>0,
-		metadata_hash=>\%phenotype_metadata
+		metadata_hash=>\%phenotype_metadata,
+		composable_validation_check_name=>$f->config->{composable_validation_check_name}
 	);
 	my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 	ok(!$verified_error);
@@ -268,7 +269,8 @@ for my $extension ("xls", "xlsx") {
 		values_hash=>\%parsed_data,
 		has_timestamps=>0,
 		overwrite_values=>0,
-		metadata_hash=>\%phenotype_metadata
+		metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 	);
 	my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 	#print STDERR Dumper $verified_error;
@@ -437,6 +439,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
     image_zipfile_path=>'t/data/fieldbook/photos.zip',
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 my $validate_phenotype_error_msg = $store_phenotypes->verify();
 #print STDERR Dumper $validate_phenotype_error_msg;
@@ -896,6 +899,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 print STDERR Dumper $verified_error;
@@ -1592,6 +1596,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
@@ -2193,6 +2198,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
@@ -2517,6 +2523,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>1,
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
@@ -5596,6 +5603,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>1,
     overwrite_values=>1,
     metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
@@ -5685,6 +5693,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>1,
     overwrite_values=>1,
     metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
