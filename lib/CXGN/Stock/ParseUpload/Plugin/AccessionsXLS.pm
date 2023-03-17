@@ -57,7 +57,8 @@ sub _validate_with_plugin {
         return;
     }
 
-    #get column headers
+    # get column headers
+    #
     my $accession_name_head;
     my $species_name_head;
     my $population_name_head;
@@ -113,6 +114,7 @@ sub _validate_with_plugin {
     }
 
     my %seen_accession_names;
+    my %accession_name_counts;
     my %seen_species_names;
     my %seen_synonyms;
     for my $row ( 1 .. $row_max ) {
@@ -136,6 +138,7 @@ sub _validate_with_plugin {
         else {
             $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}=$row_name;
+	    $accession_name_counts{$accession_name}++;
         }
 
         if (!$species_name || $species_name eq '' ) {
@@ -155,6 +158,13 @@ sub _validate_with_plugin {
         push @error_messages, "The following species are not in the database as species in the organism table: ".join(',',@species_missing);
         $errors{'missing_species'} = \@species_missing;
     }
+
+    foreach my $k (keys %accession_name_counts) {
+	if ($accession_name_counts{$k} > 1) {
+	    push @error_messages, "Accession $k occures $accession_name_counts{$k} times in the file. Accession names must be unique. Please remove duplicated accession names.";
+	}
+    }
+
 
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
