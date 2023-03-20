@@ -4858,8 +4858,9 @@ sub get_controls_by_plot {
 	my @ids = @$plot_ids;
 	my @controls;
 
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
 	my $accession_rs = $self->bcs_schema->resultset('Stock::Stock')->search(
-		{ 'subject.stock_id' => { 'in' => \@ids} , 'type.name' => 'is a control' },
+		{ 'me.type_id'=>$accession_type_id, 'subject.stock_id' => { 'in' => \@ids} , 'type.name' => 'is a control' },
 		{ join => { stock_relationship_objects => { subject => { stockprops => 'type' }}}, group_by => 'me.stock_id',},
   );
 
