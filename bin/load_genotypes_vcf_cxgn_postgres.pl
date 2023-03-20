@@ -279,11 +279,11 @@ $protocol->{'reference_genome_name'} = $reference_genome_name;
 $protocol->{'species_name'} = $organism_species;
 
 
-my $vcf_genotyping_type = 'vcf_snp_genotyping' if !$opt_T;
+my $vcf_genotyping_type = $opt_T ? $opt_T : 'vcf_snp_genotyping';
 my $genotyping_type;
 my $genotype_data_type;
 
-if ($opt_T =~ /vcf_phg_genotyping/) {
+if ($vcf_genotyping_type =~ /vcf_phg_genotyping/) {
     $genotyping_type = 'phg genotyping';
     $genotype_data_type = 'PHG';
 
