@@ -445,6 +445,23 @@ $(document).ready(function($) {
         }
     });
 
+    jQuery(document).on('change', '#label-designer-use-brapi', function(){
+        console.log("toggle was moved");
+        if (jQuery(this).is(':checked')) {
+            console.log("showing url input");
+            jQuery('#brapi-url-div').show();
+        } else {
+            console.log("hiding url input");
+            jQuery('#brapi-url-div').hide();
+        }
+    });
+
+    $("#brapi-source-access").on("click", function() {
+        // retrieve list of trials via BrAPI brapi/v2/studies
+        // then retrieve details of selected study via brapi/v2/studies/{studyDbId}
+
+    });
+
     jQuery(document).on('change', '#label_designer_data_level', function(){
         var data_type = $('#source_select :selected').parent().attr('label');
         var source_id = jQuery('#source_select').val();

@@ -6,6 +6,28 @@
     <p>To start, select a data source and a data level. The data source can be a list, crossing experiment, trial, or genotyping plate. When you are finished, click 'Next'<p>
 </div>
 <br/><br/>
+
+<div class="col-md-12">
+    <div class="col-md-2 text-center">
+        <label><b>Use BrAPI:</b></label>
+    </div>
+    <div class="col-md-2">
+        <input id="label-designer-use-brapi" type="checkbox" data-toggle="toggle">
+    </div>
+    <div class="col-md-8" style="display: none;" id="brapi-url-div">
+        <div class="col-md-2 text-center">
+            <label><b>BrAPI URL:</b></label>
+        </div>
+        <div class="col-md-6">
+            <input type="text" placeholder="https://sweetpotatobase.org" id="brapi-url-input" class="form-control input-sm" />
+            <span class="input-group-btn">
+                <span><button id="brapi-source-access" class="btn btn-sm btn-primary">Access</button></span>
+            </span>
+        </div>
+    </div>
+</div>
+<br/><br/><br/>
+
 <div class="col-md-2 text-center">
     <label><b>Data Source:</b></label>
 </div>
