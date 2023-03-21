@@ -324,7 +324,7 @@ $user_id => undef
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-6 control-label">Nearest NOAA Weather Station ID: (<a href="https://www.ncdc.noaa.gov/cdo-web/datatools/findstation" target="_blank">Search Here</a>)</label>
+            <label class="col-sm-6 control-label"><i>Optional:</i> Nearest NOAA Weather Station ID (<a href="https://www.ncdc.noaa.gov/cdo-web/datatools/findstation" target="_blank">Search Here</a>)</label>
             <div class="col-sm-6">
                 <input class="form-control" name="location_noaa_station_id" id="location_noaa_station_id" type="text" placeholder="e.g. GHCND:USC00300331"/>
             </div>
