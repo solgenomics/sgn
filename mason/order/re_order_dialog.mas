@@ -1,0 +1,74 @@
+<%args>
+
+$ordering_service_name => undef
+$additional_order_info => undef
+$ordering_type => undef
+$order_properties => undef
+$order_properties_dialog => undef
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="modal fade" id="re_order_dialog" name="re_order_dialog" tabindex="-1" role="dialog" aria-labelledby="reOrderDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOrderDialog">Ordering Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="ordering_info_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_re_order_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_re_order_button" type="button" class="btn btn-primary" >Re-Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready( function() {
+    var order_properties = "<% $order_properties %>";
+
+    jQuery('#re_order_link').click(function(){
+        reOrderInfo(order_properties)
+    });
+
+
+});
+
+function reOrderInfo(order_properties){
+    var properties = order_properties.split(",");
+    var item_name = 'test';
+    var html = '';
+
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
+    for(var i=0; i<properties.length; i++){
+        var each_property_info = properties[i].split(":");
+        if (each_property_info.length == 1) {
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
+        } else {
+            html = html + '<label class="col-sm-3 control-label">'+ each_property_info[0] +'</label><div class="col-sm-9" ><select class="form-control" id= '+ i +' name= '+ i +'> ';
+            for (var j=1; j<each_property_info.length; j++) {
+                html = html + "<option value='"+each_property_info[j]+"'>" + each_property_info[j] + "</option>";
+            }
+            html = html + "</select></div><br><br><br>";
+        }
+    }
+    html = html + '</div></div></form>';
+
+    jQuery('#ordering_info_div').html(html);
+    jQuery('#re_order_dialog').modal('show');
+
+}
+
+
+</script>

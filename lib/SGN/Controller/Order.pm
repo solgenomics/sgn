@@ -73,6 +73,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     $c->stash->{order_to} = $order_result->[4];
     $c->stash->{order_status} = $order_result->[5];
     $c->stash->{comments} = $order_result->[6];
+    $c->stash->{order_properties} = $order_properties;
 
     $c->stash->{template} = '/order/order_details.mas';
 
