@@ -53,9 +53,9 @@ sub store_location :Path("/ajax/location/store") Args(0) {
     my $country_code =  $params->{country_code};
     my $programs =  $params->{programs};
     my $type =  $params->{type};
-    my $latitude    = $params->{latitude} || undef;
-    my $longitude   = $params->{longitude} || undef;
-    my $altitude    = $params->{altitude} || undef;
+    my $latitude    = length $params->{latitude} ? $params->{latitude} : undef;
+    my $longitude   = length $params->{longitude} ? $params->{longitude} : undef;
+    my $altitude    = length $params->{altitude} ? $params->{altitude} : undef;
     my $noaa_station_id    = $params->{noaa_station_id} || undef;
 
     if (! $c->user()) {
