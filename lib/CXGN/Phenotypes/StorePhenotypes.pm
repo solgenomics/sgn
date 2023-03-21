@@ -278,7 +278,9 @@ sub verify {
         composable_validation_check_name => $self->{composable_validation_check_name}
     );
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples_or_analysis_instances',\@plot_list)->{'missing'}};
-    my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
+    my $traits_validation = $trait_validator->validate($schema,'traits',\@trait_list);
+    my @traits_missing = @{$traits_validation->{'missing'}};
+    my @traits_wrong_ids = @{$traits_validation->{'wrong_ids'}};
     my $error_message = '';
     my $warning_message = '';
 
@@ -288,6 +290,15 @@ sub verify {
         print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
         $error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
         $error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+
+        # Display matches of traits with the wrong id
+        if ( scalar(@traits_wrong_ids) > 0 ) {
+            $error_message .= "<br /><br /><strong>Possible Trait Matches:</strong>";
+            foreach my $m (@traits_wrong_ids) {
+                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />should be<br />" . $m->{'matching_term'};
+            }
+        }
+
         return ($warning_message, $error_message);
     }
 
