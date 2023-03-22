@@ -60,7 +60,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
+    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial','genotyping_trial', 'cross', 'genotyping_project'
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $dir = catdir($c->config->{static_content_path}, "folder");
