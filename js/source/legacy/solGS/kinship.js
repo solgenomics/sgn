@@ -239,7 +239,7 @@ solGS.kinship = {
 						click: function() {
 							jQuery(this).dialog("close");
 
-							solGS.kinship.analyzeNow(page, args);
+							solGS.kinship.runAnalysis(page, args);
 						},
 					},
 
@@ -256,8 +256,9 @@ solGS.kinship = {
 
 	},
 
-	analyzeNow: function(page, args) {
+	runAnalysis: function(page, args) {
 
+		var kinArgs = JSON.stringify(args)
 		jQuery("#kinship_message")
 			.text("Running kinship... please wait...it may take minutes.")
 			.show();
@@ -267,20 +268,14 @@ solGS.kinship = {
 		jQuery.ajax({
 			type: 'POST',
 			dataType: 'json',
-			data: args,
+			data: {'arguments': kinArgs},
 			url: '/kinship/run/analysis/',
 			success: function(res) {
-				if (res.data) {
+				if (res.success) {
 
-					jQuery("#kinship_message")
-						.text("Got the data... generating the heatmap... please wait...")
-						.show();
-
-					var links = solGS.kinship.addDowloandLinks(res);
-					solGS.kinship.plotKinship(res.data, links);
-					//	solGS.kinship.addDowloandLinks(res);
 					jQuery("#kinship_canvas .multi-spinner-container").hide();
 					jQuery("#kinship_message").empty();
+					solGS.kinship.getKinshipResult(args);
 
 				} else {
 					jQuery("#kinship_message")
@@ -317,11 +312,11 @@ solGS.kinship = {
 		jQuery("#kinship_canvas .multi-spinner-container").show();
 		jQuery("#kinship_message").html("Retrieving kinship output... please wait...");
 
-
+		var kinArgs = JSON.stringify(args);
 		jQuery.ajax({
 			type: 'POST',
 			dataType: 'json',
-			data: args,
+			data: {'arguments': kinArgs},
 			url: '/solgs/kinship/result/',
 			success: function(res) {
 
@@ -330,8 +325,10 @@ solGS.kinship = {
 						.html("Generating heatmap... please wait...")
 						.show();
 
-					var links = solGS.kinship.addDowloandLinks(res);
-					solGS.kinship.plotKinship(res.data, links);
+						var kinCanvas = "#kinship_canvas";
+						var kinPlotDivId = "#kinship_plot_" + res.kinship_file_id;
+						var links = solGS.kinship.addDowloandLinks(res);
+						solGS.heatmap.plot(res.data, kinCanvas, kinPlotDivId , links);
 
 					jQuery("#kinship_canvas .multi-spinner-container").hide();
 					jQuery("#kinship_message").empty();
@@ -364,16 +361,17 @@ solGS.kinship = {
 	},
 
 
-	plotKinship: function(data, links) {
+	// plotKinship: function(data, links) {
 
-		solGS.heatmap.plot(data, '#kinship_canvas', '#kinship_plot', links);
+	// 	solGS.heatmap.plot(data, '#kinship_canvas', '#kinship_plot', links);
 
-	},
+	// },
 
 
 	addDowloandLinks: function(res) {
-
+		console.log(`adddownloadlinks res: ${JSON.stringify(res)}`)
 		var popName = res.kinship_pop_name;
+		var kinFileId = res.kinship_file_id;
 		var kinshipFile = res.kinship_table_file;
 
 		var aveFile = res.kinship_averages_file;
@@ -392,6 +390,9 @@ solGS.kinship = {
 		inbreedingFile = "<a href=\"" + inbreedingFile +
 			"\" download=" + fileNameInbreeding + ">Inbreeding coefficients</a>";
 
+			var kinDownloadBtn = "download_" + "kinship_plot_" + kinFileId;
+			var kinPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + kinDownloadBtn + "'> plot</a>";
+
 		var links = '<strong>Download:</strong> ';
 
 		if (popName) {
@@ -400,7 +401,8 @@ solGS.kinship = {
 
 		links = links + kinshipFile + ' | ' +
 			aveFile + ' | ' +
-			inbreedingFile;
+			inbreedingFile + ' | ' + 
+			kinPlotLink;
 
 		return links;
 	},
@@ -457,6 +459,14 @@ jQuery(document).ready(function() {
 
 });
 
+jQuery(document).ready(function() {
+	jQuery("#kinship_canvas").on('click' , 'a', function(e) {
+		var buttonId = e.target.id;
+		var kinPlotId = buttonId.replace(/download_/, '');
+		console.log(`buttonID ${buttonId} -- kinplotId: ${kinPlotId}`)
+		saveSvgAsPng(document.getElementById("#" + kinPlotId),  kinPlotId + ".png", {scale: 1});	
+	});
+});
 
 jQuery(document).ready(function() {
 

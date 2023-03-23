@@ -78,11 +78,9 @@ $collapsed = 1;
   <& /solgs/genotyping_protocol/index.mas &>
 
 %}
-<!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
-<!-- /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\// -->
-% if ($url !~ /pca\/analysis/ ) {
-<& pca_options.mas &>
 
+% if ($url !~ /pca\/analysis/ ) {
+  <& pca_options.mas &>
 %} else {
 
   <& /solgs/tools/select_menu.mas,
@@ -90,7 +88,7 @@ $collapsed = 1;
 %}
 
   <& plot.mas,
-     pop_id => $pop_id,
+    pop_id => $pop_id,
     list_id => $list_id,
     dataset_id => $dataset_id,
     data_structure => $data_structure,
