@@ -93,7 +93,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierachical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);

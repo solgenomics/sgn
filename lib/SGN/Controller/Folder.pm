@@ -33,6 +33,7 @@ sub folder_page :Path("/folder") Args(1) {
     my @trials;
     my @cross_trials;
     my @genotyping_trials;
+    my @genotyping_projects;
     my @analyses_trials;
     my @child_folders;
     my $has_child_folders;
@@ -47,6 +48,9 @@ sub folder_page :Path("/folder") Args(1) {
         if ($_->folder_type eq 'genotyping_trial') {
             push @genotyping_trials, $_;
         }
+        if ($_->folder_type eq 'genotyping_project') {
+            push @genotyping_projects, $_;
+        }
         if ($_->folder_type eq 'analyses') {
             push @analyses_trials, $_;
         }
@@ -60,6 +64,7 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{trials} = \@trials;
     $c->stash->{crossing_trials} = \@cross_trials;
     $c->stash->{genotyping_trials} = \@genotyping_trials;
+    $c->stash->{genotyping_projects} = \@genotyping_projects;
     $c->stash->{analyses_trials} = \@analyses_trials;
     $c->stash->{child_folders} = \@child_folders;
     $c->stash->{project_parent} = $folder->project_parent();
@@ -69,6 +74,7 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{folder_for_trials} = $folder->folder_for_trials();
     $c->stash->{folder_for_crosses} = $folder->folder_for_crosses();
     $c->stash->{folder_for_genotyping_trials} = $folder->folder_for_genotyping_trials();
+    $c->stash->{folder_for_genotyping_projects} = $folder->folder_for_genotyping_projects();
     $c->stash->{folder_description} = $folder_project->description();
     $c->stash->{has_child_folders} = $has_child_folders;
     if (!$folder->breeding_program) {

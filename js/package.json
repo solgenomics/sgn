@@ -28,7 +28,9 @@
     "tape": "^4.10.1",
     "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^4.29.5",
-    "webpack-command": "^0.4.2"
+    "webpack-command": "^0.4.2",
+    "requirejs": "2.3.6",
+    "save-svg-as-png": "^1.4.17"
   },
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
