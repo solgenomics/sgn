@@ -52,6 +52,7 @@ sub search {
 		[['application/json'],['GET','PUT'],'trials/{trialDbId}',['2.0']],
 		[['application/json'],['POST'],'search/trials',['2.0']],
 		[['application/json'],['GET'],'search/trials/{searchResultsDbId}',['2.0']],
+
 		#phenotyping
 		[['application/json'],['GET','POST'], 'images',['2.0']],
 		[['application/json'],['GET','PUT'], 'images/{imageDbId}',['2.0']],
@@ -76,6 +77,7 @@ sub search {
 		[['application/json'],['POST'],'search/variables',['2.0']],
 		[['application/json'],['GET'], 'search/variables/{searchResultsDbId}',['2.0']],
         [['application/json'],['GET'], 'events',['2.0']],
+
 		#genotyping
 		[['application/json'],['GET'], 'calls',['2.0']],
 		[['application/json'],['POST'],'search/calls',['2.0']],
@@ -116,6 +118,7 @@ sub search {
 		[['application/json'],['GET'], 'variantsets/{variantSetDbId}/variants',['2.0']],
 		[['application/json'],['POST'],'search/variantsets',['2.0']],
 		[['application/json'],['GET'], 'search/variantsets/{searchResultsDbId}',['2.0']],
+		
 		#Germplasm
 		[['application/json'],['GET','POST'], 'germplasm',['2.0']],
 		[['application/json'],['GET','PUT'], 'germplasm/{germplasmDbId}',['2.0']],
