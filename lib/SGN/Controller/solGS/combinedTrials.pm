@@ -174,30 +174,6 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 }
 
 
-# sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
-#     my ($self, $c, $combo_pops_id, $trait_txt, $trait_id, $gp, $protocol_id) = @_;
-#
-#     $c->stash->{combo_pops_id} = $combo_pops_id;
-#     $c->stash->{trait_id}      = $trait_id;
-#
-#     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-#
-#     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);
-#     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
-#
-#     if ( -s $gebv_file )
-#     {
-#         $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
-#         $c->detach();
-#     }
-#     else
-#     {
-# ###	$self->combine_trait_data($c);
-# 	$self->build_model_combined_trials_trait($c);
-#     }
-# }
-
-
 sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
     my ($self, $c, $combo_pops_id, $tr_txt, $traits_selection_id, $gp, $protocol_id) = @_;
 
