@@ -104,8 +104,8 @@ $t->while_logged_in_as("submitter", sub {
         "id",
         "find location altitude input");
 
-    $location_longitude_input->clear();
-    $location_longitude_input->send_keys($location_altitude);
+    $location_altitude_input->clear();
+    $location_altitude_input->send_keys($location_altitude);
 
     $t->find_element_ok(
         "store_location_submit",
