@@ -238,6 +238,41 @@ $(window).ready( function() {
         location.reload();
     });
 
+    jQuery('#re_open_order_button').click( function() {
+        var order_id = jQuery('#re_open_order_id').val();
+        var re_open_status = "re-opened";
+        var re_open_comments = jQuery('#re_open_comments').val();
+        if (!re_open_comments) {
+            alert ("Please add comments for re-opening the order");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/order/update',
+            data : {
+                'order_id' : order_id,
+                'new_status': re_open_status,
+                'contact_person_comments': re_open_comments
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#update_saved_dialog').modal('show');
+                    jQuery('#re_open_order_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating the order');
+            }
+        });
+    });
 
 });
 
