@@ -29,6 +29,7 @@
                 <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
 
+<!--
                 <h4>Folders</h4>
                 <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
                 <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move genotyping plate(s) to folder</button><br/><br/>
@@ -40,6 +41,7 @@
                     <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
                     <br/>
                 </div>
+-->
 
                 <!--<button id="delete" disabled="disabled" >Delete</button -->
                 <br />

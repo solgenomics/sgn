@@ -18,19 +18,10 @@ BEGIN { extends 'Catalyst::Controller' }
 sub trait_pheno_means_data :Path('/trait/pheno/means/data/') Args(0) {
     my ($self, $c) = @_;
 
-    $c->stash->{pop_id} = $c->req->param('training_pop_id');
-    $c->stash->{training_pop_id} = $c->req->param('training_pop_id');
-    $c->stash->{trait_id} = $c->req->param('trait_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    if ($c->req->referer =~ /combined/)
-    {
-	$c->stash->{data_set_type} = 'combined_populations';
-	$c->stash->{combo_pops_id} = $c->req->param('combo_pops_id');
-    }
-
+    my $trait_id = $c->stash->{'trait_id'};
     $c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
     my $data = $self->get_trait_pheno_means_data($c);
@@ -57,19 +48,10 @@ sub trait_pheno_means_data :Path('/trait/pheno/means/data/') Args(0) {
 sub trait_pheno_raw_data :Path('/trait/pheno/raw/data/') Args(0) {
     my ($self, $c) = @_;
 
-    $c->stash->{pop_id} = $c->req->param('training_pop_id');
-    $c->stash->{training_pop_id} = $c->req->param('training_pop_id');
-    $c->stash->{trait_id} = $c->req->param('trait_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    if ($c->req->referer =~ /combined/)
-    {
-	$c->stash->{data_set_type} = 'combined_populations';
-	$c->stash->{combo_pops_id} = $c->req->param('combo_pops_id');
-    }
-
+    my $trait_id = $c->stash->{'trait_id'};
     $c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
 
     my $data = $self->get_trait_pheno_raw_data($c);
