@@ -140,6 +140,7 @@ sub search {
 		[['application/json'],['GET','POST'], 'seedlots/transactions',['2.0']],
 		[['application/json'],['GET','PUT'], 'seedlots/{seedLotDbId}',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
+		[['application/json'],['GET'], 'pedigree',['2.1']]
 	);
 
 	my @call_search;
@@ -159,7 +160,8 @@ sub search {
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@call_search, $page_size, $page);
 	foreach (@$data_window){
 		push @data, {
-			datatypes=>$_->[0],
+			contentTypes=>$_->[0],
+			dataTypes=>$_->[0],
 			methods=>$_->[1],
 			service=>$_->[2],
             versions=>$_->[3]
