@@ -112,6 +112,19 @@ sub search {
     my @data_window;
     my $total_count = 0;
 
+    # Get the unique germplasm names and batch retrieve synonyms and pedigrees
+    my %unique_germplasm_ids = map { $_->{germplasm_stock_id} => 1 } @$data;
+    my @unique_germplasm_ids = ( keys %unique_germplasm_ids );
+
+    my %pedigree_strings;
+    my $stock = CXGN::Stock->new ( schema => $self->bcs_schema);
+    my $pedigree_rows = $stock->get_pedigree_rows(\@unique_germplasm_ids, 'parents_only');
+    foreach my $row (@$pedigree_rows) {
+        my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+        my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
+        $pedigree_strings{$progeny} = $string;
+    }
+
     # Get the plot parents of the plants
     my @plant_ids;
     my %plant_parents;
@@ -209,6 +222,16 @@ sub search {
             my $additional_info_json = $rs->first()->value();
             $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
         }
+
+        # Get synonyms, pedigree, etc and add to additional info field with observationUnitAttributes key
+
+        my %observationUnitAttributes = ();
+
+        my $accession = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$obs_unit->{germplasm_stock_id}});
+        $observationUnitAttributes{'synonyms'} = join ',', @{$accession->synonyms};
+        $observationUnitAttributes{'pedigree'} = $pedigree_strings{$obs_unit->{germplasm_uniquename}};
+
+        $additional_info->{'observationUnitAttributes'} = \%observationUnitAttributes;
 
         my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
 
