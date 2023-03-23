@@ -134,6 +134,26 @@ $check_vendor_role
     </div>
 </div>
 
+<div class="modal fade" id="re_open_order_dialog" name="re_open_order_dialog" tabindex="-1" role="dialog" aria-labelledby="reOpenOrderDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOpenOrderDialog">Re-Open Order</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="re_open_order_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="re_open_order_button" type="button" class="btn btn-primary" >Re-Open</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 
@@ -174,6 +194,7 @@ $(window).ready( function() {
             { title: "Status", "data": "order_status" },
             { title: "Completion Date", "data": "completion_date" },
             { title: "Comments", "data": "contact_person_comments" },
+            { title: "Update", "data": "null", "render": function ( data, type, row ) { return "<a onclick='reOpenOrder(\""+row.order_id+"\", \""+row.order_from_name+"\")' >Re-Open</a>"; } },
         ]
     });
 
@@ -236,5 +257,19 @@ function updateOrder(order_id, order_from_name){
     jQuery('#update_order_dialog').modal('show');
 
 }
+
+function reOpenOrder(order_id, order_from_name){
+    var re_open = "Re-Open"
+    var html = '';
+    html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="re_open_order_id" name="re_open_order_id" value="'+order_id+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Ordered by: </label><div class="col-sm-9" ><input class="form-control" id="re_open_ordered_by" name="re_open_ordered_by" value="'+order_from_name+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><input class="form-control" id="re_open_status" name="re_open_status" value="'+re_open+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="re_open_comments" placeholder="Required"></div></div></form>'
+
+    jQuery('#re_open_order_div').html(html);
+    jQuery('#re_open_order_dialog').modal('show');
+
+}
+
 
 </script>
