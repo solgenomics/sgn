@@ -9,6 +9,7 @@ $order_status
 $comments
 $order_properties => undef
 $order_values => undef
+$ordering_type => undef
 
 </%args>
 
@@ -36,7 +37,9 @@ $order_values => undef
             </div>
         </div>
     </div>
+% if ($ordering_type eq 'single_step') {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button>
+%}
 </&>
 
 <& /order/re_order_dialog.mas, order_properties => $order_properties, order_values => $order_values&>

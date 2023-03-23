@@ -117,7 +117,7 @@ function reOrderInfo(order_properties, order_values){
     for(var i=0; i<properties.length; i++){
         var each_property_info = properties[i].split(":");
         if (each_property_info.length == 1) {
-            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' value="'+values[i]+'" ></div><br><br><br>';
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' value="'+values[i]+'" ></div><br><br>';
         } else {
             html = html + '<label class="col-sm-3 control-label">'+ each_property_info[0] +'</label><div class="col-sm-9" ><select class="form-control" id= '+ i +' name= '+ i +'> ';
             for (var j=1; j<each_property_info.length; j++) {

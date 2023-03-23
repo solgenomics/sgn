@@ -36,6 +36,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $ordering_type = $c->config->{ordering_type};
 
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -81,7 +82,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     $c->stash->{comments} = $order_result->[6];
     $c->stash->{order_properties} = $order_properties;
     $c->stash->{order_values} = $value_string;
-
+    $c->stash->{ordering_type} = $ordering_type;
     $c->stash->{template} = '/order/order_details.mas';
 
 
