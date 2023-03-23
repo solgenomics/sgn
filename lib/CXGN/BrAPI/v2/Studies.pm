@@ -629,6 +629,7 @@ sub _search {
         # }
         my $data_agreement = ''; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
         my $experimental_design = {};
+		my ($folder_id, $folder_name);
 
         # if ($t->get_design_type()){
 	    #     	$experimental_design = { 
@@ -647,8 +648,13 @@ sub _search {
 				description => $_->{design} };
 	    }
 
-		my $folder_id = $_->{folder_id};
-		my $folder_name = $_->{folder_name};
+		if ($_->{folder_id}){
+			$folder_id = $_->{folder_id};
+			$folder_name = $_->{folder_name};
+		} else {
+			$folder_id = $_->{breeding_program_id};
+			$folder_name = $_->{breeding_program_name};
+		}
 
 		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
         my %data_obj = (
