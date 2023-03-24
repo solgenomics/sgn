@@ -24,7 +24,9 @@ sub search {
     my $page_size = $self->page_size;
     my $page = $self->page;
 
-    my $depth_counter = 0;
+    my $progeny_depth_counter = 0;
+    my $pedigree_depth_counter = 0;
+    my $stock_id_list;
 
     my $stock_id  = $params->{germplasmDbId}->[0];
     my $pedigree_depth = $params->{pedigreeDepth}->[0] || 1;
@@ -39,7 +41,7 @@ sub search {
         $progeny_depth = 5;
     }
     
-    my $result = get_tree($self, $stock_id,$depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny);
+    my $result = get_tree($self, $stock_id,$progeny_depth_counter,$pedigree_depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$stock_id_list);
 
     my @data_files;
     my $data = {'data'=>$result};
@@ -51,31 +53,48 @@ sub search {
 sub get_tree {
     my $self = shift;
     my $stock_id = shift;
-    my $depth_counter = shift;
+    my $progeny_depth_counter = shift;
+    my $pedigree_depth_counter = shift;
     my $progeny_depth = shift;
     my $pedigree_depth = shift;
     my $include_parents = shift;
     my $include_siblings = shift;
     my $include_progeny = shift;
+    my $stock_id_list = shift;
     my $results = shift;
+
+    my %list = map { $_ => 1 } @$stock_id_list;
+    next if(exists($list{$stock_id}));
+    push @$stock_id_list, $stock_id;
 
     my $result = get_pedigree_progeny($self, $stock_id,$include_parents,$include_siblings,$include_progeny);
     if ($result) { push @$results, @$result; }
 
-    $depth_counter++;
-    foreach (@$result){
-        if($depth_counter < $progeny_depth ){            
-            foreach (@{$_->{progeny}}){
-                get_tree($self,$_->{germplasmDbId},$depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$results);
-                
+    $progeny_depth_counter++;
+    $pedigree_depth_counter++;
+
+    foreach my $germplasm (@$result){
+        my %list = map { $_ => 1 } @$stock_id_list;
+        my $tmp_list;       
+        if($progeny_depth_counter < $progeny_depth ){            
+            foreach my $progeny (@{$germplasm->{progeny}}){
+                next if(exists($list{$progeny->{germplasmDbId}}));
+                push @$tmp_list, $progeny->{germplasmDbId};
             }
         }
 
-        if($depth_counter < $pedigree_depth){
-            foreach (@{$_->{parents}}){
-                get_tree($self,$_->{germplasmDbId},$depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$results);
-                
+        if($pedigree_depth_counter < $pedigree_depth){
+            foreach my $parent (@{$germplasm->{parents}}){
+                next if(exists($list{$parent->{germplasmDbId}}));
+                push @$tmp_list, $parent->{germplasmDbId};                
             }
+        }
+
+        my @filtered = uniq(@$tmp_list);
+
+        foreach my $item (@filtered){
+            next if(exists($list{$item}));
+            get_tree($self,$item,$progeny_depth_counter,$pedigree_depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$stock_id_list, $results);
         }
     }
     return $results;
@@ -111,7 +130,7 @@ sub get_pedigree_progeny {
 
             defaultDisplayName=>undef,
             externalReferences=>[],    
-            germplasmDbId=>$pedigree->{germplasmDbId},,
+            germplasmDbId=>$pedigree->{germplasmDbId},
             germplasmName=>$pedigree->{germplasmName},
             germplasmPUI=>$pedigree->{germplasmPUI},
             parents=>$include_parents eq 'true' ? $pedigree->{parents} : [],
@@ -351,7 +370,10 @@ sub germplasm_progeny {
     return $result;
 }
 
-
+sub uniq {
+    my %seen;
+    grep !$seen{$_}++, @_;
+}
 
 
 1;
