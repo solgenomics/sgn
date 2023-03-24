@@ -41,7 +41,7 @@ sub search {
         $progeny_depth = 5;
     }
     
-    my $result = get_tree($self, $stock_id,$progeny_depth_counter,$pedigree_depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$stock_id_list);
+    my $result = _get_tree($self, $stock_id,$progeny_depth_counter,$pedigree_depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$stock_id_list);
 
     my @data_files;
     my $data = {'data'=>$result};
@@ -50,7 +50,7 @@ sub search {
     return CXGN::BrAPI::JSONResponse->return_success($data, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
 }
 
-sub get_tree {
+sub _get_tree {
     my $self = shift;
     my $stock_id = shift;
     my $progeny_depth_counter = shift;
@@ -67,7 +67,7 @@ sub get_tree {
     next if(exists($list{$stock_id}));
     push @$stock_id_list, $stock_id;
 
-    my $result = get_pedigree_progeny($self, $stock_id,$include_parents,$include_siblings,$include_progeny);
+    my $result = _get_pedigree_progeny($self, $stock_id,$include_parents,$include_siblings,$include_progeny);
     if ($result) { push @$results, @$result; }
 
     $progeny_depth_counter++;
@@ -94,13 +94,13 @@ sub get_tree {
 
         foreach my $item (@filtered){
             next if(exists($list{$item}));
-            get_tree($self,$item,$progeny_depth_counter,$pedigree_depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$stock_id_list, $results);
+            _get_tree($self,$item,$progeny_depth_counter,$pedigree_depth_counter,$progeny_depth,$pedigree_depth,$include_parents,$include_siblings,$include_progeny,$stock_id_list, $results);
         }
     }
     return $results;
 }
 
-sub get_pedigree_progeny {
+sub _get_pedigree_progeny {
     my $self = shift;
     my $stock_id = shift;
     my $include_parents = shift;
@@ -110,11 +110,11 @@ sub get_pedigree_progeny {
 
     my $result;
 
-    my $pedigree=germplasm_pedigree($self,$stock_id, $include_parents, $include_siblings);
+    my $pedigree=_germplasm_pedigree($self,$stock_id, $include_parents, $include_siblings);
 
     my $progeny_value=[];
     if(lc $include_progeny eq 'true'){
-        my $progeny=germplasm_progeny($self, $stock_id);
+        my $progeny=_germplasm_progeny($self, $stock_id);
         $progeny_value=$progeny->{progeny};
     }
 
@@ -142,7 +142,7 @@ sub get_pedigree_progeny {
     return $result;
 }
 
-sub germplasm_pedigree {
+sub _germplasm_pedigree {
     my $self = shift;
     my $stock_id = shift;
     my $include_parents = shift;
@@ -301,7 +301,7 @@ sub germplasm_pedigree {
     return \%result;
 }
 
-sub germplasm_progeny {
+sub _germplasm_progeny {
     my $self = shift;
     my $stock_id = shift;
     my $page_size = $self->page_size;

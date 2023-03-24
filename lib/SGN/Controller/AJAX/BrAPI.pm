@@ -5361,6 +5361,10 @@ sub nirs_matrix_GET {
 }
 
 
+=head2 brapi/v2/pedigree
+
+=cut
+
 sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST') { }
 
 sub pedigree_GET {
@@ -5381,6 +5385,23 @@ sub pedigree_GET {
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub pedigree_search  : Chained('brapi') PathPart('search/pedigree') Args(0) : ActionClass('REST') { }
+
+sub pedigree_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Pedigree');
+}
+
+sub pedigree_search_retrieve : Chained('brapi') PathPart('search/pedigree') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Pedigree');
+}
+
+
 
 #functions
 sub save_results {
