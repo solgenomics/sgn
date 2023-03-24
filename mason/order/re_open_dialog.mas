@@ -1,0 +1,53 @@
+<%args>
+$order_id
+$order_to
+</%args>
+
+
+<div class="modal fade" id="requester_re_open_order_dialog" name="requester_re_open_order_dialog" tabindex="-1" role="dialog" aria-labelledby="requesterReOpenOrderDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="requesterReOpenOrderDialog">Re-Open Order</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="requester_re_open_order_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="requester_re_open_order_link" type="button" class="btn btn-primary" >Re-Open</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready( function() {
+    var order_id = "<% $order_id %>";
+    var order_to = "<% $order_to %>";
+
+    jQuery('#requester_re_open_link').click(function(){
+        requesterReOpen(order_id, order_to)
+    });
+});
+
+
+function requesterReOpen(order_id, order_to){
+    var re_open = "Re-Open"
+    var html = '';
+    html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="requester_re_open_order_id" name="requester_re_open_order_id" value="'+order_id+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Vendor: </label><div class="col-sm-9" ><input class="form-control" id="re_open_order_to" name="re_open_order_to" value="'+order_to+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><input class="form-control" id="requester_re_open_status" name="requester_re_open_status" value="'+re_open+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="requester_re_open_comments" placeholder="Required"></div></div></form>'
+
+    jQuery('#requester_re_open_order_div').html(html);
+    jQuery('#requester_re_open_order_dialog').modal('show');
+
+}
+
+</script>
