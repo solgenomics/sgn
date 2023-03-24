@@ -1769,6 +1769,20 @@ sub list_items_POST {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub list_data  : Chained('list_single') PathPart('data') Args(0) : ActionClass('REST') { }
+
+sub list_data_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->store_items($c->stash->{list_id},$clean_inputs,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+
 sub list_search_save : Chained('brapi') PathPart('search/lists') Args(0) : ActionClass('REST') { }
 
 sub list_search_save_POST {
