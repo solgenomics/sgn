@@ -574,6 +574,12 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
+    my $re_open_by_person= CXGN::People::Person->new($dbh, $user_id);
+    my $re_open_name = $re_open_by_person->get_first_name()." ".$re_open_by_person->get_last_name();
+    if ($new_status eq 're-opened') {
+        $new_status = 're-opened by'." ".$re_open_name;
+    }
+
     my $order_obj;
     if ($new_status eq 'completed') {
         $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp, comments => $contact_person_comments});

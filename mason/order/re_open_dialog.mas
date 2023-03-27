@@ -60,7 +60,7 @@ jQuery(document).ready( function() {
 
     jQuery('#requester_re_open_order_submit').click( function() {
         var order_id = jQuery('#requester_re_open_order_id').val();
-        var re_open_status = "re-opened";
+        var re_open_status = jQuery('requester_re_open_status').val();
         var requester_re_open_comments = jQuery('#requester_re_open_comments').val();
         if (!requester_re_open_comments) {
             alert ("Please add comments for re-opening the order");
@@ -102,7 +102,7 @@ jQuery(document).ready( function() {
 
 
 function requesterReOpen(order_id, order_to){
-    var re_open = "Re-Open"
+    var re_open = "re-opened"
     var html = '';
     html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="requester_re_open_order_id" name="requester_re_open_order_id" value="'+order_id+'" disabled></div></div>';
     html += '<div class="form-group"><label class="col-sm-3 control-label">Vendor: </label><div class="col-sm-9" ><input class="form-control" id="re_open_order_to" name="re_open_order_to" value="'+order_to+'" disabled></div></div>';

@@ -240,7 +240,7 @@ $(window).ready( function() {
 
     jQuery('#re_open_order_button').click( function() {
         var order_id = jQuery('#re_open_order_id').val();
-        var re_open_status = "re-opened";
+        var re_open_status = jQuery('#re_open_status').val();
         var re_open_comments = jQuery('#re_open_comments').val();
         if (!re_open_comments) {
             alert ("Please add comments for re-opening the order");
@@ -294,7 +294,7 @@ function updateOrder(order_id, order_from_name){
 }
 
 function reOpenOrder(order_id, order_from_name){
-    var re_open = "Re-Open"
+    var re_open = "re-opened"
     var html = '';
     html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="re_open_order_id" name="re_open_order_id" value="'+order_id+'" disabled></div></div>';
     html += '<div class="form-group"><label class="col-sm-3 control-label">Ordered by: </label><div class="col-sm-9" ><input class="form-control" id="re_open_ordered_by" name="re_open_ordered_by" value="'+order_from_name+'" disabled></div></div>';
