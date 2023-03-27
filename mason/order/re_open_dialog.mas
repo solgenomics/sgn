@@ -19,11 +19,34 @@ $order_to
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="requester_re_open_order_link" type="button" class="btn btn-primary" >Re-Open</button>
+                <button id="requester_re_open_order_submit" type="button" class="btn btn-primary" >Submit</button>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="re_open_saved_dialog" name="re_open_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="reOpenSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOpenSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The order has been re-opened.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_re_open_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -34,6 +57,47 @@ jQuery(document).ready( function() {
     jQuery('#requester_re_open_link').click(function(){
         requesterReOpen(order_id, order_to)
     });
+
+    jQuery('#requester_re_open_order_submit').click( function() {
+        var order_id = jQuery('#requester_re_open_order_id').val();
+        var re_open_status = "re-opened";
+        var requester_re_open_comments = jQuery('#requester_re_open_comments').val();
+        if (!requester_re_open_comments) {
+            alert ("Please add comments for re-opening the order");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/order/update',
+            data : {
+                'order_id' : order_id,
+                'new_status': re_open_status,
+                'contact_person_comments': requester_re_open_comments
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#re_open_saved_dialog').modal('show');
+                    jQuery('#requester_re_open_order_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred re-opening the order');
+            }
+        });
+    });
+
+    jQuery("#dismiss_re_open_saved_dialog").click(function(){
+        location.reload();
+    });
+
 });
 
 
