@@ -18,7 +18,7 @@
         <div class="col-md-2 text-center">
             <label><b>BrAPI URL:</b></label>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-6 input-group">
             <input type="text" placeholder="https://sweetpotatobase.org" id="brapi-url-input" class="form-control input-sm" />
             <span class="input-group-btn">
                 <span><button id="brapi-source-access" class="btn btn-sm btn-primary">Access</button></span>
