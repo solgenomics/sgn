@@ -127,16 +127,12 @@ sub _check_cached_output {
 
     	$self->_check_combined_trials_model_all_traits_output($c, $tr_pop_id, $traits);
     }
-    elsif ($req_page =~ /kinship\/analysis/) {
-    	my $kinship_pop_id  = $args->{kinship_pop_id};
-    	my $protocol_id = $args->{genotyping_protocol_id};
+    elsif ($req_page =~ /kinship\/analysis/) 
+    {
+        $c->controller('solGS::Kinship')->stash_kinship_pop_id($c,  $args->{kinship_pop_id});
+        my $kinship_pop_id = $c->stash->{kinship_pop_id};
+        my $protocol_id = $args->{genotyping_protocol_id};
     	my $trait_id     = $args->{trait_id};
-    	my $data_str = $args->{data_structure};
-
-    	if ($data_str =~ /dataset|list/ && $kinship_pop_id !~ /dataset|list/)
-    	{
-    	    $kinship_pop_id = $data_str . '_' . $kinship_pop_id;
-    	}
 
     	$self->_check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
     }
@@ -298,9 +294,7 @@ sub _check_selection_pop_all_traits_output {
 sub _check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
 
-    my $data_set_type = $c->stash->{data_set_type};
-
-    if ($data_set_type =~ 'combined populations')
+    if ($c->stash->{data_set_type} =~ 'combined_populations')
     {
 	$self->_check_combined_trials_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
     }

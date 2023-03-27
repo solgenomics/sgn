@@ -150,7 +150,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(5);
-    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs');
+    $d->find_element_ok('download_gebvs_histo_plot', 'id',  'download gebvs');
     sleep(3);
 
    my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');

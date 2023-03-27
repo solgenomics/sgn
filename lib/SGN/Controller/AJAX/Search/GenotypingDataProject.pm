@@ -19,6 +19,7 @@ use CXGN::People::Login;
 use CXGN::Trial::Search;
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Genotype::Protocol;
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -42,6 +43,23 @@ sub genotyping_data_project_search_GET : Args(0) {
     my ($data, $total_count) = $trial_search->search();
     my @result;
     foreach (@$data){
+        my $genotyping_project_id = $_->{trial_id};
+
+        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $bcs_schema,
+            project_id => $genotyping_project_id
+        });
+        my ($plate_data, $number_of_plates) = $plate_info->get_plate_info();
+        my $total_accession_count = 0;
+        if ($plate_data) {
+            foreach (@$plate_data) {
+                my $trial_id = $_->{trial_id};
+                my $trial = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
+                my $accession_count = $trial->get_trial_stock_count();
+                $total_accession_count += $accession_count;
+            }
+        }
+
         my $folder_string = '';
         if ($_->{folder_name}){
             $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
@@ -63,7 +81,9 @@ sub genotyping_data_project_search_GET : Args(0) {
             $folder_string,
             $_->{year},
             $_->{location_name},
-            $_->{genotyping_facility}
+            $_->{genotyping_facility},
+            $number_of_plates,
+            $total_accession_count
           ];
     }
     #print STDERR Dumper \@result;

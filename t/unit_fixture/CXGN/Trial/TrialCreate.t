@@ -171,6 +171,7 @@ ok($trial_design->set_plot_start_number(1), "set plot start number");
 ok($trial_design->set_plot_number_increment(1), "set plot increment");
 ok($trial_design->set_number_of_reps(2), "set rep number");
 ok($trial_design->set_design_type("CRD"), "set design type");
+ok($trial_design->set_plot_numbering_scheme('consecutive'));
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
@@ -425,6 +426,20 @@ my $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 is(scalar(keys %{$response->{design}}), 11);
 
+
+#test genotyping project search
+$mech->get_ok('http://localhost:3010/ajax/genotyping_data_project/search');
+my $response = decode_json $mech->content;
+
+my $search_result = $response->{'data'};
+is($search_result->[0]->[1], 'SNP');
+is($search_result->[0]->[2], 'genotyping project for test');
+is($search_result->[0]->[5], '2022');
+is($search_result->[0]->[6], 'Cornell Biotech');
+is($search_result->[0]->[7], 'igd');
+is($search_result->[0]->[8], '1');
+is($search_result->[0]->[9], '11');
+
 #test moving genotyping plate to another project
 my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
 
@@ -567,7 +582,7 @@ ok($trial_design->set_num_plants_per_plot(4), "set num plants per plot");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
-#print STDERR Dumper $design;
+print STDERR Dumper $design;
 
 $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 

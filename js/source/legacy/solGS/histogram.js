@@ -89,38 +89,37 @@ solGS.histogram =  {
         return table;
     },
 
-    binElemsTableSelector: function(canvas, plotId) {
+    binElemsTableSelector: function(canvas, plotDivId) {
 
-        plotId = this.formatPlotDivId(plotId);
-        return `${canvas} ${plotId} .bin_elements_table`;
+        plotDivId = this.formatPlotDivId(plotDivId);
+        return `${canvas} ${plotDivId} .bin_elements_table`;
     },
 
-    formatPlotDivId: function(plotId) {
+    formatPlotDivId: function(plotDivId) {
 
-        plotId = String(plotId);
-        if (plotId.match(/\./)) {
-            plotId = plotId.replace(/\./g, '-');
+        plotDivId = String(plotDivId);
+        if (plotDivId.match(/\./)) {
+            plotDivId = plotDivId.replace(/\./g, '-');
         }
 
-        return plotId;
+        return plotDivId;
     },
 
     appendBinElemsTable: function(canvas, plotId) {
 
         var binElemsTableDiv = this.binElemsTableSelector(canvas, plotId);
-
+      
         if (!jQuery(binElemsTableDiv).length) {
             plotId = this.formatPlotDivId(plotId);
             var plotDivId = plotId.replace('#', '');
             var plotDiv = `<div id=${plotDivId}></div>`;
             jQuery(canvas).append(plotDiv).show();
-
             var table = this.createBinElementsTable();
             jQuery(plotId).append(table);
         }
     },
 
-    displayBinElements: function(binValues, namedValues, canvas, plotId) {
+    displayBinElements: function(binValues, namedValues, canvas, plotDivId) {
 
        var binElems = [];
        var binMin = d3.min(binValues);
@@ -133,7 +132,7 @@ solGS.histogram =  {
           }
        });
 
-        var table = this.binElemsTableSelector(canvas, plotId);
+        var table = this.binElemsTableSelector(canvas, plotDivId);
         jQuery(table).show();
 
         if (jQuery.fn.DataTable.isDataTable(table) ) {
@@ -161,22 +160,23 @@ solGS.histogram =  {
     // 'bar_color': 'optional color for bars,
     // 'alt_bar_color': 'optional color for bars for on mouseover',
    // 'values': optional array of values
-    // 'namedValues' : an array of arrray of named values}, necessary if you want view bin
+    // 'named_values' : an array of arrray of named values}, necessary if you want view bin
         //elements on mouseover;
     //
     plotHistogram: function (histo) {
 
     	var canvas = histo.canvas || 'histogram_canvas';
-    	var plotId = histo.plot_id || 'histogram_plot';
+    	var plotDivId = histo.plot_id || 'histogram_plot';
     	var values = histo.values;
-        var namedValues = histo.namedValues;
+        var namedValues = histo.named_values;
+        var downloadLinks = histo.download_links;
 
         var barClr = histo.bar_color || '#9A2EFE';
         var altBarClr = histo.alt_bar_color ||  '#C07CFE';
         var caption = histo.caption;
 
-        if (canvas.match(/#/) == null) {canvas = '#' + canvas;}
-        if (plotId.match(/#/) == null) {plotId = '#' + plotId;}
+        if (!canvas.match(/#/)) {canvas = '#' + canvas;}
+        if (!plotDivId.match(/#/)) {plotDivId = '#' + plotDivId;}
 
         if (!values || !values[0]) {
             values = this.extractValues(namedValues);
@@ -187,7 +187,7 @@ solGS.histogram =  {
     	var height = 300;
     	var width  = 500;
     	var pad    = {left:20, top:50, right:50, bottom: 50};
-    	var totalH = height + pad.top + pad.bottom;
+    	var totalH = height +  pad.top + (3 * pad.bottom);
     	var totalW = width + pad.left + pad.right;
 
     	uniqueValues = this.getUnique(values);
@@ -228,10 +228,12 @@ solGS.histogram =  {
 
        var tVals = d3.range(xMin, xMax, xRange / binNum);
         tVals.push(xMax)
+    
     	var xAxis = d3.svg.axis()
                 .scale(xAxisScale)
                 .orient("bottom")
-                .tickValues(tVals);
+                .tickValues(tVals)
+                .tickFormat(x => `${x.toFixed(1)}`);
 
     	var yAxisLabel = d3.scale.linear()
                 .domain([0, d3.max(histogram, ( function (d) {return d.y;}) )])
@@ -250,8 +252,8 @@ solGS.histogram =  {
                 .attr("width", totalW);
 
     	var histogramPlot = svg.append("g")
-                .attr("id", plotId)
-                .attr("transform", "translate(" +  pad.left + "," + pad.top + ")");
+                .attr("id", plotDivId)
+                .attr("transform", "translate(" +  0  + "," + pad.top  + ")");
 
     	var bar = histogramPlot.selectAll(".bar")
                 .data(histogram)
@@ -259,20 +261,22 @@ solGS.histogram =  {
                 .append("g")
                 .attr("class", "bar")
                 .attr("transform", function(d) {
-    		return "translate(" + xAxisScale(d.x)
+    		            return "translate(" + xAxisScale(d.x)
                         + "," + height - yAxisScale(d.y) + ")";
                 });
-
-        var binElemsTableDiv= this.binElemsTableSelector(canvas, plotId);
+                
+        var binElemsTableDiv= this.binElemsTableSelector(canvas, plotDivId);
+        var axesXOrig = 3 * pad.left;
+        var axesYOrig = height + pad.top;
 
     	bar.append("rect")
-                .attr("x", function(d) { return 2*pad.left + xAxisScale(d.x); } )
-                .attr("y", function(d) {return height - yAxisScale(d.y); })
-                .attr("width", function(d) {return width / binNum; })
+                .attr("x", function(d) { return axesXOrig  + xAxisScale(d.x); } )
+                .attr("y", function(d) {return axesYOrig - yAxisScale(d.y); })
+                .attr("width", function() {return width / binNum; })
                 .attr("height", function(d) { return yAxisScale(d.y); })
                 .style("fill", barClr)
     	        .style('stroke', "#ffffff")
-                .on("mouseover", function(d) {
+                .on("mouseover", function() {
                     d3.select(this).style("fill", altBarClr);
                 })
                 .on("mouseout", function() {
@@ -282,8 +286,8 @@ solGS.histogram =  {
 
     	bar.append("text")
                 .text(function(d) { return d.y; })
-                .attr("y", function(d) {return height - (yAxisScale(d.y) + 10); } )
-                .attr("x",  function(d) { return 2*pad.left + xAxisScale(d.x) + 0.05*width; } )
+                .attr("y", function(d) {return axesYOrig - (yAxisScale(d.y) +10); } )
+                .attr("x",  function(d) { return axesXOrig + xAxisScale(d.x) + 0.05*width; } )
                 .attr("dy", ".6em")
                 .attr("text-anchor", "end")
                 .attr("font-family", "sans-serif")
@@ -291,9 +295,10 @@ solGS.histogram =  {
                 .attr("fill", barClr)
                 .attr("class", "histoLabel");
 
+        
     	histogramPlot.append("g")
                 .attr("class", "x axis")
-                .attr("transform", "translate(" + (2*pad.left) + "," + height +")")
+                .attr("transform", "translate(" + (axesXOrig) + "," + axesYOrig  + ")")
                 .call(xAxis)
                 .selectAll("text")
                 .attr("y", 0)
@@ -305,7 +310,7 @@ solGS.histogram =  {
 
     	histogramPlot.append("g")
                 .attr("class", "y axis")
-                .attr("transform", "translate(" + 2* pad.left +  "," + 0 + ")")
+                .attr("transform", "translate(" + axesXOrig +  "," + pad.top+ ")")
                 .call(yAxis)
                 .selectAll("text")
                 .attr("y", 0)
@@ -314,28 +319,34 @@ solGS.histogram =  {
                 .style("fill", barClr);
 
     	histogramPlot.append("g")
-                .attr("transform", "translate(" + (totalW * 0.5) + "," + (height + pad.bottom) + ")")
+                .attr("transform", "translate(" + (totalW * 0.5) + "," + (axesYOrig + pad.top + 10) + ")")
                 .append("text")
                 .text(xLabel)
                 .attr("fill", barClr)
                 .style("fill", barClr);
 
     	histogramPlot.append("g")
-                .attr("transform", "translate(" + 0 + "," + ( totalH*0.5) + ")")
+                .attr("transform", "translate(" + pad.left + "," + ( totalH*0.5) + ")")
                 .append("text")
                 .text(yLabel)
                 .attr("fill", barClr)
                 .style("fill", barClr)
                 .attr("transform", "rotate(-90)");
 
-        this.appendBinElemsTable(canvas, plotId);
-
+        this.appendBinElemsTable(canvas, plotDivId);
         bar.on("mouseover", function(d) {
-            solGS.histogram.displayBinElements(d, namedValues, canvas, plotId);
+            solGS.histogram.displayBinElements(d, namedValues, canvas, plotDivId);
         });
 
         if (caption) {
             jQuery(canvas).append('<br/>' + caption);
+        }
+
+        if (downloadLinks) {
+            if (!plotDivId.match('#')) {
+                plotDivId = '#' + plotDivId;
+            }
+            jQuery(plotDivId).append("<p style='margin-top: 40px'>" + downloadLinks + "</p>");
         }
     },
 

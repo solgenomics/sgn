@@ -74,7 +74,7 @@ sub get_selection_pop_gebvs :Path('/solgs/get/gebvs/selection/population/') Args
     $c->stash->{selection_pop_id} = $c->req->param('selection_pop_id');
     $c->stash->{training_pop_id}  = $c->req->param('training_pop_id');
     $c->stash->{trait_id}         = $c->req->param('trait_id');
-    $c->stash->{population_type}  = 'selection_population';
+    $c->stash->{population_type}  = 'selection_prediction';
 
     my $protocol_id = $c->req->param('genotyping_protocol_id');
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);

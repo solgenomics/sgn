@@ -95,7 +95,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(60);
     $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
-    $d->find_element_ok('Download correlation coefficients', 'partial_link_text',  'download corr coef table'); 
+    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table'); 
     sleep(2);
 
     $d->driver->refresh();
@@ -258,7 +258,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(60);
     $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
-    $d->find_element_ok('Download correlation coefficients', 'partial_link_text',  'download corr coef table');
+    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
     
     $d->driver->refresh();
@@ -368,7 +368,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(70);
     $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
     sleep(5);
-    $d->find_element_ok('Download correlation coefficients', 'partial_link_text',  'download corr coef table');
+    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
    
 

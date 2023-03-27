@@ -83,6 +83,11 @@ sub generate_experimental_design_POST : Args(0) {
     my $design_layout_view_html;
     my $design_info_view_html;
     my $design_map_view;
+
+    my $plot_numbering_scheme = $c->req->param('plot_numbering_scheme') || 'block_based';
+    print STDERR "Setting plot_numbering_scheme to $plot_numbering_scheme\n";
+    $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
+    
     if ($c->req->param('stock_list')) {
 	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -110,6 +115,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
     my $start_number =  $c->req->param('start_number');
+    my $plot_numbering_scheme = $c->req->param('plot_numbering_scheme');
     my $increment =  $c->req->param('increment') ? $c->req->param('increment') : 1;
     my $trial_location = $c->req->param('trial_location');
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
@@ -128,7 +134,7 @@ sub generate_experimental_design_POST : Args(0) {
 
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
-        return;
+        
     }
 
     if ($design_type eq 'Westcott'){
@@ -291,7 +297,8 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_backend($c->config->{backend});
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
-
+	$trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
+	
         my $design_created = 0;
         if ($use_same_layout) {
             $design_created = 1;

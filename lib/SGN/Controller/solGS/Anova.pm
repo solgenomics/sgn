@@ -572,7 +572,8 @@ sub anova_table_file {
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
 
     my $cache_data = {key       => "anova_table_${trial_id}_${trait_id}_html",
-                      file      => "anova_table_${trial_id}_${trait_id}.html",
+                      file      => "anova_table_${trial_id}_${trait_id}",
+                      ext => 'html',
                       stash_key => "anova_table_html_file"
     };
 
@@ -581,7 +582,7 @@ sub anova_table_file {
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
 
     $cache_data = {key       => "anova_table_${trial_id}_${trait_id}_txt",
-		   file      => "anova_table_${trial_id}_${trait_id}.txt",
+		   file      => "anova_table_${trial_id}_${trait_id}",
 		   stash_key => "anova_table_txt_file"
     };
 
@@ -599,7 +600,8 @@ sub anova_diagnostics_file {
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
 
     my $cache_data = {key       => "anova_diagnosics_${trial_id}_${trait_id}",
-                      file      => "anova_diagnostics_${trial_id}_${trait_id}.png",
+                      file      => "anova_diagnostics_${trial_id}_${trait_id}",
+                      ext => '.png',
                       stash_key => "anova_diagnostics_file"
     };
 
@@ -617,7 +619,7 @@ sub anova_model_file {
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};;
 
     my $cache_data = {key       => "anova_model_${trial_id}_${trait_id}",
-                      file      => "anova_model_${trial_id}_${trait_id}.txt",
+                      file      => "anova_model_${trial_id}_${trait_id}",
                       stash_key => "anova_model_file"
     };
 
@@ -647,7 +649,7 @@ sub adj_means_file {
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};;
 
     my $cache_data = {key       => "adj_means_${trial_id}_${trait_id}",
-                      file      => "adj_means_${trial_id}_${trait_id}.txt",
+                      file      => "adj_means_${trial_id}_${trait_id}",
                       stash_key => "adj_means_file"
     };
 
