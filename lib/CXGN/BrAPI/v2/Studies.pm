@@ -586,7 +586,7 @@ sub _search {
 			if($harvest_date eq "") { $harvest_date = undef;}
 		}
 
-		# my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
+		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
 		# my $contacts = $t->get_trial_contacts();
 		my $brapi_contacts;
 		# foreach (@$contacts){
@@ -615,7 +615,7 @@ sub _search {
         # }
 
         # my $phenotype_files = $t->get_phenotype_metadata();
-        # foreach (@$phMS freezeenotype_files){
+        # foreach (@$phenotype_files){
         #     push @data_links, {
         #         scientificType => 'Uploaded Phenotype File',
         #         name => $_->[4],
@@ -629,33 +629,15 @@ sub _search {
         # }
         my $data_agreement = ''; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
         my $experimental_design = {};
-		my ($folder_id, $folder_name);
 
-        # if ($t->get_design_type()){
-	    #     	$experimental_design = { 
-	    #     		PUI => $t->get_design_type(),
-	    #     		description => $t->get_design_type() };
-	    # }
-
-		# my $folder_id = $t->get_folder()->id();
-		# my $folder_name = $t->get_folder()->name();
-
-		# get design type and folder info from trial search obj
-
-		if ($_->{design}){
-			$experimental_design = { 
-				PUI => $_->{design},
-				description => $_->{design} };
+        if ($t->get_design_type()){
+	        	$experimental_design = { 
+	        		PUI => $t->get_design_type(),
+	        		description => $t->get_design_type() };
 	    }
 
-		if ($_->{folder_id}){
-			$folder_id = $_->{folder_id};
-			$folder_name = $_->{folder_name};
-		} else {
-			$folder_id = $_->{breeding_program_id};
-			$folder_name = $_->{breeding_program_name};
-		}
-
+		my $folder_id = $t->get_folder()->id();
+		my $folder_name = $t->get_folder()->name();
 		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
         my %data_obj = (
 			active                      => JSON::true,
