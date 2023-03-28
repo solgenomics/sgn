@@ -1,7 +1,7 @@
 
 use lib 't/lib';
 
-use Test::More 'tests'=>22;
+use Test::More 'tests'=>24;
 
 use SGN::Test::WWW::WebDriver;
 
