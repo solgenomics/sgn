@@ -603,7 +603,8 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $order_history_ref = $detail_hash->{'history'};
     my @order_history = @$order_history_ref;
     my $new_status_record = {};
-    $new_status_record->{$new_status} = $timestamp;
+    $new_status_record->{$new_status}{'Date'} = $timestamp;
+    $new_status_record->{$new_status}{'Comments'} = $contact_person_comments;
     push @order_history, $new_status_record;
     $detail_hash->{'history'} = \@order_history;
 

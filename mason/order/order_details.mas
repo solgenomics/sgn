@@ -31,7 +31,7 @@ $ordering_type => undef
                         <tr><td><b>Items</b></td><td><% $item_list %></td></tr>
                         <tr><td><b>Sent Order to</b></td><td><% $order_to %></td></tr>
                         <tr><td><b>Status</b><td><% $order_status %></td></tr>
-                        <tr><td><b>Comments from Vendor</b></td><td><% $comments %></td></tr>
+                        <tr><td><b>Comments</b></td><td><% $comments %></td></tr>
                     </table>
                 </div>
             </div>

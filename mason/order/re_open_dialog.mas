@@ -60,7 +60,7 @@ jQuery(document).ready( function() {
 
     jQuery('#requester_re_open_order_submit').click( function() {
         var order_id = jQuery('#requester_re_open_order_id').val();
-        var re_open_status = jQuery('requester_re_open_status').val();
+        var re_open_status = jQuery('#requester_re_open_status').val();
         var requester_re_open_comments = jQuery('#requester_re_open_comments').val();
         if (!requester_re_open_comments) {
             alert ("Please add comments for re-opening the order");

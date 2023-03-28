@@ -56,7 +56,7 @@ $check_vendor_role
                                     <th>Order Details</th>
                                     <th>Status</th>
                                     <th>Send Order to</th>
-                                    <th>Comments from Vendor</th>
+                                    <th>Comments</th>
                                 </tr>
                             </thead>
                         </table>
@@ -80,7 +80,7 @@ $check_vendor_role
                                     <th>Status</th>
                                     <th>Completed Date</th>
                                     <th>Processed by</th>
-                                    <th>Comments from Vendor</th>
+                                    <th>Comments</th>
                                 </tr>
                             </thead>
                         </table>
