@@ -802,6 +802,7 @@ solGS.getModelArgs = function () {
     args["training_traits_ids"] = trainingTraitsIds;
   }
 
+  if (trainingTraitsIds.length ==1) {args["trait_id"] = trainingTraitsIds[0]}
   return args;
 };
 
@@ -825,7 +826,8 @@ solGS.getTrainingPopArgs = function () {
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
     genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
-    data_set_type: jQuery("#data_set_type").val()
+    data_set_type: jQuery("#data_set_type").val(),
+    analysis_type:  jQuery("#analysis_type").val(),
   };
 
   return args;
@@ -922,4 +924,7 @@ jQuery(document).on("keyup", "#analysis_name", function (e) {
   jQuery("#analysis_name").css("border", "solid #96d3ec");
 
   jQuery("#form-feedback-analysis-name").empty();
+
 });
+
+

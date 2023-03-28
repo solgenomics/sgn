@@ -10,7 +10,6 @@
 options(echo = FALSE)
 
 library(ltm)
-#library(rjson)
 library(jsonlite)
 library(methods)
 library(dplyr)
@@ -24,8 +23,8 @@ outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
 inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                     what = "character")
 
-correTableFile <- grep("genetic_corre_table", outputFiles, value=TRUE)
-correJsonFile  <- grep("genetic_corre_json", outputFiles, value=TRUE)
+correTableFile <- grep("genetic_corr_table", outputFiles, value=TRUE)
+correJsonFile  <- grep("genetic_corr_json", outputFiles, value=TRUE)
 
 geneticDataFile <- grep("combined_gebvs", inputFiles, value=TRUE)
 
