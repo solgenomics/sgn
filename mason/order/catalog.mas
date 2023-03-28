@@ -172,6 +172,7 @@ jQuery(document).ready( function() {
                 { title: "Additional Info", "data": "additional_info" },
                 { title: "Material Source", "data": "material_source" },
                 { title: "Program", "data": "breeding_program" },
+                { title: "Availability", "data": "availability"},
                 { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\")'>Request</a>"; } },
             ],
         });
