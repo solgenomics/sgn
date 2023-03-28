@@ -81,7 +81,7 @@ sub search {
 
     my $limit = $page_size;
     my $offset = $page_size*$page;
-
+    print STDERR "ObservationUnits call Checkpoint 1: ".DateTime->now()."\n";
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
@@ -105,6 +105,7 @@ sub search {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
+    print STDERR "ObservationUnits call Checkpoint 2: ".DateTime->now()."\n";
     #print STDERR Dumper $data;
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -123,7 +124,7 @@ sub search {
     if (@plant_ids && scalar @plant_ids > 0) {
         %plant_parents = $self->_get_plants_plot_parent(\@plant_ids);
     }
-
+    print STDERR "ObservationUnits call Checkpoint 3: ".DateTime->now()."\n";
     foreach my $obs_unit (@$data){
         my @brapi_observations;
         
@@ -346,7 +347,7 @@ sub search {
         $total_count = $obs_unit->{full_count};       
         
     }
-
+    print STDERR "ObservationUnits call Checkpoint 4: ".DateTime->now()."\n";
     my %result = (data=>\@data_window);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units search result constructed');
