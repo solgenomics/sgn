@@ -46,10 +46,11 @@ sub search {
     my $levels_relation_arrayref = $params->{observationLevelRelationships} || ();
     my $levels_arrayref = $params->{observationLevels} || ();
 
-
-    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+    
+    my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
     my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
-
+    my $plot_geo_json_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_geo_json', 'stock_property')->cvterm_id();
+    my $stock_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
 
     #TODO: Use materialized_view_stockprop or construct own query. Materialized phenotype jsonb takes too long when there is data in the db
     if ($levels_arrayref){
@@ -144,7 +145,7 @@ sub search {
                 my $additional_info;
                 my $external_references;
                 #get additional info
-                my $rs = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $additional_info_type_id, phenotype_id => $_->{phenotype_id}  });
+                my $rs = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $phenotype_additional_info_type_id, phenotype_id => $_->{phenotype_id}  });
                 if ($rs->count() > 0){
                     my $additional_info_json = $rs->first()->value();
                     $additional_info  = $additional_info_json ? decode_json($additional_info_json) : undef;
@@ -187,10 +188,9 @@ sub search {
             };
         }
 
-        my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_geo_json', 'stock_property')->cvterm_id();
         my $sp_rs ='';
         eval { 
-            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $type_id, stock_id => $obs_unit->{observationunit_stock_id} });
+            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
         };
         my %geolocation_lookup;
         while( my $r = $sp_rs->next()){
@@ -204,8 +204,7 @@ sub search {
         }
 
         my $additional_info;
-        my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
-        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $additional_info_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
+        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
         if ($rs->count() > 0){
             my $additional_info_json = $rs->first()->value();
             $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
