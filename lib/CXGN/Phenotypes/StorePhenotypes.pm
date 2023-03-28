@@ -192,6 +192,12 @@ has 'unique_trait_stock_timestamp' => (
     is => 'rw',
 );
 
+has 'allow_repeat_measures' => (
+    isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
 #build is used for creating hash lookups in this case
 sub create_hash_lookups {
     my $self = shift;
@@ -453,6 +459,7 @@ sub store {
     my $phenome_schema = $self->phenome_schema;
     my $overwrite_values = $self->overwrite_values;
     my $ignore_new_values = $self->ignore_new_values;
+    my $allow_repeat_measures = $self->allow_repeat_measures;
     my $error_message;
     my $transaction_error;
     my $user_id = $self->user_id;
@@ -601,7 +608,7 @@ sub store {
                             $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                         }
                         else {
-                            if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                            if (!$allow_repeat_measures && exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
 	                            $skip_count++;
 	                            next;
 	                        } else {

@@ -343,6 +343,7 @@ sub observations_store {
         metadata_hash=>\%phenotype_metadata,
         overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
+        allow_repeat_measures=>$c->config->{allow_repeat_measures},
     );
 
     # TODO: revisit this
