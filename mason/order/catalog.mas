@@ -173,7 +173,13 @@ jQuery(document).ready( function() {
                 { title: "Material Source", "data": "material_source" },
                 { title: "Program", "data": "breeding_program" },
                 { title: "Availability", "data": "availability"},
-                { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\")'>Request</a>"; } },
+                { title: " ", "data": "null", "render": function ( data, type, row ) {
+                    if (row.availability == 'available') {
+                        return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\")'>Request</a>";
+                    } else {
+                        return ' '
+                    }
+                }},
             ],
         });
     } else {
@@ -192,7 +198,14 @@ jQuery(document).ready( function() {
                 { title: "Additional Info", "data": "additional_info" },
                 { title: "Material Source", "data": "material_source" },
                 { title: "Program", "data": "breeding_program" },
-                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+                { title: "Availability", "data": "availability"},
+                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) {
+                    if (row.availability == 'available') {
+                        return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>";
+                    } else {
+                        return ' '
+                    }
+                }},
             ],
         });
     }
