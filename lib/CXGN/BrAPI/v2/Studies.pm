@@ -586,6 +586,8 @@ sub _search {
 			if($harvest_date eq "") { $harvest_date = undef;}
 		}
 
+		my ($brapi_contacts, @data_links, $data_agreement, %experimental_design, $folder_id, $folder_name);
+
 		# my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
 		# my $contacts = $t->get_trial_contacts();
 		# foreach (@$contacts){
@@ -625,23 +627,19 @@ sub _search {
         #         version => undef
         #     };
         # }
-        # my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
+        # $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 
         # if ($t->get_design_type()){
 	    #     	$experimental_design = { 
 	    #     		PUI => $t->get_design_type(),
 	    #     		description => $t->get_design_type() };
 	    # }
-		# my $folder_id = $t->get_folder()->id();
-		# my $folder_name = $t->get_folder()->name();
-
-		my ($brapi_contacts, @data_links, $data_agreement, $experimental_design, $folder_id, $folder_name);
+		# $folder_id = $t->get_folder()->id();
+		# $folder_name = $t->get_folder()->name();
 
 		if ($_->{design}){
-			$experimental_design = { 
-				PUI => $_->{design},
-				description => $_->{design}
-			};
+			$experimental_design{'PUI'} = $_->{design};
+			$experimental_design{'description'} = $_->{design};
 	    }
 
 		if ($_->{folder_id}){
@@ -663,7 +661,7 @@ sub _search {
 			documentationURL            => "",
 			endDate                     => $harvest_date ? $harvest_date : undef,
 			environmentParameters       => undef,
-			experimentalDesign          => $experimental_design,
+			experimentalDesign          => \%experimental_design,
 			externalReferences          => undef,
 			growthFacility              => undef,
 			lastUpdate                  => undef,
