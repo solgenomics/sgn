@@ -11,6 +11,7 @@ use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::Cross;
+use List::Util qw | uniq |;
 use Try::Tiny;
 
 extends 'CXGN::BrAPI::v2::Common';
@@ -368,11 +369,6 @@ sub _germplasm_progeny {
 
     }
     return $result;
-}
-
-sub uniq {
-    my %seen;
-    grep !$seen{$_}++, @_;
 }
 
 
