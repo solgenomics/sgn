@@ -581,6 +581,7 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
 
 $lp->store();
@@ -755,6 +756,7 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new({
     has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
 });
 $lp->store();
 
