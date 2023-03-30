@@ -3818,7 +3818,7 @@ sub observations_PUT {
 }
 
 sub observations_GET {
-	my $self = shift;
+	my $self = shift; 
 	my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -3834,7 +3834,8 @@ sub observations_GET {
         observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
         observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
         observationUnitDbId => $clean_inputs->{observationUnitDbId},
-        observationDbId => $clean_inputs->{observationDbId}
+        observationDbId => $clean_inputs->{observationDbId},
+        observationVariableDbId => $clean_inputs->{observationVariableDbId}
 
     });
     _standard_response_construction($c, $brapi_package_result);
