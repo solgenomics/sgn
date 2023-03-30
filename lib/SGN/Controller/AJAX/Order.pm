@@ -551,8 +551,9 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
 
 }
 
+sub update_order : Path('/ajax/order/update') : ActionClass('REST'){ }
 
-sub update_order :Path('/ajax/order/update') :Args(0) {
+sub update_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');

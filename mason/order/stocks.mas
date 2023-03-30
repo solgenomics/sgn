@@ -209,6 +209,8 @@ $(window).ready( function() {
 
         jQuery.ajax({
             url: '/ajax/order/update',
+            dataType: "json",
+            type: 'POST',
             data : {
                 'order_id' : order_id,
                 'new_status': new_order_status,
@@ -249,6 +251,8 @@ $(window).ready( function() {
 
         jQuery.ajax({
             url: '/ajax/order/update',
+            dataType: "json",
+            type: 'POST',
             data : {
                 'order_id' : order_id,
                 'new_status': re_open_status,
