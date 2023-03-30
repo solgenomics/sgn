@@ -384,9 +384,9 @@ sub get_location_geojson_data {
 	}
 	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $noaa_station_id) = @location_data;
 
-        my $lat = $latitude ? $latitude + 0 : undef;
-        my $long = $longitude ? $longitude + 0 : undef;
-        my $alt = $altitude ? $altitude + 0 : undef;
+        my $lat = length $latitude ? $latitude + 0 : undef;
+        my $long = length $longitude ? $longitude + 0 : undef;
+        my $alt = length $altitude ? $altitude + 0 : undef;
         push(@locations, {
             type => "Feature",
             properties => {
