@@ -33,36 +33,13 @@ sub cluster_analysis : Path('/correlation/analysis/') Args() {
 }
 
 
-sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args() {
-    my ($self, $c) = @_;
-
-    my $corre_pop_id = $c->req->param('corre_pop_id');
-    $c->stash->{corre_pop_id} = $corre_pop_id;
-
-    $self->pheno_correlation_output_files($c);
-    my $corre_output_file = $c->stash->{pheno_corr_json_file};
-
-    my $ret->{result} = undef;
-
-    if (-s $corre_output_file && $corre_pop_id =~ /\d+/)
-    {
-	$ret->{result} = 1;
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-
-sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis') Args(0) {
+sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0) {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
     print STDRR "\npheno_correlation_analysis_output args: $args\n";
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
+     $c->stash->{correlation_type} = "pheno-correlation";
 
     $self->pheno_correlation_output_files($c);
     my $corre_json_file = $c->stash->{pheno_corr_json_file};
@@ -92,74 +69,21 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis') 
 }
 
 
-sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/output') Args(0) {
+sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
+     $c->stash->{correlation_type} = "genetic-correlation";
 
     my $corre_pop_id = $c->stash->{corre_pop_id};
     my $pop_type = $c->stash->{pop_type};
-    my $gebvs_file = $c->stash->{gebvs_file};
-
     $c->stash->{selection_pop_id} = $corre_pop_id if $pop_type =~ /selection/;
+    
     $self->genetic_correlation_output_files($c);
     my $corre_json_file = $c->stash->{genetic_corr_json_file};
 
     if (!-s $corre_json_file)
-    {
-        $self->run_genetic_correlation_analysis($c);
-    }
-
-    my $ret->{status} = 'failed';
-   
-    if (-s $corre_json_file)
-    {
-        $ret->{status}   = 'success';
-        $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
-        $ret->{corre_table_file} = $self->download_genetic_correlation_file($c);
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-
-sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/population') Args(0) {
-    my ($self, $c) = @_;
-
-    my $args = $c->req->param('arguments');
-    $c->controller('solGS::Utils')->stash_json_args($c, $args);
-
-	my $corre_table_file = $self->download_pheno_correlation_file($c);
-
-	my $ret = {'corre_table_file' => $corre_table_file};
-	$ret = to_json($ret);
-
-	$c->res->content_type("text/plain");
-	$c->res->body($ret);
-}
-
-
-sub correlation_genetic_data :Path('/correlation/genetic/data/') Args() {
-    my ($self, $c) = @_;
-
-    my $args = $c->req->param('arguments');
-    $c->controller('solGS::Utils')->stash_json_args($c, $args);
-
-    my $corre_pop_id = $c->stash->{corre_pop_id};
-    my $pop_type = $c->stash->{pop_type};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $selection_index_file = $c->stash->{selection_index_file};
-    $c->stash->{selection_pop_id} = $corre_pop_id if $pop_type =~ /selection/;
-
-    $self->genetic_correlation_output_files($c);
-    my $genetic_corr_file = $c->stash->{genetic_corr_json_file};
-print STDERR "\ngenetic corr file: $genetic_corr_file\n";
-    if (!-s $genetic_corr_file) 
     {
         $c->controller('solGS::Gebvs')->run_combine_traits_gebvs($c);
     }
@@ -169,18 +93,27 @@ print STDERR "\ngenetic corr file: $genetic_corr_file\n";
 
     my $ret->{status} = undef;
     my $json = JSON->new();
-    if ( -s $combined_gebvs_file )
+    if ( !-s $combined_gebvs_file ) 
     {
-        my $args_hash = $json->decode($args);
-        $args_hash->{gebvs_file} = $combined_gebvs_file;
-        $args_hash->{selection_index_file} = $selection_index_file;
-        $args_hash->{genotyping_protocol_id} = $protocol_id;
-        $ret->{status} = 'success';
-        $ret->{corre_args} = $json->encode($args_hash);
+        $ret->{status} = "There is no GEBVs input. Error occured combining the GEBVs of the traits.";
+    } 
+    else 
+    {   
+        $self->run_correlation_analysis($c);
+    }
+
+    if (-s $corre_json_file)
+    {
+        $ret->{status}   = 'success';
+        $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{corre_table_file} = $self->download_genetic_correlation_file($c);
+    }
+    else
+    {
+        $ret->{status}   = 'There is no correlation output. Error occured running the correlation. ';
     }
 
     $ret = $json->encode($ret);
-
     $c->res->content_type('application/json');
     $c->res->body($ret);
 
@@ -247,23 +180,6 @@ sub genetic_correlation_output_files {
     };
 
    $c->controller('solGS::Files')->cache_file($c, $json_cache_data);
-
-}
-
-
-sub run_genetic_correlation_analysis {
-    my ($self, $c) = @_;
-
-    $self->geno_corr_input_files($c);
-    $self->geno_corr_output_files($c);
-
-    $c->stash->{corre_input_files}  = $c->stash->{geno_corr_input_files};
-    $c->stash->{corre_output_files} = $c->stash->{geno_corr_output_files};
-
-    $c->stash->{correlation_type} = "genetic-correlation";
-    $c->stash->{correlation_script} = "R/solGS/genetic_correlation.r";
-
-    $self->run_correlation_analysis($c);
 
 }
 
@@ -375,7 +291,7 @@ sub geno_corr_input_files {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{corre_pop_id};
-    my $gebvs_file = $c->stash->{gebvs_file};
+    my $gebvs_file = $c->stash->{combined_gebvs_file};
     my $index_file = $c->stash->{selection_index_file};
 
     my $files = join ("\t",
@@ -408,7 +324,6 @@ sub corr_input_files {
         print STDERR "\ncorr input_files : type -- genetic\n";
     $self->geno_corr_input_files($c);
     $c->stash->{corre_input_files}  = $c->stash->{geno_corr_input_files};
-   
     $c->stash->{correlation_script} = "R/solGS/genetic_correlation.r";
     }
 
@@ -435,8 +350,12 @@ sub corr_output_files {
 sub run_correlation_analysis {
     my ($self, $c) = @_;
 
-    $self->corr_query_jobs_file($c);
-    my $queries_file = $c->stash->{corr_query_jobs_file};
+    my $queries_file;
+    if ($c->stash->{correlation_type} =~ /pheno/) 
+    {
+        $self->corr_query_jobs_file($c);
+        $queries_file = $c->stash->{corr_query_jobs_file};
+    }
 
     $self->corr_r_jobs_file($c);
     my $r_jobs_file = $c->stash->{corr_r_jobs_file};
