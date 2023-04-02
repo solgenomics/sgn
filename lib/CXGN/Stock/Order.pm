@@ -185,7 +185,7 @@ sub get_order_details {
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
 
-    push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments;
+    push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments, $order_to_id;
 
     return \@order_details;
 
