@@ -15,8 +15,8 @@ BEGIN {extends 'Catalyst::Controller'}
 sub get_pheno_data_query_job_args_file {
     my ($self, $c, $trials) = @_;
 
-    $self->get_cluster_phenotype_query_job_args($c, $trials);
-    my $pheno_query_args = $c->stash->{cluster_phenotype_query_job_args};
+    $self->get_trials_phenotype_query_jobs_args($c, $trials);
+    my $pheno_query_args = $c->stash->{trials_phenotype_query_jobs_args};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $pheno_query_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'phenotype_data_query_args_file');
@@ -82,8 +82,8 @@ sub training_pop_data_query_job_args {
 
 	if (!-s $c->stash->{phenotype_file_name})
 	{
-	    $self->get_cluster_phenotype_query_job_args($c, [$trial]);
-	    my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
+	    $self->get_trials_phenotype_query_jobs_args($c, [$trial]);
+	    my $pheno_query = $c->stash->{trials_phenotype_query_jobs_args};
 	    push @queries, @$pheno_query if $pheno_query;
 	}
 
@@ -193,8 +193,40 @@ sub get_cluster_genotype_query_job_args {
     $c->stash->{cluster_genotype_query_job_args} = \@queries;
 }
 
+sub create_phenotype_data_query_jobs {
+    my ( $self, $c, $pop_id ) = @_;
 
-sub get_cluster_phenotype_query_job_args {
+    my $data_str = $c->stash->{data_structure};
+    my $pheno_query_jobs;
+
+    if ( $data_str =~ /list/ ) {
+        $c->controller('solGS::List')->create_list_pheno_data_query_jobs($c);
+        $pheno_query_jobs = $c->stash->{list_pheno_data_query_jobs};
+    }
+    elsif ( $data_str =~ /dataset/ ) {
+        $c->controller('solGS::Dataset')->create_dataset_pheno_data_query_jobs($c);
+        $pheno_query_jobs = $c->stash->{dataset_pheno_data_query_jobs};
+    }
+    else {
+        my $trials;
+        if ($c->stash->{data_set_type} =~ /combined/) {
+            $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $pop_id );
+            $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+            $trials =  $c->stash->{combined_pops_list};
+        } else {
+            $c->stash->{training_pop_id} =  $pop_id;
+        }
+
+        $trials = [ $c->stash->{training_pop_id} ] if !$trials;
+      
+        $self->get_trials_phenotype_query_jobs_args( $c, $trials );
+        $pheno_query_jobs = $c->stash->{trials_phenotype_query_jobs_args};
+    }
+
+    return $pheno_query_jobs;
+}
+
+sub get_trials_phenotype_query_jobs_args {
     my ($self, $c, $trials) = @_;
 
     my @queries;
@@ -258,7 +290,7 @@ sub get_cluster_phenotype_query_job_args {
 	}
     }
 
-    $c->stash->{cluster_phenotype_query_job_args} = \@queries if @queries;
+    $c->stash->{trials_phenotype_query_jobs_args} = \@queries if @queries;
 
 }
 
