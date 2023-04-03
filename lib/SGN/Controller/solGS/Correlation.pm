@@ -232,36 +232,29 @@ sub pheno_corr_input_files {
 
     my $pop_id = $c->stash->{corre_pop_id};
     my $data_type = $c->stash->{data_type} || 'phenotype';
-    my $pheno_files;
-    my $metadata_file;
     my $input_files;
 
-    if ( $data_type =~ /phenotype/i ) {
-        if ($c->stash->{data_set_type} =~ /combined_populations/) 
+    if ( $data_type =~ /phenotype/i ) 
+    {
+        $input_files = $c->stash->{phenotype_files_list}
+        || $c->stash->{phenotype_file_name};
+
+        if (!$input_files)
         {
-            $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $pop_id );
-            $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $c->stash->{combined_pops_list});
-        } 
-        else 
-        {
-            $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id);
+            if ($c->stash->{data_set_type} =~ /combined_populations/) 
+            {
+                $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $pop_id );
+                $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $c->stash->{combined_pops_list});
+            } 
+            else 
+            {
+                $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id);
+            }
         }
-
-        $pheno_files = $c->stash->{multi_pops_pheno_files};
-        $pheno_files =$c->stash->{phenotype_file_name} if !$pheno_files;
-
         $c->controller('solGS::Files')->phenotype_metadata_file($c);
-        $metadata_file = $c->stash->{phenotype_metadata_file};
-
-        $input_files = join ("\t",
-            $pheno_files,
-            $metadata_file,
-            $c->req->referer,
-	    );
-       
+        my $metadata_file = $c->stash->{phenotype_metadata_file};
+        $input_files .= "\t" . $metadata_file;
     }
-
-   
 
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "pheno_corr_input_files_${pop_id}";
@@ -418,15 +411,13 @@ sub create_corr_phenotype_data_query_jobs {
     my ( $self, $c ) = @_;
 
     my $data_str = $c->stash->{data_structure};
-
+    my $corre_pop_id = $c->stash->{corre_pop_id};
     if ( $data_str =~ /list/ ) {
-        $c->stash->{list_id} = $c->stash->{corre_pop_id};
         $c->controller('solGS::List')->create_list_pheno_data_query_jobs($c);
         $c->stash->{corr_pheno_query_jobs} =
           $c->stash->{list_pheno_data_query_jobs};
     }
     elsif ( $data_str =~ /dataset/ ) {
-         $c->stash->{dataset_id} = $c->stash->{corre_pop_id};
         $c->controller('solGS::Dataset')
           ->create_dataset_pheno_data_query_jobs($c);
         $c->stash->{corr_pheno_query_jobs} =
@@ -434,13 +425,12 @@ sub create_corr_phenotype_data_query_jobs {
     }
     else {
         my $trials;
-        my $training_pop_id = $c->stash->{training_pop_id};
         if ($c->stash->{data_set_type} =~ /combined/) {
-            $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $training_pop_id );
+            $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $corre_pop_id );
             $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
             $trials =  $c->stash->{combined_pops_list};
         } else {
-            $c->stash->{training_pop_id} =  $c->stash->{corre_pop_id};
+            $c->stash->{training_pop_id} =  $corre_pop_id;
         }
 
         $trials = [ $c->stash->{training_pop_id} ] if !$trials;
