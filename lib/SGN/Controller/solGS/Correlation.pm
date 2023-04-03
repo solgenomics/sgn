@@ -38,7 +38,6 @@ sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0)
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
-     $c->stash->{correlation_type} = "pheno-correlation";
 
     $self->cache_pheno_corr_output_files($c);
     my $corre_json_file = $c->stash->{pheno_corr_json_file};
@@ -48,7 +47,6 @@ sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0)
     if (!-s $corre_json_file)
     {
 	    $c->controller('solGS::Utils')->save_metadata($c);
-        $c->stash->{correlation_type} = "pheno-correlation";
         $self->run_correlation_analysis($c);
     }
     
@@ -72,7 +70,6 @@ sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
-     $c->stash->{correlation_type} = "genetic-correlation";
 
     my $corre_pop_id = $c->stash->{corre_pop_id};
     my $pop_type = $c->stash->{pop_type};
@@ -407,40 +404,6 @@ sub corr_r_jobs_file {
 
 }
 
-sub create_corr_phenotype_data_query_jobs {
-    my ( $self, $c ) = @_;
-
-    my $data_str = $c->stash->{data_structure};
-    my $corre_pop_id = $c->stash->{corre_pop_id};
-    if ( $data_str =~ /list/ ) {
-        $c->controller('solGS::List')->create_list_pheno_data_query_jobs($c);
-        $c->stash->{corr_pheno_query_jobs} =
-          $c->stash->{list_pheno_data_query_jobs};
-    }
-    elsif ( $data_str =~ /dataset/ ) {
-        $c->controller('solGS::Dataset')
-          ->create_dataset_pheno_data_query_jobs($c);
-        $c->stash->{corr_pheno_query_jobs} =
-          $c->stash->{dataset_pheno_data_query_jobs};
-    }
-    else {
-        my $trials;
-        if ($c->stash->{data_set_type} =~ /combined/) {
-            $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $corre_pop_id );
-            $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-            $trials =  $c->stash->{combined_pops_list};
-        } else {
-            $c->stash->{training_pop_id} =  $corre_pop_id;
-        }
-
-        $trials = [ $c->stash->{training_pop_id} ] if !$trials;
-      
-        $c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args( $c, $trials );
-        $c->stash->{corr_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
-    }
-
-}
-
 sub corr_query_jobs {
     my ($self, $c) = @_;
 
@@ -449,8 +412,8 @@ sub corr_query_jobs {
     my $data_str = $c->stash->{data_structure};
     my $trials_ids = [];
 
-    $self->create_corr_phenotype_data_query_jobs($c);
-    my $jobs = $c->stash->{corr_pheno_query_jobs};
+    my $jobs = $c->controller('solGS::AsyncJob')->create_phenotype_data_query_jobs($c, $corre_pop_id);
+
     if (reftype $jobs ne 'ARRAY')
     {
 	    $jobs = [$jobs];
