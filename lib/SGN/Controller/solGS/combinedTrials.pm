@@ -586,13 +586,14 @@ sub multi_pops_pheno_files {
 
     if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
     {
+        my @pheno_files;
         foreach my $pop_id (@$pop_ids)
         {
 	    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
-	    $files .= $c->stash->{phenotype_file_name};
-            $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);
+	    push @pheno_files, $c->stash->{phenotype_file_name};
         }
 
+        $files = join("\t", @pheno_files);
         $c->stash->{multi_pops_pheno_files} = $files;
     }
     else
@@ -622,13 +623,14 @@ sub multi_pops_geno_files {
 
     if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
     {
+        my @geno_files;
         foreach my $pop_id (@$pop_ids)
         {
 	    	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-	    	$files .= $c->stash->{genotype_file_name};
-            $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);
+            push @geno_files, $c->stash->{genotype_file_name};
         }
 
+        $files = join("\t", @geno_files);
         $c->stash->{multi_pops_geno_files} = $files;
     }
     else
