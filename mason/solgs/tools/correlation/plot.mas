@@ -39,7 +39,6 @@ $data_structure => undef
 </style>
 
 <div id="correlation_canvas">
-
 <div id="correlation_message" class="message"> </div>
 <& /solgs/spinner/spinner.mas &>
 

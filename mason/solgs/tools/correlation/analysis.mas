@@ -56,7 +56,7 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.correlation"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.correlation", "save-svg-as-png.saveSvgAsPng"] &>
 
 % if ($url =~ /correlation\/analysis/) {
 
