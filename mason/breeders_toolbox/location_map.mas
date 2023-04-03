@@ -324,7 +324,7 @@ $user_id => undef
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-6 control-label">Nearest NOAA Weather Station ID: (<a href="https://www.ncdc.noaa.gov/cdo-web/datatools/findstation" target="_blank">Search Here</a>)</label>
+            <label class="col-sm-6 control-label"><i>Optional:</i> Nearest NOAA Weather Station ID (<a href="https://www.ncdc.noaa.gov/cdo-web/datatools/findstation" target="_blank">Search Here</a>)</label>
             <div class="col-sm-6">
                 <input class="form-control" name="location_noaa_station_id" id="location_noaa_station_id" type="text" placeholder="e.g. GHCND:USC00300331"/>
             </div>
@@ -383,6 +383,12 @@ jQuery(document).ready(function() {
         //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
         if (name == '') { alert('A location name is required.');  return; }
+        if (abbreviation == '') { alert('A location abbreviation is required.');  return; }
+        if ($('#location_country').val() == '') { alert('A location country is required.');  return; }
+        if (type == '') { alert('A location type is required.');  return; }
+        if (latitude == '') { alert('A location latitude is required.');  return; }
+        if (longitude == '') { alert('A location longitude is required.');  return; }
+        if (altitude == '') { alert('A location altitude is required.');  return; }
 
         $.ajax({
             type: 'POST',

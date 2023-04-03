@@ -73,6 +73,7 @@ for my $extension ("xls", "xlsx") {
         has_timestamps             => 0,
         overwrite_values           => 0,
         metadata_hash              => \%phenotype_metadata,
+        composable_validation_check_name => $f->config->{composable_validation_check_name}
     );
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     ok(!$verified_error);

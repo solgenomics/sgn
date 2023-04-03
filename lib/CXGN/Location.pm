@@ -193,9 +193,9 @@ sub store_location {
         	     description => $name,
         	    });
 
-            if ($longitude) { $new_row->longitude($longitude); }
-            if ($latitude) { $new_row->latitude($latitude); }
-            if ($altitude) { $new_row->altitude($altitude); }
+            if (length $longitude) { $new_row->longitude($longitude); }
+            if (length $latitude) { $new_row->latitude($latitude); }
+            if (length $altitude) { $new_row->altitude($altitude); }
             $new_row->insert();
 
             #$self->ndgeolocation_id($new_row->ndgeolocation_id());
