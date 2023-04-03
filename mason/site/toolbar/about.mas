@@ -7,16 +7,16 @@
     
     <li role="separator" class="divider"></li>
     
-    <li><a href="https://solgenomics.github.io/">Manual</a></li>
+    <li><a href="https://solgenomics.github.io/sgn">Manual</a></li>
     <li><a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A">Video Tutorials</a></li>
     <li><a href="/help/faq.pl">FAQ</a></li>
     <li><a href="/forum/topics.pl">Forum</a></li>
     <!-- li><a href="ftp://ftp.breedbase.org/">FTP site</a></li -->
     
-    <li role="separator" class="divider"></li>
+    <!-- li role="separator" class="divider"></li>
     
     <li><a href="http://www.slideshare.net/solgenomics" target="_blank">SlideShare</a></li>
     <li><a href="https://twitter.com/solgenomics" target="_blank">Twitter</a></li>
-    <li><a href="https://www.facebook.com/solgenomics" target="_blank">Facebook</a></li>
+    <li><a href="https://www.facebook.com/solgenomics" target="_blank">Facebook</a></li -->
   </ul>
 </li>
