@@ -231,12 +231,10 @@ sub formatted_phenotype_file {
 
 
 sub phenotype_file_name {
-    my ($self, $c, $pop_id, $trait_id) = @_;
-
-    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
-    # my $trait_id = $c-stash->{trait_id} if !$trait_id;
-
-    # if
+    my ($self, $c, $pop_id) = @_;
+    
+    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+ 
     my $dir;
     if ($pop_id =~ /list/)
     {
