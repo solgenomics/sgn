@@ -460,8 +460,8 @@ sub create_anova_phenotype_data_query_jobs {
     my ($self, $c) = @_;
 
     my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
-    $c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
-    my $jobs = $c->stash->{cluster_phenotype_query_job_args};
+    $c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, [$trial_id]);
+    my $jobs = $c->stash->{trials_phenotype_query_jobs_args};
 
     if (reftype $jobs ne 'ARRAY')
     {

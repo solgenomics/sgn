@@ -835,9 +835,9 @@ sub create_list_pheno_data_query_jobs {
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
       print STDERR "\nDone LIST : create_list_pheno_data_query_jobs -- multi_pop_pheno_filesn ";
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
-	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials_ids);
-      print STDERR "\nDONE LIST : create_list_pheno_data_query_jobs -- get_cluster_phenotype_query_job_args\n ";
-	$c->stash->{list_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
+	$c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, $trials_ids);
+      print STDERR "\nDONE LIST : create_list_pheno_data_query_jobs -- get_trials_phenotype_query_jobs_args\n ";
+	$c->stash->{list_pheno_data_query_jobs} = $c->stash->{trials_phenotype_query_jobs_args};
     }
 }
 
@@ -1053,7 +1053,7 @@ sub get_trials_list_pheno_data {
 
     #$c->controller('solGS::combinedTrials')->multi_pops_phenotype_data($c, $trials_ids);
     $c->controller('solGS::AsyncJob')->submit_cluster_phenotype_query($c, $trials_ids);
-    #$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials_ids);
+    #$c->controller('solGS::solGS')->get_trials_phenotype_query_jobs_args($c, $trials_ids);
 
     $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
     my @pheno_files = split("\t", $c->stash->{multi_pops_pheno_files});

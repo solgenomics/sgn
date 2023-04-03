@@ -352,8 +352,8 @@ sub create_pca_phenotype_data_query_jobs {
     else
     {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials);
-	$c->stash->{pca_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
+	$c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, $trials);
+	$c->stash->{pca_pheno_query_jobs} = $c->stash->{trials_phenotype_query_jobs_args};
     }
 
 }

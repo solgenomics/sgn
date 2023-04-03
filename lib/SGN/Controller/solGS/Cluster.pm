@@ -829,9 +829,9 @@ sub create_cluster_phenotype_data_query_jobs {
           || [ $c->stash->{training_pop_id} ]
           || [ $c->stash->{selection_pop_id} ];
         $c->controller('solGS::AsyncJob')
-          ->get_cluster_phenotype_query_job_args( $c, $trials );
+          ->get_trials_phenotype_query_jobs_args( $c, $trials );
         $c->stash->{cluster_pheno_query_jobs} =
-          $c->stash->{cluster_phenotype_query_job_args};
+          $c->stash->{trials_phenotype_query_jobs_args};
     }
 
 }

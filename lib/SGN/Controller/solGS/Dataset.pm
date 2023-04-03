@@ -194,8 +194,8 @@ sub create_dataset_pheno_data_query_jobs {
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
 
-	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials_ids);
-	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
+	$c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, $trials_ids);
+	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{trials_phenotype_query_jobs_args};
     }
 }
 
