@@ -90,10 +90,22 @@ solGS.correlation = {
     var dataTypeOpts= ['Phenotype', 'GEBVs'];
 		dataTypeOpts = this.createDataTypeSelect(dataTypeOpts, corrPopId);
 
+    
+    var listId;
+    var datasetId;
+
+    if (dataStr.match(/dataset/)) {
+      datasetId = selectId;
+    } else if (dataStr.match(/list/)) {
+      listId = selectId;
+    }
+
 		var runCorrId = this.corrRunCorrId(corrPopId);
     var correArgs = {
       'corre_pop_id': `${dataStr}_${selectId}`,
       'data_structure': dataStr,
+      'dataset_id': datasetId,
+      'list_id': listId,
       'corre_pop_name': selectName,
       'data_type': 'phenotype',
     }
