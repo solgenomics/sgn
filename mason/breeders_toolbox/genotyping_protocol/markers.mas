@@ -62,23 +62,19 @@ jQuery(document).ready(function(){
                      d.marker_names = jQuery('#markers_table_search_marker_name').val();
                 }
         },
-        "fnInitComplete": function(oSettings, json) {
-            if (!isLoggedIn()) {
-                jQuery('#markers_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-            } else {
-                var marker_names = genotyping_protocol_table.column(0).data();
-                var html = "";
-                for(var i=0; i<marker_names.length; i++){
-                    html += marker_names[i]+"\n";
-                }
-                jQuery("#markers_to_new_list").html(html);
-                addToListMenu("markers_add_to_list", "markers_to_new_list", {
-                    selectText: true,
-                    listType: 'markers',
-                });
-            }
-        }
+    });
 
+    jQuery('#protocol_markers_table').on( 'draw.dt', function (){
+        var marker_names = genotyping_protocol_table.column(0).data();
+        var html = "";
+        for(var i=0; i<marker_names.length; i++){
+            html += marker_names[i]+"\n";
+        }
+        jQuery("#markers_to_new_list").html(html);
+        addToListMenu("markers_add_to_list", "markers_to_new_list", {
+            selectText: true,
+            listType: 'markers',
+        });
     });
 
     jQuery('#marker_table_search_submit').click( function() {
