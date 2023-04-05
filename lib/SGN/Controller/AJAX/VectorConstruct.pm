@@ -166,6 +166,7 @@ sub create_vector_construct_POST {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
 
     my @added_stocks;
+    my @added_fullinfo_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
             my $species = $params->{species_name} || undef;
@@ -203,8 +204,9 @@ sub create_vector_construct_POST {
                     Promotors=>$promotors,
                     Terminators=>$terminators
                 });
-               my $added_stock_id = $stock->store();
+                my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
+                push @added_fullinfo_stocks, [$added_stock_id, $uniquename];
             }
         }
 
@@ -230,7 +232,11 @@ sub create_vector_construct_POST {
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
     }
 
-    $c->stash->{rest} = {response=>$status};
+    $c->stash->{rest} = {
+        response=>$status,
+        success => "1",
+        added => \@added_fullinfo_stocks
+    };
 }
 
 sub verify_vectors_file : Path('/ajax/vectors/verify_vectors_file') : ActionClass('REST') { }
