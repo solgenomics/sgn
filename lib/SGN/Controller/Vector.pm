@@ -53,11 +53,12 @@ sub vector_new :Path('/vector/new') Args(0) {
     my ($self, $c ) = @_;
     my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
     $c->stash(
-        template => '/stock/add_vector.mas',
+        
 
         stock_types => stock_types($self->schema),
         sp_person_autocomplete_uri => '/ajax/people/autocomplete',
-        editable_vector_props => \@editable_vector_props
+        editable_vector_props => \@editable_vector_props,
+        template => '/stock/add_vector.mas'
 	);
 
 }
