@@ -5,11 +5,39 @@ $protocol_id
 <div class="well well-sm">
     <div class="form form-horizontal" id="markers_table_search_form">
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Marker Name(s): </label>
-            <div class="col-sm-9" >
+            <label class="control-label col-sm-4">Filter by:</label>
+            <div class="col-sm-8">
+                <div class="input-group">
+                    <select class="form-control" id="filter_type">
+                        <option value="">Select a filtering type</option>
+                        <option value="marker_names">Marker Name(s)</option>
+                        <option value="chromosome_name">Chromosome Name</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm" id="filtering_by_markers" style="display: none">
+            <label class="col-sm-4 control-label">Marker Name(s): </label>
+            <div class="col-sm-8" >
                 <input class="form-control" id="markers_table_search_marker_name" type="text" placeholder="Marker name(s) (comma separated)"/>
             </div>
         </div>
+        <div class="form-group form-group-sm" id="filtering_by_chromosome" style="display: none">
+            <label class="col-sm-4 control-label">Chromosome Name: </label>
+            <div class="col-sm-8" >
+                <div class="input-group">
+                    <select class="form-control" id="search_by_chromosome">
+                        <option value="">Select a chromosome name</option>
+                    </select>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+
+
     </div>
     <center>
     <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
@@ -63,6 +91,36 @@ jQuery(document).ready(function(){
                 }
         },
     });
+
+    jQuery('#filter_type').change(function() {
+        jQuery('#filtering_by_markers').toggle(($('#filter_type').val() == 'marker_names')) ;
+        jQuery('#filtering_by_chromosome').toggle(($('#filter_type').val() == 'chromosome_name')) ;
+    });
+
+    jQuery.ajax({
+        url:'/ajax/breeder/search/genotyping_protocol_chromosomes',
+        data:{'genotyping_protocol':<% $protocol_id %>},
+        success: function(response){
+            console.log(response);
+            var html = '<select id = "search_by_chromosome" >';
+            for (var i=0; i<response.chromosome_names.length; i++) {
+                html = html + "<option value='"+response.chromosome_names[i][0]+ "'>" + response.chromosome_names[i][0] + "</option>";
+            }
+            html = html + "</select>";
+            console.log(html);
+
+            if(i ==''){
+                alert("No chromosome name");
+                return;
+            }
+
+            jQuery('#search_by_chromosome').html(html);
+        },
+        error:function(response){
+            alert("An error occurred");
+        }
+    });
+
 
     jQuery('#protocol_markers_table').on( 'draw.dt', function (){
         var marker_names = genotyping_protocol_table.column(0).data();
