@@ -233,4 +233,128 @@ sub create_vector_construct_POST {
     $c->stash->{rest} = {response=>$status};
 }
 
+sub verify_vectors_file : Path('/ajax/vectors/verify_vectors_file') : ActionClass('REST') { }
+sub verify_vectors_file_POST : Args(0) {
+    my ($self, $c) = @_;
+    
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this vector info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this vector info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $upload = $c->req->upload('new_vectors_upload_file');
+    my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_vectors') ? 0 : 1;
+
+    if ($user_role ne 'curator' && !$do_fuzzy_search) {
+        $c->stash->{rest} = {error=>'Only a curator can add vectors without using the fuzzy search!'};
+        $c->detach();
+    }
+
+    # These roles are required by CXGN::UploadFile
+    if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
+        $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
+        $c->detach();
+    }
+
+    my $subdirectory = "vectors_spreadsheet_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+
+    my @editable_vector_props = split ',', $c->config->{editable_vector_props};
+    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_vector_props, do_fuzzy_search=>$do_fuzzy_search);
+    $parser->load_plugin('VectorsXLS');
+    my $parsed_data = $parser->parse();
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
+        $c->detach();
+    }
+
+    my $full_data = $parsed_data->{parsed_data};
+    my @vector_names;
+    my %full_vectors;
+    while (my ($k,$val) = each %$full_data){
+        push @vector_names, $val->{germplasmName};
+        $full_vectors{$val->{germplasmName}} = $val;
+    }
+
+    my $new_list_id = CXGN::List::create_list($c->dbc->dbh, "VectorsIn".$upload_original_name.$timestamp, 'Autocreated when upload vectors from file '.$upload_original_name.$timestamp, $user_id);
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $new_list_id } );
+
+    $list->add_bulk(\@vector_names);
+    $list->type('vector_construct');
+
+    my %return = (
+        success => "1",
+        list_id => $new_list_id,
+        full_data => \%full_vectors,
+        absent => $parsed_data->{absent_vectors},
+        fuzzy => $parsed_data->{fuzzy_vectors},
+        found => $parsed_data->{found_vectors},
+        absent_organisms => $parsed_data->{absent_organisms},
+        fuzzy_organisms => $parsed_data->{fuzzy_organisms},
+        found_organisms => $parsed_data->{found_organisms}
+    );
+
+    if ($parsed_data->{error_string}){
+        $return{error_string} = $parsed_data->{error_string};
+    }
+
+        
+    $c->stash->{rest} = \%return;
+}
 1;
