@@ -4,35 +4,20 @@ $protocol_id
 
 <div class="well well-sm">
     <div class="form form-horizontal" id="markers_table_search_form">
-<!--
-        <div class="form-group form-group-sm">
-            <label class="control-label col-sm-4">Filter by:</label>
-            <div class="col-sm-8">
-                <div class="input-group">
-                    <select class="form-control" id="filter_type">
-                        <option value="">Select a filtering type</option>
-                        <option value="marker_names">Marker Name(s)</option>
-                        <option value="chromosome_name">Chromosome Name</option>
-                    </select>
-                </div>
-            </div>
-        </div>
--->
         <div class="form-group form-group-sm" id="filtering_by_markers" style="display: ">
             <label class="col-sm-4 control-label">Filter by Marker Name(s): </label>
             <div class="col-sm-8" >
                 <input class="form-control" id="markers_table_search_marker_name" type="text" placeholder="Marker name(s) (comma separated)"/>
             </div>
         </div>
-        <div class="form-group form-group-sm" id="filtering_by_markers" style="display: ">
+        <div class="form-group form-group-sm" id="filtering_by_markers">
             <label class="col-sm-4 control-label">OR</label>
         </div>
-        <div class="form-group form-group-sm" id="filtering_by_chromosome" style="display: ">
+        <div class="form-group form-group-sm" id="filtering_by_chromosome">
             <label class="col-sm-4 control-label">Filter by Chromosome: </label>
             <div class="col-sm-8" >
                 <div class="input-group">
                     <select class="form-control" id="search_by_chromosome">
-                        <option value="">Select a chromosome name</option>
                     </select>
                     </select>
                 </div>
@@ -105,16 +90,17 @@ jQuery(document).ready(function(){
         url:'/ajax/breeder/search/genotyping_protocol_chromosomes',
         data:{'genotyping_protocol':<% $protocol_id %>},
         success: function(response){
-            console.log(response);
+            var chromosomes = response.chromosome_names;
+            chromosomes.unshift([" ", " "]);
             var html = '<select id = "search_by_chromosome" >';
-            for (var i=0; i<response.chromosome_names.length; i++) {
-                html = html + "<option value='"+response.chromosome_names[i][0]+ "'>" + response.chromosome_names[i][0] + "</option>";
+            for (var i=0; i<chromosomes.length; i++) {
+                html = html + "<option value='"+chromosomes[i][0]+ "'>" + chromosomes[i][0] + "</option>";
             }
             html = html + "</select>";
             console.log(html);
 
             if(i ==''){
-                alert("No chromosome name");
+                alert("Could not get chromosome names");
                 return;
             }
 
