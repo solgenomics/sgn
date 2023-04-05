@@ -77,6 +77,7 @@ jQuery(document).ready(function(){
                   'data': function(d) {
                      d.protocol_id = <% $protocol_id %>;
                      d.marker_names = jQuery('#markers_table_search_marker_name').val();
+                     d.chromosome_name = jQuery('#search_by_chromosome').val();
                 }
         },
     });

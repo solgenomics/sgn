@@ -91,6 +91,7 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $params = $c->req->params() || {};
     my $protocol_id = $params->{protocol_id};
+    my $chromosome_name = $params->{chromosome_name};
     my @marker_names = $params->{marker_names} ? split ',', $params->{marker_names} : ();
     my $rows = $params->{length};
     my $offset = $params->{start};
@@ -104,7 +105,8 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
         marker_name_list => \@marker_names,
         #protocolprop_marker_hash_select=>['name', 'chrom', 'pos', 'alt', 'ref'] Use default which is all marker info
         limit => $limit,
-        offset => $offset
+        offset => $offset,
+        chromosome_name => $chromosome_name
     });
     my ($search_result, $total_count) = $marker_search->search();
 

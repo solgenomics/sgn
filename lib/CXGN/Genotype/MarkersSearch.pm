@@ -80,6 +80,12 @@ has 'offset' => (
     is => 'rw'
 );
 
+has 'chromosome_name' => (
+    isa => 'Str|Undef',
+    is => 'rw'
+);
+
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -89,6 +95,7 @@ sub search {
     my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $chromosome_name = $self->chromosome_name;
     my @data;
     my %search_params;
     my @where_clause;
@@ -157,14 +164,23 @@ sub search {
         }
         push @results, $marker_obj;
     }
-
+    print STDERR "MARKER RESULTS =".Dumper(\@results)."\n";
+    my @filtered_results;
+    if ($chromosome_name) {
+        foreach my $marker_info(@results){
+            if ($marker_info->{'chrom'} eq $chromosome_name) {
+                push @filtered_results, $marker_info;
+            }
+        }
+        @results = @filtered_results;
+    }
     my $count_q = "SELECT jsonb_array_length(value->'marker_names') FROM nd_protocolprop WHERE $protocol_where;";
     my $count_h = $schema->storage->dbh()->prepare($count_q);
     $count_h->execute();
     my ($total_marker_count) = $count_h->fetchrow_array();
-
+    
     return (\@results, $total_marker_count);
+
 }
 
 1;
-
