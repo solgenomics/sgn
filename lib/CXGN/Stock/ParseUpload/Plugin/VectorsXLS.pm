@@ -302,8 +302,10 @@ sub _parse_with_plugin {
     s/^\s+|\s+$//g for @vector_list;
     s/^\s+|\s+$//g for @organism_list;
 
+    if (scalar(@vector_list) <1) { return; }
+
     if ($do_fuzzy_search) {
-        my $fuzzy_search_result = $fuzzy_vector_search->get_matches(\@vector_list, $max_distance, 'accession');
+        my $fuzzy_search_result = $fuzzy_vector_search->get_matches(\@vector_list, $max_distance, 'vector_construct');
 
         $found_vectors = $fuzzy_search_result->{'found'};
         $fuzzy_vectors = $fuzzy_search_result->{'fuzzy'};
@@ -321,7 +323,7 @@ sub _parse_with_plugin {
         }
     } else {
         my $validator = CXGN::List::Validate->new();
-        my $absent_vectors = $validator->validate($schema, 'accessions', \@vector_list)->{'missing'};
+        my $absent_vectors = $validator->validate($schema, 'vector_construct', \@vector_list)->{'missing'};
         my %vectors_missing_hash = map { $_ => 1 } @$absent_vectors;
 
         foreach (@vector_list){
