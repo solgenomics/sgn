@@ -58,7 +58,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
@@ -77,7 +77,7 @@ $d->while_logged_in_as("submitter", sub {
 
    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
@@ -92,7 +92,7 @@ $d->while_logged_in_as("submitter", sub {
 
    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
@@ -108,7 +108,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="'. $plots_list_name . '"]', 'xpath', 'plots list')->click();
     sleep(10);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(2);
@@ -124,7 +124,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select clones list')->click();
     sleep(10);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
@@ -140,7 +140,7 @@ $d->while_logged_in_as("submitter", sub {
 
    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
     sleep(10);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
@@ -158,7 +158,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'accessions dataset')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(3);
@@ -174,7 +174,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $plots_dt_name . '"]', 'xpath', 'plots dataset')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(3);
@@ -191,7 +191,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(3);
@@ -207,7 +207,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(3);
