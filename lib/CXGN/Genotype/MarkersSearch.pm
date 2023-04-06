@@ -124,6 +124,19 @@ sub search {
             push @or_clause, "s.key = '$_'";
         }
     }
+
+    if ($chromosome_name) {
+        my $q= "SELECT value->'chromosomes'->?->'rank'
+        FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($chromosome_name, $protocol_id_list->[0], $vcf_map_details_cvterm_id);
+
+        my $protocolprop_rank = $h->fetchrow_array();
+        print STDERR "RANK =".Dumper($protocolprop_rank)."\n";
+        push @where_clause, "nd_protocolprop.rank = $protocolprop_rank";
+    }
+
     push @where_clause, "nd_protocolprop.type_id = $vcf_map_details_markers_cvterm_id";
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
@@ -165,20 +178,12 @@ sub search {
         push @results, $marker_obj;
     }
     print STDERR "MARKER RESULTS =".Dumper(\@results)."\n";
-    my @filtered_results;
-    if ($chromosome_name) {
-        foreach my $marker_info(@results){
-            if ($marker_info->{'chrom'} eq $chromosome_name) {
-                push @filtered_results, $marker_info;
-            }
-        }
-        @results = @filtered_results;
-    }
+
     my $count_q = "SELECT jsonb_array_length(value->'marker_names') FROM nd_protocolprop WHERE $protocol_where;";
     my $count_h = $schema->storage->dbh()->prepare($count_q);
     $count_h->execute();
     my ($total_marker_count) = $count_h->fetchrow_array();
-    
+
     return (\@results, $total_marker_count);
 
 }
