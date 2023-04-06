@@ -293,6 +293,7 @@ sub stash_json_args {
     my $json = JSON->new();
     my $args_hash = $json->decode($args_json);
     my $data_set_type = $args_hash->{'data_set_type'};
+    my $data_str = $args_hash->{'data_structure'};
 
     my $protocol_id =  $args_hash->{'genotyping_protocol_id'};
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
@@ -325,7 +326,15 @@ sub stash_json_args {
         }
         else
         {
+            no warnings 'uninitialized';
             $c->stash->{$key} = $val;
+
+            if ($data_str =~ /dataset|list/  && $key =~ /_pop_id/)
+            {
+                my $name = "${data_str }_id";
+                $val =~ s/\w+_//g;
+                $c->stash->{$name } = $val;
+            }
         }
     }
 
@@ -341,7 +350,6 @@ sub generic_message {
     my ($self, $c, $msg) = @_;
 
     $c->stash->{message} = $msg;
-
     $c->stash->{template} = "/generic_message.mas";
 }
 
