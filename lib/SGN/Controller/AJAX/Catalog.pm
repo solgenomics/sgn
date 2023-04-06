@@ -34,6 +34,10 @@ sub add_catalog_item_POST : Args(0) {
     my $item_breeding_program_id = $c->req->param('breeding_program_id');
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
+    my $availability = $c->req->param('availability');
+    if (!$availability) {
+        $availability = 'available';
+    }
 
     my $item_stock_id;
     if (!$c->user()) {
@@ -89,6 +93,7 @@ sub add_catalog_item_POST : Args(0) {
     $stock_catalog->species($item_species);
     $stock_catalog->variety($item_variety);
     $stock_catalog->breeding_program($item_breeding_program_id);
+    $stock_catalog->availability($availability);
     $stock_catalog->additional_info($item_additional_info);
     $stock_catalog->contact_person_id($sp_person_id);
 
@@ -265,6 +270,10 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
         my $program_id = $item_details[7];
         my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
         my $program_name = $program_rs->name();
+        my $availability = $item_details[8];
+        if (!$availability) {
+            $availability = 'available';
+        }
 
         push @catalog_items, {
             item_id => $item_id,
@@ -277,6 +286,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
             material_source => $item_details[5],
             additional_info => $item_details[6],
             breeding_program => $program_name,
+            availability => $availability
         };
     }
 

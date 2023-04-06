@@ -160,9 +160,14 @@ my $list_items = $list->elements();
 
 #test storing an order from janedoe, to johndoe
 
+my $before_adding_an_order = $people_schema->resultset('SpOrder')->search( { order_to_id => $johndoe_id })->count();
+
 $mech->post_ok('http://localhost:3010/ajax/order/submit', ['list_id' => $your_cart_id,]);
 $response = decode_json $mech->content;
 is($response->{'success'}, 'Your order has been submitted successfully and the vendor has been notified.');
+
+my $after_adding_an_order = $people_schema->resultset('SpOrder')->search( { order_to_id => $johndoe_id })->count();
+is($after_adding_an_order, $before_adding_an_order + 1);
 
 #delete your cart
 CXGN::List::delete_list($dbh, $your_cart_id);
@@ -193,6 +198,24 @@ is($order->{'contact_person_comments'}, undef);
 my $clone_list = $order->{'clone_list'};
 my $vendor_num_items = @$clone_list;
 is($vendor_num_items, '2');
+
+#test updating order status by johndoe
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => '1', order_to_id => $johndoe_id, order_status => 'completed', completion_date => $timestamp, comments => 'updated by johndoe'});
+my $updated_order = $order_obj->store();
+my $after_updating_an_order = $people_schema->resultset('SpOrder')->search( { order_to_id => $johndoe_id })->count();
+is($after_updating_an_order, $after_adding_an_order);
+
+#test re-opening an order by janedoe
+$mech->post_ok('http://localhost:3010/ajax/order/update', ['order_id' => '1', 'new_status' => 're-opened', 'contact_person_comments' => 'test re-opening an order' ]);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $re_opened_order = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => '1' });
+my $order_result = $re_opened_order->get_order_details();
+my $order_status = $order_result->[5];
+is($order_status, 're-opened by Jane Doe');
 
 #test_single_step_submission
 $mech->post_ok('http://localhost:3010/ajax/order/single_step_submission', ['item_name' => 'UG120001', 'order_details' => '{"Quantity":"2","Comments":""}']);
