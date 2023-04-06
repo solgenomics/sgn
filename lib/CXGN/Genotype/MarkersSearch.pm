@@ -125,6 +125,7 @@ sub search {
         }
     }
 
+    my $protocolprop_rank;
     if ($chromosome_name) {
         my $q= "SELECT value->'chromosomes'->?->'rank'
         FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
@@ -132,9 +133,11 @@ sub search {
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($chromosome_name, $protocol_id_list->[0], $vcf_map_details_cvterm_id);
 
-        my $protocolprop_rank = $h->fetchrow_array();
+        $protocolprop_rank = $h->fetchrow_array();
         print STDERR "RANK =".Dumper($protocolprop_rank)."\n";
-        push @where_clause, "nd_protocolprop.rank = $protocolprop_rank";
+        if ($protocolprop_rank) {
+            push @where_clause, "nd_protocolprop.rank = $protocolprop_rank";
+        }
     }
 
     push @where_clause, "nd_protocolprop.type_id = $vcf_map_details_markers_cvterm_id";
