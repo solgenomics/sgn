@@ -375,7 +375,7 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type &>
 % } #End genotyping_protocol_details
 % if ($info_section_id eq 'genotyping_protocol_markers'){
-                                <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id &>
+                                <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id, protocol_name => $protocol_name &>
 % } #End genotyping_protocol_markers
 % if ($info_section_id eq 'genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>

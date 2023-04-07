@@ -1,5 +1,6 @@
 <%args>
 $protocol_id
+$protocol_name
 </%args>
 
 <div class="well well-sm">
@@ -66,6 +67,12 @@ $protocol_id
 <script>
 
 jQuery(document).ready(function(){
+    var protocol_name = "<% $protocol_name %>";
+    var protocol_id = "<% $protocol_id %>";
+    var protocol_info = {};
+    protocol_info['Protocol Name'] = protocol_name;
+    protocol_info['Protocol ID'] = protocol_id;
+    var genotyping_protocol = JSON.stringify(protocol_info);
 
     var genotyping_protocol_table = jQuery('#protocol_markers_table').DataTable({
         'searching' : false,
@@ -123,6 +130,7 @@ jQuery(document).ready(function(){
         addToListMenu("markers_add_to_list", "markers_to_new_list", {
             selectText: true,
             listType: 'markers',
+            description: genotyping_protocol
         });
     });
 

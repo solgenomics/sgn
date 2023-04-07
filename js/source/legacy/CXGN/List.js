@@ -1133,6 +1133,7 @@ function refreshListSelect(div_name, types) {
     - selectText: if the dataDiv is an html select and selectText is true, the text and not the value will be copied into the list
     - listType: the type of lists to display in the menu
     - typesSourceDiv: obtain the type from this source div
+    - description: additional info for some list types
 
 
 */
@@ -1147,6 +1148,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
     var type;
     var addition_type;
     var list_name_value = "";
+    var description;
 
     if (options) {
         if (options.selectText) {
@@ -1166,6 +1168,9 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
         }
         if (options.listName){
             list_name_value = options.listName;
+        }
+        if (options.description){
+            description = options.description;
         }
     }
 
@@ -1188,7 +1193,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
         var addition_type = jQuery('#'+dataDiv+'_addition_type').val();
 
         var data = getData(dataDiv, selectText);
-        list_id = lo.newList(new_name);
+        list_id = lo.newList(new_name, description);
         if (list_id > 0) {
             var elementsAdded;
             if (addition_type == 'cross_progeny') {
