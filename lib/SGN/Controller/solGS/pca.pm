@@ -32,7 +32,7 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 }
 
 
-sub pca_run :Path('/pca/run/') Args() {
+sub run_pca_analysis :Path('/run/pca/analysis') Args() {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
@@ -114,37 +114,6 @@ sub download_pca_variances : Path('/download/pca/variances/population') Args(1) 
 
 }
 
-
-sub pca_genotypes_list :Path('/pca/genotypes/list') Args(0) {
-    my ($self, $c) = @_;
-
-    my $list_id   = $c->req->param('list_id');
-    my $list_name = $c->req->param('list_name');
-    my $list_type = $c->req->param('list_type');
-    my $pop_id    = $c->req->param('population_id');
-
-    $c->stash->{list_name} = $list_name;
-    $c->stash->{list_id}   = $list_id;
-    $c->stash->{pop_id}    = $pop_id;
-    $c->stash->{list_type} = $list_type;
-
-    $c->stash->{data_set_type} = 'list';
-    $self->create_pca_genotype_data($c);
-
-    my $geno_file = $c->stash->{genotype_file};
-
-    my $ret->{status} = 'failed';
-    if (-s $geno_file )
-    {
-        $ret->{status} = 'success';
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
 
 sub prepare_pca_output_response {
     my ($self, $c) = @_;
@@ -267,191 +236,31 @@ sub format_pca_scores {
 }
 
 
-sub pca_dataset_genotype_data {
-    my ($self, $c) = @_;
-
-    my $model = $c->controller('solGS::Dataset')->get_model();
-    my $data = $model->get_dataset_data($c->stash->{dataset_id});
-    my $accessions = $data->{categories}->{accessions};
-    my $trials = $data->{categories}->{trials};
-
-    if ($accessions->[0])
-    {
-	$c->controller('solGS::Dataset')->get_dataset_genotypes_genotype_data($c);
-    }
-    elsif ($trials->[0])
-    {
-	$c->stash->{pops_ids_list} = $trials;
-	$c->controller('solGS::List')->get_trials_list_geno_data($c);
-	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-    }
-
-}
-
-
-sub pca_list_genotype_data {
-    my ($self, $c) = @_;
-
-    my $list_id = $c->stash->{list_id};
-    my $list_type = $c->stash->{list_type};
-
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-
-    my $data_set_type = $c->stash->{data_set_type};
-    my $referer       = $c->req->referer;
-    my $geno_file;
-
-    if ($referer =~ /solgs\/trait\/\d+\/population\//)
-    {
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-    }
-    elsif ($referer =~ /solgs\/selection\//)
-    {
-	$c->stash->{pops_ids_list} = [$c->stash->{training_pop_id},  $c->stash->{selection_pop_id}];
-	$c->controller('solGS::solGS')->genotype_file($c);
-	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-    }
-    elsif ($referer =~ /pca\/analysis\// && $data_set_type =~ 'combined_populations')
-    {
-	$c->controller('solGS::List')->get_trials_list_geno_data($c);
-	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-    }
-    else
-    {
-	if ($list_type eq 'accessions')
-	{
-	    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
-	}
-	elsif ( $list_type eq 'trials')
-	{
-	    $c->controller('solGS::List')->get_list_trials_ids($c);
-	    $c->stash->{pops_ids_list} = $c->stash->{trials_ids};
-	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
-	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-	}
-    }
-
-}
-
-
-sub create_pca_phenotype_data_query_jobs {
-    my ($self, $c) = @_;
-
-    my $data_str = $c->stash->{data_structure};
-
-    if ($data_str =~ /list/)
-    {
-	$c->controller('solGS::List')->create_list_pheno_data_query_jobs($c);
-	$c->stash->{pca_pheno_query_jobs} = $c->stash->{list_pheno_data_query_jobs};
-    }
-    elsif ($data_str =~ /dataset/)
-    {
-	$c->controller('solGS::Dataset')->create_dataset_pheno_data_query_jobs($c);
-	$c->stash->{pca_pheno_query_jobs} = $c->stash->{dataset_pheno_data_query_jobs};
-    }
-    else
-    {
-	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-	$c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, $trials);
-	$c->stash->{pca_pheno_query_jobs} = $c->stash->{trials_phenotype_query_jobs_args};
-    }
-
-}
-
-
-sub create_pca_genotype_data_query_jobs {
-    my ($self, $c) = @_;
-
-    my $data_str = $c->stash->{data_structure};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    if ($data_str =~ /list/)
-    {
-	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
-	$c->stash->{pca_geno_query_jobs} = $c->stash->{list_geno_data_query_jobs};
-    }
-    elsif ($data_str =~ /dataset/)
-    {
-	$c->controller('solGS::Dataset')->create_dataset_geno_data_query_jobs($c);
-	$c->stash->{pca_geno_query_jobs} = $c->stash->{dataset_geno_data_query_jobs};
-    }
-    else
-    {
-	if ($c->req->referer =~ /solgs\/selection\//)
-	{
-	    $c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
-	}
-
-	my $trials_ids;
-
-	if ($c->stash->{pops_ids_list})
-	{
-	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-	    $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $c->stash->{pops_ids_list}, $protocol_id);
-	    $c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
-	}
-
-	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-
-	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
-	$c->stash->{pca_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
-    }
-
-}
-
-
 sub pca_query_jobs {
     my ($self, $c) = @_;
 
     my $data_type = $c->stash->{data_type};
+    my $pca_pop_id = $c->stash->{pca_pop_id};
+    my $protocol_id =  $c->stash->{genotyping_protocol_id};
 
     my $jobs = [];
 
     if ($data_type =~ /phenotype/i)
     {
-	$self->create_pca_phenotype_data_query_jobs($c);
-	$jobs = $c->stash->{pca_pheno_query_jobs};
+    $jobs = $c->controller('solGS::AsyncJob')->create_phenotype_data_query_jobs($c, $pca_pop_id);
     }
     elsif ($data_type =~ /genotype/i)
     {
-	$self->create_pca_genotype_data_query_jobs($c);
-	$jobs = $c->stash->{pca_geno_query_jobs};
+    print STDERR "\npcaquery jobs popid: $pca_pop_id\n";
+    $jobs = $c->controller('solGS::AsyncJob')->create_genotype_data_query_jobs($c, $pca_pop_id, $protocol_id);
     }
-
+    
     if (reftype $jobs ne 'ARRAY')
     {
 	$jobs = [$jobs];
     }
 
     $c->stash->{pca_query_jobs} = $jobs;
-}
-
-
-sub create_pca_phenotype_data {
-    my ($self, $c) = @_;
-
-    my $data_structure = $c->stash->{data_structure};
-    my $referer = $c->req->referer;
-    my $combo_pops_id = $c->stash->{combo_pops_id};
-
-    if ($data_structure =~ /list/)
-    {
-      $c->controller('solGS::List')->list_phenotype_data($c);
-
-    }
-    elsif ($data_structure =~ /dataset/)
-    {
-	$c->controller('solGS::Dataset')->get_dataset_phenotype_data($c);
-    }
-    elsif ($referer =~ /solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/)
-    {
-	$c->controller('solGS::solGS')->phenotype_file($c);
-    }
-    elsif ($combo_pops_id)
-    {
-	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
-    }
-
 }
 
 
