@@ -11,6 +11,61 @@ var solGS = solGS || function solGS() {};
 
 solGS.pca = {
 
+
+	getPcaArgs: function() {
+
+		var page = location.pathname;
+		var pcaPopId;
+		var pcaUrlArgs;
+		var dataStr;
+		var trainingPopId;
+		var selectionPopId;
+
+		if (page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\/|\/breeders\/trial\//)) {
+
+			trainingPopId = jQuery("#training_pop_id").val();
+			if (!trainingPopId) {
+				trainingPopId = jQuery("#trial_id").val();
+			}
+			pcaPopId = trainingPopId;
+		}  else if (page.match(/\/selection\/|\/prediction\//)) {
+
+			selectionPopId = jQuery("#selection_pop_id").val();
+			pcaPopId = selectionPopId;
+
+		} else if (page.match(/solgs\/traits\/all\/population\/|models\/combined\/trials\//)) {
+			trainingPopId = jQuery("#training_pop_id").val();
+			pcaPopId = trainingPopId;
+			
+		} else if (page.match(/pca\/analysis/)) {
+
+			pcaUrlArgs = this.getPcaArgsFromUrl();
+			pcaPopId = pcaPopUrlArgs.pca_pop_id;
+			dataStr = pcaUrlArgs.data_structure;
+			protocolId = pcaUrlArgs.genotyping_protocol_id;
+
+		}
+
+		if (page.match(/combined/)) {
+			var comboPopsId =  trainingPopId;
+		}
+
+		var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId('pca_div');
+		var traitId = jQuery("#trait_id").val();
+
+		return {
+			'pca_pop_id': pcaPopId,
+			'training_pop_id': trainingPopId,
+			'combo_pops_id': comboPopsId,
+			'selection_pop_id': selectionPopId,
+			'data_structure': dataStr,
+			'genotyping_protocol_id': protocolId,
+			'trait_id': traitId,
+			'analysis_type': 'pca analysis'
+		};
+	},
+
+
 	getPcaArgsFromUrl: function() {
 
 		var page = location.pathname;
@@ -130,7 +185,6 @@ solGS.pca = {
 	pcaRun: function(selectId, selectName, dataStructure) {
 
 		var dataType;
-
 		if (selectId) {
 			dataType = jQuery('#' + selectId + ' #pca_data_type_select').val();
 		} else {
@@ -138,12 +192,15 @@ solGS.pca = {
 		}
 
 		var traitId = jQuery('#trait_id').val();
-		var popDetails = solGS.getPopulationDetails();
+		var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId('pca_div');
 
 		var listId;
 		var datasetId;
 		var datasetName;
 		var pcaPopId;
+		var pcaArgs;
+
+		if (location.pathname.match(/pca\/analysis/)) {
 		if (dataStructure == 'list') {
 			listId = selectId;
 			pcaPopId = 'list_' + selectId;
@@ -153,47 +210,36 @@ solGS.pca = {
 			datasetName = selectName;
 		}
 
-
 		var validateArgs = {
 			'data_id': selectId,
 			'data_structure': dataStructure,
 			'data_type': dataType,
 		};
 
-
 		var message = this.validatePcaParams(validateArgs);
 
-		if (message != undefined) {
+		if (message) {
 			jQuery("#pca_message")
 				.prependTo(jQuery("#pca_canvas"))
 				.html(message)
 				.show().fadeOut(9400);
 
 		} else {
-			if (!pcaPopId) {
-				pcaPopId = popDetails.training_pop_id || popDetails.combo_pops_id;
-				if (popDetails.selection_pop_id) {
-					pcaPopId = pcaPopId + '-' + popDetails.selection_pop_id;
-				}
-			}
 
-			var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId('pca_div');
-			
-			var pcaArgs = {
-				'training_pop_id': [popDetails.training_pop_id],
-				'selection_pop_id': [popDetails.selection_pop_id],
-				'combo_pops_id': [popDetails.combo_pops_id],
+			pcaArgs = {
 				'pca_pop_id': pcaPopId,
 				'list_id': listId,
 				'data_type': dataType,
 				'data_structure': dataStructure,
 				'dataset_id': datasetId,
 				'dataset_name': datasetName,
-				'trait_id': [traitId],
 				'genotyping_protocol_id': protocolId,
 				'analysis_type': 'pca analysis'
 			};
-
+		} }
+		else {
+			pcaArgs = this.getPcaArgs();
+		}
 			var solgsPages = 'solgs/population/' +
 				'|solgs/populations/combined/' +
 				'|solgs/trait/' +
@@ -214,7 +260,7 @@ solGS.pca = {
 
 			this.checkCachedPca(page, pcaArgs);
 			//this.runPcaAnalysis(pcaArgs);
-		}
+		// }
 
 	},
 
@@ -234,7 +280,7 @@ solGS.pca = {
 				if (res.cached) {		
 					solGS.pca.runPcaAnalysis(args);
 				} else {
-					solGS.pca.selectAnalysisOption(page, args);
+					solGS.pca.optJobSubmission(page, args);
 				}
 			},
 			error: function() {
@@ -243,7 +289,7 @@ solGS.pca = {
 		});
 	},
 
-	selectAnalysisOption: function(page, args) {
+	optJobSubmission: function(page, args) {
 		var title = '<p>This analysis may take a long time. ' +
 			'Do you want to submit the analysis and get an email when it completes?</p>';
 
@@ -312,7 +358,7 @@ solGS.pca = {
 			data: {
 				'arguments': pcaArgs
 			},
-			url: '/pca/run',
+			url: '/run/pca/analysis',
 			success: function(res) {
 
 				jQuery("#pca_canvas .multi-spinner-container").hide();
