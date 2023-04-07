@@ -3,7 +3,7 @@
 
 =head1 Vectors.js
 
-Dialogs for managing accessions
+Dialogs for managing vectors
 
 
 =head1 AUTHOR
@@ -16,13 +16,13 @@ Mirella Flores<mrf252@cornell.edu>
 
 var $j = jQuery.noConflict();
 var list = new CXGN.List();
-var accessionList;
-var accession_list_id;
+var vectorList;
+var vector_list_id;
 var validSpecies;
 var fuzzyResponse;
 var fullParsedData;
 var infoToAdd;
-var accessionListFound;
+var vectorListFound;
 var speciesNames;
 var doFuzzySearch;
 
@@ -103,13 +103,13 @@ jQuery(document).ready(function ($) {
     $('#review_absent_vectors_submit').click(function () {
         if (fullParsedData == undefined){
             var speciesName = $("#species_name_input").val();
-            var accessionsToAdd = accessionList;
+            var vectorsToAdd = vectorList;
             if (!speciesName) {
                 alert("Species name required");
                 return;
             }
 
-            if (!accessionsToAdd || accessionsToAdd.length == 0) {
+            if (!vectorsToAdd || vectorsToAdd.length == 0) {
                 alert("No vectors to add");
                 return;
 	        }
@@ -118,10 +118,10 @@ jQuery(document).ready(function ($) {
                 function(r) {
                     if (r.error) { alert(r.error); }
                     else {
-                    for(var i=0; i<accessionsToAdd.length; i++){
+                    for(var i=0; i<vectorsToAdd.length; i++){
                         infoToAdd.push({
                         'species_name':speciesName,
-                        'defaultDisplayName':accessionsToAdd[i],
+                        'defaultDisplayName':vectorsToAdd[i],
                         });
                         speciesNames.push(speciesName);
                     }
@@ -138,7 +138,6 @@ jQuery(document).ready(function ($) {
         add_vectors(infoToAdd, speciesNames);
         $('#review_absent_dialog').modal("hide");
 
-        //window.location.href='/breeders/accessions';
     });
 
     $('#new_vectors_submit').click(function () {
@@ -151,7 +150,7 @@ jQuery(document).ready(function ($) {
 	    }
 	    jQuery("#upload_new_vectors_form").submit();
 
-	$('#add_accessions_dialog').modal("hide");
+	$('#add_vectors_dialog').modal("hide");
     });
 
     jQuery('#upload_new_vectors_form').iframePostForm({
@@ -205,7 +204,7 @@ jQuery(document).ready(function ($) {
 
 	$(document).on('change', 'select[name="fuzzy_option"]', function() {
 		var value = $(this).val();
-		if ($('#add_accession_fuzzy_option_all').is(":checked")){
+		if ($('#add_vector_fuzzy_option_all').is(":checked")){
 			$('select[name="fuzzy_option"] option[value='+value+']').attr('selected','selected');
 		}
 	});
@@ -213,7 +212,7 @@ jQuery(document).ready(function ($) {
     $('#review_fuzzy_matches_download').click(function(){
         console.log(fuzzyResponse);
         openWindowWithPost(JSON.stringify(fuzzyResponse));
-        //window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
+        //window.open('/ajax/vector_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
     });
 
     jQuery('#review_absent_dialog').on('shown.bs.modal', function (e) {
@@ -228,32 +227,32 @@ jQuery(document).ready(function ($) {
 });
 
 function openWindowWithPost(fuzzyResponse) {
-    var f = document.getElementById('add_accession_fuzzy_match_download');
+    var f = document.getElementById('add_vector_fuzzy_match_download');
     f.fuzzy_response.value = fuzzyResponse;
     window.open('', 'TheWindow');
     f.submit();
 }
 
-function review_verification_results(doFuzzySearch, verifyResponse, accession_list_id){
+function review_verification_results(doFuzzySearch, verifyResponse, vector_list_id){
     var i;
     var j;
-    accessionListFound = {};
-    accessionList = [];
+    vectorListFound = {};
+    vectorList = [];
     infoToAdd = [];
     speciesNames = [];
     //console.log(verifyResponse);
-    //console.log(accession_list_id);
+    //console.log(vector_list_id);
 
     if (verifyResponse.found) {
-        jQuery('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
-        var found_html = '<table class="table table-bordered" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
+        jQuery('#count_of_found_vectors').html("Total number already in the database("+verifyResponse.found.length+")");
+        var found_html = '<table class="table table-bordered" id="found_vectors_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.found.length; i++){
             found_html = found_html
                 +'<tr><td>'+verifyResponse.found[i].matched_string
                 +'</td><td>'
                 +verifyResponse.found[i].unique_name
                 +'</td></tr>';
-            accessionListFound[verifyResponse.found[i].unique_name] = 1;
+            vectorListFound[verifyResponse.found[i].unique_name] = 1;
         }
         found_html = found_html +'</tbody></table>';
 
@@ -261,16 +260,16 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
 
         jQuery('#review_found_matches_dialog').modal('show');
 
-        jQuery('#found_accessions_table').DataTable({});
+        jQuery('#found_vectors_table').DataTable({});
 
-        accessionList = verifyResponse.absent;
+        vectorList = verifyResponse.absent;
     }
 
     if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
         fuzzyResponse = verifyResponse.fuzzy;
-        var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
+        var fuzzy_html = '<table id="add_vector_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp&nbsp;<input type="checkbox" id="add_vector_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.fuzzy.length; i++) {
-            fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
+            fuzzy_html = fuzzy_html + '<tr id="add_vector_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
             fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
             for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                 if (verifyResponse.fuzzy[i].matches[j].is_synonym){
@@ -288,7 +287,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
         for( i=0; i < verifyResponse.fuzzy.length; i++) {
             verifyResponse.absent.push(verifyResponse.fuzzy[i].name);
         }
-        accessionList = verifyResponse.absent;
+        vectorList = verifyResponse.absent;
     }
 
     if (verifyResponse.full_data){
@@ -314,13 +313,13 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
-                alert('All accessions in your list already exist in the database. (3)');
+                alert('All vectors in your list already exist in the database. (3)');
             }
         }
     });
 
     jQuery(document).on('click', '#review_fuzzy_matches_continue', function(){
-        process_fuzzy_options(accession_list_id);
+        process_fuzzy_options(vector_list_id);
     });
 
 }
@@ -329,7 +328,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
     console.log(infoToAdd);
     console.log(absent);
 
-    jQuery('#count_of_absent_accessions').html("Total number to be added("+absent.length+")");
+    jQuery('#count_of_absent_vectors').html("Total number to be added("+absent.length+")");
     var absent_html = '';
     jQuery("#species_name_input").autocomplete({
         source: '/organism/autocomplete'
@@ -344,7 +343,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
     jQuery('#view_infoToAdd').html('');
 
     if (infoToAdd.length>0){
-        var infoToAdd_html = '<div class="well"><b>The following new accessions will be added:</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        var infoToAdd_html = '<div class="well"><b>The following new vectors will be added:</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
         for( i=0; i < infoToAdd.length; i++){
             if (!('stock_id' in infoToAdd[i])){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
@@ -363,7 +362,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
             }
         }
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
-        infoToAdd_html = infoToAdd_html + '<div class="well"><b>The following accessions will be updated:</b><br/><br/><table id="infoToAdd_updated_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        infoToAdd_html = infoToAdd_html + '<div class="well"><b>The following vectors will be updated:</b><br/><br/><table id="infoToAdd_updated_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
         for( i=0; i < infoToAdd.length; i++){
             if ('stock_id' in infoToAdd[i]){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
@@ -383,17 +382,14 @@ function populate_review_absent_dialog(absent, infoToAdd){
         }
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
         jQuery('#view_infoToAdd').html(infoToAdd_html);
-        jQuery('#add_accessions_using_list_inputs').hide();
-    } else {
-        jQuery('#add_accessions_using_list_inputs').show();
     }
 
     jQuery('#review_absent_dialog').modal('show');
 }
 
-function process_fuzzy_options(accession_list_id) {
+function process_fuzzy_options(vector_list_id) {
     var data={};
-    jQuery('#add_accession_fuzzy_table').find('tr').each(function(){
+    jQuery('#add_vector_fuzzy_table').find('tr').each(function(){
         var id=jQuery(this).attr('id');
         if (id !== undefined){
             var row={};
@@ -413,37 +409,37 @@ function process_fuzzy_options(accession_list_id) {
     console.log(data);
     jQuery.ajax({
         type: 'POST',
-        url: '/ajax/accession_list/fuzzy_options',
+        url: '/ajax/vector_list/fuzzy_options',
         dataType: "json",
         data: {
-            'accession_list_id': accession_list_id,
+            'vector_list_id': vector_list_id,
             'fuzzy_option_data': JSON.stringify(data),
-            'names_to_add': JSON.stringify(accessionList)
+            'names_to_add': JSON.stringify(vectorList)
         },
         success: function (response) {
             //console.log(response);
             infoToAdd = [];
             speciesNames = [];
-            accessionList = response.names_to_add;
-            if (accessionList.length > 0){
+            vectorList = response.names_to_add;
+            if (vectorList.length > 0){
 
                 if (fullParsedData != null){
-                    for (var i=0; i<accessionList.length; i++){
-                        var accession_name = accessionList[i];
-                        infoToAdd.push(fullParsedData[accession_name]);
-                        speciesNames.push(fullParsedData[accession_name]['species']);
+                    for (var i=0; i<vectorList.length; i++){
+                        var vector_name = vectorList[i];
+                        infoToAdd.push(fullParsedData[vector_name]);
+                        speciesNames.push(fullParsedData[vector_name]['species']);
                     }
-                    for (var accession_name in accessionListFound) {
-                        if (accessionListFound.hasOwnProperty(accession_name)) {
-                            infoToAdd.push(fullParsedData[accession_name]);
-                            speciesNames.push(fullParsedData[accession_name]['species']);
+                    for (var vector_name in vectorListFound) {
+                        if (vectorListFound.hasOwnProperty(vector_name)) {
+                            infoToAdd.push(fullParsedData[vector_name]);
+                            speciesNames.push(fullParsedData[vector_name]['species']);
                         }
                     }
                 }
-                populate_review_absent_dialog(accessionList, infoToAdd);
+                populate_review_absent_dialog(vectorList, infoToAdd);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
-                alert('All accessions in your list now exist in the database. 2');
+                alert('All vectors in your list now exist in the database. 2');
             }
         },
         error: function () {
