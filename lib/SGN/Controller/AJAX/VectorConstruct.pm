@@ -22,6 +22,9 @@ use JSON;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Vector;
 use Try::Tiny;
+use Encode;
+use JSON::XS qw | decode_json |;
+use utf8;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -105,7 +108,7 @@ sub create_vector_construct_POST {
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
 
-    my $data = decode_json($c->req->param("data"));
+    my $data = decode_json( encode("utf8", $c->req->param('data')));
 
     foreach (@$data){
         my $vector = $_->{uniqueName} || undef;
@@ -363,4 +366,78 @@ sub verify_vectors_file_POST : Args(0) {
         
     $c->stash->{rest} = \%return;
 }
+
+
+sub verify_vectors_fuzzy_options : Path('/ajax/vector_list/fuzzy_options') : ActionClass('REST') { }
+
+sub verify_vectors_fuzzy_options_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $vector_list_id = $c->req->param('vector_list_id');
+    my $fuzzy_option_hash = decode_json( encode("utf8", $c->req->param('fuzzy_option_data')));
+    my $names_to_add = _parse_list_from_json($c, $c->req->param('names_to_add'));
+
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $vector_list_id } );
+
+    my %names_to_add = map {$_ => 1} @$names_to_add;
+    foreach my $form_name (keys %$fuzzy_option_hash){
+        my $item_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_name'};
+        my $select_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_select'};
+        my $fuzzy_option = $fuzzy_option_hash->{$form_name}->{'fuzzy_option'};
+        if ($fuzzy_option eq 'replace'){
+            $list->replace_by_name($item_name, $select_name);
+            delete $names_to_add{$item_name};
+        } elsif ($fuzzy_option eq 'keep'){
+            $names_to_add{$item_name} = 1;
+        } elsif ($fuzzy_option eq 'remove'){
+            $list->remove_by_name($item_name);
+            delete $names_to_add{$item_name};
+        } elsif ($fuzzy_option eq 'synonymize'){
+            my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
+            my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+            $stock->add_synonym($item_name);
+
+            delete $names_to_add{$item_name};
+        }
+    }
+
+    my @names_to_add = sort keys %names_to_add;
+    my $rest = {
+        success => "1",
+        names_to_add => \@names_to_add
+    };
+    $c->stash->{rest} = $rest;
+}
+
+
+sub _parse_list_from_json {
+    my $c = shift;
+    my $list_json = shift;
+    my $json = JSON::XS->new();
+
+    if ($list_json) {
+        debug($c, "LIST_JSON is utf8? ".utf8::is_utf8($list_json)." valid utf8? ".utf8::valid($list_json)."\n");
+        print STDERR "JSON NOW: $list_json\n";
+        my $decoded_list = $json->decode($list_json);
+        
+        my @array_of_list_items = ();
+        if (ref($decoded_list) eq "ARRAY" ) {
+            @array_of_list_items = @{$decoded_list};
+        }
+        else {
+            debug($c, "Dont know what to do " );
+        }
+
+        return \@array_of_list_items;
+    }
+    else {
+        return;
+    }
+}
+
+sub debug {
+    my $c = shift;
+    my $message = shift;
+}
+
 1;
