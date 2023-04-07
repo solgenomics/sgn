@@ -18,7 +18,7 @@ sub _validate_with_plugin {
     my $editable_stockprops = $self->get_editable_stock_props();
 
     # Match a dot, extension .xls / .xlsx
-    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $extension = $filename =~ /(\.[^.]+)$/;
     my $parser;
 
     if ($extension eq '.xlsx') {
