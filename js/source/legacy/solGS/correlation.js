@@ -1,5 +1,5 @@
 /**
- * correlation coefficients plotting using d3
+ * runs genetic and phenotypic correlation analysis and plots correlation coefficients using d3
  * Isaak Y Tecle <iyt2@cornell.edu>
  *
  */
@@ -15,13 +15,25 @@ solGS.correlation = {
     var dataSetType = jQuery("#data_set_type").val();
     var dataStr = jQuery("#data_structure").val();
 
+    var listId;
+    var datasetId;
+
+    if (dataStr.match(/dataset/)) {
+      datasetId = selectId;
+    } else if (dataStr.match(/list/)) {
+      listId = selectId;
+    }
+
     var args = {
       corre_pop_id: correPopId,
       data_set_type: dataSetType,
       data_structure: dataStr,
+      dataset_id: datasetId,
+      list_id: listId,
+      data_type: 'phenotype',
+      correlation_type: 'phenotypic',
     };
 
-    // args = JSON.stringify(args);
     return args;
   },
 
@@ -100,7 +112,7 @@ solGS.correlation = {
       listId = selectId;
     }
 
-		var runCorrId = this.corrRunCorrId(corrPopId);
+		var runCorrId = this.getRunCorrId(corrPopId);
     var correArgs = {
       'corre_pop_id': `${dataStr}_${selectId}`,
       'data_structure': dataStr,
@@ -108,6 +120,7 @@ solGS.correlation = {
       'list_id': listId,
       'corre_pop_name': selectName,
       'data_type': 'phenotype',
+      'correlation_type': 'phenotypic'
     }
 
     correArgs = JSON.stringify(correArgs);
@@ -134,7 +147,7 @@ solGS.correlation = {
 
 	},
 
-  corrRunCorrId: function(rowId) {
+  getRunCorrId: function(rowId) {
 		if (location.pathname.match(/correlation\/analysis/) && rowId) {
 			return `run_correlation_${rowId}`;
 		} else {
@@ -232,6 +245,38 @@ solGS.correlation = {
     });
   },
 
+  getGeneticCorrArgs: function(correPopId, corrPopType, sIndexFile, sindexName) {
+
+    var { canvas, corrMsgDiv } = this.corrDivs(sIndexFile);
+    
+    var trainingPopId = jQuery("#training_pop_id").val();
+    var traitsIds = jQuery("#training_traits_ids").val();
+    var traitsCode = jQuery("#training_traits_code").val();
+    var protocolId = jQuery("#genotyping_protocol_id").val();
+
+    if (traitsIds) {
+      traitsIds = traitsIds.split(",");
+    }
+
+    var genArgs = {
+      training_pop_id: trainingPopId,
+      corre_pop_id: correPopId,
+      training_traits_ids: traitsIds,
+      training_traits_code: traitsCode,
+      pop_type: corrPopType,
+      selection_index_file: sIndexFile,
+      sindex_name: sindexName,
+      canvas: canvas,
+      corr_msg_div: corrMsgDiv,
+      genotyping_protocol_id: protocolId,
+      data_type: 'gebvs',
+      correlation_type: 'genetic'
+    };
+
+    return genArgs;
+
+  },
+
   runGeneticCorrelation: function (correPopId, popType, sIndexFile, sindexName) {
 
     var { canvas, corrMsgDiv } = this.corrDivs(sIndexFile);
@@ -241,29 +286,7 @@ solGS.correlation = {
     var msg = "Running genetic correlation analysis...please wait";
     jQuery(corrMsgDiv).html(`${msg}...`).show();
 
-    var trainingPopId = jQuery("#training_pop_id").val();
-    var traitsIds = jQuery("#training_traits_ids").val();
-    var traitsCode = jQuery("#training_traits_code").val();
- 
-    if (traitsIds) {
-      traitsIds = traitsIds.split(",");
-    }
-
-    var protocolId = jQuery("#genotyping_protocol_id").val();
-
-    var genArgs = {
-      training_pop_id: trainingPopId,
-      corre_pop_id: correPopId,
-      training_traits_ids: traitsIds,
-      training_traits_code: traitsCode,
-      pop_type: popType,
-      selection_index_file: sIndexFile,
-      sindex_name: sindexName,
-      canvas: canvas,
-      corr_msg_div: corrMsgDiv,
-      genotyping_protocol_id: protocolId,
-    };
-
+    var genArgs = this.getGeneticCorrArgs(correPopId, popType, sIndexFile, sindexName)
     genArgs = JSON.stringify(genArgs);
 
     jQuery.ajax({
@@ -297,22 +320,7 @@ solGS.correlation = {
 
             jQuery(canvas).append(corLegDivVal).show();
           } 
-          // else {
-            // var popName = jQuery("#corre_selected_population_name").val();
-            // var corLegDiv = '<div id="corre_correlation_' + popName.replace(/\s/g, "") + '"></div>';
-
-            // var corLegDivVal = jQuery(corLegDiv).html(popName);
-            // jQuery(canvas).append(corLegDivVal).show();
-
-            // jQuery("#run_genetic_correlation").show();
-        }
-        
-        // jQuery(canvas + " .multi-spinner-container").hide();
-        // jQuery(corrMsgDiv).empty();
-        // jQuery("#run_genetic_correlation").show();
-     
-      
-        else {
+        } else {
           jQuery(corrMsgDiv)
             .html(res.status)
             .fadeOut(8400);
@@ -338,21 +346,22 @@ solGS.correlation = {
     jQuery("#run_pheno_correlation").hide();
     jQuery("#correlation_canvas .multi-spinner-container").show();
     jQuery("#correlation_message").html("Running correlation... please wait...").show();
-  var corrPopId;
+    
+    var corrPopId;
 
-  try {
-    var phenArgs = JSON.parse(args);
-    corrPopId = phenArgs.corre_pop_id;
-  } catch (err) {
-    var selectedPopDiv = document.getElementById(args)
-    if (selectedPopDiv) {
-      var selectedPopData = selectedPopDiv.dataset;
-      var selectedPop = JSON.parse(selectedPopData.selectedPop);
-      corrPopId = selectedPop.corre_pop_id;
-      args = selectedPopData.selectedPop;
-  }
-  }
-  
+    try {
+      var phenArgs = JSON.parse(args);
+      corrPopId = phenArgs.corre_pop_id;
+    } catch (err) {
+        var selectedPopDiv = document.getElementById(args)
+        if (selectedPopDiv) {
+          var selectedPopData = selectedPopDiv.dataset;
+          var selectedPop = JSON.parse(selectedPopData.selectedPop);
+          corrPopId = selectedPop.corre_pop_id;
+          args = selectedPopData.selectedPop;
+      }
+    }
+    
     jQuery.ajax({
       type: "POST",
       dataType: "json",
@@ -466,15 +475,12 @@ solGS.correlation = {
       success: function (response) {
         if (response.status == "success") {
           jQuery(canvas).show();
-
-          // var heatmapDiv = "#corr_plot_" +  corrPopId;
           var corrPlotDivId = "#corr_plot_" + corrPopId;
           if (canvas === "#si_canvas") {
             sindexName = sindexName.replace(/-/g, '_')
             corrPlotDivId = "#corr_plot_" + sindexName;
           }
 
-          
           var corrDownload = solGS.correlation.createCorrDownloadLink(
             response.corre_table_file, corrPlotDivId);
 
@@ -488,17 +494,10 @@ solGS.correlation = {
             var relWtsId = legendValues.params.replace(/[{",}:\s+<b/>]/gi, "");
 
             var corLegDiv = `<div id="si_correlation_${popDiv}_${relWtsId}">`;
-
             var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
 
             jQuery(canvas).append(corLegDivVal).show();
           } else {
-            // var popName = jQuery("#corre_selected_population_name").val();
-            // var corLegDiv = '<div id="corre_correlation_' + popName.replace(/\s/g, "") + '"></div>';
-
-            // var corLegDivVal = jQuery(corLegDiv).html(popName);
-            // jQuery(canvas).append(corLegDivVal).show();
-
             jQuery("#run_genetic_correlation").show();
           }
         } else {
@@ -553,7 +552,6 @@ jQuery(document).ready(function () {
   
     solGS.correlation.runGeneticCorrelation(popId, popType);
   });
-
 
 	var url = location.pathname;
 
