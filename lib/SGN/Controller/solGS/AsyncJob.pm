@@ -31,8 +31,8 @@ sub get_pheno_data_query_job_args_file {
 sub get_geno_data_query_job_args_file {
     my ($self, $c, $trials, $protocol_id) = @_;
 
-    $self->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
-    my $geno_query_args = $c->stash->{cluster_genotype_query_job_args};
+    $self->get_trials_genotype_query_jobs_args($c, $trials, $protocol_id);
+    my $geno_query_args = $c->stash->{trials_genotype_query_jobs_args};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $geno_query_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'genotype_data_query_args_file');
@@ -91,8 +91,8 @@ sub training_pop_data_query_job_args {
 
 	if (!-s $c->stash->{genotype_file_name})
 	{
-	    $self->get_cluster_genotype_query_job_args($c, [$trial], $protocol_id);
-	    my $geno_query = $c->stash->{cluster_genotype_query_job_args};
+	    $self->get_trials_genotype_query_jobs_args($c, [$trial], $protocol_id);
+	    my $geno_query = $c->stash->{trials_genotype_query_jobs_args};
 	    push @queries, @$geno_query if $geno_query;
 	}
     }
@@ -118,7 +118,7 @@ sub get_training_pop_data_query_job_args_file {
 }
 
 
-sub get_cluster_genotype_query_job_args {
+sub get_trials_genotype_query_jobs_args {
     my ($self, $c, $trials, $protocol_id) = @_;
 
     my @queries;
@@ -190,8 +190,76 @@ sub get_cluster_genotype_query_job_args {
 	}
     }
 
-    $c->stash->{cluster_genotype_query_job_args} = \@queries;
+    $c->stash->{trials_genotype_query_jobs_args} = \@queries;
 }
+
+
+sub create_genotype_data_query_jobs {
+    my ($self, $c, $pop_id, $protocol_id) = @_;
+
+    my $data_str = $c->stash->{data_structure};
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
+
+    my $geno_query_jobs;
+    if ($data_str =~ /list/)
+    {
+	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
+	$geno_query_jobs= $c->stash->{list_geno_data_query_jobs};
+    }
+    elsif ($data_str =~ /dataset/)
+    {
+	$c->controller('solGS::Dataset')->create_dataset_geno_data_query_jobs($c);
+	$geno_query_jobs = $c->stash->{dataset_geno_data_query_jobs};
+    }
+    else
+    {
+	if ($c->req->referer =~ /solgs\/selection\//)
+	{
+	    $c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
+	}
+
+	my $trials_ids;
+
+	if ($c->stash->{pops_ids_list})
+	{
+	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
+	    $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $c->stash->{pops_ids_list}, $protocol_id);
+	    $c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
+	}
+
+     if ($c->stash->{data_set_type} =~ /combined/) 
+     {
+            $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $pop_id );
+            $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+    } 
+    else 
+    {
+            $c->stash->{training_pop_id} =  $pop_id;
+    }
+
+	my $trials = $c->stash->{pops_ids_list};
+    if (!$trials)
+    {
+        $trials = [$c->stash->{training_pop_id}]  if $c->stash->{training_pop_id};
+    }
+
+    if (!$trials)
+    {
+        $trials = [$c->stash->{selection_pop_id}]  if $c->stash->{selection_pop_id};
+    }
+
+    if (!$trials)
+    {
+        $trials = [$pop_id]  if $pop_id;
+    }
+
+	$self->get_trials_genotype_query_jobs_args($c, $trials, $protocol_id);
+	$geno_query_jobs = $c->stash->{trials_genotype_query_jobs_args};
+    }
+
+    return $geno_query_jobs;
+}
+
 
 sub create_phenotype_data_query_jobs {
     my ( $self, $c, $pop_id ) = @_;
@@ -225,6 +293,7 @@ sub create_phenotype_data_query_jobs {
 
     return $pheno_query_jobs;
 }
+
 
 sub get_trials_phenotype_query_jobs_args {
     my ($self, $c, $trials) = @_;
