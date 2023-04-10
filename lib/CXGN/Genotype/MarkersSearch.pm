@@ -135,7 +135,7 @@ sub search {
 
         $protocolprop_rank = $h->fetchrow_array();
         print STDERR "RANK =".Dumper($protocolprop_rank)."\n";
-        if ($protocolprop_rank) {
+        if (defined $protocolprop_rank) {
             push @where_clause, "nd_protocolprop.rank = $protocolprop_rank";
         }
     }
