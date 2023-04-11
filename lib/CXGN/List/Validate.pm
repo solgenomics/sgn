@@ -23,11 +23,16 @@ sub validate {
 
     my $data;
     foreach my $p ($self->plugins()) {
-        if ($type eq "markers") {
+#        if ($type eq "markers") {
+#            $data = $p->validate($schema, $list, $self, $protocol_id);
+#        } elsif ($type eq $p->name()) {
+#            $data = $p->validate($schema, $list, $self);
+#        }
+        if ($type eq $p->name()) {
             $data = $p->validate($schema, $list, $self, $protocol_id);
-        } elsif ($type eq $p->name()) {
-            $data = $p->validate($schema, $list, $self);
         }
+
+
     }
     return $data;
 }
