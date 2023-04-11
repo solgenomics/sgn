@@ -16,15 +16,18 @@ sub validate {
     my $schema = shift;
     my $type = shift;
     my $list = shift;
+    my $protocol_id;
+    if ($type eq "markers") {
+        $protocol_id = shift;
+    }
 
     my $data;
-
-
-
     foreach my $p ($self->plugins()) {
-        if ($type eq $p->name()) {
-	     $data = $p->validate($schema, $list, $self);
-	}
+        if ($type eq "markers") {
+            $data = $p->validate($schema, $list, $self, $protocol_id);
+        } elsif ($type eq $p->name()) {
+            $data = $p->validate($schema, $list, $self);
+        }
     }
     return $data;
 }

@@ -620,13 +620,24 @@ sub validate : Path('/list/validate') Args(2) {
     my $c = shift;
     my $list_id = shift;
     my $type = shift;
+    print STDERR "LIST ID =".Dumper($list_id)."\n";
+    print STDERR "LIST TYPE =".Dumper($type)."\n";
+    my $protocol_id;
+    if ($type eq "markers") {
+        my $list = CXGN::List->new( { dbh=> $c->dbc->dbh(), list_id=>$list_id });
+        my $protocol_info = $list->description();
+        my $protocol_hash = decode_json $protocol_info;
+        $protocol_id = $protocol_hash->{'Protocol ID'};
+        print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
 
+    }
     my $list = $self->retrieve_list($c, $list_id);
 
     my @flat_list = map { $_->[1] } @$list;
+    print STDERR "LIST ITEMS =".Dumper(\@flat_list)."\n";
 
     my $lv = CXGN::List::Validate->new();
-    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
+    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list, $protocol_id);
 
     print STDERR "DATA = ".Dumper($data);
     $c->stash->{rest} = $data;
