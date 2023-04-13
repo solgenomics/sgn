@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-  AddOrderTables
+  AddListpropTable
 
 =head1 SYNOPSIS
 
@@ -19,7 +19,7 @@ This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Naama Menda<nm249@cornell.edu>
+ Dave Phillips<drp227@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddOrderTables;
+package AddOrderTable;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
