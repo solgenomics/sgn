@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-  AddListpropTable
+AddListDbXref.pm
 
 =head1 SYNOPSIS
 
@@ -14,8 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This is a test dummy patch.
-This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
+This patch creates a list_dbxref table to allow lists to store external references for brapi
 
 =head1 AUTHOR
 
@@ -31,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddOrderTable;
+package AddListpropTable;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -41,13 +40,8 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch create the listprop table in the sgn_people schema
+This patch creates a list_dbxref table to allow lists to store external references for brapi
 
-# has '+prereq' => (
-#     default => sub {
-#         [],
-#     },
-#   );
 
 sub patch {
     my $self=shift;
@@ -62,8 +56,8 @@ sub patch {
     my $coderef = sub {
         $self->dbh->do(<<EOSQL);
 
-
-CREATE TABLE sgn_people.listprop (
+ --do your SQL here
+dCREATE TABLE sgn_people.listprop (
    listprop_id serial primary key,
    list_id int references sgn_people.list(list_id),
    type_id int references public.cvterm(cvterm_id),
@@ -76,15 +70,15 @@ GRANT USAGE ON sgn_people.listprop_listprop_id_seq TO web_usr;
 
 EOSQL
 
-    return 1;
-};
+        return 1;
+    };
 
-try {
-    $schema->txn_do($coderef);
-} catch {
-    die "Load failed! " . $_ .  "\n" ;
-};
-print "You're done!\n";
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        die "Load failed! " . $_ .  "\n" ;
+    };
+    print "You're done!\n";
 }
 
 
