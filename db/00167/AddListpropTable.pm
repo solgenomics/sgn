@@ -7,7 +7,7 @@
 
 =head1 SYNOPSIS
 
-mx-run ThisPackageName [options] -H hostname -D dbname -u username [-F]
+mx-run AddListpropTable [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -34,17 +34,20 @@ it under the same terms as Perl itself.
 package AddOrderTable;
 
 use Moose;
+use Bio::Chado::Schema;
+use Try::Tiny;
+
 extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
 This patch create the listprop table in the sgn_people schema
 
-has '+prereq' => (
-    default => sub {
-        [],
-    },
-  );
+# has '+prereq' => (
+#     default => sub {
+#         [],
+#     },
+#   );
 
 sub patch {
     my $self=shift;
@@ -54,13 +57,16 @@ sub patch {
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
     print STDOUT "\nExecuting the SQL commands.\n";
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    $self->dbh->do(<<EOSQL);
+    my $coderef = sub {
+        $self->dbh->do(<<EOSQL);
+
 
 CREATE TABLE sgn_people.listprop (
-   listprop_id serial primary key,,
-   list_id int references list(list_id),
-   type_id int references public.cvterm(cvtermId),
+   listprop_id serial primary key,
+   list_id int references sgn_people.list(list_id),
+   type_id int references public.cvterm(cvterm_id),
    value jsonb,
    rank int not null DEFAULT 0
 );
@@ -70,6 +76,14 @@ GRANT USAGE ON sgn_people.listprop_listprop_id_seq TO web_usr;
 
 EOSQL
 
+    return 1;
+};
+
+try {
+    $schema->txn_do($coderef);
+} catch {
+    die "Load failed! " . $_ .  "\n" ;
+};
 print "You're done!\n";
 }
 
