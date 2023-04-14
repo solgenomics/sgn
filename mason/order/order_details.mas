@@ -35,6 +35,7 @@ $ordering_type => undef
                     </table>
                 </div>
             </div>
+            <td><a href="/order/stocks/view"><p>Go to Manage Order Page</p></a></td>
         </div>
     </div>
 % if ($ordering_type eq 'single_step' && $order_status ne 'completed') {
