@@ -108,18 +108,6 @@ sub download_selection_index :Path('/solgs/download/selection/index') Args(1) {
 	$c->stash->{rest}{sindex_file}  =  $sindex_file;
     $c->stash->{rest}{sindex_file}  =  $gebvs_sindex_file;
 
-    # $c->stash->{sindex_name} = $sindex_name;
-    # $self->selection_index_file($c);
-    # my $sindex_file = $c->stash->{selection_index_only_file};
-    #
-    # if (-s $sindex_file)
-    # {
-    #     my @sindex =  map { [ split(/\t/) ] }  read_file($sindex_file, {binmode => ':utf8'});
-    #
-    #     $c->res->content_type("text/plain");
-    #     $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @sindex);
-    # }
-
 }
 
 sub prep_download_si_files {
@@ -303,7 +291,7 @@ sub gebvs_selection_index_file {
     my $dir = $c->stash->{selection_index_cache_dir};
 
     my $cache_data = { key       => $name,
-		       file      => $name . '.txt',
+		       file      => $name,
 		       stash_key => 'gebvs_selection_index_file',
 		       cache_dir => $dir
     };
@@ -326,7 +314,7 @@ sub selection_index_file {
     my $dir = $c->stash->{selection_index_cache_dir};
 
     my $cache_data = { key       => $name,
-		       file      => $name . '.txt',
+		       file      => $name,
 		       stash_key => 'selection_index_only_file',
 		       cache_dir => $dir
     };
@@ -345,7 +333,7 @@ sub rel_weights_file {
     my $name =  "rel_weights_${file_id}";
 
     my $cache_data = { key       => $name,
-    		       file      => $name . '.txt',
+    		       file      => $name,
     		       stash_key => 'rel_weights_file',
     		       cache_dir => $dir
     };

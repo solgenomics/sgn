@@ -7,133 +7,58 @@
 
 
 
-jQuery(document).ready( function () {
-    checkSelectionPopulations();
-
-});
-
-
 function checkSelectionPopulations () {
 
-    var popId =  getPopulationId();
-
-    var trainingTraitsIds = jQuery('#training_traits_ids').val();
-    var protocolId = jQuery('#genotyping_protocol_id').val();
-
-    if (trainingTraitsIds) {
-	trainingTraitsIds = trainingTraitsIds.split(',');
-    }
-
-    var traitId = jQuery('#trait_id').val();
-    if (traitId && !trainingTraitsIds) {
-	trainingTraitsIds = [traitId];
-    }
-
-    var args = {'training_traits_ids': trainingTraitsIds,
-		'genotyping_protocol_id': protocolId,
-		'training_pop_id': popId}
+	var args = solGS.getModelArgs();
+	args = JSON.stringify(args);
 
     jQuery.ajax({
         type: 'POST',
-	data: args,
+		data: {'arguments': args},
         dataType: 'json',
-        url: '/solgs/check/selection/populations/' + popId,
+        url: '/solgs/check/selection/populations/',
         success: function(response) {
             if (response.data) {
-		jQuery("#selection_populations").show();
-		jQuery("#search_all_selection_pops").show();
+			jQuery("#selection_populations").show();
+			jQuery("#search_all_selection_pops").show();
 
-		displaySelectionPopulations(response.data);
+			displaySelectionPopulations(response.data);
             } else {
-		jQuery("#search_all_selection_pops").show();
+				jQuery("#search_all_selection_pops").show();
             }
-	}
+		}
     });
 
 }
 
-jQuery(document).ready( function () {
-
-    jQuery('#population_search_entry').keyup(function(e){
-
-	jQuery("#population_search_entry")
-		.css('border', 'solid #96d3ec');
-
-	jQuery("#form-feedback-search-trials")
-	    .empty();
-
-	if(e.keycode == 13) {
-     	    jQuery('#search_selection_pop').click();
-    	}
-    });
-
-    jQuery('#search_selection_pop').on('click', function () {
-
-	jQuery("#selection_pops_message").hide();
-
-	var entry = jQuery('#population_search_entry').val();
-
-	if (entry) {
-	    checkSelectionPopulationRelevance(entry);
-	}  else {
-	    jQuery("#population_search_entry")
-		.css('border', 'solid #FF0000');
-
-	    jQuery("#form-feedback-search-trials")
-		.text('Please enter trial name.');
-	}
-    });
-
-});
-
-
 function checkSelectionPopulationRelevance (popName) {
-
-    var trainingPopId  =  getPopulationId();
-
-    var combinedPopsId = jQuery("#combo_pops_id").val();
-    var dataSetType;
-
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-    var protocolId = jQuery('#genotyping_protocol_id').val();
-
-    if (combinedPopsId) {
-	dataSetType = 'combined populations';
-    }
+	var modelVars= solGS.getModelArgs();
+	modelVars['selection_pop_name'] = popName;
 
     jQuery("#selection_pops_message")
 	.html("Checking if the model can be used on " + popName + "...please wait...")
 	.show();
 
-    var popData = {
-	'selection_pop_name' : popName,
-	'training_pop_id'    : trainingPopId,
-	'training_traits_ids'   : trainingTraitsIds,
-	'data_set_type'      : dataSetType,
-	'genotyping_protocol_id': protocolId,
-    };
-
-	popData = JSON.stringify(popData);
+	var popData = JSON.stringify(modelVars);
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
 		data: {arguments: popData},
         url: '/solgs/check/selection/population/relevance/',
-        success: function(response) {
+        success: function(res) {
 
-	    var selectionPopId = response.selection_pop_id;
-	    if (selectionPopId) {
+	     if (res.selection_pop_id) {
 		
-		if (selectionPopId != trainingPopId) {
+		if (res.selection_pop_id != res.training_pop_id ) {
 
-		    if (response.similarity >= 0.5 ) {
+		    if (res.similarity >= 0.5 ) {
 
 			jQuery("#selection_pops_message ").hide();
 			jQuery("#selection_populations").show();
 
 			var selPopExists = jQuery('#selection_pops_list:contains(' + popName + ')').length;
 			if (!selPopExists) {
-			    displaySelectionPopulations(response.selection_pop_data);
+			    displaySelectionPopulations(res.selection_pop_data);
 			}
 
 		    } else {
@@ -160,7 +85,7 @@ function checkSelectionPopulationRelevance (popName) {
 			.fadeOut(5000);
 	    }
 	},
-	error: function (response) {
+	error: function (res) {
 
 	    jQuery("#selection_pops_message")
 		    .html("Error occured processing the query.")
@@ -171,29 +96,13 @@ function checkSelectionPopulationRelevance (popName) {
 
 }
 
-
-
 function searchSelectionPopulations () {
-
-    var popId = getPopulationId();
-
-    var combinedPopsId = jQuery("#combo_pops_id").val();
-    var dataSetType;
-
-    if (combinedPopsId) {
-	dataSetType = 'combined populations';
-    }
-    var protocolId = jQuery('#genotyping_protocol_id').val();
-
-    var args = {'data_set_type': dataSetType,
-	       	'genotyping_protocol_id': protocolId,
-		'training_pop_id': popId
-	       };
+    var args = solGS.getModelArgs();
 
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: args ,
+		data: args ,
         url: '/solgs/search/selection/populations/' + popId,
         success: function(res) {
 
@@ -240,19 +149,6 @@ function displaySelectionPopulations (data) {
     }
 }
 
-
-jQuery(document).ready( function() {
-
-    jQuery("#search_all_selection_pops").click(function() {
-
-	searchSelectionPopulations();
-	jQuery("#selection_pops_message")
-	    .html("<br/><br/>Searching for all selection populations relevant to this model...please wait...");
-    });
-
-});
-
-
 function getPopulationId () {
 
     var populationId = jQuery("#population_id").val();
@@ -268,3 +164,53 @@ function getPopulationId () {
     return populationId;
 
 }
+
+jQuery(document).ready( function () {
+    checkSelectionPopulations();
+
+});
+
+jQuery(document).ready( function() {
+
+    jQuery("#search_all_selection_pops").click(function() {
+
+	searchSelectionPopulations();
+	jQuery("#selection_pops_message")
+	    .html("<br/><br/>Searching for all selection populations relevant to this model...please wait...");
+    });
+
+});
+
+jQuery(document).ready( function () {
+
+    jQuery('#population_search_entry').keyup(function(e){
+
+	jQuery("#population_search_entry")
+		.css('border', 'solid #96d3ec');
+
+	jQuery("#form-feedback-search-trials")
+	    .empty();
+
+	if(e.keycode == 13) {
+     	    jQuery('#search_selection_pop').click();
+    	}
+    });
+
+    jQuery('#search_selection_pop').on('click', function () {
+
+	jQuery("#selection_pops_message").hide();
+
+	var entry = jQuery('#population_search_entry').val();
+
+	if (entry) {
+	    checkSelectionPopulationRelevance(entry);
+	}  else {
+	    jQuery("#population_search_entry")
+		.css('border', 'solid #FF0000');
+
+	    jQuery("#form-feedback-search-trials")
+		.text('Please enter trial name.');
+	}
+    });
+
+});

@@ -13,8 +13,8 @@ function isLoggedIn() {
 		alert(response.error);
 	    }
 	    else {
-		//alert("LOGGED IN USER: "+response.user_id);
-		user_id =  response.user_id;
+		//alert("LOGGED IN USER: "+response.person_id);
+		user_id =  response.person_id;
 	    }
 	},
 	error: function(response) {

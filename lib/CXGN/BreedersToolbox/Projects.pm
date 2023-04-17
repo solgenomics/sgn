@@ -384,9 +384,9 @@ sub get_location_geojson_data {
 	}
 	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $noaa_station_id) = @location_data;
 
-        my $lat = $latitude ? $latitude + 0 : undef;
-        my $long = $longitude ? $longitude + 0 : undef;
-        my $alt = $altitude ? $altitude + 0 : undef;
+        my $lat = length $latitude ? $latitude + 0 : undef;
+        my $long = length $longitude ? $longitude + 0 : undef;
+        my $alt = length $altitude ? $altitude + 0 : undef;
         push(@locations, {
             type => "Feature",
             properties => {
@@ -705,28 +705,34 @@ sub get_gt_protocols {
 }
 
 
-sub get_treatments_by_observationunit_ids {
+sub get_related_treatments {
     my $self = shift;
-    my $observationunit_ids = shift;
+    my $trial_ids = shift;
+    my $relevant_obsunits = shift;
 
-    my $treatment_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
+    my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
 
-    my $q = "SELECT project.name, stock_id
-        FROM project
-        JOIN nd_experiment_project ndp USING(project_id)
-        JOIN nd_experiment nde ON(ndp.nd_experiment_id = nde.nd_experiment_id AND nde.type_id = ?)
-        JOIN nd_experiment_stock nds ON(nds.nd_experiment_id = nde.nd_experiment_id AND nds.stock_id IN (@{[join',', ('?') x @$observationunit_ids]}))
-    ";
+    my $q = "SELECT treatment.name, nds.stock_id
+    FROM project_relationship AS pr
+    JOIN project AS treatment ON(
+        pr.type_id = ? AND
+        pr.subject_project_id = treatment.project_id AND
+        pr.object_project_id IN (@{[join',', ('?') x @$trial_ids]})
+    )
+    JOIN nd_experiment_project AS ndp ON( treatment.project_id = ndp.project_id )
+    JOIN nd_experiment_stock AS nds ON( ndp.nd_experiment_id = nds.nd_experiment_id )";
 
     my $h = $self->schema()->storage()->dbh()->prepare($q);
-    $h->execute($treatment_experiment_cvterm_id, @$observationunit_ids);
+    $h->execute($trial_treatment_relationship_cvterm_id, @$trial_ids);
 
     my %treatment_details;
     my %unique_names;
     while (my @treatment_data = $h->fetchrow_array()) {
         my ($name, $id) = @treatment_data;
-        $unique_names{$name} = 1;
-        $treatment_details{$id}->{$name} = 1;
+        if ($relevant_obsunits->{$id}) {
+            $unique_names{$name} = 1;
+            $treatment_details{$id}->{$name} = 1;
+        }
     }
 
     my @treatment_names = sort keys(%unique_names);

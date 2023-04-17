@@ -133,6 +133,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
     my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
     my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
+    my $folder_for_genotyping_projects = 1 ? $c->req->param("folder_for_genotyping_projects") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -144,7 +145,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 	    breeding_program_id => $breeding_program_id,
         folder_for_trials => $folder_for_trials,
         folder_for_crosses => $folder_for_crosses,
-        folder_for_genotyping_trials => $folder_for_genotyping_trials
+        folder_for_genotyping_trials => $folder_for_genotyping_trials,
+        folder_for_genotyping_projects => $folder_for_genotyping_projects
     });
 
     if ($empty) {
@@ -687,6 +689,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
         $c->dbic_schema("CXGN::Phenome::Schema"),
+        undef,
         undef,
         undef,
         undef,
@@ -2178,6 +2181,31 @@ sub get_items_select : Path('/ajax/html/select/items') Args(0) {
 
     $c->stash->{rest} = { select => $html };
 
+}
+
+
+sub get_genotyping_facility_select : Path('/ajax/html/select/genotyping_facilities') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "facility_select";
+    my $name = $c->req->param("name") || "facility_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    if ($empty) { unshift @facilities, [ "", "Select Facility" ] }
+
+    my $default = $c->req->param("default") || @facilities[0]->[0];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@facilities,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
 }
 
 

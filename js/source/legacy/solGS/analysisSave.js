@@ -9,11 +9,11 @@ var solGS = solGS || function solGS() {};
 solGS.save = {
   checkStoredAnalysis: function () {
     var args = this.saveGebvsArgs();
-
+    var checkArgs = JSON.stringify(args);
     var stored = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: args,
+      data: {'arguments': checkArgs},
       url: "/solgs/check/stored/analysis/",
     });
 
@@ -22,11 +22,11 @@ solGS.save = {
 
   getResultDetails: function () {
     var args = this.saveGebvsArgs();
-
+    var resultArgs = JSON.stringify(args);
     var details = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: args,
+      data: {'arguments': resultArgs},
       url: "/solgs/analysis/result/details",
     });
 
@@ -34,8 +34,6 @@ solGS.save = {
   },
 
   saveGebvs: function (args) {
-    //var args = this.saveGebvsArgs();
-
     var save = jQuery.ajax({
       dataType: "json",
       type: "POST",
@@ -47,37 +45,16 @@ solGS.save = {
   },
 
   saveGebvsArgs: function () {
-    var trainingPopId = jQuery("#training_pop_id").val();
-    var selectionPopId = jQuery("#selection_pop_id").val();
-    var traitId = jQuery("#trait_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
-
-    var analysisResultType = this.analysisResultType();
-
-    var args = {
-      training_pop_id: trainingPopId,
-      selection_pop_id: selectionPopId,
-      trait_id: traitId,
-      genotyping_protocol_id: protocolId,
-      analysis_result_type: analysisResultType,
-    };
-
-    return args;
+    
+    var analysisArgs = solGS.getSelectionPopArgs();
+    analysisArgs['analysis_result_type'] = this.analysisResultType();
+    analysisArgs['analysis_page'] = location.pathname;
+  
+    return analysisArgs;
   },
 
   analysisResultType: function () {
-    var type;
-    var path = location.pathname;
-
-    if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
-      type = "single model";
-    } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
-      type = "multiple models";
-    } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
-      type = "selection prediction";
-    }
-
-    return type;
+    return jQuery('#analysis_type').val();
   },
 
   checkUserStatus: function () {
@@ -91,11 +68,11 @@ solGS.save = {
 
 jQuery(document).ready(function () {
   solGS.save.checkStoredAnalysis().done(function (res) {
-    console.log("stored analysis id " + res.analysis_id);
-
-    jQuery("#save_gebvs").hide();
-    var link = '<a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
-    jQuery("#gebvs_output").append(link);
+    if (res.analysis_id) {
+      jQuery("#save_gebvs").hide();
+      var link = '<a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
+      jQuery("#gebvs_output").append(link);
+      }
   });
 
   jQuery("#save_gebvs").click(function () {
@@ -117,11 +94,8 @@ jQuery(document).ready(function () {
     });
 
     solGS.save.getResultDetails().done(function (res) {
-      console.log("saveGebvs analysis_details " + res.analysis_details);
-      console.log("saveGebvs error " + res.error);
 
       if (res.error) {
-        console.log("getResultDetails " + res.error);
         jQuery("#gebvs_output .multi-spinner-container").hide();
         jQuery("#gebvs_save_message")
           .html(res.error + ". The logged info may not exist for the result.")
