@@ -216,7 +216,7 @@ solGS.cluster = {
 		var dataTypeOpts = [];
 		var page = location.pathname;
 	
-		if (isNaN(selectId)) {
+		if (selectId && isNaN(selectId)) {
 			selectId = selectId.replace(/\w+_/g, '');
 		}
 
@@ -541,7 +541,7 @@ solGS.cluster = {
 					solGS.cluster.runClusterAnalysis(args);
 				} else {
 					args = JSON.parse(args);
-					solGS.cluster.selectAnalysisOption(page, args);
+					solGS.cluster.optJobSubmission(page, args);
 				}
 			},
 			error: function() {
@@ -550,7 +550,7 @@ solGS.cluster = {
 		});
 	},
 
-	selectAnalysisOption: function(page, args) {
+	optJobSubmission: function(page, args) {
 		var title = '<p>This analysis may take a long time. ' +
 			'Do you want to submit the analysis and get an email when it completes?</p>';
 
@@ -717,13 +717,8 @@ solGS.cluster = {
 		return msg;
 	},
 
-	plotClusterOutput: function(res) {
-
+	createClusterDownloadLinks: function (res) {
 		var popName = res.cluster_pop_name || '';
-		var imageId = res.plot_name;
-		imageId = 'id="' + imageId + '"';
-		var plot = '<img ' + imageId + ' src="' + res.cluster_plot + '">';
-
 		var clusterPlotFileName = res.cluster_plot.split('/').pop();
 		var plotType;
 		var outFileType;
@@ -806,6 +801,18 @@ solGS.cluster = {
 				elbowLink
 		}
 
+		return downloadLinks;
+
+	},
+
+	plotClusterOutput: function(res) {
+
+		// var popName = res.cluster_pop_name || '';
+		var imageId = res.plot_name;
+		imageId = 'id="' + imageId + '"';
+		var plot = '<img ' + imageId + ' src="' + res.cluster_plot + '">';
+
+		var downloadLinks = this.createClusterDownloadLinks(res);
 		jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
 		jQuery('#cluster_plot').prepend(plot);
 		//     // solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks)
@@ -848,18 +855,18 @@ solGS.cluster = {
 
 		var dataType = jQuery('#' + dataTypeId).val();
 		var clusterType = jQuery('#' + clusterTypeId).val();
-		var kNumber = jQuery('#' + kNumId).val();
-		var selectionProp = jQuery('#' + selectionPropId).val()
+		var kNumber = jQuery('#' + kNumId).val() || 3;
+		var selectionProp = jQuery('#' + selectionPropId).val();
+
+		if (typeof kNumber === 'string') {
+			kNumber = kNumber.replace(/\s+/g, '');
+		} 
 
 		if (selectionProp) {
 			selectionProp = selectionProp.replace(/%/, '');
 			selectionProp = selectionProp.replace(/\s+/g, '');
 		}
-
-		if (kNumber) {
-			kNumber = kNumber.replace(/\s+/g, '');
-		}
-
+	
 		return {
 			'data_type': dataType,
 			'cluster_type': clusterType,
