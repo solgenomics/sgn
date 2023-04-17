@@ -84,7 +84,7 @@ $d->while_logged_in_as(
         $d->get_ok( '/cluster/analysis', 'cluster home page' );
         sleep(5);
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'select clones list'
@@ -133,7 +133,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $plots_list_name . '"]',
             'xpath',
             'select plots list'
@@ -178,7 +178,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -227,7 +227,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -274,7 +274,7 @@ $d->while_logged_in_as(
         sleep(5);
 
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -314,7 +314,7 @@ $d->while_logged_in_as(
         sleep(5);
 
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -360,7 +360,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $trials_dt_name . '"]',
             'xpath',
             'select trials dataset'
@@ -407,7 +407,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_genotypes_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_list_select"]/option[text()="'
               . $trials_dt_name . '"]',
             'xpath',
             'select trials dataset'
@@ -712,7 +712,7 @@ $d->while_logged_in_as(
             $sel_pops );
 
         $d->find_element_ok(
-            '//div[@id="list_type_selection_pop_load"]/input[@value="View"]',
+            '//div[@id="list_type_selection_pops_go_btn"]/input[@value="View"]',
             'xpath', 'select list sel pop' )->click();
         sleep(5);
         $d->find_element_ok( 'list_type_selection_pops_list_select',
@@ -733,7 +733,7 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
             $sel_pops );
         $d->find_element_ok(
-            '//div[@id="list_type_selection_pop_load"]/input[@value="View"]',
+            '//div[@id="list_type_selection_pops_go_btn"]/input[@value="View"]',
             'xpath', 'select list sel pop' )->click();
         sleep(3);
 
@@ -800,7 +800,7 @@ $d->while_logged_in_as(
         $dataset->click();
         sleep(2);
         $d->find_element_ok(
-            '//div[@id="list_type_selection_pop_load"]/input[@value="View"]',
+            '//div[@id="list_type_selection_pops_go_btn"]/input[@value="View"]',
             'xpath', 'select list sel pop' )->click();
         sleep(5);
         my $clustering =
@@ -874,7 +874,7 @@ $d->while_logged_in_as(
         $dataset->click();
         sleep(5);
         $d->find_element_ok(
-            '//div[@id="list_type_selection_pop_load"]/input[@value="View"]',
+            '//div[@id="list_type_selection_pops_go_btn"]/input[@value="View"]',
             'xpath', 'select list sel pop' )->click();
         sleep(15);
 
@@ -2069,7 +2069,7 @@ $d->while_logged_in_as(
         $dataset->click();
         sleep(5);
         $d->find_element_ok(
-            '//div[@id="list_type_selection_pop_load"]/input[@value="View"]',
+            '//div[@id="list_type_selection_pops_go_btn"]/input[@value="View"]',
             'xpath', 'select list sel pop' )->click();
         sleep(15);
 
@@ -2125,7 +2125,7 @@ $d->while_logged_in_as(
             $sel_pops );
 
         $d->find_element_ok(
-            '//div[@id="list_type_selection_pop_load"]/input[@value="View"]',
+            '//div[@id="list_type_selection_pops_go_btn"]/input[@value="View"]',
             'xpath', 'select list type sel pop' )->click();
         sleep(5);
         $d->find_element_ok( 'list_type_selection_pops_list_select',
@@ -2140,7 +2140,7 @@ $d->while_logged_in_as(
         $list->click();
         sleep(5);
         $d->find_element_ok(
-            '//div[@id="list_type_selection_pop_load"]/input[@value="View"]',
+            '//div[@id="list_type_selection_pops_go_btn"]/input[@value="View"]',
             'xpath', 'select list sel pop' )->click();
         sleep(15);
 
