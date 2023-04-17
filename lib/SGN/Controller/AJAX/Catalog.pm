@@ -35,7 +35,7 @@ sub add_catalog_item_POST : Args(0) {
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
     my $availability = $c->req->param('availability');
-    if (!$availability) {
+    if (!defined $availability) {
         $availability = 'available';
     }
 
@@ -271,7 +271,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
         my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
         my $program_name = $program_rs->name();
         my $availability = $item_details[8];
-        if (!$availability) {
+        if (!defined $availability) {
             $availability = 'available';
         }
 
