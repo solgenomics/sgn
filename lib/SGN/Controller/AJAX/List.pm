@@ -625,11 +625,11 @@ sub validate : Path('/list/validate') Args(2) {
     my $protocol_id;
     if ($type eq "markers") {
         my $list = CXGN::List->new( { dbh=> $c->dbc->dbh(), list_id=>$list_id });
-        my $protocol_info = $list->description();
-        my $protocol_hash = decode_json $protocol_info;
-        $protocol_id = $protocol_hash->{'Protocol ID'};
-#        print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
-
+        my $protocol_info_string = $list->description();
+        my @protocol_info = split /,/, $protocol_info_string;
+        my $protocol_id_string = $protocol_info[1];
+        my @id_info = split /:/, $protocol_id_string;
+        $protocol_id = $id_info[1];       
     }
     my $list = $self->retrieve_list($c, $list_id);
 
@@ -641,7 +641,7 @@ sub validate : Path('/list/validate') Args(2) {
     if ($type eq "markers") {
         $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list, $protocol_id);
     } else {
-        $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);        
+        $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
     }
 
     print STDERR "DATA = ".Dumper($data);
