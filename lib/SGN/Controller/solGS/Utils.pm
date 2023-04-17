@@ -329,7 +329,7 @@ sub stash_json_args {
             no warnings 'uninitialized';
             $c->stash->{$key} = $val;
 
-            if ($data_str =~ /dataset|list/  && $key =~ /_pop_id/)
+            if ($data_str =~ /dataset|list/  && $key =~ /(cluster|kinship|pca|corre)_pop_id/)
             {
                 my $name = "${data_str }_id";
                 $val =~ s/\w+_//g;
