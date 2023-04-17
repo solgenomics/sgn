@@ -60,11 +60,14 @@ $latest_trial_activity => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
+      
 
 
 <br/>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
+
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "trial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, country_name => $country_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, plot_width => $plot_width, plot_length => $plot_length, field_size => $field_size, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross, folder_name => $folder_name, folder_id => $folder_id, identifier_prefix => $identifier_prefix, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
 
@@ -78,6 +81,17 @@ $latest_trial_activity => undef
 % } else {
 %     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
 % }
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.11.2/b-2.0.1/b-html5-2.0.1/b-print-2.0.1/fc-4.1.2/fh-3.1.9/r-2.2.9/sp-1.4.0/sl-1.3.3/datatables.min.css"/>
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.11.2/b-2.0.1/b-html5-2.0.1/b-print-2.0.1/fc-4.1.2/fh-3.1.9/r-2.2.9/sp-1.4.0/sl-1.3.3/datatables.min.js"></script>
+<script  src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
+<script  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
+<script  src="https://cdn.datatables.net/select/1.5.0/js/dataTables.select.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
+
 <div class="row">
     <div class="col-sm-6">
         <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, button_id => "generate_trial_barcode_link" &>
@@ -99,12 +113,22 @@ $latest_trial_activity => undef
           <p>Would you like to calculate Spatial Correction?</p>
           <button type="button" class="btn btn-primary" name="confirm_calculating_spatial_correction" id="confirm_calculating_spatial_correction">Confirm</button>
           <br />
+          <br />
           <div id="calculate_spatial_correction_status_message"></div>
+          <div id="spatial_correction_results_buttons">
+            <button id="spatial_checking_results_button" type="button" class="btn btn-default"> Spatial Importance</button>
+            <button id="fitted_values_button" type="button" class="btn btn-default"> Fitted Values</button>
+            <button id="blues_button" type="button" class="btn btn-default"> BLUEs </button>
+          </div>
           <br />
-          <br />
+          <hr>
           <div id="trait_spatial_selector"><select id="dropdown" style="">  <option value="">All</option></select></div>
-          <table id= "spatial_correction_result_table" ></table>
-          <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction">Store Spatial Correction</button>
+          <br />
+          <table id= "spatial_checking_results_table" ></table>
+          <table id= "spatial_correction_blue_results_table" ></table>
+          <table id= "spatial_correction_fitted_results_table" ></table>
+          <!-- <table id= "spatial_correction_fitted_results_table" ></table> -->
+          <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="blup" data-target="#generic_save_analysis_dialog">Store Spatial Correction</button>
 
         </div>
       </div>
@@ -239,5 +263,25 @@ jQuery(document).ready(function () {
 
 });
 
+
+$(document).on('click', '#confirm_store_spatial_correction',  function(e) {
+	$('#generic_save_analysis_dialog').modal("show");
+	$('#generic_save_analysis_model_properties').val(model_properties);
+	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
+	$('#generic_save_analysis_dataset_id').val( dataset_id );
+	$('#generic_save_analysis_accession_names').val(accession_names);
+	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
+	$('#generic_save_analysis_trait_names').val( traits );
+	$('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUPs using LMER R|SGNSTAT:0000034');
+	$('#generic_save_analysis_model_language').val('R');
+	$('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
+	$('#generic_save_analysis_model_application_version').val( version );
+	$('#generic_save_analysis_model_type').val('mixed_model_sommer');
+	$('#generic_save_analysis_result_values').val(adjusted_blues_data);
+	$('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
+	$('#generic_save_analysis_result_summary_values').val(result_summary);
+	$('#generic_save_analysis_model_training_data_file').val(input_file);
+	$('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
+});
 </script>
 

@@ -8,6 +8,17 @@ $trial_stock_type => undef
 <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js' ] &>
 
 
+<!-- Load DataTables CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+
+<!-- Load Buttons CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
+
+
+
 <div class="modal  fade" id="edit_field_map_dialog" name="edit_field_map_dialog" tabindex="-1" role="dialog" aria-labelledby="EditFieldMapDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -273,16 +284,20 @@ jQuery(document).ready(function () {
 	});
 
 jQuery('#calculate_spatial_correction').click(function() {
+    jQuery("#spatial_correction_results_buttons button").hide(); //hide the buttons
     jQuery('#trait_spatial_selector').hide();
    var trial_id = get_trial_id();
    jQuery('#calculate_spatial_correction_dialog').modal({
        backdrop: 'static',
-       keyboard: false
+       keyboard: false,
    }).find('.modal-dialog').css({
        width: '60%',
-       maxWidth: '95%'
+       maxWidth: '95%',
+       
    });
 });
+
+
 jQuery("#confirm_calculating_spatial_correction").click(function() {
      jQuery.ajax({
       beforeSend: function (xhr, settings) {
@@ -290,41 +305,116 @@ jQuery("#confirm_calculating_spatial_correction").click(function() {
       },
        url: '/ajax/spatial_model/generate_results/'+trial_id,
        success: function(response) {
-        jQuery("#calculate_spatial_correction_status_message").html("Analysis complete");
+        jQuery("#calculate_spatial_correction_status_message").html("Analysis complete. Click buttons below to see AIC (of models with and without spatial correction), fitted values, and BLUEs.");
          if (response.error) {
            alert(response.error);
-         } else {            
+           alert("Error calculating spatial correction");
+         } else {
+            jQuery("#confirm_store_spatial_correction").prop("disabled", false); 
+            jQuery("#spatial_correction_results_buttons button").show();
             var headers = response.headers;
-            jQuery("#spatial_correction_result_table").DataTable({
+            jQuery("#spatial_correction_blue_results_table").hide(); //hide blue results table
+            jQuery("#spatial_correction_blue_results_table_wrapper").hide(); //hide wrapper for blue results table
+            jQuery("#spatial_correction_fitted_results_table").hide(); //hide fitted values table
+            jQuery("#spatial_correction_fitted_results_table_wrapper").hide(); //hide wrapper for fitted values table
+
+            jQuery("#spatial_checking_results_button").click(function() {
+                jQuery("#spatial_correction_fitted_results_table").hide(); //hide fitted values table
+                jQuery("#spatial_correction_fitted_results_table_wrapper").hide(); //hide wrapper for fitted values table
+                jQuery("#spatial_correction_blue_results_table_wrapper").hide(); //hide wrapper for blue values table
+                jQuery("#spatial_correction_blue_results_table").hide(); //hide blue values table
+                jQuery("#spatial_checking_results_table").show(); //show AIC values table
+                jQuery("#spatial_checking_results_table_wrapper").show(); //show wrapper for AIC values table
+                jQuery('#trait_spatial_selector').hide(); //hide dropdown
+            });
+            jQuery("#fitted_values_button").click(function() {
+                jQuery("#spatial_correction_fitted_results_table").show(); //show fitted values table
+                jQuery("#spatial_correction_fitted_results_table_wrapper").show(); //show wrapper for fitted values table
+                jQuery("#spatial_correction_blue_results_table_wrapper").hide(); //hide wrapper for blue values table
+                jQuery("#spatial_correction_blue_results_table").hide(); //hide blue values table
+                jQuery("#spatial_checking_results_table").hide(); //hide AIC values table
+                jQuery("#spatial_checking_results_table_wrapper").hide(); //hide wrapper for AIC values table
+                jQuery('#trait_spatial_selector').hide(); //hide dropdown
+            });
+            jQuery("#blues_button").click(function() {
+                jQuery("#spatial_correction_fitted_results_table").hide(); //hide fitted values table
+                jQuery("#spatial_correction_blue_results_table").show(); //show blue values table
+                jQuery("#spatial_correction_fitted_results_table_wrapper").hide(); //hide wrapper for fitted values table
+                jQuery("#spatial_correction_blue_results_table_wrapper").show(); //show wrapper for blue values table
+                jQuery("#spatial_checking_results_table").hide(); //hide AIC values table
+                jQuery("#spatial_checking_results_table_wrapper").hide(); //hide wrapper for AIC values table
+
+                // Create custom dropdown menu
+                jQuery(document).ready(function() {
+                    var columnValues = jQuery('#spatial_correction_blue_results_table').DataTable().column(1).data().unique().toArray();
+                    console.log(columnValues);
+                    var dropdown = jQuery('#dropdown');
+                    jQuery.each(columnValues, function(i, value) {
+                        dropdown.append(jQuery('<option>').text(value).attr('value', value));
+                    });
+                //dropdown.insertAfter(jQuery('#spatial_correction_blue_results_table_wrapper .dataTables_length'));
+                    jQuery('#trait_spatial_selector').show(); // append dropdown to DataTable wrapper
+                });
+
+                // Filter DataTable based on selected value
+                jQuery(document).ready(function() {
+                    jQuery('#dropdown').on('change', function() {
+                        var selectedValue = jQuery(this).val();
+                        jQuery('#spatial_correction_blue_results_table').DataTable().column(1).search(selectedValue).draw();
+                    });
+                });
+            });
+            jQuery("#spatial_checking_results_table").DataTable({
+            'destroy': true,
+                  'timeout': 6000000,
+                  'data' : response.data_AIC,
+                  'columns': [
+                        { 'title': 'ID' },
+                        { 'title': 'Trait' },                        
+                        { 'title': 'AIC:Without' },
+                        { 'title': 'AIC:With' },
+                        { 'title': 'Spatial Correction Needed' },
+                    ],
+            });
+            jQuery("#spatial_correction_blue_results_table").DataTable({
                 'destroy': true,
                   'timeout': 6000000,
                   'data' : response.data,
                   'columns': headers,
+                  'dom': 'Bfrtip',
+                    'buttons': [
+                        'csv', 'excel', 'pdf'
+                    ]
                   //'dom': '<"top"l>rt<"bottom"ip><"clear">', 
                   //'columns': ["ID","Trait", "Effect", "Estimate", "Std.Error", "t.value"],
 
                   //"order": [[ 1, "desc" ]]
             })
 
-            // Create custom dropdown menu
-            jQuery(document).ready(function() {
-                var columnValues = jQuery('#spatial_correction_result_table').DataTable().column(1).data().unique().toArray();
-                console.log(columnValues);
-                var dropdown = jQuery('#dropdown');
-                jQuery.each(columnValues, function(i, value) {
-                    dropdown.append(jQuery('<option>').text(value).attr('value', value));
-                });
-                //dropdown.insertAfter(jQuery('#spatial_correction_result_table_wrapper .dataTables_length'));
-                jQuery('#trait_spatial_selector').show(); // append dropdown to DataTable wrapper
-            });
+            
 
-            // Filter DataTable based on selected value
-            jQuery(document).ready(function() {
-                jQuery('#dropdown').on('change', function() {
-                    var selectedValue = jQuery(this).val();
-                    jQuery('#spatial_correction_result_table').DataTable().column(1).search(selectedValue).draw();
-                });
-            });
+            jQuery("#spatial_correction_fitted_results_table").DataTable({
+                'destroy': true,
+                  'timeout': 6000000,
+                  'data' : response.data_fitted ,
+                  "columnDefs": [
+                        { "targets": 0, "visible": false }
+                    ],
+                  'columns': [
+                        { 'title': 'ID' },
+                        { 'title': 'Trait' },
+                        { 'title': 'Name' },
+                        { 'title': 'Phenotype Values' },
+                        { 'title': 'Fitted Values' }
+                    ],
+                  //'columns': response.headers_fitted,
+                  'order': [[ 1, "asc" ]],
+                    'dom': 'Bfrtip',
+                    'buttons': [
+                        'csv', 'excel', 'pdf'
+                    ]
+                  
+           })
 
          }
        }
