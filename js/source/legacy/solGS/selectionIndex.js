@@ -433,7 +433,7 @@ solGS.sIndex = {
 
     getListTypeSelPopulations: function()  {
 
-	var listTypeSelPopsDiv   = document.getElementById("list_type_selection_populations");
+	var listTypeSelPopsDiv   = document.getElementById("list_type_selection_pops_selected");
 	var listTypeSelPopsTable = listTypeSelPopsDiv.getElementsByTagName("table");
 	var listTypeSelPopsRows  = listTypeSelPopsTable[0].rows;
 	var predictedListTypePops = [];
