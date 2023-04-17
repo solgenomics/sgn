@@ -219,8 +219,8 @@ sub create_dataset_geno_data_query_jobs {
     	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
     	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
 
-    	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
-    	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
+    	$c->controller('solGS::AsyncJob')->get_trials_genotype_query_jobs_args($c, $trials_ids, $geno_protocol);
+    	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{trials_genotype_query_jobs_args};
     }
 }
 
