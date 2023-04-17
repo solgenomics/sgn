@@ -132,7 +132,7 @@ sub process_image {
     my $self = shift;
     my ($filename, $type, $type_id, $linking_table_type_id) = @_;
 
-    $self->SUPER::process_image($filename);
+    my ($image_id, $message) = $self->SUPER::process_image($filename);
 
     if ( $type eq "experiment" ) {
         #print STDERR "Associating experiment $type_id...\n";
@@ -394,7 +394,8 @@ sub upload_phenotypes_associated_images_zipfile {
     my %observationunit_stock_id_image_id;
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );
-        my $img_name = basename($_->fileName());
+	my $filepath = $_->fileName();
+        my $img_name = basename($filepath);
         my $basename;
         my $file_ext;
         if ($img_name =~ m/(.*)(\.(?!\.).*)$/) {  # extension is what follows last .
@@ -407,18 +408,20 @@ sub upload_phenotypes_associated_images_zipfile {
             my $temp_file = $image->upload_zipfile_images($_);
 
             #Check if image already stored in database
-            $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-                JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-                JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
-                WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.original_filename = '$basename';";
-            my $h = $schema->storage->dbh->prepare($q);
-            $h->execute();
-            my ($saved_image_id) = $h->fetchrow_array();
-            my $image_id;
+
+            # $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            # my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+            #     JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+            #     JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
+            #     WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.original_filename = '$basename';";
+#            my $h = $schema->storage->dbh->prepare($q);
+ #           $h->execute();
+ #           my ($saved_image_id) = $h->fetchrow_array();
+	    my $image_id;
+	    my $saved_image_id = CXGN::Image->is_duplicate($schema->storage->dbh(), $temp_file);
             if ($saved_image_id) {
                 print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
-                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+                $image_id = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
                 $image_id = $image->get_image_id();
             }
             else {

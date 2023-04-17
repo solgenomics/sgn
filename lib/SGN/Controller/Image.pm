@@ -1,8 +1,10 @@
 package SGN::Controller::Image;
 
 use Moose;
+use Digest::MD5;
 use namespace::autoclean;
 use File::Basename;
+use File::Copy;
 use SGN::Image;
 use CXGN::Login;
 
@@ -56,23 +58,15 @@ sub confirm :Path('/image/confirm') {
         or $c->throw( public_message => 'No image file uploaded.', is_client_error => 1 );
     my $filename = $upload->filename();
     my $tempfile = $upload->tempname();
-    #print STDERR "FILENAME: $filename TEMPNAME: $tempfile\n";
+    print STDERR "FILENAME: $filename TEMPNAME: $tempfile\n";
 
     if (! -e $tempfile) {
         die "No tempfile $tempfile\n";
     }
     
-    my $filename_validation_msg =  $self->validate_image_filename(basename($filename));
-    if ( $filename_validation_msg )  { #if non-blank, there is a problem with Filename, print messages
+    my $filename_validation_msg =  $self->validate_image_filename($filename);
 
-        unlink $tempfile;  # remove upload! prevents more errors on item we have rejected
-
-        $c->throw( public_message => <<EOM, is_client_error => 1 );
-There is a problem with the image file you selected: $filename <br />
-Error: $filename_validation_msg <br />
-EOM
-
-    }
+ 
     my $image_url = $c->tempfiles_subdir('image')."/".basename($tempfile);
     my $confirm_filename = $c->get_conf('basepath')."/".$image_url;
     if (! -e $tempfile) { die "Temp file does not exit $tempfile\n"; }
@@ -80,6 +74,32 @@ EOM
         die "Error copying $tempfile to $confirm_filename\n";
     }
 
+    my $duplicate_image_id = CXGN::Image->is_duplicate($c->dbc->dbh(), $confirm_filename);
+
+    print STDERR "DUPLICATE IMAGE ID = $duplicate_image_id\n";
+    if ( $filename_validation_msg || $duplicate_image_id )  {
+ 
+        unlink $tempfile;  # remove upload! prevents more errors on item we have rejected
+
+	my $message = "";
+	
+	$c->stash->{template} = '/generic_message.mas';
+	if ($filename_validation_msg) {
+	    $message = "There is a problem with the image file you selected: $filename <br />Error: $filename_validation_msg.<br />";
+	}
+	if ($duplicate_image_id) {
+	    $message .= "This image has already been uploaded with the id <a href=\"/image/view/$duplicate_image_id\">$duplicate_image_id</a> <br />"; 
+	}
+
+	$c->stash->{message} = $message;
+	return;
+    }
+    else {
+	print STDERR "CHECKS YIELDED: $filename_validation_msg and $duplicate_image_id\n";
+    }
+
+    
+    
     $c->stash(
         type => $c->req->param('type'),
         refering_page => $c->req->param('refering_page'),
@@ -107,7 +127,8 @@ sub store :Path('/image/store') {
 
 
     my $temp_image_dir = $c->get_conf("basepath")."/".$c->tempfiles_subdir('image');
-
+    mkdir($temp_image_dir);
+    
     $image->set_sp_person_id( $c->stash->{person_id} );
 
     if ((my $err = $image->process_image($temp_image_dir."/".$tempfile, $type, $type_id))<=0) {
@@ -122,7 +143,7 @@ sub store :Path('/image/store') {
     $image->set_name($filename);
 
     $image->store();
-
+ 
    # send_image_email($c, "store", $image, $sp_person_id, $refering_page, $type, $type_id);
     #remove the temp_file
     #
@@ -151,7 +172,9 @@ sub image_display_order :Path('/image/display_order') Args(0) {
 
 sub validate_image_filename :Private {
     my $self = shift;
-    my $fn = shift;
+    my $filepath = shift;
+
+    my $fn = basename($filepath);
     my %file_types = ( '.jpg'  => 'JPEG file',
                        '.jpeg' => 'JPEG file',
                        '.gif'  => 'GIF file',
@@ -180,8 +203,25 @@ sub validate_image_filename :Private {
         return "File Type must be one of: .png, .jpg, .jpeg, .gif, .pdf, .ps, or .eps";
     }
 
+    
     return 0;  # FALSE, if passes all tests
 }
+
+#moved to CXGN::Image as is_duplicate
+# sub check_duplicate {
+#     my $self = shift;
+#     my $dbh = shift;
+#     my $filepath = shift; 
+#     my $md5sum = SGN::Image->calculate_md5sum($filepath);
+
+#     my $q = "SELECT image_id from metadata.md_image where md5sum=?";
+#     my $h = $dbh->prepare($q);
+#     $h->execute($md5sum);
+
+#     if (my ($image_id) = $h->fetchrow_array()) {
+# 	return "Image has already been uploaded (image_id = $image_id)\n";
+#     }
+# }
 
 sub send_image_email :Private {
     my $self = shift;
