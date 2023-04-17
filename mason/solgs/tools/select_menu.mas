@@ -34,7 +34,8 @@ my $label = $analysis_type =~ s/_/ /gr;
   </div>
   <div class="select_menu_block" >
     <i class="glyphicon-plus"></i>
-    <a href="/solgs/breeder_search/<% $breeder_search_params %>" style="color:#ffffff"><% $wizard_link_txt %></a>
+    <a href="/solgs/breeder_search/<% $breeder_search_params %>" style="color:#ffffff"><%
+    $wizard_link_txt %></a>
     </div>
 
   <br>
