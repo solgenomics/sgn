@@ -127,6 +127,33 @@ my $selected_accessions_snp = $result_hash2{'data'};
 my $number_of_accessions_snp = scalar@$selected_accessions_snp;
 is($number_of_accessions_snp,14);
 
+#test filtering markers based on chromosome
+$mech->get_ok('http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id='.$protocol_id.'&chromosome_name='.'1');
+$response = decode_json $mech->content;
+my $filtered_markers = $response->{'data'};
+my $number_of_markers = @$filtered_markers;
+is($number_of_markers,4);
+
+my @markers;
+foreach my $marker(@$filtered_markers) {
+    push @markers, $marker->[0];
+}
+is($markers[0],'S1_21594');
+is($markers[1],'S1_21597');
+is($markers[2],'S1_26576');
+is($markers[3],'S1_26624');
+
+#test creating markers type list
+my $protocol_info = 'protocol:2015_genotype_protocol,id='.$protocol_id;
+$mech->get_ok('http://localhost:3010/list/new?name=chromosome1&desc='.$protocol_info);
+$response = decode_json $mech->content;
+my $list_id = $response->{list_id};
+ok($list_id);
+
+my $marker_list = CXGN::List->new( { dbh=>$dbh, list_id => $list_id });
+my $response = $marker_list->add_bulk(\@markers);
+is($response->{'count'},4);
+
 # Delete genotype protocol after testing
 $mech->get("/ajax/genotyping_protocol/delete/$protocol_id");
 $response = decode_json $mech->content;
