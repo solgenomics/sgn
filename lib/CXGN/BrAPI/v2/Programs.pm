@@ -126,7 +126,7 @@ sub search {
 				id => \@projects
 			});
 			my $external_references = $references->search();
-			my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+			my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
 			push @data, {
 				programDbId=>qq|$_->[0]|,
@@ -189,7 +189,7 @@ sub detail {
 		id => \@ids
 	});
 	my $external_references = $references->search();
-	my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+	my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
     
 	%result = (
 		programDbId=>qq|$id|,

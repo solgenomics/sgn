@@ -560,6 +560,7 @@ sub search {
     });
 
     my $records_total = $rs->count();
+    print STDERR "total records: ".$records_total;
     $any_name =~ s/^\s+|\s+$//g;
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
@@ -724,8 +725,11 @@ ORDER BY organism_id ASC;";
                 foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
                     push @stockprop_vals_string, $_;
                 }
-                my $stockprop_vals_string = join ',', @stockprop_vals_string;
-                $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
+                if (@stockprop_vals_string){
+                    my $stockprop_vals_string = join ',', @stockprop_vals_string;
+                    print STDERR $stockprop_view[$s].": ". $stockprop_vals_string;
+                    $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
+                }
             }
         }
 

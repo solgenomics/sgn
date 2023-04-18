@@ -139,7 +139,7 @@ is_deeply($response, {'result' => {'observationVariables' => [{'observationVaria
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/observations', ['pageSize'=>'2', 'observationDbIds' => ['740337']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR "\n\n" . Dumper$response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/observations/'. $searchId);
 $response = decode_json $mech->content;
@@ -191,7 +191,7 @@ is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','mess
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/variables', ['pageSize'=>'1', 'observationVariableDbIds' => ['70761']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR "\n\n" . Dumper$response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/variables/'. $searchId);
 $response = decode_json $mech->content;
@@ -257,7 +257,7 @@ is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'current
 #
 $mech->post_ok('http://localhost:3010/brapi/v2/search/observationunits', ['observationUnitDbIds'=>['41300','41301']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/observationunits/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR "\n\n" . Dumper $response;
