@@ -52,6 +52,7 @@ $main_page
                     <br /><br />
                 </div>
             </div>
+            <td><a href="/catalog/view"><p>Go to Catalog Page</p></a></td>
         </div>
     </div>
 </&>
