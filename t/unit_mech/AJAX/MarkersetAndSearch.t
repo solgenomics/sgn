@@ -9,6 +9,8 @@ use CXGN::List;
 use CXGN::Genotype::Protocol;
 use Data::Dumper;
 use JSON;
+use CXGN::List::Validate;
+
 
 local $Data::Dumper::Indent = 0;
 
@@ -151,8 +153,32 @@ my $list_id = $response->{list_id};
 ok($list_id);
 
 my $marker_list = CXGN::List->new( { dbh=>$dbh, list_id => $list_id });
-my $response = $marker_list->add_bulk(\@markers);
+$response = $marker_list->add_bulk(\@markers);
 is($response->{'count'},4);
+
+#test validating list
+my $list = CXGN::List->new( { dbh => $dbh, list_id => $list_id } );
+my $flat_list = $list->elements();
+
+my $list_validator = CXGN::List::Validate->new();
+my $results = $list_validator->validate($schema, 'markers', $flat_list, $protocol_id);
+my $invalid_markers = $results->{'missing'};
+my $no_of_invalid_markers = @$invalid_markers;
+is($no_of_invalid_markers,0);
+
+#adding invalid marker
+push @markers, 'XXXXXX';
+$response = $marker_list->add_bulk(\@markers);
+is($response->{'count'},1);
+
+my $list_2 = CXGN::List->new( { dbh => $dbh, list_id => $list_id } );
+my $flat_list_2 = $list_2->elements();
+
+my $list_validator_2 = CXGN::List::Validate->new();
+my $results_2 = $list_validator_2->validate($schema, 'markers', $flat_list_2, $protocol_id);
+my $invalid_markers_2 = $results_2->{'missing'};
+my $no_of_invalid_markers_2 = @$invalid_markers_2;
+is($no_of_invalid_markers_2,1);
 
 # Delete genotype protocol after testing
 $mech->get("/ajax/genotyping_protocol/delete/$protocol_id");
@@ -163,6 +189,7 @@ is($response->{'success'}, 1);
 CXGN::List::delete_list($schema->storage->dbh, $markerset_list_id);
 CXGN::List::delete_list($schema->storage->dbh, $markerset2_list_id);
 CXGN::List::delete_list($schema->storage->dbh, $accession_list_id);
+CXGN::List::delete_list($schema->storage->dbh, $list_id);
 $schema->resultset("Project::Project")->find({project_id=>$project_id})->delete();
 
 $f->clean_up_db();
