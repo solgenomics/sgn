@@ -135,8 +135,6 @@ sub search {
         $h->execute($chromosome_name,$chromosome_name,$protocol_id_list->[0], $vcf_map_details_cvterm_id);
 
         ($protocolprop_rank, $chromosome_marker_count) = $h->fetchrow_array();
-        print STDERR "RANK =".Dumper($protocolprop_rank)."\n";
-        print STDERR "MARKER COUNT =".Dumper($chromosome_marker_count)."\n";
         if (defined $protocolprop_rank) {
             push @where_clause, "nd_protocolprop.rank = $protocolprop_rank";
         }
@@ -182,7 +180,6 @@ sub search {
         }
         push @results, $marker_obj;
     }
-    print STDERR "MARKER RESULTS =".Dumper(\@results)."\n";
 
     my $total_marker_count;
     if($chromosome_name) {

@@ -24,10 +24,6 @@ $protocol_name
                 </div>
             </div>
         </div>
-
-
-
-
     </div>
     <center>
     <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
@@ -61,8 +57,6 @@ $protocol_name
         <div id="markers_add_to_list"></div>
     </div>
 </div>
-
-
 
 <script>
 
