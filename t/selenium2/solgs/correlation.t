@@ -40,7 +40,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/correlation/analysis', 'correlation home page');
     sleep(5);
 
-
     $d->find_element_ok('//select[@id="correlation_pops_list_select"]/option[text()="'. $plots_list_name . '"]', 'xpath', 'plots list')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
@@ -135,7 +134,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $corr);
     sleep(2);
     $d->find_element('Phenotypic correlation', 'partial_link_text', 'scroll to correlation')->click();
-    sleep(1);
+    sleep(2);
     $d->find_element_ok('run_pheno_correlation', 'id', 'run correlation')->click();
     sleep(60);
     $d->find_element_ok('//div[@id="correlation_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -162,7 +161,6 @@ $d->while_logged_in_as("submitter", sub {
     sleep(350);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
-
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
     sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
