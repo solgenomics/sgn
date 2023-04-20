@@ -48,15 +48,14 @@ solGS.sIndex = {
     jQuery(".si_dropdown dt a").click(function () {
       jQuery(".si_dropdown dd ul").toggle();
 
+      jQuery(".si_dropdown").on("click", function (e) {
+        var clicked = jQuery(e.target);
 
-	  jQuery(".si_dropdown").on("click", function (e) {
-		var clicked = jQuery(e.target);
-  
-		if (!clicked.parents().hasClass("si_dropdown")) {
-			jQuery(".si_dropdown dd ul").hide();
-		}
-		e.preventDefault();
-	  });
+        if (!clicked.parents().hasClass("si_dropdown")) {
+          jQuery(".si_dropdown dd ul").hide();
+        }
+        e.preventDefault();
+      });
     });
 
     var selectedPopId;
@@ -65,7 +64,6 @@ solGS.sIndex = {
     var modelId = modelData.id;
 
     jQuery(".si_dropdown dd ul li a").click(function () {
-
       var text = jQuery(this).html();
 
       jQuery(".si_dropdown dt a span").html(text);
@@ -82,16 +80,14 @@ solGS.sIndex = {
       jQuery("#si_canvas #selected_population_name").val(selectedPopName);
       jQuery("#si_canvas #selected_population_id").val(selectedPopId);
       jQuery("#si_canvas #selected_population_type").val(selectedPopType);
-
     });
 
-	if (!selectedPopId) {
-		selectedPopId = modelId;
-	};
+    if (!selectedPopId) {
+      selectedPopId = modelId;
+    }
 
-	this.displaySindexForm(modelId, selectedPopId);
-
-},
+    this.displaySindexForm(modelId, selectedPopId);
+  },
 
   addIndexedClustering: function () {
     var indexed = solGS.sIndex.indexed;
@@ -235,7 +231,6 @@ solGS.sIndex = {
 
   calcSelectionIndex: function (params, legend, trainingPopId, selectionPopId) {
     if (params) {
-
       var canvas = "#si_canvas";
       var siMsgDiv = "#si_correlation_message";
 
@@ -312,7 +307,7 @@ solGS.sIndex = {
               .runGeneticCorrelation(genArgs)
               .done(function (res) {
                 if (res.status.match(/success/)) {
-					genArgs['corr_table_file'] = res.corre_table_file;
+                  genArgs["corr_table_file"] = res.corre_table_file;
                   var corrDownload = solGS.correlation.createCorrDownloadLink(genArgs);
 
                   solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
@@ -532,11 +527,9 @@ solGS.sIndex = {
 solGS.sIndex.indexed = [];
 
 jQuery(document).ready(function () {
-setTimeout(function () {
-
+  setTimeout(function () {
     solGS.sIndex.populateSindexMenu();
-}, 5000);
-
+  }, 5000);
 });
 
 jQuery(document).on("click", "#calculate_si", function () {
