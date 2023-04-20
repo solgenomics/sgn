@@ -38,7 +38,7 @@ sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0)
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
-
+    
     $self->cache_pheno_corr_output_files($c);
     my $corre_json_file = $c->stash->{pheno_corr_json_file};
 
@@ -71,9 +71,9 @@ sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $corre_pop_id = $c->stash->{corre_pop_id};
+    my $corr_pop_id = $c->stash->{corr_pop_id};
     my $pop_type = $c->stash->{pop_type};
-    $c->stash->{selection_pop_id} = $corre_pop_id if $pop_type =~ /selection/;
+    $c->stash->{selection_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
     
     $self->cache_genetic_corr_output_files($c);
     my $corre_json_file = $c->stash->{genetic_corr_json_file};
@@ -117,7 +117,7 @@ sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
 sub cache_pheno_corr_output_files {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{corre_pop_id};
+    my $pop_id = $c->stash->{corr_pop_id};
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
 
     my $table_cache_data = {key    => 'pheno_corr_table_' . $pop_id,
@@ -142,7 +142,7 @@ sub cache_pheno_corr_output_files {
 sub cache_genetic_corr_output_files {
     my ($self, $c) = @_;
 
-    my $corre_pop_id = $c->stash->{corre_pop_id};
+    my $corr_pop_id = $c->stash->{corr_pop_id};
     my $pop_type         = $c->stash->{pop_type};
     my $traits_code = $c->stash->{training_traits_code};
     my $sindex_name = $c->stash->{sindex_name};
@@ -155,7 +155,7 @@ sub cache_genetic_corr_output_files {
     }
     else 
     {
-        $identifier  =  $pop_type =~ /selection/ ? "$model_id-${corre_pop_id}-${traits_code}" :  "${corre_pop_id}-${traits_code}";
+        $identifier  =  $pop_type =~ /selection/ ? "$model_id-${corr_pop_id}-${traits_code}" :  "${corr_pop_id}-${traits_code}";
     }
 
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
@@ -206,7 +206,7 @@ sub download_genetic_correlation_file {
 sub pheno_corr_output_files {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{corre_pop_id};
+    my $pop_id = $c->stash->{corr_pop_id};
     $self->cache_pheno_corr_output_files($c);
 
     my $output_files = join ("\t",
@@ -227,7 +227,7 @@ sub pheno_corr_output_files {
 sub pheno_corr_input_files {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{corre_pop_id};
+    my $pop_id = $c->stash->{corr_pop_id};
     my $data_type = $c->stash->{data_type} || 'phenotype';
     my $input_files;
 
@@ -265,7 +265,7 @@ sub pheno_corr_input_files {
 sub geno_corr_output_files {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{corre_pop_id};
+    my $pop_id = $c->stash->{corr_pop_id};
     $self->cache_genetic_corr_output_files($c);
 
     my $output_files = join ("\t",
@@ -286,7 +286,7 @@ sub geno_corr_output_files {
 sub geno_corr_input_files {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{corre_pop_id};
+    my $pop_id = $c->stash->{corr_pop_id};
     my $gebvs_file = $c->stash->{combined_gebvs_file};
     my $index_file = $c->stash->{selection_index_file};
 
@@ -368,7 +368,7 @@ sub corr_r_jobs {
     $c->stash->{output_files} = $c->stash->{corre_output_files};
 
     my $corre_type = $c->stash->{correlation_type};
-    my $pop_id = $c->stash->{corre_pop_id};
+    my $pop_id = $c->stash->{corr_pop_id};
 
     $c->stash->{r_temp_file}  = "${corre_type}-${pop_id}";
     $c->stash->{r_script}     = $c->stash->{correlation_script};
@@ -407,12 +407,12 @@ sub corr_r_jobs_file {
 sub corr_query_jobs {
     my ($self, $c) = @_;
 
-    my $corre_pop_id = $c->stash->{corre_pop_id};
+    my $corr_pop_id = $c->stash->{corr_pop_id};
     my $data_set_type = $c->stash->{data_set_type};
     my $data_str = $c->stash->{data_structure};
     my $trials_ids = [];
 
-    my $jobs = $c->controller('solGS::AsyncJob')->create_phenotype_data_query_jobs($c, $corre_pop_id);
+    my $jobs = $c->controller('solGS::AsyncJob')->create_phenotype_data_query_jobs($c, $corr_pop_id);
 
     if (reftype $jobs ne 'ARRAY')
     {
