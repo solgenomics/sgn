@@ -29,7 +29,7 @@
     "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^4.29.5",
     "webpack-command": "^0.4.2"
-  },
+  },{"messageType":"INFO","message":"BrAPI base call found with page=0, pageSize=10"}
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
     "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",

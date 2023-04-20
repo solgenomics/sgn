@@ -452,7 +452,7 @@ sub germplasm_progeny {
             };
         }
     }
-    my $total_count = length @{$full_data};
+    my $total_count = scalar @{$full_data};
     my $page_size = 10;
     if ($total_count > $page_size){
         $page_size = $total_count;
