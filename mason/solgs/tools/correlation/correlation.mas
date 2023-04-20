@@ -14,7 +14,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$corre_pop_id
+$corr_pop_id
 $data_set_type => undef
 $data_str => undef
 
@@ -53,7 +53,7 @@ $data_str => undef
 
       <div id="correlation_message"  class="message"></div>
       <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" />
-      <input type="hidden" id="corre_pop_id" value="<% $corre_pop_id %>" />
+      <input type="hidden" id="corre_pop_id" value="<% $corr_pop_id %>" />
       <input type="hidden" id="data_structure" value="<% $data_str %>" />
       <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
 
