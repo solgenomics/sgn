@@ -271,6 +271,8 @@ solGS.correlation = {
     var traitsIds = jQuery("#training_traits_ids").val();
     var traitsCode = jQuery("#training_traits_code").val();
     var protocolId = jQuery("#genotyping_protocol_id").val();
+    var dataSetType = jQuery("#data_set_type").val();
+
 
     if (traitsIds) {
       traitsIds = traitsIds.split(",");
@@ -280,6 +282,7 @@ solGS.correlation = {
       training_pop_id: trainingPopId,
       corr_pop_id: corrPopId,
       training_traits_ids: traitsIds,
+      data_set_type: dataSetType,
       training_traits_code: traitsCode,
       pop_type: corrPopType,
       selection_index_file: sIndexFile,
@@ -321,7 +324,8 @@ solGS.correlation = {
     return analysisReq;
   },
 
-  createCorrDownloadLink: function (corrFile, corrArgs) {
+  createCorrDownloadLink: function (corrArgs) {
+    var corrFile = corrArgs.corr_table_file;
     var corrFileName = corrFile.split("/").pop();
     var corrCoefLink =
       '<a href="' + corrFile + '" download=' + corrFileName + '">' + "coefficients" + "</a>";
@@ -359,7 +363,7 @@ solGS.correlation = {
 
     jQuery("#run_genetic_correlation").hide();
     jQuery(canvas + " .multi-spinner-container").show();
-    jQuery(msgDiv).html(`${msg}...`).show();
+    jQuery(msgDiv).html(msg).show();
   },
 
   getCorrDivs: function (corrPopId, sIndexName) {
@@ -412,7 +416,8 @@ jQuery(document).ready(function () {
 
     solGS.correlation.runPhenoCorrelation(args).done(function (res) {
       if (res.data) {
-        var corrDownload = solGS.correlation.createCorrDownloadLink(res.corre_table_file, args);
+        args['corr_table_file'] = res.corre_table_file;
+        var corrDownload = solGS.correlation.createCorrDownloadLink(args);
 
         solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
 
@@ -462,7 +467,8 @@ jQuery(document).ready(function () {
         .runPhenoCorrelation(args)
         .done(function (res) {
           if (res.data) {
-            var corrDownload = solGS.correlation.createCorrDownloadLink(res.corre_table_file, args);
+            args['corr_table_file'] = res.corre_table_file;
+            var corrDownload = solGS.correlation.createCorrDownloadLink(args);
 
             solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
 
@@ -503,15 +509,15 @@ jQuery(document).ready(function () {
     var corrMsgDiv = args.corr_msg_div;
 
     jQuery(`${canvas} .multi-spinner-container`).show();
-    var msg = "Running genetic correlation analysis...please wait";
-    jQuery(corrMsgDiv).html(`${msg}...`).show();
+    var msg = "Running genetic correlation analysis...please wait...";
+    jQuery(corrMsgDiv).html(msg).show();
 
     solGS.correlation
       .runGeneticCorrelation(args)
       .done(function (res) {
         if (res.status.match(/success/)) {
-          var corrDownload = solGS.correlation.createCorrDownloadLink(res.corre_table_file, args);
-
+          args['corr_table_file'] = res.corre_table_file;
+          var corrDownload = solGS.correlation.createCorrDownloadLink(args);
           solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
         } else {
           jQuery(corrMsgDiv).html(res.status).fadeOut(8400);
@@ -520,7 +526,6 @@ jQuery(document).ready(function () {
         jQuery(`${canvas} .multi-spinner-container`).hide();
         jQuery(corrMsgDiv).empty();
         jQuery(runCorrBtnId).show();
-        // jQuery.unblockUI();
       })
       .fail(function (res) {
         jQuery(corrMsgDiv).html("Error occured running correlation analysis.").fadeOut(8400);
