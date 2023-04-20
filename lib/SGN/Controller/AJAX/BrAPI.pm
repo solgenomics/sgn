@@ -275,7 +275,7 @@ sub _authenticate_user {
 	# Will still throw error if auth is required
 	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
 		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
-		$user_type = 'curator';
+		$user_type = $c->config->{brapi_default_user_role};
 		if (! defined $user_id) {
 			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
 			_standard_response_construction($c, $brapi_package_result, 500);
@@ -1661,6 +1661,61 @@ sub allelematrix_search_process {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+
+=head2 brapi/v2/plates
+
+=cut
+
+sub plates : Chained('brapi') PathPart('plates') Args(0) : ActionClass('REST') { }
+
+sub plates_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Plates');
+	my $brapi_package_result = $brapi_module->search($clean_inputs,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub plates_single  : Chained('brapi') PathPart('plates') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $plate_id = shift;
+
+	$c->stash->{plate_id} = $plate_id;
+}
+
+sub plates_detail  : Chained('plates_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub plates_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Plates');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{plate_id},$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub plates_search_save : Chained('brapi') PathPart('search/plates') Args(0) : ActionClass('REST') { }
+
+sub plates_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Plates');
+}
+
+sub plates_search_retrieve  : Chained('brapi') PathPart('search/Plates') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Plates');
+}
+
+
 =head2 brapi/v2/lists
 
 =cut
@@ -1740,6 +1795,20 @@ sub list_items_POST {
 	my $brapi_package_result = $brapi_module->store_items($c->stash->{list_id},$clean_inputs,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub list_data  : Chained('list_single') PathPart('data') Args(0) : ActionClass('REST') { }
+
+sub list_data_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->store_items($c->stash->{list_id},$clean_inputs,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 
 sub list_search_save : Chained('brapi') PathPart('search/lists') Args(0) : ActionClass('REST') { }
 
@@ -2638,7 +2707,7 @@ sub observation_units_POST {
 	my $self = shift;
 	my $c = shift;
 	# The observation units need an operator, so login required
-	my $force_authenticate = 0;
+	my $force_authenticate = $c->config->{brapi_observation_units_require_login};
 	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
@@ -2667,7 +2736,8 @@ sub observation_units_PUT {
 
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	my $force_authenticate = $c->config->{brapi_observation_units_require_login};
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my %data = %$clean_inputs;
     my @all_units;
@@ -3403,7 +3473,8 @@ sub observationvariable_list_POST {
 		_standard_response_construction($c, $error, 404);
 	}
 
-	my ($auth,$user_id) = _authenticate_user($c);
+	my $force_authenticate = $c->config->{brapi_variables_require_login};
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
@@ -3479,7 +3550,8 @@ sub observationvariable_detail_PUT {
 	my $self = shift;
 	my $c = shift;
 	my $variableDbId = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	my $force_authenticate = $c->config->{brapi_variables_require_login};
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 
 	my $can_put_variables = $c->config->{brapi_put_variables};
 	if (not $can_put_variables){
@@ -3863,7 +3935,7 @@ sub observations_PUT {
 }
 
 sub observations_GET {
-	my $self = shift;
+	my $self = shift; 
 	my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -3879,8 +3951,8 @@ sub observations_GET {
         observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
         observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
         observationUnitDbId => $clean_inputs->{observationUnitDbId},
-		observationVariableDbId => $clean_inputs->{observationVariableDbId},
-        observationDbId => $clean_inputs->{observationDbId}
+        observationDbId => $clean_inputs->{observationDbId},
+        observationVariableDbId => $clean_inputs->{observationVariableDbId}
 
     });
     _standard_response_construction($c, $brapi_package_result);
@@ -3992,7 +4064,7 @@ sub save_observation_results {
     my $version = shift;
 
 	# Check that the user is a user. We don't check other permissions for now.
-	my $force_authenticate = 0;
+	my $force_authenticate = $c->config->{brapi_observations_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
 	my $dbh = $c->dbc->dbh;
@@ -4419,7 +4491,7 @@ sub images_POST {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 0;
+	my $force_authenticate = $c->config->{brapi_images_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -4465,7 +4537,7 @@ sub images_single_PUT {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 0;
+	my $force_authenticate = $c->config->{brapi_images_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -4493,7 +4565,7 @@ sub image_content_store_PUT {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 0;
+	my $force_authenticate = $c->config->{brapi_images_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -5421,6 +5493,10 @@ sub nirs_matrix_GET {
 }
 
 
+=head2 brapi/v2/pedigree
+
+=cut
+
 sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST') { }
 
 sub pedigree_GET {
@@ -5441,6 +5517,23 @@ sub pedigree_GET {
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub pedigree_search  : Chained('brapi') PathPart('search/pedigree') Args(0) : ActionClass('REST') { }
+
+sub pedigree_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Pedigree');
+}
+
+sub pedigree_search_retrieve : Chained('brapi') PathPart('search/pedigree') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Pedigree');
+}
+
+
 
 #functions
 sub save_results {

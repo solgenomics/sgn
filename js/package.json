@@ -28,8 +28,10 @@
     "tape": "^4.10.1",
     "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^4.29.5",
-    "webpack-command": "^0.4.2"
-  },{"messageType":"INFO","message":"BrAPI base call found with page=0, pageSize=10"}
+    "webpack-command": "^0.4.2",
+    "requirejs": "2.3.6",
+    "save-svg-as-png": "^1.4.17"
+  },
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
     "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",

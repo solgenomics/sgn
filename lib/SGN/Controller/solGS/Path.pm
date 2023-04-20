@@ -100,16 +100,18 @@ sub create_hyperlink {
 sub page_type {
 	my ($self, $c, $url) = @_;
 
-    my $model_pages = '/solgs/trait'
-    . '|/solgs/traits/all/'
-    . '|/solgs/model/combined/trials/'
-    . '|/solgs/models/combined/trials/';
+	$url = $c->req->path if !$url;
 
-    my $selection_pop_pages = '/solgs/selection'
-    . '|/solgs/combined/model/';
+    my $model_pages = 'solgs/trait'
+    . '|solgs/traits/all/'
+    . '|solgs/model/combined/trials/'
+    . '|solgs/models/combined/trials/';
 
-	my $training_pop_pages = '/solgs/population/'
-	. '|/solgs/populations/combined/';
+    my $selection_pop_pages = 'solgs/selection'
+    . '|solgs/combined/model/';
+
+	my $training_pop_pages = 'solgs/population/'
+	. '|solgs/populations/combined/';
 
 	my $type;
 	if ($url =~ $model_pages)

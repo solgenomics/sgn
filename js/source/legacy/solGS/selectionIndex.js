@@ -271,7 +271,7 @@ solGS.sIndex = {
                         let histo = {
                                canvas: '#si_canvas',
                                plot_id: `#${res.sindex_name}`,
-                               namedValues: res.indices,
+                               named_values: res.indices,
                                caption: caption
                            };
 
@@ -280,7 +280,7 @@ solGS.sIndex = {
                         var popType = jQuery("#si_canvas #selected_population_type").val();
                         var popId   = jQuery("#si_canvas #selected_population_id").val();
 
-                        solGS.correlation.formatGenCorInputData(popId, popType,  res.index_file);
+                        solGS.correlation.formatGenCorInputData(popId, popType,  res.index_file, res.sindex_name);
 
             		    jQuery('#si_canvas #selected_pop').val('');
 

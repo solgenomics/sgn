@@ -9,14 +9,14 @@ use SGN::Test::WWW::WebDriver;
 my $d = SGN::Test::WWW::WebDriver->new();
 
 $d->while_logged_in_as("submitter", sub {
-    sleep(1);
+    # sleep(1);
 
     $d->get_ok("/about/index.pl", "get root url test");
-    sleep(1);
+    sleep(2);
 
     my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
-    sleep(1);
+    sleep(2);
 
     $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list")->click();
 
