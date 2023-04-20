@@ -14,7 +14,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$corre_pop_id => undef
+$corr_pop_id => undef
 $list_id => undef
 $dataset_id => undef
 $data_set_type => undef
@@ -23,6 +23,8 @@ $data_structure => undef
 </%args>
 
 <%perl>
+print STDERR "\nplot mas datasettype: $data_set_type\n";
+
 </%perl>
 
 
@@ -43,7 +45,7 @@ $data_structure => undef
 <& /solgs/spinner/spinner.mas &>
 
 <div id="correlation_plot">
-    <input type="hidden" id="corre_pop_id" value="<% $corre_pop_id %>" />
+    <input type="hidden" id="corr_pop_id" value="<% $corr_pop_id %>" />
     <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
     <input type="hidden" id="data_structure" value="<% $data_structure %>" />

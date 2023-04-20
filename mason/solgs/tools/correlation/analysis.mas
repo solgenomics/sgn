@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/tools/correlation/analysis.mas - cluster analysis template
+/solgs/tools/correlation/analysis.mas - correlation analysis template
 
 To add the correlation analysis interface any where on the website
 add the template '/solgs/tools/correlation/analysis.mas' in your mason template
@@ -27,13 +27,15 @@ $dataset_id => undef
 $data_structure => undef
 $pop_name => undef
 $pop_type => undef
+$corr_pop_id => undef
+$data_set_type => undef
 
 
 </%args>
 
 <%perl>
 
-my $pop_id = $trial_id if $trial_id;
+$corr_pop_id = $trial_id if !$corr_pop_id;
 
 if (!$data_structure) {
    if ($dataset_id) {
@@ -43,15 +45,16 @@ if (!$data_structure) {
    }
 }
 
+print STDERR "\ndatasettype: $data_set_type\n";
 my $url = $c->req->path;
 my $title;
-my $collapsed = 0;
+my $collapsed = 1;
 
 if ($url =~ /correlation\/analysis/) {
-$title = 'Select a list or dataset and run Pearson correlation analysis';
+  $title = 'Select a list or dataset and run Pearson correlation analysis';
+  $collapsed = 0;
 } else {
-$title = 'Pearson correlation analysis';
-$collapsed = 1 if $url =~ /breeders\/trial/;
+  $title = 'Phenotypic correlation analysis (Pearson)';
 }
 
 </%perl>
@@ -81,15 +84,16 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
    analysis_type => 'correlation' &>
 
 %} else {
-    <input id="run_correlation" class="button" type="button" value="Run Correlation" />
+    <input id="run_pheno_correlation" class="button" type="button" value="Run Correlation" />
 %}
 
 
 <& plot.mas,
-   corre_pop_id => $pop_id,
+   corr_pop_id => $corr_pop_id,
   list_id => $list_id,
   dataset_id => $dataset_id,
   data_structure => $data_structure,
+  data_set_type => $data_set_type
   &>
 
 </div>
