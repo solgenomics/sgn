@@ -254,7 +254,7 @@ solGS.dataset = {
 						solGS.dataset.displayPredictedDatasetTypeSelectionPops(args, response.output);
 
 						if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-							solGS.sIndex.listSelectionIndexPopulations();
+							solGS.sIndex.populateSindexMenu();
 							solGS.correlation.listGenCorPopulations();
 							solGS.geneticGain.ggSelectionPopulations();
 							solGS.cluster.listClusterPopulations();

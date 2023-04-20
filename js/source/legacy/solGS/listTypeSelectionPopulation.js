@@ -66,7 +66,7 @@ function checkPredictedListSelection (listId) {
 		displayPredictedListTypeSelectionPops(args, response.output);
 
 		if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-		    solGS.sIndex.listSelectionIndexPopulations();
+		    solGS.sIndex.populateSindexMenu();
 		    solGS.correlation.listGenCorPopulations();
 		    solGS.geneticGain.ggSelectionPopulations();
 		    solGS.cluster.listClusterPopulations();
@@ -228,7 +228,7 @@ function loadGenotypesListTypeSelectionPop(args) {
 			jQuery.unblockUI();
 		    } else {
 			displayPredictedListTypeSelectionPops(args, response.output);
-			solGS.sIndex.listSelectionIndexPopulations();
+			solGS.sIndex.populateSindexMenu();
 			solGS.correlation.listGenCorPopulations();
 			jQuery.unblockUI();
 		    }
@@ -422,7 +422,7 @@ function loadPredictionOutput (url, listId, listSource) {
                 var page = document.URL;
 
                 if (page.match('/traits/all/population/') != null) {
-                    solGS.sIndex.listSelectionIndexPopulations();
+                    solGS.sIndex.populateSindexMenu();
                     solGS.correlation.listGenCorPopulations();
                 }
 
