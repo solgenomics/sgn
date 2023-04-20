@@ -228,7 +228,8 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         trait_list=>[],
         values_hash=>\%parsed_data_agg,
         has_timestamps=>0,
-        metadata_hash=>\%phenotype_metadata
+        metadata_hash=>\%phenotype_metadata,
+        composable_validation_check_name=>$c->config->{composable_validation_check_name}
     });
 
     my $warning_status;
@@ -512,7 +513,8 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata,
-        allow_repeat_measures=>$c->config->{allow_repeat_measures},
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     });
 
     my $warning_status;
@@ -702,7 +704,8 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         trait_list=>[],
         values_hash=>\%parsed_data,
         has_timestamps=>0,
-        metadata_hash=>\%phenotype_metadata
+        metadata_hash=>\%phenotype_metadata,
+        composable_validation_check_name=>$c->config->{composable_validation_check_name}
     });
 
     my $warning_status;
@@ -913,7 +916,8 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata,
-        allow_repeat_measures=>$c->config->{allow_repeat_measures},
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     });
 
     my $warning_status;
@@ -1132,7 +1136,8 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         trait_list=>[],
         values_hash=>\%parsed_data,
         has_timestamps=>0,
-        metadata_hash=>\%phenotype_metadata
+        metadata_hash=>\%phenotype_metadata,
+        composable_validation_check_name=>$c->config->{composable_validation_check_name}
     });
 
     my $warning_status;
@@ -1401,7 +1406,8 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         values_hash=>\%parsed_data_agg,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata,
-        allow_repeat_measures=>$c->config->{allow_repeat_measures},
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     });
 
     my $warning_status;

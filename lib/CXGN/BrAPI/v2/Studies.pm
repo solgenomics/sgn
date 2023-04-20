@@ -615,21 +615,21 @@ sub _search {
 			if($harvest_date eq "") { $harvest_date = undef;}
 		}
 
-		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
+		my ($brapi_contacts, @data_links, $data_agreement, %experimental_design, $folder_id, $folder_name);
+
+		# my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
 		# my $contacts = $t->get_trial_contacts();
-		my $brapi_contacts;
 		# foreach (@$contacts){
 		# 	push @$brapi_contacts, {
 		# 		contactDbId => $_->{sp_person_id},
 		# 		name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
-  #               instituteName => $_->{organization},
+  		#       instituteName => $_->{organization},
 		# 		email => $_->{email},
 		# 		type => $_->{user_type},
 		# 		orcid => ''
 		# 	};
 		# }
 		# my $additional_files = $t->get_additional_uploaded_files();
-        my @data_links;
         # foreach (@$additional_files){
         #     push @data_links, {
         #         scientificType => 'Additional File',
@@ -656,17 +656,29 @@ sub _search {
         #         version => undef
         #     };
         # }
-        my $data_agreement = ''; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
-        my $experimental_design = {};
+        # $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 
-        if ($t->get_design_type()){
-	        	$experimental_design = { 
-	        		PUI => $t->get_design_type(),
-	        		description => $t->get_design_type() };
+        # if ($t->get_design_type()){
+	    #     	$experimental_design = { 
+	    #     		PUI => $t->get_design_type(),
+	    #     		description => $t->get_design_type() };
+	    # }
+		# $folder_id = $t->get_folder()->id();
+		# $folder_name = $t->get_folder()->name();
+
+		if ($_->{design}){
+			$experimental_design{'PUI'} = $_->{design};
+			$experimental_design{'description'} = $_->{design};
 	    }
 
-		my $folder_id = $t->get_folder()->id();
-		my $folder_name = $t->get_folder()->name();
+		if ($_->{folder_id}){
+			$folder_id = $_->{folder_id};
+			$folder_name = $_->{folder_name};
+		} else {
+			$folder_id = $_->{breeding_program_id};
+			$folder_name = $_->{breeding_program_name};
+		}
+
 		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
 
 		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
@@ -689,7 +701,7 @@ sub _search {
 			documentationURL            => "",
 			endDate                     => $harvest_date ? $harvest_date : undef,
 			environmentParameters       => undef,
-			experimentalDesign          => $experimental_design,
+			experimentalDesign          => \%experimental_design,
 			externalReferences          => @formatted_external_references,
 			growthFacility              => undef,
 			lastUpdate                  => undef,

@@ -12,7 +12,9 @@ sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
+    my $validator = shift;
     my @missing;
+    my @wrong_ids;
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
@@ -24,11 +26,14 @@ sub validate {
 
         my @parts = split (/\|/ , $term);
         my ($db_name, $accession) = split ":", pop @parts;
+        my $trait_name = join '|', @parts;
 
         $accession =~ s/\s+$//;
         $accession =~ s/^\s+//;
         $db_name =~ s/\s+$//;
         $db_name =~ s/^\s+//;
+        $trait_name =~ s/\s+$//;
+        $trait_name =~ s/^\s+//;
 
         my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
         if ($db_rs->count() == 0) {
@@ -36,27 +41,60 @@ sub validate {
             push @missing, $term;
         } else {
             my $db = $db_rs->first();
-            my $rs = $schema->resultset("Cv::Cvterm")->search( {
-            'dbxref.db_id' => $db->db_id(),
-            'dbxref.accession'=>$accession }, {
-                'join' => 'dbxref' }
-            );
+            my $query = {
+                'dbxref.db_id' => $db->db_id(),
+                'dbxref.accession' => $accession,
+            };
+            if ( $db_name eq 'COMP' && $validator->{composable_validation_check_name} ) {
+                $query->{'me.name'} = $trait_name;
+            }
+            my $rs = $schema->resultset("Cv::Cvterm")->search($query, {'join' => 'dbxref'});
 
+            my $is_missing = 0;
             if ($rs->count == 0) {
                 #print STDERR "Problem found with term $term at cvterm rs from accession $accession point 2\n";
                 push @missing, $term;
+                $is_missing = 1;
             } else {
                 my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
                 if ($rs_var->count == 0) {
-                    print STDERR "Problem found with term $term at variable check point 3\n";
+                    #print STDERR "Problem found with term $term at variable check point 3\n";
                     push @missing, $term;
+                    $is_missing = 1;
+                }
+            }
+
+            # Try to find matching id and term by name for missing trait
+            if( $is_missing ) {
+                my $rs_match = $schema->resultset("Cv::Cvterm")->search(
+                    {
+                        'dbxref.db_id' => $db->db_id(),
+                        'me.name' => $trait_name
+                    },
+                    {
+                        'join' => 'dbxref',
+                        '+select' => 'dbxref.accession',
+                        '+as' => 'accession'
+                    }
+                );
+                if ( $rs_match->count == 1 ) {
+                    my $m = $rs_match->first();
+                    push @wrong_ids, {
+                        original_term => $term,
+                        matching_id => $db_name . ':' . $m->get_column('accession'),
+                        matching_term => $trait_name . '|' . $db_name . ':' . $m->get_column('accession')
+                    }
                 }
             }
         }
 
     }
     # print STDERR Dumper \@missing;
-    return { missing => \@missing };
+    print STDERR Dumper \@wrong_ids;
+    return {
+        missing => \@missing,
+        wrong_ids => \@wrong_ids
+    };
 }
 
 1;
