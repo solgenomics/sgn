@@ -12,6 +12,8 @@ solGS.correlation = {
   canvas: "#correlation_canvas",
   corrPlotDivPrefix: "#corr_plot",
   corrMsgDiv: "#correlation_message",
+  corrPopsSelectMenuId: "#corr_select_populations",
+  corrPopsDiv: "#corre_select_a_population_div",
 
   getPhenoCorrArgs: function () {
     var corrPopId = jQuery("#corr_pop_id").val();
@@ -191,77 +193,32 @@ solGS.correlation = {
     return dataTypeGroup;
   },
 
-  listGenCorPopulations: function () {
+  populateGenCorrMenu: function () {
     var modelData = solGS.sIndex.getTrainingPopulationData();
 
-    var trainingPopIdName = JSON.stringify(modelData);
+    var corrPops = [modelData];
 
-    var popsList =
-      '<dl id="corre_selected_population" class="corre_dropdown">' +
-      '<dt> <a href="#"><span>Select a population</span></a></dt>' +
-      "<dd>" +
-      "<ul>" +
-      "<li>" +
-      '<a href="#">' +
-      modelData.name +
-      "<span class=value>" +
-      trainingPopIdName +
-      "</span></a>" +
-      "</li>";
-
-    popsList += "</ul></dd></dl>";
-
-    jQuery("#corre_select_a_population_div").empty().append(popsList).show();
-
-    var dbSelPopsList;
     if (modelData.id.match(/list/) == null) {
-      dbSelPopsList = solGS.sIndex.addSelectionPopulations();
-    }
-
-    if (dbSelPopsList) {
-      jQuery("#corre_select_a_population_div ul").append(dbSelPopsList);
-    }
-
-    var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
-
-    if (listTypeSelPops) {
-      var selPopsList = solGS.sIndex.getListTypeSelPopulations();
-
-      if (selPopsList) {
-        jQuery("#corre_select_a_population_div ul").append(selPopsList);
+      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+      if (trialSelPopsList) {
+        corrPops.push(trialSelPopsList);
       }
     }
 
-    jQuery(".corre_dropdown dt a").click(function () {
-      jQuery(".corre_dropdown dd ul").toggle();
-    });
+    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
+    if (listTypeSelPopsTable) {
+      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      if (listTypeSelPops) {
+        corrPops.push(listTypeSelPops);
+      }
+    }
 
-    jQuery(".corre_dropdown dd ul li a").click(function () {
-      var text = jQuery(this).html();
+    var menuId = this.corrPopsSelectMenuId;
+    var menu = new OptionsMenu(menuId);
+    corrPops = corrPops.flat();
+    var menuElem = menu.addOptions(corrPops);
 
-      jQuery(".corre_dropdown dt a span").html(text);
-      jQuery(".corre_dropdown dd ul").hide();
-
-      var idPopName = jQuery("#corre_selected_population").find("dt a span.value").html();
-      idPopName = JSON.parse(idPopName);
-      modelId = jQuery("#model_id").val();
-
-      var selectedPopId = idPopName.id;
-      var selectedPopName = idPopName.name;
-      var selectedPopType = idPopName.pop_type;
-
-      jQuery("#corre_selected_population_name").val(selectedPopName);
-      jQuery("#corre_selected_population_id").val(selectedPopId);
-      jQuery("#corre_selected_population_type").val(selectedPopType);
-    });
-
-    jQuery(".corre_dropdown").bind("click", function (e) {
-      var clicked = jQuery(e.target);
-
-      if (!clicked.parents().hasClass("corre_dropdown")) jQuery(".corre_dropdown dd ul").hide();
-
-      e.preventDefault();
-    });
+    jQuery("#corre_select_a_population_div").empty().append(menuElem).show();
   },
 
   getGeneticCorrArgs: function (corrPopId, corrPopType, sIndexFile, sIndexName) {
@@ -272,7 +229,6 @@ solGS.correlation = {
     var traitsCode = jQuery("#training_traits_code").val();
     var protocolId = jQuery("#genotyping_protocol_id").val();
     var dataSetType = jQuery("#data_set_type").val();
-
 
     if (traitsIds) {
       traitsIds = traitsIds.split(",");
@@ -396,7 +352,7 @@ jQuery(document).ready(function () {
     page.match(/solgs\/models\/combined\/trials\//) != null
   ) {
     setTimeout(function () {
-      solGS.correlation.listGenCorPopulations();
+      solGS.correlation.populateGenCorrMenu();
     }, 5000);
   }
 });
@@ -416,7 +372,7 @@ jQuery(document).ready(function () {
 
     solGS.correlation.runPhenoCorrelation(args).done(function (res) {
       if (res.data) {
-        args['corr_table_file'] = res.corre_table_file;
+        args["corr_table_file"] = res.corre_table_file;
         var corrDownload = solGS.correlation.createCorrDownloadLink(args);
 
         solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
@@ -467,7 +423,7 @@ jQuery(document).ready(function () {
         .runPhenoCorrelation(args)
         .done(function (res) {
           if (res.data) {
-            args['corr_table_file'] = res.corre_table_file;
+            args["corr_table_file"] = res.corre_table_file;
             var corrDownload = solGS.correlation.createCorrDownloadLink(args);
 
             solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
@@ -516,7 +472,7 @@ jQuery(document).ready(function () {
       .runGeneticCorrelation(args)
       .done(function (res) {
         if (res.status.match(/success/)) {
-          args['corr_table_file'] = res.corre_table_file;
+          args["corr_table_file"] = res.corre_table_file;
           var corrDownload = solGS.correlation.createCorrDownloadLink(args);
           solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
         } else {
@@ -537,6 +493,21 @@ jQuery(document).ready(function () {
   if (url.match(/correlation\/analysis/)) {
     solGS.selectMenu.populateMenu("correlation_pops", ["plots", "trials"], ["plots", "trials"]);
   }
+});
+
+jQuery(document).ready(function () {
+  var corrPopsDiv = solGS.correlation.corrPopsDiv;
+  jQuery(corrPopsDiv).change(function () {
+    var selectedPop = jQuery("option:selected", this).data("pop");
+
+    var selectedPopId = selectedPop.id;
+    var selectedPopName = selectedPop.name;
+    var selectedPopType = selectedPop.pop_type;
+
+    jQuery("#corre_selected_population_name").val(selectedPopName);
+    jQuery("#corre_selected_population_id").val(selectedPopId);
+    jQuery("#corre_selected_population_type").val(selectedPopType);
+  });
 });
 
 jQuery(document).ready(function () {
