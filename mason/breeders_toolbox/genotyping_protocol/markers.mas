@@ -90,13 +90,12 @@ jQuery(document).ready(function(){
         data:{'genotyping_protocol':<% $protocol_id %>},
         success: function(response){
             var chromosomes = response.chromosome_names;
-            chromosomes.unshift([" ", " "]);
             var html = '<select id = "search_by_chromosome" >';
+            html += "<option value=''></option>";
             for (var i=0; i<chromosomes.length; i++) {
-                html = html + "<option value='"+chromosomes[i][0]+ "'>" + chromosomes[i][0] + "</option>";
+                html += "<option value='"+chromosomes[i] + "'>" + chromosomes[i] + "</option>";
             }
-            html = html + "</select>";
-            console.log(html);
+            html += "</select>";
 
             if(i ==''){
                 alert("Could not get chromosome names");
@@ -109,7 +108,6 @@ jQuery(document).ready(function(){
             alert("An error occurred");
         }
     });
-
 
     jQuery('#protocol_markers_table').on( 'draw.dt', function (){
         var marker_names = genotyping_protocol_table.column(0).data();
