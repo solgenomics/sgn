@@ -9,11 +9,11 @@ JSAN.use("solGS.heatMap");
 var solGS = solGS || function solGS() {};
 
 solGS.correlation = {
-  canvas: "#correlation_canvas",
+  canvas: "#corr_canvas",
   corrPlotDivPrefix: "#corr_plot",
-  corrMsgDiv: "#correlation_message",
-  corrPopsSelectMenuId: "#corr_select_populations",
-  corrPopsDiv: "#corre_select_a_population_div",
+  corrMsgDiv: "#corr_message",
+  corrPopsSelectMenuId: "#corr_select_pops",
+  corrPopsDiv: "#corr_select_a_pop_div",
 
   getPhenoCorrArgs: function () {
     var corrPopId = jQuery("#corr_pop_id").val();
@@ -52,11 +52,11 @@ solGS.correlation = {
     if (selectId.length === 0) {
       alert("The list is empty. Please select a list with content.");
     } else {
-      var tableId = "correlation_pops_list_table";
+      var tableId = "corr_pops_list_table";
       var corrTable = jQuery("#" + tableId).doesExist();
       if (corrTable == false) {
         corrTable = this.getCorrPopsTable(tableId);
-        jQuery("#correlation_pops_selected").append(corrTable).show();
+        jQuery("#corr_pops_selected").append(corrTable).show();
       }
 
       var addRow = this.selectRow(selectId, selectName, dataStr);
@@ -167,9 +167,9 @@ solGS.correlation = {
 
   corrDataTypeSelectId: function (rowId) {
     if (location.pathname.match(/correlation\/analysis/) && rowId) {
-      return `correlation_data_type_select_${rowId}`;
+      return `corr_data_type_select_${rowId}`;
     } else {
-      return "correlation_data_type_select";
+      return "corr_data_type_select";
     }
   },
 
@@ -217,8 +217,8 @@ solGS.correlation = {
     var menu = new OptionsMenu(menuId);
     corrPops = corrPops.flat();
     var menuElem = menu.addOptions(corrPops);
-
-    jQuery("#corre_select_a_population_div").empty().append(menuElem).show();
+    var corrPopDiv = this.corrPopsDiv;
+    jQuery(corrPopDiv).empty().append(menuElem).show();
   },
 
   getGeneticCorrArgs: function (corrPopId, corrPopType, sIndexFile, sIndexName) {
@@ -295,7 +295,7 @@ solGS.correlation = {
 
     var popName = corrArgs.corre_pop_name;
     if (!popName) {
-      popName = jQuery("#corre_selected_population_name").val();
+      popName = jQuery("#corr_selected_pop_name").val();
     }
     if (!popName) {
       popName = jQuery("#training_pop_name").val();
@@ -311,10 +311,10 @@ solGS.correlation = {
   showCorrProgress: function (canvas, msg) {
     var msgDiv;
     if (canvas === "#si_canvas") {
-      msgDiv = "#si_correlation_message";
+      msgDiv = "#si_corr_message";
     } else {
-      msgDiv = "#correlation_message";
-      canvas = "#correlation_canvas";
+      msgDiv = "#corr_message";
+      canvas = "#corr_canvas";
     }
 
     jQuery("#run_genetic_correlation").hide();
@@ -328,8 +328,8 @@ solGS.correlation = {
     var corrPlotDiv;
 
     if (sIndexName) {
-      canvas = "#si_canvas";
-      corrMsgDiv = "#si_correlation_message";
+      canvas = solGS.sIndex.canvas; //"#si_canvas";
+      corrMsgDiv = solGS.sIndex.siMsgDiv; //"#si_corr_message";
       corrPlotDiv = `${this.corrPlotDivPrefix}_${sIndexName}`;
     } else {
       canvas = this.canvas;
@@ -399,14 +399,13 @@ jQuery(document).ready(function () {
   });
 
   jQuery(document).ready(function () {
-    jQuery("#correlation_pops_selected").on("click", "button", function (e) {
+    jQuery("#corr_pops_selected").on("click", "button", function (e) {
       var runCorrBtnId = e.target.id;
 
       var selectedPopDiv = document.getElementById(runCorrBtnId);
       var args;
       if (selectedPopDiv) {
         var selectedPopData = selectedPopDiv.dataset;
-        // var selectedPop = JSON.parse(selectedPopData.selectedPop);
         args = selectedPopData.selectedPop;
       }
 
@@ -452,8 +451,8 @@ jQuery(document).ready(function () {
   });
 
   jQuery(document).on("click", "#run_genetic_correlation", function () {
-    var corrPopId = jQuery("#corre_selected_population_id").val();
-    var popType = jQuery("#corre_selected_population_type").val();
+    var corrPopId = jQuery("#corr_selected_pop_id").val();
+    var popType = jQuery("#corr_selected_pop_type").val();
 
     var runCorrBtnId = "#run_genetic_correlation";
 
@@ -491,7 +490,7 @@ jQuery(document).ready(function () {
   var url = location.pathname;
 
   if (url.match(/correlation\/analysis/)) {
-    solGS.selectMenu.populateMenu("correlation_pops", ["plots", "trials"], ["plots", "trials"]);
+    solGS.selectMenu.populateMenu("corr_pops", ["plots", "trials"], ["plots", "trials"]);
   }
 });
 
@@ -504,18 +503,20 @@ jQuery(document).ready(function () {
     var selectedPopName = selectedPop.name;
     var selectedPopType = selectedPop.pop_type;
 
-    jQuery("#corre_selected_population_name").val(selectedPopName);
-    jQuery("#corre_selected_population_id").val(selectedPopId);
-    jQuery("#corre_selected_population_type").val(selectedPopType);
+    jQuery("#corr_selected_pop_name").val(selectedPopName);
+    jQuery("#corr_selected_pop_id").val(selectedPopId);
+    jQuery("#corr_selected_pop_type").val(selectedPopType);
   });
 });
 
 jQuery(document).ready(function () {
-  jQuery("#correlation_pops_list_select").change(function () {
-    var selectedPop = solGS.selectMenu.getSelectedPop("correlation_pops");
-
+  jQuery("#corr_pops_list_select").change(function () {
+    var selectedPop = solGS.selectMenu.getSelectedPop("corr_pops");
+console.log(`selectedPop ${JSON.stringify(selectedPop)}`)
     if (selectedPop.selected_id) {
-      jQuery("#correlation_pops_go_btn").click(function () {
+      jQuery("#corr_pop_go_btn").click(function () {
+console.log(`click corr_pop_go_btn selectedPop ${JSON.stringify(selectedPop)}`)
+
         solGS.correlation.loadCorrelationPopsList(
           selectedPop.selected_id,
           selectedPop.selected_name,
@@ -527,13 +528,13 @@ jQuery(document).ready(function () {
 });
 
 jQuery(document).ready(function () {
-  jQuery("#correlation_canvas").on("click", "a", function (e) {
+  jQuery("#corr_canvas").on("click", "a", function (e) {
     var buttonId = e.target.id;
     var corrPlotId = buttonId.replace(/download_/, "");
     saveSvgAsPng(document.getElementById("#" + corrPlotId), corrPlotId + ".png", { scale: 1 });
   });
 
-  jQuery("#si_correlation_canvas").on("click", "a", function (e) {
+  jQuery("#si_corr_canvas").on("click", "a", function (e) {
     var buttonId = e.target.id;
     var corrPlotId = buttonId.replace(/download_/, "");
     saveSvgAsPng(document.getElementById("#" + corrPlotId), corrPlotId + ".png", { scale: 1 });

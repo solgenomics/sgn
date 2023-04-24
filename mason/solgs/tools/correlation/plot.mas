@@ -23,7 +23,6 @@ $data_structure => undef
 </%args>
 
 <%perl>
-print STDERR "\nplot mas datasettype: $data_set_type\n";
 
 </%perl>
 
@@ -40,11 +39,11 @@ print STDERR "\nplot mas datasettype: $data_set_type\n";
 }
 </style>
 
-<div id="correlation_canvas">
-<div id="correlation_message" class="message"> </div>
+<div id="corr_canvas">
+<div id="corr_message" class="message"> </div>
 <& /solgs/spinner/spinner.mas &>
 
-<div id="correlation_plot">
+<div id="corr_plot">
     <input type="hidden" id="corr_pop_id" value="<% $corr_pop_id %>" />
     <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
