@@ -65,12 +65,12 @@ sub logout_externally :Path('/ajax/user/logout_externally') QueryParam('redirect
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
-    my $redirect_uri = $c->request->param( 'redirect_uri' );
+#    my $redirect_uri = $c->request->param( 'redirect_uri' );
     my $login = CXGN::Login->new($c->dbc->dbh());
     $login->logout_user();
-    $c->stash->{redirect_uri} = $redirect_uri;
-    $c->stash->{template} = '/site/toolbar/logout_externally.mas';
-    #$c->stash->{rest} = { message => "User successfully logged out." };
+#    $c->stash->{redirect_uri} = $redirect_uri;
+#    $c->stash->{template} = '/site/toolbar/logout_externally.mas';
+    $c->stash->{rest} = { message => "User successfully logged out." };
 }
 
 sub new_account :Path('/ajax/user/new') Args(0) {
