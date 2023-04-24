@@ -2903,3 +2903,9 @@ id: TIME:0000481
 name: at termination
 def: "End of life" []
 is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000482
+name: post inoculation
+def: "After inoculation with a pathogen" []
+is_a: TIME:0000477 ! Event relations
