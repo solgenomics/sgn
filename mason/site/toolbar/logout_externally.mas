@@ -1,0 +1,12 @@
+<%args>
+$redirect_uri
+</%args>%>
+
+<b>Logging out...</b>
+
+<script>
+console.log(<% $redirect_uri %>);
+jQuery(document).ready(function () {
+   window.location.replace(<% $redirect_uri %>)
+});
+</script>
