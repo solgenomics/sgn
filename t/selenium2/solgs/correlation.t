@@ -220,9 +220,9 @@ $d->while_logged_in_as("submitter", sub {
     my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
-    $d->find_element_ok('si_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('si_select_pops', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="si_dropdown"]/dd/ul/li/a[contains(text(), "Kasese")]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_select_pops"]/option[contains(text(), "Kasese")]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
@@ -378,9 +378,9 @@ $d->while_logged_in_as("submitter", sub {
     my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
-    $d->find_element_ok('si_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('si_select_pops', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="si_dropdown"]/dd/ul/li/a[contains(text(), "Training population")]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_select_pops"]/option[contains(text(), "Training population")]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
