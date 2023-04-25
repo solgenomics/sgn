@@ -2,22 +2,22 @@
 
 =head1 NAME
 
-AddStockPropViews.pm
+UpdateStockPropViews.pm
 
 =head1 SYNOPSIS
 
-mx-run AddStockPropViews [options] -H hostname -D dbname -u username [-F]
+mx-run UpdateStockPropViews [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch creates a materialized view for all stockprops
+This patch updates the materialized view for all stockprops
 
 =head1 AUTHOR
 
-nm529@cornell.edu
+tep46@cornell.edu
 
 =head1 COPYRIGHT & LICENSE
 
@@ -29,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddStockPropViews;
+package UpdateStockPropViews;
 
 use Moose;
 use SGN::Model::Cvterm;
@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch creates a materialized view for stockprops.
+This patch updates the materialized view for stockprops.
 
 sub patch {
     my $self=shift;
