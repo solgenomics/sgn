@@ -2,22 +2,22 @@
 
 =head1 NAME
 
-UpdateStockPropViews.pm
+ MakeRankNumberStockPropViews.pm
 
 =head1 SYNOPSIS
 
-mx-run UpdateStockPropViews [options] -H hostname -D dbname -u username [-F]
+mx-run MakeRankNumberStockPropViews.pm [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates the materialized view for all stockprops
+This patch updates the rank value in the materialized view for all stockprops
 
 =head1 AUTHOR
 
-tep46@cornell.edu
+ tep46@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -29,16 +29,22 @@ it under the same terms as Perl itself.
 =cut
 
 
-package UpdateStockPropViews;
+package MakeRankNumberStockPropViews;
 
 use Moose;
-use SGN::Model::Cvterm;
 use Bio::Chado::Schema;
+use SGN::Model::Cvterm;
+
 extends 'CXGN::Metadata::Dbpatch';
 
 
-has '+description' => ( default => <<'' );
-This patch updates the materialized view for stockprops.
+has '+description' => ( default => ' This patch changes the rank from being stored as a string to being stored as a number.');
+
+has '+prereq' => (
+    default => sub {
+        [ ],
+    },
+);
 
 sub patch {
     my $self=shift;
@@ -50,7 +56,8 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
 
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
-    
+
+    # Now re-generate the materialized view (code lifted from db patch 00165)
     my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
     my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
     my $igd_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd_synonym', 'stock_property')->cvterm_id();
@@ -86,6 +93,7 @@ sub patch {
     my $entry_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'entry number', 'stock_property')->cvterm_id();
     my $acquisition_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_count', 'stock_property')->cvterm_id();
+    my $current_weight_gram_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_weight_gram', 'stock_property')->cvterm_id();
     my $crossing_metadata_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
     my $ploidy_level_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'ploidy_level', 'stock_property')->cvterm_id();
     my $genome_structure_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genome_structure', 'stock_property')->cvterm_id();
@@ -95,6 +103,26 @@ sub patch {
     my $introgression_chromosome_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_chromosome', 'stock_property')->cvterm_id();
     my $introgression_start_position_bp_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_start_position_bp', 'stock_property')->cvterm_id();
     my $introgression_end_position_bp_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_end_position_bp', 'stock_property')->cvterm_id();
+    my $is_blank_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is_blank', 'stock_property')->cvterm_id();
+    my $concentration_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'concentration', 'stock_property')->cvterm_id();
+    my $volume_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'volume', 'stock_property')->cvterm_id();
+    my $extraction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'extraction', 'stock_property')->cvterm_id();
+    my $dna_person_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'dna_person', 'stock_property')->cvterm_id();
+    my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_type', 'stock_property')->cvterm_id();
+    my $ncbi_taxonomy_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'ncbi_taxonomy_id', 'stock_property')->cvterm_id();
+    my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot_quality', 'stock_property')->cvterm_id();
+
+
+    my $selection_marker_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'SelectionMarker', 'stock_property')->cvterm_id();
+    my $cloning_organism_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'CloningOrganism', 'stock_property')->cvterm_id();
+    my $cassette_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'CassetteName', 'stock_property')->cvterm_id();
+    my $microbial_strain_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'Strain', 'stock_property')->cvterm_id();
+    my $inherent_marker_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'InherentMarker', 'stock_property')->cvterm_id();
+    my $backbone_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'Backbone', 'stock_property')->cvterm_id();
+    my $svector_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'VectorType', 'stock_property')->cvterm_id();
+    my $gene_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'Gene', 'stock_property')->cvterm_id();
+    my $promotors_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'Promotors', 'stock_property')->cvterm_id();
+    my $terminators_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'Terminators', 'stock_property')->cvterm_id();
 
     $self->dbh->do(<<EOSQL);
 --do your SQL here
@@ -106,7 +134,7 @@ DROP MATERIALIZED VIEW IF EXISTS public.materialized_stockprop CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_stockprop AS
 SELECT *
 FROM crosstab(
-  'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, stockprop.rank) FROM stockprop JOIN stock USING(stock_id) JOIN cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
+  'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, stockprop.rank) FROM public.stockprop JOIN public.stock USING(stock_id) JOIN public.cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
   'SELECT type_id FROM (VALUES
     (''$block_cvterm_id''),
     (''$col_number_cvterm_id''),
@@ -143,6 +171,7 @@ FROM crosstab(
     (''$entry_number_cvterm_id''),
     (''$acquisition_date_cvterm_id''),
     (''$current_count_cvterm_id''),
+    (''$current_weight_gram_cvterm_id''),
     (''$crossing_metadata_json_cvterm_id''),
     (''$ploidy_level_cvterm_id''),
     (''$genome_structure_cvterm_id''),
@@ -151,7 +180,25 @@ FROM crosstab(
     (''$introgression_map_version_cvterm_id''),
     (''$introgression_chromosome_cvterm_id''),
     (''$introgression_start_position_bp_cvterm_id''),
-    (''$introgression_end_position_bp_cvterm_id'') ) AS t (type_id);'
+    (''$introgression_end_position_bp_cvterm_id''),
+    (''$is_blank_cvterm_id''),
+    (''$concentration_cvterm_id''),
+    (''$volume_cvterm_id''),
+    (''$extraction_cvterm_id''),
+    (''$dna_person_cvterm_id''),
+    (''$tissue_type_cvterm_id''),
+    (''$seedlot_quality_cvterm_id''),
+    (''$selection_marker_cvterm_id''),
+    (''$cloning_organism_cvterm_id''),
+    (''$cassette_name_cvterm_id''),
+    (''$microbial_strain_cvterm_id''),
+    (''$inherent_marker_cvterm_id''),
+    (''$backbone_cvterm_id''),
+    (''$svector_type_cvterm_id''),
+    (''$gene_id_cvterm_id''),
+    (''$promotors_cvterm_id''),
+    (''$terminators_type_cvterm_id''),
+    (''$ncbi_taxonomy_id_cvterm_id'')) AS t (type_id);'
 )
 AS (stock_id int,
     "uniquename" text,
@@ -193,6 +240,7 @@ AS (stock_id int,
     "entry number" jsonb,
     "acquisition date" jsonb,
     "current_count" jsonb,
+    "current_weight_gram" jsonb,
     "crossing_metadata_jsonb" jsonb,
     "ploidy_level" jsonb,
     "genome_structure" jsonb,
@@ -201,7 +249,25 @@ AS (stock_id int,
     "introgression_map_version" jsonb,
     "introgression_chromosome" jsonb,
     "introgression_start_position_bp" jsonb,
-    "introgression_end_position_bp" jsonb
+    "introgression_end_position_bp" jsonb,
+    "is_blank" jsonb,
+    "concentration" jsonb,
+    "volume" jsonb,
+    "extraction" jsonb,
+    "dna_person" jsonb,
+    "tissue_type" jsonb,
+    "seedlot_quality" jsonb,
+    "SelectionMarker" jsonb,
+    "CloningOrganism" jsonb,
+    "CassetteName" jsonb,
+    "Strain" jsonb,
+    "InherentMarker" jsonb,
+    "Backbone" jsonb,
+    "VectorType" jsonb,
+    "Gene" jsonb,
+    "Promotors" jsonb,
+    "Terminators" jsonb,
+    "ncbi_taxonomy_id" jsonb
 );
 CREATE UNIQUE INDEX materialized_stockprop_stock_idx ON public.materialized_stockprop(stock_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW public.materialized_stockprop OWNER TO web_usr;
@@ -221,7 +287,10 @@ ALTER FUNCTION public.refresh_materialized_stockprop_concurrently() OWNER TO web
 
 EOSQL
 
-print "You're done!\n";
+
+
+
+    print STDERR "Done!\n";
 }
 
 
