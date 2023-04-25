@@ -721,7 +721,7 @@ ORDER BY organism_id ASC;";
                 # my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
                 my $stockprop_vals = $stockprop_select_return[$s] ? decode_json(encode("utf8",$stockprop_select_return[$s])) : {};
                 my @stockprop_vals_string;
-                foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
+                foreach (sort { $stockprop_vals->{$a} <=> $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
                     push @stockprop_vals_string, $_;
                 }
                 my $stockprop_vals_string = join ',', @stockprop_vals_string;
