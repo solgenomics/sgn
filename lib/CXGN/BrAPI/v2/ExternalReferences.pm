@@ -35,8 +35,6 @@ has 'table_id_key' => (
     required => 1,
 );
 
-
-
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();

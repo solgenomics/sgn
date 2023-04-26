@@ -5,6 +5,8 @@ use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::TimeUtils;
+use SGN::Model::Cvterm;
+use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -93,10 +95,15 @@ sub search {
 		if(!$match_found) {
 			next;
 		}
+		# Fetch additionInfo for this list-item.
+		
+
+
+
 
 		if ($counter >= $start_index && $counter <= $end_index) {
 			push @data , {
-				additionalInfo      => {},
+				additionalInfo      => {'sub', 'search'},
 				dateCreated         => CXGN::TimeUtils::db_time_to_iso_utc($create_date),
 				dateModified        => CXGN::TimeUtils::db_time_to_iso_utc($modified_date),
 				listDbId            => qq|$id|,
@@ -196,7 +203,7 @@ sub detail {
 		}
 
 		%result = (
-			additionalInfo      => {},
+			additionalInfo      => {'sub', 'detail'},
 			dateCreated         => $list->{create_date},
 			dateModified        => undef,
 			listDbId            => qq|$list_id|,
@@ -223,7 +230,6 @@ sub store {
 	my $self = shift;
 	my $data = shift;
 	my $user_id = shift;
-
 	if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
@@ -237,7 +243,7 @@ sub store {
 	my @new_lists_ids;
 
 	foreach my $params (@$data){
-		my $additional_info = $params->{additionalInfo} || undef; #not supported
+		my $additional_info_hash_ref = $params->{additionalInfo} || undef; #not supported
 		my $date_created = $params->{dateCreated} || undef; #not supported
 		my $date_modified = $params->{dateModified} || undef; #not supported
 		my $owner_name = $params->{listOwnerName} || undef; #not supported
@@ -250,13 +256,13 @@ sub store {
 		my $owner_id = $params->{listOwnerPersonDbId} || $user_id;
 		my $data = $params->{data} || undef;
 
+
 		$list_type = convert_to_breedbase_type($list_type);
 		#verify if list exists
 		my $check_list_id = CXGN::List::exists_list($dbh, $list_name, $owner_id);
 		if ($check_list_id->{list_id}){
         	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('List name %s already exist in the database!',$list_name), 409);
 		}
-
 	    #check entries
 		if (!$list_type || !$data) {
         	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide list type and data!'), 400);
@@ -273,14 +279,15 @@ sub store {
 	    #validate
 	    my $lv = CXGN::List::Validate->new();
 	    my $validated = $lv->validate($schema, $list_type, $data);
+
+		print Dumper $validated;
 	    my $missing = scalar(@{$validated->{missing}});
+
 	    if ($missing > 0){
 		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
 	    }
-
 		#create list
     	my $new_list_id = CXGN::List::create_list($dbh, $list_name, $list_description, $owner_id);
-
 	    my $list = CXGN::List->new( { dbh=>$dbh, list_id => $new_list_id });
 
     	#add list type
@@ -308,6 +315,18 @@ sub store {
 			});
 			my $reference_result = $references->store();
 		}
+		# Store additional Info
+		if( $additional_info_hash_ref ) {
+			my $dbh = $self->bcs_schema->storage()->dbh();
+			my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'list_additional_info', 'list_properties')->cvterm_id();
+
+			my $sql = "INSERT INTO sgn_people.listprop (list_id, type_id, value ) VALUES ( ?, ?, ?)";
+			my $sth = $dbh->prepare($sql);
+
+			my $additional_info_json_str = to_json( $additional_info_hash_ref );
+			$sth->execute($new_list_id, $type_id, $additional_info_json_str);
+		}
+
 	    $counter++;
 		push @new_lists_ids, $new_list_id;
 

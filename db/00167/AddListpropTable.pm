@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-AddListDbXref.pm
+  AddListpropTable
 
 =head1 SYNOPSIS
 
@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch creates a list_dbxref table to allow lists to store external references for brapi
+This patch creates a listprop table to allow lists to store  additional info for brapi
 
 =head1 AUTHOR
 
@@ -40,7 +40,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch creates a list_dbxref table to allow lists to store external references for brapi
+This patch creates a listprop table to allow lists to store additional info for brapi
 
 
 sub patch {
@@ -57,11 +57,12 @@ sub patch {
         $self->dbh->do(<<EOSQL);
 
  --do your SQL here
-dCREATE TABLE sgn_people.listprop (
+
+CREATE TABLE IF NOT EXISTS sgn_people.listprop (
    listprop_id serial primary key,
    list_id int references sgn_people.list(list_id),
    type_id int references public.cvterm(cvterm_id),
-   value jsonb,
+   value text,
    rank int not null DEFAULT 0
 );
 
