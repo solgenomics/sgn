@@ -59,6 +59,7 @@ sub search {
 		id => \@list_ids
 	});
 	my $reference_result = $references->search();
+	my $additional_info_cvterm = _fetch_additional_info_cvterm_id($self->bcs_schema);
 
 	foreach (@$lists){
 		my $name = $_->[1];
@@ -95,15 +96,11 @@ sub search {
 		if(!$match_found) {
 			next;
 		}
-		# Fetch additionInfo for this list-item.
-
-
-
-
+		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $id, $additional_info_cvterm);
 
 		if ($counter >= $start_index && $counter <= $end_index) {
 			push @data , {
-				additionalInfo      => {'sub', 'search'},
+				additionalInfo      => $additional_info_json,
 				dateCreated         => CXGN::TimeUtils::db_time_to_iso_utc($create_date),
 				dateModified        => CXGN::TimeUtils::db_time_to_iso_utc($modified_date),
 				listDbId            => qq|$id|,
@@ -125,6 +122,37 @@ sub search {
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Lists result constructed');
+}
+sub _fetch_additional_info_cvterm_id{
+	my $bcs_schema = shift;
+
+	my $dbh = $bcs_schema->storage()->dbh();
+	my $type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'list_additional_info', 'list_properties')->cvterm_id();
+
+	return $type_id;
+}
+
+sub _fetch_additional_info {
+	my $bcs_schema = shift;
+	my $list_id = shift;
+	my $cvterm_id = shift;
+
+	my $dbh = $bcs_schema->storage()->dbh();
+
+	my $sql = "SELECT value FROM sgn_people.listprop WHERE list_id = ? AND type_id = ?";
+	my $sth = $dbh->prepare($sql);
+	$sth->execute($list_id, $cvterm_id);
+	my ($additional_info_value) = $sth->fetchrow_array();
+
+	# Convert JSON String ($additional_info_value) to JSON object ($additional_info_json)
+	my $additional_info_json;
+	if ($additional_info_value) {
+		$additional_info_json = JSON::XS::decode_json($additional_info_value);
+	}
+	else{
+		$additional_info_json = {};
+	}
+	return $additional_info_json;
 }
 
 sub convert_to_brapi_type {
@@ -201,9 +229,10 @@ sub detail {
 				push @references, $_;
 			}
 		}
-
+		my $additional_info_cvterm = _fetch_additional_info_cvterm_id($self->bcs_schema);
+		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $list_id, $additional_info_cvterm );
 		%result = (
-			additionalInfo      => {'sub', 'detail'},
+			additionalInfo      => $additional_info_json,
 			dateCreated         => $list->{create_date},
 			dateModified        => undef,
 			listDbId            => qq|$list_id|,
@@ -243,12 +272,12 @@ sub store {
 	my @new_lists_ids;
 
 	foreach my $params (@$data){
-		my $additional_info_hash_ref = $params->{additionalInfo} || undef; #not supported
 		my $date_created = $params->{dateCreated} || undef; #not supported
 		my $date_modified = $params->{dateModified} || undef; #not supported
 		my $owner_name = $params->{listOwnerName} || undef; #not supported
 		my $list_size = $params->{listSize} || undef; #not supported, counted from data
 		my $list_source = $params->{listSource} || undef;  #not supported, db name
+		my $additional_info_hash_ref = $params->{additionalInfo} || undef;
 		my $externalReferences = $params->{externalReferences} || undef;
 		my $list_name = $params->{listName} || undef;
 		my $list_type = $params->{listType} || undef;
