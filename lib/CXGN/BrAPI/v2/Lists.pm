@@ -285,7 +285,6 @@ sub store {
 		my $owner_id = $params->{listOwnerPersonDbId} || $user_id;
 		my $data = $params->{data} || undef;
 
-
 		$list_type = convert_to_breedbase_type($list_type);
 		#verify if list exists
 		my $check_list_id = CXGN::List::exists_list($dbh, $list_name, $owner_id);
