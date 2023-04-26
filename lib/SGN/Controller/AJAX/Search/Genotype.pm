@@ -80,7 +80,7 @@ sub genotyping_data_search_GET : Args(0) {
         while (my $gt_line = <$fh>) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my $g = decode_json $gt_line;
-                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
+#                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
                 my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
                 push @result, [
                     "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
@@ -245,7 +245,7 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     my $clean_inputs = _clean_inputs($c->req->params);
     my $ssr_protocol_id = $clean_inputs->{ssr_protocol_id};
     my $downloaded_protocol_id = $ssr_protocol_id->[0];
-    print STDERR "PROTOCOL ID = $downloaded_protocol_id\n";
+#    print STDERR "PROTOCOL ID = $downloaded_protocol_id\n";
 
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = $downloaded_protocol_id . "_" . "genotype_data" . "XXXX";
@@ -253,7 +253,7 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     $rel_file = $rel_file . ".csv";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
+#    print STDERR "TEMPFILE : $tempfile\n";
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to download genotype data" };
@@ -281,7 +281,7 @@ sub pcr_genotyping_data_download_POST : Args(0) {
         }
     );
     my $file_handle = $genotypes->download();
-    print STDERR "FILE HANDLE =".Dumper($file_handle)."\n";
+#    print STDERR "FILE HANDLE =".Dumper($file_handle)."\n";
 
     open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
     binmode $F;
@@ -316,8 +316,8 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     $file_row->insert();
 
     my $file_id = $file_row->file_id();
-    print STDERR "FILE ID =".Dumper($file_id)."\n";
-    print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
 
     move($tempfile,$file_destination);
     unlink $tempfile;

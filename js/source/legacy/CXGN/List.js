@@ -280,7 +280,11 @@ CXGN.List.prototype = {
             method: 'POST',
             url: '/list/add/bulk',
             data:  { 'list_id': list_id, 'elements': elements },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
             success: function(response) {
+                jQuery('#working_modal').modal('hide');
                 if (response.error) {
                     alert(response.error);
                 }

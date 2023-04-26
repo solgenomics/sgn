@@ -201,7 +201,7 @@ sub new_list_action :Path('/list/new') Args(0) {
 
     my $name = $c->req->param("name");
     my $desc = $c->req->param("desc");
-
+    print STDERR "NEW LIST DESCRIPTION =".Dumper($desc)."\n";
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
