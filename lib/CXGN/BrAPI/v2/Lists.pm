@@ -96,7 +96,7 @@ sub search {
 			next;
 		}
 		# Fetch additionInfo for this list-item.
-		
+
 
 
 
@@ -279,10 +279,7 @@ sub store {
 	    #validate
 	    my $lv = CXGN::List::Validate->new();
 	    my $validated = $lv->validate($schema, $list_type, $data);
-
-		print Dumper $validated;
 	    my $missing = scalar(@{$validated->{missing}});
-
 	    if ($missing > 0){
 		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
 	    }
