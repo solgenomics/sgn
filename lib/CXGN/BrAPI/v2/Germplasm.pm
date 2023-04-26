@@ -799,6 +799,9 @@ sub store {
     }
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+
+    # there is a timing issue between this matview refresh and the call to _simple_search (which rebuilds the materialized_stockprop view)
+    # Should probably talk with the BreedBase team on this
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     #retrieve saved items
@@ -1122,7 +1125,7 @@ sub _simple_search {
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
-            additionalInfo=>defined $_->{'stock_additional_info'} ? decode_json $_->{'stock_additional_info'} : undef,
+            additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' ? decode_json $_->{'stock_additional_info'} : undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
