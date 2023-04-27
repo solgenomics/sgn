@@ -61,9 +61,6 @@ $protocol_name
 <script>
 
 jQuery(document).ready(function(){
-    var protocol_name = "<% $protocol_name %>";
-    var protocol_id = "<% $protocol_id %>";
-    var protocol_info = 'protocol:' + protocol_name + ',' + 'id:' + protocol_id;
 
     var genotyping_protocol_table = jQuery('#protocol_markers_table').DataTable({
         'searching' : false,
@@ -110,6 +107,10 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#protocol_markers_table').on( 'draw.dt', function (){
+        var protocol_name = "<% $protocol_name %>";
+        var protocol_id = "<% $protocol_id %>";
+        var protocol_info = 'protocol:' + protocol_name + ',' + 'id:' + protocol_id;
+
         var marker_names = genotyping_protocol_table.column(0).data();
         var html = "";
         for(var i=0; i<marker_names.length; i++){
