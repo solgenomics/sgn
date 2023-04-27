@@ -262,7 +262,6 @@ sub store {
 	if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
-
 	my $schema = $self->bcs_schema;
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $page_size = $self->page_size;
@@ -270,7 +269,7 @@ sub store {
     my $page = $self->page;
     my $counter = 0;
 	my @new_lists_ids;
-
+	my $additional_info_cvterm = _fetch_additional_info_cvterm_id($self->bcs_schema);
 	foreach my $params (@$data){
 		my $date_created = $params->{dateCreated} || undef; #not supported
 		my $date_modified = $params->{dateModified} || undef; #not supported
@@ -343,13 +342,11 @@ sub store {
 		# Store additional Info
 		if( $additional_info_hash_ref ) {
 			my $dbh = $self->bcs_schema->storage()->dbh();
-			my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'list_additional_info', 'list_properties')->cvterm_id();
-
 			my $sql = "INSERT INTO sgn_people.listprop (list_id, type_id, value ) VALUES ( ?, ?, ?)";
 			my $sth = $dbh->prepare($sql);
 
 			my $additional_info_json_str = to_json( $additional_info_hash_ref );
-			$sth->execute($new_list_id, $type_id, $additional_info_json_str);
+			$sth->execute($new_list_id, $additional_info_cvterm, $additional_info_json_str);
 		}
 
 	    $counter++;
