@@ -404,6 +404,9 @@ sub check_cached_phenotype_data {
 sub check_single_trial_model_output {
     my ( $self, $c, $pop_id, $trait_id, $protocol_id ) = @_;
 
+    $c->stash->{trait_id} = $trait_id;
+    $c->stash->{training_pop_id} = $pop_id;
+
     $c->controller('solGS::Files')
       ->rrblup_training_gebvs_file( $c, $pop_id, $trait_id, $protocol_id );
     my $cached_gebv = -s $c->stash->{rrblup_training_gebvs_file};
@@ -449,6 +452,10 @@ sub check_combined_trials_model_all_traits_output {
 
 sub check_selection_pop_output {
     my ( $self, $c, $tr_pop_id, $sel_pop_id, $trait_id ) = @_;
+
+    $c->stash->{trait_id} = $trait_id;
+    $c->stash->{training_pop_id} = $tr_pop_id;
+    $c->stash->{selection_pop_id} = $sel_pop_id;
 
     $c->controller('solGS::Files')
       ->rrblup_selection_gebvs_file( $c, $tr_pop_id, $sel_pop_id, $trait_id );
