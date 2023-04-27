@@ -480,6 +480,7 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     my $c = shift;
     my $list_id = $c->req->param("list_id");
     my $elements = $c->req->param("elements");
+    print STDERR "ELEMENTS STRING =".Dumper($elements)."\n";
 
     my $user_id = $self->get_user($c);
     my $error = $self->check_user($c, $list_id);
@@ -494,6 +495,7 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     }
 
     my @elements = split "\t", $elements;
+    print STDERR "ELEMENTS ARRAY =".Dumper(\@elements)."\n";
 
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
 
