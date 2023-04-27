@@ -255,7 +255,7 @@ solGS.dataset = {
 
 						if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
 							solGS.sIndex.populateSindexMenu();
-							solGS.correlation.listGenCorPopulations();
+							solGS.correlation.populateGenCorrMenu();
 							solGS.geneticGain.ggSelectionPopulations();
 							solGS.cluster.listClusterPopulations();
 						}
