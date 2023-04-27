@@ -914,13 +914,12 @@ sub selection_population_predicted_traits :
   Path('/solgs/selection/population/predicted/traits/') Args(0) {
     my ( $self, $c ) = @_;
 
-    my $training_pop_id  = $c->req->param('training_pop_id');
-    my $selection_pop_id = $c->req->param('selection_pop_id');
 
-    $c->stash->{genotyping_protocol_id} =
-      $c->req->param('genotyping_protocol_id');
-    $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{selection_pop_id} = $selection_pop_id;
+   my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+    my $training_pop_id  = $c->stash->{training_pop_id}; 
+    my $selection_pop_id = $c->stash->{selection_pop_id};
 
     my $ret->{selection_traits} = undef;
     if ( $training_pop_id && $selection_pop_id ) {
@@ -930,6 +929,7 @@ sub selection_population_predicted_traits :
         my $selection_pop_traits =
           $c->stash->{selection_pop_analyzed_traits_ids};
         $ret->{selection_traits} = $selection_pop_traits;
+
     }
 
     $ret = to_json($ret);
