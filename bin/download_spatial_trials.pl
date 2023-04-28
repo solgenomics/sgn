@@ -47,15 +47,14 @@ print STDERR "Connecting to database...\n";
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_dbh() });
 my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() });
+my $people_schema = CXGN::People::Schema->connect( sub { $dbh->get_actual_dbh() } );
 
-my @trial_ids = split ",", $trial_ids;
-my @trial_names = split ",", $trial_names;
+my $trial_rs = $schema->resultset("Project::Project")->find( { } ); # get all trials
 
-foreach my $name (@trial_names) { 
-    my $trial = $schema->resultset("Project::Project")->find( { name => $name });
-    if (!$trial) { print STDERR "Trial $name not found. Skipping...\n"; next; }
-    push @trial_ids, $trial->project_id();
+while (my $row= $trial_rs->next()) { 
+    push @trial_ids, $row->project_id();
 }
+
 
 my @spreadsheet;
 my %trial_data;
@@ -71,6 +70,28 @@ foreach my $trial_id (@trial_ids) {
         trial_id => $trial_id
     });
 
+    if ($t->isa("CXGN::PhenotypingTrial")) {
+	print STDERR "We have a field trial!\n";
+    }
+    else {
+	print STDERR "Trial with id $trial_id is not a field trial. Skipping.\n";	
+	next();
+    }
+
+    if (! $t->has_col_and_row_numbers()) {
+	print STDERR "Trial with id $trial_id does not have a spatial layout. Skipping.\n";
+	next();
+    }
+
+    # retrieve associated genotypes using a dataset
+    #
+    my $d = CXGN::Dataset::File->new( { people_schema => $people_schema, schema => $schema } );
+    
+    $d->trials( [ $trial_id ]);
+    my $genotyping_protocols = $d->retrieve_genotyping_protocols();
+
+    print STDERR "Genotyping protocols: ". Dumper($genotyping_protocols);
+	
     my $location = $t->get_location();
 
     my $breeding_programs = $t->get_breeding_programs();
