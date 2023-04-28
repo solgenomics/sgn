@@ -21,6 +21,7 @@
     <li><a href="/breeders/phenotyping/">Phenotyping</a></li>
     <li><a href="/barcode">Barcodes</a></li>
     <li><a href="/tools/label_designer">Label Designer</a></li>
+    <li><a href="/tools/climmob">CLIMMOB</a></li>
 
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/download">Download</a></li>
