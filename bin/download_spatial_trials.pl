@@ -51,6 +51,8 @@ my $people_schema = CXGN::People::Schema->connect( sub { $dbh->get_actual_dbh() 
 
 my $trial_rs = $schema->resultset("Project::Project")->find( { } ); # get all trials
 
+my @trial_ids;
+
 while (my $row= $trial_rs->next()) { 
     push @trial_ids, $row->project_id();
 }
