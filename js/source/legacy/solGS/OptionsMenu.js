@@ -28,9 +28,9 @@ class OptionsMenu {
   addOptions(data) {
     var menu = this.createOptionsMenu();
 
-    var ids = [];
+    // var ids = [];
     data.forEach(function (dt) {
-      if (!ids.includes(dt.id)) {
+      // if (!ids.includes(dt.id)) {
         var option = document.createElement("option");
 
         option.value = dt.id;
@@ -39,8 +39,8 @@ class OptionsMenu {
 
         menu.appendChild(option);
 
-        ids.push(dt.id);
-      }
+        // ids.push(dt.id);
+      // }
     });
 
     return menu;
