@@ -7,8 +7,11 @@
 var solGS = solGS || function solGS() {};
 
 solGS.anova = {
+	canvas: "#anova_canvas",
 	msgDiv: '#anova_message',
 	runDiv: '#run_anova',
+	anovaTraitsDiv: "#anova_select_a_trait_div",
+ 	anovaTraitsSelectMenuId: "#anova_select_traits",
 
 	checkTrialDesign: function () {
 
@@ -114,58 +117,17 @@ solGS.anova = {
 		return anovaTraits;
 	},
 
-	formatAnovaTraits: function (traits) {
+	populateAnovaMenu: function (traits) {
 
-		var traitsList = '';
+		var menuId = this.anovaTraitsSelectMenuId;
+		var optionsLabel = "Select a trait";
+		var menuClass = "form-control";
+		var menu = new OptionsMenu(menuId, menuClass, optionsLabel);
+		 traits = traits.flat();
+		var menuElem = menu.addOptions(traits);
 
-		for (var i = 0; i < traits.length; i++) {
-		var traitName = traits[i].trait_name;
-
-		var idName = JSON.stringify(traits[i]);
-		traitsList +='<li>'
-			+ '<a href="#">' + traitName + '<span class=value>' + idName + '</span></a>'
-			+ '</li>';
-		}
-
-		var  traitsList =  '<dl id="anova_selected_trait" class="anova_dropdown">'
-			+ '<dt> <a href="#"><span>Select a trait</span></a></dt>'
-			+ '<dd>'
-			+ '<ul>'
-			+ traitsList
-		+ '</ul></dd></dl>';
-
-		jQuery("#anova_select_a_trait_div").empty().append(traitsList).show();
-
-		jQuery(".anova_dropdown dt a").click(function() {
-			jQuery(".anova_dropdown dd ul").toggle();
-		});
-
-		jQuery(".anova_dropdown dd ul li a").click(function() {
-
-			var text = jQuery(this).html();
-
-			jQuery(".anova_dropdown dt a span").html(text);
-			jQuery(".anova_dropdown dd ul").hide();
-
-			var traitIdName = jQuery("#anova_selected_trait").find("dt a span.value").html();
-			traitIdName     = JSON.parse(traitIdName);
-
-			var traitId   = traitIdName.trait_id;
-			var traitName = traitIdName.trait_name;
-
-			jQuery("#anova_selected_trait_name").val(traitName);
-			jQuery("#anova_selected_trait_id").val(traitId);
-
-		});
-
-		jQuery(".anova_dropdown").bind('click', function(e) {
-			var clicked = jQuery(e.target);
-
-			if (!clicked.parents().hasClass("anova_dropdown"))
-				jQuery(".anova_dropdown dd ul").hide();
-
-			e.preventDefault();
-		});
+		var anovaTraitsDiv = this.anovaTraitsDiv;
+		jQuery(anovaTraitsDiv).empty().append(menuElem).show();
 
 	},
 
@@ -195,55 +157,53 @@ solGS.anova = {
 jQuery(document).ready( function() {
 
     var url = document.URL;
-
+	var runDiv = solGS.anova.runDiv;
     if (url.match(/\/breeders_toolbox\/trial|breeders\/trial|\/solgs\/population\//)) {
 		solGS.anova.checkTrialDesign().done(function (designRes){
 		if (designRes.Error) {
 				solGS.anova.showMessage(designRes.Error);
-				jQuery(solGS.anova.runDiv).hide();
+				jQuery(runDiv).hide();
 		} else {
 			solGS.anova.listAnovaTraits().done(function (traitsRes){
 				var traits = traitsRes.anova_traits;
 
 				if (traits.length) {
-					solGS.anova.formatAnovaTraits(traits);
-					jQuery(solGS.anova.runDiv).show();
+					solGS.anova.populateAnovaMenu(traits);
+					jQuery(runDiv).show();
 				} else {
 					solGS.anova.showMessage('This trial has no phenotyped traits.');
-					jQuery(solGS.anova.runDiv).hide();
+					jQuery(runDiv).hide();
 				}
-			});
-
-			solGS.anova.listAnovaTraits().fail(function (){
+			}).fail(function (){
 				solGS.anova.showMessage("Error occured listing anova traits.");
-				jQuery(solGS.anova.runDiv).hide();
+				jQuery(runDiv).hide();
 			});
 		}	
-		});
-
-		solGS.anova.checkTrialDesign().fail( function () {
+		}).fail( function () {
 			solGS.anova.showMessage("Error occured running the ANOVA.");
-			jQuery(solGS.anova.runDiv).show();
+			jQuery(runDiv).show();
 		})
     }
 });
 
 jQuery(document).ready(function () {
-    jQuery(document).on("click", solGS.anova.runDiv, function() {
+	var runDiv = solGS.anova.runDiv;
+	var canvas = solGS.anova.canvas;
+
+    jQuery(document).on("click", runDiv, function() {
 		
 
 		var traitId = jQuery("#anova_selected_trait_id").val();
-
 		if (traitId) {	
-			jQuery(solGS.anova.runDiv).hide();
+			jQuery(runDiv).hide();
 			solGS.anova.showMessage('Please wait...Querying the database for trait data...');
-			jQuery("#anova_canvas .multi-spinner-container").show();
+			jQuery(`${canvas} .multi-spinner-container`).show();
 
 			solGS.anova.queryPhenoData(traitId).done(function (queryRes) {	
 				if (queryRes.Error) {
 					solGS.anova.showMessage(queryRes.Error);
-					jQuery(solGS.anova.runDiv).show();
-					jQuery("#anova_canvas .multi-spinner-container").hide();
+					jQuery(runDiv).show();
+					jQuery(`${canvas} .multi-spinner-container`).hide();
 				} else {
 						var traitsAbbrs = queryRes.traits_abbrs;
 						traitsAbbrs = JSON.parse(traitsAbbrs);
@@ -252,14 +212,14 @@ jQuery(document).ready(function () {
 						solGS.anova.runAnovaAnalysis(traitsAbbrs).done(function (analysisRes) {
 
 							if (analysisRes.Error) {
-								jQuery("#anova_canvas .multi-spinner-container").hide();
+								jQuery(`${canvas} .multi-spinner-container`).hide();
 								 jQuery(solGS.anova.msgDiv).empty();
 								solGS.anova.showMessage(analysisRes.Error);
-								jQuery(solGS.anova.runDiv).show();
+								jQuery(runDiv).show();
 							} else {
-								jQuery("#anova_canvas .multi-spinner-container").hide();
+								jQuery(`${canvas} .multi-spinner-container`).hide();
 								jQuery(solGS.anova.msgDiv).empty();
-								jQuery(solGS.anova.runDiv).show();
+								jQuery(runDiv).show();
 
 								var anovaTable = analysisRes.anova_html_table;
 								if (anovaTable) {
@@ -289,26 +249,18 @@ jQuery(document).ready(function () {
 									.show();
 
 							}  else {
-								jQuery("#anova_canvas .multi-spinner-container").hide();
+								jQuery(`${canvas} .multi-spinner-container`).hide();
 								solGS.anova.showMessage("There is no anova output for this dataset.");
-								jQuery(solGS.anova.runDiv).show();
+								jQuery(runDiv).show();
 							}
 						}
-					});
-
-					solGS.anova.runAnovaAnalysis(traitsAbbrs).fail(function () {
-						jQuery("#anova_canvas .multi-spinner-container").hide();
+					}).fail(function () {
+						jQuery(`${canvas} .multi-spinner-container`).hide();
 						solGS.anova.showMessage("Error occured running the anova analysis.");
-						jQuery(solGS.anova.runDiv).show();
+						jQuery(runDiv).show();
 					});
 
 				}
-
-				solGS.anova.queryPhenoData(traitId).fail(function () {
-					solGS.anova.showMessage("Error occured querying the trial data.");
-					jQuery("#anova_canvas .multi-spinner-container").hide();
-					jQuery(solGS.anova.runDiv).show();
-				})
 
 				solGS.anova.clearTraitSelection();
 
@@ -320,3 +272,16 @@ jQuery(document).ready(function () {
     });
 
 });
+
+jQuery(document).ready(function () {
+	var anovaTraitsDiv = solGS.anova.anovaTraitsDiv;
+  
+	jQuery(anovaTraitsDiv).change(function () {
+	  var selectedTrait = jQuery("option:selected", this).data("pop");
+	  var selectedTraitId = selectedTrait.id;
+	  var selectedTraitName = selectedTrait.name;
+	  jQuery("#anova_selected_trait_name").val(selectedTraitName);
+	  jQuery("#anova_selected_trait_id").val(selectedTraitId);
+
+	});
+  });
