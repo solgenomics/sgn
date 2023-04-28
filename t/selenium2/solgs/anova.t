@@ -55,7 +55,7 @@ print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
 print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
 print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
-
+my $trait = "dry matter content percentage";
 
 `rm -r $cache_dir`;
 
@@ -90,13 +90,16 @@ $d->while_logged_in_as("submitter", sub {
     my $anova = $d->find_element('ANOVA', 'partial_link_text', 'scroll to anova');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $anova);
     sleep(2);
-    $d->find_element_ok("anova_select_a_trait_div", 'id', 'click dropdown menu')->click();
-    sleep(3);
-    $d->find_element_ok("anova_dropdown", 'class', 'select a trait')->click();
+    # $d->find_element_ok('anova_select_a_trait_div', 'id', 'click dropdown menu')->click();
+    # sleep(3);
+    $d->find_element_ok('anova_select_traits', 'id', 'select a trait')->click();
+    sleep(2);
+    $d->find_element_ok('//select[@id="anova_select_traits"]/option[text()="' . $trait . '"]', 'xpath', 'select list sel pop')->click();
     sleep(2);
     $d->find_element_ok('run_anova', 'id', 'run anova')->click();
     sleep(180);
     $d->find_element_ok('//div[contains(., "ANOVA result")]', 'xpath', 'anova result')->get_text();
+
     sleep(5);
 
     `rm -r $cache_dir`;
@@ -109,9 +112,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
-    $d->find_element_ok("anova_select_a_trait_div", 'id', 'click dropdown menu')->click();
-    sleep(3);
-    $d->find_element_ok("anova_dropdown", 'class', 'select a trait')->click();
+    # $d->find_element_ok('anova_select_a_trait_div', 'id', 'click dropdown menu')->click();
+    # sleep(3);
+    $d->find_element_ok('anova_select_traits', 'id', 'select a trait')->click();
+    sleep(2);
+     $d->find_element_ok('//select[@id="anova_select_traits"]/option[text()="' . $trait . '"]', 'xpath', 'select list sel pop')->click();
     sleep(2);
     $d->find_element_ok('run_anova', 'id', 'run anova')->click();
     sleep(160);
