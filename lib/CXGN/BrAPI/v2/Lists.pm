@@ -59,7 +59,7 @@ sub search {
 		id => \@list_ids
 	});
 	my $reference_result = $references->search();
-	my $additional_info_cvterm = _fetch_additional_info_cvterm_id($self->bcs_schema);
+	my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
 
 	foreach (@$lists){
 		my $name = $_->[1];
@@ -96,7 +96,7 @@ sub search {
 		if(!$match_found) {
 			next;
 		}
-		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $id, $additional_info_cvterm);
+		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $id, $additional_info_cvterm_id);
 
 		if ($counter >= $start_index && $counter <= $end_index) {
 			push @data , {
@@ -229,8 +229,8 @@ sub detail {
 				push @references, $_;
 			}
 		}
-		my $additional_info_cvterm = _fetch_additional_info_cvterm_id($self->bcs_schema);
-		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $list_id, $additional_info_cvterm );
+		my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
+		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $list_id, $additional_info_cvterm_id );
 		%result = (
 			additionalInfo      => $additional_info_json,
 			dateCreated         => $list->{create_date},
@@ -269,7 +269,7 @@ sub store {
     my $page = $self->page;
     my $counter = 0;
 	my @new_lists_ids;
-	my $additional_info_cvterm = _fetch_additional_info_cvterm_id($self->bcs_schema);
+	my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
 	foreach my $params (@$data){
 		my $date_created = $params->{dateCreated} || undef; #not supported
 		my $date_modified = $params->{dateModified} || undef; #not supported
@@ -346,7 +346,7 @@ sub store {
 			my $sth = $dbh->prepare($sql);
 
 			my $additional_info_json_str = to_json( $additional_info_hash_ref );
-			$sth->execute($new_list_id, $additional_info_cvterm, $additional_info_json_str);
+			$sth->execute($new_list_id, $additional_info_cvterm_id, $additional_info_json_str);
 		}
 
 	    $counter++;
@@ -378,12 +378,12 @@ sub update {
     my $page = $self->page;
     my $counter = 1;
 
-	my $additional_info = $params->{additionalInfo} || undef; #not supported
 	my $date_created = $params->{dateCreated} || undef; #not supported
 	my $date_modified = $params->{dateModified} || undef; #not supported
 	my $owner_name = $params->{listOwnerName} || undef; #not supported
 	my $list_size = $params->{listSize} || undef; #not supported, counted from data
 	my $list_source = $params->{listSource} || undef;  #not supported, db name
+	my $additional_info_hash_ref = $params->{additionalInfo} || undef;
 	my $externalReferences = $params->{externalReferences} || undef;
 	my $list_id = $params->{listDbId} || undef;
 	my $list_name = $params->{listName} || undef;
@@ -391,7 +391,6 @@ sub update {
 	my $list_description = $params->{listDescription} || undef;
 	my $owner_id = $params->{listOwnerPersonDbId} || undef;
 	my $data = $params->{data} || undef;
-
     #Retrieve list
     my $list = CXGN::List->new( { dbh=>$dbh, list_id => $list_id });
 
@@ -444,6 +443,19 @@ sub update {
 			id                  => $list_id
 		});
 		my $reference_result = $references->store();
+	}
+	# Update 'additional Info'
+	if( $additional_info_hash_ref ) {
+		my $dbh = $self->bcs_schema->storage()->dbh();
+		my $sql = "DELETE FROM sgn_people.listprop WHERE list_id = ?";
+		my $sth = $dbh->prepare($sql);
+		$sth->execute($list_id);
+
+		$sql = "INSERT INTO sgn_people.listprop (list_id, type_id, value ) VALUES ( ?, ?, ?)";
+		$sth = $dbh->prepare($sql);
+		my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
+		my $additional_info_json_str = to_json( $additional_info_hash_ref );
+		$sth->execute($list_id, $additional_info_cvterm_id, $additional_info_json_str);
 	}
 
   	my @data_files;
