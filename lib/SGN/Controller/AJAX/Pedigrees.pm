@@ -261,8 +261,8 @@ sub _get_pedigrees_from_file {
                 $c->detach();
             }
         }
-        if (($female && !$male) && ($cross_type ne 'open')) {
-            $c->stash->{rest} = { error => "For $progeny on line number $line_num no male parent specified and cross_type is not open..." };
+        if (($female && !$male) && (($cross_type ne 'open') && ($cross_type ne 'self') && ($cross_type eq 'reselected') && ($cross_type eq 'sib'))) {
+            $c->stash->{rest} = { error => "For $progeny on line number $line_num no male parent specified and cross_type is not open, self, reselected or sib..." };
             $c->detach();
         }
 
