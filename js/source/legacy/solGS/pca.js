@@ -985,7 +985,7 @@ jQuery(document).ready(function () {
     jQuery("#pca_pops_list_select").change(function () {
       var selectedPop = solGS.selectMenu.getSelectedPop("pca_pops");
       if (selectedPop.selected_id) {
-        jQuery("#pca_pops_go_btn").click(function () {
+        jQuery("#pca_pop_go_btn").click(function () {
           solGS.pca.loadPcaPops(
             selectedPop.selected_id,
             selectedPop.selected_name,
