@@ -22,7 +22,7 @@ jQuery(document).ready( function() {
         var selectedPop = solGS.selectMenu.getSelectedPop('list_type_training_pops');
 
         if (selectedPop.selected_id) {  	
-            jQuery("#list_type_training_pops_go_btn").click(function() {
+            jQuery("#list_type_training_pop_go_btn").click(function() {
 
                 if (typeof selectedPop.data_str === 'undefined' || !selectedPop.data_str.match(/dataset/i)) {
                     var listDetail = getListTypeTrainingPopDetail(selectedPop.selected_id);
