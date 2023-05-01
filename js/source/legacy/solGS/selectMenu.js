@@ -13,6 +13,7 @@ solGS.selectMenu = {
         div = `${div}_pops`;
     }
 
+    console.log(`selectMenu div ${div}`)
     return div;
 
     },
@@ -59,7 +60,7 @@ solGS.selectMenu = {
         var selectedName = jQuery(divId).find("option:selected").text();
         var dataStr = jQuery(divId).find("option:selected").attr('name');
 
-        if (dataStr == undefined) {
+        if (!dataStr) {
             dataStr = 'list';
         }
         
