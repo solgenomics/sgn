@@ -25,7 +25,7 @@ jQuery(document).ready( function() {
         var selectedPop = solGS.selectMenu.getSelectedPop('list_type_selection_pops');
         if (selectedPop.selected_id) {
 
-	        jQuery("#list_type_selection_pops_go_btn").click(function() {
+	        jQuery(" #list_type_selection_pop_go_btn").click(function() {
 
                 if (typeof selectedPop.data_str === 'undefined' || !selectedPop.data_str.match(/dataset/i)) {
                     var listDetail = getListTypeSelectionPopDetail(selectedPop.selected_id);
@@ -67,7 +67,7 @@ function checkPredictedListSelection (listId) {
 
 		if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
 		    solGS.sIndex.populateSindexMenu();
-		    solGS.correlation.listGenCorPopulations();
+		    solGS.correlation.populateGenCorrMenu();
 		    solGS.geneticGain.ggSelectionPopulations();
 		    solGS.cluster.listClusterPopulations();
 		}
@@ -229,7 +229,7 @@ function loadGenotypesListTypeSelectionPop(args) {
 		    } else {
 			displayPredictedListTypeSelectionPops(args, response.output);
 			solGS.sIndex.populateSindexMenu();
-			solGS.correlation.listGenCorPopulations();
+			solGS.correlation.populateGenCorrMenu();
 			jQuery.unblockUI();
 		    }
 
@@ -423,7 +423,7 @@ function loadPredictionOutput (url, listId, listSource) {
 
                 if (page.match('/traits/all/population/') != null) {
                     solGS.sIndex.populateSindexMenu();
-                    solGS.correlation.listGenCorPopulations();
+                    solGS.correlation.populateGenCorrMenu();
                 }
 
                 jQuery.unblockUI();
