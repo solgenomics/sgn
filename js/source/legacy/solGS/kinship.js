@@ -418,7 +418,7 @@ jQuery(document).ready(function() {
 		jQuery("#kinship_pops_list_select").change(function() {
 			var selectedPop = solGS.selectMenu.getSelectedPop('kinship_pops');
 			if (selectedPop.selected_id) {
-				jQuery("#kinship_pops_go_btn").click(function() {
+				jQuery("#kinship_pop_go_btn").click(function() {
 					solGS.kinship.loadKinshipPops(selectedPop.selected_id, selectedPop.selected_name, selectedPop.data_str);
 				});
 			}
