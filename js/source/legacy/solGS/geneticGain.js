@@ -79,8 +79,6 @@ solGS.geneticGain = {
     var canvas = this.canvas;
     var ggMsgDiv = this.ggMsgDiv;
 
-	console.log(`plotGeneticGainBoxplot ggargs ${ggArgs}`)
-	console.log(`plotGeneticGainBoxplot ggargs strigify ${JSON.stringify(ggArgs)}`)
 
 	ggArgs = JSON.stringify(ggArgs)
     jQuery(` ${canvas} .multi-spinner-container`).show();
@@ -226,7 +224,6 @@ solGS.geneticGain = {
       }
     }
 
-	console.log(`gg predicted trial pops: ${JSON.stringify(ggPops)}`)
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
       var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
