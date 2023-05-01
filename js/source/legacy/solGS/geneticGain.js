@@ -238,72 +238,12 @@ solGS.geneticGain = {
     var menuId = this.ggPopsSelectMenuId;
     var menu = new OptionsMenu(menuId);
     ggPops = ggPops.flat();
-	console.log(`gg predicted trial flat array pops: ${JSON.stringify(ggPops)}`)
 
     var menuElem = menu.addOptions(ggPops);
     var ggPopsDiv = this.ggPopsDiv;
 
     jQuery(ggPopsDiv).empty().append(menuElem).show();
 
-    // var  popsList =  '<dl id="gg_selected_pop" class="gg_dropdown">'
-    //         + '<dt><a href="#"><span>Select a population</span></a></dt>'
-    //         + '<dd><ul>'
-    //     + '</ul></dd>'
-    //     + '</dl>';
-
-    // jQuery("#gg_select_a_pop_div").empty().append(popsList).show();
-
-    // var dbSelPopsList;
-    // if (ggArgs.training_pop_id.match(/list/) == null) {
-    //         dbSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
-    // }
-
-    // if (dbSelPopsList) {
-    //         jQuery("#gg_select_a_pop_div ul").append(dbSelPopsList);
-    // }
-
-    // var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
-    // if (listTypeSelPops) {
-    //         var selPopsList = solGS.sIndex.getListTypeSelPopulations();
-    //         if (selPopsList) {
-    // 	jQuery("#gg_select_a_pop_div ul").append(selPopsList);
-    //         }
-    // }
-
-    // jQuery(".gg_dropdown dt a").click(function() {
-    //         jQuery(".gg_dropdown dd ul").toggle();
-    // });
-
-    // jQuery(".gg_dropdown dd ul li a").click(function() {
-
-    //         var text = jQuery(this).html();
-
-    //         jQuery(".gg_dropdown dt a span").html(text);
-    //         jQuery(".gg_dropdown dd ul").hide();
-
-    //         var idPopName = jQuery("#gg_selected_pop").find("dt a span.value").html();
-    //         idPopName     = JSON.parse(idPopName);
-
-    //         var selectedPopId   = idPopName.id;
-    //         var selectedPopName = idPopName.name;
-    //         var selectedPopType = idPopName.pop_type;
-
-    //         jQuery("#gg_selected_pop_name").val(selectedPopName);
-    //         jQuery("#gg_selected_pop_id").val(selectedPopId);
-    //     jQuery("${canvas} #selection_pop_id").val(selectedPopId);
-    //         jQuery("#gg_selected_pop_type").val(selectedPopType);
-
-    // });
-
-    // jQuery(".gg_dropdown").bind('click', function(e) {
-    //         var clicked = jQuery(e.target);
-
-    //         if (! clicked.parents().hasClass("gg_dropdown"))
-    // 	jQuery(".gg_dropdown dd ul").hide();
-
-    //         e.preventDefault();
-
-    // });
   },
 
   getSelPopPredictedTraits: function (ggArgs) {
@@ -318,7 +258,6 @@ solGS.geneticGain = {
       url: "/solgs/selection/population/predicted/traits",
       success: function (res) {
         if (res.selection_traits) {
-			console.log(`getSelPopPredictedTraits ${res.selection_traits}`)
           var ggArgs = solGS.geneticGain.getGeneticGainArgs();
           jQuery(`${canvas} #selection_traits_ids`).val(res.selection_traits);
           solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
@@ -517,22 +456,13 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
 	var ggPopsDiv = solGS.geneticGain.ggPopsDiv;
-	console.log(`gg doc ready ggpopsdiv ${ggPopsDiv}`)
 	jQuery(ggPopsDiv).change(function () {
-	console.log(`On change ggpopsdiv ${ggPopsDiv}`)
 
 	  var selectedPop = jQuery("option:selected", this).data("pop");
-	  console.log(`gg selectedPop ${selectedPop}`)
-	  console.log(`gg selectedPop strigify ${JSON.stringify(selectedPop)}`)
-	//   console.log(`gg selectedPop parse ${JSON.parse(selectedPop)}`)
   
-	  var selectedPopId = selectedPop.id;
-	  var selectedPopName = selectedPop.name;
-	  var selectedPopType = selectedPop.pop_type;
-  console.log(`gg selectedPop ${selectedPopId}, ${selectedPopName}, ${selectedPopType}`)
-	  jQuery("#gg_selected_pop_name").val(selectedPopName);
-	  jQuery("#gg_selected_pop_id").val(selectedPopId);
-	  jQuery("#gg_selected_pop_type").val(selectedPopType);
+	  jQuery("#gg_selected_pop_name").val(selectedPop.name);
+	  jQuery("#gg_selected_pop_id").val(selectedPop.id);
+	  jQuery("#gg_selected_pop_type").val(selectedPop.pop_type);
 	});
   
   });
