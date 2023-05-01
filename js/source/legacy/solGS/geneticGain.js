@@ -8,496 +8,531 @@
 *
 */
 
-
-var solGS = solGS || function solGS () {};
+var solGS = solGS || function solGS() {};
 
 solGS.geneticGain = {
+  canvas: "#gg_canvas",
+  ggPlotDivPrefix: "#gg_plot",
+  ggMsgDiv: "#gg_message",
+  ggPopsDiv: "#gg_select_a_pop_div",
+  ggPopsSelectMenuId: "#gg_select_pops",
 
-    gebvsComparison: function () {
+  gebvsComparison: function () {
+    var gebvParams = this.getGeneticGainArgs();
 
-	var gebvParams = this.getGeneticGainArgs();
+    var trainingGEBVs = "";
+    var selectionGEBVs = "";
 
-	var trainingGEBVs  = '';
-	var selectionGEBVs = '';
+    var missing;
+    if (!gebvParams.training_pop_id) {
+      missing = "training population id";
+    }
 
-	var missing;
-	if (!gebvParams.training_pop_id) {
-	    missing = 'training population id';
-	}
+    if (!gebvParams.selection_pop_id) {
+      missing += ", selection population id";
+    }
 
-	if (!gebvParams.selection_pop_id) {
-	    missing += ', selection population id';
-	}
+    if (!gebvParams.trait_id) {
+      missing += ", trait id";
+    }
 
-	if (!gebvParams.trait_id) {
-	    missing += ', trait id';
-	}
+    var ggMsgDiv = this.ggMsgDiv;
+    if (missing) {
+      jQuery(ggMsgDiv)
+        .html("Can not compare GEBVs. I am missing " + missing + ".")
+        .show();
+    } else {
+      this.plotGeneticGainBoxplot(gebvParams);
+      //getTrainingPopulationGEBVs(gebvParams);
+    }
+  },
 
-	if (missing) {
-	    jQuery('#gg_message')
-		.html('Can not compare GEBVs. I am missing ' + missing + '.')
-		.show();
-	}
-	else {
+  getGeneticGainArgs: function () {
+    var canvas = this.canvas;
+ 
+    var trainingPopId = jQuery(`${canvas} #training_pop_id`).val();
+    var trainingPopName = jQuery(`${canvas} #training_pop_name`).val();
+    var selectionPopId = jQuery("#gg_selected_pop_id").val();
+    var trainingTraitsIds = jQuery(canvas).find("#training_traits_ids").val();
+    var traitId = jQuery("#trait_id").val();
+    var protocolId = jQuery("#genotyping_protocol_id").val();
 
-	    this.plotGeneticGainBoxplot(gebvParams);
-	    //getTrainingPopulationGEBVs(gebvParams);
-	}
-    },
+    if (document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
+      if (trainingTraitsIds) {
+        trainingTraitsIds = trainingTraitsIds.split(",");
+      }
+    }
 
+    var ggArgs = {
+      training_pop_id: trainingPopId,
+      training_pop_name: trainingPopName,
+      selection_pop_id: selectionPopId,
+      training_traits_ids: trainingTraitsIds,
+      trait_id: traitId,
+      genotyping_protocol_id: protocolId,
+    };
 
-    getGeneticGainArgs: function () {
+    return ggArgs;
+  },
 
-	var trainingPopId   = jQuery('#gg_canvas #training_pop_id').val();
-	var trainingPopName = jQuery('#gg_canvas #training_pop_name').val();
-	var selectionPopId  = jQuery('#gg_canvas #selection_pop_id').val();
-	var trainingTraitsIds = jQuery('#gg_canvas').find('#training_traits_ids').val();
-	var traitId         = jQuery('#trait_id').val();
-	var protocolId      = jQuery('#genotyping_protocol_id').val();
+  plotGeneticGainBoxplot: function (ggArgs) {
+    var canvas = this.canvas;
+    var ggMsgDiv = this.ggMsgDiv;
 
-	if(document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
-	    if (trainingTraitsIds) {
-		trainingTraitsIds = trainingTraitsIds.split(',');
-	    }
-	}
+	console.log(`plotGeneticGainBoxplot ggargs ${ggArgs}`)
+	console.log(`plotGeneticGainBoxplot ggargs strigify ${JSON.stringify(ggArgs)}`)
 
-	var ggArgs = {
-	    'training_pop_id'  : trainingPopId,
-	    'training_pop_name' : trainingPopName,
-	    'selection_pop_id' : selectionPopId,
-	    'training_traits_ids' : trainingTraitsIds,
-	    'trait_id'         : traitId,
-	    'genotyping_protocol_id': protocolId
-	}
+	ggArgs = JSON.stringify(ggArgs)
+    jQuery(` ${canvas} .multi-spinner-container`).show();
+    jQuery("#check_genetic_gain").hide();
+    jQuery(ggMsgDiv).html("Please wait... plotting genetic gain").show();
 
-	return ggArgs;
+    jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: {'arguments': ggArgs},
+      url: "/solgs/genetic/gain/boxplot",
+      success: function (res) {
+        if (res.Error) {
+          jQuery(`${canvas} .multi-spinner-container`).hide();
+          jQuery(ggMsgDiv).empty();
 
-    },
+          solGS.showMessage(ggMsgDiv, response.Error);
 
-    plotGeneticGainBoxplot: function(ggArgs) {
+          if (
+            document.URL.match(
+              /\/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//
+            )
+          ) {
+            jQuery("#check_genetic_gain").show();
+          }
+        } else {
+          var boxplot = res.boxplot;
+          var boxplotData = res.boxplot_data;
+          var plot = '<img  src= "' + boxplot + '">';
 
-	jQuery("#gg_canvas .multi-spinner-container").show();
-	jQuery("#check_genetic_gain").hide();
-	jQuery('#gg_message')
-	    .html('Please wait... plotting genetic gain')
-	    .show();
+          if (boxplot) {
+            var fileNameBoxplot = boxplot.split("/").pop();
+            boxplotFile = '<a href="' + boxplot + '" download=' + fileNameBoxplot + ">boxplot</a>";
 
-	jQuery.ajax({
-	    type: 'POST',
-	    dataType: 'json',
-	    data: ggArgs,
-	    url : '/solgs/genetic/gain/boxplot',
-	    success: function (res) {
-		if (res.Error) {
-		    jQuery("#gg_canvas .multi-spinner-container").hide();
-		    jQuery("#gg_message").empty();
+            var fileNameData = boxplotData.split("/").pop();
+            var dataFile = '<a href="' + boxplotData + '" download=' + fileNameData + ">Data</a>";
+            jQuery("#gg_plot")
+              .prepend(
+                '<div style="margin-top: 20px">' +
+                  plot +
+                  "</div>" +
+                  "<br /> <strong>Download:</strong> " +
+                  boxplotFile +
+                  " | " +
+                  dataFile
+              )
+              .show();
 
-		    solGS.showMessage("gg_message", response.Error);
+            jQuery(`${canvas} .multi-spinner-container`).hide();
+            jQuery("#gg_message").empty();
 
-		    if (document.URL.match(/\/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
-                        jQuery("#check_genetic_gain").show();
-                    }
-
-		} else {
-		    var boxplot = res.boxplot;
-		    var boxplotData = res.boxplot_data
-		    var plot = '<img  src= "' + boxplot + '">';
-
-		    if (boxplot) {
-
-			var fileNameBoxplot = boxplot.split('/').pop();
-			boxplotFile = "<a href=\"" + boxplot +  "\" download=" + fileNameBoxplot + ">boxplot</a>";
-
-			var fileNameData = boxplotData.split('/').pop();
-			var dataFile = "<a href=\"" + boxplotData +  "\" download=" + fileNameData + ">Data</a>";
-			jQuery("#gg_plot")
-			    .prepend('<div style="margin-top: 20px">' + plot + '</div>'
-				     + '<br /> <strong>Download:</strong> '
-				     + boxplotFile + ' | '
-				     + dataFile)
-			    .show();
-
-			jQuery("#gg_canvas .multi-spinner-container").hide();
-			jQuery("#gg_message").empty();
-
-			if (document.URL.match(/\/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
-                            jQuery("#check_genetic_gain").show();
-			}
-
-		    }  else {
-			jQuery("#gg_canvas .multi-spinner-container").hide();
-			showMessage("There is no genetic gain plot for this dataset.");
-			jQuery("#check_genetic_gain").show();
-
-		    }
-		}
-
-	    },
-	    error: function(res) {
-                jQuery("#gg_canvas .multi-spinner-container").hide();
-		solGS.showMessage('gg_message', "Error occured plotting the genetic gain.");
-		jQuery("#check_genetic_gain").show();
-
-	    }
-	});
-
-    },
-
-
-    getTrainingPopulationGEBVs: function (gebvParams) {
-
-	jQuery.ajax({
-	    type: 'POST',
-	    dataType: 'json',
-	    data: gebvParams,
-	    url : '/solgs/get/gebvs/training/population',
-	    success: function (res) {
-		if (res.gebv_exists) {
-		    jQuery('#gg_message').empty();
-		    trainingGEBVs = res.gebv_arrayref;
-
-		    if (trainingGEBVs) {
-			solGS.geneticGain.getSelectionPopulationGEBVs(gebvParams);
-		    }
-
-		} else {
-		    jQuery('#gg_message')
-			.html('There is no GEBV data for the training population.')
-			.show();
-		}
-	    },
-	    error: function () {
-		jQuery('#gg_message')
-		    .html('Error occured checking for GEBV data for the training population.')
-		    .show();
-	    }
-	});
-
-    },
-
-
-    getSelectionPopulationGEBVs: function (gebvParams) {
-
-	jQuery.ajax({
-	    type: 'POST',
-	    dataType: 'json',
-	    data: gebvParams,
-	    url : '/solgs/get/gebvs/selection/population',
-	    success: function (res) {
-		if (res.gebv_exists) {
-		    jQuery('#gg_message').empty();
-
-		    selectionGEBVs = res.gebv_arrayref;
-
-		    if (selectionGEBVs && trainingGEBVs) {
-			jQuery('#gg_message')
-			    .html('Please wait... plotting gebvs')
-			    .show();
-
-			solGS.geneticGain.plotGEBVs(trainingGEBVs, selectionGEBVs);
-
-			jQuery('#gg_message').empty();
-			jQuery('#check_genetic_gain').hide();
-		    }
-		} else {
-		    jQuery('#gg_message')
-			.html('There is no GEBV data for the selection population.')
-			.show();
-		}
-	    },
-	    error: function () {
-		jQuery('#gg_message')
-		    .html('Error occured checking for GEBV data for the selection population.')
-		    .show();
-	    }
-	});
-
-    },
-
-
-    ggSelectionPopulations: function()  {
-
-	var ggArgs  = this.getGeneticGainArgs();
-
-	var  popsList =  '<dl id="gg_selected_population" class="gg_dropdown">'
-            + '<dt><a href="#"><span>Select a population</span></a></dt>'
-            + '<dd><ul>'
-	    + '</ul></dd>'
-	    + '</dl>';
-
-	jQuery("#gg_select_a_population_div").empty().append(popsList).show();
-
-	var dbSelPopsList;
-	if (ggArgs.training_pop_id.match(/list/) == null) {
-            dbSelPopsList = solGS.sIndex.addSelectionPopulations();
-	}
-
-	if (dbSelPopsList) {
-            jQuery("#gg_select_a_population_div ul").append(dbSelPopsList);
-	}
-
-	var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
-	if (listTypeSelPops) {
-            var selPopsList = solGS.sIndex.getListTypeSelPopulations();
-            if (selPopsList) {
-		jQuery("#gg_select_a_population_div ul").append(selPopsList);
+            if (
+              document.URL.match(
+                /\/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//
+              )
+            ) {
+              jQuery("#check_genetic_gain").show();
             }
-	}
+          } else {
+            jQuery(`${canvas} .multi-spinner-container`).hide();
+            showMessage("There is no genetic gain plot for this dataset.");
+            jQuery("#check_genetic_gain").show();
+          }
+        }
+      },
+      error: function (res) {
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        solGS.showMessage(ggMsgDiv, "Error occured plotting the genetic gain.");
+        jQuery("#check_genetic_gain").show();
+      },
+    });
+  },
 
-	jQuery(".gg_dropdown dt a").click(function() {
-            jQuery(".gg_dropdown dd ul").toggle();
-	});
+  getTrainingPopulationGEBVs: function (gebvParams) {
+    var ggMsgDiv = this.ggMsgDiv;
+    jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: gebvParams,
+      url: "/solgs/get/gebvs/training/population",
+      success: function (res) {
+        if (res.gebv_exists) {
+          jQuery(ggMsgDiv).empty();
+          trainingGEBVs = res.gebv_arrayref;
 
-	jQuery(".gg_dropdown dd ul li a").click(function() {
+          if (trainingGEBVs) {
+            solGS.geneticGain.getSelectionPopulationGEBVs(gebvParams);
+          }
+        } else {
+          jQuery(ggMsgDiv).html("There is no GEBV data for the training population.").show();
+        }
+      },
+      error: function () {
+        jQuery(ggMsgDiv)
+          .html("Error occured checking for GEBV data for the training population.")
+          .show();
+      },
+    });
+  },
 
-            var text = jQuery(this).html();
+  getSelectionPopulationGEBVs: function (gebvParams) {
+    var ggMsgDiv = this.ggMsgDiv;
 
-            jQuery(".gg_dropdown dt a span").html(text);
-            jQuery(".gg_dropdown dd ul").hide();
+    jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: gebvParams,
+      url: "/solgs/get/gebvs/selection/population",
+      success: function (res) {
+        if (res.gebv_exists) {
+          jQuery(ggMsgDiv).empty();
 
-            var idPopName = jQuery("#gg_selected_population").find("dt a span.value").html();
-            idPopName     = JSON.parse(idPopName);
+          selectionGEBVs = res.gebv_arrayref;
 
-            var selectedPopId   = idPopName.id;
-            var selectedPopName = idPopName.name;
-            var selectedPopType = idPopName.pop_type;
+          if (selectionGEBVs && trainingGEBVs) {
+            jQuery(ggMsgDiv).html("Please wait... plotting gebvs").show();
 
-            jQuery("#gg_selected_population_name").val(selectedPopName);
-            jQuery("#gg_selected_population_id").val(selectedPopId);
-	    jQuery("#gg_canvas #selection_pop_id").val(selectedPopId);
-            jQuery("#gg_selected_population_type").val(selectedPopType);
+            solGS.geneticGain.plotGEBVs(trainingGEBVs, selectionGEBVs);
 
-	});
+            jQuery(ggMsgDiv).empty();
+            jQuery("#check_genetic_gain").hide();
+          }
+        } else {
+          jQuery(ggMsgDiv).html("There is no GEBV data for the selection population.").show();
+        }
+      },
+      error: function () {
+        jQuery(ggMsgDiv)
+          .html("Error occured checking for GEBV data for the selection population.")
+          .show();
+      },
+    });
+  },
 
-	jQuery(".gg_dropdown").bind('click', function(e) {
-            var clicked = jQuery(e.target);
+  ggSelectionPopulations: function () {
+    var ggArgs = this.getGeneticGainArgs();
 
-            if (! clicked.parents().hasClass("gg_dropdown"))
-		jQuery(".gg_dropdown dd ul").hide();
+    var ggPops = [];
+    if (ggArgs.training_pop_id.match(/list/) == null) {
+      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+      if (trialSelPopsList) {
+        ggPops.push(trialSelPopsList);
+      }
+    }
 
-            e.preventDefault();
+	console.log(`gg predicted trial pops: ${JSON.stringify(ggPops)}`)
+    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
+    if (listTypeSelPopsTable) {
+      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      if (listTypeSelPops) {
+        ggPops.push(listTypeSelPops);
+      }
+    }
 
-	});
+    var menuId = this.ggPopsSelectMenuId;
+    var menu = new OptionsMenu(menuId);
+    ggPops = ggPops.flat();
+	console.log(`gg predicted trial flat array pops: ${JSON.stringify(ggPops)}`)
 
-    },
+    var menuElem = menu.addOptions(ggPops);
+    var ggPopsDiv = this.ggPopsDiv;
 
+    jQuery(ggPopsDiv).empty().append(menuElem).show();
 
-    getSelPopPredictedTraits: function(ggArgs) {
+    // var  popsList =  '<dl id="gg_selected_pop" class="gg_dropdown">'
+    //         + '<dt><a href="#"><span>Select a population</span></a></dt>'
+    //         + '<dd><ul>'
+    //     + '</ul></dd>'
+    //     + '</dl>';
 
-	jQuery.ajax({
-	    type: 'POST',
-	    dataType: 'json',
-	    data: ggArgs,
-	    url : '/solgs/selection/population/predicted/traits',
-	    success: function (res) {
-		if (res.selection_traits) {
-		    var ggArgs = solGS.geneticGain.getGeneticGainArgs();
-		    jQuery('#gg_canvas #selection_traits_ids').val(ggArgs.training_traits_ids);
-		    solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
+    // jQuery("#gg_select_a_pop_div").empty().append(popsList).show();
 
-		} else {
-		   jQuery('#gg_message')
-		    .html('This selection population has no predicted traits.')
-		    .show();
-		}
-	    },
-	    error: function () {
-		jQuery('#gg_message')
-		    .html('Error occured checking for predicted traits for the selection population ' + selectionPopId)
-		    .show();
-	    }
-	});
+    // var dbSelPopsList;
+    // if (ggArgs.training_pop_id.match(/list/) == null) {
+    //         dbSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+    // }
 
-    },
+    // if (dbSelPopsList) {
+    //         jQuery("#gg_select_a_pop_div ul").append(dbSelPopsList);
+    // }
 
+    // var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
+    // if (listTypeSelPops) {
+    //         var selPopsList = solGS.sIndex.getListTypeSelPopulations();
+    //         if (selPopsList) {
+    // 	jQuery("#gg_select_a_pop_div ul").append(selPopsList);
+    //         }
+    // }
 
-    plotGEBVs: function (trainingGEBVs, selectionGEBVs) {
+    // jQuery(".gg_dropdown dt a").click(function() {
+    //         jQuery(".gg_dropdown dd ul").toggle();
+    // });
 
-	var normalDistTraining = new solGS.normalDistribution();
+    // jQuery(".gg_dropdown dd ul li a").click(function() {
 
-	var trainingNormalDistData  = normalDistTraining
-	    .getNormalDistData(trainingGEBVs);
+    //         var text = jQuery(this).html();
 
-	var gebvZScoresT = normalDistTraining
-	    .getYValuesZScores(trainingNormalDistData);
+    //         jQuery(".gg_dropdown dt a span").html(text);
+    //         jQuery(".gg_dropdown dd ul").hide();
 
-	var yValuesT = normalDistTraining
-	    .getPValues(trainingNormalDistData);
+    //         var idPopName = jQuery("#gg_selected_pop").find("dt a span.value").html();
+    //         idPopName     = JSON.parse(idPopName);
 
-	var zScoresPT = normalDistTraining
-	    .getZScoresP(trainingNormalDistData);
+    //         var selectedPopId   = idPopName.id;
+    //         var selectedPopName = idPopName.name;
+    //         var selectedPopType = idPopName.pop_type;
 
-	var xYT =  normalDistTraining
-	    .getYValuesP(trainingNormalDistData);
+    //         jQuery("#gg_selected_pop_name").val(selectedPopName);
+    //         jQuery("#gg_selected_pop_id").val(selectedPopId);
+    //     jQuery("${canvas} #selection_pop_id").val(selectedPopId);
+    //         jQuery("#gg_selected_pop_type").val(selectedPopType);
 
-	var xValuesT =  normalDistTraining
-	    .getYValues(trainingGEBVs);
+    // });
 
-	var trMean = ss.mean(xValuesT);
+    // jQuery(".gg_dropdown").bind('click', function(e) {
+    //         var clicked = jQuery(e.target);
 
-	var stdT = trMean <= 0 ? -1.0 : 1.0;
+    //         if (! clicked.parents().hasClass("gg_dropdown"))
+    // 	jQuery(".gg_dropdown dd ul").hide();
 
-	var xMT = normalDistTraining.getObsValueZScore(gebvZScoresT, stdT);
+    //         e.preventDefault();
 
-	var normalDistSelection = new solGS.normalDistribution();
+    // });
+  },
 
-	var selectionNormalDistData = normalDistSelection
-	    .getNormalDistData(selectionGEBVs);
+  getSelPopPredictedTraits: function (ggArgs) {
+    var ggMsgDiv = this.ggMsgDiv;
+	var canvas = this.canvas;
 
-	var gebvZScoresS = normalDistSelection
-	    .getYValuesZScores(selectionNormalDistData);
+	var args = JSON.stringify(ggArgs);
+    jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: {'arguments': args},
+      url: "/solgs/selection/population/predicted/traits",
+      success: function (res) {
+        if (res.selection_traits) {
+			console.log(`getSelPopPredictedTraits ${res.selection_traits}`)
+          var ggArgs = solGS.geneticGain.getGeneticGainArgs();
+          jQuery(`${canvas} #selection_traits_ids`).val(res.selection_traits);
+          solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
+        } else {
+          jQuery(ggMsgDiv).html("This selection population has no predicted traits.").show();
+        }
+      },
+      error: function () {
+        jQuery(ggMsgDiv)
+          .html(
+            "Error occured checking for predicted traits for the selection population " +
+              selectionPopId
+          )
+          .show();
+      },
+    });
+  },
 
-	var yValuesS = normalDistSelection
-	    .getPValues(selectionNormalDistData);
+  plotGEBVs: function (trainingGEBVs, selectionGEBVs) {
+    var normalDistTraining = new solGS.normalDistribution();
 
-	var zScoresPS = normalDistSelection
-	    .getZScoresP(selectionNormalDistData);
+    var trainingNormalDistData = normalDistTraining.getNormalDistData(trainingGEBVs);
 
-	var xYS = normalDistSelection
-	    .getYValuesP(selectionNormalDistData);
+    var gebvZScoresT = normalDistTraining.getYValuesZScores(trainingNormalDistData);
 
-	var xValuesS = normalDistSelection
-	    .getYValues(selectionGEBVs);
+    var yValuesT = normalDistTraining.getPValues(trainingNormalDistData);
 
-	var slMean = ss.mean(xValuesS);
+    var zScoresPT = normalDistTraining.getZScoresP(trainingNormalDistData);
 
-	var stdS = slMean <= 0 ? -1.0 : 1.0;
+    var xYT = normalDistTraining.getYValuesP(trainingNormalDistData);
 
-	var xMS = normalDistTraining.getObsValueZScore(gebvZScoresS, stdS);
+    var xValuesT = normalDistTraining.getYValues(trainingGEBVs);
 
-	var svgId  = '#compare_gebvs_canvas';
-	var plotId = '#compare_gebvs_plot';
+    var trMean = ss.mean(xValuesT);
 
-	var trColor      = '#02bcff';
-	var slColor      = '#ff1302';
-	var axLabelColor = '#ff8d02';
-	var yLabel       = 'Probability';
-	var xLabel       = 'GEBVs';
+    var stdT = trMean <= 0 ? -1.0 : 1.0;
 
-	var title = 'Normal distribution curves of GEBVs '
-	    + 'for the training and selection populations.';
+    var xMT = normalDistTraining.getObsValueZScore(gebvZScoresT, stdT);
 
-	var allData =  {
-	    'div_id': svgId,
-	    'plot_title': title,
-	    'x_axis_label': xLabel,
-	    'y_axis_label': yLabel,
-	    'axis_label_color': axLabelColor,
-	    'lines' :
-	    [
-		{
-		    'data'  : xYT,
-		    'legend': 'Training population' ,
-		    'color' : trColor,
-		},
-		{
-		    'data'  : xYS,
-		    'legend': 'Selection population',
-		    'color' : slColor,
-		},
+    var normalDistSelection = new solGS.normalDistribution();
 
-	    ]
-	};
+    var selectionNormalDistData = normalDistSelection.getNormalDistData(selectionGEBVs);
 
+    var gebvZScoresS = normalDistSelection.getYValuesZScores(selectionNormalDistData);
 
-	var linePlot  = solGS.linePlot(allData);
+    var yValuesS = normalDistSelection.getPValues(selectionNormalDistData);
 
-	var trainingMidlineData  = [
-	    [trMean, 0],
-	    [trMean, d3.max(yValuesT)]
-	];
+    var zScoresPS = normalDistSelection.getZScoresP(selectionNormalDistData);
 
-	var selectionMidlineData = [
-	    [slMean, 0],
-	    [slMean, d3.max(yValuesS)]
-	];
+    var xYS = normalDistSelection.getYValuesP(selectionNormalDistData);
 
-	var midLine = d3.svg.line()
-	    .x(function(d) {
-		return linePlot.xScale(d[0]);
-	    })
-	    .y(function(d) {
-		return linePlot.yScale(d[1]);
-	    });
+    var xValuesS = normalDistSelection.getYValues(selectionGEBVs);
 
-	linePlot.graph.append("path")
-	    .attr("d", midLine(trainingMidlineData))
-	    .attr("stroke", trColor)
-	    .attr("stroke-width", "3")
-	    .attr("fill", "none")
-	    .on("mouseover", function (d) {
-                if (d = trMean) {
-		    linePlot.graph.append("text")
-                        .attr("id", "tr_mean")
-                        .text(d3.format(".2f")(trMean))
-                        .style({
-			    "fill"       : trColor,
-			    "font-weight": "bold"
-			})
-			.attr("x", linePlot.xScale(xMT[0]))
-                        .attr("y", linePlot.yScale(d3.max(yValuesT) * 0.5))
-                }
-	    })
-	    .on("mouseout", function() {
-                d3.selectAll("text#tr_mean").remove();
-	    });
+    var slMean = ss.mean(xValuesS);
 
-	linePlot.graph.append("path")
-	    .attr("d", midLine(selectionMidlineData))
-	    .attr("stroke", slColor)
-	    .attr("stroke-width", "3")
-	    .attr("fill", "none")
-	    .on("mouseover", function (d) {
-                if (d = slMean) {
-		    linePlot.graph.append("text")
-                        .attr("id", "sl_mean")
-                        .text(d3.format(".2f")(slMean))
-                        .style({
-			    "fill"       : slColor,
-			    "font-weight": "bold"
-			})
-                        .attr("x", linePlot.xScale(xMS[0]))
-                        .attr("y", linePlot.yScale(d3.max(yValuesS) * 0.5))
+    var stdS = slMean <= 0 ? -1.0 : 1.0;
 
-                }
-	    })
-	    .on("mouseout", function() {
-		d3.selectAll("text#sl_mean").remove();
-	    });
-    },
+    var xMS = normalDistTraining.getObsValueZScore(gebvZScoresS, stdS);
 
-//////////
-}
+    var svgId = "#compare_gebvs_canvas";
+    var plotId = "#compare_gebvs_plot";
+
+    var trColor = "#02bcff";
+    var slColor = "#ff1302";
+    var axLabelColor = "#ff8d02";
+    var yLabel = "Probability";
+    var xLabel = "GEBVs";
+
+    var title =
+      "Normal distribution curves of GEBVs " + "for the training and selection populations.";
+
+    var allData = {
+      div_id: svgId,
+      plot_title: title,
+      x_axis_label: xLabel,
+      y_axis_label: yLabel,
+      axis_label_color: axLabelColor,
+      lines: [
+        {
+          data: xYT,
+          legend: "Training population",
+          color: trColor,
+        },
+        {
+          data: xYS,
+          legend: "Selection population",
+          color: slColor,
+        },
+      ],
+    };
+
+    var linePlot = solGS.linePlot(allData);
+
+    var trainingMidlineData = [
+      [trMean, 0],
+      [trMean, d3.max(yValuesT)],
+    ];
+
+    var selectionMidlineData = [
+      [slMean, 0],
+      [slMean, d3.max(yValuesS)],
+    ];
+
+    var midLine = d3.svg
+      .line()
+      .x(function (d) {
+        return linePlot.xScale(d[0]);
+      })
+      .y(function (d) {
+        return linePlot.yScale(d[1]);
+      });
+
+    linePlot.graph
+      .append("path")
+      .attr("d", midLine(trainingMidlineData))
+      .attr("stroke", trColor)
+      .attr("stroke-width", "3")
+      .attr("fill", "none")
+      .on("mouseover", function (d) {
+        if ((d = trMean)) {
+          linePlot.graph
+            .append("text")
+            .attr("id", "tr_mean")
+            .text(d3.format(".2f")(trMean))
+            .style({
+              fill: trColor,
+              "font-weight": "bold",
+            })
+            .attr("x", linePlot.xScale(xMT[0]))
+            .attr("y", linePlot.yScale(d3.max(yValuesT) * 0.5));
+        }
+      })
+      .on("mouseout", function () {
+        d3.selectAll("text#tr_mean").remove();
+      });
+
+    linePlot.graph
+      .append("path")
+      .attr("d", midLine(selectionMidlineData))
+      .attr("stroke", slColor)
+      .attr("stroke-width", "3")
+      .attr("fill", "none")
+      .on("mouseover", function (d) {
+        if ((d = slMean)) {
+          linePlot.graph
+            .append("text")
+            .attr("id", "sl_mean")
+            .text(d3.format(".2f")(slMean))
+            .style({
+              fill: slColor,
+              "font-weight": "bold",
+            })
+            .attr("x", linePlot.xScale(xMS[0]))
+            .attr("y", linePlot.yScale(d3.max(yValuesS) * 0.5));
+        }
+      })
+      .on("mouseout", function () {
+        d3.selectAll("text#sl_mean").remove();
+      });
+  },
+
+  //////////
+};
 /////////
 
 jQuery(document).ready(function () {
-    jQuery('#check_genetic_gain').on('click', function () {
-	var page = document.URL;
-
-	if (page.match(/solgs\/selection\//)) {
-	    solGS.geneticGain.gebvsComparison();
-	} else {
-	    var selectedPopId   = jQuery("#gg_selected_population_id").val();
-	    var selectedPopType = jQuery("#gg_selected_population_type").val();
-	    var selectedPopName = jQuery("#gg_selected_population_name").val();
-
-	    jQuery("#gg_message")
-		.css({"padding-left": '0px'})
-		.html("checking predicted traits for selection population " + selectedPopName);
-
-	    var ggArgs  = solGS.geneticGain.getGeneticGainArgs();
-	    solGS.geneticGain.getSelPopPredictedTraits(ggArgs);
-
-	}
-    });
-});
-
-
-jQuery(document).ready( function() {
+  jQuery("#check_genetic_gain").on("click", function () {
     var page = document.URL;
 
-    if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
-	setTimeout(function() {solGS.geneticGain.ggSelectionPopulations()}, 5000);
-    }
+    if (page.match(/solgs\/selection\//)) {
+      solGS.geneticGain.gebvsComparison();
+    } else {
+      var selectedPopId = jQuery("#gg_selected_pop_id").val();
+      var selectedPopType = jQuery("#gg_selected_pop_type").val();
+      var selectedPopName = jQuery("#gg_selected_pop_name").val();
 
+      jQuery("#gg_message")
+        .css({ "padding-left": "0px" })
+        .html("checking predicted traits for selection population " + selectedPopName);
+
+      var ggArgs = solGS.geneticGain.getGeneticGainArgs();
+      solGS.geneticGain.getSelPopPredictedTraits(ggArgs);
+    }
+  });
 });
+
+jQuery(document).ready(function () {
+  var page = document.URL;
+
+  if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
+    setTimeout(function () {
+      solGS.geneticGain.ggSelectionPopulations();
+    }, 5000);
+  }
+});
+
+jQuery(document).ready(function () {
+	var ggPopsDiv = solGS.geneticGain.ggPopsDiv;
+	console.log(`gg doc ready ggpopsdiv ${ggPopsDiv}`)
+	jQuery(ggPopsDiv).change(function () {
+	console.log(`On change ggpopsdiv ${ggPopsDiv}`)
+
+	  var selectedPop = jQuery("option:selected", this).data("pop");
+	  console.log(`gg selectedPop ${selectedPop}`)
+	  console.log(`gg selectedPop strigify ${JSON.stringify(selectedPop)}`)
+	//   console.log(`gg selectedPop parse ${JSON.parse(selectedPop)}`)
+  
+	  var selectedPopId = selectedPop.id;
+	  var selectedPopName = selectedPop.name;
+	  var selectedPopType = selectedPop.pop_type;
+  console.log(`gg selectedPop ${selectedPopId}, ${selectedPopName}, ${selectedPopType}`)
+	  jQuery("#gg_selected_pop_name").val(selectedPopName);
+	  jQuery("#gg_selected_pop_id").val(selectedPopId);
+	  jQuery("#gg_selected_pop_type").val(selectedPopType);
+	});
+  
+  });
