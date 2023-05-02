@@ -183,7 +183,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    #print STDERR Dumper $list_json;
+#    print STDERR "LIST JSON: ". Dumper $list_json;
     my $json = new JSON;
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
@@ -236,23 +236,50 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
 
     my @trait_list;
-    if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
+    if ($trait_list && $trait_list ne 'null') {
+	print STDERR "trait_list: ".Dumper $trait_list."\n";
+	@trait_list = @{_parse_list_from_json($trait_list)};
+    }
     my @trait_component_list;
-    if ($trait_component_list && $trait_component_list ne 'null') { print STDERR "trait_component_list: ".Dumper $trait_component_list."\n"; @trait_component_list = @{_parse_list_from_json($trait_component_list)}; }
+    if ($trait_component_list && $trait_component_list ne 'null') {
+	print STDERR "trait_component_list: ".Dumper $trait_component_list."\n";
+	@trait_component_list = @{_parse_list_from_json($trait_component_list)};
+    }
     my @trait_contains_list;
-    if ($trait_contains && $trait_contains ne 'null') { print STDERR "trait_contains: ".Dumper $trait_contains."\n"; @trait_contains_list = @{_parse_list_from_json($trait_contains)}; }
+    if ($trait_contains && $trait_contains ne 'null') {
+	print STDERR "trait_contains: ".Dumper $trait_contains."\n";
+	@trait_contains_list = @{_parse_list_from_json($trait_contains)};
+    }
     my @year_list;
-    if ($year_list && $year_list ne 'null') { print STDERR "year list: ".Dumper $year_list."\n"; @year_list = @{_parse_list_from_json($year_list)}; }
+    if ($year_list && $year_list ne 'null') {
+	print STDERR "year list: ".Dumper $year_list."\n";
+	@year_list = @{_parse_list_from_json($year_list)};
+    }
     my @location_list;
-    if ($location_list && $location_list ne 'null') { print STDERR "location list: ".Dumper $location_list."\n"; @location_list = @{_parse_list_from_json($location_list)}; }
+    if ($location_list && $location_list ne 'null') {
+	print STDERR "location list: ".Dumper $location_list."\n";
+	@location_list = @{_parse_list_from_json($location_list)};
+    }
     my @trial_list;
-    if ($trial_list && $trial_list ne 'null') { print STDERR "trial list: ".Dumper $trial_list."\n"; @trial_list = @{_parse_list_from_json($trial_list)}; }
+    if ($trial_list && $trial_list ne 'null') {
+	print STDERR "trial list: ".Dumper $trial_list."\n";
+	@trial_list = @{_parse_list_from_json($trial_list)};
+    }
     my @accession_list;
-    if ($accession_list && $accession_list ne 'null') { print STDERR "accession list: ".Dumper $accession_list."\n";@accession_list = @{_parse_list_from_json($accession_list)}; }
+    if ($accession_list && $accession_list ne 'null') {
+	print STDERR "accession list: ".Dumper $accession_list."\n";
+	@accession_list = @{_parse_list_from_json($accession_list)};
+    }
     my @plot_list;
-    if ($plot_list && $plot_list ne 'null') { print STDERR "plot list: ".Dumper $plot_list."\n"; @plot_list = @{_parse_list_from_json($plot_list)}; }
+    if ($plot_list && $plot_list ne 'null') {
+	print STDERR "plot list: ".Dumper $plot_list."\n";
+	@plot_list = @{_parse_list_from_json($plot_list)};
+    }
     my @plant_list;
-    if ($plant_list && $plant_list ne 'null') { print STDERR "plant list: ".Dumper $plant_list."\n"; @plant_list = @{_parse_list_from_json($plant_list)}; }
+    if ($plant_list && $plant_list ne 'null') {
+	print STDERR "plant list: ".Dumper $plant_list."\n";
+	@plant_list = @{_parse_list_from_json($plant_list)};
+    }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
     my @trait_list_int;

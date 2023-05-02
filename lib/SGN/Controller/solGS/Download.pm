@@ -97,7 +97,10 @@ sub download_gebvs :Path('/solgs/download/gebvs/pop') Args(0) {
 		$gebvs_file = $self->download_training_gebvs_file($c);
 	}
 
+	my $file_id = $c->controller('solGS::Files')->gebvs_file_id($c);
+
 	$c->stash->{rest}{gebvs_file} = $gebvs_file;
+	$c->stash->{rest}{gebvs_file_id} = $file_id;
 
 }
 

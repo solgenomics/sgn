@@ -443,31 +443,25 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 }
 
 
-sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
-    my ($self, $c, $tr_pop_id) = @_;
+sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(0) {
+    my ($self, $c) = @_;
 
-    # my @traits_ids = $c->req->param('training_traits_ids[]');
-    # $c->stash->{training_traits_ids} = \@traits_ids;
-    # $c->stash->{training_pop_id} = $tr_pop_id;
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    # my $protocol_id = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::Utils')->stash_json_args($c, $c->req->param('arguments'));
-
-
-    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
+    my $training_pop_id = $c->stash->{training_pop_id};
+    $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
 
     my $ret->{result} = 0;
 
     if (-s $pred_pops_file)
     {
-	$self->list_of_prediction_pops($c, $tr_pop_id);
+	$self->list_of_prediction_pops($c, $training_pop_id);
 	my $selection_pops_ids = $c->stash->{selection_pops_ids};
 	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
 
-	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
+	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pops_ids->[0]);
 	my $selection_pop_traits = $c->stash->{selection_pop_analyzed_traits_ids};
 
 	$ret->{selection_traits} = $selection_pop_traits;

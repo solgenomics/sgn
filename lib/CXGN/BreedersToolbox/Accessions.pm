@@ -149,6 +149,7 @@ sub get_possible_seedlots {
         undef,
         undef,
         undef,
+        undef,
         $accessions,
         $crosses,
         1,

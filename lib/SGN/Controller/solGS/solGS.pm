@@ -96,6 +96,8 @@ sub population : Path('/solgs/population') Args() {
         my $trial_page_url = $c->controller('solGS::Path')->trial_page_url($training_pop_id);
         $c->stash->{trial_detail_page} = $c->controller('solGS::Path')->create_hyperlink($trial_page_url, 'See trial detail');
 
+        $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
+
 	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/training_population.mas');
     }
 
@@ -369,6 +371,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		my $model_link = "$training_pop_name -- $trait_abbr";
 		$model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
 		$c->stash->{model_page_url} = $model_page;
+        $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
 
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_prediction_detail.mas');
 
@@ -462,6 +465,8 @@ sub trait :Path('/solgs/trait') Args(5) {
 
          my $trial_page_url = $c->controller('solGS::Path')->trial_page_url($training_pop_id);
         $c->stash->{trial_detail_page} = $c->controller('solGS::Path')->create_hyperlink($trial_page_url, 'See trial detail');
+
+        $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
 
 	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/models/model/detail.mas");
 	}
@@ -1045,6 +1050,8 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 $c->stash->{training_pop_desc} = $training_pop_desc;
 	 $c->stash->{training_pop_url} = $training_pop_page;
      $c->stash->{training_traits_code} = $traits_selection_id;
+     $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
+
 
 	 $c->controller('solGS::Trait')->get_acronym_pairs($c, $training_pop_id);
 

@@ -98,13 +98,12 @@ sub _check_cached_output {
     {
     	$self->_check_combined_trials_model_all_traits_output($c);
     }
-    elsif ($analysis_page =~ /kinship\/analysis/) {
-    	my $kinship_pop_id  = $c->stash->{kinship_pop_id};
-
-    	if ($data_str =~ /dataset|list/ && $kinship_pop_id !~ /dataset|list/)
-    	{
-    	    $kinship_pop_id = $data_str . '_' . $kinship_pop_id;
-    	}
+    elsif ($req_page =~ /kinship\/analysis/) 
+    {
+        $c->controller('solGS::Kinship')->stash_kinship_pop_id($c,  $args->{kinship_pop_id});
+        my $kinship_pop_id = $c->stash->{kinship_pop_id};
+        my $protocol_id = $args->{genotyping_protocol_id};
+    	my $trait_id     = $args->{trait_id};
 
     	$self->_check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
     }

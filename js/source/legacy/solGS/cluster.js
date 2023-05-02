@@ -266,10 +266,7 @@ solGS.cluster = {
     var kNumId = this.clusterKnumSelectId(clusterPopId);
     var runClusterId = this.clusterRunClusterId(clusterPopId);
 
-    var kNum =
-      '<input class="form-control" type="text" placeholder="No. of clusters?" id="' +
-      kNumId +
-      '"/>';
+		var kNum = '<input class="form-control" type="text" placeholder="3" id="' + kNumId + '"/>';
 
     var onClickVal =
       '<button type="button" id="' +
@@ -335,14 +332,15 @@ solGS.cluster = {
     return table;
   },
 
-  clusterResult: function (clusterArgs) {
-    var clusterType = clusterArgs.cluster_type;
-    var kNumber = clusterArgs.k_number || "undefined";
-    var dataType = clusterArgs.data_type;
-    var selectionProp = clusterArgs.selection_proportion;
-    var selectId = clusterArgs.select_id;
-    var selectName = clusterArgs.select_name;
-    var dataStr = clusterArgs.data_structure;
+	clusterResult: function(clusterArgs) {
+
+		var clusterType = clusterArgs.cluster_type;
+		var kNumber = clusterArgs.k_number;
+		var dataType = clusterArgs.data_type;
+		var selectionProp = clusterArgs.selection_proportion;
+		var selectId = clusterArgs.select_id;
+		var selectName = clusterArgs.select_name;
+		var dataStr = clusterArgs.data_structure;
 
     dataType = dataType.toLowerCase();
     cluseterType = clusterType.toLowerCase();
@@ -830,12 +828,13 @@ solGS.cluster = {
     return clusterTable;
   },
 
-  runCluster: function (selectId, selectName, dataStr) {
-    var clusterPopId = this.getClusterPopId(selectId, dataStr);
-    var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
-    var clusterType = clusterOpts.cluster_type || "k-means";
-    var kNumber = clusterOpts.k_number;
-    var dataType = clusterOpts.data_type || "genotype";
+	runCluster: function(selectId, selectName, dataStr) {
+
+		var clusterPopId = this.getClusterPopId(selectId, dataStr);
+		var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
+		var clusterType = clusterOpts.cluster_type || 'k-means';
+		var kNumber = clusterOpts.k_number || 3;
+		var dataType = clusterOpts.data_type || 'genotype';
 
     var clusterArgs = {
       select_id: selectId,
@@ -847,21 +846,10 @@ solGS.cluster = {
       k_number: kNumber,
     };
 
-    this.clusterResult(clusterArgs);
-  },
+		this.clusterResult(clusterArgs);
+	},
 
-  // registerClusterType: function(selectId) {
-  // var analysisRowId = this.selectRowId(selectId);
-  // var clusterType = jQuery('input[name=analysis_select]:checked', '#' + analysisRowId).val();
-  // return clusterType;
-  // },
-
-  clusteringOptions: function (clusterPopId) {
-    var url = document.URL;
-
-    // if(url.match(/cluster\/analysis/)) {
-    //     selectId = this.selectRowId(selectId);
-    // }
+	clusteringOptions: function(clusterPopId) {
 
     var clusterTypeId = this.clusterTypeSelectId(clusterPopId);
     var kNumId = this.clusterKnumSelectId(clusterPopId);
@@ -1097,11 +1085,6 @@ jQuery(document).ready(function() {
 
 jQuery(document).ready(function() {
 
-
-	//  jQuery(document).click(function(event){
-	//     alert("You've clicked: " + event.target.nodeName + ", id: " + event.target.id);
-	// });
-
 	jQuery("#run_cluster").click(function() {
 		var dataStr = jQuery('#data_structure').val();
 		var selectId;
@@ -1138,10 +1121,6 @@ jQuery(document).ready(function() {
 		var clusterOptsId = 'cluster_options';
 		var clusterPopId = solGS.cluster.getClusterPopId(selectId, dataStr);
 		var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
-
-		// if (clusterOpts.selection_proportion) {
-		//     selectId = selectName;
-		// }
 
 		var clusterArgs = {
 			'select_id': selectId,

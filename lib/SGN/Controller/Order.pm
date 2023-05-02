@@ -36,6 +36,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $ordering_type = $c->config->{ordering_type};
 
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -54,16 +55,22 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my $all_items = $order_result->[3];
     my $item_name;
     my $all_details_string;
+    my $value_string;
+
     foreach my $each_item (@$all_items) {
         my @item_details = ();
+        my @all_values = ();
         $item_name = (keys %$each_item)[0];
+        push @all_values, $item_name;
         push @item_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
         foreach my $field (@properties) {
             my $each_detail = $each_item->{$item_name}->{$field};
+            push @all_values, $each_detail;
             my $detail_string = $field. ":"."".$each_detail;
             push @item_details, $detail_string;
         }
         $all_details_string = join("<br>", @item_details);
+        $value_string = join(",", @all_values);
     }
 
     $c->stash->{order_id} = $order_result->[0];
@@ -73,7 +80,9 @@ sub order_details :Path('/order/details/view') : Args(1) {
     $c->stash->{order_to} = $order_result->[4];
     $c->stash->{order_status} = $order_result->[5];
     $c->stash->{comments} = $order_result->[6];
-
+    $c->stash->{order_properties} = $order_properties;
+    $c->stash->{order_values} = $value_string;
+    $c->stash->{ordering_type} = $ordering_type;
     $c->stash->{template} = '/order/order_details.mas';
 
 

@@ -172,131 +172,141 @@ solGS.sIndex = {
     var args = this.getSelectionIndexArgs(modelId, selectedPopId);
     args = JSON.stringify(args);
 
-    jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      url: "/solgs/selection/index/form",
-      data: { arguments: args },
-      success: function (res) {
-        if (res.status == "success") {
-          var table;
-          var traits = res.traits;
+	jQuery.ajax({
+            type: 'POST',
+            dataType: "json",
+            url: '/solgs/selection/index/form',
+            data: {'arguments': args},
+            success: function(res) {
 
-          if (traits.length > 1) {
-            table = solGS.sIndex.selectionIndexForm(traits);
-          } else {
-            var msg = "There is only one trait with valid GEBV predictions.";
-            jQuery("#si_canvas #select_a_population_div").empty();
-            jQuery("#si_canvas #select_a_population_div_text").empty().append(msg);
-          }
+		if (res.status == 'success') {
+                    var table;
+                    var traits = res.traits;
 
-          jQuery("#si_canvas #selection_index_form").empty().append(table);
-        }
-      },
-    });
-  },
+                    if (traits.length > 1) {
+			table  = solGS.sIndex.selectionIndexForm(traits);
+                    } else {
+			var msg = 'There is only one trait with valid GEBV predictions.';
+			jQuery("#si_canvas #select_a_population_div").empty();
+			jQuery("#si_canvas #select_a_population_div_text").empty().append(msg);
+                    }
 
-  selectionIndexForm: function (predictedTraits) {
-    var trait = "<div>";
-    for (var i = 0; i < predictedTraits.length; i++) {
-      trait +=
-        '<div class="form-group  class="col-sm-3">' +
-        '<div  class="col-sm-1">' +
-        '<label for="' +
-        predictedTraits[i] +
-        '">' +
-        predictedTraits[i] +
-        "</label>" +
-        "</div>" +
-        '<div  class="col-sm-2">' +
-        '<input class="form-control"  name="' +
-        predictedTraits[i] +
-        '" id="' +
-        predictedTraits[i] +
-        '" type="text" />' +
-        "</div>" +
-        "</div>";
-    }
+                    jQuery('#si_canvas #selection_index_form').empty().append(table);
 
-    trait +=
-      '<div class="col-sm-12">' +
-      '<input style="margin: 10px 0 10px 0;"' +
-      'class="btn btn-success" type="submit"' +
-      'value="Calculate" name= "rank" id="calculate_si"' +
-      "/>" +
-      "</div>";
+		}
+            }
+	});
+    },
 
-    trait += "</div>";
 
-    return trait;
-  },
+    selectionIndexForm: function(predictedTraits) {
 
-  calcSelectionIndex: function (params, legend, trainingPopId, selectionPopId) {
-    if (params) {
-      jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-      jQuery.blockUI({ message: "Please wait.." });
+	var trait = '<div>';
+	for (var i=0; i < predictedTraits.length; i++) {
+	    trait += '<div class="form-group  class="col-sm-3">'
+		+ '<div  class="col-sm-1">'
+		+ '<label for="' + predictedTraits[i] + '">' + predictedTraits[i] + '</label>'
+		+ '</div>'
+		+ '<div  class="col-sm-2">'
+		+ '<input class="form-control"  name="' + predictedTraits[i] + '" id="' + predictedTraits[i] + '" type="text" />'
+		+ '</div>'
+		+ '</div>';
+	}
 
-      if (trainingPopId == selectionPopId) {
-        selectionPopId = "";
-      }
+	trait += '<div class="col-sm-12">'
+	    + '<input style="margin: 10px 0 10px 0;"' +
+            'class="btn btn-success" type="submit"' +
+            'value="Calculate" name= "rank" id="calculate_si"' + '/>'
+	    + '</div>';
 
-      var siArgs = this.getSelectionIndexArgs(trainingPopId, selectionPopId);
-      siArgs["rel_wts"] = params;
+	trait += '</div>'
 
-      jQuery.ajax({
-        type: "POST",
-        dataType: "json",
-        data: { arguments: JSON.stringify(siArgs) },
-        url: "/solgs/calculate/selection/index/",
-        success: function (res) {
-          if (res.status == "success") {
-            var sindexFile = res.sindex_file;
-            var gebvsSindexFile = res.gebvs_sindex_file;
+	return trait;
+    },
 
-            var fileNameSindex = sindexFile.split("/").pop();
-            var fileNameGebvsSindex = gebvsSindexFile.split("/").pop();
-            var sindexLink = `<a href="${sindexFile}" download="${fileNameSindex}">Indices</a>`;
-            var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">Weighted GEBVs+indices</a>`;
 
-            let caption = `<br/><strong>Index Name:</strong> ${res.sindex_name} <strong>Download:</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
-            let histo = {
-              canvas: "#si_canvas",
-              plot_id: `#${res.sindex_name}`,
-              namedValues: res.indices,
-              caption: caption,
-            };
+    calcSelectionIndex: function(params, legend, trainingPopId, selectionPopId) {
 
-            solGS.histogram.plotHistogram(histo);
+	if (params) {
+            jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+            jQuery.blockUI({message: 'Please wait..'});
 
-            var popType = jQuery("#si_canvas #selected_population_type").val();
-            var popId = jQuery("#si_canvas #selected_population_id").val();
-            siArgs["corre_pop_id"] = popId;
-            siArgs["selection_index_file"] = res.index_file;
-            siArgs["pop_type"] = popType;
-            solGS.correlation.formatGenCorInputData(siArgs);
+	    var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	    if (trainingTraitsIds) {
+		trainingTraitsIds = trainingTraitsIds.split(',');
+	    }
+	    var protocolId = jQuery('#genotyping_protocol_id').val();
+        var traitsCode = jQuery('#training_traits_code').val();
 
-            jQuery("#si_canvas #selected_pop").val("");
+	    if (trainingPopId == selectionPopId) { selectionPopId = "";}
 
-            var sIndexed = {
-              sindex_id: popId,
-              sindex_name: res.sindex_name,
-            };
+	    var siArgs = {
+		'training_pop_id': trainingPopId,
+		'selection_pop_id': selectionPopId,
+		'rel_wts': params,
+		'training_traits_ids': trainingTraitsIds,
+        'training_traits_code': traitsCode,
+		'genotyping_protocol_id': protocolId
+	    };
 
-            solGS.sIndex.saveIndexedPops(sIndexed);
-            solGS.cluster.listClusterPopulations();
-          }
-        },
-        error: function (res) {
-          alert("error occured calculating selection index.");
-          jQuery.unblockUI();
-        },
-      });
-    }
-  },
+        siArgs = JSON.stringify(siArgs);
 
-  validateRelativeWts: function (nm, val) {
-    if (isNaN(val) && nm != "all") {
-      alert(`the relative weight of trait  ${nm} must be a number.
+            jQuery.ajax({
+		type: 'POST',
+		dataType: "json",
+		data: {'arguments': siArgs},
+		url: '/solgs/calculate/selection/index/',
+		success: function(res){
+
+                    if (res.status == 'success' ) {
+
+                        var sindexFile = res.sindex_file;
+                        var gebvsSindexFile = res.gebvs_sindex_file;
+
+           			    var fileNameSindex = sindexFile.split('/').pop();
+           			    var fileNameGebvsSindex= gebvsSindexFile.split('/').pop();
+           			    var sindexLink= `<a href="${sindexFile}" download="${fileNameSindex}">Indices</a>`;
+           			    var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">Weighted GEBVs+indices</a>`;
+
+           			    let caption = `<br/><strong>Index Name:</strong> ${res.sindex_name} <strong>Download:</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
+                        let histo = {
+                               canvas: '#si_canvas',
+                               plot_id: `#${res.sindex_name}`,
+                               named_values: res.indices,
+                               caption: caption
+                           };
+
+                        solGS.histogram.plotHistogram(histo);
+
+                        var popType = jQuery("#si_canvas #selected_population_type").val();
+                        var popId   = jQuery("#si_canvas #selected_population_id").val();
+
+                        solGS.correlation.formatGenCorInputData(popId, popType,  res.index_file, res.sindex_name);
+
+            		    jQuery('#si_canvas #selected_pop').val('');
+
+            		    var sIndexed = {
+            			'sindex_id': popId,
+            			'sindex_name': res.sindex_name
+            		    };
+
+            		    solGS.sIndex.saveIndexedPops(sIndexed);
+            		    solGS.cluster.listClusterPopulations();
+            }
+		},
+		error: function(res){
+                    alert('error occured calculating selection index.');
+                    jQuery.unblockUI();
+		}
+            });
+	}
+    },
+
+
+    validateRelativeWts: function(nm, val) {
+
+         if (isNaN(val) && nm != 'all') {
+                alert(`the relative weight of trait  ${nm} must be a number.
                     Only numbers and multiplication symbols ('*' or 'x') are allowed.`);
       return;
     } else if (!val && nm != "all") {

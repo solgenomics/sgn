@@ -337,6 +337,7 @@ sub observations_store {
         metadata_hash=>\%phenotype_metadata,
         overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
+        composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
     my ($verified_warning, $verified_error) = $store_observations->verify();
 

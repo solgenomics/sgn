@@ -524,7 +524,7 @@ sub structure_kinship_analysis_output {
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c);
+    $c->controller('solGS::Kinship')->stash_kinship_pop_id($c);
     my $pop_id = $c->stash->{kinship_pop_id};
 
     my $base = $c->controller('solGS::Path')->clean_base_name($c);

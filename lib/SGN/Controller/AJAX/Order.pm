@@ -551,8 +551,9 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
 
 }
 
+sub update_order : Path('/ajax/order/update') : ActionClass('REST'){ }
 
-sub update_order :Path('/ajax/order/update') :Args(0) {
+sub update_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
@@ -572,6 +573,35 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
 
     if ($c->user) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
+    }
+
+    if ($new_status eq 're-opened') {
+        my $re_open_by_person= CXGN::People::Person->new($dbh, $user_id);
+        my $re_open_name = $re_open_by_person->get_first_name()." ".$re_open_by_person->get_last_name();
+        $new_status = 're-opened by'." ".$re_open_name;
+
+        my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
+        my $order_result = $order_obj->get_order_details();
+        my $vendor_id = $order_result->[7];
+        if ($user_id != $vendor_id) {
+            my $contact_person = CXGN::People::Person -> new($dbh, $vendor_id);
+            my $contact_email = $contact_person->get_contact_email();
+
+            my $host = $c->config->{main_production_site_url};
+            my $project_name = $c->config->{project_name};
+            my $subject="Ordering Notification from $project_name";
+            my $body=<<END_HEREDOC;
+
+You have a re-opened order submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+            CXGN::Contact::send_email($subject,$body,$contact_email);
+        }
     }
 
     my $order_obj;
@@ -597,7 +627,8 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $order_history_ref = $detail_hash->{'history'};
     my @order_history = @$order_history_ref;
     my $new_status_record = {};
-    $new_status_record->{$new_status} = $timestamp;
+    $new_status_record->{$new_status}{'Date'} = $timestamp;
+    $new_status_record->{$new_status}{'Comments'} = $contact_person_comments;
     push @order_history, $new_status_record;
     $detail_hash->{'history'} = \@order_history;
 

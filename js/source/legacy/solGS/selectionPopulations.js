@@ -244,9 +244,18 @@ jQuery(document).ready(function () {
 function getPopulationId() {
   var populationId = jQuery("#population_id").val();
 
-  if (!populationId) {
-    populationId = jQuery("#model_id").val();
-  }
+    jQuery('#population_search_entry').keyup(function(e){
+
+	jQuery("#population_search_entry")
+		.css('border', 'solid #96d3ec');
+
+	jQuery("#form-feedback-search-trials")
+	    .empty();
+
+	if(e.keycode == 13) {
+     	    jQuery('#search_selection_pop').click();
+    	}
+    });
 
   if (!populationId) {
     populationId = jQuery("#combo_pops_id").val();

@@ -139,6 +139,8 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{data_set_type}     = 'combined_populations';
+    $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
+
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $self->get_combined_pops_list($c, $combo_pops_id);
@@ -178,6 +180,8 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
     $c->stash->{model_id} = $combo_pops_id;
     $c->stash->{pop_id} = $combo_pops_id;
     $c->stash->{data_set_type} = 'combined_populations';
+    $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
+
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
@@ -270,6 +274,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
     $c->stash->{data_set_type} = 'combined_populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{training_pop_id} = $combo_pops_id;
+    $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
@@ -339,7 +344,8 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{selection_pop_id}     = $selection_pop_id;
     $c->stash->{data_set_type}        = 'combined_populations';
     $c->stash->{combined_populations} = 1;
-    
+    $c->stash->{analysis_type} = $c->controller('solGS::Path')->page_type($c);
+
 
     # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     # $protocol_id = $c->stash->{genotyping_protocol_id};

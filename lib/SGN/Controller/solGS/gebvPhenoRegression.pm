@@ -1,4 +1,4 @@
-package SGN::Controller::solGS::Heritability;
+package SGN::Controller::solGS::gebvPhenoRegression;
 
 use Moose;
 use namespace::autoclean;
@@ -12,13 +12,14 @@ use Statistics::Descriptive;
 BEGIN { extends 'Catalyst::Controller' }
 
 
-sub check_regression_data :Path('/heritability/check/data/') Args(0) {
+sub check_regression_data :Path('/solgs/check/regression/data/') Args(0) {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    $c->controller('solGS::Trait')->get_trait_details($c, $c->stash->{trait_id});
+    my $trait_id = $c->stash->{'trait_id'};
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
 
@@ -29,7 +30,7 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
 
     if(-s $gebv_file  && -s $pheno_file)
     {
-        $ret->{exists} = 'yes';
+        $ret->{exists} = 1;
     }
 
     $ret = to_json($ret);
@@ -43,7 +44,7 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
 sub get_regression_data_files {
     my ($self, $c) = @_;
 
-    my $pop_id     = $c->stash->{pop_id};
+    my $pop_id     = $c->stash->{training_pop_id};
     my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->controller('solGS::Files')->model_phenodata_file($c);
@@ -92,13 +93,13 @@ sub get_additive_variance {
 }
 
 
-sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0) {
+sub get_regeression_data :Path('/solgs/get/regression/data/') Args(0) {
     my ($self, $c) = @_;
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $trait_id = $c->stash->{trait_id};
+    my $trait_id = $c->stash->{'trait_id'};
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
@@ -125,14 +126,14 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
 
     my @pheno_deviations = map { [$_->[0], $round->round(( $_->[1] - $pheno_mean ))] } @pheno_data;
 
-    my $pop_id = $c->stash->{training_pop_id};
+    my $pop_id = $c->stash->{'training_pop_id'};
     my $heritability =  $self->get_heritability($c, $pop_id, $trait_id);
 
-    my $ret->{status} = 'failed';
+    my $ret->{status} = undef;
 
     if (@gebv_data && @pheno_data)
     {
-        $ret->{status}           = 'success';
+        $ret->{status} = 1;
         $ret->{gebv_data}        = \@gebv_data;
         $ret->{pheno_deviations} = \@pheno_deviations;
         $ret->{pheno_data}       = \@pheno_data;

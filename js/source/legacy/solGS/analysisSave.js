@@ -9,11 +9,11 @@ var solGS = solGS || function solGS() {};
 solGS.save = {
   checkStoredAnalysis: function () {
     var args = this.saveGebvsArgs();
-
+    var checkArgs = JSON.stringify(args);
     var stored = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: { arguments: JSON.stringify(args) },
+      data: {'arguments': checkArgs},
       url: "/solgs/check/stored/analysis/",
     });
 
@@ -22,11 +22,11 @@ solGS.save = {
 
   getResultDetails: function () {
     var args = this.saveGebvsArgs();
-
+    var resultArgs = JSON.stringify(args);
     var details = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: { arguments: JSON.stringify(args) },
+      data: {'arguments': resultArgs},
       url: "/solgs/analysis/result/details",
     });
 
@@ -34,8 +34,6 @@ solGS.save = {
   },
 
   saveGebvs: function (args) {
-    //var args = this.saveGebvsArgs();
-
     var save = jQuery.ajax({
       dataType: "json",
       type: "POST",
@@ -66,18 +64,7 @@ solGS.save = {
   },
 
   analysisResultType: function () {
-    var type;
-    var path = location.pathname;
-
-    if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
-      type = "training_model";
-    } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
-      type = "multiple_models";
-    } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
-      type = "selection_prediction";
-    }
-
-    return type;
+    return jQuery('#analysis_type').val();
   },
 
   checkUserStatus: function () {
@@ -119,8 +106,8 @@ jQuery(document).ready(function () {
     });
 
     solGS.save.getResultDetails().done(function (res) {
+
       if (res.error) {
-        console.log("getResultDetails " + res.error);
         jQuery("#gebvs_output .multi-spinner-container").hide();
         jQuery("#gebvs_save_message")
           .html(res.error + ". The logged info may not exist for the result.")
