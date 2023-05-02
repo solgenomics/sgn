@@ -786,6 +786,7 @@ solGS.cluster = {
       var elbowFileName = elbowPlotFile.split("/").pop();
       elbowLink = '<a href="' + elbowPlotFile + '" download=' + elbowFileName + '">Elbow plot</a>';
 
+      if (kclusterMeansFile) {
       var kclusterMeansFileName = kclusterMeansFile.split("/").pop();
       kclusterMeansLink =
         '<a href="' +
@@ -793,6 +794,7 @@ solGS.cluster = {
         '" download=' +
         kclusterMeansFileName +
         '">Cluster means</a>';
+      }
 
       var kclusterVariancesFileName = kclusterVariancesFile.split("/").pop();
       kclusterVariancesLink =
@@ -819,8 +821,12 @@ solGS.cluster = {
       reportLink;
 
     if (elbowPlotFile) {
+      if (kclusterMeansLink) {
+        downloadLinks +=  " | " + kclusterMeansLink 
+      }
+
       downloadLinks +=
-        " | " + kclusterVariancesLink + " | " + kclusterMeansLink + " | " + elbowLink;
+        " | " + kclusterVariancesLink +  " | " + elbowLink;
     }
 
     return downloadLinks;

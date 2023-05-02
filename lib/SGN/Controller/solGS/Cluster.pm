@@ -388,7 +388,10 @@ sub prep_cluster_download_files {
           ->copy_to_tempfiles_subdir( $c, $means_file, 'cluster' );
 
         $c->stash->{download_elbow_plot}   = $elbow_file;
-        $c->stash->{download_kmeans_means} = $means_file;
+        
+        if ($c->stash->{data_type} !~ /genotype/) {
+            $c->stash->{download_kmeans_means} = $means_file;
+        }
         $c->stash->{download_variances}    = $variances_file;
     }
     else {
