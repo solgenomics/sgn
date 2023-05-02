@@ -260,7 +260,7 @@ sub gebvs_values {
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
 	my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
 
-	my $analysis_page = $params->{analysis_page}; 
+	my $analysis_page = $c->stash->{analysis_page}; 
 	$analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
 
 	my $gebvs_file;
