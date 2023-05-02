@@ -870,7 +870,6 @@ sub combined_pops_summary {
       $c->controller('solGS::Path')->training_page_url($tr_page_args);
 
     my $pop_link    = qq | <a href="$training_pop_page">$training_pop_name</a>|;
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $protocol    = $c->controller('solGS::genotypingProtocol')
       ->create_protocol_url( $c, $protocol_id );
 
