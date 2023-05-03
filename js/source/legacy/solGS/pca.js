@@ -8,6 +8,12 @@
 var solGS = solGS || function solGS() {};
 
 solGS.pca = {
+  canvas: "#pca_canvas",
+  pcaPlotDivPrefix: "#pca_plot",
+  pcaMsgDiv: "#pca_message",
+  pcaPopsDiv: "#pca_pops_list",
+  pcaPopsSelectMenuId: "#pca_pops_list_select",
+
   getPcaArgs: function () {
     var page = location.pathname;
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
@@ -134,7 +140,7 @@ solGS.pca = {
     }
   },
 
-  loadPcaPops: function (selectId, selectName, dataStr) {
+  displayPcaPop: function (selectId, selectName, dataStr) {
     if (selectId.length === 0) {
       alert("The list is empty. Please select a list with content.");
     } else {
@@ -155,6 +161,32 @@ solGS.pca = {
         jQuery("#pca_pops_table tr:last").after(addRow);
       }
     }
+  },
+
+  populatePcaPopsMenu: function () {
+    var list = new CXGN.List();
+    var lists = list.getLists(["accessions", "plots", "trials"]);
+    var pcaPrivatePops = list.convertArrayToJson(lists.private_lists);
+
+    var menuId = this.pcaPopsSelectMenuId;
+    var menu = new OptionsMenu(menuId);
+    pcaPrivatePops = pcaPrivatePops.flat();
+    var menuElem = menu.addOptions(pcaPrivatePops);
+    
+    if (lists.public_lists[0]) {
+      var pcaPublicLists = list.convertArrayToJson(lists.public_lists);
+      menu.addOptionsSeparator("public lists");
+      menuElem = menu.addOptions(pcaPublicLists);
+    }
+
+    var datasetPops = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    if (datasetPops) {
+      menu.addOptionsSeparator("datasets");
+      menuElem = menu.addOptions(datasetPops);
+    }
+
+    var pcaPopsDiv = this.pcaPopsDiv;
+    jQuery(pcaPopsDiv).append(menuElem).show();
   },
 
   selectRow: function (selectId, selectName, dataStr) {
@@ -933,11 +965,8 @@ jQuery(document).ready(function () {
   var url = location.pathname;
 
   if (url.match(/pca\/analysis/)) {
-    solGS.selectMenu.populateMenu(
-      "pca_pops",
-      ["accessions", "plots", "trials"],
-      ["accessions", "trials"]
-    );
+    solGS.pca.populatePcaPopsMenu();
+
     var pcaArgs = solGS.pca.getPcaArgsFromUrl();
     var pcaPopId = pcaArgs.pca_pop_id;
     if (pcaPopId) {
@@ -976,21 +1005,22 @@ jQuery(document).ready(function () {
     jQuery("#pca_data_type_select").html('<option selected="genotype">Genotype</option>');
   }
 
+  var pcaPopsDiv = solGS.pca.pcaPopsSelectMenuId;
+
   if (url.match(/pca\/analysis/)) {
     jQuery("<option>", {
       value: "",
       selected: true,
-    }).prependTo("#pca_pops_list_select");
+    }).prependTo(pcaPopsDiv);
 
-    jQuery("#pca_pops_list_select").change(function () {
-      var selectedPop = solGS.selectMenu.getSelectedPop("pca_pops");
-      if (selectedPop.selected_id) {
+    var pcaPopsDiv = solGS.pca.pcaPopsSelectMenuId;
+    jQuery(pcaPopsDiv).change(function () {
+      console.log(`this.pcaPopsSelectMenuId changed: ${pcaPopsDiv}`);
+      var selectedPop = jQuery("option:selected", this).data("pop");
+
+      if (selectedPop.id) {
         jQuery("#pca_pop_go_btn").click(function () {
-          solGS.pca.loadPcaPops(
-            selectedPop.selected_id,
-            selectedPop.selected_name,
-            selectedPop.data_str
-          );
+          solGS.pca.displayPcaPop(selectedPop.id, selectedPop.name, selectedPop.data_str);
         });
       }
     });
