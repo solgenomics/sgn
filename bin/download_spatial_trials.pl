@@ -21,20 +21,21 @@ use Getopt::Std;
 use Data::Dumper;
 
 use Bio::Chado::Schema;
+use CXGN::Dataset::File;
 use CXGN::Metadata::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Trial;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_b, $opt_i, $opt_n, $opt_t, $opt_r);
+our ($opt_H, $opt_D, $opt_U, $opt_P);
 
-getopts('H:D:U:P:b:i:t:r:n');
+getopts('H:D:U:P');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $dbuser = $opt_U;
 my $dbpass = $opt_P;
-my $non_interactive = $opt_n;
+#my $non_interactive = $opt_n;
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
@@ -49,11 +50,13 @@ my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_db
 my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() });
 my $people_schema = CXGN::People::Schema->connect( sub { $dbh->get_actual_dbh() } );
 
-my $trial_rs = $schema->resultset("Project::Project")->find( { } ); # get all trials
+print STDERR "Retrieving all projects...\n";
+my $trial_rs = $schema->resultset("Project::Project")->search( { } ); # get all trials
 
 my @trial_ids;
 
-while (my $row= $trial_rs->next()) { 
+while (my $row= $trial_rs->next()) {
+    print STDERR "Retrieving project row with id ".$row->project_id()."\n";
     push @trial_ids, $row->project_id();
 }
 
@@ -90,10 +93,20 @@ foreach my $trial_id (@trial_ids) {
     my $d = CXGN::Dataset::File->new( { people_schema => $people_schema, schema => $schema } );
     
     $d->trials( [ $trial_id ]);
+
     my $genotyping_protocols = $d->retrieve_genotyping_protocols();
 
-    print STDERR "Genotyping protocols: ". Dumper($genotyping_protocols);
-	
+    if (ref($genotyping_protocols) && (@$genotyping_protocols > 0) ) {
+
+	my $accessions = $d->retrieve_accessions();
+
+	print STDERR "Genotyping protocols: ". Dumper($genotyping_protocols). Dumper($accessions);
+    }
+    else {
+	print STDERR "This trial has no genotyping info associated with it. Skipping!\n";
+	next();
+    }
+    
     my $location = $t->get_location();
 
     my $breeding_programs = $t->get_breeding_programs();
