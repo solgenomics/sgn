@@ -52,14 +52,8 @@ sub accession_usage_female: Path('/ajax/accession_usage_female') :Args(0){
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-  #  my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id()
     my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $dbh = $schema->storage->dbh();
-
-#   my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT cross_id.stock_id) AS cross_number
-#            FROM stock as female_parent JOIN stock_relationship ON (female_parent.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id=?
-#            JOIN stock AS cross_id ON (cross_id.stock_id=stock_relationship.object_id) AND cross_id.type_id=?
-#            GROUP BY female_parent.stock_id ORDER BY cross_number DESC";
 
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT stock_relationship.object_id) AS num_of_progenies
             FROM stock_relationship INNER JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
@@ -86,14 +80,8 @@ sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    #my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $dbh = $schema->storage->dbh();
-
-    #my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT cross_id.stock_id) AS cross_number
-    #           FROM stock as male_parent JOIN stock_relationship ON (male_parent.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id=?
-    #           JOIN stock AS cross_id ON (cross_id.stock_id=stock_relationship.object_id) and cross_id.type_id=?
-    #           GROUP BY male_parent.stock_id ORDER BY cross_number DESC";
 
     my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT stock_relationship.object_id) AS num_of_progenies
             FROM stock_relationship INNER JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
