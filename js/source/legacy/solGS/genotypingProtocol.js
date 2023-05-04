@@ -73,8 +73,15 @@ solGS.genotypingProtocol= {
 	    return divPlace;
     },
 
-	getGenotypingProtocolId: function() {
-		return  jQuery("#genotyping_protocol_id").val();
+	getGenotypingProtocolId: function(divPlace) {
+	
+    	divPlace = solGS.genotypingProtocol.formatId(divPlace);
+		var protocolId = jQuery(divPlace + ' #genotyping_protocol #genotyping_protocol_id').val();
+		if (!protocolId) {
+			protocolId = jQuery('#genotyping_protocol_id').val();
+		}
+	
+		return protocolId;
 	},
 
 	getSelPopGenotypingProtocolId: function() {

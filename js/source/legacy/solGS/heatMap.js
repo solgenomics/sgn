@@ -9,10 +9,15 @@ var solGS = solGS || function solGS() {};
 
 solGS.heatmap = {
 
-    plot: function (data, heatmapCanvasDiv, heatmapPlotDiv, downloadLinks) {
+    plot: function (data, heatmapCanvasDiv, heatmapPlotDivId, downloadLinks) {
 
 	if (heatmapCanvasDiv == null) {
 	    alert("The div element where the heatmap to draw is missing.");
+	}
+
+	if (jQuery(heatmapPlotDivId).length == 0) {
+		var divId = heatmapPlotDivId.replace(/#/, '');
+		jQuery(heatmapCanvasDiv).append("<div id=" +divId + "></div>");
 	}
 
 	data = JSON.parse(data);
@@ -46,17 +51,12 @@ solGS.heatmap = {
 
 	if (heatmapCanvasDiv.match(/#/) == null) {heatmapCanvasDiv = '#' + heatmapCanvasDiv;}
 
-
-
-	if (heatmapPlotDiv) {
-          heatmapPlotDiv = heatmapPlotDiv.replace(/#/, '');
-	//     if (heatmapPlotDiv.match(/#/) == null) {heatmapPlotDiv = '#' + heatmapPlotDiv;}
+	if (heatmapPlotDivId) {
+		if (!heatmapPlotDivId.match(/#/)) {heatmapPlotDivId = '#' + heatmapPlotDivId;}
 	} else {
-	    heatmapPlotDiv =  "heatmap_plot";
+	    heatmapPlotDivId =  "#heatmap_plot";
 	}
-	console.log(heatmapCanvasDiv + ' ' + heatmapPlotDiv )
-	var heatmapCanvas = heatmapCanvasDiv;
-
+	
 	var fs = 10;
 
 	if (nLabels >= 100) {
@@ -77,7 +77,7 @@ solGS.heatmap = {
 
 	fs = fs + 'px';
 
-	var pad    = {left:150, top:30, right:255, bottom: 150};
+	var pad    = {left:150, top:20, right:250, bottom: 150};
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
@@ -120,8 +120,8 @@ solGS.heatmap = {
             .domain(labels)
             .rangeRoundBands([height, 0]);
 
-	var svg = d3.select(heatmapCanvas)
-            .append("svg")
+	var svg = d3.select(heatmapPlotDivId)
+			.insert("svg", ":first-child")	
             .attr("height", totalH)
             .attr("width", totalW);
 
@@ -134,87 +134,89 @@ solGS.heatmap = {
             .orient("left");
 
 	var corrplot = svg.append("g")
-            .attr("id", heatmapPlotDiv)
-            .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
+            .attr("id", heatmapPlotDivId)
+            .attr("transform", "translate(0, 0)");
+
 
 	corrplot.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height +")")
-            .call(xAxis)
-            .selectAll("text")
-            .attr("x", 10)
+		.attr("class", "y axis")
+		.attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+		.call(yAxis)
+		.selectAll("text")
+		.attr("x",-10)
+		.attr("y", 0)
+		.attr("dy", ".1em")
+		.attr("fill", "#523CB5")
+		.style({"fill": "#523CB5", "font-size":fs});
+
+	corrplot.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(" + pad.left + "," + (pad.top +  height) + ")")
+		.call(xAxis)
+		.selectAll("text")
+		.attr("x", 10)
 	    .attr("y", 0)
 	    .attr("dy", ".1em")
-            .attr("transform", "rotate(90)")
-            .attr("fill", "#523CB5")
-            .style({"text-anchor":"start", "fill": "#523CB5", "font-size":fs});
+		.attr("transform", "rotate(90)")
+		.attr("fill", "#523CB5")
+		.style({"text-anchor":"start", "fill": "#523CB5", "font-size":fs});
 
-	corrplot.append("g")
-            .attr("class", "y axis")
-            .attr("transform", "translate(0,0)")
-            .call(yAxis)
-            .selectAll("text")
-            .attr("x", -10)
-	    .attr("y", 0)
-            .attr("dy", ".1em")
-            .attr("fill", "#523CB5")
-            .style({"fill": "#523CB5", "font-size":fs});
-
-
-	var cell = corrplot.selectAll("rect")
-            .data(corr)
-            .enter().append("rect")
-            .attr("class", "cell")
-            .attr("x", function (d) {return corXscale(d.col)})
-            .attr("y", function (d) {return corYscale(d.row)})
-            .attr("width", corXscale.rangeBand())
-            .attr("height", corYscale.rangeBand())
-            .attr("fill", function (d) {
-                if (d.value == 'NA') {
-		    return "white";
-		}  else if (d.value == 0){
-		    return nral;
-		} else {
-		    return corZscale(d.value);
-		}
-            })
-            .attr("stroke", "white")
-            .attr("stroke-width", 1)
-            .on("mouseover", function (d) {
-                if(d.value != 'NA') {
-                    d3.select(this)
-                        .attr("stroke", "green")
-                    corrplot.append("text")
-                        .attr("id", "corrtext")
-                        .text("[" + labels[d.row]
-                              + " vs. " + labels[d.col]
-                              + ": " + d3.format(".3f")(d.value)
-                              + "]")
-                        .style("fill", function () {
-                            if (d.value >  0) {
-				return pve;
-			    }
-			    else if (d.value == 0) {
+	corrplot.selectAll()
+		.data(corr)
+		.attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+		.enter().append("rect")
+		.attr("class", "cell")
+		.attr("x", function (d) {return pad.left + corXscale(d.col)})
+		.attr("y", function (d) {return pad.top + corYscale(d.row)})
+		.attr("width", corXscale.rangeBand())
+		.attr("height", corYscale.rangeBand())
+		.attr("fill", function (d) {
+			if (d.value == 'NA') {
+				return "white";
+			}  else if (d.value == 0){
 				return nral;
-			    }
-			    else if (d.value < 0) {
-				return nve;
-			    }
-                        })
-                        .attr("x", totalW * 0.5)
-                        .attr("y", totalH * 0.5)
-                        .attr("font-weight", "bold")
-                        .attr("dominant-baseline", "middle")
-                        .attr("text-anchor", "middle")
-                }
-            })
-            .on("mouseout", function() {
-                d3.selectAll("text.corrlabel").remove()
-                d3.selectAll("text#corrtext").remove()
-                d3.select(this).attr("stroke","white")
-            });
+			} else {
+				return corZscale(d.value);
+			}
+		})
+		.attr("stroke", "white")
+		.attr("stroke-width", 1)
+		.on("mouseover", function (d) {
+			if(d.value != 'NA') {
+				d3.select(this)
+					.attr("stroke", "green")
+				corrplot.append("text")
+					.attr("id", "corrtext")
+					.text("[" + labels[d.row]
+							+ " vs. " + labels[d.col]
+							+ ": " + d3.format(".3f")(d.value)
+							+ "]")
+					.style("fill", function () {
+						if (d.value >  0) {
+			return pve;
+			}
+			else if (d.value == 0) {
+			return nral;
+			}
+			else if (d.value < 0) {
+			return nve;
+			}
+					})
+					.attr("x", totalW * 0.5)
+					.attr("y", totalH * 0.5)
+					.attr("font-weight", "bold")
+					.attr("dominant-baseline", "middle")
+					.attr("text-anchor", "middle")
+			}
+		})
+		.on("mouseout", function() {
+			d3.selectAll("text.corrlabel").remove()
+			d3.selectAll("text#corrtext").remove()
+			d3.select(this).attr("stroke","white")
+		});
 
 	corrplot.append("rect")
+			.attr("transform", "translate(" + pad.left + "," + pad.top + ")")	
             .attr("height", height)
             .attr("width", width)
             .attr("fill", "none")
@@ -232,12 +234,12 @@ solGS.heatmap = {
             legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
 	}
 
-	if (heatmapCanvas.match(/kinship/)) {
+	if (heatmapCanvasDiv.match(/kinship/)) {
 	    legendValues.push([3, 'Diagonals: inbreeding coefficients'], [4, 'Off-diagonals: kinship coefficients']);
 	}
 	var legend = corrplot.append("g")
             .attr("class", "cell")
-            .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.25) + ")")
+            .attr("transform", "translate(" + (pad.left+width + 10) + "," +  (pad.top+height * 0.25) + ")")
             .attr("height", 100)
             .attr("width", 100);
 
@@ -264,8 +266,8 @@ solGS.heatmap = {
             });
 
 	var legendTxt = corrplot.append("g")
-            .attr("transform", "translate(" + (width + 40) + ","
-		  + ((height * 0.25) + (0.5 * recLW)) + ")")
+            .attr("transform", "translate(" + (pad.left + width + 40) + ","
+		  + (pad.top + (height * 0.25) + (0.5 * recLW)) + ")")
             .attr("id", "legendtext");
 
 	legendTxt.selectAll("text")
@@ -287,9 +289,11 @@ solGS.heatmap = {
             .attr("dominant-baseline", "middle")
             .attr("text-anchor", "start");
 
-
 	if (downloadLinks) {
-	    jQuery(heatmapCanvas).append('<p>' + downloadLinks + '</p>');
+		if (!heatmapPlotDivId.match('#')) {
+			heatmapPlotDivId = '#' + heatmapPlotDivId;
+		}
+	    jQuery(heatmapPlotDivId).append('<p style="margin-left: 40px">' + downloadLinks + '</p>');
 	}
 
     },

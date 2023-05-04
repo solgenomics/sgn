@@ -74,22 +74,18 @@ $collapsed = 1;
 <div id='pca_div'>
 % if ($url =~ /pca\/analysis|breeders\/trial\//) {
 
-  <& /solgs/genotyping_protocol.mas &>
+  <& /solgs/genotyping_protocol/index.mas &>
 
 %}
-<!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
-<!-- /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\// -->
+
 % if ($url !~ /pca\/analysis/ ) {
-<& pca_options.mas &>
-
+  <& pca_options.mas &>
 %} else {
-
    <& select_menu.mas &>
-
 %}
 
   <& plot.mas,
-     pop_id => $pop_id,
+    pop_id => $pop_id,
     list_id => $list_id,
     dataset_id => $dataset_id,
     data_structure => $data_structure,

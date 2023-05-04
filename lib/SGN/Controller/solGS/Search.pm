@@ -42,7 +42,7 @@ sub solgs : Path('/solgs'){
 sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) {
     my ($self, $c) = @_;
     $c->stash->{referer}  = $c->req->referer();
-    $c->stash->{template} = '/solgs/breeder_search_solgs.mas';
+    $c->stash->{template} = '/solgs/search/breeder_search_solgs.mas';
 }
 
 sub solgs_login_message :Path('/solgs/login/message') Args(0) {
@@ -438,28 +438,25 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 }
 
 
-sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
-    my ($self, $c, $tr_pop_id) = @_;
+sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(0) {
+    my ($self, $c) = @_;
 
-    my @traits_ids = $c->req->param('training_traits_ids[]');
-    $c->stash->{training_traits_ids} = \@traits_ids;
-    $c->stash->{training_pop_id} = $tr_pop_id;
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
+    my $training_pop_id = $c->stash->{training_pop_id};
+    $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
 
     my $ret->{result} = 0;
 
     if (-s $pred_pops_file)
     {
-	$self->list_of_prediction_pops($c, $tr_pop_id);
+	$self->list_of_prediction_pops($c, $training_pop_id);
 	my $selection_pops_ids = $c->stash->{selection_pops_ids};
 	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
 
-	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
+	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pops_ids->[0]);
 	my $selection_pop_traits = $c->stash->{selection_pop_analyzed_traits_ids};
 
 	$ret->{selection_traits} = $selection_pop_traits;
@@ -511,7 +508,7 @@ sub projects_links {
 			my $args = {
 	   		  'training_pop_id' => $pr_id,
 	   		  'genotyping_protocol_id' => $protocol_id,
-	   		  'data_set_type' => 'single population'
+	   		  'data_set_type' => 'single_population'
 	   	  	};
 
 	   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
@@ -614,7 +611,7 @@ sub format_trait_gs_projects {
 				   	'trait_id' => $trait_id,
 		   			'training_pop_id' => $pr_id,
 					'genotyping_protocol_id' => $protocol_id,
-					'data_set_type' => 'single population'
+					'data_set_type' => 'single_population'
 				};
 
 		      	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
@@ -665,7 +662,7 @@ sub format_gs_projects {
 			   my $args = {
 		  		  'training_pop_id' => $pr_id,
 		  		  'genotyping_protocol_id' => $protocol_id,
-		  		  'data_set_type' => 'single population'
+		  		  'data_set_type' => 'single_population'
 		  	  	};
 
 	  	 		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
@@ -904,7 +901,7 @@ sub get_project_owners {
     my $owners = $self->model($c)->get_stock_owners($pr_id);
     my $owners_names;
 
-    if ($owners)
+    if (@$owners)
     {
         for (my $i=0; $i < scalar(@$owners); $i++)
         {

@@ -347,7 +347,7 @@ $analytics_protocol_result_summary => {}
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
 % if ($info_section_id eq 'genotyping_data_project_details'){
-                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
+                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type, trial_owner => $trial_owner &>
 % } #End genotyping_data_project_details
 % if ($info_section_id eq 'genotyping_data_project_protocols'){
                                 <& /breeders_toolbox/genotyping_data_project/protocols.mas, trial_id=>$trial_id &>
@@ -395,6 +395,10 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'crossingtrial_details'){
                                 <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner &>
 % } #End crossingtrial_details
+
+% if ($info_section_id eq 'target_numbers_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/target_numbers.mas, trial_id=>$trial_id &>
+% } #End target_numbers_crossingtrial_section
 
 % if ($info_section_id eq 'crosses_in_crossingtrial_section'){
                                 <& /breeders_toolbox/cross/crosses_in_crossingtrial.mas, trial_id=>$trial_id &>

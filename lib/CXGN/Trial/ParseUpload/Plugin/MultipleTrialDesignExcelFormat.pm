@@ -484,10 +484,24 @@ sub _validate_with_plugin {
 
   ## LOCATIONS OVERALL VALIDATION
   my @locations = keys %seen_locations;
-  my @locations_missing = @{$validator->validate($schema,'locations',\@locations)->{'missing'}};
-  if (scalar(@locations_missing) > 0) {
-      # $errors{'missing_locations'} = \@locations_missing;
-      push @error_messages, "Location(s) <b>".join(',',@locations_missing)."</b> are not in the database.";
+  my $locations_hashref = $validator->validate($schema,'locations',\@locations);
+
+  # Find valid location codes
+  my @codes = @{$locations_hashref->{'codes'}};
+  my %location_code_map;
+  foreach my $code (@codes) {
+    my $location_code = $code->[0];
+    my $found_location_name = $code->[1];
+    $location_code_map{$location_code} = $found_location_name;
+    push @warning_messages, "File Location '$location_code' matches the code for the location named '$found_location_name' and will be substituted if you ignore warnings.";
+  }
+  $self->_set_location_code_map(\%location_code_map);
+
+  # Check the missing locations, ignoring matched codes
+  my @locations_missing = @{$locations_hashref->{'missing'}};
+  my @locations_missing_no_codes = grep { !exists $location_code_map{$_} } @locations_missing;
+  if (scalar(@locations_missing_no_codes) > 0) {
+      push @error_messages, "Location(s) <b>".join(',',@locations_missing_no_codes)."</b> are not in the database.";
   }
 
   ## DESIGN TYPES OVERALL VALIDATION
@@ -738,8 +752,18 @@ sub _parse_with_plugin {
         %single_design = ();
         $all_designs{$trial_name} = \%final_single_design;
       }
+
+      # Get location and replace codes with names
+      my $location = $worksheet->get_cell($row,2)->value();
+      if ( $self->_has_location_code_map() ) {
+        my $location_code_map = $self->_get_location_code_map();
+        if ( exists $location_code_map->{$location} ) {
+          $location = $location_code_map->{$location};
+        }
+      }
+
       $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
-      $single_design{'location'} = $worksheet->get_cell($row,2)->value();
+      $single_design{'location'} = $location;
       $single_design{'year'} = $worksheet->get_cell($row,3)->value();
       $single_design{'design_type'} = $worksheet->get_cell($row,4)->value();
       $single_design{'description'} = $worksheet->get_cell($row,5)->value();

@@ -73,39 +73,51 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $date_head  = $worksheet->get_cell(0,0)->value();
+        $date_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $sample_name_head  = $worksheet->get_cell(0,1)->value();
+        $sample_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $source_observation_unit_name_head  = $worksheet->get_cell(0,2)->value();
+        $source_observation_unit_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $sample_number_head  = $worksheet->get_cell(0,3)->value();
+        $sample_number_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $replicate_head  = $worksheet->get_cell(0,4)->value();
+        $replicate_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $tissue_type_head  = $worksheet->get_cell(0,5)->value();
+        $tissue_type_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $ncbi_taxonomy_id_head  = $worksheet->get_cell(0,6)->value();
+        $ncbi_taxonomy_id_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,7)) {
         $person_head  = $worksheet->get_cell(0,7)->value();
+        $person_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,8)) {
         $notes_head  = $worksheet->get_cell(0,8)->value();
+        $notes_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,9)) {
         $extraction_head  = $worksheet->get_cell(0,9)->value();
+        $extraction_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,10)) {
         $concentration_head  = $worksheet->get_cell(0,10)->value();
+        $concentration_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,11)) {
         $volume_head  = $worksheet->get_cell(0,11)->value();
+        $volume_head =~ s/^\s+|\s+$//g;
     }
 
     if (!$date_head || $date_head ne 'date' ) {
@@ -180,6 +192,7 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,5)) {
             $tissue_type  = $worksheet->get_cell($row,5)->value();
+            $tissue_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
             $ncbi_taxonomy_id  = $worksheet->get_cell($row,6)->value();
@@ -354,18 +367,22 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,5)) {
             $tissue_type  = $worksheet->get_cell($row,5)->value();
+            $tissue_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
             $ncbi_taxonomy_id  = $worksheet->get_cell($row,6)->value();
+            $ncbi_taxonomy_id =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,7)) {
             $person  = $worksheet->get_cell($row,7)->value();
+            $person =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,8)) {
             $notes  = $worksheet->get_cell($row,8)->value();
         }
         if ($worksheet->get_cell($row,9)) {
             $extraction  = $worksheet->get_cell($row,9)->value();
+            $extraction =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,10)) {
             $concentration  = $worksheet->get_cell($row,10)->value();

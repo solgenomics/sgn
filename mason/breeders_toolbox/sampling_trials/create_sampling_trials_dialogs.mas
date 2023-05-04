@@ -122,7 +122,7 @@ $sampling_facilities => ();
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select Samples Layout XLS File: </label>
+                                                            <label class="col-sm-6 control-label">Select Samples Layout XLSX (or XLS) File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="sampling_trial_layout_upload" id="sampling_trial_layout_upload" encoding="multipart/form-data" />
                                                             </div>

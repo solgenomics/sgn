@@ -31,6 +31,8 @@ sub _validate_with_plugin {
     }
 
     my $header_row = <$fh>;
+    chomp($header_row);
+    $header_row =~ s/\r//g; # remove windows line endings
     my @columns;
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
@@ -44,8 +46,13 @@ sub _validate_with_plugin {
 
     my $num_cols = scalar(@columns);
 
-    if ( $columns[0] ne "plot_name" ||
-        $columns[1] ne "accession_name" ) {
+    my $plot_name_header = $columns[0];
+    $plot_name_header =~ s/^\s+|\s+$//g;
+    my $accession_name_header = $columns[1];
+    $accession_name_header =~ s/^\s+|\s+$//g;
+
+    if ( $plot_name_header ne "plot_name" ||
+        $accession_name_header ne "accession_name" ) {
             push @error_messages, 'File contents incorrect. Header row must contain:  "plot_name","accession_name"'."<br>";
             print STDERR "File contents incorrect.\n";
             $parse_errors{'error_messages'} = \@error_messages;
@@ -57,6 +64,9 @@ sub _validate_with_plugin {
     my %seen_accession_names;
     my %seen_new_plot_names;
     while ( my $row = <$fh> ){
+	chomp($row);
+	$row =~ s/\r//g; # remove windows line endings
+
         my @columns;
         if ($csv->parse($row)) {
             @columns = $csv->fields();
@@ -72,10 +82,17 @@ sub _validate_with_plugin {
             return;
         }
 
-        $seen_plot_names{$columns[0]}++;
-        $seen_accession_names{$columns[1]}++;
+        my $plot_name = $columns[0];
+        $plot_name =~ s/^\s+|\s+$//g;
+        my $accession_name = $columns[1];
+        $accession_name =~ s/^\s+|\s+$//g;
+
+        $seen_plot_names{$plot_name}++;
+        $seen_accession_names{$accession_name}++;
         if ($columns[2]) {
-            $seen_new_plot_names{$columns[2]}++;
+            my $new_plot_name = $columns[2];
+            $new_plot_name =~ s/^\s+|\s+$//g;
+            $seen_new_plot_names{$new_plot_name}++;
         }
     }
     if (@error_messages) {
@@ -113,7 +130,7 @@ sub _validate_with_plugin {
                     if ($current_name == $_) {
                         $validation = 1;
                     }
-                }  
+                }
                 if (!$validation) {
                     push @not_valid_names, $current_name;
                 }
@@ -124,7 +141,7 @@ sub _validate_with_plugin {
     if (@not_valid_names) {
         push @error_messages, "The following new plot names already exist in the database:<br>".join(", ", @not_valid_names)."<br>";
     }
-    
+
     my @plots_in_different_trial;
 
     my $q = "SELECT * FROM plotsxtrials WHERE trial_id = ?";
@@ -192,23 +209,30 @@ sub _parse_with_plugin {
         or die "Could not open file '$filename' $!";
 
     my $header_row = <$fh>;
-
+    chomp($header_row);
+    $header_row =~ s/\r//g;
     my $counter = 1;
     while ( my $row = <$fh> ){
+	chomp($row);
+	$row =~ s/\r//g; # remove windows line endings!
+
         my @columns;
         if ($csv->parse($row)) {
             @columns = $csv->fields();
         }
         my $plot_name = $columns[0];
+        $plot_name =~ s/^\s+|\s+$//g;
         my $accession_name = $columns[1];
+        $accession_name =~ s/^\s+|\s+$//g;
         my $new_plot_name;
         if ($columns[2]) {
             $new_plot_name = $columns[2];
+            $new_plot_name =~ s/^\s+|\s+$//g;
         }
         $parsed_entries{$counter} = {
             plot_name => $plot_name,
             accession_name => $accession_name,
-            new_plot_name => $new_plot_name 
+            new_plot_name => $new_plot_name
         };
         $counter++;
     }
