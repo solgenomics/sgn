@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::Accession_usage;
 use Moose;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
+use CXGN::Cross;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -49,29 +50,22 @@ sub accession_usage_female: Path('/ajax/accession_usage_female') :Args(0){
 
     my $self = shift;
     my $c = shift;
-
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-    my $dbh = $schema->storage->dbh();
 
-    my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT stock_relationship.object_id) AS num_of_progenies
-            FROM stock_relationship INNER JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
-            INNER JOIN stock AS female_parent ON (stock_relationship.subject_id = female_parent.stock_id)
-            WHERE stock_relationship.type_id = ? AND check_type.type_id = ?
-            GROUP BY female_parent.stock_id ORDER BY num_of_progenies DESC";
+    my $cross_obj = CXGN::Cross->new({schema => $schema});
+    my $data = $cross_obj->get_female_parents_and_numbers_of_progenies();
+    my @all_female_parents = @$data;
+    my @results;
+    foreach my $each_female_parent (@all_female_parents) {
+        my $female_id = $each_female_parent->[0];
+        my $female_name = $each_female_parent->[1];
+        my $number_of_progenies = $each_female_parent->[2];
+        push @results, [qq{<a href="/stock/$female_id/view">$female_name</a>},$number_of_progenies];
+    }
+    $c->stash->{rest}={data=>\@results};
 
-    my $h = $dbh->prepare($q);
-    $h->execute($female_parent_typeid, $accession_typeid);
-
-    my@female_parents =();
-    while (my ($female_parent_id, $female_parent_name, $num_of_progenies) = $h->fetchrow_array()){
-
-    push @female_parents, [qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},$num_of_progenies];
-        }
-
-    $c->stash->{rest}={data=>\@female_parents};
 }
+
 
 sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
 
