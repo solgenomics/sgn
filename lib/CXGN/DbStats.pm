@@ -68,7 +68,23 @@ sub activity {
     }    
     return \@counts;
 }
+
+sub database_counts_total {
+    my $self = shift;
+    my $c = shift;
+
+    my $q = "SELECT count(*) from .."
     
+}
+
+sub database_counts_time_interval {
+    my $self = shift;
+    my $c = shift;
+    my $start_time = shift;
+    my $end_time = shift;
+
+
+}
 
 
 1;
