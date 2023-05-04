@@ -148,5 +148,45 @@ sub download_all_accessions_with_pedigree : Path('/search/download_all_accession
 
 }
 
+sub download_female_parents_and_number_of_progenies : Path('/search/download_female_parents_and_number_of_progenies') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $file_format = "xlsx";
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = "female_parents_and_number_of_progenies". "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".$file_format";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+#    print STDERR "TEMPFILE : $tempfile\n";
+
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        filename => $tempfile,
+        format => 'FemaleParentsAndNumberOfProgeniesXLSX',
+    });
+    my $error = $download->download();
+
+    my $file_name = "female_parents_and_number_of_progenies" . "_" . "$timestamp" . ".$file_format";
+    $c->res->content_type('Application/'.$file_format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
+
+}
+
+
 
 1;
