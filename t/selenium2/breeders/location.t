@@ -1,7 +1,7 @@
 
 use lib 't/lib';
 
-use Test::More 'tests'=>22;
+use Test::More 'tests'=>24;
 
 use SGN::Test::WWW::WebDriver;
 
@@ -98,6 +98,15 @@ $t->while_logged_in_as("submitter", sub {
     $location_longitude_input->clear();
     $location_longitude_input->send_keys($location_longitude);
 
+    my $location_altitude = "826";
+    my $location_altitude_input = $t->find_element_ok(
+        "location_altitude",
+        "id",
+        "find location altitude input");
+
+    $location_altitude_input->clear();
+    $location_altitude_input->send_keys($location_altitude);
+
     $t->find_element_ok(
         "store_location_submit",
         "id",
@@ -119,6 +128,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($page_source =~ m/$location_type/, "location type loaded on page");
     ok($page_source =~ m/$location_latitude/, "location latitude loaded on page");
     ok($page_source =~ m/$location_longitude/, "location longitude loaded on page");
+    ok($page_source =~ m/$location_altitude/, "location altitude loaded on page");
 
 });
 
