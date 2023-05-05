@@ -1,8 +1,8 @@
-package CXGN::Trial::Download::Plugin::FemaleParentsAndNumberOfProgeniesXLSX;
+package CXGN::Trial::Download::Plugin::FemaleParentsAndNumbersOfProgeniesXLSX;
 
 =head1 NAME
 
-CXGN::Trial::Download::Plugin::FemaleParentsAndNumberOfProgeniesXLSX
+CXGN::Trial::Download::Plugin::FemaleParentsAndNumbersOfProgeniesXLSX
 
 =head1 SYNOPSIS
 

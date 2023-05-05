@@ -173,7 +173,7 @@ sub download_female_parents_and_numbers_of_progenies : Path('/search/download_fe
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
         filename => $tempfile,
-        format => 'FemaleParentsAndNumberOfProgeniesXLSX',
+        format => 'FemaleParentsAndNumbersOfProgeniesXLSX',
     });
     my $error = $download->download();
 
