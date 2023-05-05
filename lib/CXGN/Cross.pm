@@ -1623,5 +1623,40 @@ sub get_female_parents_and_numbers_of_progenies {
 }
 
 
+=head2 get_male_parents_and_numbers_of_progenies
+
+    Class method.
+    Returns all male stock_ids, names and numbers of progenies in the database
+    Example: my @male_info = CXGN::Cross->get_male_parents_and_numbers_of_progenies($schema)
+
+=cut
+
+sub get_male_parents_and_numbers_of_progenies {
+    my $self = shift;
+    my $schema = $self->schema;
+
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT stock_relationship.object_id) AS num_of_progenies
+        FROM stock_relationship INNER JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+        INNER JOIN stock AS male_parent ON (stock_relationship.subject_id = male_parent.stock_id)
+        WHERE stock_relationship.type_id = ? AND check_type.type_id = ?
+        GROUP BY male_parent.stock_id ORDER BY num_of_progenies DESC";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($male_parent_type_id, $accession_type_id);
+
+    my @data =();
+    while (my ($female_parent_id, $female_parent_name, $num_of_progenies) = $h->fetchrow_array()){
+        push @data, [$female_parent_id, $female_parent_name,$num_of_progenies];
+    }
+
+    return \@data;
+}
+
+
 
 1;
