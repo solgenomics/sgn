@@ -148,7 +148,7 @@ sub download_all_accessions_with_pedigree : Path('/search/download_all_accession
 
 }
 
-sub download_female_parents_and_number_of_progenies : Path('/search/download_female_parents_and_number_of_progenies') Args(0) {
+sub download_female_parents_and_numbers_of_progenies : Path('/search/download_female_parents_and_numbers_of_progenies') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -164,7 +164,7 @@ sub download_female_parents_and_number_of_progenies : Path('/search/download_fem
     my $time = DateTime->now();
     my $timestamp = $time->ymd();
     my $dir = $c->tempfiles_subdir('download');
-    my $temp_file_name = "female_parents_and_number_of_progenies". "XXXX";
+    my $temp_file_name = "female_parents_and_numbers_of_progenies". "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$file_format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
@@ -177,7 +177,7 @@ sub download_female_parents_and_number_of_progenies : Path('/search/download_fem
     });
     my $error = $download->download();
 
-    my $file_name = "female_parents_and_number_of_progenies" . "_" . "$timestamp" . ".$file_format";
+    my $file_name = "female_parents_and_numbers_of_progenies" . "_" . "$timestamp" . ".$file_format";
     $c->res->content_type('Application/'.$file_format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 

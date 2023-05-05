@@ -38,11 +38,13 @@ sub download {
     }
 
     my $row_count = 1;
-    my $info_ref = CXGN::Cross->get_progeny_info($schema);
+    my $cross_obj = CXGN::Cross->new({schema => $schema});
+    my $data = $cross_obj->get_female_parents_and_numbers_of_progenies();
+    my @all_female_parents = @$data;
     my @all_rows;
-    foreach my $each_info (@$info_ref){
-        my ($female_id, $female_name, $male_id, $male_name, $accession_id, $accession_name, $cross_type) =@$each_info;
-        push @all_rows,[$accession_name, $female_name, $male_name, $cross_type];
+    foreach my $each_row (@all_female_parents){
+        my ($female_id, $female_name, $num_of_progenies) =@$each_row;
+        push @all_rows,[$female_name, $num_of_progenies];
     }
 
     for my $k (0 .. $#all_rows) {
