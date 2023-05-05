@@ -207,7 +207,7 @@ sub detail {
 
 	 	my $rs = $people_schema->resultset("SpPerson")->search( { %query });
 		my $owner_name;
-		
+
 		while (my $p = $rs->next()) {
 			$owner_name = $p->first_name() . " " . $p->last_name();
 		}
@@ -308,7 +308,7 @@ sub store {
 	    my $validated = $lv->validate($schema, $list_type, $data);
 	    my $missing = scalar(@{$validated->{missing}});
 	    if ($missing > 0){
-		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
+		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));
 	    }
 		#create list
     	my $new_list_id = CXGN::List::create_list($dbh, $list_name, $list_description, $owner_id);
@@ -425,7 +425,7 @@ sub update {
 	    my $validated = $lv->validate($schema, $list_type, $data);
 	    my $missing = scalar(@{$validated->{missing}});
 	    if ($missing > 0){
-		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
+		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));
 	    }
 	    my $response = $list->add_bulk($data);
 	    if ($response->{error}) {
@@ -461,7 +461,7 @@ sub update {
   	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(1, $pagination, \@data_files, $status, $counter . ' Lists stored');
+	return $self->detail($list_id);
 
 }
 
@@ -497,7 +497,7 @@ sub store_items {
     my $validated = $lv->validate($schema, $list->{type}, $data);
     my $missing = scalar(@{$validated->{missing}});
     if ($missing > 0){
-	    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
+	    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));
     }
     my $response = $list->add_bulk($data);
     if ($response->{error}) {
@@ -507,7 +507,8 @@ sub store_items {
   	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(1, $pagination, \@data_files, $status,'Lists stored');
+  	return $self->detail($list_id);
+
 
 }
 1;
