@@ -38,10 +38,9 @@ sub download {
     }
 
     my $row_count = 1;
-    my $cross_obj = CXGN::Cross->new({schema => $schema});
-    my $data = $cross_obj->get_male_parents_and_numbers_of_progenies();
+    my $cross_obj = CXGN::Cross->new({schema => $schema, parent_type => 'male_parent'});
+    my $data = $cross_obj->get_parents_and_numbers_of_progenies();
     my @all_male_parents = @$data;
-    my @all_rows;
     foreach my $each_row (@all_male_parents){
         my ($male_id, $male_name, $num_of_progenies) =@$each_row;
         push @all_rows,[$male_name, $num_of_progenies];

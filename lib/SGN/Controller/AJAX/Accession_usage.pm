@@ -52,8 +52,8 @@ sub accession_usage_female: Path('/ajax/accession_usage_female') :Args(0){
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $cross_obj = CXGN::Cross->new({schema => $schema});
-    my $data = $cross_obj->get_female_parents_and_numbers_of_progenies();
+    my $cross_obj = CXGN::Cross->new({schema => $schema, parent_type => 'female_parent'});
+    my $data = $cross_obj->get_parents_and_numbers_of_progenies();
     my @all_female_parents = @$data;
     my @results;
     foreach my $each_female_parent (@all_female_parents) {
@@ -71,28 +71,21 @@ sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
 
     my $self = shift;
     my $c = shift;
-
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-    my $dbh = $schema->storage->dbh();
 
-    my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT stock_relationship.object_id) AS num_of_progenies
-            FROM stock_relationship INNER JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
-            INNER JOIN stock AS male_parent ON (stock_relationship.subject_id = male_parent.stock_id)
-            WHERE stock_relationship.type_id = ? AND check_type.type_id = ?
-            GROUP BY male_parent.stock_id ORDER BY num_of_progenies DESC";
-
-    my $h = $dbh->prepare($q);
-    $h->execute($male_parent_typeid, $accession_typeid);
-
-    my@male_parents =();
-    while (my ($male_parent_id, $male_parent_name, $num_of_progenies) = $h->fetchrow_array()){
-
-    push @male_parents, [qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $num_of_progenies];
+    my $cross_obj = CXGN::Cross->new({schema => $schema, parent_type => 'male_parent'});
+    my $data = $cross_obj->get_parents_and_numbers_of_progenies();
+    my @all_male_parents = @$data;
+    my @results;
+    foreach my $each_male_parent (@all_male_parents) {
+        my $male_id = $each_male_parent->[0];
+        my $male_name = $each_male_parent->[1];
+        my $number_of_progenies = $each_male_parent->[2];
+        push @results, [qq{<a href="/stock/$male_id/view">$male_name</a>},$number_of_progenies];
     }
+    $c->stash->{rest}={data=>\@results};
 
-    $c->stash->{rest}={data=>\@male_parents};
+
 }
 
 sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0){
