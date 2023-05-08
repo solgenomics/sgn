@@ -124,8 +124,12 @@ sub validate {
         push @samples, $sample_name;
 
         foreach (@fields) {
+            if (length($_) == 0) {
+                $parse_result{'error'}= "Sample $sample_name: cannot store an empty value";
+                return \%parse_result;
+            }
             if (not $_=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for wavelength. Must be a numeric value: '$_'";
+                $parse_result{'error'}= "Sample $sample_name: not a real value for wavelength. Must be a numeric value: '$_'";
                 return \%parse_result;
             }
         }
