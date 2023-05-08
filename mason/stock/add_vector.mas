@@ -78,6 +78,18 @@ $editable_stock_props_definitions => {}
       </div>
     </div>
     <div class="form-group">
+      <label class="col-sm-3 control-label">Plant Antibiotic Resistant Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="PlantAntibioticResistantMarker" name="PlantAntibioticResistantMarker">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Bacterial Resistant Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="BacterialResistantMarker" name="BacterialResistantMarker">
+      </div>
+    </div>
+    <div class="form-group">
       <label class="col-sm-3 control-label">Cassette Name </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="CassetteName" name="CassetteName">
@@ -101,6 +113,7 @@ $editable_stock_props_definitions => {}
         <input type="text" class="form-control" value="" id="Terminators" name="Terminators">
       </div>
     </div>
+
 
   <div class="form-group">
     <label class="col-sm-3 control-label"></label>

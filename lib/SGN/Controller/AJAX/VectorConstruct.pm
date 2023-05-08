@@ -184,6 +184,8 @@ sub create_vector_construct_POST {
             my $gene = $params->{Gene} || undef;
             my $promotors = $params->{Promotors} || undef;
             my $terminators = $params->{Terminators} || undef;
+            my $plant_antibiotic_resistant_marker = $params->{PlantAntibioticResistantMarker} || undef;
+            my $bacterial_resistant_marker = $params->{BacterialResistantMarker} || undef;
 
             if (exists($allowed_organisms{$species})){
                 my $stock = CXGN::Stock::Vector->new({
@@ -205,7 +207,9 @@ sub create_vector_construct_POST {
                     VectorType=>$vector_type,
                     Gene=>$gene,
                     Promotors=>$promotors,
-                    Terminators=>$terminators
+                    Terminators=>$terminators,
+                    PlantAntibioticResistantMarker=>$plant_antibiotic_resistant_marker,
+                    BacterialResistantMarker=>$bacterial_resistant_marker
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
