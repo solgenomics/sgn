@@ -1,48 +1,85 @@
 /*
-creates and populates select populations menu for analysis tools.
+creates and populates select menu with lists and datasets for analysis tools.
 */
 
 class OptionsMenu {
-  constructor(elemId, elemClass, label) {
-    elemId = elemId.replace(/#/, "");
-    this.elemId = elemId;
-    this.elemClass = elemClass || "form-control";
+  constructor(menuId, menuClass, label) {
+    menuId = menuId.replace(/#/, "");
+    menuClass = menuClass.replace(/\./, "");
+
+    this.menuId = menuId;
+    this.menuClass = menuClass || "form-control";
     this.label = label || "Select a population";
+    this.menu;
   }
 
   createOptionsMenu() {
     var menu = document.createElement("select");
-    menu.id = this.elemId;
-    menu.className = this.elemClass;
+    menu.id = this.menuId;
+    menu.className = this.menuClass;
 
     var option = document.createElement("option");
     option.selected = this.label;
-    option.value = this.label;
+    option.value = "";
     option.innerHTML = this.label;
+    // option.disabled = true;
 
     menu.appendChild(option);
 
+    this.menu = menu;
     return menu;
   }
 
   addOptions(data) {
-    var menu = this.createOptionsMenu();
+    var menu = this.menu;
+    if (!menu) {
+      menu = this.createOptionsMenu();
+    }
 
-    // var ids = [];
     data.forEach(function (dt) {
-      // if (!ids.includes(dt.id)) {
-        var option = document.createElement("option");
+      var option = document.createElement("option");
 
-        option.value = dt.id;
-        option.dataset.pop = JSON.stringify(dt);
-        option.innerHTML = dt.name;
+      option.value = dt.id;
+      option.dataset.pop = JSON.stringify(dt);
+      option.innerHTML = dt.name;
 
-        menu.appendChild(option);
+      menu.appendChild(option);
 
-        // ids.push(dt.id);
-      // }
     });
 
     return menu;
   }
+
+  addOptionsSeparator (text) {
+    var option = document.createElement("option");
+    option.innerHTML = `-------- ${text.toUpperCase()} --------`;
+    option.disabled = true;
+
+    this.menu.appendChild(option);
+  }
+
+  getSelectMenuByTypes (listTypes, datasetTypes) {
+    var list = new CXGN.List();
+    var lists = list.getLists(listTypes);
+    var privateLists = list.convertArrayToJson(lists.private_lists);
+
+    privateLists = privateLists.flat();
+    var selectMenu = this.addOptions(privateLists);
+
+    if (lists.public_lists[0]) {
+      var publicLists = list.convertArrayToJson(lists.public_lists);
+      this.addOptionsSeparator("public lists");
+      selectMenu = this.addOptions(publicLists);
+    }
+
+    var datasetPops = solGS.dataset.getDatasetPops(datasetTypes);
+    if (datasetPops) {
+      this.addOptionsSeparator("datasets");
+      selectMenu = this.addOptions(datasetPops);
+    }
+
+    return selectMenu;
+   
+  }
+
 }
