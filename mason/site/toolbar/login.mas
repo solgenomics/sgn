@@ -5,7 +5,7 @@
 <script>
 
   // Add URL paths to this array that should not have the login dialog shown
-  // when the config `require_login` is
+  // when the config `require_login` is set
   const PATHS_TO_NOT_REQUIRE_LOGIN = ["/user/reset_password_form"];
 
   function update_login_button() { 
