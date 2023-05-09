@@ -1079,7 +1079,7 @@ jQuery(document).ready(function () {
                    solGS.pca.cleanUpOnSuccess(pcaPopId);
                   } else {
                     var msg = "There is no PCA output for this dataset.";
-                    solGS.pca.feedBackOnFailurepcaPopId, (msg);
+                    solGS.pca.feedBackOnFailure(pcaPopId, msg);
                   }
                 })
                 .fail(function (res) {
