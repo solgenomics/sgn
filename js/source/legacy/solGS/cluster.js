@@ -10,8 +10,8 @@ solGS.cluster = {
   canvas: "#cluster_canvas",
   clusterPlotDivPrefix: "#cluster_plot",
   clusterMsgDiv: "#cluster_message",
-  clusterPopsDiv: "#cluster_select_a_pop_div",
-  clusterPopsSelectMenuId: "#cluster_select_pops",
+  clusterPopsDiv: "#cluster_pops_select_div",
+  clusterPopsSelectMenuId: "#cluster_pops_select",
 
   getClusterArgsFromUrl: function () {
     var page = location.pathname;
@@ -92,7 +92,7 @@ solGS.cluster = {
     }
   },
 
-  loadClusterGenotypesList: function (selectId, selectName, dataStr) {
+  displaySelectedClusterPop: function (selectId, selectName, dataStr) {
     var clusterPopId = this.getClusterPopId(selectId, dataStr);
     if (selectId.length === 0) {
       alert("The list is empty. Please select a list with content.");
@@ -263,7 +263,6 @@ solGS.cluster = {
     });
 
     dataTypeOpts = this.createDataTypeSelect(dataTypeOpts, clusterPopId);
-
     var kNumId = this.clusterKnumSelectId(clusterPopId);
     var runClusterId = this.clusterRunClusterId(clusterPopId);
 
@@ -787,13 +786,13 @@ solGS.cluster = {
       elbowLink = '<a href="' + elbowPlotFile + '" download=' + elbowFileName + '">Elbow plot</a>';
 
       if (kclusterMeansFile) {
-      var kclusterMeansFileName = kclusterMeansFile.split("/").pop();
-      kclusterMeansLink =
-        '<a href="' +
-        kclusterMeansFile +
-        '" download=' +
-        kclusterMeansFileName +
-        '">Cluster means</a>';
+        var kclusterMeansFileName = kclusterMeansFile.split("/").pop();
+        kclusterMeansLink =
+          '<a href="' +
+          kclusterMeansFile +
+          '" download=' +
+          kclusterMeansFileName +
+          '">Cluster means</a>';
       }
 
       var kclusterVariancesFileName = kclusterVariancesFile.split("/").pop();
@@ -822,11 +821,10 @@ solGS.cluster = {
 
     if (elbowPlotFile) {
       if (kclusterMeansLink) {
-        downloadLinks +=  " | " + kclusterMeansLink 
+        downloadLinks += " | " + kclusterMeansLink;
       }
 
-      downloadLinks +=
-        " | " + kclusterVariancesLink +  " | " + elbowLink;
+      downloadLinks += " | " + kclusterVariancesLink + " | " + elbowLink;
     }
 
     return downloadLinks;
@@ -913,6 +911,32 @@ solGS.cluster = {
     }
   },
 
+  populateClusterPopsMenu: function () {
+    var list = new CXGN.List();
+    var lists = list.getLists(["accessions", "plots", "trials"]);
+    var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
+
+    var menuId = this.clusterPopsSelectMenuId;
+    var menu = new OptionsMenu(menuId);
+    clusterPrivatePops = clusterPrivatePops.flat();
+    var menuElem = menu.addOptions(clusterPrivatePops);
+
+    if (lists.public_lists[0]) {
+      var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
+      menu.addOptionsSeparator("public lists");
+      menuElem = menu.addOptions(clusterPublicLists);
+    }
+
+    var datasetPops = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    if (datasetPops) {
+      menu.addOptionsSeparator("datasets");
+      menuElem = menu.addOptions(datasetPops);
+    }
+
+    var clusterPopsDiv = this.clusterPopsDiv;
+    jQuery(clusterPopsDiv).append(menuElem).show();
+  },
+
   listClusterPopulations: function () {
     var modelData = solGS.sIndex.getTrainingPopulationData();
 
@@ -924,7 +948,6 @@ solGS.cluster = {
         clusterPops.push(trialSelPopsList);
       }
     }
-
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
       var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
@@ -957,11 +980,7 @@ jQuery(document).ready(function () {
   var url = location.pathname;
 
   if (url.match(/cluster\/analysis/)) {
-    solGS.selectMenu.populateMenu(
-      "cluster_pops",
-      ["accessions", "plots", "trials"],
-      ["accessions", "trials"]
-    );
+    solGS.cluster.populateClusterPopsMenu();
 
     var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
     var clusterPopId = clusterArgs.cluster_pop_id;
@@ -1006,7 +1025,7 @@ jQuery(document).ready(function () {
     var selectedPop = solGS.selectMenu.getSelectedPop("cluster_pops");
     if (selectedPop.selected_id) {
       jQuery("#cluster_pop_go_btn").click(function () {
-        solGS.cluster.loadClusterGenotypesList(
+        solGS.cluster.displaySelectedClusterPop(
           selectedPop.selected_id,
           selectedPop.selected_name,
           selectedPop.data_str
@@ -1085,7 +1104,7 @@ jQuery(document).ready(function () {
     jQuery(document).ready(checkClusterPop);
 
     function checkClusterPop() {
-      if (jQuery("#cluster_div #cluster_select_a_pop_div").is(":visible")) {
+      if (jQuery("#cluster_div #cluster_pops_select_div").is(":visible")) {
         jQuery("#cluster_div #cluster_options #cluster_data_type_opts").html(dataTypeOpts);
         jQuery("#cluster_div #cluster_options #cluster_type_opts").html(clusterTypeOpts);
         jQuery("#cluster_div #cluster_options").show();
@@ -1110,7 +1129,6 @@ jQuery(document).ready(function () {
   var clusterPopsDiv = solGS.cluster.clusterPopsDiv;
 
   jQuery(clusterPopsDiv).change(function () {
-
     var selectedPop = jQuery("option:selected", this).data("pop");
 
     var selectedPopId = selectedPop.id;
