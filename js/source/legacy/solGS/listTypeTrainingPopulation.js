@@ -1,50 +1,23 @@
 
 /**
 
-For training population made from list of plots and trial.
+For training populations  from list of plots and trials.
 
 Isaak Y Tecle 
 iyt2@cornell.edu
 */
 
-JSAN.use("CXGN.List");
+// JSAN.use("CXGN.List");
 JSAN.use("jquery.blockUI");
 
+var solGS = solGS || function solGS() {};
 
-jQuery(document).ready( function() {
-    solGS.selectMenu.populateMenu("list_type_training_pops", ['plots', 'trials'],  ['plots', 'trials'] );
-          
-});
+solGS.listTypeTrainingPopulation = {
 
+ trainingPopsDiv: "#list_type_training_pops_select_div",
+ trainingPopsSelectMenuId: "#list_type_training_pops_select",
 
-jQuery(document).ready( function() {  
-    jQuery("#list_type_training_pops_list_select").change(function() { 
-        var selectedPop = solGS.selectMenu.getSelectedPop('list_type_training_pops');
-
-        if (selectedPop.selected_id) {  	
-            jQuery("#list_type_training_pop_go_btn").click(function() {
-
-                if (typeof selectedPop.data_str === 'undefined' || !selectedPop.data_str.match(/dataset/i)) {
-                    var listDetail = getListTypeTrainingPopDetail(selectedPop.selected_id);
-
-                    if (listDetail.type.match(/plots/)) {
-                        askTrainingJobQueueing(selectedPop.selected_id);
-                    } else {
-                        var trialsList = listDetail.list;
-                        var trialsNames = listDetail.list_elements_names;
-
-                        loadTrialListTypeTrainingPop(trialsNames);		    
-                    }
-                    } else {
-                        solGS.dataset.datasetTrainingPop(selectedPop.selected_id, selectedPop.selected_name);
-                    }
-                });
-        }	   
-    });       
-});
-
-
-function getTrainingListElementsNames (list) {
+getTrainingListElementsNames: function (list) {
    
     var names = [];
     for (var i = 0; i < list.length; i++) {
@@ -53,10 +26,36 @@ function getTrainingListElementsNames (list) {
 
     return names;
 
-}
+},
+
+populateTrainingPopsMenu: function  () {
+    var list = new CXGN.List();
+    var lists = list.getLists([ "plots", "trials"]);
+    var trainingPrivatePops = list.convertArrayToJson(lists.private_lists);
+
+    var menuId = this.trainingPopsSelectMenuId;
+    var menu = new OptionsMenu(menuId);
+    trainingPrivatePops = trainingPrivatePops.flat();
+    var menuElem = menu.addOptions(trainingPrivatePops);
+
+    if (lists.public_lists[0]) {
+      var trainingPublicLists = list.convertArrayToJson(lists.public_lists);
+      menu.addOptionsSeparator("public lists");
+      menuElem = menu.addOptions(trainingPublicLists);
+    }
+
+    var datasetPops = solGS.dataset.getDatasetPops(["accessions","plots", "trials"]);
+    if (datasetPops) {
+      menu.addOptionsSeparator("datasets");
+      menuElem = menu.addOptions(datasetPops);
+    }
+
+    var trainingPopsDiv = this.trainingPopsDiv;
+    jQuery(trainingPopsDiv).append(menuElem).show();
+  },
 
 
-function getTrainingListElementsIds (list) {
+getTrainingListElementsIds: function (list) {
    
     var ids = [];
     for (var i = 0; i < list.length; i++) {
@@ -65,10 +64,10 @@ function getTrainingListElementsIds (list) {
 
     return ids;
 
-}
+},
 
 
-function getListTypeTrainingPopDetail(listId) {   
+getListTypeTrainingPopDetail: function(listId) {   
     
     var list = new CXGN.List();
     
@@ -82,8 +81,8 @@ function getListTypeTrainingPopDetail(listId) {
 	listName      = list.listNameById(listId);
 	listElements  = listData.elements;
 
-	listElementsNames = getTrainingListElementsNames(listElements);
-	listElementsIds   = getTrainingListElementsIds(listElements);
+	listElementsNames = this.getTrainingListElementsNames(listElements);
+	listElementsIds   = this.getTrainingListElementsIds(listElements);
     }
   
     return {'name'          : listName,	    
@@ -93,10 +92,10 @@ function getListTypeTrainingPopDetail(listId) {
 	    'list_elements_ids' : listElementsIds,
            };
     
-}
+},
 
 
-function loadTrialListTypeTrainingPop (trialsNames) {
+loadTrialListTypeTrainingPop: function (trialsNames) {
    
     jQuery.ajax({
         type: 'POST',
@@ -111,11 +110,11 @@ function loadTrialListTypeTrainingPop (trialsNames) {
         }                       
     });
 
-}
+},
 
-function askTrainingJobQueueing (listId) {
+askTrainingJobQueueing: function (listId) {
  
-    var args = createTrainingReqArgs(listId);
+    var args = this.createTrainingReqArgs(listId);
     var modelId = args.training_pop_id;
     var protocolId = args.genotyping_protocol_id;
     
@@ -128,12 +127,12 @@ function askTrainingJobQueueing (listId) {
     
     solGS.waitPage(page, args);
 
-}
+},
 
 
-function createTrainingReqArgs (listId) {
+createTrainingReqArgs: function (listId) {
 
-    var genoList  = getListTypeTrainingPopDetail(listId);
+    var genoList  = this.getListTypeTrainingPopDetail(listId);
     var listName  = genoList.name;
     var list      = genoList.list;
     var popId     = getModelId(listId);
@@ -152,12 +151,12 @@ function createTrainingReqArgs (listId) {
 
     return args;
 
-}
+},
 
 
-function loadPlotListTypeTrainingPop(listId) {     
+loadPlotListTypeTrainingPop: function(listId) {     
   
-    var args  = createTrainingReqArgs(listId);
+    var args  = this.createTrainingReqArgs(listId);
     var popId = args.training_pop_id;
 
     if (window.Prototype) {
@@ -196,7 +195,11 @@ function loadPlotListTypeTrainingPop(listId) {
             }            
         });        
     }
-}
+},
+
+};
+
+
 
 
 jQuery.fn.doesExist = function(){
@@ -206,8 +209,8 @@ jQuery.fn.doesExist = function(){
 
 
 function getUserUploadedRefPop (listId) {
-   
-    var genoList       = getListTypeTrainingPopDetail(listId);
+ 
+    var genoList       = this.getListTypeTrainingPopDetail(listId);
     var listName       = genoList.name;
     var list           = genoList.list;
     var modelId        = getModelId(listId);
@@ -241,7 +244,7 @@ function getUserUploadedRefPop (listId) {
 
 function loadPopulationPage (url, listId, listSource) {   
     
-    var genoList       = getListTypeTrainingPopDetail(listId);
+    var genoList       = this.getListTypeTrainingPopDetail(listId);
     var listName       = genoList.name;
     var modelId        = getModelId(listId);
      
@@ -283,4 +286,35 @@ function getModelId (listId) {
     return modelId;
 
 }
+
+jQuery(document).ready( function() {
+    solGS.listTypeTrainingPopulation.populateTrainingPopsMenu();
+          
+});
+
+
+jQuery(document).ready( function() {  
+    jQuery("#list_type_training_pops_select").change(function() { 
+        var selectedPop = jQuery("option:selected", this).data("pop");
+        if (selectedPop.id) {  	
+            jQuery("#list_type_training_pop_go_btn").click(function() {
+
+                if (typeof selectedPop.data_str === 'undefined' || !selectedPop.data_str.match(/dataset/i)) {
+                    var listDetail = solGS.listTypeTrainingPopulation.getListTypeTrainingPopDetail(selectedPop.id);
+
+                    if (listDetail.type.match(/plots/)) {
+                        solGS.listTypeTrainingPopulation.askTrainingJobQueueing(selectedPop.id);
+                    } else {
+                        var trialsList = listDetail.list;
+                        var trialsNames = listDetail.list_elements_names;
+
+                        solGS.listTypeTrainingPopulation.loadTrialListTypeTrainingPop(trialsNames);		    
+                    }
+                    } else {
+                        solGS.dataset.datasetTrainingPop(selectedPop.id, selectedPop.name);
+                    }
+                });
+        }	   
+    });       
+});
 
