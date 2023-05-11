@@ -82,8 +82,8 @@ $training_pop_id = $pop_id;
 </&>
 
 
-  <& /solgs/tools/correlation/correlation.mas,
-     corre_pop_id  => $training_pop_id,
+  <& /solgs/tools/correlation/analysis.mas,
+     corr_pop_id  => $training_pop_id,
      data_set_type => $data_set_type
   &>
 

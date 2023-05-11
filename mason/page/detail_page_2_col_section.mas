@@ -186,8 +186,8 @@ $analytics_protocol_result_summary => {}
 				     trial_id => $trial_id
 				&>
                                 <!-- Phenotypic correlation analysis -->
-                                <& /solgs/tools/correlation/correlation.mas,
-                                    corre_pop_id => $trial_id
+                                <& /solgs/tools/correlation/analysis.mas,
+                                    corr_pop_id => $trial_id
                                 &>
 
                                 <& /solgs/tools/anova/analysis.mas,
