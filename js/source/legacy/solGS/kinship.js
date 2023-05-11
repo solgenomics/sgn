@@ -1,5 +1,5 @@
 /**
- * kinship plotting using d3
+ * kinship analysis call and result plotting using d3
  * Isaak Y Tecle <iyt2@cornell.edu>
  *
  */
@@ -9,43 +9,56 @@ var solGS = solGS || function solGS() {};
 
 solGS.kinship = {
 
-	getKinshipPopDetails: function() {
+	getKinshipArgs: function() {
 
 		var page = location.pathname;
-		var popId;
-		var kishipUrlArgs;
+		var kinshipPopId;
+		var kinshipUrlArgs;
 		var dataStr;
-		var protocolId;
+		var trainingPopId;
+		var selectionPopId;
 
-		if (page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\//)) {
+		if (page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\/|\/breeders\/trial\//)) {
 
-			popId = jQuery("#training_pop_id").val();
-			protocolId = jQuery("#genotyping_protocol_id").val();
-
+			trainingPopId = jQuery("#training_pop_id").val();
+			if (!trainingPopId) {
+				trainingPopId = jQuery("#trial_id").val();
+			}
+			kinshipPopId = trainingPopId;
 		} else if (page.match(/kinship\/analysis/)) {
 
 			kinshipUrlArgs = this.getKinshipArgsFromUrl();
-			popId = kinshipUrlArgs.kinship_pop_id;
+			kinshipPopId = kinshipUrlArgs.kinship_pop_id;
 			dataStr = kinshipUrlArgs.data_structure;
 			protocolId = kinshipUrlArgs.genotyping_protocol_id;
 
 		} else if (page.match(/\/selection\/|\/prediction\//)) {
 
-			popId = jQuery("#selection_pop_id").val();
-			protocolId = jQuery("#genotyping_protocol_id").val();
+			selectionPopId = jQuery("#selection_pop_id").val();
+			kinshipPopId = selectionPopId;
 
 		} else if (page.match(/solgs\/traits\/all\/population\/|models\/combined\/trials\//)) {
-			popId = jQuery("#training_pop_id").val();
-			protocolId = jQuery("#genotyping_protocol_id").val();
+			trainingPopId = jQuery("#training_pop_id").val();
+			kinshipPopId = trainingPopId;
+			
 		}
 
+		if (page.match(/combined/)) {
+			var comboPopsId =  trainingPopId;
+		}
+
+		var protocolId = jQuery("#genotyping_protocol_id").val();
 		var traitId = jQuery("#trait_id").val();
 
 		return {
-			'kinship_pop_id': popId,
+			'kinship_pop_id': kinshipPopId,
+			'training_pop_id': trainingPopId,
+			'combo_pops_id': comboPopsId,
+			'selection_pop_id': selectionPopId,
 			'data_structure': dataStr,
 			'genotyping_protocol_id': protocolId,
 			'trait_id': traitId,
+			'analysis_type': 'kinship analysis'
 		};
 	},
 
@@ -96,7 +109,7 @@ solGS.kinship = {
 
 			if (!kinshipTable) {
 				kinshipTable = this.createTable();
-				jQuery("#kinship_pops_section").append(kinshipTable).show();
+				jQuery("#kinship_pops_selected").append(kinshipTable).show();
 			}
 
 			var onClickVal = '<button type="button" id="run_kinship" class="btn btn-success" onclick="solGS.kinship.runKinship(' +
@@ -155,24 +168,31 @@ solGS.kinship = {
 
 	runKinship: function(selectId, selectName, dataStr) {
 
-		var protocolId = jQuery('#genotyping_protocol_id').val();
+		var kinshipArgs;
+	
+		var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId('kinship_div');
+		if (location.pathname.match(/kinship\/analysis/)) {
 
-		var kinshipArgs = {
+		kinshipArgs = {
 			'kinship_pop_id': selectId,
 			'kinship_pop_name': selectName,
 			'data_structure': dataStr,
 			'genotyping_protocol_id': protocolId,
 			'analysis_type': 'kinship analysis'
-		};
+		};	
+		} else {
+			kinshipArgs = this.getKinshipArgs();
+			selectId = kinshipArgs.kinship_pop_id;
+		}
 
+	
 		var page;
 		if (dataStr) {
 			page = '/kinship/analysis/' + dataStr + '_' + selectId + '/gp/' + protocolId;
 		} else {
 			page = '/kinship/analysis/' + selectId + '/gp/' + protocolId;
 		}
-
-		//this.selectAnalysisOption(page, kinshipArgs);
+		
 		this.checkCachedKinship(page, kinshipArgs);
 
 	},
@@ -192,10 +212,9 @@ solGS.kinship = {
 			success: function(response) {
 				args = JSON.parse(args);
 				if (response.cached) {
-					// solGS.submitJob.goToPage(page, args);
-					solGS.kinship.getKinshipResult(args);
+					solGS.kinship.runKinshipAnalysis(page, args);
 				} else {
-					solGS.kinship.selectAnalysisOption(page, args);
+					solGS.kinship.optJobSubmission(page, args);
 				}
 			},
 			error: function() {
@@ -205,7 +224,7 @@ solGS.kinship = {
 	},
 
 
-	selectAnalysisOption: function(page, args) {
+	optJobSubmission: function(page, args) {
 
 		var title = '<p>This analysis may take a long time. ' +
 			'Do you want to submit the analysis and get an email when it completes?</p>';
@@ -239,7 +258,7 @@ solGS.kinship = {
 						click: function() {
 							jQuery(this).dialog("close");
 
-							solGS.kinship.runAnalysis(page, args);
+							solGS.kinship.runKinshipAnalysis(page, args);
 						},
 					},
 
@@ -256,9 +275,10 @@ solGS.kinship = {
 
 	},
 
-	runAnalysis: function(page, args) {
+	runKinshipAnalysis: function(page, args) {
 
 		var kinArgs = JSON.stringify(args)
+		jQuery("#run_kinship").hide();
 		jQuery("#kinship_message")
 			.text("Running kinship... please wait...it may take minutes.")
 			.show();
@@ -269,24 +289,33 @@ solGS.kinship = {
 			type: 'POST',
 			dataType: 'json',
 			data: {'arguments': kinArgs},
-			url: '/kinship/run/analysis/',
+			url: '/run/kinship/analysis/',
 			success: function(res) {
-				if (res.success) {
-
-					jQuery("#kinship_canvas .multi-spinner-container").hide();
-					jQuery("#kinship_message").empty();
-					solGS.kinship.getKinshipResult(args);
-
+				if (res.data) {
+						jQuery("#kinship_message")
+							.html("Generating heatmap... please wait...")
+							.show();
+	
+							var kinCanvas = "#kinship_canvas";
+							var kinPlotDivId = "#kinship_plot_" + res.kinship_file_id;
+							var links = solGS.kinship.addDowloandLinks(res);
+							solGS.heatmap.plot(res.data, kinCanvas, kinPlotDivId , links);
+	
+						jQuery("#kinship_canvas .multi-spinner-container").hide();
+						jQuery("#kinship_message").empty();
+	
 				} else {
-					jQuery("#kinship_message")
-						.html('There is no kinship data to plot.')
-						.show()
-						.fadeOut(8400);
-
-					jQuery("#kinship_canvas .multi-spinner-container").hide();
-
-					jQuery("#run_kinship").show();
-				}
+	
+						jQuery("#kinship_canvas .multi-spinner-container").hide();
+						jQuery("#kinship_message")
+							.css({
+								"padding-left": '0px'
+							})
+							.html("This population has no kinship output data.")
+							.fadeOut(8400);
+	
+						jQuery("#run_kinship").show();
+				} 
 			},
 			error: function(res) {
 				jQuery("#kinship_message")
@@ -296,76 +325,8 @@ solGS.kinship = {
 
 				jQuery("#kinship_canvas .multi-spinner-container").hide();
 			}
-
-
-		});
-
-	},
-
-
-	getKinshipResult: function(args) {
-
-		if (args == null) {
-			args = this.getKinshipPopDetails();
-		}
-
-		jQuery("#kinship_canvas .multi-spinner-container").show();
-		jQuery("#kinship_message").html("Retrieving kinship output... please wait...");
-
-		var kinArgs = JSON.stringify(args);
-		jQuery.ajax({
-			type: 'POST',
-			dataType: 'json',
-			data: {'arguments': kinArgs},
-			url: '/solgs/kinship/result/',
-			success: function(res) {
-
-				if (res.data) {
-					jQuery("#kinship_message")
-						.html("Generating heatmap... please wait...")
-						.show();
-
-						var kinCanvas = "#kinship_canvas";
-						var kinPlotDivId = "#kinship_plot_" + res.kinship_file_id;
-						var links = solGS.kinship.addDowloandLinks(res);
-						solGS.heatmap.plot(res.data, kinCanvas, kinPlotDivId , links);
-
-					jQuery("#kinship_canvas .multi-spinner-container").hide();
-					jQuery("#kinship_message").empty();
-
-				} else {
-
-					jQuery("#kinship_canvas .multi-spinner-container").hide();
-					jQuery("#kinship_message")
-						.css({
-							"padding-left": '0px'
-						})
-						.html("This population has no kinship output data.")
-						.fadeOut(8400);
-
-					jQuery("#run_kinship").show();
-				}
-			},
-			error: function(res) {
-				jQuery("#kinship_canvas .multi-spinner-container").hide();
-				jQuery("#kinship_message")
-					.css({
-						"padding-left": '0px'
-					})
-					.html("Error occured retreiving the kinship output data.")
-					.fadeOut(8400);;
-
-				jQuery("#run_kinship").show();
-			}
 		});
 	},
-
-
-	// plotKinship: function(data, links) {
-
-	// 	solGS.heatmap.plot(data, '#kinship_canvas', '#kinship_plot', links);
-
-	// },
 
 
 	addDowloandLinks: function(res) {
@@ -415,26 +376,7 @@ solGS.kinship = {
 jQuery(document).ready(function() {
 
 	jQuery("#run_kinship").click(function() {
-		var url = location.pathname;
-
-		var popId;
-		var popName;
-
-		if (url.match(/kinship\/analysis/)) {
-			solGS.kinship.runKinship();
-		} else if (url.match(/breeders\/trial\//)) {
-			popId = jQuery("#trial_id").val();
-			popName = jQuery("#trial_name").val();
-			solGS.kinship.runKinship(popId, popName);
-		} else if (url.match(/solgs\/models\/combined\/trials\/|solgs\/traits\/all\/population\//)) {
-			popId = jQuery("#training_pop_id").val();
-			popName = jQuery("#training_pop_name").val();
-			solGS.kinship.runKinship(popId, popName);
-		} else {
-			solGS.kinship.getKinshipResult();
-		}
-
-		jQuery("#run_kinship").hide();
+		solGS.kinship.runKinship();
 	});
 
 });
@@ -444,23 +386,7 @@ jQuery(document).ready(function() {
 	var url = location.pathname;
 
 	if (url.match(/kinship\/analysis/)) {
-
-		var list = new CXGN.List();
-		var listMenu = list.listSelect("kinship_pops", ['accessions', 'trials'], undefined, undefined, undefined);
-
-		var dType = ['accessions', 'trials'];
-		var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-		if (listMenu.match(/option/) != null) {
-
-			jQuery("#kinship_pops_list").html(listMenu);
-			jQuery("#kinship_pops_list_select").append(dMenu);
-
-		} else {
-			jQuery("#kinship_pops_list")
-				.html("<select><option>no lists found - Log in</option></select>");
-		}
-
+		solGS.selectMenu.populateMenu("kinship_pops", ['accessions', 'trials'], ['accessions', 'trials'])
 		var args = solGS.kinship.getKinshipArgsFromUrl();
 
 		if (args.kinship_pop_id) {
@@ -489,28 +415,11 @@ jQuery(document).ready(function() {
 	var url = location.pathname;
 
 	if (url.match(/kinship\/analysis/)) {
-
-		var selectId;
-		var selectName;
-		var dataStructure;
-
-		jQuery("<option>", {
-			value: '',
-			selected: true
-		}).prependTo("#kinship_pops_list_select");
-
 		jQuery("#kinship_pops_list_select").change(function() {
-			selectId = jQuery(this).find("option:selected").val();
-			selectName = jQuery(this).find("option:selected").text();
-			dataStructure = jQuery(this).find("option:selected").attr('name');
-
-			if (dataStructure == undefined) {
-				dataStructure = 'list';
-			}
-
-			if (selectId) {
-				jQuery("#kinship_go_btn").click(function() {
-					solGS.kinship.loadKinshipPops(selectId, selectName, dataStructure);
+			var selectedPop = solGS.selectMenu.getSelectedPop('kinship_pops');
+			if (selectedPop.selected_id) {
+				jQuery("#kinship_pop_go_btn").click(function() {
+					solGS.kinship.loadKinshipPops(selectedPop.selected_id, selectedPop.selected_name, selectedPop.data_str);
 				});
 			}
 		});
