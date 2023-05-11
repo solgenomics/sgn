@@ -95,10 +95,11 @@ solGS.selectionPopulation = {
   searchSelectionPopulations: function () {
     var args = solGS.getModelArgs();
 
+    args = JSON.stringify(args);
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: args,
+      data: {'arguments': args},
       url: "/solgs/search/selection/populations/" + popId,
       success: function (res) {
         if (res.data) {
