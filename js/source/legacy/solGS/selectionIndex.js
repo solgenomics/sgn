@@ -21,7 +21,7 @@ solGS.sIndex = {
     var sIndexPops = [modelData];
 
     if (modelData.id.match(/list/) == null) {
-      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+      var trialSelPopsList = solGS.selectionPopulations.getPredictedTrialTypeSelectionPops();
       if (trialSelPopsList) {
         sIndexPops.push(trialSelPopsList);
       }
@@ -29,7 +29,7 @@ solGS.sIndex = {
 
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      var listTypeSelPops = solGS.listTypeSelPopulations.getListTypeSelPops();
       if (listTypeSelPops) {
         sIndexPops.push(listTypeSelPops);
       }
@@ -65,30 +65,6 @@ solGS.sIndex = {
 
   saveIndexedPops: function (siId) {
     solGS.sIndex.indexed.push(siId);
-  },
-
-  getPredictedTrialTypeSelectionPops: function () {
-    var selPopsTable = jQuery("#selection_pops_list").html();
-    var selPopsRows;
-
-    if (selPopsTable !== null) {
-      selPopsRows = jQuery("#selection_pops_list").find("tbody > tr");
-    }
-
-    var popsList = [];
-
-    for (var i = 0; i < selPopsRows.length; i++) {
-      var row = selPopsRows[i];
-      var popRow = row.innerHTML;
-      var predict = popRow.match(/predict/gi);
-      if (!predict) {
-        var selPopsInput = row.getElementsByTagName("input")[0];
-        var sIndexPopData = selPopsInput.value;
-        popsList.push(JSON.parse(sIndexPopData));
-      }
-    }
-
-    return popsList;
   },
 
   displaySindexForm: function (modelId, selectedPopId) {
@@ -414,26 +390,6 @@ solGS.sIndex = {
       params: params,
       validate: validate,
     };
-  },
-
-  getListTypeSelPopulations: function () {
-    var listTypeSelPopsDiv = document.getElementById("list_type_selection_pops_selected");
-    var listTypeSelPopsTable = listTypeSelPopsDiv.getElementsByTagName("table");
-    var listTypeSelPopsRows = listTypeSelPopsTable[0].rows;
-
-    var popsList = [];
-    for (var i = 1; i < listTypeSelPopsRows.length; i++) {
-      var row = listTypeSelPopsRows[i];
-      var popRow = row.innerHTML;
-
-      var predict = popRow.match(/predict/gi);
-      if (!predict) {
-        var selPopsInput = row.getElementsByTagName("input")[0];
-        var sIndexPopData = selPopsInput.value;
-        popsList.push(JSON.parse(sIndexPopData));
-      }
-    }
-    return popsList;
   },
 
   getTrainingPopulationData: function () {

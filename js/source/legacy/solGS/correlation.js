@@ -203,7 +203,7 @@ solGS.correlation = {
     var corrPops = [modelData];
 
     if (modelData.id.match(/list/) == null) {
-      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+      var trialSelPopsList = solGS.selectionPopulations.getPredictedTrialTypeSelectionPops();
       if (trialSelPopsList) {
         corrPops.push(trialSelPopsList);
       }
@@ -211,7 +211,7 @@ solGS.correlation = {
 
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      var listTypeSelPops = solGS.listTypeSelPopulations.getListTypeSelPops();
       if (listTypeSelPops) {
         corrPops.push(listTypeSelPops);
       }

@@ -86,7 +86,7 @@ function listGenCorPopulations ()  {
     var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
    
     if (listTypeSelPops) {
-        var selPopsList = solGS.sIndex.getListTypeSelPopulations();
+        var selPopsList = solGS.listTypeSelPopulations.getListTypeSelPops();
 
         if (selPopsList) {
             jQuery("#h2_select_a_population_div ul").append(selPopsList);  
