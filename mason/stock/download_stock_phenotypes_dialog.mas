@@ -83,8 +83,8 @@ $stock_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default" name="download_stock_phenotypes_cancel_button" id="download_stock_phenotypes_cancel_button" data-dismiss="modal">Close</button>
-        <button class="btn btn-primary" name="download_stock_phenotypes_submit_button" id="download_stock_phenotypes_submit_button" title="Submit">Submit</button>
+        <button type="button" class="btn btn-default" name="download_stock_phenotypes_cancel_button" id="download_stock_phenotypes_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="download_stock_phenotypes_submit_button" id="download_stock_phenotypes_submit_button" title="Submit">Submit</button>
       </div>
     </div>
   </div>
