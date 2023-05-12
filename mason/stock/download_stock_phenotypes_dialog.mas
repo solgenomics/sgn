@@ -70,6 +70,13 @@ $stock_name => undef
                <div id="download_stock_phenotypes_select_all" class="btn btn-sm btn-primary" style="margin:3px">Select all traits</div>
                <div id="download_stock_phenotypes_select_reset" class="btn btn-sm btn-default" style="margin:3px">Unselect all traits</div>
            </div>
+
+            <style>
+              #download_stock_phenotypes_traits_select:hover {
+                width:auto;
+                margin-left: -140px;
+              }
+            </style>
 </&>
         </form><br/>
 
@@ -129,6 +136,15 @@ jQuery(document).ready(function() {
 
 function data_level_change_traits() {
     var stock_type = "<% $stock_type %>";
-    get_select_box('traits', 'download_stock_phenotypes_traits', { 'name' : 'download_stock_phenotypes_traits_select', 'id' : 'download_stock_phenotypes_traits_select', 'stock_id':<% $stock_id %>, 'stock_type': stock_type , 'multiple': true});
+    get_select_box(
+        'traits',
+        'download_stock_phenotypes_traits',
+        { 'name' : 'download_stock_phenotypes_traits_select',
+        'id' : 'download_stock_phenotypes_traits_select',
+        'stock_id':<% $stock_id %>,
+        'stock_type': stock_type ,
+        'multiple': true,
+        'full_dropdown':true}
+        );
 }
 </script>
