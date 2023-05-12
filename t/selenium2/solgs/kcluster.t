@@ -625,7 +625,7 @@ $d->while_logged_in_as(
             'search for selection pop' )->click();
         sleep(30);
         $d->find_element_ok(
-'//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]',
+'//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]',
             'xpath',
             'click training pop'
         )->click();
@@ -1771,7 +1771,7 @@ $d->while_logged_in_as(
             'search for selection pop' )->click();
         sleep(20);
         $d->find_element_ok(
-'//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]',
+'//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]',
             'xpath',
             'click training pop'
         )->click();
