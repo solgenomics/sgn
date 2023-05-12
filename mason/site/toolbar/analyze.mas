@@ -6,11 +6,19 @@
     <!-- li><a href="/analyze/phenotypes">Analyze Phenotypes</a><li -->
     <!-- li><a href="/barcode">Barcode Tools</a></li -->
     <!--li><a href="/solgs/search">Genomic Selection</a></li -->
-    <li><a href="/tools/mixedmodels">Mixed Models</a></li>
     <li><a href="/pca/analysis">Population Structure</a></li>
+    <li><a href="/cluster/analysis">Clustering</a></li>
+    <li><a href="/kinship/analysis">Kinship & Inbreeding</a></li>
+    <li><a href="/tools/stability">Stability AMMI/GGE</a></li>
+    <li><a href="/tools/heritability">Heritability</a></li>
+    <li role="separator" class="divider"></li>
     <li><a href="/accession_usage">Accession Usage</a></li>
+    <li><a href="/tools/mixedmodels">Mixed Models</a></li>
     <li><a href="/tools/trial/comparison/list">Compare Trials</a></li>
     <li><a href="/tools/graphicalfiltering">Graphical Filtering</a></li>
+    <li><a href="/tools/boxplotter">BoxPlotter Tool</a></li>
+    <li><a href="/tools/solgwas">GWAS</a></li>
+    <li><a href="/tools/image_analysis">Image Analysis</a></li>
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Sequence Analysis</li>
