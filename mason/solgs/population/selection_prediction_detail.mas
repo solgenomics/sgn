@@ -1,0 +1,113 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/population/selection_prediction_detail.mas - displays trait GEBV prediction output for selection population using single trial model.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+
+<%args>
+
+
+$trait_abbr
+$trait_name
+$trait_id
+
+$traits_no => ''
+
+$training_pop_id
+$training_pop_name
+$training_pop_desc => ''
+$training_pop_owner => ''
+$training_stocks_cnt => ''
+$training_markers_cnt => ''
+$training_pop_url => ''
+
+$selection_pop_id => ''
+$selection_pop_name => ''
+$selection_pop_desc => ''
+$selection_pop_owner => ''
+$selection_stocks_cnt => ''
+$selection_markers_cnt => ''
+
+$model_page_url => ''
+$owner => 'NA'
+$protocol_url => ''
+$combined_populations => ''
+$combo_pops_id => ''
+$genotyping_protocol_id
+$data_set_type => ''
+
+
+</%args>
+
+<%perl>
+</%perl>
+
+  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.genotypingProtocol",
+                                              "flot.flot", "flot.categories",
+                                              "flot.tooltip", "flot.selection", "flot.navigate",
+                                              "flot.axisLabels",
+                                             ]
+  &>
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css', '/static/css/d3-tip.css'] &>
+
+
+<& /page/page_title.mas,
+   title => "GEBVs for $trait_name ($trait_abbr) in $selection_pop_name"
+&>
+
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
+  title       => "Selection population summary",
+  &>
+
+ <& /solgs/population/summary.mas,
+    selection_pop_id   => $selection_pop_id,
+    selection_pop_name => $selection_pop_name,
+    selection_pop_desc => $selection_pop_desc,
+    model_page_url   => $model_page_url,
+	training_pop_url => $training_pop_url,
+    stocks_no    => $selection_stocks_cnt,
+    markers_no   => $selection_markers_cnt,
+    traits_no    => $traits_no,
+    trait_name   => $trait_name,
+    protocol_url => $protocol_url,
+    owner        => $selection_pop_owner,
+   combined_populations => $combined_populations,
+ &>
+
+ <& /solgs/population/hidden_input.mas,
+    	training_pop_id  => $training_pop_id,
+   		training_pop_name => $training_pop_name,
+   		training_pop_desc => $training_pop_desc,
+   		selection_pop_id  => $selection_pop_id,
+   		selection_pop_name => $selection_pop_name,
+   		selection_pop_desc => $selection_pop_desc,
+   		genotyping_protocol_id => $genotyping_protocol_id,
+		trait_id => $trait_id,
+        combo_pops_id => $combo_pops_id
+    &>
+</&>
+
+<& /solgs/tools/pca/analysis.mas &>
+
+<& /solgs/population/models/model/gebvs.mas &>
+
+<& /solgs/tools/genetic_gain/genetic_gain.mas,
+   trait_id         => $trait_id,
+   training_pop_id  => $training_pop_id,
+   selection_pop_id => $selection_pop_id,
+&>
+
+<& /solgs/population/download.mas &>
+

@@ -1,21 +1,30 @@
 
 <%args>
 $stockref => undef
+$preferred_species => ""
+$editable_vector_props => {}
+$editable_stock_props_definitions => {}
+
 </%args>
 
 % my $stock_id = $stockref->{stock_id};
+
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Vector'] &>
 
 <& /page/page_title.mas, title=> 'Create a New Vector' &>
 
 
 <&| /page/info_section.mas, title=>"Vector details"  &>
 
+<& /breeders_toolbox/add_vectors_dialogs.mas, preferred_species=>$preferred_species, editable_vector_props=>$editable_vector_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 
 <div class="infosectioncontent">
 
 <p>Add new vector and details.</p> 
+<div style="margin-bottom:10px"><button style="float:right" class="btn btn-default" name="add_vectors_link"> Upload Vectors</button></div>
 <div class="row">
   <div class="col-sm-12">
+    
 
 <div class="container-fluid">
   <div class="well">
@@ -69,6 +78,18 @@ $stockref => undef
       </div>
     </div>
     <div class="form-group">
+      <label class="col-sm-3 control-label">Plant Antibiotic Resistant Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="PlantAntibioticResistantMarker" name="PlantAntibioticResistantMarker">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Bacterial Resistant Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="BacterialResistantMarker" name="BacterialResistantMarker">
+      </div>
+    </div>
+    <div class="form-group">
       <label class="col-sm-3 control-label">Cassette Name </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="CassetteName" name="CassetteName">
@@ -92,6 +113,7 @@ $stockref => undef
         <input type="text" class="form-control" value="" id="Terminators" name="Terminators">
       </div>
     </div>
+
 
   <div class="form-group">
     <label class="col-sm-3 control-label"></label>

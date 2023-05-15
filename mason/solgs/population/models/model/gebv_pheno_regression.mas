@@ -1,0 +1,54 @@
+<%doc>
+
+=head1 NAME
+ 
+/solgs/population/gebvs_pheno_regression.mas - OLS gebv vs phenotype deviations 
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id => ''
+$combo_pops_id => ''
+$trait_id
+$trial_id => ''
+
+</%args>
+
+<%perl>
+
+$pop_id = $trial_id if $trial_id;
+
+</%perl>
+
+
+<style>
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+<& /util/import_javascript.mas, classes => [ "solGS.gebvPhenoRegression", "solGS.scatterPlot"] &>
+
+  <&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "GEBVs vs observed phenotypes" 
+    &>
+    
+<div id="gebv_pheno_regression_canvas">
+  <div id="gebv_pheno_regression_plot"></div>
+  <div id="gebv_pheno_regression_message"></div>
+</div>
+
+</&>

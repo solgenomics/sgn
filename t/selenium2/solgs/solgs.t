@@ -92,6 +92,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
     sleep(3);
+    sleep(3);
    # #  #trial type training population: single trait modeling
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
@@ -119,7 +120,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
-    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs');
+    $d->find_element_ok('download_gebvs_histo_plot', 'id',  'download gebvs');
     sleep(3);
 
 	my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
@@ -148,7 +149,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download model phenotype data');
     sleep(3);
-   
+    $d->find_element_ok('Analysis log', 'partial_link_text',  'download analysis log');
+    sleep(3);
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
@@ -180,6 +182,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('Genotype data', 'partial_link_text',  'download selection pop genotype data');
     sleep(3);
+    $d->find_element_ok('Analysis log', 'partial_link_text',  'download analysis log');
+    sleep(3);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(120);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
@@ -196,7 +200,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(15);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
@@ -216,7 +220,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name. '"]',  'xpath', 'select list sl pop')->click();
     sleep(15);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(15);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
     sleep(10);
@@ -245,7 +249,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(12);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'dataset')->click();
     sleep(10);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]/tbody/tr/td/a[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(2);
@@ -265,7 +269,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
      sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]/tbody/tr/td/a[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
     sleep(10);
@@ -341,7 +345,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
@@ -357,7 +361,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name. '"]',  'xpath', 'list sl page')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
@@ -367,7 +371,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
      sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
@@ -387,7 +391,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'dataset')->click();
      sleep(10);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'dataset sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'dataset sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'dataset dmcp-frw pred')->click();
     sleep(10);

@@ -59,6 +59,8 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 % if ($url =~ /cluster\/analysis/) {
 
+  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster"] &>
+
 <& /page/page_title.mas,
    title => "Cluster Analysis"
   &>
@@ -75,7 +77,7 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 % if ($url =~ /cluster\/analysis|breeders\/trial\//) {
 
-  <& /solgs/genotyping_protocol.mas &>
+  <& /solgs/genotyping_protocol/index.mas &>
 
 %}
 
@@ -93,7 +95,8 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 %} elsif ($url =~ /cluster\/analysis/) {
 
-   <& select_menu.mas &>
+  <& /solgs/tools/select_menu.mas,
+  analysis_type => 'cluster' &>
 
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />

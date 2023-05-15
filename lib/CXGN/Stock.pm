@@ -502,7 +502,7 @@ sub BUILD {
 	}
     }
 
-    
+
     if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
 #	my $organism = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() });
@@ -536,7 +536,7 @@ sub BUILD {
 	$self->subjects(\@subjects);
     }
 
-    
+
     return $self;
 }
 
@@ -1101,7 +1101,7 @@ sub get_ancestor_hash {
   my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
   my $cvterm_rootstock_of = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'rootstock_of', 'stock_relationship');
   my $cvterm_scion_of = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'scion_of', 'stock_relationship');
-  
+
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
   my $stock_relationships = $stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
   my $female_parent_relationship = $stock_relationships->find({type_id => { in => [ $cvterm_female_parent->cvterm_id(), $cvterm_scion_of->cvterm_id() ]},  subject_id => {'not_in' => $direct_descendant_ids}});
@@ -1628,8 +1628,7 @@ sub merge {
 	print STDERR "Skipping this comparison - not enough data! \n";
     }
     else {
-	print STDERR join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
-	return;
+	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
     }
 
     # move stockprops

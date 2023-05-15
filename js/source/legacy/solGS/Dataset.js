@@ -180,8 +180,8 @@ solGS.dataset = {
 		var args = {
 			'dataset_name': datasetName,
 			'dataset_id': datasetId,
-			'analysis_type': 'training dataset',
-			'data_set_type': 'single population',
+			'analysis_type': 'training_dataset',
+			'data_set_type': 'single_population',
 			'training_pop_id': popId,
 			'population_type': popType,
 			'genotyping_protocol_id': protocolId
@@ -254,8 +254,8 @@ solGS.dataset = {
 						solGS.dataset.displayPredictedDatasetTypeSelectionPops(args, response.output);
 
 						if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-							solGS.sIndex.listSelectionIndexPopulations();
-							solGS.correlation.listGenCorPopulations();
+							solGS.sIndex.populateSindexMenu();
+							solGS.correlation.populateGenCorrMenu();
 							solGS.geneticGain.ggSelectionPopulations();
 							solGS.cluster.listClusterPopulations();
 						}
@@ -318,7 +318,7 @@ solGS.dataset = {
 				output +
 				'</td></tr></tbody></table>';
 
-			jQuery("#list_type_selection_populations").append(predictedListTypeSelectionTable).show();
+			jQuery("#list_type_selection_pops_selected").append(predictedListTypeSelectionTable).show();
 
 		} else {
 			var datasetIdArg = '\'' + datasetId + '\'';

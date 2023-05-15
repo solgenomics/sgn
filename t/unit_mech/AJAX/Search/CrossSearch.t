@@ -9,6 +9,11 @@ use Test::WWW::Mechanize;
 use CXGN::List;
 use Data::Dumper;
 use JSON;
+use CXGN::Trial::Download;
+use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
+use Spreadsheet::Read;
+
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -88,6 +93,29 @@ my @accessions_with_pedigree = @$results;
 my $number_of_accessions = scalar(@accessions_with_pedigree);
 is($number_of_accessions, 17);
 
+#test accessions with pedigree download
+my $tempfile = "/tmp/test_download_accessions_with_pedigree.xlsx";
+my $format = 'AccessionsWithPedigreeXLSX';
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema                => $f->bcs_schema,
+    filename                  => $tempfile,
+    format                    => $format,
+});
+
+$create_spreadsheet->download();
+my $contents = ReadData $tempfile;
+
+my $column_1 = $contents->[1]->{'cell'}->[1];
+my @column_1_rows = @$column_1;
+my $header_1 = $column_1_rows[1];
+is(scalar @column_1_rows,19);
+is($header_1, "Accession Name");
+
+my $column_2 = $contents->[1]->{'cell'}->[2];
+my @column_2_rows = @$column_2;
+my $header_2 = $column_2_rows[1];
+is(scalar @column_2_rows,19);
+is($header_2, "Female Parent");
 
 #create a list of accessions
 $mech->get_ok('http://localhost:3010/list/new?name=accession_list&desc=test');

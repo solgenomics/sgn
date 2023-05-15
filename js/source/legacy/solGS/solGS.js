@@ -47,16 +47,16 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-     var trainingTraitsIds = solGS.getTrainingTraitsIds();
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
-     if (trainingTraitsIds) {
+    if (trainingTraitsIds) {
       if (!args) {
         args = { training_traits_ids: trainingTraitsIds };
       } else {
         args["training_traits_ids"] = trainingTraitsIds;
       }
     }
-    
+
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
 
@@ -382,11 +382,8 @@ solGS.submitJob = {
     var analysisName = jQuery("#analysis_name").val();
 
     if (!analysisName) {
-      jQuery("#form-feedback-analysis-name").text(
-        "Analysis name is blank. Please give a name."
-      );
+      jQuery("#form-feedback-analysis-name").text("Analysis name is blank. Please give a name.");
     } else {
-
       var checkName = solGS.submitJob.checkAnalysisName(analysisName);
 
       checkName.done(function (res) {
@@ -406,7 +403,7 @@ solGS.submitJob = {
           }
         }
       });
-  }
+    }
 
     checkName.fail(function (res) {
       var message =
@@ -462,8 +459,8 @@ solGS.submitJob = {
 
       args["trait_id"] = [urlStr[3]];
       args["training_pop_id"] = [urlStr[5]];
-      args["analysis_type"] = "single model";
-      args["data_set_type"] = "single population";
+      args["analysis_type"] = "training_model";
+      args["data_set_type"] = "single_population";
     } else if (url.match(/solgs\/model\/combined\/trials\//)) {
       var urlStr = url.split(/\/+/);
 
@@ -487,15 +484,15 @@ solGS.submitJob = {
       args["trait_id"] = traitId;
       args["training_pop_id"] = populationId;
       args["combo_pops_id"] = comboPopsId;
-      args["analysis_type"] = "single model";
-      args["data_set_type"] = "combined populations";
+      args["analysis_type"] = "training_model";
+      args["data_set_type"] = "combined_populations";
       args["genotyping_protocol_id"] = protocolId;
     } else if (url.match(/solgs\/population\//)) {
       var urlStr = url.split(/\/+/);
 
       args["training_pop_id"] = [urlStr[3]];
-      args["analysis_type"] = "training dataset";
-      args["data_set_type"] = "single population";
+      args["analysis_type"] = "training_dataset";
+      args["data_set_type"] = "single_population";
       args["genotyping_protocol_id"] = urlStr[5];
     } else if (url.match(/solgs\/selection\//)) {
       var traitId = jQuery("#trait_id").val();
@@ -505,25 +502,25 @@ solGS.submitJob = {
       var dataSetType;
 
       if (referer.match(/solgs\/model\/combined\/trials\/|solgs\/models\/combined\//)) {
-        dataSetType = "combined populations";
+        dataSetType = "combined_populations";
       } else if (referer.match(/solgs\/trait\/|solgs\/traits\/all\/population\//)) {
-        dataSetType = "single population";
+        dataSetType = "single_population";
       }
 
       args["trait_id"] = [traitId];
       args["training_pop_id"] = [urlStr[5]];
       args["selection_pop_id"] = [urlStr[3]];
-      args["analysis_type"] = "selection prediction";
+      args["analysis_type"] = "selection_prediction";
       args["data_set_type"] = dataSetType;
     } else if (url.match(/solgs\/combined\/model\//)) {
       var urlStr = url.split(/\/+/);
       //var protocolId = urlStr[10];
-      var dataSetType = "combined populations";
+      var dataSetType = "combined_populations";
 
       args["training_pop_id"] = [urlStr[4]];
       args["selection_pop_id"] = [urlStr[6]];
       args["trait_id"] = [urlStr[8]];
-      args["analysis_type"] = "selection prediction";
+      args["analysis_type"] = "selection_prediction";
       args["data_set_type"] = dataSetType;
     }
 
@@ -689,15 +686,15 @@ jQuery(document).ready(function () {
       var referer = window.location.href;
 
       if (referer.match(/solgs\/populations\/combined\//)) {
-        dataSetType = "combined populations";
+        dataSetType = "combined_populations";
       }
 
       if (referer.match(/solgs\/population\//)) {
-        dataSetType = "single population";
+        dataSetType = "single_population";
       }
 
       if (traitIds.length == 1) {
-        analysisType = "single model";
+        analysisType = "training_model";
 
         if (referer.match(/solgs\/populations\/combined\//)) {
           page =
@@ -706,7 +703,7 @@ jQuery(document).ready(function () {
           page = "/solgs/trait/" + traitIds[0] + "/population/" + popId + "/gp/" + protocolId;
         }
       } else {
-        analysisType = "multiple models";
+        analysisType = "multiple_models";
 
         if (referer.match(/solgs\/populations\/combined\//)) {
           page = "/solgs/models/combined/trials/" + popId;
@@ -802,16 +799,19 @@ solGS.getModelArgs = function () {
     args["training_traits_ids"] = trainingTraitsIds;
   }
 
+  if (trainingTraitsIds.length == 1) {
+    args["trait_id"] = trainingTraitsIds[0];
+  }
   return args;
 };
 
 solGS.getSelectionPopArgs = function () {
   var args = this.getModelArgs();
-  var selPopGenoProtocolId = jQuery('#selection_pop_genotyping_protocol_id').val();
-  var selPopId =  jQuery('#selection_pop_id').val();
+  var selPopGenoProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+  var selPopId = jQuery("#selection_pop_id").val();
 
-  if (!selPopGenoProtocolId ) {
-    selPopGenoProtocolId = jQuery('#genotyping_protocol_id').val();
+  if (!selPopGenoProtocolId) {
+    selPopGenoProtocolId = jQuery("#genotyping_protocol_id").val();
   }
   if (selPopGenoProtocolId) {
     args["selection_pop_genotyping_protocol_id"] = selPopGenoProtocolId;
@@ -824,7 +824,10 @@ solGS.getSelectionPopArgs = function () {
 solGS.getTrainingPopArgs = function () {
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
+    training_pop_name: jQuery("#training_pop_name").val(),
     genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
+    data_set_type: jQuery("#data_set_type").val(),
+    analysis_type: jQuery("#analysis_type").val(),
   };
 
   return args;
@@ -852,13 +855,13 @@ solGS.getPopulationDetails = function () {
   var dataSetType;
 
   if (comboPopsId) {
-    dataSetType = "combined populations";
+    dataSetType = "combined_populations";
     trainingPopId = comboPopsId;
   } else {
-    dataSetType = "single population";
+    dataSetType = "single_population";
   }
 
-  var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+  var protocolId = jQuery("#genotyping_protocol_id").val();
   return {
     training_pop_id: trainingPopId,
     population_name: trainingPopName,
@@ -874,11 +877,7 @@ solGS.getPopulationDetails = function () {
 solGS.showMessage = function (divId, msg) {
   divId = divId.match(/#/) ? divId : "#" + divId;
 
-  jQuery(divId)
-    .html(msg)
-    .show()
-    .delay(4000)
-    .fadeOut('slow');
+  jQuery(divId).html(msg).show().delay(4000).fadeOut("slow");
 };
 
 solGS.checkPageType = function () {

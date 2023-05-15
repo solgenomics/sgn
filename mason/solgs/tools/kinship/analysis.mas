@@ -55,6 +55,7 @@ $collapsed = 1;
 
 </%perl>
 
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.kinship"] &>
 
 % if ($url =~ /kinship\/analysis/) {
 
@@ -76,14 +77,15 @@ $collapsed = 1;
 
 % if ($url =~ /kinship\/analysis|breeders\/trial\//) {
 
-  <& /solgs/genotyping_protocol.mas &>
+  <& /solgs/genotyping_protocol/index.mas &>
 
 %}
 
 
 % if ($url =~ /kinship\/analysis/) {
 
-<& select_menu.mas &>
+  <& /solgs/tools/select_menu.mas,
+  analysis_type => 'kinship' &>
 
 %}
 

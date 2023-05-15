@@ -237,7 +237,7 @@ sub _get_cross_and_info {
         my $number_of_seeds;
         if ($cross_info) {
             my $info_hash = decode_json $cross_info;
-            $number_of_seeds = $info_hash->{'Number of Seeds'};
+            $number_of_seeds = $info_hash->{'Number of Seeds'} || $info_hash->{'Number of Seeds Extracted'};
         }
         push @cross_details, [$cross_name, $cross_id,  $number_of_seeds, $number_of_progenies]
     }
