@@ -22,11 +22,14 @@ sub validate {
 # For postcomposed terms expects full trait names e.g. tissue metabolite unit time|COMP:0000015
 
     foreach my $term (@$list) {
-        #print STDERR $term."\n";
+        print STDERR $term."\n";
 
+        #if (index($term, '|') ) {
+
+        #}
         my @parts = split (/\|/ , $term);
         my ($db_name, $accession) = split ":", pop @parts;
-        my $trait_name = join '|', @parts;
+        my $trait_name = $term;
 
         $accession =~ s/\s+$//;
         $accession =~ s/^\s+//;
@@ -35,16 +38,30 @@ sub validate {
         $trait_name =~ s/\s+$//;
         $trait_name =~ s/^\s+//;
 
+        print STDERR $db_name."\n";
+        print STDERR $trait_name."\n";
+        if ($db_name eq '' || $db_name eq $trait_name) {
+          my $context = SGN::Context->new;
+          #my $cv_name = $context->get_conf('trait_ontology_cv_name');
+          #my $cvterm_name = $context->get_conf('trait_ontology_cvterm_name');
+          $db_name = $context->get_conf('trait_ontology_db_name');
+        }
+
         my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
         if ($db_rs->count() == 0) {
-            #print STDERR "Problem found with term $term at db $db_name\n";
+            print STDERR "Problem found with term $term at db $db_name\n";
             push @missing, $term;
         } else {
             my $db = $db_rs->first();
             my $query = {
                 'dbxref.db_id' => $db->db_id(),
-                'dbxref.accession' => $accession,
             };
+
+            if ($accession eq '') {
+                $query->{'me.name'} = $trait_name;
+            } else {
+                $query->{'dbxref.accession'} = $accession;
+            }
             if ( $db_name eq 'COMP' && $validator->{composable_validation_check_name} ) {
                 $query->{'me.name'} = $trait_name;
             }
@@ -52,13 +69,13 @@ sub validate {
 
             my $is_missing = 0;
             if ($rs->count == 0) {
-                #print STDERR "Problem found with term $term at cvterm rs from accession $accession point 2\n";
+                print STDERR "Problem found with term $term at cvterm rs from accession $accession point 2\n";
                 push @missing, $term;
                 $is_missing = 1;
             } else {
                 my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
                 if ($rs_var->count == 0) {
-                    #print STDERR "Problem found with term $term at variable check point 3\n";
+                    print STDERR "Problem found with term $term at variable check point 3\n";
                     push @missing, $term;
                     $is_missing = 1;
                 }
@@ -89,7 +106,7 @@ sub validate {
         }
 
     }
-    # print STDERR Dumper \@missing;
+    print STDERR Dumper \@missing;
     print STDERR Dumper \@wrong_ids;
     return {
         missing => \@missing,
