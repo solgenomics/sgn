@@ -11,6 +11,12 @@
 var solGS = solGS || function solGS() {};
 
 solGS.geneticGain = {
+  canvas: "#gg_canvas",
+  ggPlotDivPrefix: "#gg_plot",
+  ggMsgDiv: "#gg_message",
+  ggPopsDiv: "#gg_select_a_pop_div",
+  ggPopsSelectMenuId: "#gg_select_pops",
+
   gebvsComparison: function () {
     var gebvParams = this.getGeneticGainArgs();
 
@@ -30,8 +36,9 @@ solGS.geneticGain = {
       missing += ", trait id";
     }
 
+    var ggMsgDiv = this.ggMsgDiv;
     if (missing) {
-      jQuery("#gg_message")
+      jQuery(ggMsgDiv)
         .html("Can not compare GEBVs. I am missing " + missing + ".")
         .show();
     } else {
@@ -41,13 +48,14 @@ solGS.geneticGain = {
   },
 
   getGeneticGainArgs: function () {
-    var trainingPopId = jQuery("#gg_canvas #training_pop_id").val();
-    var trainingPopName = jQuery("#gg_canvas #training_pop_name").val();
-    var selectionPopId = jQuery("#gg_canvas #selection_pop_id").val();
-    var trainingTraitsIds = jQuery("#gg_canvas").find("#training_traits_ids").val();
-    var traitId = jQuery("#trait_id").val();
+    var canvas = this.canvas;
 
-    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+    var trainingPopId = jQuery(`${canvas} #training_pop_id`).val();
+    var trainingPopName = jQuery(`${canvas} #training_pop_name`).val();
+    var selectionPopId = jQuery("#gg_selected_pop_id").val();
+    var trainingTraitsIds = jQuery(canvas).find("#training_traits_ids").val();
+    var traitId = jQuery("#trait_id").val();
+    var protocolId = jQuery("#genotyping_protocol_id").val();
 
     if (document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
       if (trainingTraitsIds) {
@@ -61,30 +69,32 @@ solGS.geneticGain = {
       selection_pop_id: selectionPopId,
       training_traits_ids: trainingTraitsIds,
       trait_id: traitId,
-      genotyping_protocol_id: protocols.genotyping_protocol_id,
-      selection_pop_genotyping_protocol_id: protocols.selection_pop_genotyping_protocol_id,
+      genotyping_protocol_id: protocolId,
     };
 
     return ggArgs;
   },
 
   plotGeneticGainBoxplot: function (ggArgs) {
-    jQuery("#gg_canvas .multi-spinner-container").show();
-    jQuery("#check_genetic_gain").hide();
-    jQuery("#gg_message").html("Please wait... plotting genetic gain").show();
+    var canvas = this.canvas;
+    var ggMsgDiv = this.ggMsgDiv;
 
-    // ggArgs = JSON.stringify(ggArgs);
+    ggArgs = JSON.stringify(ggArgs);
+    jQuery(` ${canvas} .multi-spinner-container`).show();
+    jQuery("#check_genetic_gain").hide();
+    jQuery(ggMsgDiv).html("Please wait... plotting genetic gain").show();
+
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: ggArgs,
+      data: { arguments: ggArgs },
       url: "/solgs/genetic/gain/boxplot",
       success: function (res) {
         if (res.Error) {
-          jQuery("#gg_canvas .multi-spinner-container").hide();
-          jQuery("#gg_message").empty();
+          jQuery(`${canvas} .multi-spinner-container`).hide();
+          jQuery(ggMsgDiv).empty();
 
-          solGS.showMessage("gg_message", response.Error);
+          solGS.showMessage(ggMsgDiv, response.Error);
 
           if (
             document.URL.match(
@@ -116,7 +126,7 @@ solGS.geneticGain = {
               )
               .show();
 
-            jQuery("#gg_canvas .multi-spinner-container").hide();
+            jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery("#gg_message").empty();
 
             if (
@@ -127,21 +137,22 @@ solGS.geneticGain = {
               jQuery("#check_genetic_gain").show();
             }
           } else {
-            jQuery("#gg_canvas .multi-spinner-container").hide();
+            jQuery(`${canvas} .multi-spinner-container`).hide();
             showMessage("There is no genetic gain plot for this dataset.");
             jQuery("#check_genetic_gain").show();
           }
         }
       },
       error: function (res) {
-        jQuery("#gg_canvas .multi-spinner-container").hide();
-        solGS.showMessage("gg_message", "Error occured plotting the genetic gain.");
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        solGS.showMessage(ggMsgDiv, "Error occured plotting the genetic gain.");
         jQuery("#check_genetic_gain").show();
       },
     });
   },
 
   getTrainingPopulationGEBVs: function (gebvParams) {
+    var ggMsgDiv = this.ggMsgDiv;
     jQuery.ajax({
       type: "POST",
       dataType: "json",
@@ -149,18 +160,18 @@ solGS.geneticGain = {
       url: "/solgs/get/gebvs/training/population",
       success: function (res) {
         if (res.gebv_exists) {
-          jQuery("#gg_message").empty();
+          jQuery(ggMsgDiv).empty();
           trainingGEBVs = res.gebv_arrayref;
 
           if (trainingGEBVs) {
             solGS.geneticGain.getSelectionPopulationGEBVs(gebvParams);
           }
         } else {
-          jQuery("#gg_message").html("There is no GEBV data for the training population.").show();
+          jQuery(ggMsgDiv).html("There is no GEBV data for the training population.").show();
         }
       },
       error: function () {
-        jQuery("#gg_message")
+        jQuery(ggMsgDiv)
           .html("Error occured checking for GEBV data for the training population.")
           .show();
       },
@@ -168,6 +179,8 @@ solGS.geneticGain = {
   },
 
   getSelectionPopulationGEBVs: function (gebvParams) {
+    var ggMsgDiv = this.ggMsgDiv;
+
     jQuery.ajax({
       type: "POST",
       dataType: "json",
@@ -175,24 +188,24 @@ solGS.geneticGain = {
       url: "/solgs/get/gebvs/selection/population",
       success: function (res) {
         if (res.gebv_exists) {
-          jQuery("#gg_message").empty();
+          jQuery(ggMsgDiv).empty();
 
           selectionGEBVs = res.gebv_arrayref;
 
           if (selectionGEBVs && trainingGEBVs) {
-            jQuery("#gg_message").html("Please wait... plotting gebvs").show();
+            jQuery(ggMsgDiv).html("Please wait... plotting gebvs").show();
 
             solGS.geneticGain.plotGEBVs(trainingGEBVs, selectionGEBVs);
 
-            jQuery("#gg_message").empty();
+            jQuery(ggMsgDiv).empty();
             jQuery("#check_genetic_gain").hide();
           }
         } else {
-          jQuery("#gg_message").html("There is no GEBV data for the selection population.").show();
+          jQuery(ggMsgDiv).html("There is no GEBV data for the selection population.").show();
         }
       },
       error: function () {
-        jQuery("#gg_message")
+        jQuery(ggMsgDiv)
           .html("Error occured checking for GEBV data for the selection population.")
           .show();
       },
@@ -202,81 +215,53 @@ solGS.geneticGain = {
   ggSelectionPopulations: function () {
     var ggArgs = this.getGeneticGainArgs();
 
-    var popsList =
-      '<dl id="gg_selected_population" class="gg_dropdown">' +
-      '<dt><a href="#"><span>Select a population</span></a></dt>' +
-      "<dd><ul>" +
-      "</ul></dd>" +
-      "</dl>";
-
-    jQuery("#gg_select_a_population_div").empty().append(popsList).show();
-
-    var dbSelPopsList;
+    var ggPops = [];
     if (ggArgs.training_pop_id.match(/list/) == null) {
-      dbSelPopsList = solGS.sIndex.addSelectionPopulations();
-    }
-
-    if (dbSelPopsList) {
-      jQuery("#gg_select_a_population_div ul").append(dbSelPopsList);
-    }
-
-    var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
-    if (listTypeSelPops) {
-      var selPopsList = solGS.sIndex.getListTypeSelPopulations();
-      if (selPopsList) {
-        jQuery("#gg_select_a_population_div ul").append(selPopsList);
+      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+      if (trialSelPopsList) {
+        ggPops.push(trialSelPopsList);
       }
     }
 
-    jQuery(".gg_dropdown dt a").click(function () {
-      jQuery(".gg_dropdown dd ul").toggle();
-    });
+    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
+    if (listTypeSelPopsTable) {
+      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      if (listTypeSelPops) {
+        ggPops.push(listTypeSelPops);
+      }
+    }
 
-    jQuery(".gg_dropdown dd ul li a").click(function () {
-      var text = jQuery(this).html();
+    var menuId = this.ggPopsSelectMenuId;
+    var menu = new OptionsMenu(menuId);
+    ggPops = ggPops.flat();
 
-      jQuery(".gg_dropdown dt a span").html(text);
-      jQuery(".gg_dropdown dd ul").hide();
+    var menuElem = menu.addOptions(ggPops);
+    var ggPopsDiv = this.ggPopsDiv;
 
-      var idPopName = jQuery("#gg_selected_population").find("dt a span.value").html();
-      idPopName = JSON.parse(idPopName);
-
-      var selectedPopId = idPopName.id;
-      var selectedPopName = idPopName.name;
-      var selectedPopType = idPopName.pop_type;
-
-      jQuery("#gg_selected_population_name").val(selectedPopName);
-      jQuery("#gg_selected_population_id").val(selectedPopId);
-      jQuery("#gg_canvas #selection_pop_id").val(selectedPopId);
-      jQuery("#gg_selected_population_type").val(selectedPopType);
-    });
-
-    jQuery(".gg_dropdown").bind("click", function (e) {
-      var clicked = jQuery(e.target);
-
-      if (!clicked.parents().hasClass("gg_dropdown")) jQuery(".gg_dropdown dd ul").hide();
-
-      e.preventDefault();
-    });
+    jQuery(ggPopsDiv).empty().append(menuElem).show();
   },
 
   getSelPopPredictedTraits: function (ggArgs) {
+    var ggMsgDiv = this.ggMsgDiv;
+    var canvas = this.canvas;
+
+    var args = JSON.stringify(ggArgs);
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: ggArgs,
+      data: { arguments: args },
       url: "/solgs/selection/population/predicted/traits",
       success: function (res) {
         if (res.selection_traits) {
           var ggArgs = solGS.geneticGain.getGeneticGainArgs();
-          jQuery("#gg_canvas #selection_traits_ids").val(ggArgs.training_traits_ids);
+          jQuery(`${canvas} #selection_traits_ids`).val(res.selection_traits);
           solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
         } else {
-          jQuery("#gg_message").html("This selection population has no predicted traits.").show();
+          jQuery(ggMsgDiv).html("This selection population has no predicted traits.").show();
         }
       },
       error: function () {
-        jQuery("#gg_message")
+        jQuery(ggMsgDiv)
           .html(
             "Error occured checking for predicted traits for the selection population " +
               selectionPopId
@@ -440,9 +425,9 @@ jQuery(document).ready(function () {
     if (page.match(/solgs\/selection\//)) {
       solGS.geneticGain.gebvsComparison();
     } else {
-      var selectedPopId = jQuery("#gg_selected_population_id").val();
-      var selectedPopType = jQuery("#gg_selected_population_type").val();
-      var selectedPopName = jQuery("#gg_selected_population_name").val();
+      var selectedPopId = jQuery("#gg_selected_pop_id").val();
+      var selectedPopType = jQuery("#gg_selected_pop_type").val();
+      var selectedPopName = jQuery("#gg_selected_pop_name").val();
 
       jQuery("#gg_message")
         .css({ "padding-left": "0px" })
@@ -462,4 +447,15 @@ jQuery(document).ready(function () {
       solGS.geneticGain.ggSelectionPopulations();
     }, 5000);
   }
+});
+
+jQuery(document).ready(function () {
+  var ggPopsDiv = solGS.geneticGain.ggPopsDiv;
+  jQuery(ggPopsDiv).change(function () {
+    var selectedPop = jQuery("option:selected", this).data("pop");
+
+    jQuery("#gg_selected_pop_name").val(selectedPop.name);
+    jQuery("#gg_selected_pop_id").val(selectedPop.id);
+    jQuery("#gg_selected_pop_type").val(selectedPop.pop_type);
+  });
 });

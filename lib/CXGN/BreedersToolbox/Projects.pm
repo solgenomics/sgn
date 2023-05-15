@@ -710,7 +710,7 @@ sub get_related_treatments {
     my $trial_ids = shift;
     my $relevant_obsunits = shift;
 
-    if (ref($trial_ids) && @$trial_ids == 0) {
+    if ( (ref($trial_ids) eq "ARRAY") && (scalar(@$trial_ids) == 0)) {
 	return {
 	    treatment_names => [],
 	    treatment_details => {},

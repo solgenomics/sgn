@@ -34,31 +34,15 @@ sub cluster_analysis : Path('/cluster/analysis/') Args() {
 
 }
 
-sub check_cluster_output_files {
-    my ( $self, $c ) = @_;
-
-    $c->controller('solGS::Files')->create_file_id($c);
-    my $file_id      = $c->stash->{file_id};
-    my $cluster_type = $c->stash->{cluster_type};
-    my $cluster_result_file;
-    my $cluster_plot_file;
-
-    $self->cluster_plot_file($c);
-    $cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
-
-    if ( -s $cluster_plot_file ) {
-        $c->stash->{"${cluster_type}_plot_exists"} = 1;
-    }
-
-}
-
 sub run_cluster_analysis : Path('/run/cluster/analysis/') Args() {
     my ( $self, $c ) = @_;
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    $self->stash_cluster_pop_name($c);
+    if ( $c->stash->{data_structure} =~ /dataset|list/ ) {
+        $self->stash_cluster_pop_name($c);
+    }
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{file_id} = $file_id;
@@ -82,33 +66,22 @@ sub run_cluster_analysis : Path('/run/cluster/analysis/') Args() {
 
 }
 
-sub cluster_genotypes_list : Path('/cluster/genotypes/list') Args(0) {
+sub check_cluster_output_files {
     my ( $self, $c ) = @_;
 
-    my $list_id   = $c->req->param('list_id');
-    my $list_name = $c->req->param('list_name');
-    my $list_type = $c->req->param('list_type');
-    my $pop_id    = $c->req->param('population_id');
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    $c->stash->{file_id} = $file_id;
+    my $cluster_type = $c->stash->{cluster_type};
+    my $cluster_result_file;
+    my $cluster_plot_file;
 
-    $c->stash->{list_name} = $list_name;
-    $c->stash->{list_id}   = $list_id;
-    $c->stash->{pop_id}    = $pop_id;
-    $c->stash->{list_type} = $list_type;
+    $self->cluster_plot_file($c);
+    $cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
 
-    $c->stash->{data_structure} = 'list';
-    $self->create_cluster_genotype_data($c);
-
-    my $geno_file = $c->stash->{genotype_file};
-
-    my $ret->{status} = 'failed';
-    if ( -s $geno_file ) {
-        $ret->{status} = 'success';
+    if ( -s $cluster_plot_file ) {
+        $c->stash->{"${cluster_type}_plot_exists"} = 1;
     }
 
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 }
 
 sub stash_cluster_pop_name {
@@ -117,16 +90,17 @@ sub stash_cluster_pop_name {
     my $list_id    = $c->stash->{list_id};
     my $dataset_id = $c->stash->{dataset_id};
     my $pop_id     = $c->stash->{cluster_pop_id};
+    my $data_str   = $c->stash->{data_structure};
 
-    if ( $pop_id =~ /list_id/ || $list_id ) {
-        $list_id = $pop_id if !$list_id;
-        $c->controller('solGS::List')->stash_list_metadata( $c, $list_id );
+    if ( $data_str =~ /list/ ) {
+        $c->controller('solGS::List')
+          ->stash_list_metadata( $c, $c->stash->{list_id} );
         $c->stash->{cluster_pop_name} = $c->stash->{list_name};
     }
-    elsif ( $pop_id =~ /dataset_id/ || $dataset_id ) {
-        $dataset_id = $pop_id if !$dataset_id;
+    elsif ( $data_str =~ /dataset/ ) {
         my $pop_name =
-          $c->controller('solGS::Dataset')->get_dataset_name( $c, $dataset_id );
+          $c->controller('solGS::Dataset')
+          ->get_dataset_name( $c, $c->stash->{dataset_id} );
         $c->stash->{cluster_pop_name} = $pop_name;
     }
 
@@ -194,162 +168,15 @@ sub prepare_response {
 
 }
 
-sub create_cluster_genotype_data {
-    my ( $self, $c ) = @_;
-
-    my $data_structure = $c->stash->{data_structure};
-    my $referer        = $c->req->referer;
-    my $combo_pops_id  = $c->stash->{combo_pops_id};
-
-    my $cluster_pop_id = $c->stash->{cluster_pop_id};
-
-    if ( $data_structure =~ /list/ ) {
-        $self->cluster_list_genotype_data($c);
-    }
-    elsif ( $data_structure =~ /dataset/ ) {
-        $c->controller('solGS::Dataset')
-          ->get_dataset_genotypes_genotype_data($c);
-    }
-    elsif ( $referer =~
-/solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/
-      )
-    {
-        $c->controller('solGS::solGS')->genotype_file( $c, $cluster_pop_id );
-    }
-    elsif ($combo_pops_id) {
-        $c->controller('solGS::combinedTrials')
-          ->get_combined_pops_list( $c, $combo_pops_id );
-        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-        $c->controller('solGS::List')->get_trials_list_geno_data($c);
-    }
-
-}
-
-sub create_cluster_phenotype_data {
-    my ( $self, $c ) = @_;
-
-    my $data_structure = $c->stash->{data_structure};
-    my $referer        = $c->req->referer;
-    my $combo_pops_id  = $c->stash->{combo_pops_id};
-
-    if ( $data_structure =~ /list/ ) {
-        $self->cluster_list_phenotype_data($c);
-    }
-    elsif ( $data_structure =~ /dataset/ ) {
-        $c->controller('solGS::Dataset')->get_dataset_phenotype_data($c);
-    }
-    elsif ( $referer =~
-/solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/
-      )
-    {
-        $c->controller('solGS::solGS')->phenotype_file($c);
-    }
-    elsif ($combo_pops_id) {
-        $c->controller('solGS::combinedTrials')
-          ->get_combined_pops_list( $c, $combo_pops_id );
-        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-        $c->controller('solGS::List')->get_trials_list_pheno_data($c);
-    }
-
-}
-
-sub cluster_list_genotype_data {
-    my ( $self, $c ) = @_;
-
-    my $list_id        = $c->stash->{list_id};
-    my $list_type      = $c->stash->{list_type};
-    my $pop_id         = $c->stash->{pop_id};
-    my $data_structure = $c->stash->{data_structure};
-    my $data_set_type  = $c->stash->{data_set_type};
-    my $referer        = $c->req->referer;
-    my $geno_file;
-
-    if ( $referer =~ /solgs\/trait\/\d+\/population\// ) {
-        my $protocol_id = $c->stash->{genotyping_protocol_id};
-        $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-        $c->stash->{genotype_file} = $c->stash->{genotype_file_name};
-    }
-    elsif ( $referer =~ /solgs\/selection\// ) {
-        $c->stash->{pops_ids_list} =
-          [ $c->stash->{training_pop_id}, $c->stash->{selection_pop_id} ];
-        $c->controller('solGS::List')->get_trials_list_pheno_data($c);
-        $c->controller('solGS::combinedTrials')
-          ->process_trials_list_details($c);
-    }
-    elsif ($referer =~ /cluster\/analysis\//
-        && $data_set_type =~ 'combined_populations' )
-    {
-        $c->controller('solGS::combinedTrials')
-          ->get_combined_pops_list( $c, $c->stash->{combo_pops_id} );
-        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-        $c->controller('solGS::List')->get_trials_list_geno_data($c);
-        $c->controller('solGS::combinedTrials')
-          ->process_trials_list_details($c);
-    }
-    else {
-        if ( $list_type eq 'accessions' ) {
-            $c->controller('solGS::List')
-              ->genotypes_list_genotype_file( $c, $list_id );
-        }
-        elsif ( $list_type eq 'trials' ) {
-            $c->controller('solGS::List')->get_list_trials_ids($c);
-            $c->stash->{pops_ids_list} = $c->stash->{trials_ids};
-
-            $c->controller('solGS::List')->get_trials_list_geno_data($c);
-            $c->controller('solGS::combinedTrials')
-              ->process_trials_list_details($c);
-        }
-    }
-
-}
-
-sub cluster_list_phenotype_data {
-    my ( $self, $c ) = @_;
-
-    my $list_id        = $c->stash->{list_id};
-    my $pop_id         = $c->stash->{pop_id};
-    my $data_structure = $c->stash->{data_structure};
-    my $data_set_type  = $c->stash->{data_set_type};
-    my $referer        = $c->req->referer;
-    my $geno_file;
-
-    if ( $referer =~ /solgs\/trait\/\d+\/population\// ) {
-        $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id );
-        $c->stash->{phenotype_file} = $c->stash->{phenotype_file_name};
-    }
-    elsif ($referer =~ /cluster\/analysis\//
-        && $data_set_type =~ 'combined_populations' )
-    {
-        $c->controller('solGS::combinedTrials')
-          ->get_combined_pops_list( $c, $c->stash->{combo_pops_id} );
-        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-        $c->controller('solGS::List')->get_trials_list_pheno_data($c);
-    }
-    else {
-        $c->controller('solGS::List')->list_phenotype_data($c);
-    }
-
-}
-
 sub combined_cluster_trials_data_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
 
     my $cluster_type = $c->stash->{cluster_type};
+    my $tmp_dir      = $c->stash->{cluster_temp_dir};
 
-    my $file_name;
-    my $tmp_dir = $c->stash->{cluster_temp_dir};
-
-    # if ($cluster_type =~ /k-means/i)
-    # {
-    $file_name = "combined_${cluster_type}_data_file_${file_id}";
-
-    # }
-    # else
-    # {
-    # $file_name = "combined_hierarchical_data_file_${file_id}";
-    # }
+    my $file_name = "combined_${cluster_type}_data_file_${file_id}";
 
     my $tempfile =
       $c->controller('solGS::Files')->create_tempfile( $tmp_dir, $file_name );
@@ -371,7 +198,7 @@ sub cluster_result_file {
         my $cache_json = {
             key       => "${cluster_type}_result_json_${file_id}",
             file      => "${cluster_type}_result_json_${file_id}",
-            ext => 'json',
+            ext       => 'json',
             stash_key => "${cluster_type}_result_json_file"
         };
 
@@ -380,7 +207,7 @@ sub cluster_result_file {
         my $cache_newick = {
             key       => "${cluster_type}_result_newick_${file_id}",
             file      => "${cluster_type}_result_newick_${file_id}",
-            ext => 'tree',
+            ext       => 'tree',
             stash_key => "${cluster_type}_result_newick_file"
         };
 
@@ -401,14 +228,14 @@ sub cluster_result_file {
 sub cluster_plot_file {
     my ( $self, $c ) = @_;
 
-    my $file_id = $c->stash->{file_id};
+    my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
     my $cache_data = {
-        key       => "${cluster_type}_plot_${file_id}",
-        file      => "${cluster_type}_plot_${file_id}",
-        ext => 'png',
+        key       => "${cluster_type}_plot-${file_id}",
+        file      => "${cluster_type}_plot-${file_id}",
+        ext       => 'png',
         stash_key => "${cluster_type}_plot_file"
     };
 
@@ -425,9 +252,9 @@ sub cluster_elbow_plot_file {
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
     my $cache_data = {
-        key       => "${cluster_type}_elbow_plot_${file_id}",
-        file      => "${cluster_type}_elbow_plot_${file_id}",
-        ext => 'png',
+        key       => "${cluster_type}_elbow_plot-${file_id}",
+        file      => "${cluster_type}_elbow_plot-${file_id}",
+        ext       => 'png',
         stash_key => "${cluster_type}_elbow_plot_file"
     };
 
@@ -479,7 +306,7 @@ sub kcluster_plot_pam_file {
     my $cache_data = {
         key       => "${cluster_type}_plot_pam_${file_id}",
         file      => "${cluster_type}_plot_pam_${file_id}",
-        ext => 'png',
+        ext       => 'png',
         stash_key => "${cluster_type}_plot_pam_file"
     };
 
@@ -562,9 +389,12 @@ sub prep_cluster_download_files {
         $means_file = $c->controller('solGS::Files')
           ->copy_to_tempfiles_subdir( $c, $means_file, 'cluster' );
 
-        $c->stash->{download_elbow_plot}   = $elbow_file;
-        $c->stash->{download_kmeans_means} = $means_file;
-        $c->stash->{download_variances}    = $variances_file;
+        $c->stash->{download_elbow_plot} = $elbow_file;
+
+        if ( $c->stash->{data_type} !~ /genotype/ ) {
+            $c->stash->{download_kmeans_means} = $means_file;
+        }
+        $c->stash->{download_variances} = $variances_file;
     }
     else {
         $newick_file = $c->stash->{"${cluster_type}_result_newick_file"};
@@ -654,9 +484,7 @@ sub cluster_geno_input_files {
         $c->controller('solGS::Files')
           ->genotype_file_name( $c, $pop_id, $protocol_id );
 
-        $files =
-             $c->stash->{genotype_files_list}
-          || $c->stash->{genotype_file}
+        $files = $c->stash->{genotype_files_list}
           || $c->stash->{genotype_file_name};
     }
 
@@ -709,11 +537,10 @@ sub cluster_sindex_input_files {
 
 }
 
-
 sub cluster_data_input_files {
-    my ($self, $c) = @_;
+    my ( $self, $c ) = @_;
 
-    my $data_type    = $c->stash->{data_type};
+    my $data_type = $c->stash->{data_type};
     my $files;
 
     if ( $data_type =~ /genotype/i ) {
@@ -737,7 +564,6 @@ sub cluster_data_input_files {
     return $files;
 
 }
-
 
 sub cluster_input_files {
     my ( $self, $c ) = @_;
@@ -801,85 +627,25 @@ sub save_cluster_opts {
 
 }
 
-sub create_cluster_phenotype_data_query_jobs {
-    my ( $self, $c ) = @_;
-
-    my $data_str = $c->stash->{data_structure};
-
-    if ( $data_str =~ /list/ ) {
-        $c->controller('solGS::List')->create_list_pheno_data_query_jobs($c);
-        $c->stash->{cluster_pheno_query_jobs} =
-          $c->stash->{list_pheno_data_query_jobs};
-    }
-    elsif ( $data_str =~ /dataset/ ) {
-        $c->controller('solGS::Dataset')
-          ->create_dataset_pheno_data_query_jobs($c);
-        $c->stash->{cluster_pheno_query_jobs} =
-          $c->stash->{dataset_pheno_data_query_jobs};
-    }
-    else {
-        my $combo_pops_id = $c->stash->{combo_pops_id};
-        if ($combo_pops_id) {
-            $c->controller('solGS::combinedTrials')
-              ->get_combined_pops_list( $c, $combo_pops_id );
-            $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-        }
-
-        my $trials =
-             $c->stash->{pops_ids_list}
-          || [ $c->stash->{training_pop_id} ]
-          || [ $c->stash->{selection_pop_id} ];
-        $c->controller('solGS::AsyncJob')
-          ->get_cluster_phenotype_query_job_args( $c, $trials );
-        $c->stash->{cluster_pheno_query_jobs} =
-          $c->stash->{cluster_phenotype_query_job_args};
-    }
-
-}
-
-sub create_cluster_genotype_data_query_jobs {
-    my ( $self, $c ) = @_;
-
-    my $data_str    = $c->stash->{data_structure};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    if ( $data_str =~ /list/ ) {
-        $c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
-        $c->stash->{cluster_geno_query_jobs} =
-          $c->stash->{list_geno_data_query_jobs};
-    }
-    elsif ( $data_str =~ /dataset/ ) {
-        $c->controller('solGS::Dataset')
-          ->create_dataset_geno_data_query_jobs($c);
-        $c->stash->{cluster_geno_query_jobs} =
-          $c->stash->{dataset_geno_data_query_jobs};
-    }
-    else {
-        my $trials =
-          $c->stash->{pops_ids_list} || [ $c->stash->{cluster_pop_id} ];
-        $c->controller('solGS::AsyncJob')
-          ->get_cluster_genotype_query_job_args( $c, $trials, $protocol_id );
-        $c->stash->{cluster_geno_query_jobs} =
-          $c->stash->{cluster_genotype_query_job_args};
-    }
-
-}
-
 sub cluster_query_jobs {
     my ( $self, $c ) = @_;
 
-    my $data_type   = $c->stash->{data_type};
-    my $sindex_name = $c->stash->{sindex_name};
+    my $data_type      = $c->stash->{data_type};
+    my $sindex_name    = $c->stash->{sindex_name};
+    my $cluster_pop_id = $c->stash->{cluster_pop_id};
+    my $protocol_id    = $c->stash->{genotyping_protocol_id};
 
     my $jobs = [];
 
     if ( $data_type =~ /phenotype/i ) {
-        $self->create_cluster_phenotype_data_query_jobs($c);
-        $jobs = $c->stash->{cluster_pheno_query_jobs};
+        $jobs = $c->controller('solGS::AsyncJob')
+          ->create_phenotype_data_query_jobs( $c, $cluster_pop_id );
     }
     elsif ( $data_type =~ /genotype/i && !$sindex_name ) {
-        $self->create_cluster_genotype_data_query_jobs($c);
-        $jobs = $c->stash->{cluster_geno_query_jobs};
+        $jobs =
+          $c->controller('solGS::AsyncJob')
+          ->create_genotype_data_query_jobs( $c,
+            $cluster_pop_id, $protocol_id );
     }
 
     if ( reftype $jobs ne 'ARRAY' ) {
