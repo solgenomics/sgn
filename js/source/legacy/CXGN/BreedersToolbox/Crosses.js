@@ -209,22 +209,33 @@ jQuery(document).ready(function($) {
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
             jQuery("#submit_button_section").hide();
       }
         if (jQuery(this).val() == "xls_cross_accession"){
             jQuery("#xls_cross_accession_section").show();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
             jQuery("#submit_button_section").show();
         }
         if(jQuery(this).val() == "xls_cross_plot"){
             jQuery("#xls_cross_plot_section").show();
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
             jQuery("#submit_button_section").show();
         }
         if (jQuery(this).val() == "xls_cross_plant" ){
             jQuery("#xls_cross_plant_section").show();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_accession_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
+            jQuery("#submit_button_section").show();
+        }
+        if (jQuery(this).val() == "xls_cross_simplified" ){
+            jQuery("#xls_cross_simplified_section").show();
+            jQuery("#xls_cross_plant_section").hide();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#submit_button_section").show();
