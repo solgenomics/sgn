@@ -134,7 +134,8 @@
 	  <h4>Notes</h4>
 	  <ul>
 	    <li>Always specify the type of the cross (biparental, self, open, sib, backcross, polycross or reselected).</li>
-	    <li>If the type is open and no potential male parent is known, leave the male parent field empty
+	    <li>If the type is open and no potential male parent is known, leave the male parent field empty.</li>
+	     <li>For all other cases, list both known parents, even if they are the same, such as in the case of self.</li>
 	  </ul>
         </div>
       </div>
