@@ -6,8 +6,8 @@ import '../legacy/brapi/BrAPI.js';
 export function init(main_div){
   if (!(main_div instanceof HTMLElement)){
     main_div = document.getElementById(main_div.startsWith("#") ? main_div.slice(1) : main_div);
-  }  
-  
+  }
+
   main_div.innerHTML = `
   <div class="container-fluid">
     <div class="row">
@@ -30,20 +30,20 @@ export function init(main_div){
         </div>
       </div>
     </div>
-    
+
     <div class="row">
       <div class="col-sm-12 boxplotter-result" style="display:none;">
       </div>
     </div>
   </div>`;
-  
+
   var bp = $(main_div);
   var boxplot = BrAPIBoxPlotter(bp.find(".boxplotter-result").get(0));
-  
-  
+
+
   function loadDatasetObsUnits(ds,ou,auth_token){
     var d = {
-      'dataset':ds    
+      'dataset':ds
     };
     console.log(d);
     bp.find(".boxplotter-variable-select-div, .boxplotter-group-list, .boxplotter-result").hide();
@@ -53,7 +53,7 @@ export function init(main_div){
       type : 'GET',
       data : d,
       dataType:'json',
-      success : function(data) {    
+      success : function(data) {
         //console.log(data);
         var obsUnits = BrAPI(document.location.origin+"/brapi/v2","",auth_token).search_observationunits({
           "germplasmDbIds" : data["categories"]["accessions"],
@@ -99,10 +99,10 @@ export function init(main_div){
         .text(d=>d.value);
     });
     d3.select(main_div).select(".boxplotter-variable-select").on("change",function(){
-      boxplot.setVariable(this.value);
+      boxplot.setVariable(this.value, this.text);
     })
   }
-  
+
   function drawGroupBys(){
     boxplot.getGroupings().then(grps=>{
       console.log("grps",grps);
@@ -134,7 +134,7 @@ export function init(main_div){
       .each(function(){grouping.push(this.value)})
     boxplot.setGroupings(grouping)
   }
-  
+
   return {
     'loadDatasetObsUnits':loadDatasetObsUnits,
     'boxplot':boxplot,
