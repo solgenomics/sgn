@@ -5,11 +5,13 @@ creates and populates select menu with lists and datasets for analysis tools.
 class OptionsMenu {
   constructor(menuId, menuClass, label) {
     menuId = menuId.replace(/#/, "");
+    if(menuClass) {
     menuClass = menuClass.replace(/\./, "");
+    }
 
     this.menuId = menuId;
     this.menuClass = menuClass || "form-control";
-    this.label = label || "Select a population";
+    this.label = label || ''; // || "Select a population";
     this.menu;
   }
 
