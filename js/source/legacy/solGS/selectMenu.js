@@ -32,7 +32,7 @@ solGS.selectMenu = {
         
         var list = new CXGN.List();
         var listMenu = list.listSelect(div, listTypes);
-        var dMenu = solGS.dataset.getDatasetsMenu(dsTypes);
+        var dMenu = solGS.dataset.getDatasetPops(dsTypes);
 
         if (listMenu.match(/option/) != null) {
             var divListId = this.divListId(div);
