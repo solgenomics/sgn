@@ -917,7 +917,7 @@ solGS.cluster = {
     var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
 
     var menuId = this.clusterPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     clusterPrivatePops = clusterPrivatePops.flat();
     var menuElem = menu.addOptions(clusterPrivatePops);
 
@@ -963,7 +963,7 @@ solGS.cluster = {
     }
 
     var menuId = this.clusterPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     clusterPops = clusterPops.flat();
     var menuElem = menu.addOptions(clusterPops);
 

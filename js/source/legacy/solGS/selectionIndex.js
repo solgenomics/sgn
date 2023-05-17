@@ -36,7 +36,7 @@ solGS.sIndex = {
     }
 
     var menuId = this.siPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     sIndexPops = sIndexPops.flat();
     var menuElem = menu.addOptions(sIndexPops);
     var siPopsDiv = this.siPopsDiv;

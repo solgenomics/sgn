@@ -233,7 +233,7 @@ solGS.geneticGain = {
     }
 
     var menuId = this.ggPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     ggPops = ggPops.flat();
 
     var menuElem = menu.addOptions(ggPops);

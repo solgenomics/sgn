@@ -331,7 +331,7 @@ solGS.listTypeSelectionPopulation = {
     var selectionPrivatePops = list.convertArrayToJson(lists.private_lists);
 
     var menuId = this.selectionPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     selectionPrivatePops = selectionPrivatePops.flat();
     var menuElem = menu.addOptions(selectionPrivatePops);
 

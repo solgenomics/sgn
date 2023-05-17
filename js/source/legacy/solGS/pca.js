@@ -166,7 +166,7 @@ solGS.pca = {
     var listTypes = ["accessions", "plots", "trials"];
     var datasetTypes = ["accessions", "trials"];
     var menuId = this.pcaPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     var selectMenu = menu.getSelectMenuByTypes(listTypes, datasetTypes);
     var pcaPopsDiv = this.pcaPopsDiv;
     jQuery(pcaPopsDiv).append(selectMenu).show();

@@ -24,7 +24,7 @@ my $analysis_abbr = $analysis_type =~ /correlation/ ? 'corr' : $analysis_type;
 </%perl>
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-<& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List", "solGS.OptionsMenu"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List", "solGS.selectMenu"] &>
 
 <div id="select_menu" style="padding-top: 20px;">
   <div class="select_menu_block" id="<% $analysis_type %>_pops_label">

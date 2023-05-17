@@ -30,7 +30,7 @@ solGS.listTypeTrainingPopulation = {
     var trainingPrivatePops = list.convertArrayToJson(lists.private_lists);
 
     var menuId = this.trainingPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     trainingPrivatePops = trainingPrivatePops.flat();
     var menuElem = menu.addOptions(trainingPrivatePops);
 

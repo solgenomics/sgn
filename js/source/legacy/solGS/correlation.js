@@ -218,7 +218,7 @@ solGS.correlation = {
     }
 
     var menuId = this.corrPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     corrPops = corrPops.flat();
     var menuElem = menu.addOptions(corrPops);
     var corrPopDiv = this.corrPopsDiv;
@@ -348,7 +348,7 @@ solGS.correlation = {
     var listTypes = ["plots", "trials"];
     var datasetTypes = ["accessions", "plots", "trials"];
     var menuId = this.corrPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     var selectMenu = menu.getSelectMenuByTypes(listTypes, datasetTypes);
 
     var corrPopsDiv = this.corrPopsDiv;
