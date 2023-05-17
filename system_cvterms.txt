@@ -805,3 +805,5 @@ stock_property Promotors	Vector property 1/19/2023	mrf252	00164
 stock_property Terminators	Vector property 1/19/2023	mrf252	00164
 genotype_property	phg genotyping 00167
 genotype_property	vcf_phg_genotyping 00167
+stock_property PlantAntibioticResistantMarker	Vector property 4/17/2023	mrf252	00167	
+stock_property BacterialResistantMarker	Vector property 4/17/2023	mrf252	00167	

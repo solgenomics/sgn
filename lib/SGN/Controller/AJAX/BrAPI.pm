@@ -1634,6 +1634,61 @@ sub allelematrix_search_process {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+
+=head2 brapi/v2/plates
+
+=cut
+
+sub plates : Chained('brapi') PathPart('plates') Args(0) : ActionClass('REST') { }
+
+sub plates_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Plates');
+	my $brapi_package_result = $brapi_module->search($clean_inputs,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub plates_single  : Chained('brapi') PathPart('plates') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $plate_id = shift;
+
+	$c->stash->{plate_id} = $plate_id;
+}
+
+sub plates_detail  : Chained('plates_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub plates_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Plates');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{plate_id},$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub plates_search_save : Chained('brapi') PathPart('search/plates') Args(0) : ActionClass('REST') { }
+
+sub plates_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Plates');
+}
+
+sub plates_search_retrieve  : Chained('brapi') PathPart('search/Plates') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Plates');
+}
+
+
 =head2 brapi/v2/lists
 
 =cut
@@ -1713,6 +1768,20 @@ sub list_items_POST {
 	my $brapi_package_result = $brapi_module->store_items($c->stash->{list_id},$clean_inputs,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub list_data  : Chained('list_single') PathPart('data') Args(0) : ActionClass('REST') { }
+
+sub list_data_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->store_items($c->stash->{list_id},$clean_inputs,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 
 sub list_search_save : Chained('brapi') PathPart('search/lists') Args(0) : ActionClass('REST') { }
 
@@ -3749,7 +3818,7 @@ sub observations_PUT {
 }
 
 sub observations_GET {
-	my $self = shift;
+	my $self = shift; 
 	my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -3765,7 +3834,8 @@ sub observations_GET {
         observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
         observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
         observationUnitDbId => $clean_inputs->{observationUnitDbId},
-        observationDbId => $clean_inputs->{observationDbId}
+        observationDbId => $clean_inputs->{observationDbId},
+        observationVariableDbId => $clean_inputs->{observationVariableDbId}
 
     });
     _standard_response_construction($c, $brapi_package_result);
@@ -5306,6 +5376,10 @@ sub nirs_matrix_GET {
 }
 
 
+=head2 brapi/v2/pedigree
+
+=cut
+
 sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST') { }
 
 sub pedigree_GET {
@@ -5326,6 +5400,23 @@ sub pedigree_GET {
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub pedigree_search  : Chained('brapi') PathPart('search/pedigree') Args(0) : ActionClass('REST') { }
+
+sub pedigree_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Pedigree');
+}
+
+sub pedigree_search_retrieve : Chained('brapi') PathPart('search/pedigree') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Pedigree');
+}
+
+
 
 #functions
 sub save_results {
