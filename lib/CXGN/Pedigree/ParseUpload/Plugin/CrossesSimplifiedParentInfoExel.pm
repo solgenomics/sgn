@@ -155,10 +155,6 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,3)) {
             $female_parent =  $worksheet->get_cell($row,3)->value();
         }
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
-        }
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
         }
@@ -270,6 +266,12 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
+    my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+
     for my $row ( 1 .. $row_max ) {
         my $cross_name;
         my $cross_combination;
@@ -294,12 +296,6 @@ sub _parse_with_plugin {
             $female_parent =  $worksheet->get_cell($row,3)->value();
             $female_parent =~ s/^\s+|\s+$//g;
         }
-
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
-        }
-
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
             $male_parent =~ s/^\s+|\s+$//g;
@@ -314,12 +310,52 @@ sub _parse_with_plugin {
         }
 
         my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type, cross_combination=>$cross_combination);
-        if ($female_parent) {
-            my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
-            $pedigree->set_female_parent($female_parent_individual);
+
+        my $female_rs = $schema->resultset("Stock::Stock")->find({uniquename => $female_parent});
+        my $female_stock_id = $female_rs->stock_id();
+        my $female_type_id = $female_rs->type_id();
+
+        my $female_accession_name;
+        my $female_accession_stock_id;
+        if ($female_type_id == $plot_stock_type_id) {
+            $female_accession_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$female_stock_id, type_id=>$plot_of_type_id})->object_id();
+            $female_accession_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_accession_stock_id})->uniquename();
+            my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
+            $pedigree->set_female_plot($female_plot_individual);
+        } elsif ($female_type_id == $plant_stock_type_id) {
+            $female_accession_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$female_stock_id, type_id=>$plant_of_type_id})->object_id();
+            $female_accession_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_accession_stock_id})->uniquename();
+            my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
+            $pedigree->set_female_plant($female_plant_individual);
+        } else {
+            $female_accesson_name = $female_parent;
         }
+
+        my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_accession_name);
+        $pedigree->set_female_parent($female_parent_individual);
+
         if ($male_parent) {
-            my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
+            my $male_accession_stock_id;
+            my $male_accession_name;
+            my $male_rs = $schema->resultset("Stock::Stock")->find({uniquename => $male_parent});
+            my $male_stock_id = $male_rs->stock_id();
+            my $male_type_id = $male_rs->type_id();
+
+            if ($male_type_id == $plot_stock_type_id) {
+                $male_accession_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$male_stock_id, type_id=>$plot_of_type_id})->object_id();
+                $male_accession_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_accession_stock_id})->uniquename();
+                my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
+                $pedigree->set_male_plot($male_plot_individual);
+            } elsif ($male_type_id == $plant_stock_type_id) {
+                $male_accession_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$male_stock_id, type_id=>$plant_of_type_id})->object_id();
+                $male_accession_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_accession_stock_id})->uniquename();
+                my $male_plant_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
+                $pedigree->set_male_plant($male_plant_individual);
+            } else {
+                $male_accession_name = $male_parent
+            }
+
+            my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_accession_name);
             $pedigree->set_male_parent($male_parent_individual);
         }
 
@@ -327,7 +363,6 @@ sub _parse_with_plugin {
 
     }
 
-#    print STDERR "ADDITIONAL INFO HASH =".Dumper(\%cross_additional_info)."\n";
     $parsed_result{'additional_info'} = \%cross_additional_info;
 
     $parsed_result{'crosses'} = \@pedigrees;
@@ -338,47 +373,6 @@ sub _parse_with_plugin {
 
 }
 
-
-sub _get_accession {
-    my $self = shift;
-    my $accession_name = shift;
-    my $chado_schema = $self->get_chado_schema();
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-    my $stock;
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
-
-    $stock_lookup->set_stock_name($accession_name);
-    $stock = $stock_lookup->get_stock_exact();
-
-    if (!$stock) {
-        return;
-    }
-
-    if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-        return;
-    }
-
-    return $stock;
-
-}
-
-
-sub _get_cross {
-    my $self = shift;
-    my $cross_name = shift;
-    my $chado_schema = $self->get_chado_schema();
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-    my $stock;
-
-    $stock_lookup->set_stock_name($cross_name);
-    $stock = $stock_lookup->get_stock_exact();
-
-    if (!$stock) {
-        return;
-    }
-
-    return $stock;
-}
 
 
 1;
