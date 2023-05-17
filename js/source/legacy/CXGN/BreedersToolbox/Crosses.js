@@ -421,8 +421,11 @@ jQuery(document).ready(function($) {
             if (uploadFileXlsPlots === ''){
                 var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
                 if (uploadFileXlsPlants === '') {
-                    alert("Please select a file");
-                    return;
+                    var uploadFileXlsSimplifiedParents = $("#xls_crosses_simplified_parents_file").val();
+                    if (uploadFileXlsSimplifiedParents === ''){
+                        alert("Please select a file");
+                        return;
+                    }
                 }
             }
         }

@@ -215,7 +215,7 @@ $trial_name => undef
                                                         <div class="form-group">
                                                             <label class="col-sm-6 control-label">Select an XLS File: </label>
                                                             <div class="col-sm-6">
-                                                                <input type="file" name="xls_crosses_plots_file" id="xls_crosses_simplified_file" encoding="multipart/form-data" />
+                                                                <input type="file" name="xls_crosses_simplified_parents_file" id="xls_crosses_simplified_parents_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
