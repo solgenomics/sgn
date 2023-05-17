@@ -192,16 +192,60 @@ jQuery(document).ready(function($) {
         get_select_box('projects', 'upload_crosses_crossing_experiment_select_div', { 'name' : 'upload_crosses_crossing_experiment_id', 'id' : 'upload_crosses_crossing_experiment_id', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
     });
 
-    $("#cross_accession_info_format").click(function() {
-        $("#cross_accession_info_dialog").modal("show");
+//    $("#cross_accession_info_format").click(function() {
+//        $("#cross_accession_info_dialog").modal("show");
+//    });
+
+//    $("#cross_plot_info_format").click(function() {
+//        $("#cross_plot_info_dialog").modal("show");
+//    });
+
+//    $("#cross_plant_info_format").click(function() {
+//        $("#cross_plant_info_dialog").modal("show");
+//    });
+
+    jQuery("#cross_accession_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").show();
+        jQuery("#cross_plot_parents_header").hide();
+        jQuery("#cross_plant_parents_header").hide();
+        jQuery("#accession_parent_info").show();
+        jQuery("#plot_parent_info").hide();
+        jQuery("#plant_parent_info").hide();
+        jQuery("#any_parent_info").hide();
     });
 
-    $("#cross_plot_info_format").click(function() {
-        $("#cross_plot_info_dialog").modal("show");
+    jQuery("#cross_plot_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").hide();
+        jQuery("#cross_plot_parents_header").show();
+        jQuery("#cross_plant_parents_header").hide();
+        jQuery("#accession_parent_info").hide();
+        jQuery("#plot_parent_info").show();
+        jQuery("#plant_parent_info").hide();
+        jQuery("#any_parent_info").hide();
     });
 
-    $("#cross_plant_info_format").click(function() {
-        $("#cross_plant_info_dialog").modal("show");
+    jQuery("#cross_plant_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").hide();
+        jQuery("#cross_plot_parents_header").hide();
+        jQuery("#cross_plant_parents_header").show();
+        jQuery("#accession_parent_info").hide();
+        jQuery("#plot_parent_info").hide();
+        jQuery("#plant_parent_info").show();
+        jQuery("#any_parent_info").hide();
+    });
+
+    jQuery("#cross_simplified_parent_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").show();
+        jQuery("#cross_plot_parents_header").hide();
+        jQuery("#cross_plant_parents_header").hide();
+        jQuery("#accession_parent_info").hide();
+        jQuery("#plot_parent_info").hide();
+        jQuery("#plant_parent_info").hide();
+        jQuery("#any_parent_info").show();
     });
 
     jQuery("#cross_file_format_option").change(function(){
