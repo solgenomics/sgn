@@ -12,68 +12,35 @@ JSAN.use("jquery.blockUI");
 
 
 jQuery(document).ready( function() {
-       
-    var list = new CXGN.List();
-
-    var dType = ['plots', 'trials']; 
-    var dMenu = solGS.dataset.getDatasetsMenu(dType);
-
-    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials'], undefined, undefined, undefined);
-       
-    if (listMenu.match(/option/) != null) {           
-        jQuery("#list_type_training_pops_list")
-	    .append(listMenu);
-	
-	jQuery("#list_type_training_pops_list_select")
-	    .append(dMenu);
-    } else {
-        jQuery("#list_type_training_pops_list")
-	    .append("<select><option>no lists or datasets found</option></select>");
-    }
-               
+    solGS.selectMenu.populateMenu("list_type_training_pops", ['plots', 'trials'],  ['plots', 'trials'] );
+          
 });
 
 
-jQuery(document).ready( function() { 
-               
-    jQuery("<option>", {value: 'select...', selected: true})
-	.prependTo("#list_type_training_pops_list_select");
-        
-    jQuery("#list_type_training_pops_list_select")
-	.change(function() { 
-            var selectedType = jQuery(this)
-		.find("option:selected")
-		.attr('name');
+jQuery(document).ready( function() {  
+    jQuery("#list_type_training_pops_list_select").change(function() { 
+        var selectedPop = solGS.selectMenu.getSelectedPop('list_type_training_pops');
 
-	    var selectedId = jQuery(this)
-		.find("option:selected")
-		.val();
-	    
-	    var selectedName = jQuery(this)
-		.find("option:selected")
-		.text();
-	    
-            if (selectedId) {  	
-		jQuery("#list_type_training_pop_load").click(function() {
-		    
-		    if (typeof selectedType === 'undefined'
-			|| !selectedType.match(/dataset/i)) {
-			var listDetail = getListTypeTrainingPopDetail(selectedId);
+        if (selectedPop.selected_id) {  	
+            jQuery("#list_type_training_pop_go_btn").click(function() {
 
-			if (listDetail.type.match(/plots/)) {
-			    askTrainingJobQueueing(selectedId);
-			} else {
-			    var trialsList = listDetail.list;
-			    var trialsNames = listDetail.list_elements_names;
-			
-			    loadTrialListTypeTrainingPop(trialsNames);		    
-			}
-		    } else {
-			solGS.dataset.datasetTrainingPop(selectedId, selectedName);
-		    }
-		});
-            }	   
-	});       
+                if (typeof selectedPop.data_str === 'undefined' || !selectedPop.data_str.match(/dataset/i)) {
+                    var listDetail = getListTypeTrainingPopDetail(selectedPop.selected_id);
+
+                    if (listDetail.type.match(/plots/)) {
+                        askTrainingJobQueueing(selectedPop.selected_id);
+                    } else {
+                        var trialsList = listDetail.list;
+                        var trialsNames = listDetail.list_elements_names;
+
+                        loadTrialListTypeTrainingPop(trialsNames);		    
+                    }
+                    } else {
+                        solGS.dataset.datasetTrainingPop(selectedPop.selected_id, selectedPop.selected_name);
+                    }
+                });
+        }	   
+    });       
 });
 
 

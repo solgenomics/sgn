@@ -199,7 +199,9 @@ sub search {
     my %design_layout_hash;
     my $using_layout_hash;
     #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
+
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
+
         $using_layout_hash = 1;
         foreach (@{$self->trial_list}){
             my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>$self->experiment_type()});
@@ -408,7 +410,7 @@ sub search {
 
     my  $q = $select_clause . $from_clause . $where_clause . $group_by . $order_clause . $limit_clause . $offset_clause;
 
-    print STDERR "QUERY: $q\n\n";
+    #print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;

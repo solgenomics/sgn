@@ -2,7 +2,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 69;
+use Test::More;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
 use CXGN::List;
