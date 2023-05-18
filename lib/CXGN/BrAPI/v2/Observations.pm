@@ -23,6 +23,8 @@ sub search {
     my $status = $self->status;
 
     my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ());
+
+    print STDERR "CXGN::BrAPI::v2::Observations->search observationDbIds: ". Dumper $observation_db_id;
     my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
     my @observation_variable_names = $params->{observationVariableNames} ? @{$params->{observationVariableNames}} : ();
     # externalReferenceID
@@ -71,6 +73,7 @@ sub search {
             trait_list=>\@observation_variable_db_ids,
             trait_contains=>\@observation_variable_names,
             plot_list=>$observation_unit_db_id,
+            observation_id_list=>$observation_db_id,
             limit=>$limit,
             offset=>$offset,
             order_by=>"plot_number"
@@ -89,7 +92,7 @@ sub search {
             # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
                 my %season = (
                     year => $obs_unit->{year},
-                    seasonName => $obs_unit->{year},
+                    season => $obs_unit->{year},
                     seasonDbId => $obs_unit->{year}
                 );
                 my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};

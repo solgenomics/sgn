@@ -293,7 +293,7 @@ sub search {
             id => qq|$obs_unit->{observationunit_stock_id}|
         });
         my $external_references = $references->search();
-        my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+        my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
         my @plot_image_ids;
 			eval {

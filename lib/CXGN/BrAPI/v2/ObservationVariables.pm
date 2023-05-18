@@ -42,6 +42,9 @@ sub observation_levels {
 
     my @data_window;
     push @data_window, ({
+            levelName => 'rep',
+            levelOrder => 0 },
+        {
             levelName => 'replicate',
             levelOrder => 0 },
         {
@@ -266,6 +269,7 @@ sub get_query {
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $additional_info_string, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
+        print STDERR "synonyms: ".Dumper @$synonym."\n";
         foreach (@$synonym){
             $_ =~ s/ EXACT \[\]//;
             $_ =~ s/\"//g;
@@ -304,8 +308,10 @@ sub get_query {
             db_id               => $db_id,
             db                  => $db_name,
             accession           => $accession,
+            name                => $cvterm_name,
             external_references => $references,
-            additional_info     => $additional_info
+            additional_info     => $additional_info,
+            synonyms            => $synonym
         });
 
         push @variables, $self->_construct_variable_response($c, $trait);
@@ -542,7 +548,7 @@ sub _construct_variable_response {
     my @synonyms = $variable->synonyms;
 
     return {
-        additionalInfo => $variable->additional_info,
+        additionalInfo => $variable->additional_info || {},
         commonCropName => $c->config->{'supportedCrop'},
         contextOfUse => undef,
         defaultValue => $variable->default_value,
@@ -553,7 +559,7 @@ sub _construct_variable_response {
         language => 'eng',
         method => $method_json,
         observationVariableDbId => $variable->cvterm_id,
-        observationVariableName => $variable->name,
+        observationVariableName => $variable->name."|".$variable->db.":".$variable->accession,
         ontologyReference => {
             documentationLinks => $variable->uri ? $variable->uri : undef,
             ontologyDbId => $variable->db_id ? $variable->db_id : undef,
