@@ -24,7 +24,6 @@ sub search {
 
     my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ());
 
-    print STDERR "CXGN::BrAPI::v2::Observations->search observationDbIds: ". Dumper $observation_db_id;
     my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
     my @observation_variable_names = $params->{observationVariableNames} ? @{$params->{observationVariableNames}} : ();
     # externalReferenceID

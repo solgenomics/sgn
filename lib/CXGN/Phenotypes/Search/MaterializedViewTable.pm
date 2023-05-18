@@ -413,8 +413,6 @@ sub search {
                 }
             }
 
-            #TODO filter out observations that don't match the observation_id
-
             my $phenotype_uniquename = $o->{uniquename};
             $unique_traits{$trait_name}++;
             if ($include_timestamp){

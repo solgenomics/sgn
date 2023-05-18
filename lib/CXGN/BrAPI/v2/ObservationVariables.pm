@@ -269,7 +269,6 @@ sub get_query {
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $additional_info_string, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
-        print STDERR "synonyms: ".Dumper @$synonym."\n";
         foreach (@$synonym){
             $_ =~ s/ EXACT \[\]//;
             $_ =~ s/\"//g;
