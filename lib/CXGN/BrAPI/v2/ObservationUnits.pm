@@ -563,7 +563,7 @@ sub observationunits_update {
         if ($observationUnit_x_ref){
             my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                 bcs_schema => $self->bcs_schema,
-                table_name => 'Stock::StockDbxref',
+                table_name => 'stock',
                 table_id_key => 'stock_id',
                 external_references => $observationUnit_x_ref,
                 id => $observation_unit_db_id
