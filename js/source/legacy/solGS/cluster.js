@@ -943,7 +943,7 @@ solGS.cluster = {
     var clusterPops = [modelData];
 
     if (modelData.id.match(/list/) == null) {
-      var trialSelPopsList = solGS.selectionPopulations.getPredictedTrialTypeSelectionPops();
+      var trialSelPopsList = solGS.selectionPopulation.getPredictedTrialTypeSelectionPops();
       if (trialSelPopsList) {
         clusterPops.push(trialSelPopsList);
       }
