@@ -198,12 +198,17 @@ solGS.correlation = {
   },
 
   populateGenCorrMenu: function () {
-    var modelData = solGS.sIndex.getTrainingPopulationData();
-
+    var modelData = solGS.getModelArgs();
+    modelData = {
+      id: modelData.training_pop_id,
+      name: modelData.training_pop_name,
+      pop_type: 'training'
+    }
     var corrPops = [modelData];
 
-    if (modelData.id.match(/list/) == null) {
-      var trialSelPopsList = solGS.selectionPopulations.getPredictedTrialTypeSelectionPops();
+    if (!modelData.id.match(/list/)) {
+      var trialSelPopsList = solGS.selectionPopulation.getPredictedTrialTypeSelectionPops();
+
       if (trialSelPopsList) {
         corrPops.push(trialSelPopsList);
       }
