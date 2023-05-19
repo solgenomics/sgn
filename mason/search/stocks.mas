@@ -312,21 +312,30 @@ my $breeding_programs_select = simple_selectbox_html(
 var stock_table;
 
 jQuery(document).ready(function () {
+    
+    // I think is unnecessary that jquery function when all fields are reset below
+    // Also returns a jquery error is some cases.
+    // window.addEventListener('load', () => {
+      // // Reset the form parameters
+      // jQuery('#stock_search_form').reset();
+    // });
+    
 
-    window.addEventListener('load', () => {
-      // Reset the form parameters
-      jQuery('#stock_search_form').reset();
-    });
     const textFields = document.querySelectorAll('input[type="text"]');
     // Loop through the text fields and set their values to an empty string
       textFields.forEach(textField => {
         textField.value = '';
      });
+
      // Get all the dropdown select elements in the form
+     // Reset all but 'stock_type_select' dropdown to zero value 
+     // Leave 'stock_type_select' with the default "selected" value from the mason file. 
      const selectFields = document.querySelectorAll('select');
      selectFields.forEach(selectField => {
-        selectField.selectedIndex = 0;
-     });
+        if (selectField.id != 'stock_type_select') {
+          selectField.selectedIndex = 0;
+        }
+     });     
 
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'
