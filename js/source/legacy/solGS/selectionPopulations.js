@@ -64,9 +64,9 @@ solGS.selectionPopulation = {
   getPredictedTrialTypeSelectionPops: function () {
     var selPopsTable = jQuery(this.selPopsTable).html();
     var selPopsRows;
-
     if (selPopsTable !== null) {
       selPopsRows = jQuery(this.selPopsTable).find("tbody > tr");
+
     }
 
     var popsList = [];
@@ -77,8 +77,9 @@ solGS.selectionPopulation = {
       var predict = popRow.match(/predict/gi);
       if (!predict) {
         var selPopsInput = row.getElementsByTagName("input")[0];
-        var sIndexPopData = selPopsInput.value;
-        popsList.push(JSON.parse(sIndexPopData));
+        var selPopData = selPopsInput.value;
+
+        popsList.push(JSON.parse(selPopData));
       }
     }
 
