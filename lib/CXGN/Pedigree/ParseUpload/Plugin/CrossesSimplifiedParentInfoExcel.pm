@@ -1,4 +1,4 @@
-package CXGN::Pedigree::ParseUpload::Plugin::CrossesSimpleExcel;
+package CXGN::Pedigree::ParseUpload::Plugin::CrossesSimplifiedParentInfoExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -30,7 +30,6 @@ sub _validate_with_plugin {
 
     my $excel_obj;
     my $worksheet;
-#    print STDERR "ADDITIONAL INFO =".Dumper($cross_additional_info)."\n";
 
     #currently supported cross types
     $supported_cross_types{'biparental'} = 1; #both parents required
@@ -328,7 +327,7 @@ sub _parse_with_plugin {
             my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
             $pedigree->set_female_plant($female_plant_individual);
         } else {
-            $female_accesson_name = $female_parent;
+            $female_accession_name = $female_parent;
         }
 
         my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_accession_name);

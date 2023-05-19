@@ -639,8 +639,8 @@ $trial_name => undef
                             <li><b>male_plant</b> (Plant names must exist in the database)</li>
                         </div>
                         <div id = "any_parent_info" style="display:none">
-                            <li><b>female_parent</b> (female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot or plant stock type.)</li>
-                            <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot or plant stock type.)</li>
+                            <li><b>female_parent</b> (female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.)</li>
+                            <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.)</li>
                         </div>
                     </ul>
                     <b>Optional columns (additional parent info):</b> You can add additional parent info after male_plant column by using one or more of these column headers.
