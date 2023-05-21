@@ -192,18 +192,6 @@ jQuery(document).ready(function($) {
         get_select_box('projects', 'upload_crosses_crossing_experiment_select_div', { 'name' : 'upload_crosses_crossing_experiment_id', 'id' : 'upload_crosses_crossing_experiment_id', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
     });
 
-//    $("#cross_accession_info_format").click(function() {
-//        $("#cross_accession_info_dialog").modal("show");
-//    });
-
-//    $("#cross_plot_info_format").click(function() {
-//        $("#cross_plot_info_dialog").modal("show");
-//    });
-
-//    $("#cross_plant_info_format").click(function() {
-//        $("#cross_plant_info_dialog").modal("show");
-//    });
-
     jQuery("#cross_accession_info_format").click(function() {
         jQuery("#cross_spreadsheet_info_dialog").modal("show");
         jQuery("#cross_parents_header").show();
