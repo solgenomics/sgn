@@ -123,14 +123,53 @@ sub get_trait_info {
 		}
 	}
 
-	#change from default numeric based on properties stored in the database
-  foreach my $property_name (keys %{$cvterms}) {
-    my $prop_cvterm = $cvterms->{$property_name};
-    my $prop = $cvtermprops->find({'type_id' => $prop_cvterm->cvterm_id()});
-    if ($prop  && $prop->value()) {
-      $trait_props{$property_name}=$prop->value();
-    }
-  }
+	# change from default numeric based on properties stored in the database
+	# first pass to update all props as was done previously
+	foreach my $property_name (keys %{$cvterms}) {
+		my $prop_cvterm = $cvterms->{$property_name};
+		my $prop = $cvtermprops->find({ 'type_id' => $prop_cvterm->cvterm_id() });
+		if ($prop && $prop->value()) {
+			$trait_props{$property_name} = $prop->value();
+		}
+	}
+
+	# updates for Breeding Insight
+	my $prop_cvterm = $cvterms->{'trait_format'};
+	my $prop = $cvtermprops->find({ 'type_id' => $prop_cvterm->cvterm_id() });
+	if ($prop && $prop->value()) {
+		$trait_props{'trait_format'} = _convert_brapi_datatype($prop->value());
+	}
+
+	# update trait_details & trait_categories if not already updated
+	if ($trait_name !~ m/([0-9])-([0-9]+)/) {
+		my $prop_cvterm = $cvterms->{'trait_categories'};
+		my $prop = $cvtermprops->find({ 'type_id' => $prop_cvterm->cvterm_id() });
+		if ($prop && $prop->value()) {
+			my $categories_str = "";
+			my $trait_details_str = "";
+
+			my @trait_categories = split /\//, $prop->value();
+			foreach my $category (@trait_categories) {
+				if ($trait_details_str ne "") {
+					$trait_details_str = $trait_details_str . "/";
+				}
+				if ($categories_str ne "") {
+					$categories_str = $categories_str . "/";
+				}
+				my @split_value = split('=', $category);
+				if (scalar(@split_value) == 1) {
+					$trait_details_str = $trait_details_str . $split_value[0];
+				}
+				elsif (scalar(@split_value) > 1) {
+					$trait_details_str = $trait_details_str . $category;
+				}
+				$categories_str = $categories_str . $split_value[0];
+			}
+
+			$trait_props{'trait_details'} = $trait_details_str;
+			$trait_props{'trait_categories'} = $categories_str;
+		}
+	}
 
   #build trait_info_string
   #order for trait file is: format,defaultValue,minimum,maximum,details,categories
@@ -177,6 +216,24 @@ sub _get_cvterms {
 
 }
 
+# If datatype is BrAPI type as stored through BrAPI convert, otherwise pass through value
+sub _convert_brapi_datatype {
+	my $datatype = shift;
+
+	if ($datatype eq "Nominal" || $datatype eq "Ordinal") {
+		return "categorical";
+	}
+	if ($datatype eq "Date") {
+		return "date";
+	}
+	if ($datatype eq "Numerical" || $datatype eq "Duration") {
+		return "numeric";
+	}
+	if ($datatype eq "Code" || $datatype eq "Text") {
+		return "text";
+	}
+	return $datatype;
+}
 
 #######
 1;

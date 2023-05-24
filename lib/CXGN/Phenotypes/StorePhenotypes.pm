@@ -371,10 +371,6 @@ sub verify {
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
-                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
-                    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-                }
-
                 #check that trait value is valid for trait name
                 if (exists($check_trait_format{$trait_cvterm_id})) {
                     if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
