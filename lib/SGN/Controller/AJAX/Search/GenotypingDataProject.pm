@@ -113,12 +113,12 @@ sub genotyping_project_plates_GET : Args(0) {
         }
         push @result,
         [
-            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            "<a href=\"/breeders_toolbox/trial/$_->{plate_id}\">$_->{plate_name}</a>",
             $_->{description},
             $folder_string,
-            $_->{genotyping_plate_format},
-            $_->{genotyping_plate_sample_type},
-            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+            $_->{plate_format},
+            $_->{sample_type},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{plate_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
         ];
     }
 

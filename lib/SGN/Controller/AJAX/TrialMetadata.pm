@@ -2288,6 +2288,9 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
     if ($plot_names){
         $number_of_plots = scalar(@{$plot_names});
     }
+    print STDERR "NUMBER OF PLOTS =".Dumper($number_of_plots)."\n";
+    print STDERR "PLOT NAMES =".Dumper($plot_names)."\n";
+    print STDERR "DEIGN TYPE =".Dumper($design_type)."\n";
 
     $c->stash->{rest} = {
         design_type => $design_type,

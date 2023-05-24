@@ -170,6 +170,7 @@ sub get_plate_info {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $plate_list = $self->genotyping_plate_list();
+    print STDERR "PLATE LIST =".Dumper($plate_list)."\n";
     my $number_of_plates = scalar (@$plate_list);
     my $data;
     my $total_count;
@@ -182,7 +183,25 @@ sub get_plate_info {
         ($data, $total_count) = $trial_search->search();
     }
 
-    return ($data, $number_of_plates);
+    my @all_plates;
+    foreach my $plate (@$data){
+        my $folder_string = '';
+        if ($plate->{folder_name}){
+            $folder_string = "<a href=\"/folder/$plate->{folder_id}\">$plate->{folder_name}</a>";
+        }
+        push @all_plates, {
+            plate_id => $plate->{trial_id},
+            plate_name => $plate->{trial_name},
+            plate_description => $plate->{description},
+            plate_format => $plate->{genotyping_plate_format},
+            sample_type => $plate->{genotyping_plate_sample_type},
+            folder_id => $plate->{folder_id},
+            folder_name => $plate->{folder_name}
+        };
+    }
+
+    print STDERR "PLATE DATA =".Dumper(\@all_plates)."\n";
+    return (\@all_plates, $number_of_plates);
 
 }
 
