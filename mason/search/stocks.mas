@@ -88,7 +88,7 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1, id=>'advanced_search_panel' &>
 
     <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
 
@@ -313,12 +313,19 @@ var stock_table;
 
 jQuery(document).ready(function () {
     
-    // I think is unnecessary that jquery function when all fields are reset below
-    // Also returns a jquery error is some cases.
-    // window.addEventListener('load', () => {
-      // // Reset the form parameters
-      // jQuery('#stock_search_form').reset();
-    // });
+    window.addEventListener('load', () => {
+      // Reset the advanced search form parameters on load. 
+      // Very similar to later functionality but that one is for advanced search and on load trigger only.
+      var input_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('input');
+      for (let input_elem of input_list) {
+        input_elem.value = '';
+      }
+
+      var select_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('select');
+      for (let select_elem of select_list) {
+        select_elem.selectedIndex = 0;
+      }
+    });
     
 
     const textFields = document.querySelectorAll('input[type="text"]');
