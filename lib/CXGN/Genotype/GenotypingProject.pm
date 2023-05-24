@@ -24,6 +24,7 @@ use JSON;
 use CXGN::Trial::Search;
 use Try::Tiny;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -189,6 +190,13 @@ sub get_plate_info {
         if ($plate->{folder_name}){
             $folder_string = "<a href=\"/folder/$plate->{folder_id}\">$plate->{folder_name}</a>";
         }
+        my $plate_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $plate->{trial_id}, experiment_type => 'genotyping_layout'});
+        my $sample_names = $plate_layout->get_plot_names();
+        my $number_of_samples = '';
+        if ($sample_names){
+            $number_of_samples = scalar(@{$sample_names});
+        }
+
         push @all_plates, {
             plate_id => $plate->{trial_id},
             plate_name => $plate->{trial_name},
@@ -196,7 +204,8 @@ sub get_plate_info {
             plate_format => $plate->{genotyping_plate_format},
             sample_type => $plate->{genotyping_plate_sample_type},
             folder_id => $plate->{folder_id},
-            folder_name => $plate->{folder_name}
+            folder_name => $plate->{folder_name},
+            number_of_samples => $number_of_samples
         };
     }
 

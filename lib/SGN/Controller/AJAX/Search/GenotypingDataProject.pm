@@ -106,19 +106,20 @@ sub genotyping_project_plates_GET : Args(0) {
     });
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @result;
-    foreach (@$data){
+    foreach my $plate(@$data){
         my $folder_string = '';
-        if ($_->{folder_name}){
-            $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
+        if ($plate->{folder_name}){
+            $folder_string = "<a href=\"/folder/$plate->{folder_id}\">$plate->{folder_name}</a>";
         }
         push @result,
         [
-            "<a href=\"/breeders_toolbox/trial/$_->{plate_id}\">$_->{plate_name}</a>",
-            $_->{description},
+            "<a href=\"/breeders_toolbox/trial/$plate->{plate_id}\">$plate->{plate_name}</a>",
+            $plate->{plate_description},
             $folder_string,
-            $_->{plate_format},
-            $_->{sample_type},
-            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{plate_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+            $plate->{plate_format},
+            $plate->{sample_type},
+            $plate->{number_of_samples},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$plate->{plate_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
         ];
     }
 
