@@ -128,7 +128,7 @@ $latest_trial_activity => undef
           <table id= "spatial_correction_blue_results_table" ></table>
           <table id= "spatial_correction_fitted_results_table" ></table>
           <!-- <table id= "spatial_correction_fitted_results_table" ></table> -->
-          <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="blup" data-target="#generic_save_analysis_dialog">Store Spatial Correction</button>
+          <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="fitted" data-target="#generic_save_analysis_dialog">Store Spatial Correction</button>
 
         </div>
       </div>
@@ -264,24 +264,7 @@ jQuery(document).ready(function () {
 });
 
 
-$(document).on('click', '#confirm_store_spatial_correction',  function(e) {
-	$('#generic_save_analysis_dialog').modal("show");
-	$('#generic_save_analysis_model_properties').val(model_properties);
-	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
-	$('#generic_save_analysis_dataset_id').val( dataset_id );
-	$('#generic_save_analysis_accession_names').val(accession_names);
-	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
-	$('#generic_save_analysis_trait_names').val( traits );
-	$('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUPs using LMER R|SGNSTAT:0000034');
-	$('#generic_save_analysis_model_language').val('R');
-	$('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
-	$('#generic_save_analysis_model_application_version').val( version );
-	$('#generic_save_analysis_model_type').val('mixed_model_sommer');
-	$('#generic_save_analysis_result_values').val(adjusted_blues_data);
-	$('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
-	$('#generic_save_analysis_result_summary_values').val(result_summary);
-	$('#generic_save_analysis_model_training_data_file').val(input_file);
-	$('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
-});
+
+//jQuery(document).on('click', '#confirm_store_spatial_correction',  function(e) {}
 </script>
 

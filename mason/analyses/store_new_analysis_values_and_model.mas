@@ -240,13 +240,19 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Protocol: </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="generic_save_analysis_protocol" name="generic_save_analysis_protocol" type="text" placeholder="e.g. lmer(grain_yield ~ replicate + 1|germplasmName)" disabled/>
+                                        <input class="form-control" id="generic_save_analysis_protocol" name="generic_save_analysis_protocol" type="text" placeholder="e.g. lmer(grain_yield ~ replicate + 1|germplasmName)" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Dataset ID: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_dataset_id" name="generic_save_analysis_dataset_id" type="number" disabled/>
+                                    </div>
+                                </div>
+                                 <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Trial ID: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_trial_id" name="generic_save_analysis_trial_id" type="number" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">

@@ -348,7 +348,8 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my $basename = basename($pheno_filepath.".clean.fitted");
 
     copy($pheno_filepath.".clean.fitted", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/".$basename);
-
+    my $fitted_hash;
+    ($fitted_hash) = $self->result_file_to_hash($c, $F_fitted);
     my $download_url_fitted = '/documents/tempfiles/spatial_model_files/'.$basename;
     my $download_link_fitted = "<a href=\"$download_url\">Download Fitted values</a>";
 
@@ -389,10 +390,66 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     data_AIC => \@data_AIC,
     headers_AIC => \@spl_AIC,
     download_link_AIC => $download_link_AIC,
+    input_file => $temppath,
+    fitted_hash => $fitted_hash,
     };
 }
 
+sub result_file_to_hash {
+    my $self = shift;
+    my $c = shift;
+    my $file = shift;
 
+    print STDERR "result_file_to_hash(): Processing file $file...\n";
+    my @lines = read_file($file);
+    chomp(@lines);
+
+    my $header_line = shift(@lines);
+    my ($accession_header, @value_cols) = split /\t/, $header_line;
+
+    my $now = DateTime->now();
+    my $timestamp = $now->ymd()."T".$now->hms();
+
+    my $operator = $c->user()->get_object()->get_first_name()." ".$c->user()->get_object()->get_last_name();
+
+    my @fields;
+    my @accession_names;
+    my %analysis_data;
+
+    my $html = qq | <style> th, td {padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
+
+    $html .= "<br><tr>";
+    for (my $m=0; $m<@value_cols; $m++) {
+      $html .= "<th scope=\"col\">".($value_cols[$m])."</th>";
+    }
+    $html .= "</tr><tr>";
+    foreach my $line (@lines) {
+	      my ($accession_name, @values) = split /\t/, $line;
+	      push @accession_names, $accession_name;
+
+        #$html .= "<tr><td>".join("</td><td>", $accession_name)."</td>";
+
+        for (my $k=0; $k<@value_cols; $k++) { 
+          #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
+          $html .= "<td>".($values[$k])."</td>";
+        }
+
+	      for(my $n=0; $n<@values; $n++) {
+	         #print STDERR "Building hash for trait $accession_name and value $value_cols[$n]\n";
+	          $analysis_data{$accession_name}->{$value_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
+
+
+
+	      }
+        $html .= "</tr>"
+
+    }
+    $html .= "</table>";
+
+    #print STDERR "Analysis data formatted: ".Dumper(\%analysis_data);
+
+    return (\%analysis_data);
+}
 sub make_R_trait_name {
     my $trait = shift;
 

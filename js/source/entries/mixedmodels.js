@@ -84,7 +84,7 @@ export function init(main_div){
     $(document).on('click', '#open_store_blues_dialog_button',  function(e) {
 	$('#generic_save_analysis_dialog').modal("show");
 	$('#generic_save_analysis_model_properties').val(model_properties);
-	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
+	$('#generic_save_analysis_protocol').val( $('#model_string').html() ); 
 	$('#generic_save_analysis_dataset_id').val( dataset_id );
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
@@ -367,11 +367,14 @@ export function init(main_div){
 		    blups_data = JSON.stringify(r.blups_data);
 		    blues_data = JSON.stringify(r.blues_data);
 		    traits = JSON.stringify(r.traits);
+			console.log("Traits: "+traits);
 		    input_file = r.input_file;
 		    result_summary = '{ "method" : "Breedbase mixed model analysis tool" }';
 
 		    var model_properties_data = { "properties" : { "traits" : traits  } } ;
+			console.log("traits: "+traits);
 		    model_properties = JSON.stringify(model_properties_data);
+			//alert("Model properties: "+model_properties);
 
 
 		}
@@ -534,7 +537,7 @@ function get_model_string() {
 		alert(error);
 	    }
 	    else {
-
+		alert("MODEL STRING: "+r.model);
 		console.log("ENGINE AGAIN: "+r.engine+" "+JSON.stringify(r));
 		if (r.engine == 'sommer') {
 		    jQuery('#model_string').text(r.model[0]+" , random = " + r.model[1]);
