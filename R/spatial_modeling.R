@@ -129,6 +129,7 @@ for (i in 2:length(userResponse)) {
     fitted_tab$Fitted_values <- round(fitted_tab$Fitted_values, 2)
     # place userResponse[i] in first column
     fitted_tab <- data.frame(Trait = userResponse[i], fitted_tab)
+    # fitted_tab <- data.frame(plotNumber = userPheno$plotNumber, fitted_tab)
     write(paste("colnames:", colnames(fitted_tab)), stderr())
     fitted_output <- rbind(fitted_output, fitted_tab)
   }
