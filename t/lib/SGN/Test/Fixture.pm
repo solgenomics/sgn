@@ -141,8 +141,6 @@ has 'auditstats_start' => (isa => 'HashRef', is => 'rw' );
 
 has 'auditstats_end' => (isa => 'HashRef', is => 'rw');
 
-
-
 sub dbic_schema {
     my $self = shift;
     my $name = shift;
