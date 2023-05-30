@@ -142,14 +142,8 @@ sub genotyping_project_plate_names_GET : Args(0) {
         project_id => $genotyping_project_id
     });
     my ($data, $total_count) = $plate_info->get_plate_info();
-    my @plates;
-    foreach  my $plate(@$data){
-        my $plate_id = $plate->{trial_id};
-        my $plate_name = $plate->{trial_name};
-        push @plates, {plate_name => $plate_name, plate_id => $plate_id};
-    }
 
-    $c->stash->{rest} = { data => \@plates };
+    $c->stash->{rest} = { data => $data };
 
 }
 
