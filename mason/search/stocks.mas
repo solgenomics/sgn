@@ -325,6 +325,9 @@ jQuery(document).ready(function () {
       for (let select_elem of select_list) {
         select_elem.selectedIndex = 0;
       }
+
+      var type_select = document.getElementById('stock_type_select');
+      type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
     });
     
 
