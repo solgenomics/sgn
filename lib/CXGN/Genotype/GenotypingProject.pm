@@ -196,49 +196,43 @@ sub get_plate_info {
             $number_of_samples = scalar(@{$sample_names});
         }
 
-        if ($sample_names && scalar @$sample_names > 0) {
+        if ($number_of_samples > 0) {
             foreach my $sample(@$sample_names) {
                 my $sample_id = $schema->resultset("Stock::Stock")->find({ name => $sample })->stock_id();
                 push @sample_id_list, $sample_id;
             }
-        }
 
-        my $where_clause;
-        if (scalar(@sample_id_list)>0) {
+            my $where_clause;
             my $query = join ("," , @sample_id_list);
             $where_clause = "nd_experiment_stock.stock_id in ($query)";
+            my $q = "SELECT DISTINCT nd_experiment_stock.stock_id
+                FROM nd_experiment_stock
+                JOIN nd_experiment_genotype ON (nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+                JOIN genotypeprop ON (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                WHERE $where_clause";
+
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute();
+
+            my @sample_with_data = ();
+            while(my ($stock_id) = $h->fetchrow_array()){
+                push @sample_with_data, [$stock_id];
+            }
+
+            my $number_of_samples_with_data = scalar(@sample_with_data);
+
+            push @all_plates, {
+                plate_id => $plate->{trial_id},
+                plate_name => $plate->{trial_name},
+                plate_description => $plate->{description},
+                plate_format => $plate->{genotyping_plate_format},
+                sample_type => $plate->{genotyping_plate_sample_type},
+                folder_id => $plate->{folder_id},
+                folder_name => $plate->{folder_name},
+                number_of_samples => $number_of_samples,
+                number_of_samples_with_data => $number_of_samples_with_data
+            };
         }
-
-        my $q = "SELECT DISTINCT nd_experiment_stock.stock_id
-            FROM nd_experiment_stock
-            JOIN nd_experiment_genotype ON (nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
-            JOIN genotypeprop ON (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-            WHERE $where_clause";
-
-        my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute();
-
-        my @sample_with_data = ();
-        while (my ($stock_id) = $h->fetchrow_array()){
-            push @sample_with_data, [$stock_id]
-        }
-
-        my $number_of_samples_with_data = scalar @sample_with_data > 0;
-        if (!$number_of_samples_with_data) {
-            $number_of_samples_with_data = '0';
-        }
-
-        push @all_plates, {
-            plate_id => $plate->{trial_id},
-            plate_name => $plate->{trial_name},
-            plate_description => $plate->{description},
-            plate_format => $plate->{genotyping_plate_format},
-            sample_type => $plate->{genotyping_plate_sample_type},
-            folder_id => $plate->{folder_id},
-            folder_name => $plate->{folder_name},
-            number_of_samples => $number_of_samples,
-            number_of_samples_with_data => $number_of_samples_with_data
-        };
     }
 
     return (\@all_plates, $number_of_plates);
