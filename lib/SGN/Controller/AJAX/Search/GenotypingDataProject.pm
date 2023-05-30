@@ -53,7 +53,7 @@ sub genotyping_data_project_search_GET : Args(0) {
         my $total_accession_count = 0;
         if ($plate_data) {
             foreach (@$plate_data) {
-                my $trial_id = $_->{trial_id};
+                my $trial_id = $_->{plate_id};
                 my $trial = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
                 my $accession_count = $trial->get_trial_stock_count();
                 $total_accession_count += $accession_count;
@@ -71,7 +71,7 @@ sub genotyping_data_project_search_GET : Args(0) {
         } else {
             $data_type = 'SNP';
         }
-        print STDERR "DESIGN =".Dumper($design)."\n";
+#        print STDERR "DESIGN =".Dumper($design)."\n";
         push @result,
           [
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
