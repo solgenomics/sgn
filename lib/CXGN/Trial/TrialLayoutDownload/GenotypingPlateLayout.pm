@@ -58,8 +58,6 @@ sub retrieve {
     my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
     my $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial->get_trial_id(), type_id => $genotyping_facility_cvterm_id } )->first->value();
 
-
-
     my $genotyping_project_name;
     my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
     my $project_and_plate_relationship_cvterm_id = $genotyping_project_relationship_cvterm->cvterm_id();
