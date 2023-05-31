@@ -80,7 +80,7 @@ sub genotyping_data_search_GET : Args(0) {
         while (my $gt_line = <$fh>) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my $g = decode_json $gt_line;
-                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
+#                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
                 my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
                 push @result, [
                     "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
