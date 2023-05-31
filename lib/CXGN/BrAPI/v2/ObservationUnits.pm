@@ -853,7 +853,7 @@ sub _refresh_matviews {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
 
     # Refresh materialized view so data can be retrieved
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath}, 0);
     # Wait until materialized view is reset. Wait 5 minutes total, then throw an error
     my $refreshing = 1;
     my $refresh_time = 0;
