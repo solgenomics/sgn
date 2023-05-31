@@ -88,7 +88,7 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1, id=>'advanced_search_panel' &>
 
     <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
 
@@ -312,21 +312,40 @@ my $breeding_programs_select = simple_selectbox_html(
 var stock_table;
 
 jQuery(document).ready(function () {
-
+    
     window.addEventListener('load', () => {
-      // Reset the form parameters
-      jQuery('#stock_search_form').reset();
+      // Reset the advanced search form parameters on load. 
+      // Very similar to later functionality but that one is for advanced search and on load trigger only.
+      var input_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('input');
+      for (let input_elem of input_list) {
+        input_elem.value = '';
+      }
+
+      var select_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('select');
+      for (let select_elem of select_list) {
+        select_elem.selectedIndex = 0;
+      }
+
+      var type_select = document.getElementById('stock_type_select');
+      type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
     });
+    
+
     const textFields = document.querySelectorAll('input[type="text"]');
     // Loop through the text fields and set their values to an empty string
       textFields.forEach(textField => {
         textField.value = '';
      });
+
      // Get all the dropdown select elements in the form
+     // Reset all but 'stock_type_select' dropdown to zero value 
+     // Leave 'stock_type_select' with the default "selected" value from the mason file. 
      const selectFields = document.querySelectorAll('select');
      selectFields.forEach(selectField => {
-        selectField.selectedIndex = 0;
-     });
+        if (selectField.id != 'stock_type_select') {
+          selectField.selectedIndex = 0;
+        }
+     });     
 
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'

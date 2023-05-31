@@ -241,6 +241,39 @@ for my $extension ("xls", "xlsx") {
     is($after_uploading_relationship_femaleplant, $before_uploading_relationship_femaleplant + 2);
     is($after_uploading_relationship_maleplant, $before_uploading_relationship_maleplant + 2);
 
+    # test uploading crosses with simplified parent info format
+    my $before_uploading_cross_simplified_info = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id })->count();
+    my $before_uploading_stocks_simplified_info = $schema->resultset("Stock::Stock")->search({})->count();
+    my $before_uploading_relationship_simplified_info = $schema->resultset("Stock::StockRelationship")->search({})->count();
+
+    my $file = $f->config->{basepath} . "/t/data/cross/crosses_simplified_parents_upload.$extension";
+    my $ua = LWP::UserAgent->new;
+    $response = $ua->post(
+        'http://localhost:3010/ajax/cross/upload_crosses_file',
+        Content_Type => 'form-data',
+        Content      => [
+            "xls_crosses_simplified_parents_file" => [
+                $file,
+                "crosses_simplified_parents_upload.$extension",
+                Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ],
+            "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
+            "sgn_session_id"                        => $sgn_session_id
+        ]
+    );
+    ok($response->is_success);
+    my $message = $response->decoded_content;
+    my $message_hash = decode_json $message;
+    is_deeply($message_hash, { 'success' => 1 });
+
+    my $after_uploading_cross_simplified_info = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id })->count();
+    my $after_uploading_stocks_simplified_info = $schema->resultset("Stock::Stock")->search({})->count();
+    my $after_uploading_relationship_simplified_info = $schema->resultset("Stock::StockRelationship")->search({})->count();
+
+    is($after_uploading_cross_simplified_info, $before_uploading_cross_simplified_info + 4);
+    is($after_uploading_stocks_simplified_info, $before_uploading_stocks_simplified_info + 4);
+    is($after_uploading_relationship_simplified_info, $before_uploading_relationship_simplified_info + 13);
+
     # test retrieving crosses in a trial
     my $test_add_cross_rs = $schema->resultset('Stock::Stock')->find({ name => 'test_add_cross' });
     my $test_add_cross_id = $test_add_cross_rs->stock_id();
@@ -600,7 +633,7 @@ for my $extension ("xls", "xlsx") {
     my %data1 = %$response;
     my $result1 = $data1{data};
     my $number_of_result1 = @$result1;
-    is($number_of_result1, 2);
+    is($number_of_result1, 3);
 
     #test search crosses using both female and male parents
     $mech->post_ok('http://localhost:3010/ajax/search/crosses', [ 'female_parent' => 'TMEB419', 'male_parent' => 'TMEB693' ]);
@@ -608,7 +641,7 @@ for my $extension ("xls", "xlsx") {
     my %data2 = %$response;
     my $result2 = $data2{data};
     my $number_of_result2 = @$result2;
-    is($number_of_result2, 1);
+    is($number_of_result2, 2);
 
     #test search crosses using male parent
     $mech->post_ok('http://localhost:3010/ajax/search/crosses', [ 'male_parent' => 'TMEB693' ]);
@@ -616,7 +649,7 @@ for my $extension ("xls", "xlsx") {
     my %data3 = %$response;
     my $result3 = $data3{data};
     my $number_of_result3 = @$result3;
-    is($number_of_result3, 1);
+    is($number_of_result3, 2);
 
     #test crossing experiment download
     my @cross_properties = ("Tag Number", "Pollination Date", "Number of Bags", "Number of Flowers", "Number of Fruits", "Number of Seeds");
@@ -636,7 +669,7 @@ for my $extension ("xls", "xlsx") {
     my $columns = $contents->[1]->{'cell'};
     my @column_array = @$columns;
     my $number_of_columns = scalar @column_array;
-    #print STDERR "COLUMNS =".Dumper ($columns)."\n";
+#    print STDERR "COLUMNS =".Dumper ($columns)."\n";
 
     ok(scalar($number_of_columns) == 22, "check number of columns.");
     is_deeply($contents->[1]->{'cell'}->[1], [
@@ -650,7 +683,11 @@ for my $extension ("xls", "xlsx") {
         'test_cross_upload3',
         'test_cross_upload4',
         'test_cross_upload5',
-        'test_cross_upload6'
+        'test_cross_upload6',
+        'test_cross_simplified_parents_1',
+        'test_cross_simplified_parents_2',
+        'test_cross_simplified_parents_3',
+        'test_cross_simplified_parents_4'
     ], "check column 1");
 
     is_deeply($contents->[1]->{'cell'}->[3], [
@@ -664,7 +701,11 @@ for my $extension ("xls", "xlsx") {
         'biparental',
         'self',
         'biparental',
-        'self'
+        'self',
+        'biparental',
+        'biparental',
+        'biparental',
+        'biparental'
     ], "check column 3");
 
     is_deeply($contents->[1]->{'cell'}->[4], [
@@ -678,6 +719,10 @@ for my $extension ("xls", "xlsx") {
         'UG120001',
         'UG120001',
         'TMEB419',
+        'TMEB419',
+        'UG120001',
+        'UG120001',
+        'UG120001',
         'TMEB419'
     ], "check column 4");
 
@@ -687,7 +732,7 @@ for my $extension ("xls", "xlsx") {
     my $result = $crosses->get_all_cross_entries();
     my @all_cross_entries = @$result;
     my $first_cross = $all_cross_entries[0];
-    is(scalar @all_cross_entries, 10);
+    is(scalar @all_cross_entries, 14);
     is($first_cross->[1], 'test_add_cross');
     is($first_cross->[2], 'biparental');
     is($first_cross->[4], 'UG120001');

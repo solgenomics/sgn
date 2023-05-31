@@ -5012,7 +5012,7 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @genotyping_plate_ids;
     foreach  my $plate(@$data){
-        my $plate_id = $plate->{trial_id};
+        my $plate_id = $plate->{plate_id};
         push @genotyping_plate_ids, $plate_id;
     }
 
