@@ -25,7 +25,7 @@ use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions;
 use File::Path qw /mkpath/;
 use JSON;
-use List::Util qw/any uniq uniqint all/;
+use List::Util qw/any uniq all/;
 use List::MoreUtils qw/firstidx/;
 use Scalar::Util qw /weaken reftype looks_like_number/;
 use Storable qw/nstore retrieve/;
