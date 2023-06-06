@@ -941,14 +941,26 @@ function doSnap(state, selection) {
 }
 
 function getDataSourceSelect() {
+    get_select_box('label_data_source_types', 'data_source_type', {
+        name: 'source_type_select',
+        id: 'source_type_select',
+        default: 'Select a type of data source for the labels',
+        live_search: 0
+    });
+    updateDataSourceSelect();
+    jQuery(document).off("change").on("change", "#source_type_select", updateDataSourceSelect);
+}
+
+function updateDataSourceSelect() {
     get_select_box('label_data_sources', 'data_source',
         {
             name: 'source_select',
             id: 'source_select',
-            default: 'Select a list, crossing exp, trial, or GT plate',
+            default: 'Select a data source for the labels',
             live_search: 1,
-            // workflow_trigger: 1,
-        });
+            type: jQuery("#source_type_select option:selected").val()
+        }
+    );
 }
 
 function switchPageDependentOptions(page) {
