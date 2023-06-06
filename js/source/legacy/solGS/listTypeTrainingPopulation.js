@@ -86,18 +86,14 @@ solGS.listTypeTrainingPopulation = {
   },
 
   loadTrialListTypeTrainingPop: function (trialsNames) {
-    jQuery.ajax({
+    var trialsList = jQuery.ajax({
       type: "POST",
       url: "/solgs/get/trial/id/",
       dataType: "json",
       data: { trials_names: trialsNames },
-      success: function (res) {
-        solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
-      },
-      error: function (response) {
-        alert("Error occured querying for trials ids");
-      },
     });
+
+    return trialsList;
   },
 
   askTrainingJobQueueing: function (listId) {
@@ -119,9 +115,9 @@ solGS.listTypeTrainingPopulation = {
     var genoList = this.getListTypeTrainingPopDetail(listId);
     var listName = genoList.name;
     var list = genoList.list;
-    var popId = getModelId(listId);
+    var popId = this.getModelId(listId);
     var protocolId = jQuery("#genotyping_protocol_id").val();
-    var popType = "list_reference";
+    var popType = "list_training";
 
     var args = {
       list_name: listName,
@@ -149,126 +145,131 @@ solGS.listTypeTrainingPopulation = {
     if (args.list.length === 0) {
       alert("The list is empty. Please select a list with content.");
     } else {
-      jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-      jQuery.blockUI({ message: "Please wait.." });
+      // jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+      // jQuery.blockUI({ message: "Please wait.." });
 
-      jQuery.ajax({
+      var plotsList = jQuery.ajax({
         type: "POST",
         dataType: "json",
         data: { arguments: args },
         url: "/solgs/load/plots/list/training",
-        success: function (response) {
-          if (response.status == "success") {
-            window.location = "/solgs/population/" + popId;
-            jQuery.unblockUI();
-          } else {
-            alert("Error occured while querying for the training data.");
-            jQuery.unblockUI();
-          }
-        },
-        error: function (res) {
-          alert("Error occured while querying for the training data.");
-          jQuery.unblockUI();
-        },
       });
+
+      return plotsList;
     }
+
+    //       success: function (response) {
+    //         if (response.status == "success") {
+    //           window.location = "/solgs/population/" + popId;
+    //           jQuery.unblockUI();
+    //         } else {
+    //           alert("Error occured while querying for the training data.");
+    //           jQuery.unblockUI();
+    //         }
+    //       },
+    //       error: function (res) {
+    //         alert("Error occured while querying for the training data.");
+    //         jQuery.unblockUI();
+    //       },
+    //     });
+    //   }
+  },
+
+  getModelId: function (listId) {
+    var modelId = "list_" + listId;
+    return modelId;
+  },
+
+  getUserUploadedRefPop: function (listId) {
+    var genoList = this.getListTypeTrainingPopDetail(listId);
+    var listName = genoList.name;
+    var list = genoList.list;
+    var modelId = this.getModelId(listId);
+
+    var url = "'/solgs/population/" + modelId + "'";
+    var listIdArg = "'" + listId + "'";
+    var listSource = "'from_db'";
+    var popIdName = { id: modelId, name: listName };
+    popIdName = JSON.stringify(popIdName);
+    var hiddenInput = '<input type="hidden" value=\'' + popIdName + "'/>";
+
+    var listSelPop =
+      '<table id="list_reference_pops_table" style="width:100%; text-align:left"><tr>' +
+      "<th>List-based training population</th>" +
+      "<th>Models</th>" +
+      "</tr>" +
+      "<tr>" +
+      "<td>" +
+      '<a href="/solgs/population/' +
+      modelId +
+      '" onclick="javascript:loadPopulationPage(' +
+      url +
+      "," +
+      listIdArg +
+      "," +
+      listSource +
+      ')">' +
+      "<data>" +
+      hiddenInput +
+      "</data>" +
+      listName +
+      "</a>" +
+      "</td>" +
+      '<td id="list_reference_page_' +
+      modelId +
+      '">' +
+      '<a href="/solgs/population/' +
+      modelId +
+      '" onclick="javascript:loadPopulationPage(' +
+      url +
+      "," +
+      listIdArg +
+      "," +
+      listSource +
+      ')">' +
+      "[ Build model ]" +
+      "</a>" +
+      "</td></tr></table>";
+
+    return listSelPop;
+  },
+
+  loadPopulationPage: function (url, listId, listSource) {
+    var genoList = this.getListTypeTrainingPopDetail(listId);
+    var listName = genoList.name;
+    var modelId = this.getModelId(listId);
+
+    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+    jQuery.blockUI({ message: "Please wait.." });
+
+    jQuery.ajax({
+      type: "POST",
+      url: url,
+      dataType: "json",
+      data: {
+        list_reference: 1,
+        model_id: modelId,
+        list_source: listSource,
+        list_name: listName,
+      },
+      success: function (response) {
+        if (response.status == "success") {
+          jQuery.unblockUI();
+        } else {
+          alert("Fail: Error occured calculating GEBVs for the list of selection genotypes.");
+          jQuery.unblockUI();
+        }
+      },
+      error: function (response) {
+        alert("error: " + res.responseText);
+      },
+    });
   },
 };
 
 jQuery.fn.doesExist = function () {
   return jQuery(this).length > 0;
 };
-
-function getUserUploadedRefPop(listId) {
-  var genoList = this.getListTypeTrainingPopDetail(listId);
-  var listName = genoList.name;
-  var list = genoList.list;
-  var modelId = getModelId(listId);
-
-  var url = "'/solgs/population/" + modelId + "'";
-  var listIdArg = "'" + listId + "'";
-  var listSource = "'from_db'";
-  var popIdName = { id: modelId, name: listName };
-  popIdName = JSON.stringify(popIdName);
-  var hiddenInput = '<input type="hidden" value=\'' + popIdName + "'/>";
-
-  var listSelPop =
-    '<table id="list_reference_pops_table" style="width:100%; text-align:left"><tr>' +
-    "<th>List-based training population</th>" +
-    "<th>Models</th>" +
-    "</tr>" +
-    "<tr>" +
-    "<td>" +
-    '<a href="/solgs/population/' +
-    modelId +
-    '" onclick="javascript:loadPopulationPage(' +
-    url +
-    "," +
-    listIdArg +
-    "," +
-    listSource +
-    ')">' +
-    "<data>" +
-    hiddenInput +
-    "</data>" +
-    listName +
-    "</a>" +
-    "</td>" +
-    '<td id="list_reference_page_' +
-    modelId +
-    '">' +
-    '<a href="/solgs/population/' +
-    modelId +
-    '" onclick="javascript:loadPopulationPage(' +
-    url +
-    "," +
-    listIdArg +
-    "," +
-    listSource +
-    ')">' +
-    "[ Build model ]" +
-    "</a>" +
-    "</td></tr></table>";
-
-  return listSelPop;
-}
-
-function loadPopulationPage(url, listId, listSource) {
-  var genoList = this.getListTypeTrainingPopDetail(listId);
-  var listName = genoList.name;
-  var modelId = getModelId(listId);
-
-  jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-  jQuery.blockUI({ message: "Please wait.." });
-
-  jQuery.ajax({
-    type: "POST",
-    url: url,
-    dataType: "json",
-    data: {
-      list_reference: 1,
-      model_id: modelId,
-      list_source: listSource,
-      list_name: listName,
-    },
-    success: function (response) {
-      if (response.status == "success") {
-        jQuery.unblockUI();
-      } else {
-        alert("Fail: Error occured calculating GEBVs for the list of selection genotypes.");
-        jQuery.unblockUI();
-      }
-    },
-    error: function (response) {
-      alert("error: " + res.responseText);
-    },
-  });
-}
-
-function getModelId(listId) {
-  var modelId = "list_" + listId;
-  return modelId;
-}
 
 jQuery(document).ready(function () {
   solGS.listTypeTrainingPopulation.populateTrainingPopsMenu();
@@ -290,10 +291,17 @@ jQuery(document).ready(function () {
           if (listDetail.type.match(/plots/)) {
             solGS.listTypeTrainingPopulation.askTrainingJobQueueing(selectedPop.id);
           } else {
-            var trialsList = listDetail.list;
+            // var trialsList = listDetail.list;
             var trialsNames = listDetail.list_elements_names;
 
-            solGS.listTypeTrainingPopulation.loadTrialListTypeTrainingPop(trialsNames);
+            solGS.listTypeTrainingPopulation
+              .loadTrialListTypeTrainingPop(trialsNames)
+              .done(function (res) {
+                solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
+              })
+              .fail(function (res) {
+                alert("Error occured querying for trials ids");
+              });
           }
         } else {
           solGS.dataset.datasetTrainingPop(selectedPop.id, selectedPop.name);
