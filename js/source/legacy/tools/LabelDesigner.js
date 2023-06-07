@@ -697,7 +697,6 @@ function updateFields(data_type, source_id, data_level){
                 getDataSourceSelect();
             } else {
                 add_fields = response.fields;
-                add_fields["Select a field"] = {};
 
                 // if reps, add reps as options for filtering
                 reps = response.reps;
@@ -1261,7 +1260,7 @@ function createAdders(add_fields) {
     //load field options
     d3.select("#d3-add-field-input").selectAll("option").remove();
     d3.select("#d3-add-field-input").selectAll("option")
-        .data(Object.keys(add_fields).sort())
+        .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
             return d
@@ -1298,7 +1297,7 @@ function addSortOrders(add_fields) {
     //load options
     d3.select("#sort_order").selectAll("option").remove();
     d3.select("#sort_order").selectAll("option")
-        .data(Object.keys(add_fields).sort())
+        .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
             return d
@@ -1412,7 +1411,7 @@ function initializeCustomModal(add_fields) {
     //load field options
     d3.select("#d3-custom-add-field-input").selectAll("option").remove();
     d3.select("#d3-custom-add-field-input").selectAll("option")
-        .data(Object.keys(add_fields).sort())
+        .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
             return d
