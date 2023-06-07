@@ -292,7 +292,7 @@ var drag_behaviour = d3.behavior.drag().on(
 $(document).ready(function($) {
 
     initializeDrawArea();
-    $('#source_select').focus();
+    $('#source_type_select').focus();
 
     //Add link to docs
     // jQuery('#pagetitle_h3').append('&nbsp;<a id="label_designer_docs_link" href="http://solgenomics.github.io/sgn/03_managing_breeding_data/03_12.html"><span class="glyphicon glyphicon-info-sign"></span></a>');
@@ -405,7 +405,9 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    if (response.list_type == 'plots') {
+                    if ( response.list_type === 'trials' ) {
+                        html += '<option value="plots">Plot Details</option>';
+                    } else if (response.list_type == 'plots') {
                         html = html + '<option value="plots">Plot Details</option>';
                     } else if (response.list_type == 'subplots') {
                         html = html + '<option value="subplots">Subplot Details</option>';
