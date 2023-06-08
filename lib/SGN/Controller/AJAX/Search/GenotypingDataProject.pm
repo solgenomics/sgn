@@ -53,7 +53,7 @@ sub genotyping_data_project_search_GET : Args(0) {
         my $total_accession_count = 0;
         if ($plate_data) {
             foreach (@$plate_data) {
-                my $trial_id = $_->{trial_id};
+                my $trial_id = $_->{plate_id};
                 my $trial = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
                 my $accession_count = $trial->get_trial_stock_count();
                 $total_accession_count += $accession_count;
@@ -71,7 +71,7 @@ sub genotyping_data_project_search_GET : Args(0) {
         } else {
             $data_type = 'SNP';
         }
-        print STDERR "DESIGN =".Dumper($design)."\n";
+#        print STDERR "DESIGN =".Dumper($design)."\n";
         push @result,
           [
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
@@ -106,19 +106,21 @@ sub genotyping_project_plates_GET : Args(0) {
     });
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @result;
-    foreach (@$data){
+    foreach my $plate(@$data){
         my $folder_string = '';
-        if ($_->{folder_name}){
-            $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
+        if ($plate->{folder_name}){
+            $folder_string = "<a href=\"/folder/$plate->{folder_id}\">$plate->{folder_name}</a>";
         }
         push @result,
         [
-            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
-            $_->{description},
+            "<a href=\"/breeders_toolbox/trial/$plate->{plate_id}\">$plate->{plate_name}</a>",
+            $plate->{plate_description},
             $folder_string,
-            $_->{genotyping_plate_format},
-            $_->{genotyping_plate_sample_type},
-            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+            $plate->{plate_format},
+            $plate->{sample_type},
+            $plate->{number_of_samples},
+            $plate->{number_of_samples_with_data},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$plate->{plate_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
         ];
     }
 
@@ -140,14 +142,8 @@ sub genotyping_project_plate_names_GET : Args(0) {
         project_id => $genotyping_project_id
     });
     my ($data, $total_count) = $plate_info->get_plate_info();
-    my @plates;
-    foreach  my $plate(@$data){
-        my $plate_id = $plate->{trial_id};
-        my $plate_name = $plate->{trial_name};
-        push @plates, {plate_name => $plate_name, plate_id => $plate_id};
-    }
 
-    $c->stash->{rest} = { data => \@plates };
+    $c->stash->{rest} = { data => $data };
 
 }
 
