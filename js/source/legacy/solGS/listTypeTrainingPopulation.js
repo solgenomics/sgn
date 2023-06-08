@@ -1,6 +1,6 @@
 /**
 
-For training populations  from list of plots and trials.
+For training populations options from list of plots and trials and datasets.
 
 Isaak Y Tecle 
 iyt2@cornell.edu
