@@ -6,23 +6,11 @@ Isaak Y Tecle
 iyt2@cornell.edu
 */
 
-// JSAN.use("CXGN.List");
-JSAN.use("jquery.blockUI");
-
 var solGS = solGS || function solGS() {};
 
 solGS.listTypeTrainingPopulation = {
   trainingPopsDiv: "#list_type_training_pops_select_div",
   trainingPopsSelectMenuId: "#list_type_training_pops_select",
-
-  getTrainingListElementsNames: function (list) {
-    var names = [];
-    for (var i = 0; i < list.length; i++) {
-      names.push(list[i][1]);
-    }
-
-    return names;
-  },
 
   populateTrainingPopsMenu: function () {
     var list = new CXGN.List();
@@ -50,40 +38,6 @@ solGS.listTypeTrainingPopulation = {
     jQuery(trainingPopsDiv).append(menuElem).show();
   },
 
-  getTrainingListElementsIds: function (list) {
-    var ids = [];
-    for (var i = 0; i < list.length; i++) {
-      ids.push(list[i][0]);
-    }
-
-    return ids;
-  },
-
-  getListTypeTrainingPopDetail: function (listId) {
-    var list = new CXGN.List();
-
-    var listData;
-    var listType;
-    var listName;
-
-    if (listId) {
-      listData = list.getListData(listId);
-      listType = list.getListType(listId);
-      listName = list.listNameById(listId);
-      listElements = listData.elements;
-
-      listElementsNames = this.getTrainingListElementsNames(listElements);
-      listElementsIds = this.getTrainingListElementsIds(listElements);
-    }
-
-    return {
-      name: listName,
-      type: listType,
-      list_id: listId,
-      list_elements_names: listElementsNames,
-      list_elements_ids: listElementsIds,
-    };
-  },
 
   loadTrialListTypeTrainingPop: function (trialsNames) {
     var trialsList = jQuery.ajax({
@@ -112,9 +66,10 @@ solGS.listTypeTrainingPopulation = {
   },
 
   createTrainingReqArgs: function (listId) {
-    var genoList = this.getListTypeTrainingPopDetail(listId);
-    var listName = genoList.name;
-    var list = genoList.list;
+    const listObj = new solGSList(listId);
+    var listDetail = listObj.getListDetail();
+    var listName = listDetail.name;
+
     var popId = this.getModelId(listId);
     var protocolId = jQuery("#genotyping_protocol_id").val();
     var popType = "list_training";
@@ -134,7 +89,6 @@ solGS.listTypeTrainingPopulation = {
 
   loadPlotListTypeTrainingPop: function (listId) {
     var args = this.createTrainingReqArgs(listId);
-    var popId = args.training_pop_id;
 
     if (window.Prototype) {
       delete Array.prototype.toJSON;
@@ -181,9 +135,9 @@ solGS.listTypeTrainingPopulation = {
   },
 
   getUserUploadedRefPop: function (listId) {
-    var genoList = this.getListTypeTrainingPopDetail(listId);
-    var listName = genoList.name;
-    var list = genoList.list;
+    const listObj = new solGSList(listId);
+    var listDetail = listObj.getListDetail();
+    var listName = listDetail.name;
     var modelId = this.getModelId(listId);
 
     var url = "'/solgs/population/" + modelId + "'";
@@ -234,9 +188,68 @@ solGS.listTypeTrainingPopulation = {
     return listSelPop;
   },
 
+  displayListTypeTrainingPops: function (listId) {
+    const listObj = new solGSList(listId);
+    var listDetail = listObj.getListDetail();
+    var listName = listDetail.name;
+    var modelId = this.getModelId(listId);
+
+
+    var popIdName = { id: modelId, name: listName, pop_type: "list_training" };
+    popIdName = JSON.stringify(popIdName);
+    var hiddenInput = '<input type="hidden" value=\'' + popIdName + "'/>";
+
+    var tableId = "list_type_training_pops_table";
+    var trId = "list_training_" + listId;
+    var listTypeSelectionPops = jQuery(`#${tableId}`).doesExist();
+
+    if (listTypeSelectionPops == false) {
+      var listTypeTrainingTable =
+        `<table id="${tableId}" class="table"><thead><tr>` +
+        "<th>List-based tranining population</th>" +
+        "<th>View Population</th>" +
+        "</tr></thead><tbody>" +
+        `<tr id="${trId}">` +
+        "<td>" +
+        "<b>" +
+        listName +
+        "</b>" +
+        "</td>" +
+        "<td><data>" +
+        hiddenInput +
+        "</data>" +
+        output +
+        "</td></tr></tbody></table>";
+
+      jQuery("#list_type_training_pops_selected").append(listTypeTrainingTable).show();
+    } else {
+      var addRow =
+        `<tr id="${trId}">` +
+        "<td>" +
+        "<b>" +
+        listName +
+        "</td>" +
+        "<td> <data>" +
+        hiddenInput +
+        "</data>" +
+        output +
+        "</td></tr>";
+
+      var samePop = jQuery(`#${trId}`).doesExist();
+
+      if (samePop == false) {
+        jQuery(`#${tableId} tr:last`).after(addRow);
+      } else {
+        jQuery(`#${trId}`).remove();
+        jQuery(`#${tableId}`).append(addRow).show();
+      }
+    }
+  },
+
   loadPopulationPage: function (url, listId, listSource) {
-    var genoList = this.getListTypeTrainingPopDetail(listId);
-    var listName = genoList.name;
+    const listObj = new solGSList(listId);
+    var listDetail = listObj.getListDetail();
+    var listName = listDetail.name;
     var modelId = this.getModelId(listId);
 
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
@@ -284,15 +297,13 @@ jQuery(document).ready(function () {
           typeof selectedPop.data_str === "undefined" ||
           !selectedPop.data_str.match(/dataset/i)
         ) {
-          var listDetail = solGS.listTypeTrainingPopulation.getListTypeTrainingPopDetail(
-            selectedPop.id
-          );
+          const list = new solGSList(selectedPop.id);
+          var listDetail = list.getListDetail();
 
           if (listDetail.type.match(/plots/)) {
             solGS.listTypeTrainingPopulation.askTrainingJobQueueing(selectedPop.id);
           } else {
-            // var trialsList = listDetail.list;
-            var trialsNames = listDetail.list_elements_names;
+            var trialsNames = list.getListElementsNames();
 
             solGS.listTypeTrainingPopulation
               .loadTrialListTypeTrainingPop(trialsNames)

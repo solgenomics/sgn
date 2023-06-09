@@ -20,7 +20,7 @@ my $referer = $c->req->path;
 my $search_params = '?dsp=genotyping_protocols,trials|plots,traits,accessions&dsr=/' . $referer;
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.listTypeTrainingPopulation"] &>
+<& /util/import_javascript.mas, classes => ["CXGN.List", "solGS.List", "solGS.listTypeTrainingPopulation"] &>
 
 <&| /page/info_section.mas, 
     collapsible => 1, 

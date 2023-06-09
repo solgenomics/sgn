@@ -29,33 +29,6 @@ solGS.listTypeSelectionPopulation = {
     return checkPredicted;
   },
 
-  getSelectionListElementsNames: function (list) {
-    var names = [];
-    for (var i = 0; i < list.length; i++) {
-      names.push(list[i][1]);
-    }
-
-    return names;
-  },
-
-  getListTypeSelectionPopDetail: function (listId) {
-    if (typeof listId == "number") {
-      var list = new CXGN.List();
-
-      var listData;
-      var listType;
-      var listName;
-
-      if (listId) {
-        listData = list.getListData(listId);
-        listType = list.getListType(listId);
-        listName = list.listNameById(listId);
-        elemCount = listData.elements;
-      }
-
-      return { name: listName, list_id: listId, type: listType, elements_count: elemCount };
-    }
-  },
 
   askSelectionJobQueueing: function (listId) {
     var args = this.createSelectionReqArgs(listId);
@@ -72,8 +45,9 @@ solGS.listTypeSelectionPopulation = {
 
   createSelectionReqArgs: function (listId) {
     if (typeof listId == "number") {
-      var genoList = this.getListTypeSelectionPopDetail(listId);
-      var listName = genoList.name;
+      const listObj = new solGSList(listId);
+      var listDetail = listObj.getListDetail();
+      var listName = listDetail.name;
 
       var modelArgs = solGS.getModelArgs();
       var modelId = modelArgs.training_pop_id;
@@ -223,7 +197,9 @@ jQuery(document).ready(function () {
           var listDetail = solGS.listTypeSelectionPopulation.getListTypeSelectionPopDetail(
             selectedPop.id
           );
-
+          const listObj = new solGSList(selectedPop.id);
+          var listDetail = listObj.getListDetail();
+    
           if (listDetail.type.match(/accessions/)) {
             solGS.listTypeSelectionPopulation
               .checkPredictedListSelection(selectedPop.id)
