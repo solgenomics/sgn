@@ -85,6 +85,9 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
+    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
     my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');

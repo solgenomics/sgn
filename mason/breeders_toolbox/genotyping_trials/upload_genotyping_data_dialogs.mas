@@ -351,7 +351,8 @@ $facilities
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    <button type="button" class="btn btn-primary" name="file_check_button" id="file_check_button">Check File Type</button>
+                                    <button type="button" style="display:none" class="btn btn-primary" disabled onclick="Workflow.complete(this); return false;" id="genotyping_data_upload_next">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
@@ -1010,6 +1011,45 @@ jQuery(document).ready(function(){
             }
         }
         return false;
+    });
+
+    jQuery('#file_check_button').click(function(){
+        var data_type = jQuery('#genotype_data_type_select').val();
+        if (data_type == 'vcf') {
+            if (jQuery('#upload_genotype_vcf_file_input').val() == ''){
+                alert('Please select a VCF file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'tassel_hdf5') {
+            if (jQuery('#upload_genotype_tassel_hdf5_file_input').val() == ''){
+                alert('Please select a Tassel HDF5 file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'intertek') {
+            if (jQuery('#upload_genotype_intertek_file_input').val() == ''){
+                alert('Please select an Intertek SNP Result Grid file.');
+            } else if (jQuery('#upload_genotype_intertek_snp_file_input').val() == ''){
+                alert('Please select an Intertek SNP Information File.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'ssr') {
+            if (jQuery('#upload_genotype_ssr_file_input').val() == ''){
+                alert('Please select a SSR file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        }
     });
 
     jQuery('#upload_genotype_vcf_spreadsheet_info_format').click(function(){
