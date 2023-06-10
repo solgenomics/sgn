@@ -5,7 +5,7 @@ download_trials.pl - script to download trials
 
 =head1 DESCRIPTION
 
-perl download_trials.pl -i trial_id -H host -D dbname -U dbuser -P dbpass
+perl download_spatial_trials.pl -H host (breedbase_db) -D dbname (cxgn_cassava) -U dbuser (postgres) -P dbpass (postgres)
 
 Downloads trials whose ids are provided as a comma separated list for the -i parameter.
 
