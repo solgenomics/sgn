@@ -176,7 +176,9 @@ solGS.dataset = {
       dataset_name: datasetName,
       training_pop_id: trainingPopDetails.training_pop_id,
       selection_pop_id: selectionPopId,
+      selection_pop_name: datasetName,
       training_traits_ids: trainingTraitsIds,
+      population_type: 'dataset_selection',
       data_set_type: trainingPopDetails.data_set_type,
       genotyping_protocol_id: protocolId,
     };
@@ -212,7 +214,10 @@ solGS.dataset = {
           args = JSON.parse(args);
 
           if (response.output) {
-            solGS.dataset.displayPredictedDatasetTypeSelectionPops(args, response.output);
+            solGS.listTypeSelectionPopulation.displayPredictedListTypeSelectionPops(
+              args,
+              response.output
+            );
 
             if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
               solGS.sIndex.populateSindexMenu();
@@ -237,85 +242,6 @@ solGS.dataset = {
     var page = hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId;
 
     solGS.waitPage(page, args);
-  },
-
-  displayPredictedDatasetTypeSelectionPops: function (args, output) {
-    var datasetName = args.dataset_name;
-    var datasetId = args.dataset_id;
-
-    var traitId = args.trait_id;
-    var selectionPopId = args.selection_pop_id;
-    var trainingPopId = args.training_pop_id;
-
-    var url = "/solgs/selection/" + selectionPopId + "/model/" + trainingPopId;
-    var datasetIdArg = "'" + datasetId + "'";
-    var listSource = "'from_db'";
-    var popIdName = {
-      id: "dataset_" + datasetId,
-      name: datasetName,
-      pop_type: "dataset_selection",
-    };
-    popIdName = JSON.stringify(popIdName);
-    var hiddenInput = '<input type="hidden" value=\'' + popIdName + "'/>";
-
-    var predictedListTypeSelectionPops = jQuery("#list_type_selection_pops_table").doesExist();
-
-    if (predictedListTypeSelectionPops == false) {
-      var predictedListTypeSelectionTable =
-        '<table id="list_type_selection_pops_table" class="table"><thead><tr>' +
-        "<th>List-based selection population</th>" +
-        "<th>View GEBVs</th>" +
-        "</tr></thead><tbody>" +
-        '<tr id="list_prediction_output_' +
-        datasetId +
-        '">' +
-        "<td>" +
-        "<b>" +
-        datasetName +
-        "</b>" +
-        "</td>" +
-        "<td><data>" +
-        hiddenInput +
-        "</data>" +
-        output +
-        "</td></tr></tbody></table>";
-
-      jQuery("#list_type_selection_pops_selected").append(predictedListTypeSelectionTable).show();
-    } else {
-      var datasetIdArg = "'" + datasetId + "'";
-      var datasetSource = "'from_db'";
-
-      var popIdName = {
-        id: "dataset_" + datasetId,
-        name: datasetName,
-        pop_type: "dataset_selection",
-      };
-      popIdName = JSON.stringify(popIdName);
-      var hiddenInput = '<input type="hidden" value=\'' + popIdName + "'/>";
-
-      var addRow =
-        '<tr id="list_prediction_output_' +
-        datasetId +
-        '"><td>' +
-        "<b>" +
-        datasetName +
-        "</td>" +
-        "<td> <data>" +
-        hiddenInput +
-        "</data>" +
-        output +
-        "</td></tr>";
-
-      var trId = "#list_prediction_output_" + datasetId;
-      var samePop = jQuery(trId).doesExist();
-
-      if (samePop == false) {
-        jQuery("#list_type_selection_pops_table tr:last").after(addRow);
-      } else {
-        jQuery(trId).remove();
-        jQuery("#list_type_selection_pops_table").append(addRow).show();
-      }
-    }
   },
 
   /////

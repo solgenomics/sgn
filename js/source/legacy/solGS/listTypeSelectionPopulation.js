@@ -65,6 +65,7 @@ solGS.listTypeSelectionPopulation = {
         data_set_type: dataSetType,
         training_pop_id: modelId,
         selection_pop_id: selectionPopId,
+        selection_pop_name: listName,
         population_type: popType,
         training_traits_ids: trainingTraitsIds,
         genotyping_protocol_id: protocolId,
@@ -75,15 +76,14 @@ solGS.listTypeSelectionPopulation = {
   },
 
   displayPredictedListTypeSelectionPops: function (args, output) {
-    var listName = args.list_name;
-    var listId = args.list_id;
+    var selPopName = args.selection_pop_name;
+    var selPopId = args.selection_pop_id;
 
-    var popIdName = { id: "list_" + listId, name: listName, pop_type: "list_selection" };
-    popIdName = JSON.stringify(popIdName);
-    var hiddenInput = '<input type="hidden" value=\'' + popIdName + "'/>";
+    var popDetail = {id: selPopId, name: selPopName, pop_type: args.population_type};
+    popDetail= JSON.stringify(popDetail);
 
     var tableId = "list_type_selection_pops_table";
-    var trId = "list_selection_" + listId;
+    var trId = `${args.population_type}_${selPopId}`;
     var predictedListTypeSelectionPops = jQuery(`#${tableId}`).doesExist();
 
     if (predictedListTypeSelectionPops == false) {
@@ -92,31 +92,18 @@ solGS.listTypeSelectionPopulation = {
         "<th>List-based selection population</th>" +
         "<th>View GEBVs</th>" +
         "</tr></thead><tbody>" +
-        `<tr id="${trId}">` +
-        "<td>" +
-        "<b>" +
-        listName +
-        "</b>" +
-        "</td>" +
-        "<td><data>" +
-        hiddenInput +
-        "</data>" +
-        output +
-        "</td></tr></tbody></table>";
+        `<tr id='${trId}' data-list-selection-pop='${popDetail}'>` +
+        `<td><b>${selPopName}</b></td>` +
+        `<td>${output}</td>` +
+        "</tr></tbody></table>";
 
       jQuery("#list_type_selection_pops_selected").append(predictedListTypeSelectionTable).show();
     } else {
       var addRow =
-        `<tr id="${trId}">` +
-        "<td>" +
-        "<b>" +
-        listName +
-        "</td>" +
-        "<td> <data>" +
-        hiddenInput +
-        "</data>" +
-        output +
-        "</td></tr>";
+        `<tr id='${trId}' data-list-selection-pop='${popDetail}'>` +
+        `<td><b> ${selPopName}</b></td>`  +
+        `<td>${output}</td>` +
+        "</tr>";
 
       var samePop = jQuery(`#${trId}`).doesExist();
 
