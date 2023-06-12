@@ -12,7 +12,7 @@ $facilities
                 <h4 class="modal-title" id="uploadGenotypesDialog">Upload Genotypes</h4>
             </div>
             <div class="modal-body">
-                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_form" name="upload_genotypes_form" action="/ajax/genotype/upload">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_form" name="upload_genotypes_form" action="/ajax/genotype/upload">
 
                     <div class="container-fluid">
 
@@ -398,12 +398,11 @@ $facilities
                                 <br/>
                             </&>
                         </&>
-
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" id="upload_genotype_data_close_modal" class="btn btn-default" >Close</button>
                     </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -1128,6 +1127,12 @@ jQuery(document).ready(function(){
 
         }
     });
+
+    jQuery('#upload_genotype_data_close_modal').click(function(){
+        jQuery('#upload_genotypes_dialog').modal('hide');
+        location.reload();
+    });
+
 
 });
 </script>
