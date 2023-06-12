@@ -194,9 +194,7 @@ jQuery(document).ready(function () {
           typeof selectedPop.data_str === "undefined" ||
           !selectedPop.data_str.match(/dataset/i)
         ) {
-          var listDetail = solGS.listTypeSelectionPopulation.getListTypeSelectionPopDetail(
-            selectedPop.id
-          );
+
           const listObj = new solGSList(selectedPop.id);
           var listDetail = listObj.getListDetail();
     
