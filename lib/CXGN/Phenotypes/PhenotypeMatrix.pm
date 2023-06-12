@@ -128,6 +128,12 @@ has 'include_timestamp' => (
     default => 0
 );
 
+has 'include_phenotype_primary_key' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool',
     is => 'ro',
@@ -163,6 +169,7 @@ sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
+    my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -197,7 +204,7 @@ sub get_phenotype_matrix {
 
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();
-
+        print STDERR "Look at Data here! ".Dumper($data);
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -211,6 +218,9 @@ sub get_phenotype_matrix {
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
+            if ($include_phenotype_primary_key) {
+                push @line, $trait.'_phenotype_id';
+            }
         }
         push @line, 'notes';
 
@@ -259,6 +269,7 @@ sub get_phenotype_matrix {
 #            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
             my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
+            my %phenotype_ids;
             foreach (@$observations){
                 my $collect_date = $_->{collect_date};
                 my $timestamp = $_->{timestamp};
@@ -272,8 +283,17 @@ sub get_phenotype_matrix {
                     $trait_observations{$_->{trait_name}} = $_->{value};
                 }
             }
+
+            if ($include_phenotype_primary_key) {
+                foreach (@$observations) {
+                    $phenotype_ids{$_->{trait_name}} = $_->{phenotype_id};
+                }
+            }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
+                if ($include_phenotype_primary_key) {
+                    push @line, $phenotype_ids{$trait};
+                }
             }
             push @line, $obs_unit->{notes};
 
@@ -299,6 +319,8 @@ sub get_phenotype_matrix {
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;
+
+        print STDERR "Look at Data here! ".Dumper($data);
 
         foreach my $d (@$data) {
             my $cvterm = $d->{trait_name};
