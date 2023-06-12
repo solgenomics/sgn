@@ -106,16 +106,22 @@ sub _validate_with_plugin {
             push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
         }
 
+        my %file_marker_info_hash;
         while (my $marker_line = <$MI_F>) {
             my @marker_line_info;
             if ($marker_info_csv->parse($marker_line)) {
                 @marker_line_info = $marker_info_csv->fields();
             }
             my $intertek_snp_id = $marker_line_info[0];
+            $intertek_snp_id =~ s/^\s+|\s+$//g;
             my $customer_snp_id = $marker_line_info[1];
+            $customer_snp_id =~ s/^\s+|\s+$//g;
             my $ref = $marker_line_info[2];
+            $ref =~ s/^\s+|\s+$//g;
             my $alt = $marker_line_info[3];
+            $alt =~ s/^\s+|\s+$//g;
             my $chrom = $marker_line_info[4];
+            $chrom =~ s/^\s+|\s+$//g;
 
             if (!$intertek_snp_id){
                 push @error_messages, 'Intertek snp id is required for all markers.';
@@ -133,10 +139,15 @@ sub _validate_with_plugin {
                 push @error_messages, 'Chromosome is required for all markers.';
             }
             $marker_names{$customer_snp_id} = 1;
+            $file_marker_info_hash{$customer_snp_id}{'intertek_name'} = $intertek_snp_id;
+            $file_marker_info_hash{$customer_snp_id}{'ref'} = $ref;
+            $file_marker_info_hash{$customer_snp_id}{'alt'} = $alt;
+            $file_marker_info_hash{$customer_snp_id}{'chrom'} = $chrom;
         }
 
     close($MI_F);
 
+    print STDERR "FILE MARKER INFO HASH =".Dumper(\%file_marker_info_hash)."\n";
     my @file_marker_names = keys %marker_names;
 
     if (defined $protocol_id) {
@@ -147,7 +158,19 @@ sub _validate_with_plugin {
         }
     }
 
-
+    if (defined $protocol_id) {
+        while (my ($file_marker_name, $file_marker_obj) = each %file_marker_info_hash) {
+            my $stored_marker_obj = $stored_marker_info{$file_marker_name};
+            while (my ($key, $value) = each %$file_marker_obj) {
+                my $stored_value = $stored_marker_obj->{$key};
+                $stored_value =~ s/^\s+|\s+$//g;
+                if ($value ne $stored_value) {
+                    push @error_messages, "Marker $file_marker_name in your marker info file has $value for $key, but in your selected protocol shows ".$stored_value;
+                }
+            }
+        }
+    }
+    
     # Open GRID FILE and parse
     my $csv = Text::CSV->new({ sep_char => ',' });
     my $F;
