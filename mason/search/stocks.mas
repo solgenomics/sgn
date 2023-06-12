@@ -101,16 +101,7 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Stock Owner: </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="person" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
     </div>
-    <br/>
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
@@ -278,7 +269,6 @@ my $breeding_programs_select = simple_selectbox_html(
                     <th>Stock Type</th>
                     <th>Organism</th>
                     <th>Synonyms</th>
-                    <th>Submitters</th>
                     <th>Organization</th>
                 </tr>
                 </thead>
@@ -312,9 +302,9 @@ my $breeding_programs_select = simple_selectbox_html(
 var stock_table;
 
 jQuery(document).ready(function () {
-    
+
     window.addEventListener('load', () => {
-      // Reset the advanced search form parameters on load. 
+      // Reset the advanced search form parameters on load.
       // Very similar to later functionality but that one is for advanced search and on load trigger only.
       var input_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('input');
       for (let input_elem of input_list) {
@@ -329,7 +319,7 @@ jQuery(document).ready(function () {
       var type_select = document.getElementById('stock_type_select');
       type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
     });
-    
+
 
     const textFields = document.querySelectorAll('input[type="text"]');
     // Loop through the text fields and set their values to an empty string
@@ -338,14 +328,14 @@ jQuery(document).ready(function () {
      });
 
      // Get all the dropdown select elements in the form
-     // Reset all but 'stock_type_select' dropdown to zero value 
-     // Leave 'stock_type_select' with the default "selected" value from the mason file. 
+     // Reset all but 'stock_type_select' dropdown to zero value
+     // Leave 'stock_type_select' with the default "selected" value from the mason file.
      const selectFields = document.querySelectorAll('select');
      selectFields.forEach(selectField => {
         if (selectField.id != 'stock_type_select') {
           selectField.selectedIndex = 0;
         }
-     });     
+     });
 
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'
