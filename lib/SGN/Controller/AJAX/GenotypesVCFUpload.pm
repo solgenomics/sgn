@@ -137,7 +137,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->stash->{rest} = { error => 'Do not try to upload both Intertek and Tassel HDF5 at the same time!' };
         $c->detach();
     }
-    if (defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) {
+    if ((defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) || (!defined($upload_intertek_genotypes) && defined($upload_inteterk_marker_info))) {
         $c->stash->{rest} = { error => 'To upload Intertek genotype data please provide both the Grid Genotypes File and the Marker Info File.' };
         $c->detach();
     }
@@ -490,7 +490,10 @@ sub upload_genotype_verify_POST : Args(0) {
         $return = $store_genotypes->store_genotypeprop_table();
     }
     #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
-    elsif ($parser_plugin eq 'GridFileIntertekCSV' || $parser_plugin eq 'IntertekCSV') {
+    elsif ($parser_plugin eq 'IntertekCSV') {
+        if (defined $protocol_id) {
+            $parser->{nd_protocol_id} = $protocol_id;
+        }
         my $parsed_data = $parser->parse();
         my $parse_errors;
         if (!$parsed_data) {

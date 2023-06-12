@@ -4,62 +4,74 @@ use Moose::Role;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Text::CSV;
+use CXGN::Genotype::Protocol;
 
 # Check that all sample IDs are in the database already
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $marker_info_filename = $self->get_filename_intertek_marker_info();
+    my $protocol_id = $self->get_nd_protocol_id();
     my $schema = $self->get_chado_schema();
     my %errors;
     my @error_messages;
     my %missing_accessions;
+    my %stored_marker_info;
 
-    my $csv = Text::CSV->new({ sep_char => ',' });
+    if (defined $protocol_id) {
+        my $stored_protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
+        });
 
-    my $F;
+        my $stored_markers = $stored_protocol->markers();
+        print STDERR "STORED MARKERS =".Dumper($stored_markers)."\n";
+        %stored_marker_info = %$stored_markers;
+    }
+
+    my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
+    my $MI_F;
 
     my %marker_names;
-    if ($marker_info_filename) {
-        # Open Marker Info File and get headers
-        open($F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
+    # Open Marker Info File and get headers
+    open($MI_F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
-            my $header_row = <$F>;
-            my @header_info;
+        my $marker_info_header_row = <$MI_F>;
+        my @marker_header_info;
 
-            # Get first row, which is the header
-            if ($csv->parse($header_row)) {
-                @header_info = $csv->fields();
-            }
+        # Get first row, which is the header
+        if ($marker_info_csv->parse($marker_info_header_row)) {
+            @marker_header_info = $marker_info_csv->fields();
+        }
 
-        my $intertek_snp_id_header = $header_info[0];
+        my $intertek_snp_id_header = $marker_header_info[0];
         $intertek_snp_id_header =~ s/^\s+|\s+$//g;
 
-        my $customer_snp_id_header = $header_info[1];
+        my $customer_snp_id_header = $marker_header_info[1];
         $customer_snp_id_header =~ s/^\s+|\s+$//g;
 
-        my $ref_header = $header_info[2];
+        my $ref_header = $marker_header_info[2];
         $ref_header =~ s/^\s+|\s+$//g;
 
-        my $alt_header = $header_info[3];
+        my $alt_header = $marker_header_info[3];
         $alt_header =~ s/^\s+|\s+$//g;
 
-        my $chrom_header = $header_info[4];
+        my $chrom_header = $marker_header_info[4];
         $chrom_header =~ s/^\s+|\s+$//g;
 
-        my $position_header = $header_info[5];
+        my $position_header = $marker_header_info[5];
         $position_header =~ s/^\s+|\s+$//g;
 
-        my $quality_header = $header_info[6];
+        my $quality_header = $marker_header_info[6];
         $quality_header =~ s/^\s+|\s+$//g;
 
-        my $filter_header = $header_info[7];
+        my $filter_header = $marker_header_info[7];
         $filter_header =~ s/^\s+|\s+$//g;
 
-        my $info_header = $header_info[8];
+        my $info_header = $marker_header_info[8];
         $info_header =~ s/^\s+|\s+$//g;
 
-        my $format_header = $header_info[9];
+        my $format_header = $marker_header_info[9];
         $format_header =~ s/^\s+|\s+$//g;
 
         # Check that the columns in the marker info file are what we expect
@@ -94,16 +106,16 @@ sub _validate_with_plugin {
             push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
         }
 
-        while (my $line = <$F>) {
-            my @line_info;
-            if ($csv->parse($line)) {
-                @line_info = $csv->fields();
+        while (my $marker_line = <$MI_F>) {
+            my @marker_line_info;
+            if ($marker_info_csv->parse($marker_line)) {
+                @marker_line_info = $marker_info_csv->fields();
             }
-            my $intertek_snp_id = $line_info[0];
-            my $customer_snp_id = $line_info[1];
-            my $ref = $line_info[2];
-            my $alt = $line_info[3];
-            my $chrom = $line_info[4];
+            my $intertek_snp_id = $marker_line_info[0];
+            my $customer_snp_id = $marker_line_info[1];
+            my $ref = $marker_line_info[2];
+            my $alt = $marker_line_info[3];
+            my $chrom = $marker_line_info[4];
 
             if (!$intertek_snp_id){
                 push @error_messages, 'Intertek snp id is required for all markers.';
@@ -123,10 +135,22 @@ sub _validate_with_plugin {
             $marker_names{$customer_snp_id} = 1;
         }
 
-        close($F);
+    close($MI_F);
+
+    my @file_marker_names = keys %marker_names;
+
+    if (defined $protocol_id) {
+        foreach (@file_marker_names) {
+            if (!exists($stored_marker_info{$_})) {
+                push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
+            }
+        }
     }
 
+
     # Open GRID FILE and parse
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    my $F;
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
         my $header_row = <$F>;
