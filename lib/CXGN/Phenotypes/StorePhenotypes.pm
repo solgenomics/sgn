@@ -662,17 +662,17 @@ sub store {
                             $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                         }
                     }
-
+                    my $pheno_additional_info;
                     if($additional_info){
-                        my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->create({
+                        $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                             phenotype_id => $phenotype->phenotype_id,
                             type_id       => $phenotype_addtional_info_type_id,
                             value => encode_json $additional_info,
                         });
                     }
-
+                    my $phenotype_external_references;
                     if($external_references){
-                        my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->create({
+                        $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                             phenotype_id => $phenotype->phenotype_id,
                             type_id      => $external_references_type_id,
                             value => encode_json $external_references,
@@ -691,6 +691,8 @@ sub store {
                         "observationVariableName"=> $trait_cvterm->name,
                         "studyDbId"=> $project_id,
                         "uploadedBy"=> $operator ? $operator : "",
+                        "additionalInfo" => decode_json $pheno_additional_info->value,
+                        "externalReferences" => decode_json $phenotype_external_references->value,
                         "value" => $trait_value
                     );
 
