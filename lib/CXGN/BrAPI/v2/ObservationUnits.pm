@@ -423,6 +423,15 @@ sub observationunits_update {
         my $level_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
         my $raw_additional_info = $params->{additionalInfo} || undef;
         my $is_a_control = $raw_additional_info->{control} ? $raw_additional_info->{control} : undef;
+
+        my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
+        my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+
+        # BrAPI entryType overrides additionalinfo.control
+        if ($entry_type) {
+            $is_a_control = uc($entry_type) eq 'CHECK' ? 1 : 0;
+        }
+
         my $range_number = $raw_additional_info->{range} ? $raw_additional_info->{range} : undef;
         my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","range");
         my %additional_info;
@@ -628,7 +637,14 @@ sub observationunits_store {
         my $plot_parent_id = $params->{additionalInfo}->{observationUnitParent} ? $params->{additionalInfo}->{observationUnitParent} : undef;
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
         my $accession_name = $params->{germplasmName} ? $params->{germplasmName} : undef;
+        my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
         my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+
+        # BrAPI entryType overrides additionalinfo.control
+        if ($entry_type) {
+            $is_a_control = uc($entry_type) eq 'CHECK' ? 1 : 0;
+        }
+
         my $range_number = $params->{additionalInfo}->{range}  ? $params->{additionalInfo}->{range}  : undef;
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
