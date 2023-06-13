@@ -574,10 +574,15 @@ sub retrieve_genotypes {
     # print STDERR "CXGN::Dataset retrieve_genotypes\n";
 
     my $accessions = $self->retrieve_accessions();
+
+    #print STDERR "ACCESSIONS: ".Dumper($accessions);
+
     my @accession_ids;
     foreach (@$accessions) {
         push @accession_ids, $_->[0];
     }
+
+    #print STDERR "ACCESSION IDS: ".Dumper(\@accession_ids);
 
     my $trials = $self->retrieve_trials();
     my @trial_ids;
@@ -1128,6 +1133,33 @@ sub retrieve_trial_types {
     return \@trial_types;
 }
 
+=head2 retrieve_outliers_phoeno_ids()
+
+Retrieves phenotypes ids from outlier set if has one ?
+
+=cut
+
+# sub retrieve_outliers_phoeno_ids {
+#     my $self = shift;
+#
+#     my $outliers_phoeno_ids;
+#     if ($self->outliers() && scalar(@{$self->outliers()})>0) {
+#         foreach my $a (@{$self->trial_types()}) {
+#             push @trial_types, [$a, $a];
+#         }
+#     }
+#     else {
+#         my $criteria = $self->get_dataset_definition();
+#         push @$criteria, "trial_types";
+#         my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_types"));
+#         my $breeding_program_list = $breeding_program_data->{results};
+#
+#         foreach my $y (@$breeding_program_list) {
+#             push @trial_types, [$y->[0], $y->[0]];
+#         }
+#     }
+#     return \@trial_types;
+# }
 
 sub get_dataset_definition  {
     my $self = shift;

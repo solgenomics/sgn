@@ -98,8 +98,7 @@ $dataset_contents => ''
 </%perl>
 
 <body>
-
-  <div id="wizard" class="row">
+    <div id="wizard" class="row">
 
   <div class="wizard-datasets">
   <table id="dataset_results"; border="1">
@@ -117,21 +116,152 @@ $dataset_contents => ''
          <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
   </table>
   </div>
+
+
+  <div class="top-row">
+    <div id="trait_selections">
+      <label for="trait_selection">Select a Trait: </label>
+      <select id="trait_selection" name="trait_selection">
+        <option value="default">Select Trait</option>
+      </select>
+    </div>
+
+    <div id="store-outliers">
+      <button class="btn btn-primary" id="store_outliers">Store Outliers</button>
+    </div>
+    
+    <div id="dataset_slider">
+      <input type="range" min="4" max="8" value="6" class="slider form-range" id="myRange">
+    </div>
   </div>
+
+
+  <div id="trait_graph"></div>
+
+
+  <div id="dataset_summary_table">
+
+    <!-- DataTable with a summary of the different datatypes in the dataset -->
+    
+  </div>
+
+  <div>
+    <button class="btn btn-primary" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
+  </div>
+
 
   <script>
 
-    jQuery('#info_table').click(function() {
-      $.ajax({
-      url: '/ajax/dataset/by_user/<% $dataset_id %>',
-      success: function(response) {
-        alert(response.options);
-      },
-      error: function(response) {
-        alert("An error occurred");
-      }  
+    jQuery(document).ready( function() {
+        console.log('dataset id', '<% $dataset_id %>');
+        var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
+        DataSet.render();
+
+        jQuery('#info_table').click(function() {
+          $.ajax({
+            url: '/ajax/dataset/by_user/<% $dataset_id %>',
+            success: function(response) {
+                alert(response.options);
+            },
+            error: function(response) {
+              alert("An error occurred");
+            }  
+        });
+
+
+        // tuaj trzeba bedzie zrobic przejscie miedzy przedmiotami :P w sensie lista z outlierwów z JS do tego linka -> potem w kontrolerze wypierdalame te linie ifami i jazda :P
+
+        $('#outliers_phenotype_download').click(function() {
+            console.log("hello");
+            console.log('dataset id', '<% $dataset_id %>');
+            // console.log(DataSet.datasetId);
+            // console.log(DataSet.datasets);
+            // console.log(DataSet.data);
+            // console.log(DataSet.outliers);
+            // console.log(DataSet.observations);
+            // console.log(DataSet.traits);
+            // console.log(Object.keys(DataSet.traits).length);
+            console.log("DataSet.traitsIds: ");
+            console.log(DataSet.traitsIds);
+            // console.log(DataSet.phenoIds);
+            // console.log(DataSet.traitVals);
+            // console.log(DataSet.);
+            // console.log(DataSet.);
+            // console.log(DataSet.);
+            // console.log(DataSet.);
+
+            var speed = 'MaterializedViewTable';
+            // var speed = d3.select(".wizard-download-phenotypes-speed").node().value;
+            var format = '.csv';
+            // var format = d3.select(".wizard-download-phenotypes-format").node().value;
+            var level = 'all';
+            // var level = d3.select(".wizard-download-phenotypes-level").node().value;
+            var timestamp = 0;
+            // var timestamp = d3.selectAll('.wizard-download-phenotypes-timestamp').property('checked')?1:0;
+            var entry_numbers = 0;
+            // var entry_numbers = d3.selectAll('.wizard-download-phenotypes-entry-numbers').property('checked')?1:0;
+            var outliers = 0;
+            // var outliers = d3.selectAll('.wizard-download-phenotypes-outliers').property('checked')?1:0;
+            var names = "";
+            // var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
+            var min = "";
+            // var min = d3.select(".wizard-download-phenotypes-min").node().value;
+            var max = "";
+            // var max = d3.select(".wizard-download-phenotypes-max").node().value;
+
+            var url = document.location.origin+
+              `/breeders/download_action?trait_ids_list=${DataSet.traitsIds}`+
+              `&format=${format}`+
+              // `&speed=${speed}&format=${format}&trait_list=${trait_ids}&trait_component_list=${comp_ids}`+
+              // `&accession_list=${accession_ids}&plot_list=${plot_ids}&plant_list=${plant_ids}&location_list=${location_ids}`+
+              `&phenotype_datalevel=${level}`+
+              `&timestamp_included=${timestamp}`+
+              `&dataset_id='<% $dataset_id %>'`
+              // `&include_row_and_column_numbers=1&exclude_phenotype_outlier=${outliers}`+
+              // `&include_pedigree_parents=0`;       
+
+            console.log(url);
+            window.open(url,'_blank');    
+
+              // my $accession_list_id = $c->req->param("accession_list_list_select");
+              // my $trait_list_id     = $c->req->param("trait_list_list_select");
+              // my $trial_list_id     = $c->req->param("trial_list_list_select");
+              // my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
+              // if (!$trial_list_id && !$accession_list_id && !$trait_list_id){
+              //     $trial_list_id     = $c->req->param("trial_metadata_list_list_select");
+              //     $dl_token = $c->req->param("metadata_download_token") || "no_token";
+              // }
+              // my $format            = $c->req->param("format");
+              // if (!$format){
+              //     $format            = $c->req->param("metadata_format");
+              // }
+              // my $datalevel         = $c->req->param("phenotype_datalevel");
+              // if (!$datalevel){
+              //     $datalevel         = $c->req->param("metadata_datalevel");
+              // }
+              // my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
+              // my $timestamp_included = $c->req->param("timestamp") || 0;
+
+              // # more parameters for outliers download
+              // my @trait_ids     = $c->req->param("trait_ids_list");
+
+            // var url = document.location.origin+
+            //   `/breeders/download_action?trial_list=${trial_ids}`+
+            //   `&speed=${speed}&format=${format}&trait_list=${trait_ids}&trait_component_list=${comp_ids}`+
+            //   `&accession_list=${accession_ids}&plot_list=${plot_ids}&plant_list=${plant_ids}&location_list=${location_ids}`+
+            //   `&year_list=${year_ids}&dataLevel=${level}&phenotype_min_value=${min}&phenotype_max_value=${max}`+
+            //   `&timestamp=${timestamp}&entry_numbers=${entry_numbers}&trait_contains=${names}`+
+            //   `&include_row_and_column_numbers=1&exclude_phenotype_outlier=${outliers}`+
+            //   `&include_pedigree_parents=0`;
+            
+            // window.open(url,'_blank');
+        })
     });
-    });
+
     
+
+  });
+
+
   </script>
 </body>
