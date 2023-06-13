@@ -428,12 +428,6 @@ sub upload_genotype_verify_POST : Args(0) {
 
             $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
             my $verified_errors = $store_genotypes->validate();
-            # print STDERR Dumper $verified_errors;
-#            if (scalar(@{$verified_errors->{error_messages}}) > 0){
-#                my $error_string = join ', ', @{$verified_errors->{error_messages}};
-#                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
-#                $c->detach();
-#            }
 
             if (scalar(@{$verified_errors->{error_messages}}) > 0){
                 my $error_string;
@@ -457,6 +451,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
             if ($protocol_id) {
                 my @protocol_match_errors;
+                my $new_marker_data = $protocol->{markers};
                 my $stored_protocol = CXGN::Genotype::Protocol->new({
                     bcs_schema => $schema,
                     nd_protocol_id => $protocol_id
@@ -464,10 +459,14 @@ sub upload_genotype_verify_POST : Args(0) {
                 my $stored_markers = $stored_protocol->markers();
 
                 while (my ($marker_name, $marker_obj) = each %$stored_markers) {
-                    my $new_marker_obj = $protocol->{markers}->{$marker_name};
-                    while (my ($key, $value) = each %$marker_obj) {
-                        if ($value ne $new_marker_obj->{$key}) {
-                            push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$new_marker_obj->{$key};
+                    while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+                        if ($new_marker_data_1->{$marker_name}) {
+                            my $protocol_data_obj = $new_marker_data_1->{$marker_name};
+                            while (my ($key, $value) = each %$marker_obj) {
+                                if ($value ne $protocol_data_obj->{$key}) {
+                                    push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$protocol_data_obj->{$key};
+                                }
+                            }
                         }
                     }
                 }
@@ -560,31 +559,39 @@ sub upload_genotype_verify_POST : Args(0) {
             }
         }
 
-#        if ($protocol_id) {
-#            my @protocol_match_errors;
-#            my $stored_protocol = CXGN::Genotype::Protocol->new({
-#                bcs_schema => $schema,
-#                nd_protocol_id => $protocol_id
-#           });
-#            my $stored_markers = $stored_protocol->markers();
+        if ($protocol_id) {
+            my @protocol_match_errors;
+            my $new_marker_data = $protocol->{markers};
+            my $stored_protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $protocol_id
+            });
+            my $stored_markers = $stored_protocol->markers();
 
-#            while (my ($marker_name, $marker_obj) = each %$stored_markers) {
-#                my $new_marker_obj = $protocol_info->{markers}->{$marker_name};
-#                while (my ($key, $value) = each %$marker_obj) {
-#                    if ($value ne $new_marker_obj->{$key}) {
-#                        push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$new_marker_obj->{$key};
-#                    }
-#                }
-#            }
+            while (my ($marker_name, $marker_obj) = each %$stored_markers) {
+                while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+                    if ($new_marker_data_1->{$marker_name}) {
+                        my $protocol_data_obj = $new_marker_data_1->{$marker_name};
+                        while (my ($key, $value) = each %$marker_obj) {
+                            if ($value ne $protocol_data_obj->{$key}) {
+                                push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$protocol_data_obj->{$key};
+                            }
+                        }
+                    }
+                }
+            }
 
-#            if (scalar(@protocol_match_errors) > 0){
-#                my $warning_string = join ', ', @protocol_match_errors;
-#                if (!$accept_warnings){
-#                    $c->stash->{rest} = { warning => $warning_string };
-#                    $c->detach();
-#                }
-#            }
-#        }
+            if (scalar(@protocol_match_errors) > 0){
+                my $protocol_warning;
+                foreach my $match_error (@protocol_match_errors) {
+                    $protocol_warning .= $match_error."<br>";
+                }
+                if (!$accept_warnings){
+                    $c->stash->{rest} = { warning => $protocol_warning };
+                    $c->detach();
+                }
+            }
+        }
 
         $store_genotypes->store_metadata();
         $store_genotypes->store_identifiers();
