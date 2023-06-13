@@ -429,14 +429,26 @@ sub upload_genotype_verify_POST : Args(0) {
             $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
             my $verified_errors = $store_genotypes->validate();
             # print STDERR Dumper $verified_errors;
+#            if (scalar(@{$verified_errors->{error_messages}}) > 0){
+#                my $error_string = join ', ', @{$verified_errors->{error_messages}};
+#                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+#                $c->detach();
+#            }
+
             if (scalar(@{$verified_errors->{error_messages}}) > 0){
-                my $error_string = join ', ', @{$verified_errors->{error_messages}};
+                my $error_string;
+                foreach my $error (@{$verified_errors->{error_messages}}) {
+                    $error_string .= $error."<br>";
+                }
                 $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
                 $c->detach();
             }
+
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-                #print STDERR Dumper $verified_errors->{warning_messages};
-                my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+                my $warning_string;
+                foreach my $error_string (@{$verified_errors->{'warning_messages'}}){
+                    $warning_string .= $error_string."<br>";
+                }
                 if (!$accept_warnings){
                     $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                     $c->detach();
@@ -461,9 +473,12 @@ sub upload_genotype_verify_POST : Args(0) {
                 }
 
                 if (scalar(@protocol_match_errors) > 0){
-                    my $warning_string = join ', ', @protocol_match_errors;
+                    my $protocol_warning;
+                    foreach my $match_error (@protocol_match_errors) {
+                        $protocol_warning .= $match_error."<br>";
+                    }
                     if (!$accept_warnings){
-                        $c->stash->{rest} = { warning => $warning_string };
+                        $c->stash->{rest} = { warning => $protocol_warning };
                         $c->detach();
                     }
                 }
@@ -524,14 +539,21 @@ sub upload_genotype_verify_POST : Args(0) {
 
         my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
         my $verified_errors = $store_genotypes->validate();
+
         if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string = join ', ', @{$verified_errors->{error_messages}};
+            my $error_string;
+            foreach my $error (@{$verified_errors->{error_messages}}) {
+                $error_string .= $error."<br>";
+            }
             $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
             $c->detach();
         }
+
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            #print STDERR Dumper $verified_errors->{warning_messages};
-            my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+            my $warning_string;
+            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
+                $warning_string .= $error_string."<br>";
+            }
             if (!$accept_warnings){
                 $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                 $c->detach();
@@ -614,14 +636,21 @@ sub upload_genotype_verify_POST : Args(0) {
 
         my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
         my $verified_errors = $store_genotypes->validate();
+
         if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string = join ', ', @{$verified_errors->{error_messages}};
+            my $error_string;
+            foreach my $error (@{$verified_errors->{error_messages}}) {
+                $error_string .= $error."<br>";
+            }
             $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
             $c->detach();
         }
+
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            #print STDERR Dumper $verified_errors->{warning_messages};
-            my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+            my $warning_string;
+            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
+                $warning_string .= $error_string."<br>";
+            }
             if (!$accept_warnings){
                 $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                 $c->detach();

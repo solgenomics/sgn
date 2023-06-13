@@ -351,7 +351,7 @@ $facilities
 
                                 <br/><br/>
                                 <center>
-                                    <button type="button" class="btn btn-primary" name="file_check_button" id="file_check_button">Check File Type</button>
+                                    <button type="button" class="btn btn-default" name="file_check_button" id="file_check_button">Check File Type</button>
                                     <button type="button" style="display:none" class="btn btn-primary" disabled onclick="Workflow.complete(this); return false;" id="genotyping_data_upload_next">Go to Next Step</button>
                                 </center>
                             </&>
