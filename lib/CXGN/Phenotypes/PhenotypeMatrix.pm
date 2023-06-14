@@ -22,6 +22,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     include_timestamp=>$include_timestamp,
     include_pedigree_parents=>$include_pedigree_parents,
     exclude_phenotype_outlier=>0,
+    dataset_exluded_outliers=>$dataset_exluded_outliers,
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
     phenotype_max_value=>$phenotype_max_value,
@@ -140,6 +141,11 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
+has 'dataset_exluded_outliers' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'trait_contains' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw'
@@ -190,6 +196,7 @@ sub get_phenotype_matrix {
             subplot_list=>$self->subplot_list,
             include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+            dataset_exluded_outliers=>$self->dataset_exluded_outliers,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
@@ -204,7 +211,7 @@ sub get_phenotype_matrix {
 
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();
-        print STDERR "Look at Data here! ".Dumper($data);
+        # print STDERR "Look at Data here! ".Dumper($data);
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -270,23 +277,34 @@ sub get_phenotype_matrix {
             my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             my %phenotype_ids;
-            foreach (@$observations){
-                my $collect_date = $_->{collect_date};
-                my $timestamp = $_->{timestamp};
+            my $dataset_exluded_outliers = $self->dataset_exluded_outliers;
+            foreach my $observation (@$observations){
+                my $collect_date = $observation->{collect_date};
+                my $timestamp = $observation->{timestamp};
+                # if ($_)
+                # if phenotype_id is on a list of outliers then put a value NA / O later - we need to decide on it
+
+                # if($observation($))
+
                 if ($include_timestamp && $timestamp) {
-                    $trait_observations{$_->{trait_name}} = "$_->{value},$timestamp";
+                    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
                 }
                 elsif ($include_timestamp && $collect_date) {
-                    $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
+                    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
                 }
                 else {
-                    $trait_observations{$_->{trait_name}} = $_->{value};
+                    $trait_observations{$observation->{trait_name}} = $observation->{value};
+                }
+                # outliers
+                print STDERR "DATASET_EXCLUDED_OUTLIERS = ".Dumper($dataset_exluded_outliers)."\n";
+                if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_exluded_outliers) {
+                    $trait_observations{$observation->{trait_name}} = "outlier";
                 }
             }
 
             if ($include_phenotype_primary_key) {
-                foreach (@$observations) {
-                    $phenotype_ids{$_->{trait_name}} = $_->{phenotype_id};
+                foreach my $observation (@$observations) {
+                    $phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
                 }
             }
             foreach my $trait (@sorted_traits) {
