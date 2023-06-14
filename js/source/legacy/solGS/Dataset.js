@@ -148,6 +148,7 @@ solGS.dataset = {
       analysis_type: "training_dataset",
       data_set_type: "single_population",
       training_pop_id: popId,
+      training_pop_name: datasetName,
       population_type: popType,
       genotyping_protocol_id: protocolId,
     };
@@ -178,7 +179,7 @@ solGS.dataset = {
       selection_pop_id: selectionPopId,
       selection_pop_name: datasetName,
       training_traits_ids: trainingTraitsIds,
-      population_type: 'dataset_selection',
+      population_type: "dataset_selection",
       data_set_type: trainingPopDetails.data_set_type,
       genotyping_protocol_id: protocolId,
     };
@@ -214,7 +215,7 @@ solGS.dataset = {
           args = JSON.parse(args);
 
           if (response.output) {
-            solGS.listTypeSelectionPopulation.displayPredictedListTypeSelectionPops(
+            solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(
               args,
               response.output
             );
