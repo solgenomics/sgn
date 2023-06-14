@@ -670,6 +670,8 @@ sub store {
                         my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                             phenotype_id => $phenotype->phenotype_id,
                             type_id       => $phenotype_addtional_info_type_id,
+                        });
+                        $pheno_additional_info = $pheno_additional_info->update({
                             value => encode_json $additional_info,
                         });
                         $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
@@ -679,22 +681,25 @@ sub store {
                         my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                             phenotype_id => $phenotype->phenotype_id,
                             type_id      => $external_references_type_id,
+                        });
+                        $phenotype_external_references = $phenotype_external_references->update({
                             value => encode_json $external_references,
                         });
                         $external_references_stored = $phenotype_external_references->value ? decode_json $phenotype_external_references->value : undef;
                     }
 
                     my $observationVariableDbId = $trait_cvterm->cvterm_id;
+                    my $observation_id = $phenotype->phenotype_id;
                     my %details = (
-                        "germplasmDbId"=> $linked_data{$plot_name}->{germplasmDbId},
+                        "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
                         "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
-                        "observationDbId"=> $phenotype->phenotype_id,
+                        "observationDbId"=> qq|$observation_id|,
                         "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
-                        "observationUnitDbId"=> $linked_data{$plot_name}->{observationUnitDbId},
+                        "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
                         "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
                         "observationVariableDbId"=> qq|$observationVariableDbId|,
                         "observationVariableName"=> $trait_cvterm->name,
-                        "studyDbId"=> $project_id,
+                        "studyDbId"=> qq|$project_id|,
                         "uploadedBy"=> $operator ? $operator : "",
                         "additionalInfo" => $additional_info_stored,
                         "externalReferences" => $external_references_stored,
