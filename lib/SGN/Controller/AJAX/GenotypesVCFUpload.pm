@@ -333,6 +333,9 @@ sub upload_genotype_verify_POST : Args(0) {
         });
         $organism_species = $protocol->species_name;
         $obs_type = $protocol->sample_observation_unit_type_name;
+        if ($obs_type eq 'accession') {
+            $include_lab_numbers = 1;
+        }
     }
 
     my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
@@ -561,7 +564,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
         if ($protocol_id) {
             my @protocol_match_errors;
-            my $new_marker_data = $protocol->{markers};
+            my $new_marker_data = $protocol_info->{markers};
             my $stored_protocol = CXGN::Genotype::Protocol->new({
                 bcs_schema => $schema,
                 nd_protocol_id => $protocol_id
