@@ -1,7 +1,5 @@
 /**
-selection population upload from lists
-and files. Run prediction model on list selection population
-and display output.
+A search interface for list and dataset type selection populations
 
 Isaak Y Tecle
 iyt2@cornell.edu
@@ -28,7 +26,6 @@ solGS.listTypeSelectionPopulation = {
 
     return checkPredicted;
   },
-
 
   askSelectionJobQueueing: function (listId) {
     var args = this.createSelectionReqArgs(listId);
@@ -75,45 +72,38 @@ solGS.listTypeSelectionPopulation = {
     }
   },
 
-  displayPredictedListTypeSelectionPops: function (args, output) {
+  displayListTypeSelectionPops: function (args, output) {
     var selPopName = args.selection_pop_name;
     var selPopId = args.selection_pop_id;
 
-    var popDetail = {id: selPopId, name: selPopName, pop_type: args.population_type};
-    popDetail= JSON.stringify(popDetail);
+    var popDetail = { id: selPopId, name: selPopName, pop_type: args.population_type };
+    popDetail = JSON.stringify(popDetail);
 
     var tableId = "list_type_selection_pops_table";
-    var trId = `${args.population_type}_${selPopId}`;
-    var predictedListTypeSelectionPops = jQuery(`#${tableId}`).doesExist();
+    var listTypeSelectionTable = jQuery(`#${tableId}`).doesExist();
 
-    if (predictedListTypeSelectionPops == false) {
-      var predictedListTypeSelectionTable =
+    if (listTypeSelectionTable == false) {
+      listTypeSelectionTable =
         `<table id="${tableId}" class="table"><thead><tr>` +
-        "<th>List-based selection population</th>" +
+        "<th>List/datset type selection population</th>" +
         "<th>View GEBVs</th>" +
-        "</tr></thead><tbody>" +
+        "</tr></thead><tbody>";
+
+      jQuery("#list_type_selection_pops_selected").append(listTypeSelectionTable).show();
+    }
+
+    var trId = `${args.population_type}_${selPopId}`;
+    var popDisplayed = jQuery(`#${trId}`).doesExist();
+    if (popDisplayed == false) {
+      var row =
         `<tr id='${trId}' data-list-selection-pop='${popDetail}'>` +
         `<td><b>${selPopName}</b></td>` +
         `<td>${output}</td>` +
-        "</tr></tbody></table>";
-
-      jQuery("#list_type_selection_pops_selected").append(predictedListTypeSelectionTable).show();
-    } else {
-      var addRow =
-        `<tr id='${trId}' data-list-selection-pop='${popDetail}'>` +
-        `<td><b> ${selPopName}</b></td>`  +
-        `<td>${output}</td>` +
         "</tr>";
 
-      var samePop = jQuery(`#${trId}`).doesExist();
-
-      if (samePop == false) {
-        jQuery(`#${tableId} tr:last`).after(addRow);
-      } else {
-        jQuery(`#${trId}`).remove();
-        jQuery(`#${tableId}`).append(addRow).show();
-      }
+      jQuery(`#${tableId} tr:last`).after(row);
     }
+
   },
 
   populateSelectionPopsMenu: function () {
@@ -175,16 +165,17 @@ jQuery(document).ready(function () {
   var menuId = solGS.listTypeSelectionPopulation.selectionPopsSelectMenuId;
   jQuery(`${menuId}`).change(function () {
     var selectedPop = jQuery("option:selected", this).data("pop");
+   
     if (selectedPop.id) {
       jQuery(" #list_type_selection_pop_go_btn").click(function () {
+
         if (
           typeof selectedPop.data_str === "undefined" ||
-          !selectedPop.data_str.match(/dataset/i)
+          selectedPop.data_str.match(/list/i)
         ) {
-
           const listObj = new solGSList(selectedPop.id);
           var listDetail = listObj.getListDetail();
-    
+
           if (listDetail.type.match(/accessions/)) {
             solGS.listTypeSelectionPopulation
               .checkPredictedListSelection(selectedPop.id)
@@ -192,10 +183,7 @@ jQuery(document).ready(function () {
                 var args = solGS.listTypeSelectionPopulation.createSelectionReqArgs(selectedPop.id);
 
                 if (res.output) {
-                  solGS.listTypeSelectionPopulation.displayPredictedListTypeSelectionPops(
-                    args,
-                    res.output
-                  );
+                  solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(args, res.output);
 
                   if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
                     solGS.sIndex.populateSindexMenu();
@@ -204,7 +192,7 @@ jQuery(document).ready(function () {
                     solGS.cluster.listClusterPopulations();
                   }
                 } else {
-                  solGS.listTypeSelectionPopulation.askSelectionJobQueueing(listId);
+                  solGS.listTypeSelectionPopulation.askSelectionJobQueueing(selectedPop.id);
                 }
               })
               .fail(function () {
@@ -217,6 +205,7 @@ jQuery(document).ready(function () {
             //	loadTrialListTypeSelectionPop(trialsNames);
           }
         } else {
+        
           solGS.dataset.checkPredictedDatasetSelection(selectedPop.id, selectedPop.name);
         }
       });
