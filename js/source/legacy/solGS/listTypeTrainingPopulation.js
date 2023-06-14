@@ -107,8 +107,8 @@ solGS.listTypeTrainingPopulation = {
     if (listTypeTrainingTable == false) {
       listTypeTrainingTable =
         `<table id="${tableId}" class="table"><thead><tr>` +
-        "<th>List-based training population</th>" +
-        "<th>View GEBVs</th>" +
+        "<th>List/dataset type training population</th>" +
+        "<th>Detail page</th>" +
         "</tr></thead><tbody>";
 
       jQuery("#list_type_training_pops_selected").append(listTypeTrainingTable).show();
@@ -168,16 +168,16 @@ jQuery("#list_type_training_pops_table").ready(function () {
     var selectedPop = row.target.dataset.selectedPop;
 
     selectedPop = JSON.parse(selectedPop);
+    if (selectedPop.id.match(/\w+_/)) {
+      selectedPop.id = selectedPop.id.replace(/\w+_/, "");
+    }
 
     if (selectedPop.pop_type.match(/list/)) {
-      if (selectedPop.id.match(/list/)) {
-        var listId = selectedPop.id.replace(/list_/, "");
-      }
-
-      const list = new solGSList(listId);
+    
+      const list = new solGSList(selectedPop.id);
       var listDetail = list.getListDetail();
       if (listDetail.type.match(/plots/)) {
-        solGS.listTypeTrainingPopulation.askTrainingJobQueueing(listId);
+        solGS.listTypeTrainingPopulation.askTrainingJobQueueing(selectedPop.id);
       } else {
         var trialsNames = list.getListElementsNames();
 
@@ -191,11 +191,7 @@ jQuery("#list_type_training_pops_table").ready(function () {
           });
       }
     } else {
-      if (selectedPop.id.match(/dataset/)) {
-        var datasetId = selectedPop.id.replace(/dataset_/, "");
-      }
-
-      solGS.dataset.datasetTrainingPop(datasetId, selectedPop.name);
+      solGS.dataset.datasetTrainingPop(selectedPop.id, selectedPop.name);
     }
   });
 });
