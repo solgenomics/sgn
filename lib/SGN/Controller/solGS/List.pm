@@ -509,44 +509,6 @@ sub map_plots_genotypes {
 
 }
 
-sub load_plots_list_training : Path('/solgs/load/plots/list/training') Args(0) {
-    my ( $self, $c ) = @_;
-
-    my $args = $c->req->param('arguments');
-
-    my $json = JSON->new();
-    $args = $json->decode($args);
-
-    $c->stash->{list_name}              = $args->{list_name};
-    $c->stash->{list_id}                = $args->{list_id};
-    $c->stash->{model_id}               = $args->{training_pop_id};
-    $c->stash->{population_type}        = $args->{population_type};
-    $c->stash->{list_id}                = $args->{list_id};
-    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
-
-    my $model_id = $c->stash->{model_id};
-
-    $self->plots_list_phenotype_file($c);
-    my $pheno_file = $c->stash->{plots_list_phenotype_file};
-
-    $self->genotypes_list_genotype_file( $c, $model_id );
-    my $geno_file = $c->stash->{genotypes_list_genotype_file};
-
-    $self->create_list_population_metadata_file( $c, $model_id );
-
-    my $ret->{status} = 'failed';
-
-    if ( -s $geno_file && -s $pheno_file ) {
-        $ret->{status} = 'success';
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
 sub transform_plots_genotypes_names {
     my ( $self, $c ) = @_;
 
