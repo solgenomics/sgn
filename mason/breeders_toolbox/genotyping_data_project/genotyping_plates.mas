@@ -11,6 +11,8 @@ $trial_id
                 <th>Folder</th>
                 <th>Format</th>
                 <th>Sample Type</th>
+                <th>No of Samples</th>
+                <th>No of Samples with Data</th>
                 <th>Download</th>
             </tr>
         </thead>
