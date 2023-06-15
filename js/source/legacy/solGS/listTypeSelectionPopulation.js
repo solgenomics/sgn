@@ -85,7 +85,7 @@ solGS.listTypeSelectionPopulation = {
     if (listTypeSelectionTable == false) {
       listTypeSelectionTable =
         `<table id="${tableId}" class="table"><thead><tr>` +
-        "<th>List/datset type selection population</th>" +
+        "<th>List/dataset type selection population</th>" +
         "<th>View GEBVs</th>" +
         "</tr></thead><tbody>";
 
