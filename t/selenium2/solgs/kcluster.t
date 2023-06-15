@@ -646,7 +646,7 @@ $d->while_logged_in_as(
         sleep(15);
 
         $d->find_element_ok(
-'//select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'accessions list sl pop'
@@ -676,7 +676,7 @@ $d->while_logged_in_as(
         sleep(15);
 
         $d->find_element_ok(
-'//select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'accession select list sl pop'
@@ -715,11 +715,11 @@ $d->while_logged_in_as(
             '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
             'xpath', 'select list sel pop' )->click();
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_list_select',
+        $d->find_element_ok( 'list_type_selection_pops_select',
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $list = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'select list sel pop'
@@ -788,11 +788,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);",
             $sel_pops );
         sleep(2);
-        $d->find_element_ok( 'list_type_selection_pops_list_select',
+        $d->find_element_ok( 'list_type_selection_pops_select',
             'id', 'select clones list menu' )->click();
         sleep(2);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select dataset sel pop'
@@ -862,11 +862,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_list_select',
+        $d->find_element_ok( 'list_type_selection_pops_select',
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select accessions dataset sel pop'
@@ -1793,7 +1793,7 @@ $d->while_logged_in_as(
         sleep(15);
 
         $d->find_element_ok(
-'//select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'list sl pop'
@@ -1825,7 +1825,7 @@ $d->while_logged_in_as(
         sleep(5);
 
         $d->find_element_ok(
-'//select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select list sl pop'
@@ -2057,11 +2057,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_list_select',
+        $d->find_element_ok( 'list_type_selection_pops_select',
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select dataset sel pop'
@@ -2128,11 +2128,11 @@ $d->while_logged_in_as(
             '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
             'xpath', 'select list type sel pop' )->click();
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_list_select',
+        $d->find_element_ok( 'list_type_selection_pops_select',
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $list = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="'
+'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'select list sel pop'
