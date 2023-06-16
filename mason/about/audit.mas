@@ -33,76 +33,19 @@ results and returns the appropriate URL for going to that page of results
   
 </%args>
 
+
+<& /page/page_title.mas, title=>"Database Audit Tables" &>
+
 <div class="container-fluid">
 
-<& /page/page_title.mas, title => 'Organism/Taxon Search' &>
-
 <style>
-#organism_search_form .checkboxgroup span span {
-  white-space: nowrap;
-  float: left;
-  width: 10em;
-}
-#organism_search_form div label, #organism_search_form legend {
-  font-weight: bold;
-}
-#organism_search_form div.text label {
-  float: left;
-  width: 10em;
-}
-
-div.paginate_nav {
-  margin: 0 auto;
-  width: 80%;
-  white-space: nowrap;
-  text-align: center;
-}
 </style>
 
-
-<& /util/import_javascript.mas, classes => [ 'jquery' ] &>
-  
-<!--
-
-  <&| /page/info_section.mas, title    => 'Search Results',
-                              subtitle => 'Results '
-                                          .$pager->first
-                                          .'-'.$pager->last
-                                          .' of '.Number::Format->new->format_number($pager->total_entries)
-   &>
-
--->
-
-
-<&| /page/info_section.mas, title    => 'Search', collapsible=>1, collapsed=>0 &>
-
-<div class="well">
-</div>
-
-</&>
-
-<br/>
-<center>
-<div style="width:400px">
-  <div class="panel panel-info">
-    <div class="panel-heading">Popular Species</div>
-    <div class="panel-body" style="overflow:hidden">
-      <& /homepage/popular_species.mas, show_link => 0 &>
-    </div>
-  </div>
-</div>
-</center>
 
 </div>
 
 <script>
   
-   $(window).ready( function() {
-    $('#organism_search_form input[name=species]').autocomplete( {
-      source: '/organism/autocomplete'
-    });
-
-  });
 
 </script>
 
