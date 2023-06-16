@@ -2386,11 +2386,22 @@ sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_comple
 
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
-    my $has_phenotype_check = $schema->resultset('Phenotype::Phenotype')->search({'stock.type_id'=> [$plot_type_id, $plant_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    my $pheno_resultset = $schema->resultset('Phenotype::Phenotype');
+    my $has_phenotype_check = $pheno_resultset->search({'stock.type_id'=> [$plot_type_id,$plant_type_id,$subplot_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    my $has_plot_phenotype_check = $pheno_resultset->search({'stock.type_id'=> [$plot_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    my $has_plant_phenotype_check = $pheno_resultset->search({'stock.type_id'=> [$plant_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    my $has_subplot_phenotype_check = $pheno_resultset->search({'stock.type_id'=> [$subplot_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
     my $has_phenotypes = $has_phenotype_check->first ? 1 : 0;
-
-    $c->stash->{rest} = {has_phenotypes => $has_phenotypes};
+    my $has_plot_phenotypes = $has_plot_phenotype_check->first ? 1 : 0;
+    my $has_plant_phenotypes = $has_plant_phenotype_check->first ? 1 : 0;
+    my $has_subplot_phenotypes = $has_subplot_phenotype_check->first ? 1 : 0;
+    $c->stash->{rest} = {has_phenotypes => $has_phenotypes,
+        has_plot_phenotypes => $has_plot_phenotypes,
+        has_plant_phenotypes => $has_plant_phenotypes,
+        has_subplot_phenotypes => $has_subplot_phenotypes
+    };
 }
 
 sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {

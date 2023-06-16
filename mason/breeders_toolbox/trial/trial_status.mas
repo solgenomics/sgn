@@ -137,7 +137,15 @@ jQuery(document).ready(function () {
             success: function(response){
                 var html = '';
                 if (response.has_phenotypes == 1){
-                    html = '<p class="text-success" title="This trial has phenotypes saved. You can view and download this data in the Traits Assayed section on this page."><small>Has Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                    if (response.has_plot_phenotypes == 1){
+                        html = '<p class="text-success" title="This trial has phenotypes saved. You can view and download this data in the Traits Assayed section on this page."><small>Has Plot Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                    }
+                    if (response.has_plant_phenotypes == 1){
+                        html = '<p class="text-success" title="This trial has phenotypes saved. You can view and download this data in the Traits Assayed section on this page."><small>Has Plant Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                    }
+                    if (response.has_subplot_phenotypes == 1){
+                        html = '<p class="text-success" title="This trial has phenotypes saved. You can view and download this data in the Traits Assayed section on this page."><small>Has Subplot Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                    }
                 } else {
                     html = '<p class="text-info" title="This trial does not have any phenotypes stored. You can upload phenotypes in the Files section on this page."><small>No Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>';
                 }
