@@ -332,7 +332,7 @@ sub _check_combined_trials_model_selection_output {
 sub _check_kinship_output {
     my ( $self, $c, $kinship_pop_id, $protocol_id, $trait_id ) = @_;
 
-    $c->stash->{rest}{cached} =
+    $c->stash->{rest}=
       $self->check_kinship_output( $c, $kinship_pop_id, $protocol_id,
         $trait_id );
 }
@@ -531,10 +531,13 @@ sub check_kinship_output {
     my $files = $c->controller('solGS::Kinship')
       ->get_kinship_coef_files( $c, $pop_id, $protocol_id, $trait_id );
 
-    my $cached =
-      -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'} ? 1 : 0;
+      if (-s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'}) {
 
-    return $cached;
+         my $res = $c->controller('solGS::Kinship')->structure_kinship_response($c);
+            return $res;
+      } else {
+        return {cached => 0};
+      }
 
 }
 
