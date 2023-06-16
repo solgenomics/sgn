@@ -135,7 +135,7 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'previous_genotypes_exist' => 1,'warning' => 'SRLI1_90 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_66 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_52 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2015_383 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2015_BULK in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_076 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI2_33 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_78 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_1241 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_968 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_1155 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>UKG1503_004 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_740 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2015_080 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_1463 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>UKG1502_022 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_124 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI2_70 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_26 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>UKG15OP07_038 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_286 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>'} );
 
 #adding genotype data using same protocol as before to different project
@@ -324,6 +324,37 @@ $message_hash = decode_json $message;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
+
+my $intertek_project_id = $message_hash->{project_id};
+my $intertek_protocol_id = $message_hash->{nd_protocol_id};
+
+#test upload genotyping data using previously stored protocol but having mismatched markers
+my $snp_info_file_2 = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_info_2.csv";
+my $ua = LWP::UserAgent->new;
+
+$response = $ua->post(
+    'http://localhost:3010/ajax/genotype/upload',
+    Content_Type => 'form-data',
+    Content => [
+        upload_genotype_intertek_file_input => [ $file, 'genotype_intertek_grid_data_upload' ],
+        upload_genotype_intertek_snp_file_input => [ $snp_info_file_2, 'genotype_intertek_snp_info_data_upload' ],
+        "sgn_session_id"=>$sgn_session_id,
+        "upload_genotype_project_id"=>$intertek_project_id,
+        "upload_genotype_protocol_id"=>$intertek_protocol_id,
+        "upload_genotypes_species_name_input"=>"Manihot esculenta",
+        "upload_genotype_location_select"=>$location_id,
+        "upload_genotype_vcf_observation_type"=>"accession",
+        "upload_genotype_vcf_include_igd_numbers"=>1,
+        "upload_genotype_add_new_accessions"=>0,
+        "upload_genotype_accept_warnings"=>0
+    ]
+);
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+my $error_string = $message_hash->{'error_string'};
+is($error_string, 'Marker S12_792613200 in the marker info file is not found in the selected protocol.<br>Marker S12_7926132 in the SNP grid file is not found in the marker info file.<br>');
+
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/testset_GT-AD-DP-GQ-DS-PL.h5";
 
