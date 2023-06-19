@@ -12,7 +12,7 @@ solGS.sIndex = {
   siPlotDivPrefix: "#si_plot",
   siMsgDiv: "#si_message",
   siPopsDiv: "#si_select_pops_div",
-  siPopsSelectMenuId: "#si_select_pops",
+  siPopsSelectMenuId: "#si_pops_select",
   siFormId: "#si_form",
 
   populateSindexMenu: function () {
