@@ -18,6 +18,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Cross;
 use SGN::Model::Cvterm;
+use Sort::Naturally;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -409,7 +410,15 @@ __PACKAGE__->config(
        my $col_num = $design_params->{'start_col'} || 1;
        my $row_num = $design_params->{'start_row'} || 1;
        my $key_number = 0;
-       my $sort_order = $design_params->{'sort_order'};
+       my $sort_order_1 = $design_params->{'sort_order_1'};
+       my $sort_order_2 = $design_params->{'sort_order_2'};
+       my $sort_order_3 = $design_params->{'sort_order_3'};
+
+       my @sorted_keys = sort { 
+            ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) || 
+            ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
+            ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3})
+       }  keys %design;
 
        my $qrcode = Imager::QRCode->new(
            margin        => 0,
@@ -431,7 +440,7 @@ __PACKAGE__->config(
            $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
 
            # loop through design hash, sorting via specified field or default
-           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or versioncmp($a, $b) } keys %design) {
+           foreach my $key (@sorted_keys) {
                if ($start_number && ($key_number < $start_number)){
                    $key_number++;
                    next;
@@ -547,7 +556,7 @@ __PACKAGE__->config(
            }
            $zpl_obj->end_sequence();
            my $zpl_template = $zpl_obj->render();
-           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
+           foreach my $key ( @sorted_keys ) {
 
                if ($start_number && ($key_number < $start_number)){
                    $key_number++;
