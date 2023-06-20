@@ -53,7 +53,7 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'recordsFiltered' => 5,'recordsTotal' => 5,'data' => [['<a href="/stock/41259/view">TestPopulation1</a>','population','Manihot esculenta','',''],['<a href="/stock/41260/view">TestPopulation2</a>','population','Manihot esculenta','',''],['<a href="/stock/41261/view">TestPopulation3</a>','population','Manihot esculenta','',''],['<a href="/stock/41262/view">TestPopulation4</a>','population','Manihot esculenta','',''],['<a href="/stock/41263/view">TestPopulation5</a>','population','Manihot esculenta','','']],'draw' => undef}, 'test stock search 5');
 
-$mech->post_ok('http://localhost:3010/ajax/search/stocks',['length'=>10, 'start'=>0, "any_name_matchtype" => "contains","any_name" => "test5P", "stock_type"=>"accession", "extra_stockprop_columns_view" => encode_json({"organization"=>1}), "stockprop_extra_columns_view_array"=> encode_json(["organization"]) ] );
+$mech->post_ok('http://localhost:3010/ajax/search/stocks',['length'=>10, 'start'=>0, "any_name_matchtype" => "starts_with","any_name" => "test5", "stock_type"=>"accession", "extra_stockprop_columns_view" => encode_json({"organization"=>1}), "stockprop_extra_columns_view_array"=> encode_json(["organization"]) ] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 

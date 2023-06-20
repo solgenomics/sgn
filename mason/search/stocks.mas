@@ -65,8 +65,8 @@ my $breeding_programs_select = simple_selectbox_html(
               <div class="input-group">
                 <span class="input-group-btn" width="20%">
                   <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
-                    <option title="contains" value="contains" selected="selected">contains</option>
-                    <option title="starts with" value="starts_with">starts with</option>
+                    <option title="starts_with" value="starts_with" selected="selected">starts with</option>
+                    <option title="contains" value="contains">contains</option>
                     <option title="ends with" value="ends_with">ends with</option>
                     <option title="exactly" value="exactly">exactly</option>
                   </select>
