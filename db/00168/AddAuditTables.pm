@@ -54,6 +54,10 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
+CREATE TABLE logged_in_user(sp_person_id int);
+INSERT INTO logged_in_user (sp_person_id) VALUES (0);
+ALTER TABLE logged_in_user OWNER TO web_usr;
+
 CREATE SCHEMA IF NOT EXISTS audit;
 ALTER SCHEMA audit OWNER TO web_usr;
 
@@ -61,6 +65,7 @@ CREATE TABLE audit.cv_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -106,6 +111,7 @@ CREATE TABLE audit.cvprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -151,6 +157,7 @@ CREATE TABLE audit.cvterm_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -196,6 +203,7 @@ CREATE TABLE audit.cvterm_dbxref_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -241,6 +249,7 @@ CREATE TABLE audit.cvterm_relationship_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -286,6 +295,7 @@ CREATE TABLE audit.cvtermpath_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -331,6 +341,7 @@ CREATE TABLE audit.cvtermprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -376,6 +387,7 @@ CREATE TABLE audit.cvtermsynonym_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -421,6 +433,7 @@ CREATE TABLE audit.db_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -466,6 +479,7 @@ CREATE TABLE audit.dbxref_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -511,6 +525,7 @@ CREATE TABLE audit.dbxrefprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -556,6 +571,7 @@ CREATE TABLE audit.genotype_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -601,6 +617,7 @@ CREATE TABLE audit.nd_experiment_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -646,6 +663,7 @@ CREATE TABLE audit.nd_experiment_contact_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -691,6 +709,7 @@ CREATE TABLE audit.nd_experiment_dbxref_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -736,6 +755,7 @@ CREATE TABLE audit.nd_experiment_genotype_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -781,6 +801,7 @@ CREATE TABLE audit.nd_experiment_phenotype_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -826,6 +847,7 @@ CREATE TABLE audit.nd_experiment_project_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -871,6 +893,7 @@ CREATE TABLE audit.nd_experiment_protocol_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -916,6 +939,7 @@ CREATE TABLE audit.nd_experiment_pub_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -961,6 +985,7 @@ CREATE TABLE audit.nd_experiment_stock_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1006,6 +1031,7 @@ CREATE TABLE audit.nd_experiment_stock_dbxref_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1051,6 +1077,7 @@ CREATE TABLE audit.nd_experiment_stockprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1096,6 +1123,7 @@ CREATE TABLE audit.nd_experimentprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1141,6 +1169,7 @@ CREATE TABLE audit.nd_geolocation_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1186,6 +1215,7 @@ CREATE TABLE audit.nd_geolocationprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1231,6 +1261,7 @@ CREATE TABLE audit.nd_protocol_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1276,6 +1307,7 @@ CREATE TABLE audit.nd_protocol_reagent_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1321,6 +1353,7 @@ CREATE TABLE audit.nd_protocolprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1366,6 +1399,7 @@ CREATE TABLE audit.nd_reagent_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1411,6 +1445,7 @@ CREATE TABLE audit.nd_reagent_relationship_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1456,6 +1491,7 @@ CREATE TABLE audit.nd_reagentprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1501,6 +1537,7 @@ CREATE TABLE audit.organism_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1546,6 +1583,7 @@ CREATE TABLE audit.organism_dbxref_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1591,6 +1629,7 @@ CREATE TABLE audit.organism_relationship_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1636,6 +1675,7 @@ CREATE TABLE audit.organismpath_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1681,6 +1721,7 @@ CREATE TABLE audit.organismprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1726,6 +1767,7 @@ CREATE TABLE audit.phenotype_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1771,6 +1813,7 @@ CREATE TABLE audit.phenotype_cvterm_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1816,6 +1859,7 @@ CREATE TABLE audit.phenotypeprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1861,6 +1905,7 @@ CREATE TABLE audit.project_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1906,6 +1951,7 @@ CREATE TABLE audit.project_contact_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1951,6 +1997,7 @@ CREATE TABLE audit.project_pub_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -1996,6 +2043,7 @@ CREATE TABLE audit.project_relationship_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2041,6 +2089,7 @@ CREATE TABLE audit.projectprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2086,6 +2135,7 @@ CREATE TABLE audit.pub_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2131,6 +2181,7 @@ CREATE TABLE audit.pub_dbxref_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2176,6 +2227,7 @@ CREATE TABLE audit.pub_relationship_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2221,6 +2273,7 @@ CREATE TABLE audit.pubabstract_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2266,6 +2319,7 @@ CREATE TABLE audit.pubauthor_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2311,6 +2365,7 @@ CREATE TABLE audit.pubprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2356,6 +2411,7 @@ CREATE TABLE audit.stock_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2401,6 +2457,7 @@ CREATE TABLE audit.stock_cvterm_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2446,6 +2503,7 @@ CREATE TABLE audit.stock_cvtermprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2491,6 +2549,7 @@ CREATE TABLE audit.stock_dbxref_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2536,6 +2595,7 @@ CREATE TABLE audit.stock_dbxrefprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2581,6 +2641,7 @@ CREATE TABLE audit.stock_genotype_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2626,6 +2687,7 @@ CREATE TABLE audit.stock_pub_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2671,6 +2733,7 @@ CREATE TABLE audit.stock_relationship_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2716,6 +2779,7 @@ CREATE TABLE audit.stock_relationship_cvterm_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2761,6 +2825,7 @@ CREATE TABLE audit.stock_relationship_pub_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2806,6 +2871,7 @@ CREATE TABLE audit.stockcollection_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2851,6 +2917,7 @@ CREATE TABLE audit.stockcollection_stock_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2896,6 +2963,7 @@ CREATE TABLE audit.stockcollectionprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2941,6 +3009,7 @@ CREATE TABLE audit.stockprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -2986,6 +3055,7 @@ CREATE TABLE audit.stockprop_pub_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3031,6 +3101,7 @@ CREATE TABLE audit.list_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3076,6 +3147,7 @@ CREATE TABLE audit.list_item_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3121,6 +3193,7 @@ CREATE TABLE audit.sp_dataset_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3166,6 +3239,7 @@ CREATE TABLE audit.sp_order_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3211,6 +3285,7 @@ CREATE TABLE audit.sp_orderprop_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3256,6 +3331,7 @@ CREATE TABLE audit.sp_person_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3301,6 +3377,7 @@ CREATE TABLE audit.sp_roles_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3346,6 +3423,7 @@ CREATE TABLE audit.sp_token_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3391,6 +3469,7 @@ CREATE TABLE audit.sp_person_roles_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
@@ -3436,6 +3515,7 @@ CREATE TABLE audit.sp_organization_audit(
        audit_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
        operation VARCHAR(10) NOT NULL,
        username TEXT NOT NULL DEFAULT "current_user"(),
+       logged_in_user INT,
        before JSONB,
        after JSONB
 );
