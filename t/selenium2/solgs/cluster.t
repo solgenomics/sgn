@@ -85,7 +85,7 @@ $d->while_logged_in_as(
         $d->get_ok( '/cluster/analysis', 'cluster home page' );
         sleep(5);
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'select clones list'
@@ -134,7 +134,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'select clones list'
@@ -177,7 +177,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $plots_list_name . '"]',
             'xpath',
             'select plots list'
@@ -222,7 +222,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $plots_list_name . '"]',
             'xpath',
             'select plots list'
@@ -261,7 +261,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -310,7 +310,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -354,7 +354,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -400,7 +400,7 @@ $d->while_logged_in_as(
         sleep(5);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -440,7 +440,7 @@ $d->while_logged_in_as(
         sleep(5);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -480,7 +480,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_dt_name . '"]',
             'xpath',
             'select trials dataset'
@@ -519,7 +519,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_list_name . '"]',
             'xpath',
             'select trials list'
@@ -565,7 +565,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_dt_name . '"]',
             'xpath',
             'select trials dataset'
@@ -612,7 +612,7 @@ $d->while_logged_in_as(
         sleep(3);
 
         $d->find_element_ok(
-            '//select[@id="cluster_pops_list_select"]/option[text()="'
+            '//select[@id="cluster_pops_select"]/option[text()="'
               . $trials_dt_name . '"]',
             'xpath',
             'select trials dataset'
@@ -1001,7 +1001,7 @@ $d->while_logged_in_as(
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $list = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'select list sel pop'
@@ -1076,7 +1076,7 @@ $d->while_logged_in_as(
             'id', 'select clones list menu' )->click();
         sleep(2);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select dataset sel pop'
@@ -1152,7 +1152,7 @@ $d->while_logged_in_as(
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select accessions dataset sel pop'
@@ -1221,7 +1221,7 @@ $d->while_logged_in_as(
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select dataset sel pop'
@@ -1286,7 +1286,7 @@ $d->while_logged_in_as(
         sleep(5);
 
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select dataset sel pop'
@@ -1549,11 +1549,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);",
             $cor );
         sleep(5);
-        $d->find_element_ok( 'si_select_pops', 'id', 'select list sl pop' )
+        $d->find_element_ok( 'si_pops_select', 'id', 'select list sl pop' )
           ->click();
         sleep(3);
         $d->find_element_ok(
-'//select[@id="si_select_pops"]/option[text()="Kasese solgs trial"]',
+'//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]',
             'xpath',
             'select trial type tr pop'
         )->click();
@@ -1619,11 +1619,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);",
             $cor );
         sleep(5);
-        $d->find_element_ok( 'si_select_pops', 'id', 'select list sl pop' )
+        $d->find_element_ok( 'si_pops_select', 'id', 'select list sl pop' )
           ->click();
         sleep(3);
         $d->find_element_ok(
-'//select[@id="si_select_pops"]/option[text()="Kasese solgs trial"]',
+'//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]',
             'xpath',
             'select trial type tr pop'
         )->click();
@@ -2032,11 +2032,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);",
             $cor );
         sleep(5);
-        $d->find_element_ok( 'si_select_pops', 'id', 'select list sl pop' )
+        $d->find_element_ok( 'si_pops_select', 'id', 'select list sl pop' )
           ->click();
         sleep(3);
         $d->find_element_ok(
-'//select[@id="si_select_pops"]/option[text()="Kasese solgs trial"]',
+'//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]',
             'xpath',
             'select trial type tr pop'
         )->click();
@@ -2105,11 +2105,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);",
             $cor );
         sleep(5);
-        $d->find_element_ok( 'si_select_pops', 'id', 'select list sl pop' )
+        $d->find_element_ok( 'si_pops_select', 'id', 'select list sl pop' )
           ->click();
         sleep(3);
         $d->find_element_ok(
-'//select[@id="si_select_pops"]/option[text()="Kasese solgs trial"]',
+'//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]',
             'xpath',
             'select trial type tr pop'
         )->click();
@@ -2762,11 +2762,11 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);",
             $cor );
         sleep(5);
-        $d->find_element_ok( 'si_select_pops', 'id', 'select list sl pop' )
+        $d->find_element_ok( 'si_pops_select', 'id', 'select list sl pop' )
           ->click();
         sleep(3);
         $d->find_element_ok(
-'//select[@id="si_select_pops"]/option[text()="Training population 2804608595"]',
+'//select[@id="si_pops_select"]/option[text()="Training population 2804608595"]',
             'xpath',
             'select combo pop'
         )->click();
@@ -2837,7 +2837,7 @@ $d->while_logged_in_as(
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select dataset sel pop'
@@ -2906,7 +2906,7 @@ $d->while_logged_in_as(
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $dataset = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_dt_name . '"]',
             'xpath',
             'select dataset sel pop'
@@ -2976,7 +2976,7 @@ $d->while_logged_in_as(
             'id', 'select clones list menu' )->click();
         sleep(5);
         my $list = $d->find_element_ok(
-'//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_select"]/option[text()="'
+'//select[@id="list_type_selection_pops_select"]/option[text()="'
               . $accessions_list_name . '"]',
             'xpath',
             'select list sel pop'
