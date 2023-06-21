@@ -103,7 +103,6 @@ solGS.listTypeSelectionPopulation = {
 
       jQuery(`#${tableId} tr:last`).after(row);
     }
-
   },
 
   populateSelectionPopsMenu: function () {
@@ -140,13 +139,21 @@ solGS.listTypeSelectionPopulation = {
     var popsList = [];
     for (var i = 1; i < listTypeSelPopsRows.length; i++) {
       var row = listTypeSelPopsRows[i];
-      var popRow = row.innerHTML;
+      var notPredicted = row.innerHTML.match(/predict/gi);
+      if (!notPredicted) {
+        var selectedPop = row.dataset.listSelectionPop;
+        selectedPop = JSON.parse(selectedPop);
 
-      var predict = popRow.match(/predict/gi);
-      if (!predict) {
-        var selPopsInput = row.getElementsByTagName("input")[0];
-        var sIndexPopData = selPopsInput.value;
-        popsList.push(JSON.parse(sIndexPopData));
+        if (selectedPop.id.match(/\w+_/)) {
+          if (selectedPop.id.match(/list/)) {
+            selectedPop.data_str = "list";
+          } else {
+            selectedPop.data_str = "dataset";
+          }
+          selectedPop.id = selectedPop.id.replace(/\w+_/, "");
+        }
+
+        popsList.push(selectedPop);
       }
     }
     return popsList;
@@ -165,14 +172,10 @@ jQuery(document).ready(function () {
   var menuId = solGS.listTypeSelectionPopulation.selectionPopsSelectMenuId;
   jQuery(`${menuId}`).change(function () {
     var selectedPop = jQuery("option:selected", this).data("pop");
-   
+
     if (selectedPop.id) {
       jQuery(" #list_type_selection_pop_go_btn").click(function () {
-
-        if (
-          typeof selectedPop.data_str === "undefined" ||
-          selectedPop.data_str.match(/list/i)
-        ) {
+        if (typeof selectedPop.data_str === "undefined" || selectedPop.data_str.match(/list/i)) {
           const listObj = new solGSList(selectedPop.id);
           var listDetail = listObj.getListDetail();
 
@@ -205,7 +208,6 @@ jQuery(document).ready(function () {
             //	loadTrialListTypeSelectionPop(trialsNames);
           }
         } else {
-        
           solGS.dataset.checkPredictedDatasetSelection(selectedPop.id, selectedPop.name);
         }
       });

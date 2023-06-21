@@ -216,7 +216,7 @@ solGS.correlation = {
 
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.listTypeSelPopulations.getListTypeSelPops();
+      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
       if (listTypeSelPops) {
         corrPops.push(listTypeSelPops);
       }
