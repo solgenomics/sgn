@@ -29,7 +29,7 @@ solGS.sIndex = {
 
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.listTypeSelPopulations.getListTypeSelPops();
+      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
       if (listTypeSelPops) {
         sIndexPops.push(listTypeSelPops);
       }
