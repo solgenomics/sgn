@@ -2400,7 +2400,7 @@ sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_comple
     $c->stash->{rest} = {has_phenotypes => $has_phenotypes,
         has_plot_phenotypes => $has_plot_phenotypes,
         has_plant_phenotypes => $has_plant_phenotypes,
-        has_subplot_phenotypes => $has_subplot_phenotypes
+        has_subplot_phenotypes => $has_subplot_phenotypes,
     };
 }
 
