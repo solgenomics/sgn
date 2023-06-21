@@ -26,11 +26,11 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
 
     print STDERR "FORMAT = $format\n";
     
-    if ($format eq "vcf") {
-	print STDERR "Converting vcf to dosage...\n";
-	system("perl ../gtsimsrch/src/vcf2dosage.pl < $filename > $filename.dosage");
-	$filename = $filename.".dosage";
-    }
+#    if ($format eq "vcf") {
+#	print STDERR "Converting vcf to dosage...\n";
+#	system("perl ../gtsimsrch/src/vcf2dosage.pl < $filename > $filename.dosage");
+#	$filename = $filename.".dosage";
+ #   }
 
     
     
@@ -42,19 +42,18 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     #
     my $ref_option = "";
     if ($reference_file) {
-	$ref_option = " -r $reference_file_path ";
+	$ref_option = " -ref $reference_file_path ";
     }
     
-    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
+#    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
 
+    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -vcf $filename $ref_option -outfile $filename.out";
     print STDERR "running command $cmd...\n";
     system($cmd);
 
 
-    system("perl ../gtsimsrch/src/agmr_cluster.pl < $filename.out > $filename.out.clusters");
-
     my $results;
-    open(my $F , "<", $filename.".out.clusters") || die "Can't open file $filename.out";
+    open(my $F , "<", $filename.".out_clusters") || die "Can't open file $filename.out_clusters";
 
     my @data;
     my @line;
