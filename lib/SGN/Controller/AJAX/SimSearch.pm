@@ -47,7 +47,7 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     
 #    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
 
-    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -vcf $filename $ref_option -outfile $filename.out";
+    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -vcf $filename $ref_option -output $filename.out";
     print STDERR "running command $cmd...\n";
     system($cmd);
 
@@ -57,18 +57,22 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
 
     my @data;
     my @line;
-    my $html = "<table cellspacing=\"20\" cellpadding=\"20\" border=\"1\">";
+
     my $group =1;
     
     while(<$F>) {
 	chomp;
 	if (/^#/) { next; }
 	@line = split /\s+/;
-	$html .= '<tr><td>'.$group.'</td><td>'. join('<br />', @line[4..@line-1])."</td></tr>\n";
-	push @data, [ $line[0], $line[1], $line[2], $line[3], join("<br />", @line[4..@line-1]) ];
+	my @member_info = @line[9..@line-1];
+	my @members = ();
+	for(my $i =0; $i<@member_info; $i+3) {
+	    push @members, $member_info[$i];
+	}
+		
+	push @data, [ $group, $line[1], $line[2], $line[3], join("<br />", @members) ];
 	$group++;
     }
-    $html.="</table>\n";
     close($F);
     
     # plot the agmr score distribution histogram using the 6th column in $filename.out
