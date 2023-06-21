@@ -69,22 +69,90 @@ sub activity {
     return \@counts;
 }
 
-sub database_counts_total {
-    my $self = shift;
-    my $c = shift;
 
-    my $q = "SELECT count(*) from .."
+has 'schema' => ( is => 'rw', required => 1, isa => 'Bio::Chado::Schema' );
+has 'start_date' => ( is => 'rw', isa => 'Str' );
+has 'end_date' => ( is => 'rw', isa => 'Str' );
+
+sub stock_stats {
+    my $self = shift;
+
+    my $dbh = $self->schema->storage->dbh();
     
+    my $query = "SELECT distinct(cvterm.name), count(*) FROM stock join cvterm on(type_id=cvterm_id) WHERE create_date > ? and create_date < ? group by cvterm.name";
+
+    my $h = $dbh->prepare($query);
+    $h->execute($self->start_date, $self->end_date);
+
+    my @data;
+    while (my ($stock_type, $count) = $h->fetchrow_array()) {
+	push @data, [ $stock_type, $count ];
+    }
+
+    return \@data;
 }
 
-sub database_counts_time_interval {
+sub germplasm_count_with_pedigree {
+       my $self = shift;
+
+    my $dbh = $self->schema->storage->dbh();
+    
+    my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on(stock_id=object_id) WHERE stock_relationship.type_id=(select cvterm_id FROM cvterm where name='female_parent' or name='male_parent') and cvterm.name='accession' and create_date > ? and create_date < ? group by cvterm.name";
+
+    my $h = $dbh->prepare($query);
+    $h->execute($self->start_date, $self->end_date);
+
+    my @data;
+    while (my ($stock_type, $count) = $h->fetchrow_array()) {
+	push @data, [ 'accessions with pedigree', $count ];
+    }
+
+    return \@data;
+}
+
+sub germplasm_count_with_phenotypes {
     my $self = shift;
-    my $c = shift;
-    my $start_time = shift;
-    my $end_time = shift;
+     my $dbh = $self->schema->storage->dbh();
+    
+    my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on (stock.stock_id=object_id) join stock as plot on (stock_relationship.subject_id=plot.stock_id) join nd_experiment_stock on(plot.stock_id=nd_experiment_stock.stock_id) join nd_experiment_phenotype on(nd_experiment_stock.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id) WHERE cvterm.name='accession' and stock.create_date > ? and stock.create_date < ? group by cvterm.name";
 
+    my $h = $dbh->prepare($query);
+    $h->execute($self->start_date, $self->end_date);
 
+    my @data;
+    while (my ($stock_type, $count) = $h->fetchrow_array()) {
+	push @data, [ 'accessions with pedigree', $count ];
+    }
+
+    return \@data;
 }
+
+sub germplasm_count_with_genotypes {
+    my $self = shift;
+    my $dbh = $self->schema->storage->dbh();
+
+    # genotypes associated with accessions
+    #
+    my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock on(plot.stock_id=nd_experiment_stock.stock_id) join nd_experiment_genotype on(nd_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) WHERE cvterm.name='accession' and stock.create_date > ? and stock.create_date < ? group by cvterm.name";
+
+    
+    my $h = $dbh->prepare($query);
+    $h->execute($self->start_date, $self->end_date);
+
+    
+    my @data;
+    while (my ($stock_type, $count) = $h->fetchrow_array()) {
+	push @data, [ 'accessions with pedigree', $count ];
+    }
+
+    # genotypes associated with plants
+
+    # gentoypes associated with plots, etc.??? need to do this separately?
+    
+    return \@data;
+}
+
+
 
 
 1;
