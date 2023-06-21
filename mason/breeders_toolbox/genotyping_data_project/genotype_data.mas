@@ -2,6 +2,9 @@
 $trial_id
 </%args>
 
+<input type="checkbox" id="project_genotype_data_forbid_cache"> Refresh results
+<hr>
+
 <div style="overflow:scroll">
     <table id="genotyping_data_project_genotype_data" width="100%" class="table table-hover table-striped">
         <thead>
@@ -23,14 +26,31 @@ $trial_id
 <script>
 
 jQuery(document).ready(function () {
-   var genotypes_data_table = jQuery('#genotyping_data_project_genotype_data').DataTable({
-       'destroy' : true,
-       'searching' : false,
-       'ordering'  : false,
-       'processing': true,
-       'serverSide': true,
-       'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>',
-   });
+    var project_genotypes_data_table = jQuery('#genotyping_data_project_genotype_data').DataTable({
+        'destroy' : true,
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'lengthMenu': [ 10, 50, 100, 2000 ],
+        'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>',
+    });
+
+    jQuery("#project_genotype_data_forbid_cache").change(function(){
+        if (jQuery(this).is(":checked")) {
+            var project_genotypes_data_table = jQuery('#genotyping_data_project_genotype_data').DataTable({
+                'destroy' : true,
+                'searching' : false,
+                'ordering'  : false,
+                'processing': true,
+                'serverSide': true,
+                'lengthMenu': [ 10, 50, 100, 2000 ],
+                'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>&forbid_cache=1',
+            });
+        }
+    });
+
+
 });
 
 </script>
