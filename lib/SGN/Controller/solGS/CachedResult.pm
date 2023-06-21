@@ -346,7 +346,7 @@ sub _check_pca_output {
 sub _check_cluster_output {
     my ( $self, $c, $file_id ) = @_;
     my $cached = $self->check_cluster_output( $c, $file_id );
-    $c->stash->{rest}{cached} = $self->check_cluster_output( $c, $file_id );
+    $c->stash->{rest} = $self->check_cluster_output( $c, $file_id );
 }
 
 sub check_single_trial_training_data {
@@ -579,10 +579,11 @@ sub check_cluster_output {
             $cached_file = $c->stash->{"${cluster_type}_result_newick_file"};
         }
         if ( -s $cached_file ) {
-            return 1;
+            my $res = $c->controller('solGS::Cluster')->prepare_response($c);
+            return $res;
         }
         else {
-            return 0;
+            return { cached => 0 };
         }
     }
 
