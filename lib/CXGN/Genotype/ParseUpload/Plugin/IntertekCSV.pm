@@ -31,7 +31,6 @@ sub _validate_with_plugin {
     }
 
     #supported marker info
-    $supported_marker_info{'Position'} = 1;
     $supported_marker_info{'Quality'} = 1;
     $supported_marker_info{'Filter'} = 1;
     $supported_marker_info{'Info'} = 1;
@@ -69,8 +68,8 @@ sub _validate_with_plugin {
         my $chrom_header = $marker_header_info[4];
         $chrom_header =~ s/^\s+|\s+$//g;
 
-#        my $position_header = $marker_header_info[5];
-#        $position_header =~ s/^\s+|\s+$//g;
+        my $position_header = $marker_header_info[5];
+        $position_header =~ s/^\s+|\s+$//g;
 
 #        my $quality_header = $marker_header_info[6];
 #        $quality_header =~ s/^\s+|\s+$//g;
@@ -100,9 +99,9 @@ sub _validate_with_plugin {
         if ($chrom_header ne 'Chromosome'){
             push @error_messages, 'Column 5 header must be "Chromosome" in the SNP Info File.';
         }
-#        if ($position_header ne 'Position'){
-#            push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
-#        }
+        if ($position_header ne 'Position'){
+            push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
+        }
 #        if ($quality_header ne 'Quality'){
 #            push @error_messages, 'Column 7 header must be "Quality" in the SNP Info File.';
 #        }
@@ -116,7 +115,7 @@ sub _validate_with_plugin {
 #            push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
 #        }
 
-        for my $i (5 .. $#marker_header_info){
+        for my $i (6 .. $#marker_header_info){
             my $each_header = $marker_header_info[$i];
             $each_header =~ s/^\s+|\s+$//g;
 
@@ -299,74 +298,108 @@ sub _parse_with_plugin {
     my @error_messages;
     my %errors;
 
-    print STDERR "Reading VCF to parse\n";
+    print STDERR "Reading Intertek files to parse\n";
 
     my %protocolprop_info;
     $protocolprop_info{'header_information_lines'} = [];
     $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
 
-    my $csv = Text::CSV->new({ sep_char => ',' });
-
-    my $F;
+    my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
+    my $MF;
     my %marker_info;
     my %marker_info_nonseparated;
+    my @marker_info_keys = qw(name intertek_name chrom pos alt ref);
 
-    if ($marker_info_filename) {
-        # Open Marker Info File and parse into the %marker_info for later use
-        open($F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
-            my $header_row = <$F>;
-            my @header_info;
+    # Open Marker Info File and parse into the %marker_info for later use
+    open($MF, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
-            # Get first row, which is the header
-            if ($csv->parse($header_row)) {
-                @header_info = $csv->fields();
+        my $marker_header_row = <$MF>;
+        my @marker_header_info;
+
+        # Get first row, which is the header
+        if ($marker_info_csv->parse($marker_header_row)) {
+            @marker_header_info = $marker_info_csv->fields();
+        }
+
+        for my $i (6 .. $#marker_header_info){
+            my $header = $marker_header_info[$i];
+            $header =~ s/^\s+|\s+$//g;
+            if ($header eq 'Quality') {
+                push @marker_info_keys, 'qual';
+            } elsif ($header eq 'Filter') {
+                push @marker_info_keys, 'filter';
+            } elsif ($header eq 'Info') {
+                push @marker_info_keys, 'info';
+            } elsif ($header eq 'Format') {
+                push @marker_info_keys, 'format';
+            } elsif ($header eq 'Sequences') {
+                push @marker_info_keys, 'sequences';
             }
+        }
 
-            # Iterate over all rows to get all the marker's info
-            while (my $line = <$F>) {
-                my @line_info;
-                if ($csv->parse($line)) {
-                    @line_info = $csv->fields();
+        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n"
+
+        # Iterate over all rows to get all the marker's info
+        while (my $marker_line = <$MF>) {
+            my @marker_line_info;
+            if ($marker_info_csv->parse($marker_line)) {
+                @marker_line_info = $marker_info_csv->fields();
+            }
+            my $intertek_snp_id = $marker_line_info[0];
+            my $customer_snp_id = $marker_line_info[1];
+            my $ref = $marker_line_info[2];
+            my $alt = $marker_line_info[3];
+            my $chromosome = $marker_line_info[4];
+            my $position = $line_info[5];
+#            my $quality = $line_info[6];
+#            my $filter = $line_info[7];
+#            my $info = $line_info[8];
+#            my $format = $line_info[9];
+            my %marker = (
+                ref => $ref,
+                alt => $alt,
+                intertek_name => $intertek_snp_id,
+                chrom => $chromosome,
+                pos => $position,
+                name => $customer_snp_id,
+#                qual => $quality,
+#                filter => $filter,
+#                info => $info,
+#                format => $format,
+            );
+
+            for my $i (6 .. $#marker_header_info){
+                my $header = $marker_header_info[$i];
+                $header =~ s/^\s+|\s+$//g;
+                if ($header eq 'Quality') {
+                    $marker{'qual'} = $marker_line_info[$i];
+                } elsif ($header eq 'Filter') {
+                    $marker{'filter'} = $marker_line_info[$i];
+                } elsif ($header eq 'Info') {
+                    $marker{'info'} = $marker_line_info[$i];
+                } elsif ($header eq 'Format') {
+                    $marker{'format'} = $marker_line_info[$i];
+                } elsif ($header eq 'Sequences') {
+                    $marker{'sequences'} = $marker_line_info[$i];
                 }
-                my $intertek_snp_id = $line_info[0];
-                my $customer_snp_id = $line_info[1];
-                my $ref = $line_info[2];
-                my $alt = $line_info[3];
-                my $chromosome = $line_info[4];
-
-#                my $position = $line_info[5];
-#                my $quality = $line_info[6];
-#                my $filter = $line_info[7];
-#                my $info = $line_info[8];
-#                my $format = $line_info[9];
-                my %marker = (
-                    ref => $ref,
-                    alt => $alt,
-                    intertek_name => $intertek_snp_id,
-                    chrom => $chromosome,
-#                    pos => $position,
-#                    name => $customer_snp_id,
-#                    qual => $quality,
-#                    filter => $filter,
-#                    info => $info,
-#                    format => $format,
-                );
-
-
-                push @{$protocolprop_info{'marker_names'}}, $customer_snp_id;
-                $marker_info_nonseparated{$customer_snp_id} = \%marker;
-
-                push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
-                $marker_info{$chromosome}->{$customer_snp_id} = \%marker;
             }
 
-        close($F);
+            push @{$protocolprop_info{'marker_names'}}, $customer_snp_id;
+            $marker_info_nonseparated{$customer_snp_id} = \%marker;
+
+            push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
+            $marker_info{$chromosome}->{$customer_snp_id} = \%marker;
+        }
+
+    close($MF);
         #print STDERR Dumper \%marker_info_lookup;
-        $protocolprop_info{'markers'} = \%marker_info;
-    }
+    $protocolprop_info{'markers'} = \%marker_info;
+    print STDERR "MARKER INFO =".Dumper(\%marker_info)."\n";
 
     # Open GRID FILE and parse
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    my $F;
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
         my $header_row = <$F>;
@@ -461,7 +494,8 @@ sub _parse_with_plugin {
     my %parsed_data = (
         protocol_info => \%protocolprop_info,
         genotypes_info => \%genotype_info,
-        observation_unit_uniquenames => \@observation_unit_names
+        observation_unit_uniquenames => \@observation_unit_names,
+        marker_info_keys => \@marker_info_keys
     );
 
     $self->_set_parsed_data(\%parsed_data);
