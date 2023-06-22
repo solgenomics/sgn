@@ -30,7 +30,6 @@ results and returns the appropriate URL for going to that page of results
 </%doc>
 
 <%args>
-  
 </%args>
 
 
@@ -41,14 +40,146 @@ results and returns the appropriate URL for going to that page of results
 <style>
 </style>
 
+</div>
 
+
+<!--here is where I pasted in the drop down and search code -->
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="col-sm-1">
+            </div>
+            <div class="row">
+                <div class="col-sm-11">
+                   <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-4">Select a database table to see audits:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="db_table_list_select">
+                                        <option value="Stock">Stock</option>
+                                        <option value="Another">Another</option>
+                                    </select>
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="search_audit_button"><i class="glyphicon glyphicon-search"></i> View audits </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Audit table", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="audit_results">
+                </table>
+            </&>
+        </div>
+    </div>
 </div>
 
 <script>
-  
 
+
+jQuery(document).ready(function(){
+
+    /*var lo = new CXGN.List();*/
+    
+    /*jQuery('#db_table_list_select').html(lo.listSelect('db_table_list_select', ['db_tables'], 'Select database table', undefined, undefined));*/
+
+    jQuery("#search_audit_button").click(function(){
+        var db_table_list_id = jQuery('#db_table_list_select').find(":selected").val();    
+	    alert("you have clicked "+db_table_list_id);
+	});
+
+    var req = $.ajax({
+        url: '/ajax/audit/retrieve_results',
+        data: {'db_table_list_id': db_table_list_id},
+        timeout: 300000,
+        success: function(response){
+            var perl_response = response.result1;
+            alert("successfully retrieved "+perl_response);
+        }
+
+        )};
+    .done(function() {
+        alert( "success" );
+        alert(req);
+        })
+    .fail(function() {
+        alert( "error" );
+        })
+    
+
+});
+
+/*
+        if (!db_table_list_id) {
+            alert("Please select a database table");
+            return;
+        }
+	
+	if (! lo.legacy_validate(db_table_list_id, 'dbtable', true)) {
+            alert('The accession list contains elements that are not accessions or are not uniquenames.');
+            return;
+        }
+
+        var table = jQuery('#audit_results').DataTable({
+            'destroy' : true,
+            'ajax': { 'url':'/ajax/<!--search/common_parents'-->fix/pathForAuditTable,
+                'data':{
+                    <!--'accession_list_id'-->'db_table_id': <!--accession_list_id-->db_table_id,
+                }
+            },
+            columns: [
+                {
+                    title: "Timestamp",
+                    data: null,
+                    render: function(data, type, row){
+                        if (row.female_id === null) { <!--do you need this here?-->
+                            return 'unknown'
+                        } else {
+                            return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>" <!--need to display the timestamp but don't know the path-->
+                        }
+                    }
+                },
+                {
+                    title: "User ID",
+                    data: null,
+                    render: function(data, type, row){
+                        if (row.male_id === null) { <!--do you need this here?-->
+                            return 'unknown'
+                        } else {
+                            return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>" <!--need to fix this to display the row for the user id from the temp table-->
+                        }
+                    }
+                },
+                {
+                    title: "Operation",
+                    data: "operations",
+                },
+                {
+                    title: "Data before operation",
+                    data: "before_operation",
+                },
+		{
+                    title: "Data after operation",
+                    data: "after_operation",
+                },
+            ],
+        });
+    });
+
+});
+
+*/
 </script>
-
 
 
 <%init>
