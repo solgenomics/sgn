@@ -532,8 +532,10 @@ sub upload_genotype_verify_POST : Args(0) {
         my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
         my $genotype_info = $parsed_data->{genotypes_info};
         my $protocol_info = $parsed_data->{protocol_info};
+        my $marker_info_keys = $parsed_data->{marker_info_keys};
         $protocol_info->{'reference_genome_name'} = $reference_genome_name;
         $protocol_info->{'species_name'} = $organism_species;
+        $protocol_info->{'marker_info_keys'} = $marker_info_keys;
 
         $store_args->{protocol_info} = $protocol_info;
         $store_args->{genotype_info} = $genotype_info;

@@ -333,12 +333,12 @@ sub _parse_with_plugin {
                 push @marker_info_keys, 'info';
             } elsif ($header eq 'Format') {
                 push @marker_info_keys, 'format';
-            } elsif ($header eq 'Sequences') {
-                push @marker_info_keys, 'sequences';
+            } elsif ($header eq 'Sequence') {
+                push @marker_info_keys, 'sequence';
             }
         }
 
-        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n"
+        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
 
         # Iterate over all rows to get all the marker's info
         while (my $marker_line = <$MF>) {
@@ -351,7 +351,7 @@ sub _parse_with_plugin {
             my $ref = $marker_line_info[2];
             my $alt = $marker_line_info[3];
             my $chromosome = $marker_line_info[4];
-            my $position = $line_info[5];
+            my $position = $marker_line_info[5];
 #            my $quality = $line_info[6];
 #            my $filter = $line_info[7];
 #            my $info = $line_info[8];
@@ -380,8 +380,8 @@ sub _parse_with_plugin {
                     $marker{'info'} = $marker_line_info[$i];
                 } elsif ($header eq 'Format') {
                     $marker{'format'} = $marker_line_info[$i];
-                } elsif ($header eq 'Sequences') {
-                    $marker{'sequences'} = $marker_line_info[$i];
+                } elsif ($header eq 'Sequence') {
+                    $marker{'sequence'} = $marker_line_info[$i];
                 }
             }
 
