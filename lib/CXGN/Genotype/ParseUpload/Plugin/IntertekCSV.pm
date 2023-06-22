@@ -17,6 +17,7 @@ sub _validate_with_plugin {
     my @error_messages;
     my %missing_accessions;
     my %stored_marker_info;
+    my %supported_marker_info;
 
     if (defined $protocol_id) {
         my $stored_protocol = CXGN::Genotype::Protocol->new({
@@ -28,6 +29,15 @@ sub _validate_with_plugin {
         print STDERR "STORED MARKERS =".Dumper($stored_markers)."\n";
         %stored_marker_info = %$stored_markers;
     }
+
+    #supported marker info
+    $supported_marker_info{'Position'} = 1;
+    $supported_marker_info{'Quality'} = 1;
+    $supported_marker_info{'Filter'} = 1;
+    $supported_marker_info{'Info'} = 1;
+    $supported_marker_info{'Format'} = 1;
+    $supported_marker_info{'Sequence'} = 1;
+
 
     my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
     my $MI_F;
@@ -59,20 +69,20 @@ sub _validate_with_plugin {
         my $chrom_header = $marker_header_info[4];
         $chrom_header =~ s/^\s+|\s+$//g;
 
-        my $position_header = $marker_header_info[5];
-        $position_header =~ s/^\s+|\s+$//g;
+#        my $position_header = $marker_header_info[5];
+#        $position_header =~ s/^\s+|\s+$//g;
 
-        my $quality_header = $marker_header_info[6];
-        $quality_header =~ s/^\s+|\s+$//g;
+#        my $quality_header = $marker_header_info[6];
+#        $quality_header =~ s/^\s+|\s+$//g;
 
-        my $filter_header = $marker_header_info[7];
-        $filter_header =~ s/^\s+|\s+$//g;
+#        my $filter_header = $marker_header_info[7];
+#        $filter_header =~ s/^\s+|\s+$//g;
 
-        my $info_header = $marker_header_info[8];
-        $info_header =~ s/^\s+|\s+$//g;
+#        my $info_header = $marker_header_info[8];
+#        $info_header =~ s/^\s+|\s+$//g;
 
-        my $format_header = $marker_header_info[9];
-        $format_header =~ s/^\s+|\s+$//g;
+#        my $format_header = $marker_header_info[9];
+#        $format_header =~ s/^\s+|\s+$//g;
 
         # Check that the columns in the marker info file are what we expect
         if ($intertek_snp_id_header ne 'IntertekSNPID'){
@@ -90,20 +100,29 @@ sub _validate_with_plugin {
         if ($chrom_header ne 'Chromosome'){
             push @error_messages, 'Column 5 header must be "Chromosome" in the SNP Info File.';
         }
-        if ($position_header ne 'Position'){
-            push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
-        }
-        if ($quality_header ne 'Quality'){
-            push @error_messages, 'Column 7 header must be "Quality" in the SNP Info File.';
-        }
-        if ($filter_header ne 'Filter'){
-            push @error_messages, 'Column 8 header must be "Filter" in the SNP Info File.';
-        }
-        if ($info_header ne 'Info'){
-            push @error_messages, 'Column 9 header must be "Info" in the SNP Info File.';
-        }
-        if ($format_header ne 'Format'){
-            push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
+#        if ($position_header ne 'Position'){
+#            push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
+#        }
+#        if ($quality_header ne 'Quality'){
+#            push @error_messages, 'Column 7 header must be "Quality" in the SNP Info File.';
+#        }
+#        if ($filter_header ne 'Filter'){
+#            push @error_messages, 'Column 8 header must be "Filter" in the SNP Info File.';
+#        }
+#        if ($info_header ne 'Info'){
+#            push @error_messages, 'Column 9 header must be "Info" in the SNP Info File.';
+#        }
+#        if ($format_header ne 'Format'){
+#            push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
+#        }
+
+        for my $i (5 .. $#marker_header_info){
+            my $each_header = $marker_header_info[$i];
+            $each_header =~ s/^\s+|\s+$//g;
+
+            if (!$supported_marker_info{$each_header}){
+                push @error_messages, "Invalid  marker info type: $each_header";
+            }
         }
 
         while (my $marker_line = <$MI_F>) {
@@ -315,23 +334,26 @@ sub _parse_with_plugin {
                 my $ref = $line_info[2];
                 my $alt = $line_info[3];
                 my $chromosome = $line_info[4];
-                my $position = $line_info[5];
-                my $quality = $line_info[6];
-                my $filter = $line_info[7];
-                my $info = $line_info[8];
-                my $format = $line_info[9];
+
+#                my $position = $line_info[5];
+#                my $quality = $line_info[6];
+#                my $filter = $line_info[7];
+#                my $info = $line_info[8];
+#                my $format = $line_info[9];
                 my %marker = (
                     ref => $ref,
                     alt => $alt,
                     intertek_name => $intertek_snp_id,
                     chrom => $chromosome,
-                    pos => $position,
-                    name => $customer_snp_id,
-                    qual => $quality,
-                    filter => $filter,
-                    info => $info,
-                    format => $format,
+#                    pos => $position,
+#                    name => $customer_snp_id,
+#                    qual => $quality,
+#                    filter => $filter,
+#                    info => $info,
+#                    format => $format,
                 );
+
+
                 push @{$protocolprop_info{'marker_names'}}, $customer_snp_id;
                 $marker_info_nonseparated{$customer_snp_id} = \%marker;
 
