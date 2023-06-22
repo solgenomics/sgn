@@ -88,38 +88,35 @@ results and returns the appropriate URL for going to that page of results
 
 
 jQuery(document).ready(function(){
-
-    /*var lo = new CXGN.List();*/
-    
-    /*jQuery('#db_table_list_select').html(lo.listSelect('db_table_list_select', ['db_tables'], 'Select database table', undefined, undefined));*/
-
     jQuery("#search_audit_button").click(function(){
         var db_table_list_id = jQuery('#db_table_list_select').find(":selected").val();    
 	    alert("you have clicked "+db_table_list_id);
+        jQuery.ajax({
+            url: '/ajax/audit/retrieve_results',
+            method: 'POST',
+            data: {'db_table_list_id': db_table_list_id},
+            timeout: 300000,
+            success: function(response){
+                var perl_response = response.result1;
+                alert("successfully retrieved "+perl_response);
+                }
+        });
 	});
-
-    var req = $.ajax({
-        url: '/ajax/audit/retrieve_results',
-        data: {'db_table_list_id': db_table_list_id},
-        timeout: 300000,
-        success: function(response){
-            var perl_response = response.result1;
-            alert("successfully retrieved "+perl_response);
-        }
-
-        )};
-    .done(function() {
-        alert( "success" );
-        alert(req);
-        })
-    .fail(function() {
-        alert( "error" );
-        })
-    
-
 });
-
 /*
+        jQuery.ajax({
+            url: '/ajax/audit/retrieve_results',
+            method: 'POST',
+            data: {'db_table_list_id': db_table_list_id},
+            timeout: 300000,
+            success: function(response){
+                var perl_response = response.result1;
+                alert("successfully retrieved "+perl_response);
+                }
+
+            }); 
+
+
         if (!db_table_list_id) {
             alert("Please select a database table");
             return;
