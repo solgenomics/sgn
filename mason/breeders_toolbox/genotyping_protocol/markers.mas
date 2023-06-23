@@ -1,5 +1,6 @@
 <%args>
 $protocol_id
+$marker_info_headers
 </%args>
 
 <div class="well well-sm">
@@ -19,15 +20,9 @@ $protocol_id
 <table id="protocol_markers_table" class="table table-hover table-bordered">
     <thead>
         <tr>
-            <th>Marker Name</th>
-            <th>Chromosome</th>
-            <th>Position</th>
-            <th>Alternate</th>
-            <th>Reference</th>
-            <th>Quality</th>
-            <th>Filter</th>
-            <th>Info</th>
-            <th>Format</th>
+% foreach my $column_header(@$marker_info_headers){
+            <th><%$column_header%></th>
+%}
         </tr>
     </thead>
     </tbody>
@@ -36,7 +31,7 @@ $protocol_id
 <script>
 
 jQuery(document).ready(function(){
-    
+
     var genotyping_protocol_table = jQuery('#protocol_markers_table').DataTable({
         'searching' : false,
         'ordering'  : false,

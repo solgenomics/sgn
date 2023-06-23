@@ -108,6 +108,11 @@ has 'marker_type' => (
     is => 'rw'
 );
 
+has 'marker_info_keys' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw'
+);
+
 #Filtering KEYS
 
 has 'chromosome_list' => (
@@ -161,6 +166,7 @@ sub BUILD {
     }
     my $species_name = $map_details->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
     my $sample_observation_unit_type_name = $map_details->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
+
     $self->marker_names($marker_names);
     $self->protocol_name($nd_protocol_name);
     $self->marker_type($marker_type);
@@ -178,6 +184,9 @@ sub BUILD {
     if ($description) {
         $self->protocol_description($description);
     }
+
+    my $marker_info_keys = $map_details->{marker_info_keys};
+    $self->marker_info_keys($marker_info_keys);
 
     return;
 }

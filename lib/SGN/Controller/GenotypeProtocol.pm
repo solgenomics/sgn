@@ -49,6 +49,26 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
         $display_observation_unit_type = $observation_unit_type;
     }
 
+    my $marker_info_keys = $protocol->marker_info_keys;
+    my @marker_info_headers = ('Marker Name', 'Chromosome', 'Position', 'Alternate', 'Reference');
+    if (defined $marker_info_keys) {
+        foreach my $info_key (@$marker_info_keys) {
+            if ($info_key eq 'qual') {
+                push @marker_info_headers, 'Quality';
+            } elsif ($info_key eq 'filter') {
+                push @marker_info_headers, 'Filter';
+            } elsif ($info_key eq 'info') {
+                push @marker_info_headers, 'Info';
+            } elsif (@$marker_info_keys eq 'format') {
+                push @marker_info_headers, 'Format';
+            } elsif ($info_key eq 'sequence') {
+                push @marker_info_headers. 'Sequence';
+            }
+        }
+    } else {
+        push @marker_info_headers, ('Quality', 'Filter', 'Info', 'Format');
+    }
+
 	$c->stash->{protocol_id} = $protocol_id;
 	$c->stash->{protocol_name} = $protocol->protocol_name;
 	$c->stash->{protocol_description} = $protocol->protocol_description;
@@ -60,7 +80,8 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	$c->stash->{create_date} = $protocol->create_date;
 	$c->stash->{sample_observation_unit_type_name} = $display_observation_unit_type;
     $c->stash->{marker_type} = $protocol->marker_type;
-	$c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
+    $c->stash->{marker_info_headers} = \@marker_info_headers;
+    $c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
     }
 }
 
