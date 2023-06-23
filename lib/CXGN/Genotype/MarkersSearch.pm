@@ -114,7 +114,9 @@ sub search {
                 nd_protocol_id => $protocol_id
             });
             my $marker_info_keys = $protocol->marker_info_keys;
-            push @all_marker_info_keys, @$marker_info_keys;
+            if (defined $marker_info_keys) {
+                push @all_marker_info_keys, @$marker_info_keys;                
+            }
         }
         @all_marker_info_keys = uniq @all_marker_info_keys;
     }

@@ -116,22 +116,25 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
 #    print STDERR "SEARCH RESULT =".Dumper($search_result)."\n";
 
     foreach (@$search_result) {
-        my @each_row = ();
-#        push @result, [
-#            $_->{marker_name},
-#            $_->{chrom},
-#            $_->{pos},
-#            $_->{alt},
-#            $_->{ref},
-#            $_->{qual},
-#            $_->{filter},
-#            $_->{info},
-#            $_->{format}
-#        ];
-        foreach my $info_key (@$marker_info_keys) {
-            push @each_row, $_->{$info_key};
+        if (defined $marker_info_keys) {
+            my @each_row = ();
+            foreach my $info_key (@$marker_info_keys) {
+                push @each_row, $_->{$info_key};
+            }
+            push @result, [@each_row];
+        } else {
+            push @result, [
+                $_->{marker_name},
+                $_->{chrom},
+                $_->{pos},
+                $_->{alt},
+                $_->{ref},
+                $_->{qual},
+                $_->{filter},
+                $_->{info},
+                $_->{format}
+            ];
         }
-        push @result, [@each_row];
     }
 
     print STDERR "RESULT =".Dumper(\@result)."\n";
