@@ -97,6 +97,12 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
     my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
     my @result;
 
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $bcs_schema,
+        nd_protocol_id => $protocol_id
+    });
+    my $marker_info_keys = $protocol->marker_info_keys;
+
     my $marker_search = CXGN::Genotype::MarkersSearch->new({
         bcs_schema => $bcs_schema,
         protocol_id_list => [$protocol_id],
@@ -107,20 +113,28 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
         offset => $offset
     });
     my ($search_result, $total_count) = $marker_search->search();
+#    print STDERR "SEARCH RESULT =".Dumper($search_result)."\n";
 
     foreach (@$search_result) {
-        push @result, [
-            $_->{marker_name},
-            $_->{chrom},
-            $_->{pos},
-            $_->{alt},
-            $_->{ref},
-            $_->{qual},
-            $_->{filter},
-            $_->{info},
-            $_->{format}
-        ];
+        my @each_row = ();
+#        push @result, [
+#            $_->{marker_name},
+#            $_->{chrom},
+#            $_->{pos},
+#            $_->{alt},
+#            $_->{ref},
+#            $_->{qual},
+#            $_->{filter},
+#            $_->{info},
+#            $_->{format}
+#        ];
+        foreach my $info_key (@$marker_info_keys) {
+            push @each_row, $_->{$info_key};
+        }
+        push @result, [@each_row];
     }
+
+    print STDERR "RESULT =".Dumper(\@result)."\n";
 
     $c->stash->{rest} = { data => \@result, recordsTotal => $total_count, recordsFiltered => $total_count };
 }

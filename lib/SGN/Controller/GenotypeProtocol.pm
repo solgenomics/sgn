@@ -39,7 +39,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	my $protocol = CXGN::Genotype::Protocol->new({
 	    bcs_schema => $self->schema,
 	    nd_protocol_id => $protocol_id
-						     });
+	});
 
     my $display_observation_unit_type;
     my $observation_unit_type = $protocol->sample_observation_unit_type_name;
@@ -50,23 +50,36 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     }
 
     my $marker_info_keys = $protocol->marker_info_keys;
-    my @marker_info_headers = ('Marker Name', 'Chromosome', 'Position', 'Alternate', 'Reference');
+    print STDERR "INFO KEYS =".Dumper($marker_info_keys)."\n";
+    my @marker_info_headers = ();
     if (defined $marker_info_keys) {
         foreach my $info_key (@$marker_info_keys) {
-            if ($info_key eq 'qual') {
+            if ($info_key eq 'name') {
+                push @marker_info_headers, 'Marker Name';
+            } elsif ($info_key eq 'intertek_name') {
+                push @marker_info_headers, 'Intertek Name';
+            } elsif ($info_key eq 'chrom') {
+                push @marker_info_headers, 'Chromosome';
+            } elsif ($info_key eq 'pos') {
+                push @marker_info_headers, 'Position';
+            } elsif ($info_key eq 'alt') {
+                push @marker_info_headers, 'Alternate';
+            } elsif ($info_key eq 'ref') {
+                push @marker_info_headers, 'Reference';
+            } elsif ($info_key eq 'qual') {
                 push @marker_info_headers, 'Quality';
             } elsif ($info_key eq 'filter') {
                 push @marker_info_headers, 'Filter';
             } elsif ($info_key eq 'info') {
                 push @marker_info_headers, 'Info';
-            } elsif (@$marker_info_keys eq 'format') {
+            } elsif ($info_key eq 'format') {
                 push @marker_info_headers, 'Format';
             } elsif ($info_key eq 'sequence') {
-                push @marker_info_headers. 'Sequence';
+                push @marker_info_headers, 'Sequence';
             }
         }
     } else {
-        push @marker_info_headers, ('Quality', 'Filter', 'Info', 'Format');
+        @marker_info_headers = ('Marker Name','Chromosome','Position','Alternate','Reference','Quality','Filter','Info','Format');
     }
 
 	$c->stash->{protocol_id} = $protocol_id;

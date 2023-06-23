@@ -37,6 +37,8 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use JSON;
+use CXGN::Genotype::Protocol;
+use List::MoreUtils qw(uniq);
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -86,7 +88,6 @@ sub search {
     my $protocol_id_list = $self->protocol_id_list;
     my $protocol_name_list = $self->protocol_name_list;
     my $marker_name_list = $self->marker_name_list;
-    my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
     my $limit = $self->limit;
     my $offset = $self->offset;
     my @data;
@@ -104,26 +105,47 @@ sub search {
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 
-    #check keys
-    my @intertek_name_key;
-    my @protocolprop_marker_hash_array = @$protocolprop_marker_hash_select;
-    foreach my $id (@$protocol_id_list) {
-        my $check_keys_q = "SELECT nd_protocolprop.value from nd_protocolprop where nd_protocol_id = ? and type_id = ? FETCH FIRST 1 ROWS ONLY";
-        my $check_keys_h = $schema->storage->dbh()->prepare($check_keys_q);
-        $check_keys_h->execute($id, $vcf_map_details_markers_array_cvterm_id);
-
-        my @check_keys_data = ();
-        my @all_keys = ();
-        @check_keys_data = $check_keys_h->fetchrow_array();
-        my $each_data = decode_json$check_keys_data[0];
-        my $each_marker_info = $each_data->[0];
-        if ($each_marker_info->{'intertek_name'}) {
-            push @protocolprop_marker_hash_array, 'intertek_name';
-            $protocolprop_marker_hash_select = \@protocolprop_marker_hash_array;
-            last:
+    my $protocolprop_marker_hash_select;
+    my @all_marker_info_keys = ();
+    if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
+        foreach my $protocol_id (@$protocol_id_list) {
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $protocol_id
+            });
+            my $marker_info_keys = $protocol->marker_info_keys;
+            push @all_marker_info_keys, @$marker_info_keys;
         }
+        @all_marker_info_keys = uniq @all_marker_info_keys;
     }
-    print STDERR "HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
+
+    if (scalar(@all_marker_info_keys)>0) {
+        $protocolprop_marker_hash_select = \@all_marker_info_keys;
+    } else {
+        $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
+    }
+    print STDERR "PROTOCOLPROP HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
+
+    #check keys
+#    my @intertek_name_key;
+#    my @protocolprop_marker_hash_array = @$protocolprop_marker_hash_select;
+#    foreach my $id (@$protocol_id_list) {
+#        my $check_keys_q = "SELECT nd_protocolprop.value from nd_protocolprop where nd_protocol_id = ? and type_id = ? FETCH FIRST 1 ROWS ONLY";
+#        my $check_keys_h = $schema->storage->dbh()->prepare($check_keys_q);
+#        $check_keys_h->execute($id, $vcf_map_details_markers_array_cvterm_id);
+
+#        my @check_keys_data = ();
+#        my @all_keys = ();
+#        @check_keys_data = $check_keys_h->fetchrow_array();
+#        my $each_data = decode_json$check_keys_data[0];
+#        my $each_marker_info = $each_data->[0];
+#        if ($each_marker_info->{'intertek_name'}) {
+#            push @protocolprop_marker_hash_array, 'intertek_name';
+#            $protocolprop_marker_hash_select = \@protocolprop_marker_hash_array;
+#            last:
+#        }
+#    }
+#    print STDERR "HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
 
 
     #protocol_id_list is required
