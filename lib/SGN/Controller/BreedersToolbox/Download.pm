@@ -881,6 +881,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     }
 
     my $ped_format = $c->req->param("ped_format");
+    my $include_descendants = $c->req->param("include_descendants");
     my $file_format = $c->req->param("file_format");
     my $dl_token = $c->req->param("pedigree_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -891,11 +892,13 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 
     # Get the pedigrees
     my $stock = CXGN::Stock->new ( schema => $schema);
-    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format);
+    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format, defined $include_descendants);
 
     # HELIUM FORMAT
     if ( $file_format eq ".helium" ) {
         print $FILE "# $source_description\n";
+        print $FILE "# Pedigree Format: $ped_format\n";
+        print $FILE "# Include Descendants: " . ( defined $include_descendants ? 'true' : 'false' ) . "\n";
         if (scalar(@$pedigree_rows) == 0) {
             print $FILE "# No pedigrees found for the provided source\n";
         }

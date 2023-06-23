@@ -1174,11 +1174,18 @@ sub get_descendant_hash {
 =cut
 
 sub get_pedigree_rows {
-    my ($self, $accession_ids, $format) = @_;
+    my ($self, $accession_ids, $format, $include_descendants) = @_;
     #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
 
     my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my @values = @$accession_ids;
+
     my ($query, $pedigree_rows);
+    my $child_query = "";
+    if ( $include_descendants ) {
+        $child_query = "OR m_rel.subject_id IN ($placeholders) OR f_rel.subject_id IN ($placeholders)";
+        push(@values, @$accession_ids, @$accession_ids);
+    }
 
     if ($format eq 'parents_only') {
         $query = "
@@ -1191,7 +1198,7 @@ sub get_pedigree_rows {
         LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
         LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
-        WHERE child.stock_id IN ($placeholders)
+        WHERE child.stock_id IN ($placeholders) $child_query
         GROUP BY 1,2,3,4
         ORDER BY 1";
     }
@@ -1213,7 +1220,7 @@ sub get_pedigree_rows {
                 LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
                 LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
                 LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
-                WHERE c.stock_id IN ($placeholders)
+                WHERE c.stock_id IN ($placeholders) $child_query
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
             UNION
                 SELECT c.uniquename AS child,
@@ -1242,7 +1249,7 @@ sub get_pedigree_rows {
     }
 
     my $sth = $self->schema()->storage()->dbh()->prepare($query);
-    $sth->execute(@$accession_ids);
+    $sth->execute(@values);
 
     no warnings 'uninitialized';
     while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
