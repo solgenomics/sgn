@@ -349,10 +349,13 @@ $(document).ready(function() {
 <form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download Pedigree </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Pedigrees </h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
+    </th>
+    <th>
+      Include
     </th>
     <th>
       Format
@@ -369,13 +372,19 @@ $(document).ready(function() {
       </div>
     </td>
     <td>
- <div class="radio">
-  <label><input type="radio" id="ped_format" name="ped_format" value="parents_only" checked>Direct parents only</label>
- </div>
- <div class="radio">
-   <label><input type="radio" id="ped_format" name="ped_format" value="full">Full pedigrees</label>
- </div>
-     </td>
+      <div class="radio">
+        <label><input type="radio" id="ped_format" name="ped_format" value="parents_only" checked>Direct parents only</label>
+      </div>
+      <div class="radio">
+        <label><input type="radio" id="ped_format" name="ped_format" value="full">Full pedigrees</label>
+      </div>
+    </td>
+    <td>
+      <select class="form-control" id="pedigree_file_format" name="file_format">
+        <option value=".txt">Plain Text</option>
+        <option value=".helium">Helium Format</option>
+      </select>
+    </td>
     <td>
       <button class="btn btn-primary" type="button" id="pedigree">Download</button>
       <input type="hidden" id="pedigree_download_token" name="pedigree_download_token"/>
