@@ -296,164 +296,139 @@ jQuery('#calculate_spatial_correction').click(function() {
        
    });
 });
+var pheno_filepath;
+var headers;
+var phenotype_file;
+var dataTableToPass;
+jQuery("#confirm_calculating_spatial_correction").click(async function() {
+  try { //try is a block of code that will run and if it encounters an error it will run the catch block
+    jQuery("#calculate_spatial_correction_status_message").html("starting analysis");
 
+    const response = await new Promise((resolve, reject) => {
+      jQuery.ajax({
+        beforeSend: function(xhr, settings) {
+          jQuery("#calculate_spatial_correction_status_message").html("starting analysis");
+        },
+        url: '/ajax/spatial_model/generate_results/' + trial_id,
+        success: function(response) {
+          resolve(response);
+        },
+        error: function(xhr, status, error) {
+          reject(new Error(error));
+        }
+      });
+    });
 
-jQuery("#confirm_calculating_spatial_correction").click(function() {
-     jQuery.ajax({
-      beforeSend: function (xhr, settings) {
-        jQuery("#calculate_spatial_correction_status_message").html("starting analysis");
-      },
-       url: '/ajax/spatial_model/generate_results/'+trial_id,
-       success: function(response) {
-        jQuery("#calculate_spatial_correction_status_message").html("Analysis complete. Click buttons below to see AIC (of models with and without spatial correction), fitted values, and BLUEs.");
-         if (response.error) {
-           alert(response.error);
-           alert("Error calculating spatial correction");
-         } else {
-            jQuery("#confirm_store_spatial_correction").prop("disabled", false); 
-            jQuery("#spatial_correction_results_buttons button").show();
-            var headers = response.headers;
-            var input_file = response.input_file;
-            var fitted_data = JSON.stringify(response.fitted_hash);
-            var model_properties = JSON.stringify({ "properties" : { "traits" :  ["ID", "Trait", "Name", "Phenotype Values", "Fitted Values"] } });
-            jQuery("#spatial_correction_blue_results_table").hide(); //hide blue results table
-            jQuery("#spatial_correction_blue_results_table_wrapper").hide(); //hide wrapper for blue results table
-            jQuery("#spatial_correction_fitted_results_table").hide(); //hide fitted values table
-            jQuery("#spatial_correction_fitted_results_table_wrapper").hide(); //hide wrapper for fitted values table
+    jQuery("#calculate_spatial_correction_status_message").html("Analysis complete. Click below to correct spatial correlation on necessary traits.");
 
-            jQuery("#spatial_checking_results_button").click(function() {
-                jQuery("#spatial_correction_fitted_results_table").hide(); //hide fitted values table
-                jQuery("#spatial_correction_fitted_results_table_wrapper").hide(); //hide wrapper for fitted values table
-                jQuery("#spatial_correction_blue_results_table_wrapper").hide(); //hide wrapper for blue values table
-                jQuery("#spatial_correction_blue_results_table").hide(); //hide blue values table
-                jQuery("#spatial_checking_results_table").show(); //show AIC values table
-                jQuery("#spatial_checking_results_table_wrapper").show(); //show wrapper for AIC values table
-                jQuery('#trait_spatial_selector').hide(); //hide dropdown
-            });
-            jQuery("#fitted_values_button").click(function() {
-                jQuery("#spatial_correction_fitted_results_table").show(); //show fitted values table
-                jQuery("#spatial_correction_fitted_results_table_wrapper").show(); //show wrapper for fitted values table
-                jQuery("#spatial_correction_blue_results_table_wrapper").hide(); //hide wrapper for blue values table
-                jQuery("#spatial_correction_blue_results_table").hide(); //hide blue values table
-                jQuery("#spatial_checking_results_table").hide(); //hide AIC values table
-                jQuery("#spatial_checking_results_table_wrapper").hide(); //hide wrapper for AIC values table
-                jQuery('#trait_spatial_selector').hide(); //hide dropdown
-            });
-            jQuery("#blues_button").click(function() {
-                jQuery("#spatial_correction_fitted_results_table").hide(); //hide fitted values table
-                jQuery("#spatial_correction_blue_results_table").show(); //show blue values table
-                jQuery("#spatial_correction_fitted_results_table_wrapper").hide(); //hide wrapper for fitted values table
-                jQuery("#spatial_correction_blue_results_table_wrapper").show(); //show wrapper for blue values table
-                jQuery("#spatial_checking_results_table").hide(); //hide AIC values table
-                jQuery("#spatial_checking_results_table_wrapper").hide(); //hide wrapper for AIC values table
+    if (response.error) {
+      alert(response.error);
+      alert("Error calculating spatial correction");
+    } else {
+      jQuery("#confirm_store_spatial_correction").prop("disabled", false);
+      jQuery("#spatial_correction_results_buttons button").show();
+      headers = response.headers;
+      pheno_filepath = response.pheno_filepath;
+      phenotype_file = response.phenotype_file;
+      dataTableToPass = response.data;
+      var input_file = response.input_file;
+      var fitted_data = JSON.stringify(response.fitted_hash);
+      var model_properties = JSON.stringify({ "properties": { "traits": ["ID", "Trait", "Name", "Phenotype Values", "Fitted Values"] } });
 
-                // Create custom dropdown menu
-                jQuery(document).ready(function() {
-                    var columnValues = jQuery('#spatial_correction_blue_results_table').DataTable().column(1).data().unique().toArray();
-                    console.log(columnValues);
-                    var dropdown = jQuery('#dropdown');
-                    jQuery.each(columnValues, function(i, value) {
-                        dropdown.append(jQuery('<option>').text(value).attr('value', value));
-                    });
-                //dropdown.insertAfter(jQuery('#spatial_correction_blue_results_table_wrapper .dataTables_length'));
-                    jQuery('#trait_spatial_selector').show(); // append dropdown to DataTable wrapper
-                });
+      jQuery("#spatial_correction_needed_results_table").show();
+      jQuery("#spatial_correction_needed_results_table_wrapper").show();
 
-                // Filter DataTable based on selected value
-                jQuery(document).ready(function() {
-                    jQuery('#dropdown').on('change', function() {
-                        var selectedValue = jQuery(this).val();
-                        jQuery('#spatial_correction_blue_results_table').DataTable().column(1).search(selectedValue).draw();
-                    });
-                });
-            });
-            jQuery("#spatial_checking_results_table").DataTable({
-            'destroy': true,
-                  'timeout': 6000000,
-                  'data' : response.data_AIC,
-                  'columns': [
-                        { 'title': 'ID' },
-                        { 'title': 'Trait' },                        
-                        { 'title': 'AIC:Without' },
-                        { 'title': 'AIC:With' },
-                        { 'title': 'Spatial Correction Needed' },
-                    ],
-            });
-            jQuery("#spatial_correction_blue_results_table").DataTable({
-                'destroy': true,
-                  'timeout': 6000000,
-                  'data' : response.data,
-                  'columns': headers,
-                  'dom': 'Bfrtip',
-                    'buttons': [
-                        'csv', 'excel', 'pdf'
-                    ]
-                  //'dom': '<"top"l>rt<"bottom"ip><"clear">', 
-                  //'columns': ["ID","Trait", "Effect", "Estimate", "Std.Error", "t.value"],
+      var dataTable = jQuery("#spatial_correction_needed_results_table").DataTable({
+        'destroy': true,
+        'timeout': 6000000,
+        'data': response.data,
+        'columns': [
+          { 'title': 'Trait' },
+          { 'title': 'Data Quality' },
+          { 'title': 'Moran P Value' },
+          { 'title': 'Spatial Correction Needed' },
+        ],
+        'dom': 'Bfrtip',
+        'buttons': [
+          'csv', 'excel', 'pdf'
+        ]
+      });
 
-                  //"order": [[ 1, "desc" ]]
-            })
+      dataTable.on('init', function() {
+        var columnValues = dataTable.column(1).data().unique().toArray();
+        console.log(columnValues);
+        var dropdown = jQuery('#dropdown');
+        dropdown.empty();
+        jQuery.each(columnValues, function(i, value) {
+          dropdown.append(jQuery('<option>').text(value).attr('value', value));
+        });
+        jQuery('#trait_spatial_selector').show();
+      });
 
-            
+      jQuery('#dropdown').on('change', function() {
+        var selectedValue = jQuery(this).val();
+        dataTable.column(1).search(selectedValue).draw();
+      });
 
-            var fittedtable = jQuery("#spatial_correction_fitted_results_table").DataTable({
-                'destroy': true,
-                  'timeout': 6000000,
-                  'data' : response.data_fitted ,
-                  "columnDefs": [
-                        { "targets": 0, "visible": false }
-                    ],
-                  'columns': [
-                        { 'title': 'ID' },
-                        { 'title': 'Trait' },
-                        { 'title': 'Name' },
-                        { 'title': 'Phenotype Values' },
-                        { 'title': 'Fitted Values' }
-                    ],
-                  //'columns': response.headers_fitted,
-                  'order': [[ 1, "asc" ]],
-                    'dom': 'Bfrtip',
-                    'buttons': [
-                        'csv', 'excel', 'pdf'
-                    ]
-                  
-           })
-
-            var accessionNames = fittedtable.column(2).data().toArray();
-            var accessionNamesArray = accessionNames.join(" ").split(/\s+/);
-            console.log(accessionNamesArray);
-            var traits = ["ID", "Trait", "Name", "Phenotype Values", "Fitted Values"];
-            //var traitsString = traits.join(", ");
-            var model_properties_data = { "properties" : { "traits" : traits  } } ;
-		    var model_properties = JSON.stringify(model_properties_data);
-
-           //jQuery('#confirm_store_spatial_correction').click(function() {
-           jQuery(document).on('click', '#confirm_store_spatial_correction',  function(e) {
-	        jQuery('#generic_save_analysis_dialog').modal("show");
-	        jQuery('#generic_save_analysis_model_properties').val(model_properties);
-	        jQuery('#generic_save_analysis_protocol').val("mmer(Yield~1 + germplasmName,random=~vsr(Row) +vsr(Col) +spl2Da(Row,Col),data=DT)");
-            jQuery('#generic_save_analysis_dataset_id').val();
-	        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
-	        jQuery('#generic_save_analysis_trial_id').val( get_trial_id() );
-	        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(traits));
-	        jQuery('#generic_save_analysis_statistical_ontology_term').val('Fitted Values from Spatial Correction using Sommer|R');
-	        jQuery('#generic_save_analysis_model_language').val('R');
-	        jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
-	        jQuery('#generic_save_analysis_model_application_version').val( '0.01' );
-	        jQuery('#generic_save_analysis_model_type').val('spatial_model_sommer');
-	        jQuery('#generic_save_analysis_result_values').val(fitted_data);
-	        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
-	        jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase mixed model analysis tool" }');
-	        jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
-	        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
-            });
-
-         }
-       }
-     });
+      jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
+        jQuery('#generic_save_analysis_dialog').modal("show");
+        jQuery('#generic_save_analysis_model_properties').val(model_properties);
+        jQuery('#generic_save_analysis_protocol').val("mmer(Yield~1 + germplasmName,random=~vsr(Row) +vsr(Col) +spl2Da(Row,Col),data=DT)");
+        jQuery('#generic_save_analysis_dataset_id').val();
+        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
+        jQuery('#generic_save_analysis_trial_id').val(get_trial_id());
+        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(traits));
+        jQuery('#generic_save_analysis_statistical_ontology_term').val('Fitted Values from Spatial Correction using Sommer|R');
+        jQuery('#generic_save_analysis_model_language').val('R');
+        jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
+        jQuery('#generic_save_analysis_model_application_version').val('0.01');
+        jQuery('#generic_save_analysis_model_type').val('spatial_model_sommer');
+        jQuery('#generic_save_analysis_result_values').val(fitted_data);
+        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
+        jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase mixed model analysis tool" }');
+        jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
+      });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
 });
 
-
+jQuery("#correct_spatial").click(function() {
+  //var dataTableData = jQuery("#spatial_correction_needed_results_table").DataTable().data();
+  //alert(JSON.stringify(dataTableData));
+  //console.log(dataTableData);
+  jQuery.ajax({
+    url: '/ajax/spatial_model/correct_spatial/' + trial_id,
+    data: {
+      dataTableData: dataTableToPass,
+      pheno_filepath: pheno_filepath,
+      headers: headers,
+      phenotype_file: phenotype_file,
+    },
+    success: function(response) {
+      console.log(response);
+      if (response.error) {
+        alert(response.error);
+        alert("Error calculating spatial correction");
+      } else {
+        jQuery("#spatial_correction_blue_results_table").DataTable({
+          'destroy': true,
+          'timeout': 6000000,
+          'data': response.result,
+          'columns': [
+            { 'title': 'ID' },
+            { 'title': 'Trait' },
+            { 'title': 'Effect' },
+            { 'title': 'BLUE' },
+            { 'title': 'Std.Error' },
+          ],
+        });
+      }
+    }
+  });
+});
 
 
   jQuery('#edit_field_map_link').click(function () {

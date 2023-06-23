@@ -110,23 +110,20 @@ $latest_trial_activity => undef
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <p>Would you like to calculate Spatial Correction?</p>
+          <p>To proceed to check presence of spatial autocorrelation. Click Confirm.</p>
           <button type="button" class="btn btn-primary" name="confirm_calculating_spatial_correction" id="confirm_calculating_spatial_correction">Confirm</button>
           <br />
           <br />
           <div id="calculate_spatial_correction_status_message"></div>
           <div id="spatial_correction_results_buttons">
-            <button id="spatial_checking_results_button" type="button" class="btn btn-default"> Spatial Importance</button>
-            <button id="fitted_values_button" type="button" class="btn btn-default"> Fitted Values</button>
-            <button id="blues_button" type="button" class="btn btn-default"> BLUEs </button>
+            <button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button>
           </div>
           <br />
           <hr>
           <div id="trait_spatial_selector"><select id="dropdown" style="">  <option value="">All</option></select></div>
           <br />
-          <table id= "spatial_checking_results_table" ></table>
+          <table id= "spatial_correction_needed_results_table" ></table>
           <table id= "spatial_correction_blue_results_table" ></table>
-          <table id= "spatial_correction_fitted_results_table" ></table>
           <!-- <table id= "spatial_correction_fitted_results_table" ></table> -->
           <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="fitted" data-target="#generic_save_analysis_dialog">Store Spatial Correction</button>
 
