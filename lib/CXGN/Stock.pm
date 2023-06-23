@@ -1234,10 +1234,11 @@ sub get_pedigree_rows {
                 WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
         )
-        SELECT child, mother, father, type, depth
+        SELECT child, mother, father, type
         FROM included_rows
-        GROUP BY 1,2,3,4,5
-        ORDER BY 5,1;";
+        GROUP BY 1,2,3,4
+        ORDER BY 1;";
+        # depth was removed from this query since including it was creating a lot of duplicate rows
     }
 
     my $sth = $self->schema()->storage()->dbh()->prepare($query);
