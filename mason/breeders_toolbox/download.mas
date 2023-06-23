@@ -374,10 +374,10 @@ $(document).ready(function() {
     <td>
       <div style="width: 150px">
         <div class="radio">
-          <label><input type="radio" id="ped_format" name="ped_format" value="parents_only" checked>Direct parents (and descendants) only</label>
+          <label><input type="radio" id="ped_format_parents" name="ped_format" value="parents_only" checked>Direct parents (and descendants) only</label>
         </div>
         <div class="radio">
-          <label><input type="radio" id="ped_format" name="ped_format" value="full">Full pedigrees</label>
+          <label><input type="radio" id="ped_format_full" name="ped_format" value="full">Full pedigrees</label>
         </div>
         <div>
           <input type="checkbox" id="ped_descendants" name="include_descendants" value="true">
@@ -429,7 +429,24 @@ $(document).ready(function() {
                     //var token = new Date().getTime(); //use the current timestamp as the token name and value
                     //manage_dl_with_cookie(token, ladda);
                     //jQuery('#pedigree_download_token').val(token);
-                    jQuery('#download_pedigree').submit();
+                    jQuery('#working_modal').modal('show');
+                    var http = new XMLHttpRequest();
+                    http.open('POST', '/breeders/download_pedigree_action', true);
+                    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                    http.onreadystatechange = () => {
+                      if( http.readyState == 4 ) {
+                        jQuery('#working_modal').modal('hide');
+                        if ( http.status == 200) {
+                          var blob = new Blob([http.response], { type : 'plain/text' });
+                          var fileName = http.getResponseHeader("FileName");
+                          var link = document.createElement('a');
+                          link.href = window.URL.createObjectURL(blob);
+                          link.download = fileName;
+                          link.click();
+                        }
+                      }
+                    }
+                    http.send(jQuery("#download_pedigree").serialize());
                  }
              });
         } });

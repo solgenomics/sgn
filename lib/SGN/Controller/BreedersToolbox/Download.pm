@@ -937,7 +937,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
       value => $dl_token,
       expires => '+1m',
     };
-
+    $c->res->header("Filename", $filename);
     $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
 
 
