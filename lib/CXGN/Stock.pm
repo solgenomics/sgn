@@ -1167,7 +1167,7 @@ sub get_descendant_hash {
  Usage:
  Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
  Ret:
- Args: $accession_ids, $format (either 'parents_only' or 'full')
+ Args: $accession_ids, $format (either 'parents_only' or 'full'), $include_descendants (when defined, the response will include children of the accessions)
  Side Effects:
  Example:
 
