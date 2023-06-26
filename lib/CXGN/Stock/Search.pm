@@ -339,30 +339,6 @@ sub search {
     }
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    if ( $owner_first_name || $owner_last_name ){
-        my %person_params;
-        if ($owner_first_name) {
-            $owner_first_name =~ s/\s+//g;
-            $person_params{first_name} = {'ilike' => $owner_first_name};
-        }
-        if ($owner_last_name) {
-            $owner_last_name =~ s/\s+//g;
-            $person_params{last_name} = {'ilike' => $owner_last_name};
-        }
-
-        #$people_schema->storage->debug(1);
-        my $p_rs = $people_schema->resultset("SpPerson")->search(\%person_params);
-
-        my $stock_owner_rs = $phenome_schema->resultset("StockOwner")->search({
-            sp_person_id => { -in  => $p_rs->get_column('sp_person_id')->as_query },
-        });
-        my @stock_ids;
-        while ( my $o = $stock_owner_rs->next ) {
-            push @stock_ids, $o->stock_id;
-        }
-        $and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
-    }
-
     my $stock_join;
     my $nd_experiment_joins = [];
 
@@ -525,12 +501,6 @@ sub search {
         $rs = $rs->slice($offset, $limit);
     }
 
-    my $owners_hash;
-    if (!$self->minimal_info){
-        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-        $owners_hash = $stock_lookup->get_owner_hash_lookup();
-    }
-
     my @result;
     my %result_hash;
     my @result_stock_ids;
@@ -541,7 +511,7 @@ sub search {
 
         if (!$self->minimal_info){
             # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
-            my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
+            #my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
             my $type_id     = $a->type_id ;
             my $type        = $a->get_column('cvterm_name');
             my $organism_id = $a->organism_id;
@@ -560,7 +530,7 @@ sub search {
                 genus => $genus,
                 common_name => $common_name,
                 organism_id => $organism_id,
-                owners => \@owners,
+                #owners => \@owners,
                 # pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
                 # synonyms=> $stock_object->synonyms,
                 # speciesAuthority=>$stock_object->get_species_authority,
