@@ -553,13 +553,21 @@ $facilities
                                 <td>Alternate</td>
                                 <td>Chromosome</td>
                                 <td>Position</td>
-                                <td>Quality</td>
-                                <td>Filter</td>
-                                <td>Info</td>
-                                <td>Format</td>
+                                <td><b>Optional:</b> additional marker info can be included. Please see below.</td>
                             </tr>
                         </tbody>
                     </table>
+                    <b>
+                        Optional columns:
+                    </b>
+                    You can include additional marker infomation by selecting one or more column headers listed below. Please add the selected column(s) after "Position" column. </li>
+                    <ul>
+                        <li><b>Quality</b></li>
+                        <li><b>Filter</b></li>
+                        <li><b>Info</b></li>
+                        <li><b>Format</b></li>
+                        <li><b>Sequence</b></li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
