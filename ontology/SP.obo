@@ -4,6 +4,7 @@ saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
 ontology: TEMP
+owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000501> \"SP:0000477\"^^xsd:string)\n)
 
 [Term]
 id: SP:0000000
@@ -391,8 +392,8 @@ synonym: "pericarp elongation index" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000039 ! fruit shape index
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000039 ! fruit shape index
 
 [Term]
 id: SP:0000049
@@ -541,8 +542,8 @@ synonym: "dec" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000058 ! fruit shape eccentric
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
 id: SP:0000064
@@ -552,8 +553,8 @@ synonym: "pec" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000058 ! fruit shape eccentric
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
 id: SP:0000065
@@ -1112,7 +1113,8 @@ synonym: "count" RELATED []
 xref: PATO:0000053
 xref: PO:0007615
 xref: PO:0009046
-is_a: SP:0000115 ! flower
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000115 ! flower
 created_by: naama
 creation_date: 2008-02-22T10:47:00Z
 
@@ -1429,8 +1431,8 @@ name: fruit shape triangle 5%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1440,8 +1442,8 @@ name: fruit shape triangle 10%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1451,8 +1453,8 @@ name: fruit shape triangle 20%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1462,8 +1464,8 @@ name: fruit shape triangle 30%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1511,48 +1513,48 @@ creation_date: 2008-03-17T01:50:00Z
 [Term]
 id: SP:0000155
 name: distal angle micro 2%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000156
 name: distal angle micro 3%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000157
 name: distal angle micro 5%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000158
 name: distal angle macro 10%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000159
 name: distal angle macro 15%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000160
 name: distal angle macro 20%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
@@ -1577,8 +1579,8 @@ creation_date: 2008-03-25T11:17:00Z
 [Term]
 id: SP:0000163
 name: distal angle macro 25%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:19:00Z
 
@@ -1591,8 +1593,8 @@ synonym: "oel" EXACT []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000058 ! fruit shape eccentric
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 created_by: naama
 creation_date: 2008-03-31T10:09:00Z
 
@@ -4389,6 +4391,15 @@ name: Variables
 is_a: SP:0001000 ! Solanaceae phenotype ontology
 
 [Term]
+id: SP:0000501
+name: Old gold crimson flower color observation boolean
+def: "Crimson is the flower color conditioned by the recessive gene (ogc). There is a positive correlation between crimson color and dark red fruit color. Boolean trait 0 = absent, 1= present." [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000009 ! flower color
+created_by: naama
+creation_date: 2023-06-26
+
+[Term]
 id: SP:0000706
 name: male sterility
 synonym: "TO:0000437" RELATED []
@@ -4453,3 +4464,4 @@ name: part of
 [Typedef]
 id: variable_of
 name: variable_of
+
