@@ -355,7 +355,7 @@ $(document).ready(function() {
       Accessions
     </th>
     <th>
-      Depth
+      Query
     </th>
     <th>
       Format
@@ -372,16 +372,20 @@ $(document).ready(function() {
       </div>
     </td>
     <td>
-      <div style="width: 150px">
+      <div style="width: 175px">
+        <p><strong>Depth:</strong></p>
         <div class="radio">
-          <label><input type="radio" id="ped_format_parents" name="ped_format" value="parents_only" checked>Direct parents (and descendants) only</label>
+          <label><input type="radio" id="ped_format_parents" name="ped_format" value="parents_only" checked>Only One Generation</label>
         </div>
         <div class="radio">
-          <label><input type="radio" id="ped_format_full" name="ped_format" value="full">Full pedigrees</label>
+          <label><input type="radio" id="ped_format_full" name="ped_format" value="full">All Generations</label>
         </div>
-        <div>
-          <input type="checkbox" id="ped_descendants" name="include_descendants" value="true">
-          <span>Include Descendants</span>
+        <p><strong>Include:</strong></p>
+        <div class="radio">
+          <label><input type="radio" id="include_ancestors" name="ped_include" value="ancestors" checked>Only Ancestors</label>
+        </div>
+        <div class="radio">
+          <label><input type="radio" id="include_ancestors_descendants" name="ped_include" value="ancestors_descendants">Ancestors and Descendants</label>
         </div>
       </div>
     </td>
