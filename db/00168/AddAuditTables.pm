@@ -54,9 +54,9 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
-CREATE TABLE logged_in_user(sp_person_id int);
-INSERT INTO logged_in_user (sp_person_id) VALUES (0);
-ALTER TABLE logged_in_user OWNER TO web_usr;
+CREATE TABLE public.logged_in_user (sp_person_id INT);
+INSERT INTO public.logged_in_user (sp_person_id) VALUES (57);
+ALTER TABLE public.logged_in_user OWNER TO web_usr;
 
 CREATE SCHEMA IF NOT EXISTS audit;
 ALTER SCHEMA audit OWNER TO web_usr;
