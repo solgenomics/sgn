@@ -521,7 +521,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     }
 
     # retrive dataset outliers
-    # chujowa baza danych... ja pierdole co za syf
     my $dbname = "breedbase";
     my $dbuser = "postgres";
     my $dbpassword = "postgres";
