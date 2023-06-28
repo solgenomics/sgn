@@ -371,6 +371,11 @@ sub verify {
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
+                #Trait values can be non alphanumeric 
+                #if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
+                #    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                #}
+
                 #check that trait value is valid for trait name
                 if (exists($check_trait_format{$trait_cvterm_id})) {
                     if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
@@ -591,7 +596,7 @@ sub store {
                     my $observation = $value->[3];
                     my $image_id = $value->[4];
                     my $additional_info = $value->[5] || undef;
-	                my $external_references = $value->[6] || undef;
+                    my $external_references = $value->[6] || undef;
                     my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA' . $upload_date;
 
                     if (defined($trait_value) && length($trait_value)) {
@@ -612,23 +617,25 @@ sub store {
                         # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
                         if ($overwrite_values) {
                             if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                                push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-                                push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+
+                                #skip when observation is provided since overwriting doesn't create records it updates observations.
+                                if (!$observation) {
+                                    push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+                                    push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+                                }
                                 $plot_trait_uniquename .= ", overwritten: $upload_date";
                                 $overwrite_count++;
-                            }
-                            else {
+                            } else {
                                 $new_count++;
                             }
                             $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                        }
-                        else {
+                        } else {
                             if (!$allow_repeat_measures && exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-	                            $skip_count++;
-	                            next;
-	                        } else {
-	                            $new_count++;
-	                        }
+                                $skip_count++;
+                                next;
+                            } else {
+                                $new_count++;
+                            }
                         }
 
                         my $phenotype;
@@ -695,41 +702,49 @@ sub store {
                         }
 
                         if($additional_info){
-                            my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->create({
+                            my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                                 phenotype_id => $phenotype->phenotype_id,
                                 type_id       => $phenotype_addtional_info_type_id,
+                            });
+                            $pheno_additional_info = $pheno_additional_info->update({
                                 value => encode_json $additional_info,
                             });
+                            $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+                        }
+                        my $external_references_stored;
+                        if($external_references){
+                            my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
+                                phenotype_id => $phenotype->phenotype_id,
+                                type_id      => $external_references_type_id,
+                            });
+                            $phenotype_external_references = $phenotype_external_references->update({
+                                value => encode_json $external_references,
+                            });
+                            $external_references_stored = $phenotype_external_references->value ? decode_json $phenotype_external_references->value : undef;
                         }
 
-	                    if($external_references){
-	                        my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->create({
-	                            phenotype_id => $phenotype->phenotype_id,
-	                            type_id      => $external_references_type_id,
-	                            value => encode_json $external_references,
-	                        });
-	                    }
-
                         my $observationVariableDbId = $trait_cvterm->cvterm_id;
+                        my $observation_id = $phenotype->phenotype_id;
                         my %details = (
-                            "germplasmDbId"           => $linked_data{$plot_name}->{germplasmDbId},
-                            "germplasmName"           => $linked_data{$plot_name}->{germplasmName},
-                            "observationDbId"         => $phenotype->phenotype_id,
-                            "observationLevel"        => $linked_data{$plot_name}->{observationLevel},
-                            "observationUnitDbId"     => $linked_data{$plot_name}->{observationUnitDbId},
-                            "observationUnitName"     => $linked_data{$plot_name}->{observationUnitName},
-                            "observationVariableDbId" => qq|$observationVariableDbId|,
-                            "observationVariableName" => $trait_cvterm->name,
-                            "studyDbId"               => $project_id,
-                            "uploadedBy"              => $operator ? $operator : "",
-                            "value"                   => $trait_value
+                            "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
+                            "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
+                            "observationDbId"=> qq|$observation_id|,
+                            "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
+                            "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
+                            "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
+                            "observationVariableDbId"=> qq|$observationVariableDbId|,
+                            "observationVariableName"=> $trait_cvterm->name,
+                            "studyDbId"=> qq|$project_id|,
+                            "uploadedBy"=> $operator ? $operator : "",
+                            "additionalInfo" => $additional_info_stored,
+                            "externalReferences" => $external_references_stored,
+                            "value" => $trait_value
                         );
 
-                        if ($timestamp) {$details{'observationTimeStamp'} = $timestamp};
-                        if ($operator) {$details{'collector'} = $operator};
+                        if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
+                        if ($operator) { $details{'collector'} = $operator};
 
                         push @stored_details, \%details;
-                    }
                 }
             }
         }
@@ -861,7 +876,6 @@ sub delete_previous_phenotypes {
             die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
         }
     }
-
     return @deleted_phenotypes;
 }
 

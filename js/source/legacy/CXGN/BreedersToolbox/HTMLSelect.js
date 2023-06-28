@@ -26,6 +26,10 @@ function get_select_box(type, div_id, options) {
             // console.log(JSON.stringify(response.select));
             var select = jQuery("#"+options.id).attr('onChange', 'Workflow.complete(this);');
         }
+        if (options.full_dropdown) {
+            var select_collection = document.getElementById(options.id).options;
+            document.getElementById(options.id).setAttribute("size", select_collection.length);
+        }
 	},
 	error: function(response) {
 	    alert("An error occurred");

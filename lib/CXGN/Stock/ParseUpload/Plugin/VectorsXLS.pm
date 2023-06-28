@@ -70,7 +70,7 @@ sub _validate_with_plugin {
         $species_name_head =~ s/^\s+|\s+$//g;
     }
 
-    push @$editable_stockprops, ('VectorType','Strain','CloningOrganism','InherentMarker','Backbone','SelectionMarker','CassetteName','Gene','Promotors','Terminators');
+    push @$editable_stockprops, ('VectorType','Strain','CloningOrganism','InherentMarker','Backbone','SelectionMarker','CassetteName','Gene','Promotors','Terminators','BacterialResistantMarker','PlantAntibioticResistantMarker');
     my %allowed_stockprops_head = map { $_ => 1 } @$editable_stockprops;
     for my $i (3..$col_max){
         my $stockprops_head;
@@ -221,6 +221,8 @@ sub _parse_with_plugin {
         'gene' => ['gene','Gene'],
         'promotors' => ['promotors','Promotors'],
         'terminators' => ['terminators','Terminators'],
+        'plant_antibiotic_resistant_marker' => ['plant_antibiotic_resistant_marker','PlantAntibioticResistantMarker'],
+        'bacterial_resistant_marker' => ['bacterial_resistant_marker','BacterialResistantMarker'],
     );
 
     my @header;

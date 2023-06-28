@@ -65,14 +65,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select clones list')->click();
     sleep(2);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
 
-    my $sel = $d->find_element('//div[@class="list_upload"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
+    my $sel = $d->find_element('//div[@class="select_menu_block"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel);
     sleep(2);
     $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
@@ -84,13 +84,13 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
     sleep(2);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(150);
-    my $sel = $d->find_element('//div[@class="list_upload"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
+    my $sel = $d->find_element('//div[@class="select_menu_block"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel);
     sleep(2);
     $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
@@ -106,7 +106,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select clones list')->click();
     sleep(2);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
@@ -124,7 +124,7 @@ $d->while_logged_in_as("submitter", sub {
     # $d->get_ok('/kinship/analysis/list_17/gp/1', 'cluster home page');
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select clones list')->click();
     sleep(3);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
@@ -140,8 +140,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select clones list')->click();
-    sleep(2);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    sleep(4);
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
@@ -155,7 +155,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
     sleep(2);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(2);
@@ -171,7 +171,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select clones list')->click();
     sleep(2);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(3);
@@ -190,7 +190,7 @@ $d->while_logged_in_as("submitter", sub {
     # sleep(20);
     $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select clones list')->click();
     sleep(2);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(3);
     $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
     sleep(5);

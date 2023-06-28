@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test_docker_build]
     container:
-      image: breedbase/breedbase:v0.56
+      image: breedbase/breedbase:v0.69
       env:
         HOME: /root
         MODE: 'TESTING'
@@ -151,6 +151,9 @@ jobs:
 
       - name: Run selenium tests 02_trial
         run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
+
+      - name: Run selenium tests dataset
+        run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
 
       - name: Run selenium tests breeders
         run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null

@@ -5,22 +5,27 @@
 */
 
 
-jQuery(document).ready( function() { 
-    var page = document.URL;
-   
-    if (page.match(/solgs\/traits\/all\//) != null || 
-        page.match(/solgs\/models\/combined\/trials\//) != null) {
+jQuery(document).ready( function() {
+
+
+     jQuery("#run_pheno_heritability").show();    
+    // var page = document.URL;
+
+
     
-    setTimeout(function() {listGenCorPopulations()}, 5000);
+    // if (page.match(/solgs\/traits\/all\//) != null || 
+    //     page.match(/solgs\/models\/combined\/trials\//) != null) {
+    
+    // setTimeout(function() {listGenCorPopulations()}, 5000);
         
-    } else {
+    // } else {
 
-    var url = window.location.pathname;
+    // var url = window.location.pathname;
 
-    if (url.match(/[solgs\/population|breeders_toolbox\/trial|breeders\/trial]/)) {
-        checkPhenoH2Result();  
-    } 
-    }
+    // if (url.match(/[solgs\/population|breeders_toolbox\/trial|breeders\/trial]/)) {
+    //     checkPhenoH2Result();  
+    // } 
+    // }
           
 });
 
@@ -50,7 +55,7 @@ jQuery(document).ready( function() {
 
     jQuery("#run_pheno_heritability").click(function() {
         phenotypicHeritability();
-    jQuery("#run_pheno_heritability").hide();
+	jQuery("#run_pheno_heritability").hide();
     }); 
   
 });
@@ -176,7 +181,7 @@ function formatGenCorInputData (popId, type, indexFile) {
             } else {
                 jQuery(divPlace +" #heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("This population has no valid traits to h2late.");
+                    .html("This trial has no valid traits to calculate heritability.");
         
             }
         },
@@ -221,13 +226,14 @@ function phenotypicHeritability () {
             success: function(response) {
     
                 if (response.result) {
+		    console.log('phenotypicHeritability ' + response.result)
                     runPhenoHeritabilityAnalysis();
                 } else {
                     jQuery("#heritability_message")
                         .css({"padding-left": '0px'})
                         .html("This population has no phenotype data.");
 
-            jQuery("#run_pheno_heritability").show();
+		    jQuery("#run_pheno_heritability").show();
                 }
             },
             error: function(response) {
@@ -235,7 +241,7 @@ function phenotypicHeritability () {
                     .css({"padding-left": '0px'})
                     .html("Error 1 occured preparing the phenotype data for heritability analysis.");
 
-        jQuery("#run_pheno_heritability").show();
+		jQuery("#run_pheno_heritability").show();
             }
     });     
 }
@@ -259,18 +265,18 @@ function runPhenoHeritabilityAnalysis () {
 
         jQuery("#heritability_canvas").append("<br />[ " + h2Download + " ]").show();
     
-        if(document.URL.match('/breeders/trial/')) {
-            displayTraitAcronyms(response.acronyms);
-        }
+        // if(document.URL.match('/breeders/trial/')) {
+        //     displayTraitAcronyms(response.acronyms);
+        // }
         
                 jQuery("#heritability_message").empty();
-        jQuery("#run_pheno_heritability").hide();
+		jQuery("#run_pheno_heritability").hide();
             } else {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
                     .html("There is no heritability output for this dataset."); 
         
-        jQuery("#run_pheno_heritability").show();
+		jQuery("#run_pheno_heritability").show();
             }
         },
         error: function(response) {                          
@@ -288,13 +294,14 @@ function createHeritabilityTable (tableId) {
     
     var table = '<table id="' + tableId + '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th>Trait</th><th>Test</th><th>VE</th><th>VRes</th><<th>Heritability</th>'; 
+    table    += '<th>Trait</th><th>VG</th><th>Vres</th><th>Heritability</th>'; 
     table    += '</tr></thead>';
     table    += '</table>';
 
     return table;
 
 }
+
 
 function plotHeritability (data, divPlace) {
     console.log(data)
