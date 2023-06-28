@@ -110,6 +110,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
     print STDERR "****************************************************************************\n";
     print STDERR "The dataset is $dataset_id\n";
     print STDERR $dataset_id;
@@ -134,7 +135,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     #my $temppath = $heritability_tmp_output . "/" . $tempfile;
     my $temppath = $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 

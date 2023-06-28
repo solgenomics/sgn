@@ -1635,7 +1635,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 
     my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
     foreach my $ds (@datasets) {
-        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td>'.$ds->{name}.'</td><td>';
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td><a href="/dataset/'.$ds->{id}.'">'.$ds->{name}.'</a></td><td>';
 
         $html .= '<table class="table-bordered"><thead><tr>';
         foreach my $cat (@{$ds->{info}->{category_order}}) {
