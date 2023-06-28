@@ -301,6 +301,16 @@ has 'outlier_cutoffs' => (
     default => sub { [] },
 );
 
+=head2 exclude_dataset_outliers()
+
+=cut
+
+has 'exclude_dataset_outliers' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 =head2 include_phenotype_primary_key()
 
 =cut
@@ -686,6 +696,16 @@ sub retrieve_phenotypes {
         push @trait_ids, $_->[0];
     }
 
+    # here would be good to have retrieve_outliers
+    # if (exclude_dataset_outliers) {
+    #     my $dataset_exluded_outliers = $self->outliers();
+    # }
+
+    my $dataset_exluded_outliers = $self->exclude_dataset_outliers() ? $self->outliers() : undef;
+
+    print "dataset_exluded_outliers from dataset pm: ".Dumper($dataset_exluded_outliers);
+    print "\n";
+
     print "TRAITS: ".Dumper(\@trait_ids);
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
@@ -697,6 +717,7 @@ sub retrieve_phenotypes {
         accession_list=>\@accession_ids,
         exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
         include_phenotype_primary_key=>$self->include_phenotype_primary_key,
+        dataset_exluded_outliers=>$dataset_exluded_outliers
     );
     my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;

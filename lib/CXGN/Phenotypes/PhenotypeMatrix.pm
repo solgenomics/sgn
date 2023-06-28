@@ -298,7 +298,7 @@ sub get_phenotype_matrix {
                 # outliers
                 print STDERR "DATASET_EXCLUDED_OUTLIERS = ".Dumper($dataset_exluded_outliers)."\n";
                 if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_exluded_outliers) {
-                    $trait_observations{$observation->{trait_name}} = "outlier";
+                    $trait_observations{$observation->{trait_name}} = ''; # empty field for outlier now / NA ?
                 }
             }
 

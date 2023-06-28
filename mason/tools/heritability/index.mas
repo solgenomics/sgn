@@ -41,6 +41,8 @@
         <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
       <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
       <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+      <input type="checkbox" id="dataset_trait_outliers" />
+      <label>Exclude dataset outliers &nbsp; </label>
       <br>
       <br>
       <br>
@@ -210,9 +212,14 @@ jQuery(document).ready(function() {
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
         var trait_id = $('#pheno_select').val();
+        var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
         $.ajax({
           url: '/ajax/heritability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          data: {
+            'dataset_id': dataset_id, 
+            'trait_id': trait_id,
+            'dataset_trait_outliers': dataset_trait_outliers,            
+            },
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
