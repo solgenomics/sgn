@@ -4,7 +4,7 @@ saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
 ontology: TEMP
-owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000502> \"SP:0000421\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000503> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000504> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000505> \"SP:0000472\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000506> \"SP:0000080\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000507> \"SP:0000080\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000508> \"SP:0000080\"^^xsd:string)\n)
+owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000502> \"SP:0000421\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000503> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000504> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000505> \"SP:0000472\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000506> \"SP:0000080\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000507> \"SP:0000080\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000508> \"SP:0000080\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000509> \"SP:0000080\"^^xsd:string)\n)
 
 [Term]
 id: SP:0000000
@@ -3399,8 +3399,10 @@ creation_date: 2010-07-19T11:25:30Z
 
 [Term]
 id: SP:0000366
-name: days to fruit ripening
+name: Number of days to fruit ripening
+def: "Number of days from sowing until 50% of plants have at least one fruit ripened." []
 synonym: "days to fruit maturity" RELATED []
+synonym: "fruit maturity" EXACT []
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000365 ! fruit ripening timing
 created_by: Naama
@@ -4459,6 +4461,15 @@ name: plant vigor visual estimation 0-5
 def: "Visual estimation of plant vigor 0 = low, 5= high." [SGN:DP]
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000003 ! plant habit
+created_by: naama
+creation_date: 2023-06-29
+
+[Term]
+id: SP:0000509
+name: Fruit shape. Visual observation 1-9 nominal scale
+def: "Visual observation of fruit shape. 1 = Flattened (oblate), 2 = Slightly flattened, 3 = Rounded, 4 = High rounded, 5 = Heart-shaped, 6 = Cylindrical (long oblong), 7 = Pyriform, 8 = Ellipsoid (plum-shaped), 9 = Other. Apapted from IPGRI descriptors for tomato." [SGN:DP]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000038 ! fruit shape
 created_by: naama
 creation_date: 2023-06-29
 
