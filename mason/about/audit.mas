@@ -60,8 +60,6 @@ results and returns the appropriate URL for going to that page of results
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="db_table_list_select">
-                                        <option value="Stock">Stock</option>
-                                        <option value="Another">Another</option>
                                     </select>
                                     <div class="input-group-btn">
                                         <button class="btn btn-info" id="search_audit_button"><i class="glyphicon glyphicon-search"></i> View audits </button>
@@ -87,52 +85,94 @@ results and returns the appropriate URL for going to that page of results
 <script>
 
 
+
 jQuery(document).ready(function(){
+
+    jQuery.ajax({
+        url: '/ajax/audit/retrieve_table_names',
+        success: function(response){
+            var json_names = JSON.parse(response.result1);
+            for (var i=0; i<json_names.length; i++){
+                var opt = json_names[i];
+                var displayname = opt.replace("_audit","").replace("_"," ").replace("_"," ");
+                jQuery("select#db_table_list_select").append(jQuery("<option>")
+                    .val(opt)
+                    .html(displayname)
+                    );
+                }
+        }
+    });
     jQuery("#search_audit_button").click(function(){
-        var db_table_list_id = jQuery('#db_table_list_select').find(":selected").val();    
-	    alert("you have clicked "+db_table_list_id);
+        var db_table_list_id = jQuery('#db_table_list_select').find(":selected").val();
         jQuery.ajax({
             url: '/ajax/audit/retrieve_results',
-            method: 'POST',
-            data: {'db_table_list_id': db_table_list_id},
+            data: {'db_table_list_id':db_table_list_id},
             timeout: 300000,
             success: function(response){
-                var perl_response = response.result1;
-                alert("successfully retrieved "+perl_response);
+                var json_audits = JSON.parse(response.result3);
+                var json_audit_ts = JSON.parse(response.json_audit_ts);
+                var json_operation = JSON.parse(response.json_operation);
+                var json_logged_in_user = JSON.parse(response.json_logged_in_user);
+                var json_before = JSON.parse(response.json_before);
+                var json_after = JSON.parse(response.json_after);
+
+                var audit_ts = response.audit_ts;
+                var operation = response.operation;
+                var logged_in_user = response.logged_in_user;
+                var before = response.before;
+                var after = response.after;
+
+                alert(operation);
+
+                alert(json_audits);
+                alert("timestamps: "+json_audit_ts);
+                alert("operations: "+json_operation);
+                alert("logged in user: "+json_logged_in_user);
+                alert("before: "+json_before);
+                alert("after: "+json_after);
+                jQuery('#audit_results').DataTable({
+                    columns: [
+                        {
+                            title: "Timestamp",
+                            data: audit_ts,
+                            render: function(data, type, row){
+                                return 'unknown'
+                            }
+                        },
+                        {
+                            title: "Operation",
+                            data: operation,
+                        },
+                        {
+                            title: "Logged in user",
+                            data: logged_in_user,
+                        },
+                        {
+                            title: "Before",
+                            data: before,
+                        },
+                        {
+                            title: "After",
+                            data: after,
+                        },
+                    ],
+
+                });
                 }
         });
+
 	});
 });
-/*
-        jQuery.ajax({
-            url: '/ajax/audit/retrieve_results',
-            method: 'POST',
-            data: {'db_table_list_id': db_table_list_id},
-            timeout: 300000,
-            success: function(response){
-                var perl_response = response.result1;
-                alert("successfully retrieved "+perl_response);
-                }
+/* 
 
-            }); 
-
-
-        if (!db_table_list_id) {
-            alert("Please select a database table");
-            return;
-        }
-	
-	if (! lo.legacy_validate(db_table_list_id, 'dbtable', true)) {
-            alert('The accession list contains elements that are not accessions or are not uniquenames.');
-            return;
-        }
+        
+        
 
         var table = jQuery('#audit_results').DataTable({
             'destroy' : true,
-            'ajax': { 'url':'/ajax/<!--search/common_parents'-->fix/pathForAuditTable,
-                'data':{
-                    <!--'accession_list_id'-->'db_table_id': <!--accession_list_id-->db_table_id,
-                }
+            'ajax': { 
+                'url':'/ajax/audit/retrieve_results',
+                'data':{ 'db_table_list_id':db_table_list_id,}
             },
             columns: [
                 {
@@ -165,7 +205,7 @@ jQuery(document).ready(function(){
                     title: "Data before operation",
                     data: "before_operation",
                 },
-		{
+		        {
                     title: "Data after operation",
                     data: "after_operation",
                 },

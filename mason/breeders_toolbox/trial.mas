@@ -113,6 +113,8 @@ $latest_trial_activity => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_type => $trial_type, info_section_title => "<h4 style='display:inline'>Experiment Linkage</h4>", info_section_subtitle => 'View other experiments, crosses, and genotyping plates linked to this experiment.', icon_class => "glyphicon glyphicon-link", info_section_id => "trial_linkage_section" &>
 
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_type => $trial_type, info_section_title => "<h4 style='display:inline'>Audit Table</h4>", info_section_subtitle => 'Track audit information linked to this experiment.', icon_class => "glyphicon glyphicon-time", info_section_id => "audit_table_section" &>
+
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Delete Experiment Data</h4>", info_section_subtitle => 'Delete phenotypes, field layout, and/or the entire experiment from the database.', icon_class => "glyphicon glyphicon-trash", info_section_id => "trial_deletion_section" &>
 
 % my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
