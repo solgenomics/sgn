@@ -4,7 +4,7 @@ saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
 ontology: TEMP
-owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000502> \"SP:0000421\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000503> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000504> \"SP:0000422\"^^xsd:string)\n)
+owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000502> \"SP:0000421\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000503> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000504> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000505> \"SP:0000472\"^^xsd:string)\n)
 
 [Term]
 id: SP:0000000
@@ -4296,6 +4296,8 @@ creation_date: 2018-03-29T15:17:03Z
 id: SP:0000472
 name: green leaf color, visual observation 3-7 scale
 def: "3:Light green, 5:medium green, 7:dark green." [SGN:MJD]
+synonym: "foliage color" EXACT []
+synonym: "leaf color" EXACT []
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000005 ! leaf color
 created_by: naama
@@ -4421,6 +4423,15 @@ name: plant growth habit observation 1-4 scale
 def: "Visual observation of the plant growth habit. 1= dwarf, 2= determinate, 3= semi-determinate, 4 = indeterminate." []
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000128 ! plant habit index
+created_by: naama
+creation_date: 2023-06-29
+
+[Term]
+id: SP:0000505
+name: foliage density, visual observation 3-7 scale
+def: "3 = sparse, 5 = intermediate, 7 = dense." [SGN:MJD]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000108 ! leaf
 created_by: naama
 creation_date: 2023-06-29
 
