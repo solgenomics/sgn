@@ -4,7 +4,7 @@ saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
 ontology: TEMP
-owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000501> \"SP:0000477\"^^xsd:string)\n)
+owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000502> \"SP:0000421\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000503> \"SP:0000422\"^^xsd:string)\n)
 
 [Term]
 id: SP:0000000
@@ -4398,6 +4398,22 @@ is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000009 ! flower color
 created_by: naama
 creation_date: 2023-06-26
+
+[Term]
+id: SP:0000502
+name: flower abcission zone
+is_a: SP:0000008 ! flower morphology
+created_by: naama
+creation_date: 2023-06-29
+
+[Term]
+id: SP:0000503
+name: Jointless flower abcission zone. Observation 0 = absent, 1 = present
+def: "Presence or absence of the \"jointless\" mutation. JOINTLESS accounts for the failure of activation of pedicel abcission zone development." []
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000502 ! flower abcission zone
+created_by: naama
+creation_date: 2017-09-12T13:36:34Z
 
 [Term]
 id: SP:0000706
