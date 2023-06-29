@@ -4,7 +4,7 @@ saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
 ontology: TEMP
-owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000502> \"SP:0000421\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000503> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000504> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000505> \"SP:0000472\"^^xsd:string)\n)
+owl-axioms: Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\nPrefix(xml:=<http://www.w3.org/XML/1998/namespace>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\n\nOntology(\nDeclaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#id>))\n\n\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000502> \"SP:0000421\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000503> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000504> \"SP:0000422\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000505> \"SP:0000472\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000506> \"SP:0000080\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000507> \"SP:0000080\"^^xsd:string)\nAnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#id> <http://purl.obolibrary.org/obo/TEMP.owl#SP:0000508> \"SP:0000080\"^^xsd:string)\n)
 
 [Term]
 id: SP:0000000
@@ -4432,6 +4432,33 @@ name: foliage density, visual observation 3-7 scale
 def: "3 = sparse, 5 = intermediate, 7 = dense." [SGN:MJD]
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000108 ! leaf
+created_by: naama
+creation_date: 2023-06-29
+
+[Term]
+id: SP:0000506
+name: fruiting estimation 0-5 scale
+def: "Visual estimation of fruiting 0 = low, 5= high." [SGN:DP]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000037 ! fruit
+created_by: naama
+creation_date: 2023-06-29
+
+[Term]
+id: SP:0000507
+name: fruit smoothness visual estimation 0-5
+def: "Visual estimation of fruit smoothness. 0 = low, 5= high." [SGN:DP]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000124 ! epicarp texture
+created_by: naama
+creation_date: 2023-06-29
+
+[Term]
+id: SP:0000508
+name: plant vigor visual estimation 0-5
+def: "Visual estimation of plant vigor 0 = low, 5= high." [SGN:DP]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000003 ! plant habit
 created_by: naama
 creation_date: 2023-06-29
 
