@@ -25,9 +25,6 @@ __PACKAGE__->config(
     );
 
     
-#my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    #my $audit_result_table = $c->req->param('audit_result_table');
-    #my $q = "SELECT ".$drop_menu_option." FROM audit.stock_audit";
 sub retrieve_results : Path('/ajax/audit/retrieve_results'){
     my $self = shift;
     my $c = shift;
@@ -35,48 +32,19 @@ sub retrieve_results : Path('/ajax/audit/retrieve_results'){
     my $q = "select * from audit.".$drop_menu_option.";";
     my $h = $c->dbc->dbh->prepare($q);
     $h->execute();
-    my @audit_ts;
-    my @operation;
-    my @logged_in_user;
-    my @before;
-    my @after;
-    my @audits = [@audit_ts, @operation, @logged_in_user, @before, @after];
-    while (my ($audit_ts, $operation, $logged_in_user, $before, $after) = $h->fetchrow_array) {
-        push @audit_ts, $audit_ts;
-        push @operation, $operation;
-        push @logged_in_user, $logged_in_user;
-        push @before, $before;
-        push @after, $after;
-        
-        push @audits, ($audit_ts, $operation, $logged_in_user, $before, $after);
-    };
+    my @all_audits;
+    my $counter = 0;
+
+    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after) = $h->fetchrow_array) {
+        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after];
+        $counter++;
+        };
+
+
     my $json_string = new JSON;
-    my $jsonts = new JSON;
-    my $jsonop = new JSON;
-    my $jsonuser = new JSON;
-    my $jsonbef = new JSON;
-    my $jsonaft = new JSON;
-    
-    $json_string = encode_json(\@audits);
-    $jsonts = encode_json(\@audit_ts);
-    $jsonop = encode_json(\@operation);
-    $jsonuser = encode_json(\@logged_in_user);
-    $jsonbef = encode_json(\@before);
-    $jsonaft = encode_json(\@after);
-
+    $json_string = encode_json(\@all_audits);
     $c->stash->{rest} = {
-        result3 => $json_string,
-        json_audit_ts => $jsonts,
-        json_operation => $jsonop,
-        json_logged_in_user => $jsonuser,
-        json_before => $jsonbef,
-        json_after => $jsonaft,
-
-        audit_ts => @audit_ts,
-        operation => @operation,
-        logged_in_user => @logged_in_user,
-        before => @before,
-        after => @after,
+        result => $json_string,
         };
 };
 

@@ -94,7 +94,7 @@ jQuery(document).ready(function(){
             var json_names = JSON.parse(response.result1);
             for (var i=0; i<json_names.length; i++){
                 var opt = json_names[i];
-                var displayname = opt.replace("_audit","").replace("_"," ").replace("_"," ");
+                var displayname = opt.replace("_audit","");
                 jQuery("select#db_table_list_select").append(jQuery("<option>")
                     .val(opt)
                     .html(displayname)
@@ -109,113 +109,31 @@ jQuery(document).ready(function(){
             data: {'db_table_list_id':db_table_list_id},
             timeout: 300000,
             success: function(response){
-                var json_audits = JSON.parse(response.result3);
-                var json_audit_ts = JSON.parse(response.json_audit_ts);
-                var json_operation = JSON.parse(response.json_operation);
-                var json_logged_in_user = JSON.parse(response.json_logged_in_user);
-                var json_before = JSON.parse(response.json_before);
-                var json_after = JSON.parse(response.json_after);
 
-                var audit_ts = response.audit_ts;
-                var operation = response.operation;
-                var logged_in_user = response.logged_in_user;
-                var before = response.before;
-                var after = response.after;
+            var all_audits = response.result;
+            
 
-                alert(operation);
+        var json_object = JSON.parse(all_audits);
+        
+            jQuery('#audit_results').DataTable({
+                data: json_object,
+                columns: [
+                    { title: 'Timestamp' },
+                    { title: 'Operation' },
+                    { title: 'Username' },
+                    { title: 'Logged in user' },
+                    { title: 'Before' },
+                    { title: 'After' },
+                ],
+                
+            });
 
-                alert(json_audits);
-                alert("timestamps: "+json_audit_ts);
-                alert("operations: "+json_operation);
-                alert("logged in user: "+json_logged_in_user);
-                alert("before: "+json_before);
-                alert("after: "+json_after);
-                jQuery('#audit_results').DataTable({
-                    columns: [
-                        {
-                            title: "Timestamp",
-                            data: audit_ts,
-                            render: function(data, type, row){
-                                return 'unknown'
-                            }
-                        },
-                        {
-                            title: "Operation",
-                            data: operation,
-                        },
-                        {
-                            title: "Logged in user",
-                            data: logged_in_user,
-                        },
-                        {
-                            title: "Before",
-                            data: before,
-                        },
-                        {
-                            title: "After",
-                            data: after,
-                        },
-                    ],
-
-                });
-                }
+            }
         });
-
+        
 	});
 });
-/* 
 
-        
-        
-
-        var table = jQuery('#audit_results').DataTable({
-            'destroy' : true,
-            'ajax': { 
-                'url':'/ajax/audit/retrieve_results',
-                'data':{ 'db_table_list_id':db_table_list_id,}
-            },
-            columns: [
-                {
-                    title: "Timestamp",
-                    data: null,
-                    render: function(data, type, row){
-                        if (row.female_id === null) { <!--do you need this here?-->
-                            return 'unknown'
-                        } else {
-                            return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>" <!--need to display the timestamp but don't know the path-->
-                        }
-                    }
-                },
-                {
-                    title: "User ID",
-                    data: null,
-                    render: function(data, type, row){
-                        if (row.male_id === null) { <!--do you need this here?-->
-                            return 'unknown'
-                        } else {
-                            return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>" <!--need to fix this to display the row for the user id from the temp table-->
-                        }
-                    }
-                },
-                {
-                    title: "Operation",
-                    data: "operations",
-                },
-                {
-                    title: "Data before operation",
-                    data: "before_operation",
-                },
-		        {
-                    title: "Data after operation",
-                    data: "after_operation",
-                },
-            ],
-        });
-    });
-
-});
-
-*/
 </script>
 
 
