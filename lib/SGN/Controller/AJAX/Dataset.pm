@@ -88,6 +88,23 @@ sub store_outliers_in_dataset :Path('/ajax/dataset/store_outliers') Args(1) {
     
 }
 
+sub retrieve_outliers_from_dataset :Path('/ajax/dataset/retrieve_outliers') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $dataset = CXGN::Dataset->new(
+        {
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_dataset_id => $dataset_id,
+        });
+
+    my $outliers = $dataset->outliers();
+
+    $c->stash->{rest} = { outliers => $outliers };
+}
+
 sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
     my $self = shift;
     my $c = shift;
