@@ -1463,22 +1463,22 @@ for my $extension ("xls", "xlsx") {
     is_deeply($trial_with_tissues_layout->{5}->{tissue_sample_names}, [
         'test_trial25_plant_1_leaf',        # sample without tissue number
         'test_trial25_plant_2_leaf',        # sample without tissue number
-        'test_trial25_plant_1_root2',       # sample with tissue number
-        'test_trial25_plant_1_fruit3',      # sample with tissue number
-        'test_trial25_plant_2_root2',       # sample with tissue number
-        'test_trial25_plant_2_fruit3'       # sample with tissue number
+        'test_trial25_plant_1_root1',       # sample with tissue number
+        'test_trial25_plant_1_fruit2',      # sample with tissue number
+        'test_trial25_plant_2_root1',       # sample with tissue number
+        'test_trial25_plant_2_fruit2'       # sample with tissue number
     ], 'test layout with tissue samples');
 
     is_deeply($trial_with_tissues_layout->{5}->{plants_tissue_sample_names}, {
         'test_trial25_plant_2' => [
             'test_trial25_plant_2_leaf',    # sample without tissue number
-            'test_trial25_plant_2_root2',   # sample with tissue number
-            'test_trial25_plant_2_fruit3'   # sample with tissue number
+            'test_trial25_plant_2_root1',   # sample with tissue number
+            'test_trial25_plant_2_fruit2'   # sample with tissue number
         ],
         'test_trial25_plant_1' => [
             'test_trial25_plant_1_leaf',    # sample without tissue number
-            'test_trial25_plant_1_root2',   # sample with tissue number
-            'test_trial25_plant_1_fruit3'   # sample with tissue number
+            'test_trial25_plant_1_root1',   # sample with tissue number
+            'test_trial25_plant_1_fruit2'   # sample with tissue number
         ]
     }, 'test layout with tissues samples');
     $f->clean_up_db();
