@@ -13,42 +13,119 @@ $dataset_contents => ''
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>
-  .slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 20px;
-  background: #d3d3d3;
-  outline: none;
-  opacity: 0.7;
-  border-radius: 5px;
-  -webkit-transition: .2s;
-  transition: opacity .2s;
+
+  // .slider {
+  //   -webkit-appearance: none;
+  //   width: 100%;
+  //   height: 20px;
+  //   background: #d3d3d3;
+  //   outline: none;
+  //   opacity: 0.8;
+  //   border-radius: 5px;
+  //   -webkit-transition: .2s;
+  //   transition: opacity .2s;
+  // }
+
+  // .slider:hover {
+  //   opacity: 1;
+  // }
+
+  // .slider::-webkit-slider-thumb {
+  //   -webkit-appearance: none;
+  //   appearance: none;
+  //   width: 25px;
+  //   height: 25px;
+  //   background: #04AA6D;
+  //   cursor: pointer;
+  // }
+
+  // .slider::-moz-range-thumb {
+  //   width: 25px;
+  //   height: 25px;
+  //   background: darkslategrey;
+  //   cursor: pointer;
+  // }
+
+  .top-row {
+    # display: flex;
+    # justify-content: center;
+    margin-top: 20px;    
   }
 
-  .slider:hover {
-    opacity: 1;
+  input[type="range"] { 
+      margin: auto;
+      -webkit-appearance: none;
+      position: relative;
+      overflow: hidden;
+      height: 40px;
+      width: 200px;
+      cursor: pointer;
+      border-radius: 0; /* iOS */
   }
 
-  .slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 25px;
-    height: 25px;
-    background: #04AA6D;
-    cursor: pointer;
+  ::-webkit-slider-runnable-track {
+    background: dodgerblue;
   }
 
-  .slider::-moz-range-thumb {
-    width: 25px;
-    height: 25px;
-    background: darkslategrey;
-    cursor: pointer;
+/*
+ * 1. Set to 0 width and remove border for a slider without a thumb
+ * 2. Shadow is negative the full width of the input and has a spread 
+ *    of the width of the input.
+ */
+  ::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; /* 1 */
+      height: 40px;
+      background: #fff;
+      box-shadow: -200px 0 0 200px #339933; /* 2 */
+      border: 2px solid #999; /* 1 */
   }
-  #top-row {
-    display: flex;
-    justify-content: center;
 
-  }
+::-moz-range-track {
+    height: 40px;
+    background: #d96e6b;
+}
+
+::-moz-range-thumb {
+    background: #fff;
+    height: 40px;
+    width: 20px;
+    border: 3px solid #999;
+    border-radius: 0 !important;
+    box-shadow: -200px 0 0 200px #339933;
+    box-sizing: border-box;
+}
+
+::-ms-fill-lower { 
+    background: dodgerblue;
+}
+
+::-ms-thumb { 
+    background: #fff;
+    border: 2px solid #999;
+    height: 40px;
+    width: 20px;
+    box-sizing: border-box;
+}
+
+::-ms-ticks-after { 
+    display: none; 
+}
+
+::-ms-ticks-before { 
+    display: none; 
+}
+
+::-ms-track { 
+    background: #ddd;
+    color: transparent;
+    height: 40px;
+    border: none;
+}
+
+::-ms-tooltip { 
+    display: none;
+}
 
   #pagefooter {
     min-height: 150px !important;
@@ -57,17 +134,18 @@ $dataset_contents => ''
   #trait_selection {
     font-size: 15px;
   }
-  #trait_selections {
-    float: left;
-    max-width: 400px;
-    height: 100px;
-    font-size: 15px;
-  }
 
-  #store_outliers {
-    float: right;
-    padding: 5px;
-  }
+  # #trait_selections {
+  #   float: left;
+  #   max-width: 400px;
+  #   height: 100px;
+  #   font-size: 15px;
+  # }
+
+  # #store_outliers {
+  #   float: right;
+  #   padding: 5px;
+  # }
 
   #dataset_slider {
     margin: 0 auto;
@@ -76,12 +154,25 @@ $dataset_contents => ''
   }
 
   #trait_graph {
-
     width: 65%;
   }
   table, th, td {
     padding: 15px;
   }
+
+  .sd-line-top {
+        stroke-dasharray: 5,5;
+  }
+
+  .sd-line-bottom {
+        stroke-dasharray: 5,5;
+  }
+
+  .mean-line {
+        stroke-dasharray: 5,5;
+  }
+
+
 
 </style>
 
@@ -117,26 +208,39 @@ $dataset_contents => ''
   </table>
   </div>
 
+  <div class="row">
+      <div class="top-row col-md-12">
 
-  <div class="top-row">
-    <div id="trait_selections">
-      <label for="trait_selection">Select a Trait: </label>
-      <select id="trait_selection" name="trait_selection">
-        <option value="default">Select Trait</option>
-      </select>
-    </div>
+          <div id="trait_selections" class="col-md-6">
+            <label for="trait_selection">Select a Trait: </label>
+            <select id="trait_selection" name="trait_selection">
+              <option value="default">Select Trait</option>
+            </select>
+          </div>
 
-    <div id="store-outliers">
-      <button class="btn btn-primary" id="store_outliers">Store Outliers</button>
-    </div>
-    
-    <div id="dataset_slider">
-      <input type="range" min="4" max="8" value="6" class="slider form-range" id="myRange">
-    </div>
+          <div id="dataset_slider" class="col-md-3">
+            <input type="range" min="1" max="12" value="6" class="slider form-range" id="myRange">
+          </div>
+
+
+      </div>
   </div>
 
-
-  <div id="trait_graph"></div>
+  <div class="row">
+      <div class="col-md-10">
+          <div id="trait_graph"></div>
+      </div>
+      <div class="col-md-2">
+          <div class="btn-group-vertical">
+              <button class="btn btn-success" id="store_outliers">Add selection to outliers</button>
+              <button class="btn btn-danger" id="reset_outliers">Reset all outliers</button>
+              <button class="btn btn-danger" id="reset_trait">Reset outliers for current trait</button>
+              <button class="btn btn-primary" id="retrieve_outliers">Retrieve Outliers</button>
+              <button class="btn btn-primary" id="show_outliers">Show Outliers</button>
+              <button class="btn btn-primary" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
+          </div>
+      </div>
+  </div>
 
 
   <div id="dataset_summary_table">
@@ -145,9 +249,7 @@ $dataset_contents => ''
     
   </div>
 
-  <div>
-    <button class="btn btn-primary" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
-  </div>
+
 
 
   <script>

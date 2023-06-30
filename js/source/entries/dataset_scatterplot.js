@@ -15,6 +15,7 @@ export function init(datasetId, datasetName) {
 			this.traitsIds = {};
 			this.phenoIds = [];
 			this.traitVals = [];
+			this.storedOutliersIds = [];
 		}
 
 		getPhenotypes() {
@@ -40,15 +41,29 @@ export function init(datasetId, datasetName) {
 			    success: function(response) {
 			        LocalThis.traitsIds = response.traits.map(
 				        trait => trait[0]
-			        );
-                // console.log("response from ajax:");
-                // console.log(response);
+			        );                
 			    },
 			    error: function(response) {
 			        alert('Error');
 			    }
             })
 		}
+
+        getStoredOutliers() {
+            const LocalThis = this;            
+            new jQuery.ajax({
+                type: 'POST',
+                url: '/ajax/dataset/retrieve_outliers/' + LocalThis.datasetId,
+                success: function(response) {
+                    console.log("response from ajax stored outliers:");
+                    console.log(response.outliers);
+                    LocalThis.storedOutliersIds = response.outliers;
+                },
+                error: function(response) {
+                    alert('Error');
+                }
+            })
+        }
 
 		setDropDownTraits() {
 		    const keys = this.observations[0];
@@ -119,6 +134,21 @@ export function init(datasetId, datasetName) {
 		}
 
 
+        median(values) {
+            let sorted = [...values].sort((a, b) => a - b);
+            let middle = Math.floor(sorted.length / 2);
+
+            if (sorted.length % 2 === 0) {
+                return (sorted[middle - 1] + sorted[middle]) / 2;
+            }
+
+            return sorted[middle];
+        }
+
+        mad(values) {
+            return 1;
+        }
+
 		addEventListeners() {
 		    let LocalThis = this;
 
@@ -140,33 +170,99 @@ export function init(datasetId, datasetName) {
                 LocalThis.setData();
                 LocalThis.outliers = [];
                 LocalThis.outlierCutoffs = new Set();
+				document.getElementById("myRange").value = document.getElementById("myRange").max; 
+				LocalThis.stdDevMultiplier = document.getElementById("myRange").value;
 			    if (!this.firstRefresh) {
 			        LocalThis.render();
-			    }
+			    }				
 		    });
 
 		    let storeOutliersButton = document.getElementById("store_outliers");
 		    storeOutliersButton.onclick = function() {
-			    const stringOutliers = LocalThis.outliers.join(',');
-			    const stringOutlierCutoffs = [...LocalThis.outlierCutoffs].join(',');
+		        let allOutliers = new Set(LocalThis.storedOutliersIds.concat(LocalThis.outliers));
+			    let stringOutliers = [...allOutliers].join(',');
+			    let stringOutlierCutoffs = [...LocalThis.outlierCutoffs].join(',');
 			    new jQuery.ajax({
                     type: 'POST',
                     url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
                     data: {outliers: stringOutliers, outlier_cutoffs: stringOutlierCutoffs },
                     success: function(response) {
                         alert('outliers successfully stored!');
+                        LocalThis.storedOutliersIds = [...allOutliers];
                     },
 			        error: function(response) {
 				        alert('Error');
 			        }
 			    })
 		    }
+
+            let resetOutliersButton = document.getElementById("reset_outliers");
+            resetOutliersButton.onclick = function() {
+
+                new jQuery.ajax({
+                    type: 'POST',
+                    url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
+                    data: {outliers: "", outlier_cutoffs: "" },
+                    success: function(response) {
+                        alert('outliers successfully reseted!');
+                        LocalThis.storedOutliersIds = [];						
+						d3.select("svg").remove();
+						LocalThis.render();
+                    },
+                    error: function(response) {
+                        alert('Error');
+                    }
+                })
+            }
+
+            let resetTraitOutliersButton = document.getElementById("reset_trait");
+            resetTraitOutliersButton.onclick = function() {                
+                let filteredNonTrait = LocalThis.storedOutliersIds.filter(elem => !LocalThis.phenoIds.includes(elem));
+                let stringFilteredNonTrait = filteredNonTrait.join(',');                
+               	new jQuery.ajax({
+                    type: 'POST',
+                    url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
+                    data: {outliers: stringFilteredNonTrait, outlier_cutoffs: "" },
+                    success: function(response) {
+                        alert('outliers successfully reseted!');
+                        LocalThis.storedOutliersIds = filteredNonTrait;					   					    
+						d3.select("svg").remove();
+						LocalThis.render();
+                    },
+                    error: function(response) {
+                       alert('Error');
+                    }
+               })
+            }
+
+		    let retrieveOutliersButton = document.getElementById("retrieve_outliers");
+            retrieveOutliersButton.onclick = function() {
+                new jQuery.ajax({
+                    type: 'POST',
+                    url: '/ajax/dataset/retrieve_outliers/' + LocalThis.datasetId,
+                    success: function(response) {
+                        alert('outliers successfully restored!');
+                        console.log(response.outliers);
+//                        LocalThis.storedOutliersIds = response.outliers;
+                    },
+                    error: function(response) {
+                        alert('Error');
+                    }
+                })
+            }
+
+            let showOutliersButton = document.getElementById("show_outliers");
+            showOutliersButton.onclick = function() {
+                console.log(LocalThis.outliers);
+            }
+
 		}
 
 		render() {
 		    if (this.firstRefresh) {
 			    this.getPhenotypes();
 			    this.getTraits();
+			    this.getStoredOutliers();
 			    this.addEventListeners();
 		    } else if (this.selection != "default") {
 			    const LocalThis = this;
@@ -185,20 +281,30 @@ export function init(datasetId, datasetName) {
 				            "translate(" + margin.left + "," + margin.top + ")"
 				            );
 
-			    var isOutlier = function(id, value, mean, stdDev) {
+                var isOutlier = function(id, value, mean, stdDev) {
 				    let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
 				    let leftCutoff = mean - stdDev * filter;
 				    let rightCutoff = mean + stdDev * filter;
+				    let color = "";
+//				    console.log(LocalThis.storedOutliersIds);
+
 				    if (value >= leftCutoff && value <= rightCutoff) {
-				        return "green";
-				    } else {
-                        // if left cutoff is negative, don't include it.
+				         color = "green";
+                    }
+
+                    if (LocalThis.storedOutliersIds.includes(id.toString())) {
+                         color = "orange";
+                    }
+
+                    if (value <= leftCutoff || value >= rightCutoff){
                         if (leftCutoff >= 0) {LocalThis.outlierCutoffs.add(leftCutoff)};
                         LocalThis.outlierCutoffs.add(rightCutoff);
                         LocalThis.outliers.push(id);
-                        return "red";
-				    }
-			    }
+                        color = "#d9534f";
+                    }
+
+                    return color;
+                }
 
 			    const [mean, stdDev] = this.standardDeviation(this.traitVals);
 
@@ -256,8 +362,8 @@ export function init(datasetId, datasetName) {
 			    var mousemove = function(d) {
 			        tooltip
                         .html("id: " + LocalThis.phenoIds[d] + "<br>" + "val: " + LocalThis.traitVals[d])
-                        .style("left", (d3.mouse(this)[0]+90) + "px")
-                        .style("top", (d3.mouse(this)[1]+180) + "px")
+                        .style("left", (d3.mouse(this)[0]+50) + "px")
+                        .style("top", (d3.mouse(this)[1]+40) + "px")
 			    }
 
 			    var mouseleave = function(d) {
@@ -268,6 +374,10 @@ export function init(datasetId, datasetName) {
 				        .style("opacity", 0.8)
 		    	}
 
+		    	let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
+                let rightCutoff = mean + stdDev * filter;
+                let leftCutoff = mean - stdDev * filter;
+
 			    svg.append('g')
 			        .selectAll("dot")
 			        .data([...Array(this.phenoIds.length).keys()])
@@ -277,9 +387,39 @@ export function init(datasetId, datasetName) {
                         .attr("cy", function (d) { return y(LocalThis.traitVals[d]); } )
                         .attr("r", 6)
                         .style("fill", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], mean, stdDev)})
+                        .style("opacity", 0.8)
                         .on("mouseover", mouseover)
                         .on("mousemove", mousemove)
                         .on("mouseleave", mouseleave);
+
+                svg.append("line")
+                   .attr("class", "mean-line")
+                   .attr("x1", 0)
+                   .attr("y1", y(mean))
+                   .attr("x2", width)
+                   .attr("y2", y(mean))
+                   .attr("fill", "none")
+                   .attr("stroke", "black");
+
+
+               svg.append("line")
+                  .attr("class", "sd-line-top")
+                  .attr("x1", 0)
+                  .attr("y1", y(rightCutoff))
+                  .attr("x2", width)
+                  .attr("y2", y(rightCutoff))
+                  .attr("fill", "none")
+                  .attr("stroke", "darkgrey");
+
+               svg.append("line")
+                  .attr("class", "sd-line-bottom")
+                  .attr("x1", 0)
+                  .attr("y1", y(leftCutoff >= 0 ? leftCutoff : 0))
+                  .attr("x2", width)
+                  .attr("y2", y(leftCutoff >= 0 ? leftCutoff : 0))
+                  .attr("fill", "none")
+                  .attr("stroke", "darkgrey");
+
 
                 // mean legend
                 const legend = svg.append('g')
