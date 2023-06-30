@@ -387,7 +387,7 @@ export function init(datasetId, datasetName) {
                         .attr("cy", function (d) { return y(LocalThis.traitVals[d]); } )
                         .attr("r", 6)
                         .style("fill", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], mean, stdDev)})
-                        .style("opacity", 0.8)
+                        .style("opacity", (d) => { return (LocalThis.traitVals[d] <= leftCutoff || LocalThis.traitVals[d] >= rightCutoff ? 0.2 : 0.8) })
                         .on("mouseover", mouseover)
                         .on("mousemove", mousemove)
                         .on("mouseleave", mouseleave);
