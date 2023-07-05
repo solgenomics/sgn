@@ -41,9 +41,9 @@ jQuery(document).ready(function(){
             'ajax': { 'url': '/ajax/breeders/seedlots',
                       'data': function(d) {
 % if ($stock_type eq 'accession'){
-                         d.contents_accession = "<% $stock_uniquename %>";
+                         d.accession = "<% $stock_uniquename %>";
 % } elsif ($stock_type eq 'cross'){
-                        d.contents_cross = "<% $stock_uniquename %>";
+                        d.cross = "<% $stock_uniquename %>";
 % }
                     }
             },
