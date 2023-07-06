@@ -445,7 +445,10 @@ relationshipMatrix <- column_to_rownames(relationshipMatrix, var="genotypes")
 traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in% commonObs), ]
 traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% commonObs)]
 
+kinshipLog <- c()
 if (any(eigen(traitRelationshipMatrix)$values < 0) ) {
+kinshipLog <- paste0("\n\nNote: The kinship matrix of this dataset causes 'Not positive semi-definite error' while running the Cholesky decomposition. To fix this and run the modeling, a corrected positive semi-definite matrix was computed using the 'Matrix::nearPD' function. The negative eigen values from this decomposition nudged to positive values.\n\n")
+
 traitRelationshipMatrix <- Matrix::nearPD(as.matrix(traitRelationshipMatrix))$mat
 }
 
@@ -461,6 +464,10 @@ if (nCores > 1) {
 varCompData <- c()
 modelingLog <- paste0("\n\n#Training a model for ", traitAbbr, ".\n\n")
 modelingLog <- append(modelingLog, paste0("The genomic prediction modeling follows a two-step approach. First trait average values, as described above, are computed for each genotype. This is followed by the model fitting on the basis of single phenotype value for each genotype entry and kinship  matrix computed from their marker data.\n"))
+
+if (kinshipLog) {
+modelingLog <- append(modelingLog, paste0(kinshipLog))
+}
 
 if (length(selectionData) == 0) {
 
