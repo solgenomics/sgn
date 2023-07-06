@@ -296,6 +296,9 @@ $analytics_protocol_result_summary => {}
 % } #End stock_images_section
 % if ($info_section_id eq 'stock_sequencing_status_section'){
                                 <& /stock/sequencing_status.mas, stock_id => $stock_id &>
+% } #End stock audit section
+% if($info_section_id eq 'audit_table_section'){
+        <& /stock/audit.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
 % } #End stock requencing status section
 % if ($info_section_id eq 'stock_literature_annotation_section'){
                                 <&| /page/info_section.mas, title=>"Literature annotation (".scalar( @$pubs ).")" , id=>"publications" , collapsible=>1, collapsed=>1 &>

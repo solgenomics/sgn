@@ -30,6 +30,7 @@ sub retrieve_results : Path('/ajax/audit/retrieve_results'){
     my $c = shift;
     my $drop_menu_option = $c->req->param('db_table_list_id');
     my $q = "select * from audit.".$drop_menu_option.";";
+
     my $h = $c->dbc->dbh->prepare($q);
     $h->execute();
     my @all_audits;
@@ -65,4 +66,81 @@ sub retrieve_table_names : Path('/ajax/audit/retrieve_table_names'){
         result1 => $json_string,
         };
 
+
+sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
+    my $self = shift;
+    my $c = shift;
+    my $stock_uniquename = $c->req->param('stock_uniquename');
+    my $q = "SELECT * FROM audit.stock_audit;";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+    my @all_audits;
+    my @before;
+    my @after;
+    my $counter = 0;
+
+    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after) = $h->fetchrow_array) {
+        $after[$counter] = $after;
+        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after];
+        $counter++;
+        }
+
+    
+   # $json_after_string = encode_json(\@after);
+  #  print STDERR Dumper(@after)."\n";
+  #  my $parsed_after = decode_json($json_after_string);
+
+
+   # my $tempo = decode_json($after[0]);
+   # my $temp_des_uniquename = $tempo->{'uniquename'};
+  #  print STDERR Dumper($tempo)."\n";
+  #  print STDERR Dumper($temp_des_uniquename)."\n";
+    my @match_after;
+
+    for (my $i = 0; $i<@after.length; $i++){
+        my $json_after_string = new JSON;
+        $json_after_string = decode_json($after[$i]);
+        my $desired_uniquename = $json_after_string->{'uniquename'};
+        if($stock_uniquename eq $desired_uniquename){
+            $match_after[$i] = $all_audits[$i];
+        }
+    }
+
+    print STDERR Dumper(@match_after)."\n";
+
+    my $match_json = new JSON;
+    $match_json = encode_json(\@match_after);
+    print STDERR Dumper(decode_json($match_json))."\n";
+
+    $c->stash->{rest} = {
+        match_after => $match_json,
+        }
+    
+        
+    #for ($after in $json__after_string){
+       # my $uniq = $after.uniquename;
+        #if ($uniq eq $uniquename_from_mason){
+           # my $uniquename = $uniq;
+        #}
+    #}
+
+    #my $json_before_string = new JSON;
+    #$json_before_string = encode_json(\@before);
+    #my $parsed_before = JSON.parse($json_before_string);
+
+   
+
+    
+
+    
+     #  if ($operation eq "UPDATE" || $operation eq "DELETE"){
+  #      my $uniquename = $json_before_string.uniquename;
+  #  } 
+   # if ($operation eq "INSERT"){
+   #     my $uniquename = $json_after_string.uniquename;
+   # }
+
+    
+
+};
 }

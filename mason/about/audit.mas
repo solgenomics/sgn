@@ -50,7 +50,7 @@ results and returns the appropriate URL for going to that page of results
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
-            <div class="col-sm-1">
+          <div class="col-sm-1">
             </div>
             <div class="row">
                 <div class="col-sm-11">
@@ -68,7 +68,7 @@ results and returns the appropriate URL for going to that page of results
                             </div>
                         </div>
                    </div>
-                </div>
+               </div>
             </div>
         </div>
     </div>
