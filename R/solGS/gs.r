@@ -24,6 +24,7 @@ library(jsonlite)
 library(data.table)
   }))
 library(genoDataFilter)
+library(Matrix)
 
 allArgs <- commandArgs()
 
@@ -419,7 +420,7 @@ if (length(relationshipMatrixFile) != 0) {
   } else {
     relationshipMatrix           <- A.mat(genoData)
   diag(relationshipMatrix)     <- diag(relationshipMatrix) %>% replace(., . < 1, 1)
-relationshipMatrix <- relationshipMatrix %>% replace(., . < 0, 0)
+relationshipMatrix <- relationshipMatrix %>% replace(., . <= 0, 0.00001)
 
     inbreeding <- diag(relationshipMatrix)
     inbreeding <- inbreeding - 1
@@ -438,11 +439,15 @@ relationshipMatrix <- data.frame(relationshipMatrix)
 colnames(relationshipMatrix) <- rownames(relationshipMatrix)
 
 relationshipMatrix <- rownames_to_column(relationshipMatrix, var="genotypes")
-relationshipMatrix <- relationshipMatrix %>% mutate_if(is.numeric, round, 3)
+relationshipMatrix <- relationshipMatrix %>% mutate_if(is.numeric, round, 5)
 relationshipMatrix <- column_to_rownames(relationshipMatrix, var="genotypes")
 
 traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in% commonObs), ]
 traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% commonObs)]
+
+if (any(eigen(traitRelationshipMatrix)$values < 0) ) {
+traitRelationshipMatrix <- Matrix::nearPD(as.matrix(traitRelationshipMatrix))$mat
+}
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
 
