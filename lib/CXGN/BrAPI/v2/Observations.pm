@@ -352,6 +352,8 @@ sub observations_store {
         allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
 
+    my ($verified_warning, $verified_error) = $store_observations->verify();
+
     if ($verified_error) {
         print STDERR "Error: $verified_error\n";
         push @$status, {'500' => 'Internal error.'};

@@ -745,7 +745,7 @@ sub store {
                         if ($operator) { $details{'collector'} = $operator};
 
                         push @stored_details, \%details;
-		    }
+		            }
                 }
             }
         }
