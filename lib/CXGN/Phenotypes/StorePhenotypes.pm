@@ -625,15 +625,18 @@ sub store {
                                 }
                                 $plot_trait_uniquename .= ", overwritten: $upload_date";
                                 $overwrite_count++;
-                            } else {
+                            }
+                            else {
                                 $new_count++;
                             }
                             $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                        } else {
+                        }
+                        else {
                             if (!$allow_repeat_measures && exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
                                 $skip_count++;
                                 next;
-                            } else {
+                            }
+                            else {
                                 $new_count++;
                             }
                         }
@@ -701,10 +704,10 @@ sub store {
                             }
                         }
                         my $additional_info_stored;
-                        if($additional_info){
+                        if ($additional_info) {
                             my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                                 phenotype_id => $phenotype->phenotype_id,
-                                type_id       => $phenotype_addtional_info_type_id,
+                                type_id      => $phenotype_addtional_info_type_id,
                             });
                             $pheno_additional_info = $pheno_additional_info->update({
                                 value => encode_json $additional_info,
@@ -712,7 +715,7 @@ sub store {
                             $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
                         }
                         my $external_references_stored;
-                        if($external_references){
+                        if ($external_references) {
                             my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                                 phenotype_id => $phenotype->phenotype_id,
                                 type_id      => $external_references_type_id,
@@ -726,25 +729,26 @@ sub store {
                         my $observationVariableDbId = $trait_cvterm->cvterm_id;
                         my $observation_id = $phenotype->phenotype_id;
                         my %details = (
-                            "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
-                            "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
-                            "observationDbId"=> qq|$observation_id|,
-                            "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
-                            "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
-                            "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-                            "observationVariableDbId"=> qq|$observationVariableDbId|,
-                            "observationVariableName"=> $trait_cvterm->name,
-                            "studyDbId"=> qq|$project_id|,
-                            "uploadedBy"=> $operator ? $operator : "",
-                            "additionalInfo" => $additional_info_stored,
-                            "externalReferences" => $external_references_stored,
-                            "value" => $trait_value
+                            "germplasmDbId"           => qq|$linked_data{$plot_name}->{germplasmDbId}|,
+                            "germplasmName"           => $linked_data{$plot_name}->{germplasmName},
+                            "observationDbId"         => qq|$observation_id|,
+                            "observationLevel"        => $linked_data{$plot_name}->{observationLevel},
+                            "observationUnitDbId"     => qq|$linked_data{$plot_name}->{observationUnitDbId}|,
+                            "observationUnitName"     => $linked_data{$plot_name}->{observationUnitName},
+                            "observationVariableDbId" => qq|$observationVariableDbId|,
+                            "observationVariableName" => $trait_cvterm->name,
+                            "studyDbId"               => qq|$project_id|,
+                            "uploadedBy"              => $operator ? $operator : "",
+                            "additionalInfo"          => $additional_info_stored,
+                            "externalReferences"      => $external_references_stored,
+                            "value"                   => $trait_value
                         );
 
-                        if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
-                        if ($operator) { $details{'collector'} = $operator};
+                        if ($timestamp) {$details{'observationTimeStamp'} = $timestamp};
+                        if ($operator) {$details{'collector'} = $operator};
 
                         push @stored_details, \%details;
+                    }
                 }
             }
         }
