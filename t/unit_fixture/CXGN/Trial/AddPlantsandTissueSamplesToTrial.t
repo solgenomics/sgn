@@ -1453,31 +1453,32 @@ for my $extension ("xls", "xlsx") {
     ], "check col13");
 
     $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id });
-    is($trial->create_tissue_samples([ 'leaf', 'root', 'fruit' ], 1), 1, 'test create tissue samples');
+    is($trial->create_tissue_samples(['leaf', ], 1, 0), 1, 'test create tissue samples without tissue numbers');
+    is($trial->create_tissue_samples(['root', 'fruit' ], 1, 1), 1, 'test create tissue samples with tissue numbers');
 
     my $trial_with_tissues_layout = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' })->get_design();
     print STDERR Dumper $trial_with_tissues_layout;
     print STDERR scalar(keys %$trial_with_tissues_layout) . "\n";
     is(scalar(keys(%$trial_with_tissues_layout)), 15, 'test trial layout count');
     is_deeply($trial_with_tissues_layout->{5}->{tissue_sample_names}, [
-        'test_trial25_plant_1_leaf1',
-        'test_trial25_plant_1_root2',
-        'test_trial25_plant_1_fruit3',
-        'test_trial25_plant_2_leaf1',
-        'test_trial25_plant_2_root2',
-        'test_trial25_plant_2_fruit3'
+        'test_trial25_plant_1_leaf',        # sample without tissue number
+        'test_trial25_plant_2_leaf',        # sample without tissue number
+        'test_trial25_plant_1_root1',       # sample with tissue number
+        'test_trial25_plant_1_fruit2',      # sample with tissue number
+        'test_trial25_plant_2_root1',       # sample with tissue number
+        'test_trial25_plant_2_fruit2'       # sample with tissue number
     ], 'test layout with tissue samples');
 
     is_deeply($trial_with_tissues_layout->{5}->{plants_tissue_sample_names}, {
         'test_trial25_plant_2' => [
-            'test_trial25_plant_2_leaf1',
-            'test_trial25_plant_2_root2',
-            'test_trial25_plant_2_fruit3'
+            'test_trial25_plant_2_leaf',    # sample without tissue number
+            'test_trial25_plant_2_root1',   # sample with tissue number
+            'test_trial25_plant_2_fruit2'   # sample with tissue number
         ],
         'test_trial25_plant_1' => [
-            'test_trial25_plant_1_leaf1',
-            'test_trial25_plant_1_root2',
-            'test_trial25_plant_1_fruit3'
+            'test_trial25_plant_1_leaf',    # sample without tissue number
+            'test_trial25_plant_1_root1',   # sample with tissue number
+            'test_trial25_plant_1_fruit2'   # sample with tissue number
         ]
     }, 'test layout with tissues samples');
     $f->clean_up_db();
