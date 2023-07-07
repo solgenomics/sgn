@@ -1594,6 +1594,10 @@ sub get_cached_file_VCF {
     my $basepath_config = shift;
     my $forbid_cache = $self->forbid_cache();
     my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select();
+    my %marker_info_hash;
+    foreach my $info_key (@$protocolprop_marker_hash_select) {
+        $marker_info_hash{$info_key} = 1;
+    }
 
     print STDERR "FORBID CACHE =".Dumper($forbid_cache)."\n";
     print STDERR "PROTOCOLPROP MARKER HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
@@ -1762,6 +1766,20 @@ sub get_cached_file_VCF {
                     $genotype_string .= $format . "\t";
                     $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format} = $format;
                     $m->{format} = $format;
+                }
+                if ($marker_info_hash{'intertek_name'}) {
+                    $genotype_string .= "\n";
+                    $genotype_string .= "INTERTEK NAME\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{intertek_name} . "\t";
+                    }
+                }
+                if ($marker_info_hash{'sequence'}) {
+                    $genotype_string .= "\n";
+                    $genotype_string .= "SEQUENCE\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{sequence} . "\t";
+                    }
                 }
                 $genotype_string .= "\n";
             }
