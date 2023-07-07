@@ -465,7 +465,7 @@ varCompData <- c()
 modelingLog <- paste0("\n\n#Training a model for ", traitAbbr, ".\n\n")
 modelingLog <- append(modelingLog, paste0("The genomic prediction modeling follows a two-step approach. First trait average values, as described above, are computed for each genotype. This is followed by the model fitting on the basis of single phenotype value for each genotype entry and kinship  matrix computed from their marker data.\n"))
 
-if (kinshipLog) {
+if (length(kinshipLog)) {
 modelingLog <- append(modelingLog, paste0(kinshipLog))
 }
 
