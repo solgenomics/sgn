@@ -700,7 +700,7 @@ sub store {
                                 $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                             }
                         }
-
+                        my $additional_info_stored;
                         if($additional_info){
                             my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                                 phenotype_id => $phenotype->phenotype_id,
