@@ -115,7 +115,7 @@ sub search {
             });
             my $marker_info_keys = $protocol->marker_info_keys;
             if (defined $marker_info_keys) {
-                push @all_marker_info_keys, @$marker_info_keys;                
+                push @all_marker_info_keys, @$marker_info_keys;
             }
         }
         @all_marker_info_keys = uniq @all_marker_info_keys;
@@ -126,7 +126,7 @@ sub search {
     } else {
         $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
     }
-    print STDERR "PROTOCOLPROP HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
+#    print STDERR "PROTOCOLPROP HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
 
     #check keys
 #    my @intertek_name_key;
@@ -208,7 +208,7 @@ sub search {
     my $count_h = $schema->storage->dbh()->prepare($count_q);
     $count_h->execute();
     my ($total_marker_count) = $count_h->fetchrow_array();
-    print STDERR "MARKER RESULTS =".Dumper(\@results)."\n";
+#    print STDERR "MARKER RESULTS =".Dumper(\@results)."\n";
     return (\@results, $total_marker_count);
 }
 
