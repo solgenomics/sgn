@@ -27,7 +27,7 @@ $format => ""
 
    <table id="simsearch_results_table">
       <thead>
-         <tr><th>Group #</th><th>Min score</th><th>Max score</th><th>Similarity</th><th>Group members</th></tr>
+         <tr><th>Group #</th><th>Member count</th><th>Max score</th><th>Average score</th><th>Group members</th></tr>
    </table>
 
 </div>
