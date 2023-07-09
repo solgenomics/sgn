@@ -47,7 +47,7 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     
 #    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
 
-    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -vcf $filename $ref_option -output $filename.out";
+    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -alt_marker_ids -nofull_cluster_output -vcf $filename $ref_option -output $filename.out";
     print STDERR "running command $cmd...\n";
     system($cmd);
 
@@ -59,21 +59,20 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     my @line;
 
     my $group =1;
-    
+
+    print STDERR "Parsing output file...\n";
     while(<$F>) {
+	print STDERR "Processing group $group...\n";
 	chomp;
 	if (/^#/) { next; }
-	@line = split /\s+/;
-	my @member_info = @line[9..@line-1];
-	my @members = ();
-	for(my $i =0; $i<@member_info; $i+3) {
-	    push @members, $member_info[$i];
-	}
+	@line = split " ";
+	my @members = @line[9..@line-1];
 		
-	push @data, [ $group, $line[1], $line[2], $line[3], join("<br />", @members) ];
+	push @data, [ $group, $line[0], $line[3], $line[2], join("<br />", @members) ];
 	$group++;
     }
     close($F);
+    print STDERR "Done.\n";
     
     # plot the agmr score distribution histogram using the 6th column in $filename.out
     #
