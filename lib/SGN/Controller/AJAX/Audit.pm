@@ -81,66 +81,86 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
 
     while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after) = $h->fetchrow_array) {
         $after[$counter] = $after;
+        $before[$counter] = $before;
         $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after];
         $counter++;
         }
 
     
-   # $json_after_string = encode_json(\@after);
-  #  print STDERR Dumper(@after)."\n";
-  #  my $parsed_after = decode_json($json_after_string);
-
-
-   # my $tempo = decode_json($after[0]);
-   # my $temp_des_uniquename = $tempo->{'uniquename'};
-  #  print STDERR Dumper($tempo)."\n";
-  #  print STDERR Dumper($temp_des_uniquename)."\n";
-    my @match_after;
-
-    for (my $i = 0; $i<@after.length; $i++){
-        my $json_after_string = new JSON;
-        $json_after_string = decode_json($after[$i]);
-        my $desired_uniquename = $json_after_string->{'uniquename'};
+    my @matches;
+    my $j = 0; #this is to make sure only matched audits go into the matches array
+    for (my $i = 0; $i<$counter; $i++){
+        my $operation = $all_audits[$i][1];
+        my $stock_json_string = new JSON;
+        if($operation eq "DELETE"){
+            $stock_json_string = decode_json($before[$i]);
+        }else{
+            $stock_json_string = decode_json($after[$i]);
+        }
+        my $desired_uniquename = $stock_json_string->{'uniquename'};
         if($stock_uniquename eq $desired_uniquename){
-            $match_after[$i] = $all_audits[$i];
+            $matches[$j] = $all_audits[$i];
+            $j++;
+        }
+        #for(my $num = 0; $num<$j; $num++){
+         #   print STDERR Dumper($matches[$num])."\n";
+        #}
+    }
+    print STDERR Dumper(@matches)."\n";
+
+
+    my $stock_match_json = new JSON;
+    $stock_match_json = encode_json(\@matches);
+
+    $c->stash->{rest} = {
+        stock_match_after => $stock_match_json,
+        }
+};
+
+
+sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id');
+    my $q = "SELECT * FROM audit.project_audit;";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+    my @all_audits;
+    my @before;
+    my @after;
+    my $counter = 0;
+
+    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after) = $h->fetchrow_array) {
+        $after[$counter] = $after;
+        $before[$counter] = $before;
+        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after];
+        $counter++;
+        }
+
+    
+    my @matches;
+
+    for (my $i = 0; $i<$counter; $i++){
+        my $operation = $all_audits[$i][1];
+        print STDERR ($operation)."\n";
+        my $json_string = new JSON;
+        if($operation eq "DELETE"){
+            $json_string = decode_json($before[$i]);
+        }else{
+            $json_string = decode_json($after[$i]);
+        }
+        my $desired_trial_id = $json_string->{'project_id'};
+        print STDERR ($desired_trial_id)."\n";
+        if($trial_id eq $desired_trial_id){
+            $matches[$i] = $all_audits[$i];
         }
     }
 
-    print STDERR Dumper(@match_after)."\n";
-
-    my $match_json = new JSON;
-    $match_json = encode_json(\@match_after);
-    print STDERR Dumper(decode_json($match_json))."\n";
+    my $match_trial_json = new JSON;
+    $match_trial_json = encode_json(\@matches);
 
     $c->stash->{rest} = {
-        match_after => $match_json,
+        match_project => $match_trial_json,
         }
-    
-        
-    #for ($after in $json__after_string){
-       # my $uniq = $after.uniquename;
-        #if ($uniq eq $uniquename_from_mason){
-           # my $uniquename = $uniq;
-        #}
-    #}
-
-    #my $json_before_string = new JSON;
-    #$json_before_string = encode_json(\@before);
-    #my $parsed_before = JSON.parse($json_before_string);
-
-   
-
-    
-
-    
-     #  if ($operation eq "UPDATE" || $operation eq "DELETE"){
-  #      my $uniquename = $json_before_string.uniquename;
-  #  } 
-   # if ($operation eq "INSERT"){
-   #     my $uniquename = $json_after_string.uniquename;
-   # }
-
-    
-
 };
 }
