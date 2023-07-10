@@ -193,8 +193,8 @@ sub download {
     my $chromosome_list = $self->chromosome_list;
     my $start_position = $self->start_position;
     my $end_position = $self->end_position;
-#    my $forbid_cache = $self->forbid_cache;
-    my $forbid_cache = '1';
+    my $forbid_cache = $self->forbid_cache;
+    print STDERR "CHECK VCF PLUGIN FORBID CACHE =".Dumper($forbid_cache)."\n";
     my $compute_from_parents = $self->compute_from_parents;
 
     my @marker_info_keys_protocols = ();
