@@ -39,7 +39,8 @@ $facilities
                                             <option value="">Select data type</option>
                                             <option value="vcf">VCF</option>
                                             <option value="tassel_hdf5">Tassel HDF5</option>
-                                            <option value="intertek">Intertek</option>
+                                            <option value="intertek">Intertek Simple Format</option>
+                                            <option value="intertek_details">Intertek Details Format</option>
                                             <option value="ssr">SSR</option>
                                         </select>
                                     </div>
@@ -314,6 +315,43 @@ $facilities
                                                         <label class="col-sm-6 control-label">Select Intertek SNP Information File: </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_intertek_snp_file_input" id="upload_genotype_intertek_snp_file_input" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="well well-sm" id="upload_genotype_data_format_intertek_details" style="display:none">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_genotype_intertek_details_spreadsheet_info_format">Intertek details format</a>
+                                                </p>
+                                            </&>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select Intertek SNP Result File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_genotype_data_format_intertek_details_file_input" id="upload_genotype_intertek_details_file_input" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select Intertek SNP Information File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_genotype_intertek_snp_info_input" id="upload_genotype_intertek_snp_info_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -885,24 +923,35 @@ jQuery(document).ready(function(){
         if (data_type == 'vcf') {
             jQuery('#upload_genotype_data_format_vcf').show();
             jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_intertek_details').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'intertek') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').show();
+            jQuery('#upload_genotype_data_format_intertek_details').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'tassel_hdf5') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_intertek_details').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').show();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'ssr') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_intertek_details').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').show();
+        } else if (data_type == 'intertek_details') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_intertek_details').show();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').hide();
         }
+
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
         if (data_type == 'ssr') {
