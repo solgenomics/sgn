@@ -32,6 +32,7 @@ has "config_file" => (
     isa => 'Str',
 );
 
+
 sub run {
     my $self = shift;
 
@@ -56,87 +57,86 @@ sub run {
 sub run_prerequisite_jobs {
     my $self = shift;
 
-    my @jobs;
-    my $jobs = $self->prerequisite_jobs;
-    if ( $jobs !~ /none/ ) {
-        $jobs = retrieve($jobs);
-        my $type = reftype $jobs;
+    my $remaining_jobs;
+    my $pre_jobs = $self->prerequisite_jobs;
+    if ( $pre_jobs !~ /none/ ) {
+        $pre_jobs = retrieve($pre_jobs);
+        my $type = reftype $pre_jobs;
 
-        if ( reftype $jobs eq 'HASH' ) {
-            my @priority_jobs;
-            foreach my $rank ( sort keys %$jobs ) {
-                my $js = $jobs->{$rank};
-                foreach my $jb (@$js) {
-                    my $sj = $self->submit_job($jb);
-                    push @priority_jobs, $sj;
-                }
+        if ( reftype $pre_jobs eq 'HASH' ) {
+
+            my $submitted_priority_jobs;
+            foreach my $rank ( sort keys %$pre_jobs ) {
+                my $js = $pre_jobs->{$rank};
+
+                $submitted_priority_jobs = $self->submit_jobs($js);
             }
-
-
-            while (@priority_jobs) {
-                for ( my $i = 0 ; $i < scalar(@priority_jobs) ; $i++ ) {
-                    splice( @priority_jobs, $i, 1 )
-                      if !$priority_jobs[$i]->alive();
-                }
-
-                sleep 30;
-
-            }
+            $remaining_jobs = $self->wait_till_jobs_end($submitted_priority_jobs);
         }
         else {
-            if ( reftype $jobs eq 'SCALAR' ) {
-                $jobs = [$jobs];
+            if ( reftype $pre_jobs eq 'SCALAR' ) {
+                $pre_jobs = [$pre_jobs];
             }
 
-            if ( $jobs->[0] ) {
-                foreach my $job (@$jobs) {
-                    my $job = $self->submit_job($job);
-                    push @jobs, $job;
-                }
-            }
-        }
+            my $submitted_jobs = $self->submit_jobs($pre_jobs);
 
-        while (@jobs) {
-            for ( my $i = 0 ; $i < scalar(@jobs) ; $i++ ) {
-                splice( @jobs, $i, 1 ) if !$jobs[$i]->alive();
-            }
-
-            sleep 30;
+            $remaining_jobs = $self->wait_till_jobs_end($submitted_jobs);
+            print STDERR "\nremaining jobs: $remaining_jobs\n";
 
         }
+    }
+
+    return $remaining_jobs;
+
+}
+
+sub wait_till_jobs_end {
+    my ( $self, $jobs, $sleep_time ) = @_;
+
+    $sleep_time = 30 if !$sleep_time;
+    while (@$jobs) {
+        for ( my $i = 0 ; $i < scalar(@$jobs) ; $i++ ) {
+            splice( @$jobs, $i, 1 ) if !$jobs->[$i]->alive();
+        }
+
+        sleep $sleep_time;
 
     }
 
-    return \@jobs;
+    my $remaining_jobs = $jobs ? $jobs->[0] : 0;
+    return $remaining_jobs;
+}
 
+sub submit_jobs {
+    my ( $self, $jobs ) = @_;
+
+    my @submitted_jobs;
+
+    if ( $jobs->[0] ) {
+        foreach my $job (@$jobs) {
+            my $submitted_job = $self->submit_job($job);
+            push @submitted_jobs, $submitted_job;
+        }
+    }
+
+    return \@submitted_jobs;
 }
 
 sub run_dependent_jobs {
     my $self = shift;
 
-    my @dep_jobs;
-    my $jobs_file     = $self->dependent_jobs;
-    my $dep_jobs_cmds = retrieve($jobs_file);
+    my $jobs_file = $self->dependent_jobs;
+    my $dep_jobs  = retrieve($jobs_file);
 
-    if ( reftype $dep_jobs_cmds ne 'ARRAY' ) {
-        $dep_jobs_cmds = [$dep_jobs_cmds];
+    if ( reftype $dep_jobs ne 'ARRAY' ) {
+        $dep_jobs = [$dep_jobs];
     }
 
-    foreach my $dep_job_cmd (@$dep_jobs_cmds) {
-        my $dep_job = $self->submit_job($dep_job_cmd);
-        push @dep_jobs, $dep_job;
-    }
+    my $submitted_jobs = $self->submit_jobs($dep_jobs);
 
-    while (@dep_jobs) {
-        for ( my $i = 0 ; $i < scalar(@dep_jobs) ; $i++ ) {
-            splice( @dep_jobs, $i, 1 ) if !$dep_jobs[$i]->alive();
-        }
-
-        sleep 30;
-
-    }
-
-    return \@dep_jobs;
+    my $remaining_jobs = $self->wait_till_jobs_end($submitted_jobs);
+    print STDERR "\nremaining jobs: $remaining_jobs\n";
+    return $remaining_jobs;
 
 }
 
