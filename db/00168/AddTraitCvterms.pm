@@ -59,12 +59,6 @@ sub patch {
 
     my %cvterms =
         (
-            'brapi_external_reference' =>
-                [
-                    'reference_id',
-                    'reference_source',
-                ],
-
             'trait_property' =>
                 [
                     'trait_method_name',

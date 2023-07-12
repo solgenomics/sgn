@@ -3,18 +3,18 @@
 
 =head1 NAME
 
-AddListDbXref.pm
+AddListCreateDate.pm
 
 =head1 SYNOPSIS
 
-mx-run AddListDbXref [options] -H hostname -D dbname -u username [-F]
+mx-run AddListCreateDate [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch creates a list_dbxref table to allow lists to store external references for brapi
+This patch add create date to list objects
 
 =head1 AUTHOR
 
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddListDbXref;
+package AlterListTimestampType;
 
 use Moose;
 use Try::Tiny;
@@ -40,7 +40,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch creates a list_dbxref table to allow lists to store external references for brapi
+This patch modify create/modified date to be timestamp types in the database
 
 
 sub patch {
@@ -57,20 +57,18 @@ sub patch {
         $self->dbh->do(<<EOSQL);
 
  --do your SQL here
---delete from sgn_people.list where list_id in (11, 9, 3, 5, 4, 10, 6, 14, 13, 808, 7, 12, 810, 811, 809, 8);
-alter table sgn_people.list add constraint list_id_unique unique(list_id);
-CREATE TABLE sgn_people.list_dbxref (
-	list_dbxref_id serial4 NOT null,
-	list_id int4 NOT NULL,
-	dbxref_id int4 NOT NULL,
-	is_current bool NOT NULL DEFAULT true,
-	CONSTRAINT list_dbxref_c1 UNIQUE (list_id, dbxref_id),
-	CONSTRAINT list_dbxref_pkey PRIMARY KEY (list_dbxref_id),
-	CONSTRAINT list_dbxref_dbxref_id_fkey FOREIGN KEY (dbxref_id) REFERENCES public.dbxref(dbxref_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-	CONSTRAINT list_dbxref_stock_id_fkey FOREIGN KEY (list_id) REFERENCES sgn_people.list(list_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-);
-CREATE INDEX IF NOT EXISTS list_dbxref_idx1 ON sgn_people.list_dbxref USING btree (list_id);
-CREATE INDEX IF NOT EXISTS list_dbxref_idx2 ON sgn_people.list_dbxref USING btree (dbxref_id);
+    alter table sgn_people.list add column modified_date timestamp NULL DEFAULT now();
+
+    update sgn_people.list set create_date = to_timestamp("timestamp", 'YYYY-MM-DD_hh24:mi:ss') where timestamp ~ '\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d\\:\\d\\d\\:\\d\\d';
+    update sgn_people.list set modified_date = to_timestamp(modify_timestamp, 'YYYY-MM-DD_hh24:mi:ss');
+
+    -- update lists used for tests to have a known create/modified date
+    update sgn_people.list set create_date = to_timestamp('0001-01-01 00:00:00', 'YYYY-MM-DD hh24:mi:ss'),
+    modified_date = to_timestamp('0001-01-01 00:00:00', 'YYYY-MM-DD hh24:mi:ss')
+    where create_date is null and modified_date is null;
+
+    alter table sgn_people.list drop column "timestamp";
+    alter table sgn_people.list drop column modify_timestamp;
 EOSQL
 
         return 1;
