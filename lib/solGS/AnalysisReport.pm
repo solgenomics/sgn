@@ -727,12 +727,12 @@ sub single_modeling_message {
 
                     if ( $output_details->{$k}->{success} ) {
                         $message =
-                            "The analysis for $trait_name is done."
+                            "The modeling for $trait_name is done."
                           . "\nYou can view the model output here:"
                           . "\n\n$trait_page\n\n";
                     }
                     else {
-                        $message = "The analysis for $trait_name failed.\n\n";
+                        $message = "The modeling for $trait_name failed.\n\n";
                         $message .= 'Refering page: ' . $trait_page . "\n\n";
                         $message .=
 "We will troubleshoot the cause and contact you when we find out more.";
@@ -768,9 +768,8 @@ sub selection_prediction_message {
                         $message .=
 "The prediction of selection population $selection_pop_name is done."
                           . "\nYou can view the prediction output here:\n\n";
-                    }
-
-                    $message .= "$selection_pop_page\n\n";
+                    }        
+                    $message .= uc($trait_name) . ":\n" .  $selection_pop_page . "\n\n";
                 }
                 else {
                     my $failure_reason =
@@ -797,8 +796,7 @@ sub multi_models_extra_message {
     my ( $self, $output_details ) = @_;
 
     my $multi_models_url = $output_details->{multi_models_url};
-
-    $message .=
+    my $message .=
         "You can also view the summary of all the analyses in the page below.\n"
       . "Additionally, you may find the analytical features in the page useful.\n"
       . $multi_models_url . "\n\n";
