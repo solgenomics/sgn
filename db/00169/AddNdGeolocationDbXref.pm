@@ -58,7 +58,7 @@ sub patch {
 
  --do your SQL here
 CREATE TABLE IF NOT EXISTS public.nd_geolocation_dbxref (
-	nd_geolocation_dbxref_id int4 NOT NULL PRIMARY KEY,
+	nd_geolocation_dbxref_id serial NOT NULL PRIMARY KEY,
 	nd_geolocation_id int4 NOT NULL REFERENCES nd_geolocation(nd_geolocation_id),
 	dbxref_id int4 REFERENCES dbxref(dbxref_id),
 	is_current bool NOT NULL DEFAULT true
