@@ -794,19 +794,18 @@ sub selection_prediction_message {
 }
 
 sub multi_models_extra_message {
-    my ($self, $output_details) = @_;
+    my ( $self, $output_details ) = @_;
 
-     my $multi_models_url =
-          $output_details->{multi_models_url};
+    my $multi_models_url = $output_details->{multi_models_url};
 
-        $message .=
-"You can also view the summary of all the analyses in the page below.\n"
-          . "Additionally, you may find the analytical features in the page useful.\n"
-          . $multi_models_url . "\n\n";
-    }
+    $message .=
+        "You can also view the summary of all the analyses in the page below.\n"
+      . "Additionally, you may find the analytical features in the page useful.\n"
+      . $multi_models_url . "\n\n";
 
     return $message;
 }
+
 sub population_download_message {
     my ( $self, $output_details ) = @_;
 
