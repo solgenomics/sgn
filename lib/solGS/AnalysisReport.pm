@@ -705,13 +705,7 @@ sub multi_modeling_message {
     }
 
     if ( $cnt > 1 ) {
-        my $analysis_page =
-          $output_details->{analysis_profile}->{analysis_page};
-
-        $message .=
-"You can also view the summary of all the analyses in the page below.\n"
-          . "Additionally, you may find the analytical features in the page useful.\n"
-          . $analysis_page . "\n\n";
+        $message .= $self->multi_models_extra_message($output_details);
     }
 
     return $message;
@@ -793,15 +787,26 @@ sub selection_prediction_message {
     }
 
     if ( $cnt > 1 ) {
-        $message .=
-"You can also view the summary of all the analyses in the page below.\n"
-          . "Additionally, you may find the analytical features in the page useful.\n"
-          . $output_details->{referer} . "\n\n";
+        $message .= $self->multi_models_extra_message($output_details);
     }
 
     return $message;
 }
 
+sub multi_models_extra_message {
+    my ($self, $output_details) = @_;
+
+     my $multi_models_url =
+          $output_details->{multi_models_url};
+
+        $message .=
+"You can also view the summary of all the analyses in the page below.\n"
+          . "Additionally, you may find the analytical features in the page useful.\n"
+          . $multi_models_url . "\n\n";
+    }
+
+    return $message;
+}
 sub population_download_message {
     my ( $self, $output_details ) = @_;
 
