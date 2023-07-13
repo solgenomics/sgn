@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AlterListTimestampType;
+package SetListTimestampsForTests;
 
 use Moose;
 use Try::Tiny;
@@ -40,7 +40,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch modify create/modified date to be timestamp types in the database
+This patch sets the created/modified dates of lists used for testing
 
 
 sub patch {
@@ -57,13 +57,10 @@ sub patch {
         $self->dbh->do(<<EOSQL);
 
  --do your SQL here
-    alter table sgn_people.list add column modified_date timestamp NULL DEFAULT now();
-
-    update sgn_people.list set create_date = to_timestamp("timestamp", 'YYYY-MM-DD_hh24:mi:ss') where timestamp ~ '\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d\\:\\d\\d\\:\\d\\d';
-    update sgn_people.list set modified_date = to_timestamp(modify_timestamp, 'YYYY-MM-DD_hh24:mi:ss');
-
-    alter table sgn_people.list drop column "timestamp";
-    alter table sgn_people.list drop column modify_timestamp;
+    -- update lists used for tests to have a known create/modified date
+    update sgn_people.list set create_date = to_timestamp('0001-01-01 00:00:00', 'YYYY-MM-DD hh24:mi:ss'),
+    modified_date = to_timestamp('0001-01-01 00:00:00', 'YYYY-MM-DD hh24:mi:ss')
+    where list_id in (11, 9, 3, 5, 4, 10, 6, 14, 13, 808, 7, 12, 810, 811, 809, 8);
 EOSQL
 
         return 1;
