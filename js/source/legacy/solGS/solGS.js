@@ -364,6 +364,9 @@ solGS.submitJob = {
     args["analysis_name"] = analysisName;
     args["analysis_page"] = page;
 
+    var hostname = `${location.protocol}//${location.hostname}`;
+    args['hostname'] = hostname;
+
     args = JSON.stringify(args);
 
     var analysisProfile = {
