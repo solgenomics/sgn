@@ -29,14 +29,17 @@ sub model_page_url {
 	my $pop_id = $args->{training_pop_id};
 	my $protocol_id = $args->{genotyping_protocol_id};
 
+	my $path;
 	if ($args->{data_set_type} =~ /combined/)
 	{
-		return "/solgs/model/combined/trials/$pop_id/trait/$trait_id/gp/$protocol_id";
+		$path =  "/solgs/model/combined/trials/$pop_id/trait/$trait_id/gp/$protocol_id";
 	}
 	else
 	{
-		return "/solgs/trait/$trait_id/population/$pop_id/gp/$protocol_id";
+		$path =  "/solgs/trait/$trait_id/population/$pop_id/gp/$protocol_id";
 	}
+
+	return $path;
 
 }
 
@@ -47,14 +50,46 @@ sub training_page_url {
 	my $pop_id = $args->{training_pop_id};
 	my $protocol_id = $args->{genotyping_protocol_id};
 
+	my $path;
 	if ( $args->{data_set_type} =~ /combined/)
 	{
-		return "/solgs/populations/combined/$pop_id/gp/$protocol_id";
+		$path = "/solgs/populations/combined/$pop_id/gp/$protocol_id";
 	}
 	else
 	{
-		return "/solgs/population/$pop_id/gp/$protocol_id";
+		$path =  "/solgs/population/$pop_id/gp/$protocol_id";
 	}
+
+	return $path;
+}
+
+sub multi_models_page_url {
+	my ($self, $args) = @_;
+
+	my $training_pop_id = $args->{training_pop_id};
+	my $protocol_id = $args->{genotyping_protocol_id};
+	my $traits_code = $args->{traits_selection_id};
+
+	my$path;
+	if ( $args->{data_set_type} =~ /combined/)
+	{
+		$path =   "/solgs/models/combined/trials/"
+                  . $training_pop_id
+                  . '/traits/'
+                  . $traits_code . '/gp/'
+                  . $protocol_id;
+	}
+	else
+	{
+		$path = "/solgs/traits/all/population/"
+                  . $training_pop_id
+                  . '/traits/'
+                  . $traits_code . '/gp/'
+                  . $protocol_id;
+
+	}
+
+	return $path;
 
 }
 
@@ -75,14 +110,17 @@ sub selection_page_url {
     my $trait_id           = $args->{trait_id};
     my $protocol_id     = $args->{genotyping_protocol_id};
 
+	my $path;
 	if ($args->{data_set_type} =~ /combined_populations/)
 	{
-	   return "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
+	   $path = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
 	}
 	else
 	{
-	    return "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+	    $path =  "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
 	}
+
+	return $path;
 
 }
 
