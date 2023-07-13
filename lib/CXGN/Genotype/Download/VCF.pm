@@ -51,7 +51,6 @@ use Text::CSV;
 use CXGN::Genotype::Search;
 use CXGN::Stock::StockLookup;
 use DateTime;
-use List::MoreUtils qw(uniq);
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -186,7 +185,7 @@ sub download {
     my $marker_name_list = $self->marker_name_list;
     my $genotypeprop_hash_select = $self->genotypeprop_hash_select;
     my $protocolprop_top_key_select = $self->protocolprop_top_key_select;
-#    my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
+    my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
     my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
     my $limit = $self->limit;
     my $offset = $self->offset;
@@ -194,52 +193,7 @@ sub download {
     my $start_position = $self->start_position;
     my $end_position = $self->end_position;
     my $forbid_cache = $self->forbid_cache;
-    print STDERR "CHECK VCF PLUGIN FORBID CACHE =".Dumper($forbid_cache)."\n";
     my $compute_from_parents = $self->compute_from_parents;
-
-    my @marker_info_keys_protocols = ();
-    my $protocolprop_marker_hash_select;
-    my @all_marker_info_keys = ();
-
-    if ($markerprofile_id_list && scalar(@$markerprofile_id_list)>0) {
-        foreach my $geno_id (@$markerprofile_id_list) {
-
-            my $q = "SELECT nd_experiment_protocol.nd_protocol_id FROM nd_experiment_protocol JOIN nd_experiment_genotype ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
-                WHERE nd_experiment_genotype.genotype_id = ?";
-
-            my $h = $schema->storage->dbh()->prepare($q);
-            $h->execute($geno_id);
-
-            while(my($protocol_id) = $h->fetchrow_array()){
-                push @marker_info_keys_protocols, $protocol_id;
-            }
-        }
-    } elsif ($protocol_id_list && scalar(@$protocol_id_list)>0) {
-        @marker_info_keys_protocols = @$protocol_id_list;
-    }
-
-    @marker_info_keys_protocols = uniq @marker_info_keys_protocols;
-    print STDERR "INFO KEYS PROTOCOLS =".Dumper(\@marker_info_keys_protocols)."\n";
-    if (scalar(@marker_info_keys_protocols)>0) {
-        foreach my $protocol_id (@marker_info_keys_protocols) {
-            my $protocol = CXGN::Genotype::Protocol->new({
-                bcs_schema => $schema,
-                nd_protocol_id => $protocol_id
-            });
-            my $marker_info_keys = $protocol->marker_info_keys;
-            if (defined $marker_info_keys) {
-                push @all_marker_info_keys, @$marker_info_keys;
-            }
-        }
-        @all_marker_info_keys = uniq @all_marker_info_keys;
-    }
-
-    if (scalar(@all_marker_info_keys)>0) {
-        $protocolprop_marker_hash_select = \@all_marker_info_keys;
-    } else {
-        $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
-    }
-    print "PLUGIN HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,

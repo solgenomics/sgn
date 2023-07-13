@@ -1055,7 +1055,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $end_position = $c->req->param("end_position") || undef;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
-    print STDERR "CHECK CONTROLLER FORBID CACHE =".Dumper($forbid_cache)."\n";
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
