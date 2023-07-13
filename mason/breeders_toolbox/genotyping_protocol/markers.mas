@@ -37,6 +37,7 @@ jQuery(document).ready(function(){
         'ordering'  : false,
         'processing': true,
         'serverSide': true,
+        'autoWidth' : false,
         'lengthMenu': [10,20,50,100,1000],
         'ajax': { 'url': '/ajax/genotyping_protocol/markers_search',
                   'data': function(d) {
@@ -56,6 +57,11 @@ jQuery(document).ready(function(){
             jQuery('#marker_table_search_submit').click();
         }
     });
+
+    jQuery('#download_protocol_marker_info').click(function(){
+        window.location.replace("/breeders/download_protocol_marker_info/?protocol_id=<% $protocol_id %>");
+    });
+
 });
 
 </script>

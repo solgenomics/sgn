@@ -1604,6 +1604,14 @@ sub wellsort {
     }
 }
 
+sub download_protocol_marker_info : Path('/breeders/download_protocol_marker_info') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $protocol_id = $c->req->param("protocol_id");
+    print STDERR "CHECK PROTOCOL ID =".Dumper($protocol_id)."\n";
+}
+
 
 #=pod
 1;
