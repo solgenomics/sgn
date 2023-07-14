@@ -2810,6 +2810,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
     my $tissue_names = decode_json $c->req->param("tissue_samples_names");
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $use_tissue_numbers = $c->req->param("use_tissue_numbers");
     my $tissues_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $tissues_with_treatments = 1;
@@ -2838,7 +2839,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $user_id)) {
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $use_tissue_numbers, $user_id)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
@@ -2871,6 +2872,7 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
         $c->stash->{rest} = { error => 'No treatment name given!' };
         return;
     }
+
     if (!$treatment_description) {
         $c->stash->{rest} = { error => 'No treatment description given!' };
         return;
