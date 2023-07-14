@@ -113,7 +113,6 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
         offset => $offset
     });
     my ($search_result, $total_count) = $marker_search->search();
-#    print STDERR "SEARCH RESULT =".Dumper($search_result)."\n";
 
     foreach (@$search_result) {
         if (defined $marker_info_keys) {
@@ -136,8 +135,6 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
             ];
         }
     }
-
-    print STDERR "RESULT =".Dumper(\@result)."\n";
 
     $c->stash->{rest} = { data => \@result, recordsTotal => $total_count, recordsFiltered => $total_count };
 }
@@ -173,8 +170,9 @@ sub genotyping_protocol_pcr_markers_GET : Args(0) {
         my $linkage_group = $marker_details{$marker_name}{'linkage_group'};
         push @results, [$marker_name, $product_sizes, $forward_primer, $reverse_primer, $annealing_temperature, $sequence_motif, $sequence_source, $linkage_group];
     }
-    print STDERR "MARKER INFO =".Dumper(\@results)."\n";
+
     $c->stash->{rest} = {data => \@results};
+    
 }
 
 
