@@ -41,6 +41,7 @@ __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
+    json_options_encode => { 'utf8' => 0 }
    );
 
 sub verify_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
