@@ -100,6 +100,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
     my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
     my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
+    my $assay_type = $c->req->param('assay_type_select');
     my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
     my $add_accessions;
     if ($add_new_accessions){
@@ -420,6 +421,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
         $protocol->{'reference_genome_name'} = $reference_genome_name;
         $protocol->{'species_name'} = $organism_species;
+        $protocol->{'assay_type'} = $assay_type;
         my $store_genotypes;
         my ($observation_unit_names, $genotype_info) = $parser->next();
         if (scalar(keys %$genotype_info) > 0) {
@@ -536,6 +538,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $protocol_info->{'reference_genome_name'} = $reference_genome_name;
         $protocol_info->{'species_name'} = $organism_species;
         $protocol_info->{'marker_info_keys'} = $marker_info_keys;
+        $protocol_info->{'assay_type'} = $assay_type;
 
         $store_args->{protocol_info} = $protocol_info;
         $store_args->{genotype_info} = $genotype_info;

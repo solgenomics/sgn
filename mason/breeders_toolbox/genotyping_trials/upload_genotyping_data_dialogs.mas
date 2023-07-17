@@ -168,6 +168,17 @@ $facilities
                                             </div>
                                         </div>
                                         <div class="form-group">
+                                            <label class="col-sm-5 control-label">Assay Type </label>
+                                            <div class="col-sm-7">
+                                                <select class="form-control" id="assay_type_select" name="assay_type_select">
+                                                    <option value="">Select assay type</option>
+                                                    <option value="GBS">GBS</option>
+                                                    <option value="KASP">KASP</option>
+                                                    <option value="SSR">SSR</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
                                             <label class="col-sm-5 control-label">Description:</label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_genotypes_protocol_description_input" name="upload_genotypes_protocol_description_input" type="text" />
