@@ -103,6 +103,10 @@ jQuery(document).ready(function(){
         }
     });
     jQuery("#search_audit_button").click(function(){
+        if ( jQuery.fn.dataTable.isDataTable( '#audit_results' ) ) {
+            table = jQuery('#audit_results').DataTable();
+            table.destroy();
+        }
         var db_table_list_id = jQuery('#db_table_list_select').find(":selected").val();
         jQuery.ajax({
             url: '/ajax/audit/retrieve_results',
@@ -125,9 +129,22 @@ jQuery(document).ready(function(){
                     { title: 'Before' },
                     { title: 'After' },
                 ],
+                "rowCallback" : function (row, data, index){
+                    if(data[1] == "INSERT"){
+                        jQuery('td', row).css('background-color', 'HoneyDew');
+                    }
+                    if(data[1] == "UPDATE"){
+                        jQuery('td',row).css('background-color', 'LightCyan');
+                    }
+                    if(data[1] == "DELETE"){
+                        jQuery('td',row).css('background-color', 'Red');
+                    }
+
+                }
                 
             });
 
+            
             }
         });
         

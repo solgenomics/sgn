@@ -1,0 +1,70 @@
+<%args>
+$trial_id
+$project_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table class="table table-hover table-bordered" id="audit_results">
+
+</table>
+
+<script> 
+    jQuery(document).ready(function () {
+      function filterStatusInfo (arr){
+        return [arr.name,arr.project_id,arr.description].join(" ");
+      }
+
+      var trial_id = "<% $trial_id %>";
+      jQuery.ajax({
+        url: '/ajax/audit/retrieve_trial_audits',
+        data: {'trial_id':trial_id},
+        timeout: 300000,
+          success: function(response){
+          var data = response.match_project;
+          var json_object = JSON.parse(data);
+          var num_audit_rows = json_object.length;
+          
+
+          var filtered_json_object = json_object.map(filterStatusInfo);
+          
+          var datastring = json_object[0][5];
+          for(var i=0;i<datastring.length;i++){
+            if (datastring[i]=='{' || datastring[i]=='}' || datastring[i]=='"'){
+              datastring = datastring.replace(datastring[i],"");
+              i--;
+            }
+            if (datastring[i]==','){
+              datastring = datastring.replace(datastring[i]+" ",'\n');
+              i--;
+            }
+          }
+
+          alert(datastring);
+          alert(filtered_json_object);
+
+        /*Now we want to use map function or filter function to cut down the string in the before/after columns */
+            
+
+          jQuery('#audit_results').DataTable({
+              data: json_object,
+              columns: [
+                  { title: 'Timestamp' },
+                  { title: 'Operation' },
+                  { title: 'Username' },
+                  { title: 'Logged in user' },
+                  { title: 'Before' },
+                  { title: 'After' },
+              ],
+              
+                
+          });
+
+          }
+        
+      });
+    });
+
+</script>

@@ -139,6 +139,7 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
 
     
     my @matches;
+    my $j = 0; #this is to make sure only matched audits go into the matches array
 
     for (my $i = 0; $i<$counter; $i++){
         my $operation = $all_audits[$i][1];
@@ -152,7 +153,9 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
         my $desired_trial_id = $json_string->{'project_id'};
         print STDERR ($desired_trial_id)."\n";
         if($trial_id eq $desired_trial_id){
-            $matches[$i] = $all_audits[$i];
+            $matches[$j] = $all_audits[$i];
+            $j++;
+
         }
     }
 
