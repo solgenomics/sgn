@@ -60,30 +60,58 @@ sub download {
         protocol_id_list => $protocol_id
     });
     my ($search_result, $total_count) = $marker_search->search();
-    print STDERR "PLUGIN RESULT SEARCH =".Dumper($search_result)."\n";
-    print STDERR "MARKER INFO KEY =".Dumper($marker_info_keys)."\n";
     my @results;
     my @lines;
-    my @headers = @$marker_info_keys;
+    my @headers;
 
-    foreach (@$search_result) {
+    if (defined $marker_info_keys) {
+        foreach my $header_key (@$marker_info_keys) {
+            if ($header_key eq 'name') {
+                push @headers, 'NAME';
+            } elsif ($header_key eq 'intertek_name') {
+                push @headers, 'INTERTEK NAME';
+            } elsif ($header_key eq 'chrom') {
+                push @headers, 'CHROMOSOME';
+            } elsif ($header_key eq 'pos') {
+                push @headers, 'POSITION';
+            } elsif ($header_key eq 'alt') {
+                push @headers, 'ALTERNATE';
+            } elsif ($header_key eq 'ref') {
+                push @headers, 'REFERENCE';
+            } elsif ($header_key eq 'qual') {
+                push @headers, 'QUALITY';
+            } elsif ($header_key eq 'filter') {
+                push @headers, 'FILTER';
+            } elsif ($header_key eq 'info') {
+                push @headers, 'INFO';
+            } elsif ($header_key eq 'format') {
+                push @headers, 'FORMAT';
+            } elsif ($header_key eq 'sequence') {
+                push @headers, 'SEQUENCE';
+            }
+        }
+    } else {
+        @headers = ('NAME', 'CHROMOSOME', 'POSITION', 'ALTERNATE', 'REFERENCE', 'QUALITY', 'FILTER', 'INFO', 'FORMAT');
+    }
+
+    foreach my $result (@$search_result) {
         if (defined $marker_info_keys) {
             my @each_row = ();
             foreach my $info_key (@$marker_info_keys) {
-                push @each_row, $_->{$info_key};
+                push @each_row, $result->{$info_key};
             }
             push @results, [@each_row];
         } else {
             push @results, [
-                $_->{marker_name},
-                $_->{chrom},
-                $_->{pos},
-                $_->{alt},
-                $_->{ref},
-                $_->{qual},
-                $_->{filter},
-                $_->{info},
-                $_->{format}
+                $result->{marker_name},
+                $result->{chrom},
+                $result->{pos},
+                $result->{alt},
+                $result->{ref},
+                $result->{qual},
+                $result->{filter},
+                $result->{info},
+                $result->{format}
             ];
         }
     }

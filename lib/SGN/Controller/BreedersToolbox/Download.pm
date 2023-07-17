@@ -1631,7 +1631,7 @@ sub download_protocol_marker_info : Path('/breeders/download_protocol_marker_inf
 
     my $download = $marker_info_download->download();
 
-    my $format = 'CSV';
+    my $format = 'csv';
     my $download_file_name = 'BreedbaseMarkerInfo'.$format;
 
     $c->res->content_type('Application/'.$format);
