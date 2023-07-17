@@ -50,7 +50,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     }
 
     my $marker_info_keys = $protocol->marker_info_keys;
-    print STDERR "INFO KEYS =".Dumper($marker_info_keys)."\n";
+#    print STDERR "INFO KEYS =".Dumper($marker_info_keys)."\n";
     my @marker_info_headers = ();
     if (defined $marker_info_keys) {
         foreach my $info_key (@$marker_info_keys) {
@@ -94,6 +94,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	$c->stash->{sample_observation_unit_type_name} = $display_observation_unit_type;
     $c->stash->{marker_type} = $protocol->marker_type;
     $c->stash->{marker_info_headers} = \@marker_info_headers;
+    $c->stash->{assay_type} = $protocol->assay_type;
     $c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
     }
 }
