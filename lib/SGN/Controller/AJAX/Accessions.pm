@@ -40,8 +40,8 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
-   );
+    map       => { 'application/json' => 'JSON' },
+);
 
 sub verify_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
 
@@ -62,7 +62,7 @@ sub verify_accession_list_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this info!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -71,7 +71,7 @@ sub verify_accession_list_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this info!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();

@@ -76,7 +76,7 @@ if ($url =~ /correlation\/analysis/) {
   title       => $title
   &>
 
-  <div id='correlation_div'>
+  <div id='corr_div'>
 
 % if ($url =~ /correlation\/analysis/) {
 
