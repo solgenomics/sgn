@@ -34,7 +34,7 @@ has 'dbname' => (
 
  Args:         criteria_list: a comma separated string of criteria categories. Possible
                criteria include accessions, breeding programs, genotyping protocols,
-               locations, plots, plants, trials, trial_designs, traits, and years. The last
+               locations, plots, plants, tissue samples, trials, trial_designs, traits, and years. The last
                criteria in the list is the return type.
 
                dataref: The dataref is a hashref of hashrefs. The first key

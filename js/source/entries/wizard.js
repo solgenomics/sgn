@@ -26,6 +26,7 @@ const types = {
   "locations":"Locations",
   "plots":"Plots",
   "plants":"Plants",
+  "tissueSamples":"Tissue Sample",
   "seedlots":"Seedlots",
   "trait_components":"Trait Components",
   "traits":"Traits",

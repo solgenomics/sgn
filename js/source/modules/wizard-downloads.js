@@ -168,6 +168,7 @@ export function WizardDownloads(main_id,wizard){
     var comps = categories.indexOf("trait_components")!=-1 ? selections["trait_components"] : [];
     var plots = categories.indexOf("plots")!=-1 ? selections["plots"] : [];
     var plants = categories.indexOf("plants")!=-1 ? selections["plants"] : [];
+    var tissueSamples = categories.indexOf("tissueSamples")!=-1 ? selections["tissueSamples"] : [];
     var locations = categories.indexOf("locations")!=-1 ? selections["locations"] : [];
     var years = categories.indexOf("years")!=-1 ? selections["years"] : [];
 
@@ -183,6 +184,7 @@ export function WizardDownloads(main_id,wizard){
         var accession_ids = JSON.stringify(accessions.map(d=>d.id));
         var plot_ids = JSON.stringify(plots.map(d=>d.id));
         var plant_ids = JSON.stringify(plants.map(d=>d.id));
+        var tissueSamples_ids = JSON.stringify(tissueSamples.map(d=>d.id));
         var location_ids = JSON.stringify(locations.map(d=>d.id));
         var year_ids = JSON.stringify(years.map(d=>d.id));
 
