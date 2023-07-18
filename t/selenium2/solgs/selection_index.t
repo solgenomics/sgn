@@ -115,7 +115,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(5);
-    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
@@ -132,9 +132,9 @@ $d->while_logged_in_as("submitter", sub {
     my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
-    $d->find_element_ok('si_select_pops', 'id', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//select[@id="si_select_pops"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
@@ -159,9 +159,9 @@ $d->while_logged_in_as("submitter", sub {
     my $cor = $d->find_element('selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
-    $d->find_element_ok('si_select_pops', 'id', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//select[@id="si_select_pops"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(2);
     sleep(5);
@@ -264,7 +264,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(20);
-    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
@@ -280,9 +280,9 @@ $d->while_logged_in_as("submitter", sub {
     my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
-    $d->find_element_ok('si_select_pops', 'id', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//select[@id="si_select_pops"]/option[contains(text(), "Training population 280")]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[contains(text(), "Training population 280")]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
@@ -305,9 +305,9 @@ $d->while_logged_in_as("submitter", sub {
     my $cor = $d->find_element('selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
-    $d->find_element_ok('si_select_pops', 'id', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//select[@id="si_select_pops"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(2);
     sleep(5);
