@@ -10,7 +10,7 @@ use CXGN::Genotype::Protocol;
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
-    my $marker_info_filename = $self->get_filename_intertek_marker_info();
+    my $marker_info_filename = $self->get_filename_marker_info();
     my $protocol_id = $self->get_nd_protocol_id();
     my $schema = $self->get_chado_schema();
     my %errors;
@@ -292,7 +292,7 @@ sub _validate_with_plugin {
 sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
-    my $marker_info_filename = $self->get_filename_intertek_marker_info();
+    my $marker_info_filename = $self->get_filename_marker_info();
     my $schema = $self->get_chado_schema();
     my $stock_type = $self->get_observation_unit_type_name;
     my @error_messages;

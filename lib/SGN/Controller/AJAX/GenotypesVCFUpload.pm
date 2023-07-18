@@ -125,6 +125,8 @@ sub upload_genotype_verify_POST : Args(0) {
     my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
     my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
     my $upload_ssr_data = $c->req->upload('upload_genotype_ssr_file_input');
+    my $upload_kasp_genotypes = $c->req->upload('upload_genotype_data_kasp_file_input');
+    my $upload_kasp_marker_info = $c->req->upload('upload_genotype_kasp_marker_info_file_input');
 
     if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
         $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
@@ -266,7 +268,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $parser_plugin = 'transposedVCF';
     }
 
-    my $archived_intertek_marker_info_file;
+    my $archived_marker_info_file;
     if ($upload_intertek_genotypes) {
         $upload_original_name = $upload_intertek_genotypes->filename();
         $upload_tempfile = $upload_intertek_genotypes->tempname;
@@ -289,9 +291,9 @@ sub upload_genotype_verify_POST : Args(0) {
             user_id => $user_id,
             user_role => $user_role
         });
-        $archived_intertek_marker_info_file = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_intertek_marker_info_file);
-        if (!$archived_intertek_marker_info_file) {
+        $archived_marker_info_file = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_marker_info_file);
+        if (!$archived_marker_info_file) {
             push @error_status, "Could not save file $upload_inteterk_marker_info_original_name in archive.";
             return (\@success_status, \@error_status);
         } else {
@@ -305,6 +307,35 @@ sub upload_genotype_verify_POST : Args(0) {
         $upload_tempfile = $upload_ssr_data->tempname;
         $subdirectory = "ssr_data_upload";
         $parser_plugin = 'SSRExcel';
+    }
+
+    if ($upload_ksap_genotypes) {
+        $upload_original_name = $upload_kasp_genotypes->filename();
+        $upload_tempfile = $upload_kasp_genotypes->tempname;
+        $subdirectory = "genotype_kasp_upload";
+        $parser_plugin = 'KASP';
+
+        my $upload_kasp_marker_info_original_name = $upload_kasp_marker_info->filename();
+        my $upload_kasp_marker_info_tempfile = $upload_kasp_marker_info->tempname();
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_kasp_marker_info_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_kasp_marker_info_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        $archived_marker_info_file = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_marker_info_file);
+        if (!$archived_marker_info_file) {
+            push @error_status, "Could not save file $upload_kasp_marker_info_original_name in archive.";
+            return (\@success_status, \@error_status);
+        } else {
+            push @success_status, "File $upload_kasp_marker_info_original_name saved in archive.";
+        }
+        unlink $upload_kasp_marker_info_tempfile;
     }
 
     my $uploader = CXGN::UploadFile->new({
@@ -359,7 +390,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
-        filename_intertek_marker_info => $archived_intertek_marker_info_file,
+        filename_marker_info => $archived_marker_info_file,
         observation_unit_type_name => $obs_type,
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
