@@ -39,8 +39,8 @@ $facilities
                                             <option value="">Select data type</option>
                                             <option value="vcf">VCF</option>
                                             <option value="tassel_hdf5">Tassel HDF5</option>
-                                            <option value="intertek">Intertek Simple Format</option>
-                                            <option value="intertek_details">Intertek Details Format</option>
+                                            <option value="intertek">Intertek</option>
+                                            <option value="KASP">KASP</option>
                                             <option value="ssr">SSR</option>
                                         </select>
                                     </div>
@@ -334,14 +334,14 @@ $facilities
                                     </div>
                                 </div>
 
-                                <div class="well well-sm" id="upload_genotype_data_format_intertek_details" style="display:none">
+                                <div class="well well-sm" id="upload_genotype_data_format_kasp" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <&| /page/explanation.mas, title=>'Template information' &>
                                                 <p>
                                                     <b>File format information</b>
                                                     <br>
-                                                    <a id="upload_genotype_intertek_details_spreadsheet_info_format">Intertek details format</a>
+                                                    <a id="upload_genotype_kasp_spreadsheet_info_format">KASP data format</a>
                                                 </p>
                                             </&>
                                         </div>
@@ -350,9 +350,9 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select Intertek SNP Result File: </label>
+                                                        <label class="col-sm-6 control-label">Select KASP Result File (csv): </label>
                                                         <div class="col-sm-6">
-                                                            <input type="file" name="upload_genotype_data_format_intertek_details_file_input" id="upload_genotype_intertek_details_file_input" encoding="multipart/form-data" />
+                                                            <input type="file" name="upload_genotype_data_kasp_file_input" id="upload_genotype_data_kasp_file_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -360,9 +360,9 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select Intertek SNP Information File: </label>
+                                                        <label class="col-sm-6 control-label">Select KASP Marker Information File: </label>
                                                         <div class="col-sm-6">
-                                                            <input type="file" name="upload_genotype_intertek_snp_info_input" id="upload_genotype_intertek_snp_info_input" encoding="multipart/form-data" />
+                                                            <input type="file" name="upload_genotype_kasp_marker_info_file_input" id="upload_genotype_kasp_marker_info_file_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -934,31 +934,31 @@ jQuery(document).ready(function(){
         if (data_type == 'vcf') {
             jQuery('#upload_genotype_data_format_vcf').show();
             jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_intertek_details').hide();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'intertek') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').show();
-            jQuery('#upload_genotype_data_format_intertek_details').hide();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'tassel_hdf5') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_intertek_details').hide();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').show();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'ssr') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_intertek_details').hide();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').show();
-        } else if (data_type == 'intertek_details') {
+        } else if (data_type == 'kasp') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_intertek_details').show();
+            jQuery('#upload_genotype_data_format_kasp').show();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').hide();
         }
@@ -1108,6 +1108,17 @@ jQuery(document).ready(function(){
                 jQuery('#genotyping_data_upload_next').show();
                 jQuery('#genotyping_data_upload_next').attr('disabled', false);
             }
+        } else if (data_type == 'KASP') {
+                if (jQuery('#upload_genotype_data_kasp_file_input').val() == ''){
+                    alert('Please select a KASP Result file.');
+                } else if (jQuery('#upload_genotype_kasp_marker_info_file_input').val() == ''){
+                    alert('Please select a KASP Marker Information File.');
+                } else {
+                    jQuery('#file_check_button').hide();
+                    jQuery('#genotyping_data_upload_next').show();
+                    jQuery('#genotyping_data_upload_next').attr('disabled', false);
+                }
+
         } else if (data_type == 'ssr') {
             if (jQuery('#upload_genotype_ssr_file_input').val() == ''){
                 alert('Please select a SSR file.');
@@ -1129,6 +1140,10 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotype_intertek_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal('show');
+    });
+
+    jQuery('#upload_genotype_kasp_spreadsheet_info_format').click(function(){
+        jQuery('#upload_genotype_kasp_spreadsheet_info_format_dialog').modal('show');
     });
 
     jQuery('#upload_ssr_data_spreadsheet_info').click(function(){
