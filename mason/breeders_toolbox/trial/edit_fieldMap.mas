@@ -331,10 +331,7 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
       pheno_filepath = response.pheno_filepath;
       phenotype_file = response.phenotype_file;
       dataTableToPass = response.data;
-      var input_file = response.input_file;
-      var fitted_data = JSON.stringify(response.fitted_hash);
-      var model_properties = JSON.stringify({ "properties": { "traits": ["ID", "Trait", "Name", "Phenotype Values", "Fitted Values"] } });
-
+      
       jQuery("#spatial_correction_needed_results_table").show();
       jQuery("#spatial_correction_needed_results_table_wrapper").show();
 
@@ -370,25 +367,7 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
         dataTable.column(1).search(selectedValue).draw();
       });
 
-      jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
-        jQuery('#generic_save_analysis_dialog').modal("show");
-        jQuery('#generic_save_analysis_model_properties').val(model_properties);
-        jQuery('#generic_save_analysis_protocol').val("mmer(Yield~1 + germplasmName,random=~vsr(Row) +vsr(Col) +spl2Da(Row,Col),data=DT)");
-        jQuery('#generic_save_analysis_dataset_id').val();
-        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
-        jQuery('#generic_save_analysis_trial_id').val(get_trial_id());
-        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(traits));
-        jQuery('#generic_save_analysis_statistical_ontology_term').val('Fitted Values from Spatial Correction using Sommer|R');
-        jQuery('#generic_save_analysis_model_language').val('R');
-        jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
-        jQuery('#generic_save_analysis_model_application_version').val('0.01');
-        jQuery('#generic_save_analysis_model_type').val('spatial_model_sommer');
-        jQuery('#generic_save_analysis_result_values').val(fitted_data);
-        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
-        jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase mixed model analysis tool" }');
-        jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
-        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
-      });
+      
     }
   } catch (error) {
     console.error('Error:', error);
@@ -426,6 +405,31 @@ jQuery("#correct_spatial").click(function() {
           ],
         });
       }
+      //var input_file = response.input_file;
+      var fitted_data = JSON.stringify(response.result);
+      var accessionNamesArray = response.accession_names;
+      alert(JSON.stringify(accessionNamesArray));
+      var model_properties = JSON.stringify({ "properties": { "traits": ["ID", "Trait", "Name", "Fitted Values"] } });
+
+      jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
+        jQuery('#generic_save_analysis_dialog').modal("show");
+        jQuery('#generic_save_analysis_model_properties').val(model_properties);
+        jQuery('#generic_save_analysis_protocol').val("mmer(Yield~1 + germplasmName,random=~vsr(Row) +vsr(Col) +spl2Da(Row,Col),data=DT)");
+        jQuery('#generic_save_analysis_dataset_id').val("dataset_id");
+        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
+        jQuery('#generic_save_analysis_trial_id').val(trial_id);
+        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(traits));
+        jQuery('#generic_save_analysis_statistical_ontology_term').val('Fitted Values from Spatial Correction using Sommer|R');
+        jQuery('#generic_save_analysis_model_language').val('R');
+        jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
+        jQuery('#generic_save_analysis_model_application_version').val('0.01');
+        jQuery('#generic_save_analysis_model_type').val('spatial_model_sommer');
+        jQuery('#generic_save_analysis_result_values').val(fitted_data);
+        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
+        jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase mixed model analysis tool" }');
+        jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
+      });
     }
   });
 });

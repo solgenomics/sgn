@@ -34,16 +34,20 @@ spatialHeaders <- args[3]
 # read in the phenotypic data
 
 userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE)
-spatialPheno <- read.delim(spatialFile, header = FALSE, sep = "\t", fill = TRUE)
-colnames(spatialPheno) <- c("Data.Quality", "Moran.P.Value", "Correction.Needed", "Trait")
+spatialPheno <- read.delim(spatialFile, header = TRUE, sep = "\t", fill = TRUE)
+colnames(spatialPheno) <- c("Trait", "Data.Quality", "Moran.P.Value", "Correction.Needed")
+# print the trait column to stderr
+# write(paste("spatialPheno$Trait:", spatialPheno$Trait), stderr())
+write(paste("spatialPheno:", head(spatialPheno)), stderr())
 # select all the traits that need correction: Correction.Needed == "YES" and save them in a vector
-traits <- paste(spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"], collapse = ",")
-
-
+# traits <- paste(spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"], collapse = ",")
+traits <- spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"]
+write(paste("traits:", traits), stderr())
 # The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
 #    to this vector, 'userResponse'.
 userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
+write(paste("userResponse:", userResponse), stderr())
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse
 replicate <- "replicate"
 userID <- "germplasmName"
@@ -103,6 +107,8 @@ for (i in 1:length(userResponse)) {
     AIC.without <- summary(mod)$logo$AIC
     AIC.with <- summary(m2.sommer)$logo$AIC
 
+    # Obtain all userIDs
+    userIDs <- unique(userPheno[, userID])
     # blues
     blue <- summary(m2.sommer)$betas
     blue_sum <- 0
@@ -114,6 +120,10 @@ for (i in 1:length(userResponse)) {
             # If it is an Intercept row, update the blue_sum variable
             blue_sum <- blue$Estimate[i]
             is_intercept <- TRUE
+            # If the first row is an Intercept row, assign the blue_sum to BLUE
+            if (i == 1) {
+                blue$BLUE[i] <- blue_sum
+            }
         } else {
             # If it is not an Intercept row, add the blue_sum to the current Estimate value
             if (is_intercept) {
@@ -130,6 +140,15 @@ for (i in 1:length(userResponse)) {
         }
     }
     blue_tab <- blue[, c("Trait", "Effect", "BLUE", "Std.Error")]
+    # remove "germplasmName" in Effect row eg germplasmNameTDr0900013 to TDr0900013
+    blue_tab$Effect <- gsub(paste(userID, "", sep = ""), "", blue_tab$Effect)
+
+    # blue_tab$Effect <- gsub(paste(userID, "\\+", sep = ""), "", blue_tab$Effect) #
+    # take all Effect names and compare them to the userIDs to find the missing one
+    missing <- setdiff(userIDs, blue_tab$Effect) # setdiff returns the elements of x that are not in y
+    write(paste("missing:", missing), stderr())
+    # replace (Intercept) with the missing userID
+    blue_tab$Effect[blue_tab$Effect == "(Intercept)"] <- missing
     output <- rbind(output, blue_tab)
 }
 
@@ -142,7 +161,7 @@ write.table(AIC_output, outfile_AIC)
 
 ## dealing with blues output
 print(colnames(output))
-colnames(output) <- c("ID", "Trait", "Name", "Estimate", "Std.Error")
+colnames(output) <- c("Trait", "Name", "Estimate", "Std.Error")
 BLUE <- as.data.frame(output)
 outfile_blue <- paste(phenotypeFile, ".blues", sep = "")
 write.table(BLUE, outfile_blue)

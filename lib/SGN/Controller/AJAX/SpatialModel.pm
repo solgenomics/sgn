@@ -346,7 +346,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 	#$c->config->{basepath} . "/R/spatial_modeling.R",
     $c->config->{basepath} . "/R/Spatial_Correction.R",
     $phenotype_file,
-    $temp_file, 
+    $phenotype_file.".spatial_correlation_summary",
+    # $temp_file, 
 	"'".$headers_string."'",
 
 	);
@@ -358,10 +359,10 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
    #getting the spatial correlation results
     my @result;
 
-    open(my $F, "<", $pheno_filepath.".blues") || die "Can't open result file $pheno_filepath".".blues";
+    open(my $F, "<", $phenotype_file.".blues") || die "Can't open result file $phenotype_file".".blues";
     my $header = <$F>;
     my @h = split(/\t/, $header);
-    #my @h = split(',', $header);
+    #my @h = split(',', $header); @ because it is an array
     my @spl;
     foreach my $item (@h) {
     push  @spl, {title => $item};
@@ -369,16 +370,19 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     print STDERR "Header: ".Dumper(\@spl);
     while (<$F>) {
 	chomp;
-	my @fields = split /\t/; #split /,/;
+	my @fields = split /\s+/; #split /,/; #split by space use /\s+/;
 	foreach my $f (@fields) { $f =~ s/\"//g; }
 	push @result, \@fields;
     }
-
+    my @accessions;
     print STDERR "FORMATTED DATA: ".Dumper(\@result);
+    foreach my $r (@result) {
+        push @accessions, $r->[2];
+    }
+    
+    my $basename = basename($phenotype_file.".clean.blues");
 
-    my $basename = basename($pheno_filepath.".clean.blues");
-
-    copy($pheno_filepath.".clean.corrected", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/".$basename);
+    copy($phenotype_file.".clean.corrected", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/".$basename);
 
     my $download_url = '/documents/tempfiles/spatial_model_files/'.$basename;
     my $download_link = "<a href=\"$download_url\">Download Results</a>";
@@ -387,9 +391,11 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 	result => \@result,
     headers => \@spl,
 	download_link => $download_link,
+    accession_names => \@accessions,
+    };
 
 };
-}
+
 sub result_file_to_hash {
     my $self = shift;
     my $c = shift;
