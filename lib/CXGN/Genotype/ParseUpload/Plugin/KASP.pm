@@ -254,7 +254,7 @@ sub _validate_with_plugin {
         return;
     }
 
-    return 1; 
+    return 1;
 }
 
 
@@ -266,6 +266,95 @@ sub _parse_with_plugin {
     my $stock_type = $self->get_observation_unit_type_name;
     my @error_messages;
     my %errors;
+
+    my %protocolprop_info;
+    $protocolprop_info{'header_information_lines'} = [];
+    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
+
+    my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
+    my $MF;
+    my %marker_info;
+    my %marker_info_nonseparated;
+    my @marker_info_keys = qw(name intertek_name chrom pos alt ref);
+
+    open($MF, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
+
+        my $marker_header_row = <$MF>;
+        my @marker_header_info;
+
+        if ($marker_info_csv->parse($marker_header_row)) {
+            @marker_header_info = $marker_info_csv->fields();
+        }
+
+        for my $i (6 .. $#marker_header_info){
+            my $header = $marker_header_info[$i];
+            $header =~ s/^\s+|\s+$//g;
+            if ($header eq 'Quality') {
+                push @marker_info_keys, 'qual';
+            } elsif ($header eq 'Filter') {
+                push @marker_info_keys, 'filter';
+            } elsif ($header eq 'Info') {
+                push @marker_info_keys, 'info';
+            } elsif ($header eq 'Format') {
+                push @marker_info_keys, 'format';
+            } elsif ($header eq 'Sequence') {
+                push @marker_info_keys, 'sequence';
+            }
+        }
+        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
+
+        while (my $marker_line = <$MF>) {
+            my @marker_line_info;
+            if ($marker_info_csv->parse($marker_line)) {
+                @marker_line_info = $marker_info_csv->fields();
+            }
+            my $facility_snp_id = $marker_line_info[0];
+            my $customer_snp_id = $marker_line_info[1];
+            my $ref = $marker_line_info[2];
+            my $alt = $marker_line_info[3];
+            my $chromosome = $marker_line_info[4];
+            my $position = $marker_line_info[5];
+            my %marker = (
+                ref => $ref,
+                alt => $alt,
+                intertek_name => $facility_snp_id,
+                chrom => $chromosome,
+                pos => $position,
+                name => $customer_snp_id,
+            );
+            for my $i (6 .. $#marker_header_info){
+                my $header = $marker_header_info[$i];
+                $header =~ s/^\s+|\s+$//g;
+                if ($header eq 'Quality') {
+                    $marker{'qual'} = $marker_line_info[$i];
+                } elsif ($header eq 'Filter') {
+                    $marker{'filter'} = $marker_line_info[$i];
+                } elsif ($header eq 'Info') {
+                    $marker{'info'} = $marker_line_info[$i];
+                } elsif ($header eq 'Format') {
+                    $marker{'format'} = $marker_line_info[$i];
+                } elsif ($header eq 'Sequence') {
+                    $marker{'sequence'} = $marker_line_info[$i];
+                }
+            }
+
+            push @{$protocolprop_info{'marker_names'}}, $customer_snp_id;
+            $marker_info_nonseparated{$customer_snp_id} = \%marker;
+
+            push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
+            $marker_info{$chromosome}->{$customer_snp_id} = \%marker;
+        }
+
+    close($MF);
+        #print STDERR Dumper \%marker_info_lookup;
+    $protocolprop_info{'markers'} = \%marker_info;
+    print STDERR "MARKER INFO =".Dumper(\%marker_info)."\n";
+
+
+
+
+
+
 
 
     return 1;
