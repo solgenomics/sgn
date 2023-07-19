@@ -818,7 +818,6 @@ sub modeling_jobs {
             $c->stash->{trait_id} = $trait_id;
             $c->controller('solGS::Trait')->get_trait_details($c);
 
-            my $stashed = $c->stash->{analysis_type};
             if ( $c->stash->{analysis_type} =~ /multiple_models/ ) {
                 $c->stash->{analysis_type} = 'training_model';
             }
