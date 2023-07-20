@@ -1725,11 +1725,16 @@ sub lists : Chained('brapi') PathPart('lists') Args(0) : ActionClass('REST') { }
 sub lists_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c, $c->config->{brapi_lists_require_login});
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
-	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	my $brapi_package_result;
+	if($c->config->{brapi_lists_require_login}) {
+		$brapi_package_result = $brapi_module->search($clean_inputs, $user_id, 1);
+	} else {
+		$brapi_package_result = $brapi_module->search($clean_inputs, undef, 0);
+	}
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -3287,7 +3292,6 @@ sub locations_list_POST {
 	my $self = shift;
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
-	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	my @all_locations;

@@ -228,7 +228,7 @@ sub detail {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                #tags =>  $_->{'tags_array'},
+                tags =>  $_->{'tags_array'},
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
@@ -447,7 +447,7 @@ sub image_metadata_store {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                #tags =>  $_->{'tags_array'},
+                tags =>  $_->{'tags_array'},
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},

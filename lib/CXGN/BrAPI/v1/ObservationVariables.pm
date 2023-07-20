@@ -221,9 +221,6 @@ sub search {
 			}
 		);
 
-		# Don't convert since POST /variables writes correct scale types (not sure if this breaks Breedbase UI stuff?)
-		# my $trait_format = $trait->format;
-
 		# Convert our breedbase data types to BrAPI data types.
 		my $trait_format = $self->convert_datatype_to_brapi($trait->format, scalar(@brapi_categories));
 
