@@ -196,12 +196,14 @@ sub trial_details_GET   {
 
     my $trial = $c->stash->{trial};
     my $planting_date = $trial->get_planting_date();
+    my $transplanting_date = $trial->get_transplanting_date();
     my $harvest_date = $trial->get_harvest_date();
     my $get_location_noaa_station_id = $trial->get_location_noaa_station_id();
 
     $c->stash->{rest} = {
         details => {
             planting_date => $planting_date,
+            transplanting_date => $transplanting_date,
             harvest_date => $harvest_date,
             location_noaa_station_id => $get_location_noaa_station_id
         }
@@ -270,6 +272,10 @@ sub trial_details_POST  {
       if ($details->{planting_date}) {
         if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
         else { $trial->set_planting_date($details->{planting_date}); }
+      }
+       if ($details->{transplanting_date}) {
+        if ($details->{transplanting_date} eq 'remove') { $trial->remove_transplanting_date($trial->get_transplanting_date()); }
+        else { $trial->set_transplanting_date($details->{transplanting_date}); }
       }
       if ($details->{harvest_date}) {
         if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
