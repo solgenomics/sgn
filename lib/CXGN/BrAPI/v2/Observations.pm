@@ -262,6 +262,7 @@ sub observations_store {
     if (!$validated_request || $validated_request->{'error'}) {
         my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
         print STDERR $parse_error;
+        push @$status, {'400' => 'Invalid request.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($validated_request->{'success'}) {
         push @$status, {'info' => $validated_request->{'success'} };
@@ -276,6 +277,7 @@ sub observations_store {
     if (!$parsed_request || $parsed_request->{'error'}) {
         my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
         print STDERR $parse_error;
+        push @$status, {'400' => 'Invalid request.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($parsed_request->{'success'}) {
         push @$status, {'info' => $parsed_request->{'success'} };
@@ -301,6 +303,7 @@ sub observations_store {
     my $archive_error_message = $response->{error_message};
     my $archive_success_message = $response->{success_message};
     if ($archive_error_message){
+        push @$status, {'500' => 'Internal error.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message, 500);
     }
     if ($archive_success_message){
@@ -343,6 +346,7 @@ sub observations_store {
 
     if ($verified_error) {
         print STDERR "Error: $verified_error\n";
+        push @$status, {'500' => 'Internal error.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
     }
     if ($verified_warning) {
@@ -353,6 +357,7 @@ sub observations_store {
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
+        push @$status, {'500' => 'Internal error.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request could not be processed correctly.", 500);
     }
     if ($stored_observation_success) {

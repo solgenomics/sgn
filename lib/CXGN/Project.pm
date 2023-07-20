@@ -3836,7 +3836,7 @@ sub create_tissue_samples {
         if ($rs_previous_tissue->count > 0) {
             $previous_tissue_number = $rs_previous_tissue->first->value;
         }
-        my $new_tissue_number = $previous_tissue_number + scalar(@$tissue_names);
+        my $new_tissue_number = $previous_tissue_number + ($use_tissue_numbers ? scalar(@$tissue_names) : 0);
 
         my $treatments;
         my %treatment_experiments;

@@ -56,7 +56,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/pca/analysis', 'pca home page');
     sleep(5);
 
-    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -75,7 +75,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca pg')->click();
     sleep(3);
 
-   $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
+   $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -90,7 +90,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-   $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
+   $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -106,7 +106,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="'. $plots_list_name . '"]', 'xpath', 'plots list')->click();
+    $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="'. $plots_list_name . '"]', 'xpath', 'plots list')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -122,7 +122,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select clones list')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -138,7 +138,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-   $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
+   $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
@@ -156,7 +156,7 @@ $d->while_logged_in_as("submitter", sub {
 
     `rm -r $cache_dir`;
 
-    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'accessions dataset')->click();
+    $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'accessions dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
@@ -172,7 +172,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $plots_dt_name . '"]', 'xpath', 'plots dataset')->click();
+    $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $plots_dt_name . '"]', 'xpath', 'plots dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
@@ -189,7 +189,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 
-    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
+    $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
@@ -205,7 +205,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
+    $d->find_element_ok('//select[@id="pca_pops_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(20);
@@ -349,7 +349,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(10);
-    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(3);
@@ -498,7 +498,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(20);
-    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click sel pop')->click();
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click sel pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(4);

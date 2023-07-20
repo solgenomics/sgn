@@ -349,10 +349,13 @@ $(document).ready(function() {
 <form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download Pedigree </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Pedigrees </h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
+    </th>
+    <th>
+      Query
     </th>
     <th>
       Format
@@ -369,13 +372,29 @@ $(document).ready(function() {
       </div>
     </td>
     <td>
- <div class="radio">
-  <label><input type="radio" id="ped_format" name="ped_format" value="parents_only" checked>Direct parents only</label>
- </div>
- <div class="radio">
-   <label><input type="radio" id="ped_format" name="ped_format" value="full">Full pedigrees</label>
- </div>
-     </td>
+      <div style="width: 175px">
+        <p><strong>Depth:</strong></p>
+        <div class="radio">
+          <label><input type="radio" id="ped_format_parents" name="ped_format" value="parents_only" checked>Only One Generation</label>
+        </div>
+        <div class="radio">
+          <label><input type="radio" id="ped_format_full" name="ped_format" value="full">All Generations</label>
+        </div>
+        <p><strong>Include:</strong></p>
+        <div class="radio">
+          <label><input type="radio" id="include_ancestors" name="ped_include" value="ancestors" checked>Only Ancestors</label>
+        </div>
+        <div class="radio">
+          <label><input type="radio" id="include_ancestors_descendants" name="ped_include" value="ancestors_descendants">Ancestors and Descendants</label>
+        </div>
+      </div>
+    </td>
+    <td>
+      <select class="form-control" id="pedigree_file_format" name="file_format">
+        <option value=".txt">Plain Text</option>
+        <option value=".helium">Helium Format</option>
+      </select>
+    </td>
     <td>
       <button class="btn btn-primary" type="button" id="pedigree">Download</button>
       <input type="hidden" id="pedigree_download_token" name="pedigree_download_token"/>
@@ -414,7 +433,24 @@ $(document).ready(function() {
                     //var token = new Date().getTime(); //use the current timestamp as the token name and value
                     //manage_dl_with_cookie(token, ladda);
                     //jQuery('#pedigree_download_token').val(token);
-                    jQuery('#download_pedigree').submit();
+                    jQuery('#working_modal').modal('show');
+                    var http = new XMLHttpRequest();
+                    http.open('POST', '/breeders/download_pedigree_action', true);
+                    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                    http.onreadystatechange = () => {
+                      if( http.readyState == 4 ) {
+                        jQuery('#working_modal').modal('hide');
+                        if ( http.status == 200) {
+                          var blob = new Blob([http.response], { type : 'plain/text' });
+                          var fileName = http.getResponseHeader("FileName");
+                          var link = document.createElement('a');
+                          link.href = window.URL.createObjectURL(blob);
+                          link.download = fileName;
+                          link.click();
+                        }
+                      }
+                    }
+                    http.send(jQuery("#download_pedigree").serialize());
                  }
              });
         } });
