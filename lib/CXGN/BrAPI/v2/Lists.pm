@@ -47,10 +47,10 @@ sub search {
 
 	if($brapi_require_login) {
 		if ($user_id) {
-			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(), $user_id, $types_arrayref->[0]);
+			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(), $user_id, $list_type);
 		}
 		else {
-			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(), $types_arrayref->[0]);
+			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(), $list_type);
 		}
 	} else {
 		$lists = CXGN::List::all_lists($self->bcs_schema()->storage->dbh(),$user_id,$list_type);
