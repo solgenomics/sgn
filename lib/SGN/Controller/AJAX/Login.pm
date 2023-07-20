@@ -23,17 +23,19 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
     my $dbh = $c->dbic_schema("CXGN::People::Schema")->storage->dbh;
     my $login = CXGN::Login->new($dbh);
-    
+
     if (my ($person_id, $user_type) = $login->has_session()) {
         my $user_id = CXGN::People::Person->new($dbh,$person_id);
         my $login_info = $login->get_login_info();
         my $user = $c->user();
+        my $domain = $c->config->{main_production_site_url};
         $c->stash->{rest} = $login -> get_login_info;
         $c->stash->{rest} = {
             first_name => $user->get_object->get_first_name(),
             last_name => $user->get_object->get_last_name(),
     	    username => $user->get_object->get_username(),
             user_id => $person_id,
+            domain => $domain,
     	};
     	return;
     };
