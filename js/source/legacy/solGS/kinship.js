@@ -366,8 +366,8 @@ jQuery(document).ready(function () {
             jQuery(jobSubmit).appendTo("body");
 
             jQuery("#kinship_submit").dialog({
-              height: 200,
-              width: 400,
+              height: "auto",
+              width: "auto",
               modal: true,
               title: "Kinship job submission",
               buttons: {
