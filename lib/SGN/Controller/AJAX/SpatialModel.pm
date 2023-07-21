@@ -21,6 +21,8 @@ use CXGN::Blast::SeqQuery;
 use SGN::Model::Cvterm;
 use Cwd qw(cwd);
 use namespace::autoclean;
+use Storable qw(retrieve);
+use Storable qw(store);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -122,15 +124,27 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my @fields = split /\t/, $header;
 
     my @file_traits = @fields[ 39 .. @fields-1 ];
+    my @file_traits_original = @fields[ 39 .. @fields-1 ];
     my @other_headers = @fields[ 0 .. 38 ];
 
 
 
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
-    foreach my $t (@file_traits) {
+    foreach my $t (@file_traits) { 
 	$t = make_R_trait_name($t);
     }
+    #later i will replace the R trait name with the original trait name so save both so that it can remember the original trait name
+    my %trait_hash;
+    for (my $i=0; $i<@file_traits; $i++) {
+            $trait_hash{$file_traits[$i]} = $file_traits_original[$i];
+    }
+
+    # print STDERR "TRAIT HASH: ".Dumper(\%trait_hash);
+    #save the trait hash to a perl storable file to be retrieved later
+    my $trait_hash_file = $pheno_filepath.".clean.trait_hash";
+    store \%trait_hash, $trait_hash_file; #syntax error here because store is not defined, need to use Storable qw(retrieve);
+    
 
     my $si_traits = join(",", @file_traits);
 
@@ -190,6 +204,21 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 	foreach my $f (@fields) { $f =~ s/\"//g; }
 	push @data, \@fields;
     }
+    #change the trait name back to the original trait name, i dont need to open the trait hash file again because i already have the hash
+    my @data_original;
+    foreach my $r (@data) {
+        my @data_original_row;
+        foreach my $r2 (@$r) {
+            if (exists($trait_hash{$r2})) {
+                push @data_original_row, $trait_hash{$r2};
+            } else {
+                push @data_original_row, $r2;
+            }
+        }
+        push @data_original, \@data_original_row;
+    }
+    @data = @data_original;
+    
 
     print STDERR "FORMATTED DATA: ".Dumper(\@data);
 
@@ -308,7 +337,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 }
 sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     #my ($c) = @_; # $c is the catalyst object
-     my ($self, $c) = @_;
+    my ($self, $c) = @_;
     my $dataTableData = $c->req->param("dataTableData");
     print STDERR "DATA TABLE DATA: $dataTableData\n";
     # Convert the DataTable data back into an array
@@ -374,11 +403,30 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 	foreach my $f (@fields) { $f =~ s/\"//g; }
 	push @result, \@fields;
     }
+    #change the trait name back to the original trait name
+    my $trait_hash_file = $phenotype_file.".trait_hash";
+    my $trait_hash = retrieve($trait_hash_file);
+
+    my @result_original;
+    foreach my $r (@result) {
+        my @result_original_row;
+        foreach my $r2 (@$r) {
+            if (exists($trait_hash->{$r2})) {
+                push @result_original_row, $trait_hash->{$r2};
+            } else {
+                push @result_original_row, $r2;
+            }
+        }
+        push @result_original, \@result_original_row;
+    }
+    @result = @result_original;
+    #get the accession names
     my @accessions;
     print STDERR "FORMATTED DATA: ".Dumper(\@result);
     foreach my $r (@result) {
         push @accessions, $r->[2];
     }
+    
     
     my $basename = basename($phenotype_file.".clean.blues");
 

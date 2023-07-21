@@ -149,6 +149,8 @@ for (i in 1:length(userResponse)) {
     write(paste("missing:", missing), stderr())
     # replace (Intercept) with the missing userID
     blue_tab$Effect[blue_tab$Effect == "(Intercept)"] <- missing
+    # print number of rows in blue_tab
+    write(paste("nrow(blue_tab):", nrow(blue_tab)), stderr())
     output <- rbind(output, blue_tab)
 }
 
@@ -163,5 +165,6 @@ write.table(AIC_output, outfile_AIC)
 print(colnames(output))
 colnames(output) <- c("Trait", "Name", "Estimate", "Std.Error")
 BLUE <- as.data.frame(output)
+
 outfile_blue <- paste(phenotypeFile, ".blues", sep = "")
 write.table(BLUE, outfile_blue)

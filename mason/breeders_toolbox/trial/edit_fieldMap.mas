@@ -408,7 +408,7 @@ jQuery("#correct_spatial").click(function() {
       //var input_file = response.input_file;
       var fitted_data = JSON.stringify(response.result);
       var accessionNamesArray = response.accession_names;
-      alert(JSON.stringify(accessionNamesArray));
+      //alert(JSON.stringify(accessionNamesArray));
       var model_properties = JSON.stringify({ "properties": { "traits": ["ID", "Trait", "Name", "Fitted Values"] } });
 
       jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
