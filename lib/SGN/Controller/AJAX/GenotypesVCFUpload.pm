@@ -309,7 +309,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $parser_plugin = 'SSRExcel';
     }
 
-    if ($upload_ksap_genotypes) {
+    if ($upload_kasp_genotypes) {
         $upload_original_name = $upload_kasp_genotypes->filename();
         $upload_tempfile = $upload_kasp_genotypes->tempname;
         $subdirectory = "genotype_kasp_upload";
@@ -540,7 +540,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $return = $store_genotypes->store_genotypeprop_table();
     }
     #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
-    elsif ($parser_plugin eq 'IntertekCSV') {
+    elsif (($parser_plugin eq 'IntertekCSV') || ($parser_plugin eq 'KASP')) {
         if (defined $protocol_id) {
             $parser->{nd_protocol_id} = $protocol_id;
         }

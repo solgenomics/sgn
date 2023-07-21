@@ -955,7 +955,7 @@ jQuery(document).ready(function(){
             jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').show();
-        } else if (data_type == 'kasp') {
+        } else if (data_type == 'KASP') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
             jQuery('#upload_genotype_data_format_kasp').show();

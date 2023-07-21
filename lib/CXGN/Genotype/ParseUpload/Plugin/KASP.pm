@@ -41,7 +41,7 @@ sub _validate_with_plugin {
     my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
     my $MI_F;
 
-    my %marker_names
+    my %marker_names;
     open($MI_F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
         my $marker_info_header_row = <$MI_F>;
@@ -75,10 +75,10 @@ sub _validate_with_plugin {
         if ($customer_snp_id_header ne 'CustomerSNPID'){
             push @error_messages, 'Column 2 header must be "CustomerSNPID" in the marker Info File.';
         }
-        if ($ref_header ne 'Xallele'){
+        if ($Xallele_header ne 'Xallele'){
             push @error_messages, 'Column 3 header must be "Xallele" in the marker Info File.';
         }
-        if ($alt_header ne 'Yallele'){
+        if ($Yallele_header ne 'Yallele'){
             push @error_messages, 'Column 4 header must be "Yallele" in the marker Info File.';
         }
         if ($chrom_header ne 'Chromosome'){
@@ -163,13 +163,13 @@ sub _validate_with_plugin {
         $snp_id_header =~ s/^\s+|\s+$//g;
 
         my $snpcall_header = $header_info[2];
-        $SNPCall_header =~ s/^\s+|\s+$//g;
+        $snpcall_header =~ s/^\s+|\s+$//g;
 
-        my $Xvalue_header = $header_info[2];
-        $SNPCall_header =~ s/^\s+|\s+$//g;
+        my $Xvalue_header = $header_info[3];
+        $Xvalue_header =~ s/^\s+|\s+$//g;
 
-        my $Yvalue_header = $header_info[2];
-        $SNPCall_header =~ s/^\s+|\s+$//g;
+        my $Yvalue_header = $header_info[4];
+        $Yvalue_header =~ s/^\s+|\s+$//g;
 
         if ($sample_id_header ne 'SampleID'){
             push @error_messages, 'Column 1 header must be "SampleID" in the KASP result File.';
@@ -402,8 +402,10 @@ sub _parse_with_plugin {
         my $sample_result = $kasp_result{$marker_name};
         %sample_kasp_result = %{$sample_result};
         foreach my $sample (keys %sample_kasp_result) {
-            my $snp_call = $sample->{call};
-            my $XV = $sample->{XV};
+            my $sample_data = $sample_kasp_result{$sample};
+            my $snp_call = $sample_data->{call};
+            my $XV = $sample_data->{XV};
+            my $YV = $sample_data->{YV};
             my @snp_alleles = split ":", $snp_call;
 
             my $genotype_obj;
@@ -444,11 +446,15 @@ sub _parse_with_plugin {
             } else {
                 die "There should always be a ref and alt according to validation above\n";
             }
-
+            $genotype_info{$sample}->{$chrom}->{$marker_name} = $genotype_obj;
         }
 
-        $genotype_info{$sample}->{$chrom}->{$marker_name} = $genotype_obj;
     }
+
+    print STDERR "KASP PLUGIN PROTOCOLPROP INFO =".Dumper(\%protocolprop_info)."\n";
+    print STDERR "KASP PLUGIN GENOTYPE INFO =".Dumper(\%genotype_info)."\n";
+    print STDERR "KASP PLUGIN OBSERVATION UNIT NAME =".Dumper(\@observation_unit_names)."\n";
+    print STDERR "KASP PLUGIN MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
 
     if (scalar(@error_messages)>0) {
         $errors{'error_messages'} = \@error_messages;
