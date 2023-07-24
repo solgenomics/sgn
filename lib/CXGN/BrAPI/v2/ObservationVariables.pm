@@ -125,11 +125,7 @@ sub search {
 
     # External reference id and reference source search
     if (scalar(@dbxref_ids) > 0 || scalar(@dbxref_terms)>0) {
-        my $cv_id = $self->trait_ontology_cv_id;
-
         my @sub_and_wheres;
-        push @sub_and_wheres, "cvterm.cv_id = $cv_id";
-        push @sub_and_wheres, "reltype.name='VARIABLE_OF'";
         my @dbxrefid_where;
         if (scalar(@dbxref_ids)>0){
             foreach (@dbxref_ids) {
@@ -223,9 +219,6 @@ sub detail {
 
     my $join = '';
     my $and_where;
-
-    # only get cvterms for the cv for the configured trait ontology
-    $and_where = "cvterm.cv_id=".$self->trait_ontology_cv_id;
 
     if ($trait_id){
         $and_where = $and_where." AND cvterm.cvterm_id IN ($trait_id)";
