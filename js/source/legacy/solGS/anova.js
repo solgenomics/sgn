@@ -108,7 +108,7 @@ solGS.anova = {
     var menuId = this.anovaTraitsSelectMenuId;
     var optionsLabel = "Select a trait";
     var menuClass = "form-control";
-    var menu = new OptionsMenu(menuId, menuClass, optionsLabel);
+    var menu = new SelectMenu(menuId, menuClass, optionsLabel);
     traits = traits.flat();
     var menuElem = menu.addOptions(traits);
 

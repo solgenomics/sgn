@@ -3858,6 +3858,7 @@ sub observations_POST {
 		observations => \@all_observations,
         user_id => $user_id,
         user_type => $user_type,
+        overwrite => 0,
     },$c);
 
 	my $status = $brapi_package_result->{status};
@@ -3916,6 +3917,7 @@ sub observations_detail_PUT {
 		observations => \@all_observations,
         user_id => $user_id,
         user_type => $user_type,
+        overwrite => 1,
     },$c);
 
 

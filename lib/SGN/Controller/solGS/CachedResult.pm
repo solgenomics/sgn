@@ -346,7 +346,7 @@ sub _check_combined_trials_model_selection_output {
 sub _check_kinship_output {
     my ( $self, $c, $kinship_pop_id, $protocol_id, $trait_id ) = @_;
 
-    $c->stash->{rest}{cached} =
+    $c->stash->{rest} =
       $self->check_kinship_output( $c, $kinship_pop_id, $protocol_id,
         $trait_id );
 }
@@ -360,7 +360,7 @@ sub _check_pca_output {
 sub _check_cluster_output {
     my ( $self, $c, $file_id ) = @_;
     my $cached = $self->check_cluster_output( $c, $file_id );
-    $c->stash->{rest}{cached} = $self->check_cluster_output( $c, $file_id );
+    $c->stash->{rest} = $self->check_cluster_output( $c, $file_id );
 }
 
 sub check_single_trial_training_data {
@@ -474,6 +474,9 @@ sub check_selection_pop_output {
 
     # $c->stash->{genotyping_protocol_id} = $protocol_id;
     # $c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
+    $c->stash->{trait_id}         = $trait_id;
+    $c->stash->{training_pop_id}  = $tr_pop_id;
+    $c->stash->{selection_pop_id} = $sel_pop_id;
 
     $c->controller('solGS::Files')
       ->rrblup_selection_gebvs_file( $c, $tr_pop_id, $sel_pop_id, $trait_id );
@@ -549,10 +552,14 @@ sub check_kinship_output {
     my $files = $c->controller('solGS::Kinship')
       ->get_kinship_coef_files( $c, $pop_id, $protocol_id, $trait_id );
 
-    my $cached =
-      -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'} ? 1 : 0;
-
-    return $cached;
+    if ( -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'} ) {
+        my $res =
+          $c->controller('solGS::Kinship')->structure_kinship_response($c);
+        return $res;
+    }
+    else {
+        return { cached => 0 };
+    }
 
 }
 
@@ -593,10 +600,11 @@ sub check_cluster_output {
             $cached_file = $c->stash->{"${cluster_type}_result_newick_file"};
         }
         if ( -s $cached_file ) {
-            return 1;
+            my $res = $c->controller('solGS::Cluster')->prepare_response($c);
+            return $res;
         }
         else {
-            return 0;
+            return { cached => 0 };
         }
     }
 

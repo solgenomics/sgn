@@ -56,7 +56,7 @@ $training_pop_name
 
 
     <div class="row">
-      <div class="form-group col-sm-3" id="corr_select_a_pop_div" style="margin-right:35px"></div>
+      <div class="form-group col-sm-3" id="corr_pops_select_div" style="margin-right:35px"></div>
       <input class="button" type="submit" value="Run correlation" id="run_genetic_correlation" />
     </div>
     <div id="corr_canvas">

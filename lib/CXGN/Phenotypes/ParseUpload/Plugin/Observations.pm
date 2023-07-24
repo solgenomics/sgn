@@ -223,14 +223,6 @@ sub parse {
         return \%parse_result;
     }
 
-    foreach my $value (@values) {
-        if ($value eq '.' || ($value =~ m/[^a-zA-Z0-9,.\-\/\_:;\s]/ && $value ne '.')) {
-            $parse_result{'error'} = "Value $value is not valid. Trait values must be alphanumeric.";
-            print STDERR "Invalid value: $value\n";
-            return \%parse_result;
-        }
-    }
-
     foreach my $timestamp (@timestamps) {
         if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
             $parse_result{'error'} = "Timestamp $timestamp is not of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";

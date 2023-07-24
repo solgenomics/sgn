@@ -5,261 +5,240 @@
  *
  */
 
-jQuery(document).ready(function () {
-  checkSelectionPopulations();
-});
+var solGS = solGS || function solGS() {};
 
-function checkSelectionPopulations() {
-  var popId = getPopulationId();
+solGS.selectionPopulation = {
+  msgDiv: "#selection_pops_message",
+  resultSelDiv: "#selection_pops_result",
+  selPopsDiv: "#selection_pops_div",
+  searchBtn: "#search_selection_pop",
+  searchBox: "#population_search_entry",
+  selPopsTable: "#selection_pops_table",
+  searchAllSelPops: "#search_all_selection_pops",
+  searchFormFeedBack: "#form-feedback-search-trials",
 
-  var trainingTraitsIds = solGS.getTrainingTraitsIds();
-  var protocolId = jQuery("#genotyping_protocol_id").val();
-  var selPopProtocolId = jQuery("#genotyping_protocol #selection_pop_genotyping_protocol_id").val();
-  
-  console.log("checkselpops protocol id " + selPopProtocolId);
-  if (!selPopProtocolId) {
-    var sessionData = solGS.genotypingProtocol.getSessionGenoProtocol();
-    if (sessionData) {
-      selPopProtocolId = sessionData.protocol_id;
-    } else {
-      selPopProtocolId = protocolId;
+  checkSelectionPopulations: function () {
+    var args = solGS.getModelArgs();
+    args = JSON.stringify(args);
+
+    var checkPop = jQuery.ajax({
+      type: "POST",
+      data: { arguments: args },
+      dataType: "json",
+      url: "/solgs/check/selection/populations/",
+    });
+
+    return checkPop;
+  },
+
+  checkSelectionPopulationRelevance: function (popName) {
+    var modelVars = solGS.getModelArgs();
+    modelVars["selection_pop_name"] = popName;
+
+    var popData = JSON.stringify(modelVars);
+    var checkRelevance = jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: { arguments: popData },
+      url: "/solgs/check/selection/population/relevance/",
+    });
+
+    return checkRelevance;
+  },
+
+  searchSelectionPopulations: function () {
+    var args = solGS.getModelArgs();
+    var popId = args.training_pop_id;
+
+    args = JSON.stringify(args);
+    var searchPops = jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: { arguments: args },
+      url: "/solgs/search/selection/populations/" + popId,
+    });
+
+    return searchPops;
+  },
+
+  getPredictedTrialTypeSelectionPops: function () {
+    var selPopsTable = jQuery(this.selPopsTable).html();
+    var selPopsRows;
+    if (selPopsTable !== null) {
+      selPopsRows = jQuery(this.selPopsTable).find("tbody > tr");
+
     }
-  }
 
-  var args = {
-    training_traits_ids: trainingTraitsIds,
-    genotyping_protocol_id: protocolId,
-    selection_pop_genotyping_protocol_id: selPopProtocolId,
-    training_pop_id: popId,
-  };
+    var popsList = [];
 
-  args = JSON.stringify(args);
+    for (var i = 0; i < selPopsRows.length; i++) {
+      var row = selPopsRows[i];
+      var popRow = row.innerHTML;
+      var predict = popRow.match(/predict/gi);
+      if (!predict) {
+        var selPopsInput = row.getElementsByTagName("input")[0];
+        var selPopData = selPopsInput.value;
 
-  jQuery.ajax({
-    type: "POST",
-    data: { arguments: args },
-    dataType: "json",
-    url: "/solgs/check/selection/populations/" + popId,
-    success: function (response) {
-      if (response.data) {
-        jQuery("#selection_populations").show();
-        jQuery("#search_all_selection_pops").show();
-
-        displaySelectionPopulations(response.data);
-      } else {
-        jQuery("#search_all_selection_pops").show();
+        popsList.push(JSON.parse(selPopData));
       }
-    },
-  });
-}
+    }
+
+    return popsList;
+  },
+
+  feedbackOnFail: function (msg) {
+    jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
+  },
+
+  displaySelectionPopulations: function (data) {
+    var tableRow = jQuery(`${this.selPopsTable} tr`).length;
+
+    if (tableRow === 1) {
+      jQuery(this.selPopsTable).dataTable({
+        searching: false,
+        ordering: false,
+        processing: true,
+        paging: false,
+        info: false,
+        data: data,
+      });
+    } else {
+      jQuery(this.selPopsTable).dataTable().fnAddData(data);
+    }
+  },
+};
 
 jQuery(document).ready(function () {
-  jQuery("#population_search_entry").keyup(function (e) {
-    jQuery("#population_search_entry").css("border", "solid #96d3ec");
+  var resultSelDiv = solGS.selectionPopulation.resultSelDiv;
+  var msgDiv = solGS.selectionPopulation.msgDiv;
+  var searchAllSelPops = solGS.selectionPopulation.searchAllSelPops;
+  var searchBox = solGS.selectionPopulation.searchBox;
+  var selPopsTable = solGS.selectionPopulation.selPopsTable;
+  var selPopsDiv = solGS.selectionPopulation.selPopsDiv;
+  var searchBtn = solGS.selectionPopulation.searchBtn;
+  var searchFormFeedBack = solGS.selectionPopulation.searchFormFeedBack;
 
-    jQuery("#form-feedback-search-trials").empty();
+  // jQuery(searchBtn).hide();
+
+  solGS.selectionPopulation
+    .checkSelectionPopulations()
+    .done(function (res) {
+      if (res.data) {
+        jQuery(resultSelDiv).show();
+
+        solGS.selectionPopulation.displaySelectionPopulations(res.data);
+      } else {
+        var msg = "No result found.";
+        solGS.selectionPopulation.feedbackOnFail(msg);
+      }
+
+      // jQuery(searchBtn).show();
+    })
+    .fail(function () {
+      var msg = "Errro occured querying for selection populations";
+      solGS.selectionPopulation.feedbackOnFail(msg);
+      // jQuery(searchBtn).show();
+    });
+
+  jQuery(searchAllSelPops).click(function () {
+    var msg =
+      "<br/><br/>Searching for all selection populations relevant to this model...please wait...";
+    jQuery(msgDiv).html(msg).show();
+
+    solGS.selectionPopulation
+      .searchSelectionPopulations()
+      .done(function (res) {
+        if (res.data) {
+          jQuery(resultSelDiv).show();
+          solGS.selectionPopulation.displaySelectionPopulations(res.data);
+          jQuery(searchAllSelPops).hide();
+          jQuery(this.msgDiv).hide();
+        } else {
+          var msg =
+            "<p>There are no relevant selection populations in the database." +
+            "If you have or want to make your own set of selection candidates" +
+            "use the form below.</p>";
+
+          jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
+        }
+      })
+      .fail(function () {
+        var msg = "Error occured searching for the selection populations.";
+        jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
+      });
+  });
+
+  jQuery(searchBox).keyup(function (e) {
+    jQuery(searchBox).css("border", "solid #96d3ec");
+
+    jQuery(searchFormFeedBack).empty();
 
     if (e.keycode == 13) {
-      jQuery("#search_selection_pop").click();
+      jQuery(searchBtn).click();
     }
   });
 
-  jQuery("#search_selection_pop").on("click", function () {
-    jQuery("#selection_pops_message").hide();
+  jQuery(searchBtn).on("click", function () {
+    jQuery(searchBtn).hide();
 
-    var entry = jQuery("#population_search_entry").val();
+    var popName = jQuery(searchBox).val();
+    if (popName) {
+      var selPopExists = jQuery(`${selPopsTable}:contains(${popName})`).length;
 
-    if (entry) {
-      checkSelectionPopulationRelevance(entry);
-    } else {
-      jQuery("#population_search_entry").css("border", "solid #FF0000");
+      if (selPopExists) {
+        jQuery(searchBtn).show();
+        var msg = `${popName} is already in the search result table`;
+        solGS.selectionPopulation.feedbackOnFail(msg);
+      } else {
+        jQuery(msgDiv)
+          .html(`Checking if the model can be used on ${popName} ...please wait...`)
+          .show();
+        jQuery(`${selPopsDiv} .multi-spinner-container`).show();
 
-      jQuery("#form-feedback-search-trials").text("Please enter trial name.");
-    }
-  });
-});
+        solGS.selectionPopulation
+          .checkSelectionPopulationRelevance(popName)
+          .done(function (res) {
+            if (res.selection_pop_id) {
+              if (res.selection_pop_id != res.training_pop_id) {
+                if (res.similarity >= 0.5) {
+                  jQuery(msgDiv).hide();
+                  jQuery(resultSelDiv).show();
 
-function checkSelectionPopulationRelevance(popName) {
-  var trainingPopId = getPopulationId();
+                  var selPopExists = jQuery(`${selPopsTable}:contains(${popName})`).length;
+                  if (!selPopExists) {
+                    solGS.selectionPopulation.displaySelectionPopulations(res.selection_pop_data);
+                  }
+                } else {
+                  var msg = `${popName} is genotyped by a marker set different  
+                  from the one used for the training population. Therefore you can not predict its GEBVs using this model.`;
 
-  var combinedPopsId = jQuery("#combo_pops_id").val();
-  var dataSetType;
+                  solGS.selectionPopulation.feedbackOnFail(msg);
+                }
+              } else {
+                var msg = `${popName} is the same population as the the training population. Please select a different selection population.`;
 
-  var traitId = jQuery("#trait_id").val();
-  var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
-  var protocolId = protocols.genotyping_protocol_id;
-  var selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
-
-  if (!selPopProtocolId) {
-    selPopProtocolId = protocolId;
-  }
-
-  if (combinedPopsId) {
-    dataSetType = "combined populations";
-  }
-
-  jQuery("#selection_pops_message")
-    .html("Checking if the model can be used on " + popName + "...please wait...")
-    .show();
-
-  var popData = {
-    selection_pop_name: popName,
-    training_pop_id: trainingPopId,
-    trait_id: traitId,
-    data_set_type: dataSetType,
-    genotyping_protocol_id: protocolId,
-    selection_pop_genotyping_protocol_id: selPopProtocolId,
-  };
-
-  popData = JSON.stringify(popData);
-  jQuery.ajax({
-    type: "POST",
-    dataType: "json",
-    data: {'arguments': popData},
-    url: "/solgs/check/selection/population/relevance/",
-    success: function (response) {
-      var selectionPopId = response.selection_pop_id;
-      if (selectionPopId) {
-        console.log("tr pop id " + trainingPopId);
-        console.log("se pop id " + selectionPopId);
-
-        if (selectionPopId != trainingPopId) {
-          if (response.similarity >= 0.5) {
-            jQuery("#selection_pops_message ").hide();
-            jQuery("#selection_populations").show();
-
-            var selPopExists = jQuery("#selection_pops_list:contains(" + popName + ")").length;
-            if (!selPopExists) {
-              displaySelectionPopulations(response.selection_pop_data);
+                solGS.selectionPopulation.feedbackOnFail(msg);
+              }
+            } else {
+              var msg = `${popName} does not exist in the database.`;
+              solGS.selectionPopulation.feedbackOnFail(msg);
             }
-          } else {
-            jQuery("#selection_pops_message")
-              .html(
-                popName +
-                  " is genotyped by a marker set different  " +
-                  "from the one used for the training population. " +
-                  "Therefore you can not predict its GEBVs using this model."
-              )
-              .show();
-          }
-        } else {
-          jQuery("#selection_pops_message")
-            .html(
-              popName +
-                " is the same population as the " +
-                "the training population. " +
-                "Please select a different selection population."
-            )
-            .show()
-            .fadeOut(5000);
-        }
-      } else {
-        jQuery("#selection_pops_message")
-          .html(popName + " does not exist in the database.")
-          .show()
-          .fadeOut(5000);
+
+            jQuery(searchBtn).show();
+            jQuery(`${selPopsDiv} .multi-spinner-container`).hide();
+          })
+          .fail(function () {
+            var msg = "Error occured processing the query.";
+            solGS.selectionPopulation.feedbackOnFail(msg);
+            jQuery(searchBtn).show();
+            jQuery(`${selPopsDiv} .multi-spinner-container`).hide();
+          });
       }
-    },
-    error: function (response) {
-      jQuery("#selection_pops_message")
-        .html("Error occured processing the query.")
-        .show()
-        .fadeOut(5000);
-    },
-  });
-}
+    } else {
+      jQuery(searchBox).css("border", "solid #FF0000");
 
-function searchSelectionPopulations() {
-  var popId = getPopulationId();
-
-  var combinedPopsId = jQuery("#combo_pops_id").val();
-  var dataSetType;
-
-  if (combinedPopsId) {
-    dataSetType = "combined populations";
-  }
-  var protocolId = jQuery("#genotyping_protocol_id").val();
-  var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
-
-  if (!selPopProtocolId) {
-    selPopProtocolId = protocolId;
-  }
-
-  var args = {
-    data_set_type: dataSetType,
-    genotyping_protocol_id: protocolId,
-    selection_pop_genotyping_protocol_id: selPopProtocolId,
-    training_pop_id: popId,
-  };
-
-  jQuery.ajax({
-    type: "POST",
-    dataType: "json",
-    data: args,
-    url: "/solgs/search/selection/populations/" + popId,
-    success: function (res) {
-      if (res.data) {
-        jQuery("#selection_populations").show();
-        displaySelectionPopulations(res.data);
-        jQuery("#search_all_selection_pops").hide();
-        jQuery("#selection_pops_message").hide();
-      } else {
-        var msg =
-          "<p>There are no relevant selection populations in the database." +
-          "If you have or want to make your own set of selection candidates" +
-          "use the form below.</p>";
-
-        jQuery("#selection_pops_message").html(msg).show().fadeOut(5000);
-      }
-    },
-  });
-}
-
-function displaySelectionPopulations(data) {
-  var tableRow = jQuery("#selection_pops_list tr").length;
-
-  if (tableRow === 1) {
-    jQuery("#selection_pops_list").dataTable({
-      searching: false,
-      ordering: false,
-      processing: true,
-      paging: false,
-      info: false,
-      data: data,
-    });
-  } else {
-    jQuery("#selection_pops_list").dataTable().fnAddData(data);
-  }
-}
-
-jQuery(document).ready(function () {
-  jQuery("#search_all_selection_pops").click(function () {
-    searchSelectionPopulations();
-    jQuery("#selection_pops_message").html(
-      "<br/><br/>Searching for all selection populations relevant to this model...please wait..."
-    );
+      jQuery(searchFormFeedBack).text("Please enter trial name.");
+      jQuery(searchBtn).show();
+    }
   });
 });
-
-function getPopulationId() {
-  var populationId = jQuery("#population_id").val();
-
-    jQuery('#population_search_entry').keyup(function(e){
-
-	jQuery("#population_search_entry")
-		.css('border', 'solid #96d3ec');
-
-	jQuery("#form-feedback-search-trials")
-	    .empty();
-
-	if(e.keycode == 13) {
-     	    jQuery('#search_selection_pop').click();
-    	}
-    });
-
-  if (!populationId) {
-    populationId = jQuery("#combo_pops_id").val();
-  }
-
-  return populationId;
-}

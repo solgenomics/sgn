@@ -41,6 +41,7 @@ sub run {
 
     my $pre_jobs = $self->run_prerequisite_jobs;
     my $dep_jobs = $self->run_dependent_jobs($pre_jobs);
+    sleep(60 * 4);
     $self->send_analysis_report($dep_jobs);
 
 }
