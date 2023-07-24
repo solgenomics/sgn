@@ -12,6 +12,8 @@ load_people.pl -H [dbhost] -D [dbname] -i [infile]
 
 =head2 ARGUMENTS
 
+=over 5
+
 =item -H
 
 host name (required) e.g. "localhost"
@@ -28,11 +30,13 @@ path to infile (required)
 
 =head2 FLAGS
 
+=over 5
+
 =item -t
 
 Test run. Rolling back at the end.
 
-=back
+=back 
 
 =head1 DESCRIPTION
 

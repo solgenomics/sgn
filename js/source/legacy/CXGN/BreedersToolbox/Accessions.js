@@ -381,7 +381,7 @@ jQuery(document).ready(function ($) {
         },
         complete: function (r) {
 	    //alert("DONE WITH UPLOAD "+r);
-	    var clean_r = r.replace('<pre>', '');
+	    var clean_r = r.replace(/^<pre[^>]*>/, '');
 	    clean_r = clean_r.replace('</pre>', '');
 	    response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
             console.log(response);

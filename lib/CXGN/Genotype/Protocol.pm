@@ -345,7 +345,7 @@ sub list {
             marker_type => $marker_type
         };
     }
-    print STDERR "PROTOCOL LIST =".Dumper(\@results);
+#    print STDERR "PROTOCOL LIST =".Dumper(\@results);
     return \@results;
 }
 

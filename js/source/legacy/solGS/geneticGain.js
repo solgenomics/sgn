@@ -14,7 +14,7 @@ solGS.geneticGain = {
   canvas: "#gg_canvas",
   ggPlotDivPrefix: "#gg_plot",
   ggMsgDiv: "#gg_message",
-  ggPopsDiv: "#gg_select_a_pop_div",
+  ggPopsDiv: "#gg_pops_select_div",
   ggPopsSelectMenuId: "#gg_select_pops",
 
   gebvsComparison: function () {
@@ -218,7 +218,7 @@ solGS.geneticGain = {
 
     var ggPops = [];
     if (ggArgs.training_pop_id.match(/list/) == null) {
-      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+      var trialSelPopsList = solGS.selectionPopulation.getPredictedTrialTypeSelectionPops();
       if (trialSelPopsList) {
         ggPops.push(trialSelPopsList);
       }
@@ -226,14 +226,14 @@ solGS.geneticGain = {
 
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
       if (listTypeSelPops) {
         ggPops.push(listTypeSelPops);
       }
     }
 
     var menuId = this.ggPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     ggPops = ggPops.flat();
 
     var menuElem = menu.addOptions(ggPops);

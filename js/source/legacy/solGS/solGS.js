@@ -781,10 +781,12 @@ solGS.getTraitDetails = function (traitId) {
 
 solGS.getTrainingTraitsIds = function () {
   var trainingTraitsIds = jQuery("#training_traits_ids").val();
+  var trainingTraitsCode = jQuery("#training_traits_code").val();
   var traitId = jQuery("#trait_id").val();
 
   if (trainingTraitsIds) {
     trainingTraitsIds = trainingTraitsIds.split(",");
+
   } else if (traitId) {
     trainingTraitsIds = [traitId];
   }
@@ -796,6 +798,7 @@ solGS.getModelArgs = function () {
   var args = this.getTrainingPopArgs();
   var trainingTraitsIds = this.getTrainingTraitsIds();
   if (trainingTraitsIds) {
+    args["training_traits_code"] = jQuery("#training_traits_code").val();
     args["training_traits_ids"] = trainingTraitsIds;
   }
 
