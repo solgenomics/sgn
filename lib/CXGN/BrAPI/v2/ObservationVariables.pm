@@ -221,7 +221,7 @@ sub detail {
     my $and_where;
 
     if ($trait_id){
-        $and_where = $and_where." AND cvterm.cvterm_id IN ($trait_id)";
+        $and_where = $and_where." cvterm.cvterm_id IN ($trait_id)";
     }
 
     $self->get_query($c, $and_where, $join, 0);
