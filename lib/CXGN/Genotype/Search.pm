@@ -684,7 +684,9 @@ sub get_genotype_info {
         push @data, $info;
     }
 
-    #print STDERR Dumper \@data;
+    print STDERR "TOTAL COUNT =".Dumper($total_count);
+    print STDERR "SEARCH DATA =".Dumper(\@data);
+
     return ($total_count, \@data);
 }
 
@@ -2252,5 +2254,6 @@ sub get_pcr_genotype_info {
     return \%protocol_genotype_data;
 
 }
+
 
 1;
