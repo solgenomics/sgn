@@ -21,6 +21,7 @@ extends 'CXGN::BrAPI::v2::Common';
 sub search {
     my $self = shift;
     my $params = shift;
+    my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -177,13 +178,16 @@ sub search {
         }
 
         my @brapi_treatments;
-        my $treatments = $obs_unit->{treatments};
-        while (my ($factor, $modality) = each %$treatments){
-            my $modality = $modality ? $modality : undef;
-            push @brapi_treatments, {
-                factor => $factor,
-                modality => $modality,
-            };
+
+        if ($c->config->{brapi_treatments_no_management_factor}) {
+            my $treatments = $obs_unit->{treatments};
+            while (my ($factor, $modality) = each %$treatments) {
+                my $modality = $modality ? $modality : undef;
+                push @brapi_treatments, {
+                    factor   => $factor,
+                    modality => $modality,
+                };
+            }
         }
 
         my $sp_rs ='';
@@ -364,12 +368,13 @@ sub _get_plants_plot_parent {
 sub detail {
     my $self = shift;
     my $observation_unit_db_id = shift;
+    my $c = shift;
 
     my $search_params = {
         observationUnitDbIds => [ $observation_unit_db_id ],
         includeObservations  => 'true' 
     };
-    my $response = $self->search($search_params);
+    my $response = $self->search($search_params, $c);
     $response->{result} = scalar $response->{result}->{data} > 0 ? $response->{result}->{data}->[0] : {};
     return $response;
 }
@@ -586,7 +591,7 @@ sub observationunits_update {
     my @observation_unit_db_ids;
     foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
-    $self->search($search_params);
+    $self->search($search_params, $c);
 }
 
 sub _get_existing_germplasm {
@@ -857,7 +862,7 @@ sub observationunits_store {
     foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; }
     my $search_params = {observationUnitNames => \@observationUnitNames};
     $self->page_size(scalar @{$data});
-    return $self->search($search_params);
+    return $self->search($search_params, $c);
 }
 
 sub _refresh_matviews {
