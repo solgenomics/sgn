@@ -13,7 +13,6 @@ $dataset_contents => ''
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>
-
   // .slider {
   //   -webkit-appearance: none;
   //   width: 100%;
@@ -46,131 +45,137 @@ $dataset_contents => ''
   //   cursor: pointer;
   // }
 
-  .top-row {
-    # display: flex;
-    # justify-content: center;
-    margin-top: 20px;    
-  }
+    .top-row {
+        # display: flex;
+        # justify-content: center;
+        margin-top: 20px;    
+    }
 
-  input[type="range"] { 
-      margin: auto;
-      -webkit-appearance: none;
-      position: relative;
-      overflow: hidden;
-      height: 40px;
-      width: 200px;
-      cursor: pointer;
-      border-radius: 0; /* iOS */
-  }
+    input[type="range"] { 
+        margin: auto;
+        -webkit-appearance: none;
+        position: relative;
+        overflow: hidden;
+        height: 40px;
+        width: 200px;
+        cursor: pointer;
+        border-radius: 0; /* iOS */
+    }
 
-  ::-webkit-slider-runnable-track {
-    background: dodgerblue;
-  }
+    ::-webkit-slider-runnable-track {
+        background: dodgerblue;
+    }
 
 /*
  * 1. Set to 0 width and remove border for a slider without a thumb
  * 2. Shadow is negative the full width of the input and has a spread 
  *    of the width of the input.
  */
-  ::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px; /* 1 */
-      height: 40px;
-      background: #fff;
-      box-shadow: -200px 0 0 200px #339933; /* 2 */
-      border: 2px solid #999; /* 1 */
-  }
+    ::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px; /* 1 */
+        height: 40px;
+        background: #fff;
+        box-shadow: -200px 0 0 200px #00ba38; /* 2 */
+        border: 2px solid #999; /* 1 */
+    }
 
-::-moz-range-track {
-    height: 40px;
-    background: #d96e6b;
-}
+    ::-moz-range-track {
+        height: 40px;
+        background: #f7756c;
+    }
 
-::-moz-range-thumb {
-    background: #fff;
-    height: 40px;
-    width: 20px;
-    border: 3px solid #999;
-    border-radius: 0 !important;
-    box-shadow: -200px 0 0 200px #339933;
-    box-sizing: border-box;
-}
+    ::-moz-range-thumb {
+        background: #fff;
+        height: 40px;
+        width: 20px;
+        border: 3px solid #999;
+        border-radius: 0 !important;
+        box-shadow: -200px 0 0 200px #00ba38;
+        box-sizing: border-box;
+    }
 
-::-ms-fill-lower { 
-    background: dodgerblue;
-}
+    ::-ms-fill-lower { 
+        background: dodgerblue;
+    }
 
-::-ms-thumb { 
-    background: #fff;
-    border: 2px solid #999;
-    height: 40px;
-    width: 20px;
-    box-sizing: border-box;
-}
+    ::-ms-thumb { 
+        background: #fff;
+        border: 2px solid #999;
+        height: 40px;
+        width: 20px;
+        box-sizing: border-box;
+    }
 
-::-ms-ticks-after { 
-    display: none; 
-}
+    ::-ms-ticks-after { 
+        display: none; 
+    }
 
-::-ms-ticks-before { 
-    display: none; 
-}
+    ::-ms-ticks-before { 
+        display: none; 
+    }
 
-::-ms-track { 
-    background: #ddd;
-    color: transparent;
-    height: 40px;
-    border: none;
-}
+    ::-ms-track { 
+        background: #ddd;
+        color: transparent;
+        height: 40px;
+        border: none;
+    }
 
-::-ms-tooltip { 
-    display: none;
-}
+    ::-ms-tooltip { 
+        display: none;
+    }
 
-  #pagefooter {
-    min-height: 150px !important;
-  }
+    #pagefooter {
+        min-height: 150px !important;
+    }
 
-  #trait_selection {
-    font-size: 15px;
-  }
+    #trait_selection {
+        font-size: 15px;
+    }
 
-  # #trait_selections {
-  #   float: left;
-  #   max-width: 400px;
-  #   height: 100px;
-  #   font-size: 15px;
-  # }
+    # #trait_selections {
+    #   float: left;
+    #   max-width: 400px;
+    #   height: 100px;
+    #   font-size: 15px;
+    # }
 
-  # #store_outliers {
-  #   float: right;
-  #   padding: 5px;
-  # }
+    # #store_outliers {
+    #   float: right;
+    #   padding: 5px;
+    # }
 
-  #dataset_slider {
-    margin: 0 auto;
-    padding: 10px;
-    width: 200px;
-  }
+    #dataset_slider {
+        margin: 0 auto;
+        padding: 10px;
+        width: 200px;
+    }
 
-  #trait_graph {
-    width: 65%;
-  }
-  table, th, td {
-    padding: 15px;
-  }
+    #trait_graph {
+        width: 65%;
+        font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;    
+    }
 
-  .sd-line-top {
+    table, th, td {
+        padding: 15px;
+    }
+
+    .sd-line-top {
         stroke-dasharray: 5,5;
-  }
+    }
 
-  .sd-line-bottom {
+    .sd-line-bottom {
         stroke-dasharray: 5,5;
-  }
+    }
 
-  .mean-line {
+    .mean-line {
         stroke-dasharray: 5,5;
-  }
+    }
+
+    .btn-dataset {
+        margin-left: 4px;
+    } 
 
 
 
@@ -219,28 +224,44 @@ $dataset_contents => ''
           </div>
 
           <div id="dataset_slider" class="col-md-3">
-            <input type="range" min="1" max="12" value="6" class="slider form-range" id="myRange">
+            <input type="range" min="1" max="12" value="6" class="slider form-range" id="outliersRange">
           </div>
 
 
       </div>
   </div>
 
-  <div class="row">
-      <div class="col-md-10">
-          <div id="trait_graph"></div>
-      </div>
-      <div class="col-md-2">
-          <div class="btn-group-vertical">
-              <button class="btn btn-success" id="store_outliers">Add selection to outliers</button>
-              <button class="btn btn-danger" id="reset_outliers">Reset all outliers</button>
-              <button class="btn btn-danger" id="reset_trait">Reset outliers for current trait</button>
-              <button class="btn btn-primary" id="retrieve_outliers">Retrieve Outliers</button>
-              <button class="btn btn-primary" id="show_outliers">Show Outliers</button>
-              <button class="btn btn-primary" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
-          </div>
-      </div>
-  </div>
+<div class="row">
+    <div class="col-md-12">
+        <div id="trait_graph"></div>
+    </div>
+    <div class="col-md-12">
+        <div class="input-group-btn col-md-11 col-md-offset-1">
+            <span>
+                <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
+            <span>
+            <span>
+                    <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
+            </span>
+            <span>
+                    <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
+            </span>
+            <!--
+            <span>
+                <button class="btn btn-sm btn-primary btn-dataset" id="retrieve_outliers">Retrieve Outliers</button>
+            </span>
+            -->
+            <!--
+            <span>
+                 <button class="btn btn-sm btn-primary btn-dataset" id="show_outliers">Show Outliers</button>
+             </span>
+            -->
+            <span>
+                <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
+            </span>
+        </div>
+    </div>
+</div>
 
 
   <div id="dataset_summary_table">
