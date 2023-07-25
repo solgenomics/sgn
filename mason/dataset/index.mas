@@ -63,7 +63,7 @@ $dataset_contents => ''
     }
 
     ::-webkit-slider-runnable-track {
-        background: dodgerblue;
+        background: #f7756c;
     }
 
 /*
@@ -96,7 +96,11 @@ $dataset_contents => ''
     }
 
     ::-ms-fill-lower { 
-        background: dodgerblue;
+        background: #00ba38;
+    }
+
+    ::-ms-fill-upper { 
+        background: #f7756c;
     }
 
     ::-ms-thumb { 
