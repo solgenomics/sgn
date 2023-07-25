@@ -41,6 +41,7 @@ use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
 use CXGN::Accession;
 use CXGN::Stock::Seedlot::Maintenance;
+use CXGN::Dataset;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -470,7 +471,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 #}
 
 
-#used from manage download page for downloading phenotypes.
+#used from manage download page for downloading phenotypes and from dataset with outliers to download phenotypes table
 sub download_action : Path('/breeders/download_action') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -478,8 +479,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $accession_list_id = $c->req->param("accession_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $trial_list_id     = $c->req->param("trial_list_list_select");
-    # ok a co jesli zamiast lity to pobrac numer datasuy ??
-    # ale jutaj musi byc jakas lista zeby to przekazac dalej
     my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
     if (!$trial_list_id && !$accession_list_id && !$trait_list_id){
         $trial_list_id     = $c->req->param("trial_metadata_list_list_select");
@@ -496,11 +495,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
 
-    # more parameters for outliers download
+    # parameters for outliers download
     my @trait_ids     = split(',', $c->req->param("trait_ids_list"));
-
-    my $dataset_flag = $c->req->param("dataset_id") || 0;
-
     my $dataset_id   = $c->req->param("dataset_id");
 
     my $dl_cookie = "download".$dl_token;
@@ -508,46 +504,35 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     my $accession_data;
     if ($accession_list_id) {
-	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+	    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     }
 
     my $trial_data;
     if ($trial_list_id) {
-	$trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+	    $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
     }
 
     my $trait_data;
     if ($trait_list_id) {
-	$trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+	    $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
     }
 
-    # retrive dataset outliers
-    my $dbname = "breedbase";
-    my $dbuser = "postgres";
-    my $dbpassword = "postgres";
+    # print STDERR "***************************************Dataset id data $dataset_id ******************* \n";
+    my $outliers;
+    if (defined $dataset_id) {
+        my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+        my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+        my $dataset = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => int($dataset_id), exclude_dataset_outliers => 1);
+        $outliers = $dataset->outliers();
+    }
 
-    # retrive dataset outliers
-    my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=breedbase_db;port=5432", $dbuser, $dbpassword) or die "Error $DBI::errstr";
-
-    my $sth = $dbh->prepare("
-        SELECT dataset FROM sgn_people.sp_dataset
-        WHERE sp_dataset_id = $dataset_id;
-    ");
-    $sth->execute;
-    my $dataset_json = $sth->fetchrow();
-    my $dataset_ref = decode_json($dataset_json);
-    my $outliers = $dataset_ref->{'outliers'};
-
-
-    # outliers list retrive
-
-    print STDERR "***************************************Trait list id $trait_list_id ******************************* \n";
+    # print STDERR "***************************************Trait list id $trait_list_id ******************************* \n";
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
     my @trait_list = map { $_->[1] } @$trait_data;
 
-    print STDERR "***************************************Trait list data @trait_list ******************* \n";
+    # print STDERR "***************************************Trait list data @trait_list ******************* \n";
 
     my $tf = CXGN::List::Transform->new();
 
@@ -566,25 +551,23 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $accession_id_data = $t->transform($schema, $acc_t, $unique_accessions);
 
     my $trial_t = $t->can_transform("trials", "trial_ids");
-
     my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);
 
     my $trait_t = $t->can_transform("traits", "trait_ids");
     my $trait_id_data = $t->transform($schema, $trait_t, \@trait_list);
 
-    my $data_transform = $trait_id_data->{transform};
-
-    print STDERR "***************************************Trait id data $trait_id_data ******************* \n";
-    print STDERR "***************************************Trait id data @$data_transform ******************* \n";
-    print STDERR "***************************************Trait array from JS @trait_ids ******************* \n";
-    print STDERR "***************************************Outliers array from database @$outliers ******************* \n";
+    # print STDERR "***************************************Trait id data $trait_id_data ******************* \n";
+    # print STDERR "***************************************Trait id data @$data_transform ******************* \n";
+    # print STDERR "***************************************Trait array from JS @trait_ids ******************* \n";
+    # print STDERR "***************************************Outliers array from database @$outliers ******************* \n";
     # print STDERR "***************************************Trait array from JS" . split(',', $trait_ids) . "******************* \n";
     # print STDERR "***************************************Trait array from JS with \@ @$trait_ids ******************* \n";
 
-    my $result;
     my $output = "";
 
-    # retrive outliers from dataset_id ? or something
+    # if we work with dataset then @trait_ids we have directly from http request but we need reference/pointer to it
+    # if we work with lists than we need to use result of transform method from class Transform - reference type to list
+    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform},
 
     my @data;
     if ($datalevel eq 'metadata'){
@@ -600,8 +583,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     		bcs_schema=>$schema,
     		search_type=>'MaterializedViewTable',
-    		# trait_list=>$trait_id_data->{transform},
-            trait_list=>\@trait_ids,
+            trait_list=>$trait_list_ref,
     		trial_list=>$trial_id_data->{transform},
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
@@ -690,8 +672,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         my $file_name = $time_stamp . "$what" . "$format";
         $c->res->content_type('Application/'.$format);
         $c->res->cookies->{$dl_cookie} = {
-          value => $dl_token,
-          expires => '+1m',
+            value => $dl_token,
+            expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 

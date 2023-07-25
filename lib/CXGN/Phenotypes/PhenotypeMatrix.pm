@@ -277,14 +277,10 @@ sub get_phenotype_matrix {
             my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             my %phenotype_ids;
-            my $dataset_exluded_outliers = $self->dataset_exluded_outliers;
+            my $dataset_exluded_outliers_ref = $self->dataset_exluded_outliers;
             foreach my $observation (@$observations){
                 my $collect_date = $observation->{collect_date};
                 my $timestamp = $observation->{timestamp};
-                # if ($_)
-                # if phenotype_id is on a list of outliers then put a value NA / O later - we need to decide on it
-
-                # if($observation($))
 
                 if ($include_timestamp && $timestamp) {
                     $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
@@ -296,10 +292,9 @@ sub get_phenotype_matrix {
                     $trait_observations{$observation->{trait_name}} = $observation->{value};
                 }
 
-                # outliers
-                #print STDERR "DATASET_EXCLUDED_OUTLIERS = ".Dumper($dataset_exluded_outliers)."\n";
-                if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_exluded_outliers) {
-                    $trait_observations{$observation->{trait_name}} = ''; # empty field for outlier now / NA ?
+                # dataset outliers will be empty fields if are in @$dataset_exluded_outliers_ref list of pheno_id outliers
+                if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_exluded_outliers_ref) {
+                    $trait_observations{$observation->{trait_name}} = ''; # empty field for outlier NA
                 }
             }
 

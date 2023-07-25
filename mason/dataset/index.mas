@@ -195,85 +195,75 @@ $dataset_contents => ''
 
 <body>
     <div id="wizard" class="row">
-
-  <div class="wizard-datasets">
-  <table id="dataset_results"; border="1">
-         <tr><td>Name<td><% $dataset_name %>
-         <tr><td>Description<td><% $dataset_description %>
-         <tr><td>Contents<td><% $dataset_contents %>
-%        if ($c->user()) {
-             <tr><td>Edit<td>
-             <span class="input-group-btn">
-               <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-public">Make Public</button></span>
-               <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-private">Make Private</button></span>
-               <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" id="wizard-dataset-delete">Delete</button></span>
-             </span>
-%        }
-         <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
-  </table>
-  </div>
-
-  <div class="row">
-      <div class="top-row col-md-12">
-
-          <div id="trait_selections" class="col-md-6">
-            <label for="trait_selection">Select a Trait: </label>
-            <select id="trait_selection" name="trait_selection">
-              <option value="default">Select Trait</option>
-            </select>
-          </div>
-
-          <div id="dataset_slider" class="col-md-3">
-            <input type="range" min="1" max="12" value="6" class="slider form-range" id="outliersRange">
-          </div>
-
-
-      </div>
-  </div>
-
-<div class="row">
-    <div class="col-md-12">
-        <div id="trait_graph"></div>
-    </div>
-    <div class="col-md-12">
-        <div class="input-group-btn col-md-11 col-md-offset-1">
-            <span>
-                <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
-            <span>
-            <span>
-                    <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
-            </span>
-            <span>
-                    <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
-            </span>
-            <!--
-            <span>
-                <button class="btn btn-sm btn-primary btn-dataset" id="retrieve_outliers">Retrieve Outliers</button>
-            </span>
-            -->
-            <!--
-            <span>
-                 <button class="btn btn-sm btn-primary btn-dataset" id="show_outliers">Show Outliers</button>
-             </span>
-            -->
-            <span>
-                <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
-            </span>
+        <div class="wizard-datasets">
+            <table id="dataset_results"; border="1">
+                    <tr><td>Name<td><% $dataset_name %>
+                    <tr><td>Description<td><% $dataset_description %>
+                    <tr><td>Contents<td><% $dataset_contents %>
+%                   if ($c->user()) {
+                        <tr><td>Edit<td>
+                        <span class="input-group-btn">
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-public">Make Public</button></span>
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-private">Make Private</button></span>
+                        <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" id="wizard-dataset-delete">Delete</button></span>
+                        </span>
+%                   }
+                    <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
+            </table>
         </div>
     </div>
-</div>
+
+    <div class="row">
+        <div class="top-row col-md-12">
+
+            <div id="trait_selections" class="col-md-6">
+            <label for="trait_selection">Select a Trait: </label>
+            <select id="trait_selection" name="trait_selection">
+                <option value="default">Select Trait</option>
+            </select>
+            </div>
+
+            <div id="dataset_slider" class="col-md-3">
+            <input type="range" min="1" max="12" value="6" class="slider form-range" id="outliersRange">
+            </div>
 
 
-  <div id="dataset_summary_table">
+        </div>
+    </div>
 
-    <!-- DataTable with a summary of the different datatypes in the dataset -->
+    <div class="row">
+        <div class="col-md-12">
+            <div id="trait_graph"></div>
+        </div>
+        <div class="col-md-12">
+            <div class="input-group-btn col-md-11 col-md-offset-1">
+                <span>
+                    <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
+                </span>
+                <span>
+                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
+                </span>
+                <span>
+                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
+                </span>
+                <!--
+                <span>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="retrieve_outliers">Retrieve Outliers</button>
+                </span>
+                -->
+                <!--
+                <span>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="show_outliers">Show Outliers</button>
+                </span>
+                -->
+                <span>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
+                </span>
+            </div>
+        </div>
+    </div>
     
-  </div>
-
-
-
-
-  <script>
+    <script>
 
     jQuery(document).ready( function() {
         
@@ -288,49 +278,34 @@ $dataset_contents => ''
                     alert(response.options);
                 },
                 error: function(response) {
-                     alert("An error occurred");
+                    alert("An error occurred");
                 }  
             });
-        })
+        })        
 
-        // tuaj trzeba bedzie zrobic przejscie miedzy przedmiotami :P w sensie lista z outlierwów z JS do tego linka -> potem w kontrolerze wypierdalame te linie ifami i jazda :P
-
-        jQuery('#outliers_phenotype_download').click(function() {
-            console.log("hello");
-            console.log('dataset id', '<% $dataset_id %>');
-            console.log("DataSet.traitsIds: ");
-            console.log(DataSet.traitsIds);
+        jQuery('#outliers_phenotype_download').click(function() {            
 
             var speed = 'MaterializedViewTable';
-            // var speed = d3.select(".wizard-download-phenotypes-speed").node().value;
             var format = '.csv';
-            // var format = d3.select(".wizard-download-phenotypes-format").node().value;
             var level = 'all';
-            // var level = d3.select(".wizard-download-phenotypes-level").node().value;
             var timestamp = 0;
-            // var timestamp = d3.selectAll('.wizard-download-phenotypes-timestamp').property('checked')?1:0;
-            var entry_numbers = 0;
-            // var entry_numbers = d3.selectAll('.wizard-download-phenotypes-entry-numbers').property('checked')?1:0;
-            var outliers = 0;
-            // var outliers = d3.selectAll('.wizard-download-phenotypes-outliers').property('checked')?1:0;
-            var names = "";
-            // var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
-            var min = "";
-            // var min = d3.select(".wizard-download-phenotypes-min").node().value;
-            var max = "";
-            // var max = d3.select(".wizard-download-phenotypes-max").node().value;
+            // var entry_numbers = 0;
+            // var outliers = 0;
+            // var names = "";
+            // var min = "";
+            // var max = "";
 
             var url = document.location.origin+
-              `/breeders/download_action?trait_ids_list=${DataSet.traitsIds}`+
-              `&format=${format}`+            
-              `&phenotype_datalevel=${level}`+
-              `&timestamp_included=${timestamp}`+
-              `&dataset_id='<% $dataset_id %>'`
+                `/breeders/download_action?trait_ids_list=${DataSet.traitsIds}`+
+                `&format=${format}`+            
+                `&phenotype_datalevel=${level}`+
+                `&timestamp_included=${timestamp}`+
+                `&dataset_id=<% $dataset_id %>`
             
-            console.log(url);
+            // console.log(url);
             window.open(url,'_blank');
         })
     });
 
-  </script>
+    </script>
 </body>

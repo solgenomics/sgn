@@ -696,17 +696,7 @@ sub retrieve_phenotypes {
         push @trait_ids, $_->[0];
     }
 
-    # here would be good to have retrieve_outliers
-    # if (exclude_dataset_outliers) {
-    #     my $dataset_exluded_outliers = $self->outliers();
-    # }
-
     my $dataset_exluded_outliers = $self->exclude_dataset_outliers() ? $self->outliers() : undef;
-
-    print "dataset_exluded_outliers from dataset pm: ".Dumper($dataset_exluded_outliers);
-    print "\n";
-
-    print "TRAITS: ".Dumper(\@trait_ids);
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         search_type=>'MaterializedViewTable',
@@ -1184,34 +1174,6 @@ sub retrieve_trial_types {
     }
     return \@trial_types;
 }
-
-=head2 retrieve_outliers_phoeno_ids()
-
-Retrieves phenotypes ids from outlier set if has one ?
-
-=cut
-
-# sub retrieve_outliers_phoeno_ids {
-#     my $self = shift;
-#
-#     my $outliers_phoeno_ids;
-#     if ($self->outliers() && scalar(@{$self->outliers()})>0) {
-#         foreach my $a (@{$self->trial_types()}) {
-#             push @trial_types, [$a, $a];
-#         }
-#     }
-#     else {
-#         my $criteria = $self->get_dataset_definition();
-#         push @$criteria, "trial_types";
-#         my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_types"));
-#         my $breeding_program_list = $breeding_program_data->{results};
-#
-#         foreach my $y (@$breeding_program_list) {
-#             push @trial_types, [$y->[0], $y->[0]];
-#         }
-#     }
-#     return \@trial_types;
-# }
 
 sub get_dataset_definition  {
     my $self = shift;
