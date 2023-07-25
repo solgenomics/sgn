@@ -77,7 +77,64 @@ sub download {
         genotypeprop_hash_select=>$genotypeprop_hash_select
     });
 
-    my $data = $genotypes_search->get_genotype_info();
+    my ($total_count, $data) = $genotypes_search->get_genotype_info();
+    print STDERR "PLUGIN DATA =".Dumper($data)."\n";
+    my @all_data = @$data;
+    my $number_of_samples = scalar @all_data;
+    my %data_hash;
+    foreach my $sample_data (@all_data) {
+        my %genotype_hash = ();
+        my $sample_name = $sample_data->{stock_name};
+        my $genotype_hash_ref = $sample_data->{selected_genotype_hash};
+        %genotype_hash = %{$genotype_hash_ref};
+        foreach my $marker_name (keys %genotype_hash) {
+            my $each_marker_data = $genotype_hash{$marker_name};
+            my $nt =  $each_marker_data->{NT};
+            my $xv = $each_marker_data->{XV};
+            my $yv = $each_marker_data->{YV};
+            $data_hash{$marker_name}{$sample_name}{NT} = $nt;
+            $data_hash{$marker_name}{$sample_name}{XV} = $xv;
+            $data_hash{$marker_name}{$sample_name}{YV} = $yv;
+        }
+    }
+
+    print STDERR "PLUGIN DATA HASH =".Dumper(\%data_hash)."\n";
+
+    my @info_lines;
+    foreach my $marker_name (keys %data_hash) {
+        my $sample_data_ref = $data_hash{$marker_name};
+        my %sample_data = %{$sample_data_ref};
+        foreach my $sample_name (keys %sample_data ) {
+            my @each_info_line = ();
+            my $genotype_data_ref = $sample_data{$sample_name};
+            my $sample_nt = $genotype_data_ref->{NT};
+            my $sample_xv = $genotype_data_ref->{XV};
+            my $sample_yv = $genotype_data_ref->{YV};
+            push @each_info_line, ($marker_name, $sample_name, $sample_nt, $sample_xv, $sample_yv);
+            push @info_lines, [@each_info_line];
+        }
+    }
+
+    print STDERR "INFO LINES =".Dumper(\@info_lines)."\n";
+
+    my @headers = ('MARKER NAME', 'SAMPLE NAME', 'SNP CALL (X,Y)', 'X VALUE', 'Y VALUE');
+    my @lines;
+    push @lines, [@headers];
+    push @lines, @info_lines;
+    print STDERR "LINES =".Dumper(@lines)."\n";
+
+    no warnings 'uninitialized';
+    open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
+
+        my $header =  $lines[0];
+        my $num_col = scalar(@$header);
+        for (my $line =0; $line< @lines; $line++) {
+            my $columns = $lines[$line];
+            print $F join ',', map { qq!"$_"! } @$columns;
+            print $F "\n";
+        }
+    close($F);
+
 }
 
 1;
