@@ -7,7 +7,7 @@ export function init(datasetId, datasetName) {
 			this.outliers = [];
 			this.outlierCutoffs = new Set();
 			this.firstRefresh = true;
-			this.stdDevMultiplier = document.getElementById("myRange").value;
+			this.stdDevMultiplier = document.getElementById("outliersRange").value;
 			this.selection = "default";
 			this.datasetId = datasetId;
 			this.observations = {};
@@ -153,7 +153,7 @@ export function init(datasetId, datasetName) {
 		    let LocalThis = this;
 
 		    // Handle Slider Events
-		    var slider = document.getElementById("myRange");
+		    var slider = document.getElementById("outliersRange");
 		    slider.oninput = function() {
                 LocalThis.stdDevMultiplier = this.value;
                 LocalThis.outliers = [];
@@ -170,8 +170,8 @@ export function init(datasetId, datasetName) {
                 LocalThis.setData();
                 LocalThis.outliers = [];
                 LocalThis.outlierCutoffs = new Set();
-				document.getElementById("myRange").value = document.getElementById("myRange").max; 
-				LocalThis.stdDevMultiplier = document.getElementById("myRange").value;
+				document.getElementById("outliersRange").value = document.getElementById("outliersRange").max; 
+				LocalThis.stdDevMultiplier = document.getElementById("outliersRange").value;
 			    if (!this.firstRefresh) {
 			        LocalThis.render();
 			    }				
@@ -235,26 +235,26 @@ export function init(datasetId, datasetName) {
                })
             }
 
-		    let retrieveOutliersButton = document.getElementById("retrieve_outliers");
-            retrieveOutliersButton.onclick = function() {
-                new jQuery.ajax({
-                    type: 'POST',
-                    url: '/ajax/dataset/retrieve_outliers/' + LocalThis.datasetId,
-                    success: function(response) {
-                        alert('outliers successfully restored!');
-                        console.log(response.outliers);
-//                        LocalThis.storedOutliersIds = response.outliers;
-                    },
-                    error: function(response) {
-                        alert('Error');
-                    }
-                })
-            }
+// 		    let retrieveOutliersButton = document.getElementById("retrieve_outliers");
+//             retrieveOutliersButton.onclick = function() {
+//                 new jQuery.ajax({
+//                     type: 'POST',
+//                     url: '/ajax/dataset/retrieve_outliers/' + LocalThis.datasetId,
+//                     success: function(response) {
+//                         alert('outliers successfully restored!');
+//                         console.log(response.outliers);
+// //                        LocalThis.storedOutliersIds = response.outliers;
+//                     },
+//                     error: function(response) {
+//                         alert('Error');
+//                     }
+//                 })
+//             }
 
-            let showOutliersButton = document.getElementById("show_outliers");
-            showOutliersButton.onclick = function() {
-                console.log(LocalThis.outliers);
-            }
+            // let showOutliersButton = document.getElementById("show_outliers");
+            // showOutliersButton.onclick = function() {
+            //     console.log(LocalThis.outliers);
+            // }
 
 		}
 
@@ -267,9 +267,9 @@ export function init(datasetId, datasetName) {
 		    } else if (this.selection != "default") {
 			    const LocalThis = this;
 
-			    var margin = {top: 10, right: 30, bottom: 30, left: 60},
-				    width = 1180 - margin.left - margin.right,
-				    height = 600 - margin.top - margin.bottom;
+			    const margin = {top: 10, right: 30, bottom: 30, left: 60},
+                    width = 1180 - margin.left - margin.right,
+				    height = 600 - margin.top - margin.bottom;                
 
 			    var svg = d3.select("#trait_graph")
                     .append("svg")
@@ -281,6 +281,10 @@ export function init(datasetId, datasetName) {
 				            "translate(" + margin.left + "," + margin.top + ")"
 				            );
 
+                const greenColor = "#00ba38"
+                    , yellowColor = "#ffe531"
+                    , redColor = "#f7756c";
+
                 var isOutlier = function(id, value, mean, stdDev) {
 				    let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
 				    let leftCutoff = mean - stdDev * filter;
@@ -289,18 +293,18 @@ export function init(datasetId, datasetName) {
 //				    console.log(LocalThis.storedOutliersIds);
 
 				    if (value >= leftCutoff && value <= rightCutoff) {
-				         color = "green";
+				         color = greenColor;
                     }
 
                     if (LocalThis.storedOutliersIds.includes(id.toString())) {
-                         color = "orange";
+                         color = yellowColor;
                     }
 
                     if (value <= leftCutoff || value >= rightCutoff){
                         if (leftCutoff >= 0) {LocalThis.outlierCutoffs.add(leftCutoff)};
                         LocalThis.outlierCutoffs.add(rightCutoff);
                         LocalThis.outliers.push(id);
-                        color = "#d9534f";
+                        color = redColor;
                     }
 
                     return color;
@@ -310,22 +314,37 @@ export function init(datasetId, datasetName) {
 
 			    this.outliers = [];
 
+			    // Add ackground ggplot2 like
+                svg.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("height", height)
+                    .attr("width", width)
+                    .style("fill", "#ebebeb")
+
 			    // Add X axis
 			    var x = d3.scaleLinear()
 			        .domain([0, this.phenoIds.length])
 			        .range([ 0, width]);
-                svg.append("g")
-			        .style("font", "18px times")
-			        .attr("transform", "translate(0," + height + ")")
+//                svg.append("g")
+//			        .style("font", "16px arial")
+//			        .attr("transform", "translate(0," + height + ")")
 
 			    // Add Y axis
 			    var y = d3.scaleLinear()
 			        .domain([Math.min(...this.traitVals), Math.max(...this.traitVals)])
 			        .range([ height, 0]);
+                svg.append("g")
+                    .call(d3.axisLeft(y).tickSize(-width*1).ticks(10))
+                     .style("font", "16px arial")
+//                    .select(".domain").remove()
 
-			    svg.append("g")
-			        .style("font", "18px times")
-			        .call(d3.axisLeft(y))
+                // Customization
+                svg.selectAll(".tick line").attr("stroke", "white")
+
+//			    svg.append("g")
+//			        .style("font", "16px arial")
+//			        .call(d3.axisLeft(y))
 
 			    svg.append("text")
 			        .attr("transform", "rotate(-90)")
@@ -333,7 +352,7 @@ export function init(datasetId, datasetName) {
 			        .attr("x",0 - (height / 2))
                     .attr("dy", ".65em")
 			        .style("text-anchor", "middle")
-			        .style("font", "18px times")
+			        .style("font", "16px arial")
 			        .text("Trait Value");
 
 
@@ -421,47 +440,108 @@ export function init(datasetId, datasetName) {
                   .attr("stroke", "darkgrey");
 
 
-                // mean legend
-                const legend = svg.append('g')
-                    .attr('id', 'legend')
-                    .attr('height', 100)
-                    .attr('width', 500)
-                    .attr('transform', 'translate(950, 50)');
 
-                legend.append("text")
-                    .text("Mean: " + mean.toFixed(2));
+				// legend builder				
+				const legendSize = {
+					width: 250,
+					height: 135,
+					get posX() {
+                        return 5;
+					},
+					get posY() {
+						return 15
+					}
+					};
+				const  dotSize = 7
 
-                legend.append("text")
-                    .text("Std Dev: " + stdDev.toFixed(2))
-                    .attr('x', 0)
-                    .attr('y', 15);
+            	const legend = svg.append("g")
+            		.attr('id', 'legend')
+                   	.attr('height', legendSize.height)
+                   	.attr('width', legendSize.width)
+                   	.attr('transform', 'translate(5, 5)');
 
-                legend.append("text")
-//                  .text(LocalThis.stdDevMultiplier);\
-                    .text(() => {
-                        let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
-                        let leftCutoff = mean - stdDev * filter;
-                        return "Left Cutoff: " + leftCutoff.toFixed(2);
-                    })
-                    .attr('x', 0)
-                    .attr('y', 30);
+				legend.append('rect')				
+					.attr('height', legendSize.height)
+					.attr('width',  legendSize.width)
+					.attr('x', 0)
+					.attr('y', 0)
+					.attr('fill', 'white')
+					.style("stroke", "lightgrey")
+					.style("stroke-width", 3);
 
-                legend.append("text")
-                    .text(() => {
-                        let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
-                        let rightCutoff = mean + stdDev * filter;
-                        return "Right Cutoff: " +  rightCutoff.toFixed(2);
-                    })
-                    .attr('x', 0)
-                    .attr('y', 45);
 
-                legend.append("text")
-                    .text(() => {
-                        let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
-                        return "Filter multiplier: " +  filter;
-                    })
-                    .attr('x', 0)
-                    .attr('y', 60);
+
+				legend.append('circle')
+					.attr('r', dotSize)
+					.attr('class', 'dot-legend')
+					.attr('fill', greenColor)
+					.attr('cx', legendSize.posX + 20)
+					.attr('cy', legendSize.posY + 5)
+
+				legend.append('circle')
+					.attr('r', dotSize)
+					.attr('fill', yellowColor)
+					.attr('class', 'dot-legend')
+					.attr('cx', legendSize.posX + 20)
+					.attr('cy', legendSize.posY + 30)
+
+				legend.append('circle')
+					.attr('r', dotSize)
+					.attr('class', 'dot-legend')
+					.attr('fill', redColor)
+					.attr('cx', legendSize.posX + 20)
+					.attr('cy', legendSize.posY + 55)
+
+
+                svg.append('text')
+                    .attr('x', legendSize.posX + 25 + dotSize + 5)
+                    .attr('y', legendSize.posY + 10 + dotSize / 2 + 1)
+                    .style("font", "arial")
+                    .text('normal data point')
+
+                svg.append('text')
+                    .attr('x', legendSize.posX + 25 + dotSize + 5)
+                    .attr('y', legendSize.posY + 35 + dotSize / 2 + 1)
+                    .style("font", "arial")
+                    .text('outliers value stored in database')
+
+				svg.append('text')
+                    .attr('x', legendSize.posX + 25 + dotSize + 5)
+                    .attr('y', legendSize.posY + 60 + dotSize / 2 + 1)
+                    .style("font", "arial")
+                    .text('outliers from current cutoff')
+
+
+               	legend.append("text")
+                   .text("Mean: " + mean.toFixed(2))
+				   .attr('x', legendSize.posX + 20 - dotSize / 2)
+                   .attr('y', legendSize.posY + 85);
+
+               	legend.append("text")
+                   .text("Std Dev: " + stdDev.toFixed(2))
+				   .style("font", "arial")
+                   .attr('x', legendSize.posX + 120 - dotSize / 2)
+                   .attr('y', legendSize.posY + 85);
+
+               	legend.append("text")
+                   .text(() => {
+                       let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
+                       let leftCutoff = mean - stdDev * filter;
+                       return "L. Cutoff: " + leftCutoff.toFixed(2);
+                   })
+				   .style("font", "arial")
+                   .attr('x', legendSize.posX + 20 - dotSize / 2)
+                   .attr('y', legendSize.posY + 110);
+
+               	legend.append("text")
+                   .text(() => {
+                       let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
+                       let rightCutoff = mean + stdDev * filter;
+                       return "R. Cutoff: " +  rightCutoff.toFixed(2);
+                   })
+				   .style("font", "arial")
+                   .attr('x', legendSize.posX + 120 - dotSize / 2)
+                   .attr('y', legendSize.posY + 110);
 
 		    }
 		}
