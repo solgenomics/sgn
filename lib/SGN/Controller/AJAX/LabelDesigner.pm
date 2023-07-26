@@ -262,13 +262,27 @@ __PACKAGE__->config(
 
         # Get additional list data for just the longest item
         if ( $data_type eq 'Lists' ) {
-            my $additional_list_data = get_additional_list_data($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
+            my %longest_additional_list_data;
+            my $additional_list_data = get_additional_list_data($c, $source_id);
             if ( $additional_list_data ) {
-                my $fields = $additional_list_data->{$longest_hash{'list_item_id'}};
-		if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) {
-		    %longest_hash = (%longest_hash, %$fields);
-		}
+                foreach my $key ( keys(%$additional_list_data) ) {
+                    my $fields = $additional_list_data->{$key};
+                    if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) {
+                        foreach my $field_name ( keys(%$fields) ) {
+                            my $field_value = $fields->{$field_name};
+                            if (exists $longest_additional_list_data{$field_name} ) {
+                                if ( length($field_value) > length($longest_additional_list_data{$field_name}) ) {
+                                    $longest_additional_list_data{$field_name} = $field_value;
+                                }
+                            }
+                            else {
+                                $longest_additional_list_data{$field_name} = $field_value;
+                            }
+                        }
+                    }
+                }
             }
+            %longest_hash = (%longest_hash, %longest_additional_list_data);
         }
 
         $c->stash->{rest} = {
