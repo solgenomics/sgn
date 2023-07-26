@@ -8,6 +8,12 @@
 var solGS = solGS || function solGS() {};
 
 solGS.pca = {
+  canvas: "#pca_canvas",
+  pcaPlotDivPrefix: "#pca_plot",
+  pcaMsgDiv: "#pca_message",
+  pcaPopsDiv: "#pca_pops_select_div",
+  pcaPopsSelectMenuId: "#pca_pops_select",
+
   getPcaArgs: function () {
     var page = location.pathname;
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
@@ -116,7 +122,7 @@ solGS.pca = {
 
       var reg = /\d+-+\d+/;
       if (pcaPopId.match(reg)) {
-        var ids = pcaPopd.split("-");
+        var ids = pcaPopId.split("-");
         args["training_pop_id"] = ids[0];
         args["selection_pop_id"] = ids[1];
       }
@@ -134,8 +140,8 @@ solGS.pca = {
     }
   },
 
-  loadPcaPops: function (selectId, selectName, dataStr) {
-    if (selectId.length === 0) {
+  displaySelectedPcaPop: function (selectedPop) {
+    if (selectedPop.length === 0) {
       alert("The list is empty. Please select a list with content.");
     } else {
       var pcaTable = jQuery("#pca_pops_table").doesExist();
@@ -145,9 +151,8 @@ solGS.pca = {
         jQuery("#pca_pops_selected").append(pcaTable).show();
       }
 
-      var addRow = this.selectRow(selectId, selectName, dataStr);
-      var pcaPopId = `${dataStr}_${selectId}`;
-      console.log(`row ${addRow}`);
+      var addRow = this.selectRow(selectedPop);
+      var pcaPopId = `${selectedPop.data_str}_${selectedPop.id}`;
       var tdId = "#pca_" + pcaPopId;
       var addedRow = jQuery(tdId).doesExist();
 
@@ -157,15 +162,29 @@ solGS.pca = {
     }
   },
 
-  selectRow: function (selectId, selectName, dataStr) {
-    var pcaPopId = `${dataStr}_${selectId}`;
+  populatePcaPopsMenu: function () {
+    var listTypes = ["accessions", "plots", "trials"];
+    var datasetTypes = ["accessions", "trials"];
+    var menuId = this.pcaPopsSelectMenuId;
+    var menu = new SelectMenu(menuId);
+    var selectMenu = menu.getSelectMenuByTypes(listTypes, datasetTypes);
+    var pcaPopsDiv = this.pcaPopsDiv;
+    jQuery(pcaPopsDiv).append(selectMenu).show();
+  },
+
+  selectRow: function (selectedPop) {
+    var selectedId = selectedPop.id;
+    var selectedName = selectedPop.name;
+    var dataStr = selectedPop.data_str;
+
+    var pcaPopId = `${dataStr}_${selectedId}`;
     var listId;
     var datasetId;
 
     if (dataStr.match(/dataset/)) {
-      datasetId = selectId;
+      datasetId = selectedId;
     } else if (dataStr.match(/list/)) {
-      listId = selectId;
+      listId = selectedId;
     }
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
     var pcaArgs = {
@@ -173,21 +192,15 @@ solGS.pca = {
       data_structure: dataStr,
       dataset_id: datasetId,
       list_id: listId,
-      pca_pop_name: selectName,
+      pca_pop_name: selectedName,
       genotyping_protocol_id: protocolId,
       analysis_type: "pca analysis",
     };
 
-    pcaArgs = JSON.stringify(pcaArgs);
     var runPcaId = this.getRunPcaId(pcaPopId);
-    var onClickVal =
-      '<button type="button" id="' +
-      runPcaId +
-      '" class="btn btn-success"  data-selected-pop=\'' +
-      pcaArgs +
-      "' onclick=\"solGS.pca.checkCachedPca('" +
-      pcaPopId +
-      "')\">Run PCA</button>";
+
+    pcaArgs = JSON.stringify(pcaArgs);
+    var onClickVal = `<button type="button" id=${runPcaId} class="btn btn-success" data-selected-pop='${pcaArgs}'>Run PCA</button>`;
 
     var dataType = ["Genotype", "Phenotype"];
     var dataTypeOpts = this.createDataTypeSelect(dataType, pcaPopId);
@@ -197,7 +210,7 @@ solGS.pca = {
       pcaPopId +
       '">' +
       "<td>" +
-      selectName +
+      selectedName +
       "</td>" +
       "<td>" +
       dataStr +
@@ -215,10 +228,10 @@ solGS.pca = {
     return addRow;
   },
 
-  getSelectedPopPcaArgs: function (pcaPopId) {
+  getSelectedPopPcaArgs: function (runPcaElemId) {
     var pcaArgs;
 
-    var runPcaElemId = this.getRunPcaId(pcaPopId);
+    // var runPcaElemId = this.getRunPcaId(pcaPopId);
     var selectedPopDiv = document.getElementById(runPcaElemId);
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
@@ -239,21 +252,18 @@ solGS.pca = {
   },
 
   checkCachedPca: function (pcaArgs) {
-    if (location.pathname.match(/pca\/analysis/)) {
-      pcaArgs = this.getSelectedPopPcaArgs(pcaArgs);
-    }
-
-    if (pcaArgs.analysis_page.match(/\pca\/analysis/)) {
+    if (document.URL.match(/pca\/analysis/)) {
       var message = this.validatePcaParams(pcaArgs);
 
       if (message) {
-        jQuery("#pca_message").prependTo(jQuery("#pca_canvas")).html(message).show().fadeOut(9400);
+        jQuery(this.pcaMsgDiv).prependTo(jQuery(this.canvas)).html(message).show().fadeOut(9400);
       }
 
       var page = pcaArgs.analysis_page;
     }
     pcaArgs = JSON.stringify(pcaArgs);
-    jQuery.ajax({
+
+    var checkCache = jQuery.ajax({
       type: "POST",
       dataType: "json",
       data: {
@@ -261,71 +271,58 @@ solGS.pca = {
         arguments: pcaArgs,
       },
       url: "/solgs/check/cached/result/",
-      // });
-
-      success: function (res) {
-        pcaArgs = JSON.parse(pcaArgs);
-        if (res.scores) {
-          var plotData = solGS.pca.structurePlotData(res);
-          var downloadLinks = solGS.pca.pcaDownloadLinks(res);
-          solGS.pca.plotPca(plotData, downloadLinks);
-        } else {
-          solGS.pca.optJobSubmission(page, pcaArgs);
-        }
-      },
-      error: function () {
-        alert("Error occured checking for cached output.");
-      },
     });
+
+    return checkCache;
   },
 
-  optJobSubmission: function (page, args) {
-    var title =
-      "<p>This analysis may take a long time. " +
-      "Do you want to submit the analysis and get an email when it completes?</p>";
+  // optJobSubmission: function (page, args) {
+  //   var title =
+  //     "<p>This analysis may take a long time. " +
+  //     "Do you want to submit the analysis and get an email when it completes?</p>";
 
-    var jobSubmit = '<div id= "pca_submit">' + title + "</div>";
+  //   var jobSubmit = '<div id= "pca_submit">' + title + "</div>";
 
-    jQuery(jobSubmit).appendTo("body");
+  //   jQuery(jobSubmit).appendTo("body");
 
-    jQuery("#pca_submit").dialog({
-      height: 200,
-      width: 400,
-      modal: true,
-      title: "pca job submission",
-      buttons: {
-        OK: {
-          text: "Yes",
-          class: "btn btn-success",
-          id: "queue_job",
-          click: function () {
-            jQuery(this).dialog("close");
-            solGS.submitJob.checkUserLogin(page, args);
-          },
-        },
+  //   jQuery("#pca_submit").dialog({
+  //     height: 200,
+  //     width: 400,
+  //     modal: true,
+  //     title: "pca job submission",
+  //     buttons: {
+  //       OK: {
+  //         text: "Yes",
+  //         class: "btn btn-success",
+  //         id: "queue_job",
+  //         //   click: function () {
+  //         //     jQuery(this).dialog("close");
+  //         //     solGS.submitJob.checkUserLogin(page, args);
+  //         //   },
+  //       },
 
-        No: {
-          text: "No, I will wait till it completes.",
-          class: "btn btn-warning",
-          id: "no_queue",
-          click: function () {
-            jQuery(this).dialog("close");
+  //       No: {
+  //         text: "No, I will wait till it completes.",
+  //         class: "btn btn-warning",
+  //         id: "no_queue",
+  //         // click: function () {
+  //         //   jQuery(this).dialog("close");
 
-            solGS.pca.runPcaAnalysis(args);
-          },
-        },
+  //         //   solGS.pca.runPcaAnalysis(args);
+  //         // },
+  //       },
 
-        Cancel: {
-          text: "Cancel",
-          class: "btn btn-info",
-          id: "cancel_queue_info",
-          click: function () {
-            jQuery(this).dialog("close");
-          },
-        },
-      },
-    });
-  },
+  //       Cancel: {
+  //         text: "Cancel",
+  //         class: "btn btn-info",
+  //         id: "cancel_queue_info",
+  //         click: function () {
+  //           jQuery(this).dialog("close");
+  //         },
+  //       },
+  //     },
+  //   });
+  // },
 
   pcaDataTypeSelectId: function (pcaPopId) {
     if (location.pathname.match(/pca\/analysis/) && pcaPopId) {
@@ -348,63 +345,18 @@ solGS.pca = {
   },
 
   runPcaAnalysis: function (pcaArgs) {
-    jQuery("#pca_canvas .multi-spinner-container").prependTo("#pca_canvas");
-    jQuery("#pca_canvas .multi-spinner-container").show();
-    jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));
-    jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
-
-    var runPcaId = this.getRunPcaId(pcaArgs.pca_pop_id);
-    jQuery("#" + runPcaId).hide();
     pcaArgs = JSON.stringify(pcaArgs);
 
-    jQuery.ajax({
+    var pcaAnalysis = jQuery.ajax({
       type: "POST",
       dataType: "json",
       data: {
         arguments: pcaArgs,
       },
       url: "/run/pca/analysis",
-
-      success: function (res) {
-        jQuery("#pca_canvas .multi-spinner-container").hide();
-        if (res.scores) {
-          var listId = res.list_id;
-          var listName;
-
-          if (listId != undefined) {
-            var list = new CXGN.List();
-            listName = list.listNameById(listId);
-          }
-
-          var plotData = {
-            scores: res.scores,
-            variances: res.variances,
-            loadings: res.loadings,
-            pca_pop_id: res.pca_pop_id,
-            list_id: listId,
-            list_name: listName,
-            trials_names: res.trials_names,
-            output_link: res.output_link,
-            data_type: res.data_type,
-          };
-
-          var downloadLinks = solGS.pca.pcaDownloadLinks(res);
-          solGS.pca.plotPca(plotData, downloadLinks);
-
-          jQuery("#pca_message").empty();
-          jQuery(runPcaId).show();
-        } else {
-          jQuery("#pca_canvas .multi-spinner-container").hide();
-          jQuery("#pca_message").html("Error occured running the PCA.");
-          jQuery(runPcaId).show();
-        }
-      },
-      error: function (res) {
-        jQuery("#pca_canvas .multi-spinner-container").hide();
-        jQuery("#pca_message").html("Error occured running the PCA.");
-        jQuery(runPcaId).show();
-      },
     });
+
+    return pcaAnalysis;
   },
 
   validatePcaParams: function (valArgs) {
@@ -478,7 +430,7 @@ solGS.pca = {
       jQuery("#list_id").remove();
     }
 
-    jQuery("#pca_canvas").append('<input type="hidden" id="list_id" value=' + listId + "></input>");
+    jQuery(this.canvas).append('<input type="hidden" id="list_id" value=' + listId + "></input>");
   },
 
   getListId: function () {
@@ -530,7 +482,7 @@ solGS.pca = {
     var listId = res.list_id;
     var listName;
 
-    if (listId != undefined) {
+    if (listId) {
       var list = new CXGN.List();
       listName = list.listNameById(listId);
     }
@@ -581,6 +533,26 @@ solGS.pca = {
     return url;
   },
 
+  cleanUpOnSuccess: function (pcaPopId) {
+
+    jQuery(this.pcaMsgDiv).empty();
+    jQuery(`${this.canvas} .multi-spinner-container`).hide();
+    jQuery(`#${this.getRunPcaId(pcaPopId)}`).show();
+
+  },
+
+  feedBackOnFailure: function (pcaPopId, msg) {
+    jQuery(`${this.canvas} .multi-spinner-container`).hide();
+
+    jQuery(this.pcaMsgDiv)
+      .html(msg)
+      .fadeOut(8400);
+
+      jQuery(`#${this.getRunPcaId(pcaPopId)}`).show();
+
+  },
+
+
   plotPca: function (plotData, downloadLinks) {
     var scores = plotData.scores;
     var variances = plotData.variances;
@@ -620,7 +592,7 @@ solGS.pca = {
     var totalH = height + pad.top + pad.bottom + 100;
     var totalW = width + pad.left + pad.right + 400;
 
-    var pcaCanvasDivId = "#pca_canvas";
+    var pcaCanvasDivId = this.canvas;
     var pcaPlotDivId = plotData.pca_pop_id.replace(/-/g, "_");
     pcaPlotDivId = "pca_plot_" + pcaPlotDivId;
 
@@ -931,13 +903,11 @@ solGS.pca = {
 
 jQuery(document).ready(function () {
   var url = location.pathname;
+  var canvas = solGS.pca.canvas;
 
   if (url.match(/pca\/analysis/)) {
-    solGS.selectMenu.populateMenu(
-      "pca_pops",
-      ["accessions", "plots", "trials"],
-      ["accessions", "trials"]
-    );
+    solGS.pca.populatePcaPopsMenu();
+
     var pcaArgs = solGS.pca.getPcaArgsFromUrl();
     var pcaPopId = pcaArgs.pca_pop_id;
     if (pcaPopId) {
@@ -945,24 +915,18 @@ jQuery(document).ready(function () {
         pcaArgs["pca_pop_id"] = pcaArgs.data_structure + "_" + pcaPopId;
       }
       pcaArgs["analysis_page"] = url;
-      solGS.pca.checkCachedPca(pcaArgs);
+
+      solGS.pca.checkCachedPca(pcaArgs).done(function (res) {
+        if (res.scores) {
+          var plotData = solGS.pca.structurePlotData(res);
+          var downloadLinks = solGS.pca.pcaDownloadLinks(res);
+          solGS.pca.plotPca(plotData, downloadLinks);
+        }
+      });
     }
   }
 
-  jQuery("#run_pca").click(function () {
-    var pcaArgs = solGS.pca.getPcaArgs();
-    var pcaPopId = pcaArgs.pca_pop_id;
-    var runPcaId = solGS.pca.getRunPcaId(pcaPopId);
-
-    jQuery("#" + runPcaId).hide();
-
-    var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
-    pcaArgs["analysis_page"] = pcaUrl;
-
-    solGS.pca.checkCachedPca(pcaArgs);
-  });
-
-  jQuery("#pca_canvas").on("click", "a", function (e) {
+  jQuery(canvas).on("click", "a", function (e) {
     var buttonId = e.target.id;
     var pcaPlotId = buttonId.replace(/download_/, "");
     saveSvgAsPng(document.getElementById("#" + pcaPlotId), pcaPlotId + ".png", { scale: 2 });
@@ -976,25 +940,161 @@ jQuery(document).ready(function () {
     jQuery("#pca_data_type_select").html('<option selected="genotype">Genotype</option>');
   }
 
+  var pcaPopsDiv = solGS.pca.pcaPopsSelectMenuId;
+
   if (url.match(/pca\/analysis/)) {
     jQuery("<option>", {
       value: "",
       selected: true,
-    }).prependTo("#pca_pops_list_select");
+    }).prependTo(pcaPopsDiv);
 
-    jQuery("#pca_pops_list_select").change(function () {
-      var selectedPop = solGS.selectMenu.getSelectedPop("pca_pops");
-      if (selectedPop.selected_id) {
+    var pcaPopsDiv = solGS.pca.pcaPopsSelectMenuId;
+    jQuery(pcaPopsDiv).change(function () {
+      var selectedPop = jQuery("option:selected", this).data("pop");
+
+      if (selectedPop.id) {
         jQuery("#pca_pop_go_btn").click(function () {
-          solGS.pca.loadPcaPops(
-            selectedPop.selected_id,
-            selectedPop.selected_name,
-            selectedPop.data_str
-          );
+          if (!selectedPop.data_str) {
+            selectedPop.data_str = "list";
+          }
+          solGS.pca.displaySelectedPcaPop(selectedPop);
         });
       }
     });
   }
+});
+
+jQuery(document).ready(function () {
+  jQuery("#pca_div").on("click", function (e) {
+    var runPcaBtnId = e.target.id;
+    if (runPcaBtnId.match(/run_pca/)) {
+      var pcaArgs = solGS.pca.getPcaArgs();
+      var pcaPopId = pcaArgs.pca_pop_id;
+      if (!pcaPopId) {
+        pcaArgs = solGS.pca.getSelectedPopPcaArgs(runPcaBtnId);
+      }
+      pcaPopId = pcaArgs.pca_pop_id;
+      var canvas = solGS.pca.canvas;
+      // var pcaPlotDivId = solGS.pca.pcaPlotDivPrefix;
+      var pcaMsgDiv = solGS.pca.pcaMsgDiv;
+      runPcaBtnId = `#${runPcaBtnId}`;
+      var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
+      pcaArgs["analysis_page"] = pcaUrl;
+
+      jQuery(runPcaBtnId).hide();
+      jQuery(`${canvas} .multi-spinner-container`).show();
+      jQuery(pcaMsgDiv).html("Running pca... please wait...").show();
+
+      solGS.pca
+        .checkCachedPca(pcaArgs)
+        .done(function (res) {
+          if (res.scores) {
+            var plotData = solGS.pca.structurePlotData(res);
+            var downloadLinks = solGS.pca.pcaDownloadLinks(res);
+            solGS.pca.plotPca(plotData, downloadLinks);
+
+             solGS.pca.cleanUpOnSuccess(pcaPopId);
+          } else {
+            var page = location.pathname;
+            var pcaUrl = solGS.pca.generatePcaUrl(pcaArgs.pca_pop_id);
+            pcaArgs["analysis_page"] = pcaUrl;
+
+            var title =
+              "<p>This analysis may take a long time. " +
+              "Do you want to submit the analysis and get an email when it completes?</p>";
+
+            var jobSubmit = '<div id= "pca_submit">' + title + "</div>";
+
+            jQuery(jobSubmit).appendTo("body");
+
+            jQuery("#pca_submit").dialog({
+              height: 200,
+              width: 400,
+              modal: true,
+              title: "pca job submission",
+              buttons: {
+                OK: {
+                  text: "Yes",
+                  class: "btn btn-success",
+                  id: "queue_job",
+                  click: function () {
+                    jQuery(this).dialog("close");
+                    solGS.submitJob.checkUserLogin(pcaUrl, pcaArgs);
+                  },
+                },
+
+                No: {
+                  text: "No, I will wait till it completes.",
+                  class: "btn btn-warning",
+                  id: "no_queue",
+                  click: function () {
+                    jQuery(this).dialog("close");
+
+                    solGS.pca
+                      .runPcaAnalysis(pcaArgs)
+                      .done(function (res) {
+                        if (res.scores) {
+                          var downloadLinks = solGS.pca.pcaDownloadLinks(res);
+                          var plotData = solGS.pca.structurePlotData(res);
+                          solGS.pca.plotPca(plotData, downloadLinks);
+
+                          solGS.pca.cleanUpOnSuccess(pcaPopId);
+                        } else {
+                          var msg = "There is no PCA output for this dataset.";
+                          solGS.pca.feedBackOnFailure(pcaPopId, msg);
+                        }
+                      })
+                      .fail(function (res) {
+                        var msg = "Error occured running the PCA.";
+                        solGS.pca.feedBackOnFailure(pcaPopId, msg);
+                      });
+                  },
+                },
+
+                Cancel: {
+                  text: "Cancel",
+                  class: "btn btn-info",
+                  id: "cancel_queue_info",
+                  click: function () {
+                    jQuery(this).dialog("close");
+                  },
+                },
+              },
+            });
+            jQuery(jobSubmit).show();
+
+            jQuery("#queue_job").on("click", function (e) {
+              solGS.submitJob.checkUserLogin(page, args);
+            });
+
+            jQuery("#queue_no").on("click", function (e) {
+              solGS.pca
+                .runPcaAnalysis(pcaArgs)
+                .done(function (res) {
+                  if (res.scores) {
+                    var plotData = solGS.pca.structurePlotData(res);
+                    var downloadLinks = solGS.pca.pcaDownloadLinks(res);
+                    solGS.pca.plotPca(plotData, downloadLinks);
+
+                   solGS.pca.cleanUpOnSuccess(pcaPopId);
+                  } else {
+                    var msg = "There is no PCA output for this dataset.";
+                    solGS.pca.feedBackOnFailure(pcaPopId, msg);
+                  }
+                })
+                .fail(function (res) {
+                  var msg = "Error occured running the PCA.";
+                        solGS.pca.feedBackOnFailure(pcaPopId,msg);
+                });
+            });
+          }
+        })
+        .fail(function () {
+          var msg = "Error occured checking for cached output.";
+          solGS.pca.feedBackOnFailure(pcaPopId,msg);
+        });
+    }
+  });
 });
 
 jQuery.fn.doesExist = function () {

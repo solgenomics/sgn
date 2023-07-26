@@ -1167,18 +1167,30 @@ sub get_descendant_hash {
  Usage:
  Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
  Ret:
- Args: $accession_ids, $format (either 'parents_only' or 'full')
+ Args: $accession_ids, $format (either 'parents_only' or 'full'), $include (either 'ancestors' or 'ancestors_descendants')
  Side Effects:
  Example:
 
 =cut
 
 sub get_pedigree_rows {
-    my ($self, $accession_ids, $format) = @_;
+    my ($self, $accession_ids, $format, $include) = @_;
     #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
 
     my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my @values = ();
+
+    # set the filter criteria based on whether to include ancestors and descendants
     my ($query, $pedigree_rows);
+    my $where = "";
+    if ( $include eq 'ancestors_descendants' ) {
+        $where = "child.stock_id IN ($placeholders) OR m_rel.subject_id IN ($placeholders) OR f_rel.subject_id IN ($placeholders)";
+        push(@values, @$accession_ids, @$accession_ids, @$accession_ids);
+    }
+    else {
+        $where = "child.stock_id IN ($placeholders)";
+        push(@values, @$accession_ids);
+    }
 
     if ($format eq 'parents_only') {
         $query = "
@@ -1191,29 +1203,29 @@ sub get_pedigree_rows {
         LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
         LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
-        WHERE child.stock_id IN ($placeholders)
+        WHERE $where
         GROUP BY 1,2,3,4
         ORDER BY 1";
     }
     elsif ($format eq 'full') {
         $query = "
         WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type, depth, path, cycle) AS (
-                SELECT c.uniquename AS child,
-                c.stock_id AS child_id,
+                SELECT child.uniquename AS child,
+                child.stock_id AS child_id,
                 m.uniquename AS mother,
                 m.stock_id AS mother_id,
                 f.uniquename AS father,
                 f.stock_id AS father_id,
                 m_rel.value AS type,
                 1,
-                ARRAY[c.stock_id],
+                ARRAY[child.stock_id],
                 false
-                FROM stock c
-                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                FROM stock child
+                LEFT JOIN stock_relationship m_rel ON(child.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
                 LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
-                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
                 LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
-                WHERE c.stock_id IN ($placeholders)
+                WHERE $where
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
             UNION
                 SELECT c.uniquename AS child,
@@ -1234,14 +1246,15 @@ sub get_pedigree_rows {
                 WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
         )
-        SELECT child, mother, father, type, depth
+        SELECT child, mother, father, type
         FROM included_rows
-        GROUP BY 1,2,3,4,5
-        ORDER BY 5,1;";
+        GROUP BY 1,2,3,4
+        ORDER BY 1;";
+        # depth was removed from this query since including it was creating a lot of duplicate rows
     }
 
     my $sth = $self->schema()->storage()->dbh()->prepare($query);
-    $sth->execute(@$accession_ids);
+    $sth->execute(@values);
 
     no warnings 'uninitialized';
     while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
