@@ -37,11 +37,10 @@ sub _validate_with_plugin {
     $supported_marker_info{'Format'} = 1;
     $supported_marker_info{'Sequence'} = 1;
 
-
     my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
     my $MI_F;
 
-    my %marker_names;
+    my %seen_marker_names;
     open($MI_F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
         my $marker_info_header_row = <$MI_F>;
@@ -51,11 +50,11 @@ sub _validate_with_plugin {
             @marker_header_info = $marker_info_csv->fields();
         }
 
-        my $facility_snp_id_header = $marker_header_info[0];
-        $facility_snp_id_header =~ s/^\s+|\s+$//g;
+        my $customer_marker_name_header = $marker_header_info[0];
+        $customer_marker_name_header =~ s/^\s+|\s+$//g;
 
-        my $customer_snp_id_header = $marker_header_info[1];
-        $customer_snp_id_header =~ s/^\s+|\s+$//g;
+        my $facility_marker_name_header = $marker_header_info[1];
+        $facility_marker_name_header =~ s/^\s+|\s+$//g;
 
         my $Xallele_header = $marker_header_info[2];
         $Xallele_header =~ s/^\s+|\s+$//g;
@@ -69,11 +68,11 @@ sub _validate_with_plugin {
         my $position_header = $marker_header_info[5];
         $position_header =~ s/^\s+|\s+$//g;
 
-        if ($facility_snp_id_header ne 'FacilitySNPID'){
-            push @error_messages, 'Column 1 header must be "FacilitySNPID" in the marker Info File.';
+        if ($customer_marker_name_header ne 'CustomerMarkerName'){
+            push @error_messages, 'Column 1 header must be "CustomerMarkerName" in the marker Info File.';
         }
-        if ($customer_snp_id_header ne 'CustomerSNPID'){
-            push @error_messages, 'Column 2 header must be "CustomerSNPID" in the marker Info File.';
+        if ($facility_marker_name_header ne 'FacilityMarkerName'){
+            push @error_messages, 'Column 2 header must be "FacilityMarkerName" in the marker Info File.';
         }
         if ($Xallele_header ne 'Xallele'){
             push @error_messages, 'Column 3 header must be "Xallele" in the marker Info File.';
@@ -102,22 +101,26 @@ sub _validate_with_plugin {
             if ($marker_info_csv->parse($marker_line)) {
                 @marker_line_info = $marker_info_csv->fields();
             }
-            my $facility_snp_id = $marker_line_info[0];
-            $facility_snp_id =~ s/^\s+|\s+$//g;
-            my $customer_snp_id = $marker_line_info[1];
-            $customer_snp_id =~ s/^\s+|\s+$//g;
+
+            my $customer_marker_name = $marker_line_info[0];
+            $customer_marker_name =~ s/^\s+|\s+$//g;
+            my $facility_marker_name = $marker_line_info[1];
+            $facility_marker_name =~ s/^\s+|\s+$//g;
             my $Xallele = $marker_line_info[2];
             $Xallele =~ s/^\s+|\s+$//g;
             my $Yallele = $marker_line_info[3];
             $Yallele =~ s/^\s+|\s+$//g;
             my $chrom = $marker_line_info[4];
             $chrom =~ s/^\s+|\s+$//g;
+            my $position = $marker_line_info[5];
+            $position =~ s/^\s+|\s+$//g;
 
-            if (!defined $facility_snp_id){
-                push @error_messages, 'Facility snp id is required for all markers.';
+
+            if (!defined $customer_marker_name){
+                push @error_messages, 'Customer marker name is required for all markers.';
             }
-            if (!defined $customer_snp_id){
-                push @error_messages, 'Customer snp id is required for all markers.';
+            if (!defined $facility_marker_name){
+                push @error_messages, 'Facility marker name is required for all markers.';
             }
             if (!defined $Xallele){
                 push @error_messages, 'X allele info is required for all markers.';
@@ -125,15 +128,19 @@ sub _validate_with_plugin {
             if (!defined $Yallele){
                 push @error_messages, 'Y allele info is required for all markers.';
             }
-            if ($chrom eq '' || !defined($chrom)) {
+            if (!defined $chrom) {
                 push @error_messages, 'Chromosome is required for all markers.';
             }
-            $marker_names{$customer_snp_id} = 1;
+            if (!defined $position) {
+                push @error_messages, 'Position is required for all markers.';
+            }
+
+            $seen_marker_names{$customer_marker_name} = 1;
         }
 
     close($MI_F);
 
-    my @file_marker_names = keys %marker_names;
+    my @file_marker_names = keys %seen_marker_names;
 
     if (defined $protocol_id) {
         foreach (@file_marker_names) {
@@ -146,7 +153,7 @@ sub _validate_with_plugin {
     my $csv = Text::CSV->new({ sep_char => ',' });
     my $F;
 
-    my %seen_sample_ids;
+    my %seen_sample_names;
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
         my $header_row = <$F>;
@@ -156,11 +163,11 @@ sub _validate_with_plugin {
             @header_info = $csv->fields();
         }
 
-        my $sample_id_header = $header_info[0];
-        $sample_id_header =~ s/^\s+|\s+$//g;
+        my $marker_name_header = $header_info[0];
+        $marker_name_header =~ s/^\s+|\s+$//g;
 
-        my $snp_id_header = $header_info[1];
-        $snp_id_header =~ s/^\s+|\s+$//g;
+        my $sample_name_header = $header_info[1];
+        $sample_name_header =~ s/^\s+|\s+$//g;
 
         my $snpcall_header = $header_info[2];
         $snpcall_header =~ s/^\s+|\s+$//g;
@@ -171,13 +178,15 @@ sub _validate_with_plugin {
         my $Yvalue_header = $header_info[4];
         $Yvalue_header =~ s/^\s+|\s+$//g;
 
-        if ($sample_id_header ne 'SampleID'){
-            push @error_messages, 'Column 1 header must be "SampleID" in the KASP result File.';
+        if ($marker_name_header ne 'MarkerName'){
+            push @error_messages, 'Column 1 header must be "MarkerName" in the KASP result File.';
         }
 
-        if ($snp_id_header ne 'SNPID'){
-            push @error_messages, 'Column 2 header must be "SNPID" in the KASP result File.';
+
+        if ($sample_name_header ne 'SampleName'){
+            push @error_messages, 'Column 2 header must be "SampleName" in the KASP result File.';
         }
+
 
         if ($snpcall_header ne 'SNPCall'){
             push @error_messages, 'Column 3 header must be "SNPCall" in the KASP result File.';
@@ -198,10 +207,10 @@ sub _validate_with_plugin {
                 @line_info = $csv->fields();
             }
 
-            my $sample_id = $line_info[0];
-            $sample_id =~ s/^\s+|\s+$//g;
-            my $snp_id = $line_info[1];
-            $snp_id =~ s/^\s+|\s+$//g;
+            my $marker_name = $line_info[0];
+            $marker_name =~ s/^\s+|\s+$//g;
+            my $sample_name = $line_info[1];
+            $sample_name =~ s/^\s+|\s+$//g;
             my $snpcall = $line_info[2];
             $snpcall =~ s/^\s+|\s+$//g;
             my $xvalue = $line_info[3];
@@ -209,16 +218,16 @@ sub _validate_with_plugin {
             my $yvalue = $line_info[4];
             $yvalue =~ s/^\s+|\s+$//g;
 
-            if (!defined $sample_id){
-                push @error_messages, 'Sample id is required for all rows.';
-            } else {
-                $seen_sample_ids{$sample_id}++;
+            if (!defined $marker_name){
+                push @error_messages, 'Marker name is required for all rows.';
+            } elsif (!exists($seen_marker_names{$marker_name})) {
+                push @error_messages, "Marker $marker_name in the result file is not found in the marker info file.";
             }
 
-            if (!defined $snp_id){
-                push @error_messages, 'SNP id is required for all rows.';
-            } elsif (!exists($marker_names{$snp_id})) {
-                push @error_messages, "Marker $snp_id in the result file is not found in the marker info file.";
+            if (!defined $sample_name){
+                push @error_messages, 'Sample name is required for all rows.';
+            } else {
+                $seen_sample_names{$sample_name}++;
             }
 
             if (!defined $snpcall){
@@ -240,12 +249,12 @@ sub _validate_with_plugin {
     my $validate_type = $stock_type.'s';
     print STDERR "VALIDATE TYPE =".Dumper($validate_type)."\n";
 
-    my @all_sample_ids = keys %seen_sample_ids;
+    my @all_sample_names = keys %seen_sample_names;
     my $sample_validator = CXGN::List::Validate->new();
-    my @sample_missing = @{$sample_validator->validate($schema,$validate_type,\@all_sample_ids)->{'missing'}};
+    my @sample_missing = @{$sample_validator->validate($schema,$validate_type,\@all_sample_names)->{'missing'}};
 
     if (scalar(@sample_missing) > 0) {
-        push @error_messages, "The following sample ids are not in the database, or are not in the database as uniquenames: ".join(',',@sample_missing);
+        push @error_messages, "The following sample names are not in the database, or are not in the database as uniquenames: ".join(',',@sample_missing);
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -275,7 +284,7 @@ sub _parse_with_plugin {
     my $MF;
     my %marker_info;
     my %marker_info_details;
-    my @marker_info_keys = qw(name intertek_name chrom pos alt ref);
+    my @marker_info_keys = qw(name facility_name chrom pos alt ref);
 
     open($MF, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
@@ -308,8 +317,9 @@ sub _parse_with_plugin {
             if ($marker_info_csv->parse($marker_line)) {
                 @marker_line_info = $marker_info_csv->fields();
             }
-            my $facility_snp_id = $marker_line_info[0];
-            my $customer_snp_id = $marker_line_info[1];
+
+            my $customer_marker_name = $marker_line_info[0];
+            my $facility_marker_name = $marker_line_info[1];
             my $ref = $marker_line_info[2];
             my $alt = $marker_line_info[3];
             my $chromosome = $marker_line_info[4];
@@ -317,10 +327,10 @@ sub _parse_with_plugin {
             my %marker = (
                 ref => $ref,
                 alt => $alt,
-                intertek_name => $facility_snp_id,
+                facility_name => $facility_marker_name,
                 chrom => $chromosome,
                 pos => $position,
-                name => $customer_snp_id,
+                name => $customer_marker_name,
             );
             for my $i (6 .. $#marker_header_info){
                 my $header = $marker_header_info[$i];
@@ -338,11 +348,11 @@ sub _parse_with_plugin {
                 }
             }
 
-            push @{$protocolprop_info{'marker_names'}}, $customer_snp_id;
-            $marker_info_details{$customer_snp_id} = \%marker;
+            push @{$protocolprop_info{'marker_names'}}, $customer_marker_name;
+            $marker_info_details{$customer_marker_name} = \%marker;
 
             push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
-            $marker_info{$chromosome}->{$customer_snp_id} = \%marker;
+            $marker_info{$chromosome}->{$customer_marker_name} = \%marker;
         }
 
     close($MF);
@@ -372,10 +382,10 @@ sub _parse_with_plugin {
                 @line_info = $csv->fields();
             }
 
-            my $sample_id = $line_info[0];
-            $sample_id =~ s/^\s+|\s+$//g;
-            my $snp_id = $line_info[1];
-            $snp_id =~ s/^\s+|\s+$//g;
+            my $marker_name = $line_info[0];
+            $marker_name =~ s/^\s+|\s+$//g;
+            my $sample_name = $line_info[1];
+            $sample_name =~ s/^\s+|\s+$//g;
             my $snpcall = $line_info[2];
             $snpcall =~ s/^\s+|\s+$//g;
             my $xvalue = $line_info[3];
@@ -383,10 +393,10 @@ sub _parse_with_plugin {
             my $yvalue = $line_info[4];
             $yvalue =~ s/^\s+|\s+$//g;
 
-           $kasp_result{$snp_id}{$sample_id}{'call'} = $snpcall;
-           $kasp_result{$snp_id}{$sample_id}{'XV'} = $xvalue;
-           $kasp_result{$snp_id}{$sample_id}{'YV'} = $yvalue;
-           $seen_samples{$sample_id}++;
+           $kasp_result{$marker_name}{$sample_name}{'call'} = $snpcall;
+           $kasp_result{$marker_name}{$sample_name}{'XV'} = $xvalue;
+           $kasp_result{$marker_name}{$sample_name}{'YV'} = $yvalue;
+           $seen_samples{$sample_name}++;
         }
 
     close($F);
@@ -394,12 +404,12 @@ sub _parse_with_plugin {
     my @observation_unit_names = keys %seen_samples;
     my %genotype_info;
 
-    foreach my $marker_name (keys %kasp_result) {
+    foreach my $marker_name_key (keys %kasp_result) {
         my %sample_kasp_result = ();
-        my $ref = $marker_info_details{$marker_name}{'ref'};
-        my $alt = $marker_info_details{$marker_name}{'alt'};
-        my $chrom = $marker_info_details{$marker_name}{'chrom'};
-        my $sample_result = $kasp_result{$marker_name};
+        my $ref = $marker_info_details{$marker_name_key}{'ref'};
+        my $alt = $marker_info_details{$marker_name_key}{'alt'};
+        my $chrom = $marker_info_details{$marker_name_key}{'chrom'};
+        my $sample_result = $kasp_result{$marker_name_key};
         %sample_kasp_result = %{$sample_result};
         foreach my $sample (keys %sample_kasp_result) {
             my $sample_data = $sample_kasp_result{$sample};
@@ -429,7 +439,7 @@ sub _parse_with_plugin {
                         push @gt_vcf_genotype, './.';
                         push @alt_calls, './.';
                     } else {
-                        push @error_messages, "Allele Call Does Not Match Ref or Alt for Sample: $sample Marker: $marker_name Alt: $alt Ref: $ref Allele: $a";
+                        push @error_messages, "SNP Call Does Not Match X allele or Y allele for Sample: $sample Marker: $marker_name X allele: $ref Y allele: $alt Allele: $a";
                     }
                 }
 
@@ -444,9 +454,9 @@ sub _parse_with_plugin {
                     'YV' => $YV,
                 };
             } else {
-                die "There should always be a ref and alt according to validation above\n";
+                die "There should always be an X allele and a Y allele according to validation above\n";
             }
-            $genotype_info{$sample}->{$chrom}->{$marker_name} = $genotype_obj;
+            $genotype_info{$sample}->{$chrom}->{$marker_name_key} = $genotype_obj;
         }
 
     }

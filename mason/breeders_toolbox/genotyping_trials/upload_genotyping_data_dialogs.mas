@@ -21,7 +21,7 @@ $facilities
                                 <& /page/page_title.mas, title=>"This workflow will guide you through uploading genotypes into the database" &>
                                 <p>Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.</p>
                                 <p>Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.</p>
-                                <p>Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format and SSR for upload.</p>
+                                <p>Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload.</p>
                                 <p>If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).</p>
 
                                 <br/><br/>
@@ -350,9 +350,9 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select KASP Result File (csv): </label>
+                                                        <label class="col-sm-6 control-label">Select KASP Marker Information File (CSV): </label>
                                                         <div class="col-sm-6">
-                                                            <input type="file" name="upload_genotype_data_kasp_file_input" id="upload_genotype_data_kasp_file_input" encoding="multipart/form-data" />
+                                                            <input type="file" name="upload_genotype_kasp_marker_info_file_input" id="upload_genotype_kasp_marker_info_file_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -360,9 +360,9 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select KASP Marker Information File: </label>
+                                                        <label class="col-sm-6 control-label">Select KASP Result File (CSV): </label>
                                                         <div class="col-sm-6">
-                                                            <input type="file" name="upload_genotype_kasp_marker_info_file_input" id="upload_genotype_kasp_marker_info_file_input" encoding="multipart/form-data" />
+                                                            <input type="file" name="upload_genotype_data_kasp_file_input" id="upload_genotype_data_kasp_file_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -916,6 +916,72 @@ $facilities
     </div>
 </div>
 
+<div class="modal fade" id="upload_genotype_kasp_spreadsheet_info_format_dialog" name="upload_genotype_kasp_spreadsheet_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypeKASPDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeKASPDialog">Upload KASP data Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading KASP genotype data.</b>
+                    <br/>
+                    <b>Please use CSV formatted files</b>
+                    <br/>
+                    <br/>
+                    <b>For KASP Marker Information File:</b>
+                    <br>
+                    <p>The header must be:</p>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>CustomerMarkerName</td>
+                                <td>FacilityMarkerName</td>
+                                <td>Xallele</td>
+                                <td>Yallele</td>
+                                <td>Chromosome</td>
+                                <td>Position</td>
+                                <td><b>Optional:</b> additional marker info can be included. Please see below.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Optional columns:
+                    </b>
+                    You can include additional marker infomation by selecting one or more column headers listed below. Please add the selected column(s) after "Position" column. </li>
+                    <ul>
+                        <li>Quality</li>
+                        <li>Filter</li>
+                        <li>Info</li>
+                        <li>Format</li>
+                        <li>Sequence</li>
+                    </ul>
+
+                    <b>For KASP Result File:</b>
+                    <br>
+                    <p>The header must be:</p>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>MarkerName</td>
+                                <td>SampleName</td>
+                                <td>SNPCall</td>
+                                <td>Xvalue</td>
+                                <td>Yvalue</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_kasp_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 
