@@ -53,6 +53,61 @@ my %ADDITIONAL_LIST_DATA = (
                 $values{$list_item_ids->[$index]} = $list_item_db_ids->[$index];
             }
             return \%values;
+        },
+
+        'accession pedigree' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+            my $mother_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+            my $father_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+            foreach my $stock_id ( @$list_item_db_ids) {
+
+                # Get the pedigree of the stock
+                my $prs = $schema->resultset("Stock::StockRelationship")->search([
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $father_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    },
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $mother_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    }
+                ], {
+                    'join' => 'subject',
+                    '+select' => ['subject.uniquename'],
+                    '+as' => ['subject_uniquename']
+                });
+
+                # Retrieve the names of the parents
+                my $parents = {};
+                while ( my $p = $prs->next() ) {
+                    if ( $p->type_id == $mother_type_id ) {
+                        $parents->{'mother'} = $p->get_column('subject_uniquename');
+                    }
+                    else {
+                        $parents->{'father'} = $p->get_column('subject_uniquename');
+                    }
+                }
+
+                # Build pedigree string
+                my $pedigree = 'NA/NA';
+                if ( $parents->{'mother'} && $parents->{'father'} ) {
+                    $pedigree = $parents->{'mother'} . '/' . $parents->{'father'};
+                }
+
+                # Add pedigree to return hash
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $stock_id ) {
+                        $values{$list_item_ids->[$index]} = $pedigree;
+                    }
+                }
+            }
+
+            return \%values;
         }
 
     },
