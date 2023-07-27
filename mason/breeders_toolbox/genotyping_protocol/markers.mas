@@ -16,17 +16,17 @@ $marker_info_headers
     <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
     </center>
 </div>
-
-<table id="protocol_markers_table" class="table table-hover table-bordered">
-    <thead>
-        <tr>
+<div style="overflow:scroll">
+    <table id="protocol_markers_table" class="table table-hover table-bordered">
+        <thead>
+             <tr>
 % foreach my $column_header(@$marker_info_headers){
-            <th><%$column_header%></th>
+                <th><%$column_header%></th>
 %}
-        </tr>
-    </thead>
-    </tbody>
-</table>
+            </tr>
+        </thead>
+    </table>
+</div>
 
 <script>
 

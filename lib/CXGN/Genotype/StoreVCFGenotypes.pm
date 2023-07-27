@@ -651,7 +651,7 @@ sub validate {
                     push @error_messages, "No genotype info provided";
                 }
                 foreach (keys %$marker_info){
-                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name' && $_ ne 'sequence'){
+                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name' && $_ ne 'sequence' && $_ ne 'facility_name'){
                         push @error_messages, "protocol_info key not recognized: $_";
                     }
                 }

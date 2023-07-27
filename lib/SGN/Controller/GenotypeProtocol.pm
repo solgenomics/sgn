@@ -56,8 +56,8 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
         foreach my $info_key (@$marker_info_keys) {
             if ($info_key eq 'name') {
                 push @marker_info_headers, 'Marker Name';
-            } elsif ($info_key eq 'intertek_name') {
-                push @marker_info_headers, 'Intertek Name';
+            } elsif (($info_key eq 'intertek_name') || ($info_key eq 'facility_name')) {
+                push @marker_info_headers, 'Facility Marker Name';
             } elsif ($info_key eq 'chrom') {
                 push @marker_info_headers, 'Chromosome';
             } elsif ($info_key eq 'pos') {

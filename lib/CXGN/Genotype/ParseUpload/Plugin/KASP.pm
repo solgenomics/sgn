@@ -188,8 +188,8 @@ sub _validate_with_plugin {
         }
 
 
-        if ($snpcall_header ne 'SNPCall'){
-            push @error_messages, 'Column 3 header must be "SNPCall" in the KASP result File.';
+        if ($snpcall_header ne 'SNPcall'){
+            push @error_messages, 'Column 3 header must be "SNPcall" in the KASP result File.';
         }
 
         if ($Xvalue_header ne 'Xvalue'){
@@ -439,7 +439,7 @@ sub _parse_with_plugin {
                         push @gt_vcf_genotype, './.';
                         push @alt_calls, './.';
                     } else {
-                        push @error_messages, "SNP Call Does Not Match X allele or Y allele for Sample: $sample Marker: $marker_name X allele: $ref Y allele: $alt Allele: $a";
+                        push @error_messages, "SNP Call Does Not Match X allele or Y allele for Sample: $sample Marker: $marker_name_key X allele: $ref Y allele: $alt Allele: $a";
                     }
                 }
 

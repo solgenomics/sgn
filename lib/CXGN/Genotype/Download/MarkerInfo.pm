@@ -67,9 +67,9 @@ sub download {
     if (defined $marker_info_keys) {
         foreach my $header_key (@$marker_info_keys) {
             if ($header_key eq 'name') {
-                push @headers, 'NAME';
-            } elsif ($header_key eq 'intertek_name') {
-                push @headers, 'INTERTEK NAME';
+                push @headers, 'MARKER NAME';
+            } elsif (($header_key eq 'intertek_name') || ($header_key eq 'facility_name')) {
+                push @headers, 'FACILITY MARKER NAME';
             } elsif ($header_key eq 'chrom') {
                 push @headers, 'CHROMOSOME';
             } elsif ($header_key eq 'pos') {
