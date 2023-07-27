@@ -21,6 +21,7 @@ This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
  Naama Menda<nm249@cornell.edu>
  Srikanth Kumar Karaikal <sk2783@cornell.edu>
+
 =head1 COPYRIGHT & LICENSE
 
 Copyright 2010 Boyce Thompson Institute for Plant Research
@@ -49,35 +50,32 @@ has '+prereq' => (
     },
   );
 
-    sub patch {
-        my $self=shift;
+sub patch {
+    my $self=shift;
 
-        print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
+    print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
 
-        print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
+    print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
-        print STDOUT "\nExecuting the SQL commands.\n";
-        my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
-        # my %cvterms =
-        # (
-        #     'project_property'  => ['project_transplanting_date'],
-        # );
-        print STDERR "INSERTING CV TERMS...\n";
-        my $terms = {
-             'project_property' =>[
-                    'project_transplanting_date'],
-        };
+    print STDOUT "\nExecuting the SQL commands.\n";
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-        foreach my $t (keys %$terms){
-                foreach(@{$terms->{$t}}){
-                        $schema->resultset("Cv::Cvterm")->create_with({
-                                name => $_,
-                                cv => $t,
-                        });
-                }
+    print STDERR "INSERTING CV TERMS...\n";
+    my $terms = {
+       'project_property' =>[
+           'project_transplanting_date'],
+    };
+
+    foreach my $t (keys %$terms){
+        foreach(@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t,
+            });
         }
+    }
 
-        print "You're done!\n"
+    print "You're done!\n"
 }
 
 ####

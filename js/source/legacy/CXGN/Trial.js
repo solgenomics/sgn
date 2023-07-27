@@ -567,11 +567,11 @@ function highlight_changed_details(element) { // compare changed value to defaul
     element.attr("name", "changed");
     element.parent().parent().addClass("has-success has-feedback");
     element.parent().after('<span class="glyphicon glyphicon-pencil form-control-feedback" id="change_indicator" aria-hidden="true" style="right: -20px;"></span>');
-  } else {
+} else {
     element.attr("name", "");
     element.parent().parent().removeClass("has-success has-feedback");
     element.parent().siblings('#change_indicator').remove();
-  }
+    }
 }
 
 function reset_dialog_body (body_id, body_html) {
