@@ -204,7 +204,12 @@ has '_snp_genotyping_cvterm_id' => (
     is => 'rw'
 );
 
-has '_vcf_snp_genotyping_cvterm_id' => (
+has '_phg_genotyping_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
+has '_vcf_genotyping_cvterm_id' => (
     isa => 'Int',
     is => 'rw'
 );
@@ -386,21 +391,20 @@ sub get_genotype_info {
     my %search_params;
     my @where_clause;
 
-print STDERR Dumper "\nget_genotype_info protocol id list: $protocol_id_list\n";    
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 
+    my $phg_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phg genotyping', 'genotype_property')->cvterm_id();
 
-    # my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
-
-
-     my $vcf_snp_genotyping_cvterm_id;
+     my $vcf_genotyping_cvterm_id;#the cvterm id for vcf_snp_genotyping or vcf_phg_genotyping
      if ($protocol_id_list->[0]) {
-        $vcf_snp_genotyping_cvterm_id = $self->get_protocol_genotypeprop_type_id($protocol_id_list->[0]);
+        $vcf_genotyping_cvterm_id = $self->get_protocol_genotypeprop_type_id($protocol_id_list->[0]);
      } elsif ($markerprofile_id_list->[0]) {
-        $vcf_snp_genotyping_cvterm_id = $self->get_genotypeprop_type_id_from_genotype_id($markerprofile_id_list->[0]);
+        $vcf_genotyping_cvterm_id = $self->get_genotypeprop_type_id_from_genotype_id($markerprofile_id_list->[0]);
      }
 
-print STDERR Dumper "\nget_genotype_info vcf_snp_genotyping_cvterm_id -- $vcf_snp_genotyping_cvterm_id\n";    
+
+
+print STDERR Dumper "\nget_genotype_info vcf_genotyping_cvterm_id -- $vcf_genotyping_cvterm_id\n";    
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
@@ -665,22 +669,22 @@ print STDERR Dumper "\nget_genotype_info vcf_snp_genotyping_cvterm_id -- $vcf_sn
         }
 
         my $q2 = "SELECT genotypeprop_id
-            FROM genotypeprop WHERE genotype_id = ? AND type_id=$vcf_snp_genotyping_cvterm_id $genotypeprop_chromosome_rank_string;";
+            FROM genotypeprop WHERE genotype_id = ? AND type_id=$vcf_genotyping_cvterm_id $genotypeprop_chromosome_rank_string;";
         my $h2 = $schema->storage->dbh()->prepare($q2);
 
         my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
             FROM genotypeprop, jsonb_each(genotypeprop.value) as s
-            WHERE genotypeprop_id = ? AND s.key != 'CHROM' AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
+            WHERE genotypeprop_id = ? AND s.key != 'CHROM' AND type_id = $vcf_genotyping_cvterm_id $filtered_markers_sql;";
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
 
         foreach my $genotype_id (@genotype_id_array){
-                    print STDERR "\nvcf_snp_genotyping_cvterm_id -- $vcf_snp_genotyping_cvterm_id --genotype_id: $genotype_id\n";
+                    print STDERR "\nvcf_snp_genotyping_cvterm_id -- $vcf_genotyping_cvterm_id --genotype_id: $genotype_id\n";
 
             $h2->execute($genotype_id);
             while (my ($genotypeprop_id) = $h2->fetchrow_array()) {
                 $genotypeprop_h->execute($genotypeprop_id);
                 while (my ($marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
-                    print STDERR "\nvcf_snp_genotyping_cvterm_id -- $vcf_snp_genotyping_cvterm_id --marker_name: $marker_name\n";
+                    print STDERR "\nvcf_snp_genotyping_cvterm_id -- $vcf_genotyping_cvterm_id --marker_name: $marker_name\n";
                     for my $s (0 .. scalar(@genotypeprop_hash_select_arr)-1){
                         $genotype_hash{$genotype_id}->{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
                     }
@@ -758,20 +762,19 @@ sub init_genotype_iterator {
 
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     $self->_snp_genotyping_cvterm_id($snp_genotyping_cvterm_id);
-print STDERR Dumper "\nnit_genotype_iterator protocol id list: snp_genotyping_cvterm_id -- $snp_genotyping_cvterm_id\n";
 
-    # my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+     my $phg_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phg genotyping', 'genotype_property')->cvterm_id();
+    $self->_phg_genotyping_cvterm_id($phg_genotyping_cvterm_id);
 
-my $vcf_snp_genotyping_cvterm_id;
-     if ($protocol_id_list->[0]) {
-        $vcf_snp_genotyping_cvterm_id = $self->get_protocol_genotypeprop_type_id($protocol_id_list->[0]);
-     } elsif ($markerprofile_id_list->[0]) {
-        $vcf_snp_genotyping_cvterm_id = $self->get_genotypeprop_type_id_from_genotype_id($markerprofile_id_list->[0]);
-     }
+    my $vcf_genotyping_cvterm_id;
+        if ($protocol_id_list->[0]) {
+            $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_protocol_vcf_genotyping_cvterm_id($self->bcs_schema, $protocol_id_list->[0]);
+        } elsif ($markerprofile_id_list->[0]) {
+            $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id_from_genotype_id($self->bcs_schema, $markerprofile_id_list->[0]);
+        }
 
-print STDERR Dumper "\ninit_genotype_iterator protocol id list: vcf_snp_genotyping_cvterm_id -- $vcf_snp_genotyping_cvterm_id\n";
 
-    $self->_vcf_snp_genotyping_cvterm_id($vcf_snp_genotyping_cvterm_id);
+    $self->_vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     $self->_vcf_map_details_cvterm_id($vcf_map_details_cvterm_id);
@@ -1066,12 +1069,12 @@ print STDERR Dumper "\ninit_genotype_iterator protocol id list: vcf_snp_genotypi
 
     my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
         FROM genotypeprop, jsonb_each(genotypeprop.value) as s
-        WHERE genotypeprop_id = ? AND s.key != 'CHROM' AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
+        WHERE genotypeprop_id = ? AND s.key != 'CHROM' AND type_id = $vcf_genotyping_cvterm_id $filtered_markers_sql;";
     my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
     $self->_genotypeprop_h($genotypeprop_h);
 
     my $q2 = "SELECT genotypeprop_id
-        FROM genotypeprop WHERE genotype_id = ? AND type_id=$vcf_snp_genotyping_cvterm_id $genotypeprop_chromosome_rank_string;";
+        FROM genotypeprop WHERE genotype_id = ? AND type_id=$vcf_genotyping_cvterm_id $genotypeprop_chromosome_rank_string;";
     my $h2 = $schema->storage->dbh()->prepare($q2);
     $self->_iterator_genotypeprop_query_handle($h2);
 
@@ -1128,7 +1131,9 @@ sub get_next_genotype_info {
     my $protocolprop_top_key_select_arr = $self->_protocolprop_top_key_select_arr();
     my $genotypeprop_hash_select_arr = $self->_genotypeprop_hash_select_arr();
     my $snp_genotyping_cvterm_id = $self->_snp_genotyping_cvterm_id();
-    my $vcf_snp_genotyping_cvterm_id = $self->_vcf_snp_genotyping_cvterm_id();
+    my $phg_genotyping_cvterm_id = $self->_phg_genotyping_cvterm_id();
+    my $vcf_genotyping_cvterm_id = $self->_vcf_genotyping_cvterm_id();
+    # my $vcf_phg_genotyping_cvterm_id = $self->_vcf_phg_genotyping_cvterm_id();
     my $vcf_map_details_cvterm_id = $self->_vcf_map_details_cvterm_id();
     my $vcf_map_details_markers_cvterm_id = $self->_vcf_map_details_markers_cvterm_id();
     my $vcf_map_details_markers_array_cvterm_id = $self->_vcf_map_details_markers_array_cvterm_id();
@@ -1137,7 +1142,7 @@ sub get_next_genotype_info {
     my $tissue_sample_cvterm_id = $self->_tissue_sample_cvterm_id();
     my $tissue_sample_of_cvterm_id = $self->_tissue_sample_of_cvterm_id();
 
-print STDERR "\nget_next_genotype_info: vcf_snp_genotyping_cvterm_id --$vcf_snp_genotyping_cvterm_id\n";
+print STDERR "\nget_next_genotype_info: vcf_genotyping_cvterm_id --$vcf_genotyping_cvterm_id\n";
     my $total_count = 0;
     my @genotypeprop_array;
     my %protocolprop_hash;
@@ -2292,47 +2297,5 @@ sub get_pcr_genotype_info {
 
 }
 
-
-sub get_protocol_genotypeprop_type_id {
-    my $self = shift;
-    my $protocol_id = shift;
-
-    print STDERR "\nget_protocol_genotypeprop_type_id protocol_id: $protocol_id\n";
-
-    my $schema = $self->bcs_schema;
-    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name,  genotypeprop.type_id FROM stock  JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_protocol USING (nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN nd_protocol USING (nd_protocol_id) LEFT JOIN nd_protocolprop ON (nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id) JOIN genotype USING (genotype_id) LEFT JOIN genotypeprop USING (genotype_id) where nd_protocol.nd_protocol_id = ? LIMIT 1";
-
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($protocol_id);
-
-    my ($protocol_id, $protocol_name, $vcf_genotype_type_id) = $h->fetchrow_array();
-    
-    print STDERR "\nget_protocol_genotypeprop_type_id: $protocol_id, $protocol_name, $vcf_genotype_type_id\n";
-
-    return $vcf_genotype_type_id;
-
-}
-
-
-
-sub get_genotypeprop_type_id_from_genotype_id {
-    my $self = shift;
-    my $genotype_id = shift;
-    my $schema = $self->bcs_schema;
-
-     print STDERR "\nget_genotypeprop_type_id_from_genotype_id genotype_id: $genotype_id\n";
-
-    my $q = "SELECT  type_id FROM genotypeprop WHERE genotype_id = ? LIMIT 1";
-
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotype_id);
-
-    my $vcf_genotype_type_id = $h->fetchrow_array();
-    
-    print STDERR "\nget_genotypeprop_type_id_from_genotype_id: $vcf_genotype_type_id\n";
-
-    return $vcf_genotype_type_id;
-
-}
 
 1;
