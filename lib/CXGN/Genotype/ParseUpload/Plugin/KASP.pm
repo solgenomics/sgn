@@ -6,6 +6,7 @@ use Data::Dumper;
 use Text::CSV;
 use CXGN::Genotype::Protocol;
 use CXGN::List::Validate;
+use CXGN::Stock::FacilityIdentifiers;
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -429,7 +430,21 @@ sub _parse_with_plugin {
 
     close($F);
 
-    my @observation_unit_names = keys %seen_samples;
+    my @observation_unit_names;
+    my %facility_sample_name_link;
+    if ($sample_name_type eq 'FacilitySampleName') {
+        my @facility_sample_list = keys %seen_samples;
+        my $facility_identifiers_obj = CXGN::Stock::FacilityIdentifiers->new();
+        my $db_sample_name_info = $facility_identifiers_obj->get_tissue_samples();
+        %facility_sample_name_link = %{$db_sample_name_info};
+        @observation_unit_names = values %facility_sample_name_link
+    } else {
+        @observation_unit_names = keys %seen_samples;
+    }
+
+    print STDERR "FACILITY NAME LINK =".Dumper(\%facility_sample_name_link)."\n";
+    print STDERR "OBSERVATION UNIT NAMES =".Dumper(\@observation_unit_uniquenames)."\n";
+
     my %genotype_info;
 
     foreach my $marker_name_key (keys %kasp_result) {
@@ -484,7 +499,13 @@ sub _parse_with_plugin {
             } else {
                 die "There should always be an X allele and a Y allele according to validation above\n";
             }
-            $genotype_info{$sample}->{$chrom}->{$marker_name_key} = $genotype_obj;
+
+            if ($sample_name_type eq 'FacilitySampleName') {
+                my $store_sample_name = $facility_sample_name_link{$sample};
+                $genotype_info{$store_sample_name}->{$chrom}->{$marker_name_key} = $genotype_obj;
+            } else {
+                $genotype_info{$sample}->{$chrom}->{$marker_name_key} = $genotype_obj;
+            }
         }
 
     }
