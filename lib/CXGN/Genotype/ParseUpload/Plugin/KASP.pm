@@ -154,6 +154,7 @@ sub _validate_with_plugin {
     my $F;
 
     my %seen_sample_names;
+    my %seen_facility_sample_names;
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
         my $header_row = <$F>;
@@ -178,15 +179,13 @@ sub _validate_with_plugin {
         my $Yvalue_header = $header_info[4];
         $Yvalue_header =~ s/^\s+|\s+$//g;
 
-        if ($marker_name_header ne 'MarkerName'){
-            push @error_messages, 'Column 1 header must be "MarkerName" in the KASP result File.';
+        if (($marker_name_header ne 'MarkerName') || ($marker_name_header ne 'FacilityMarkerName')){
+            push @error_messages, 'Column 1 header must be "MarkerName" or "FacilityMarkerName" in the KASP result File.';
         }
 
-
-        if ($sample_name_header ne 'SampleName'){
-            push @error_messages, 'Column 2 header must be "SampleName" in the KASP result File.';
+        if (($sample_name_header ne 'SampleName') || ($sample_name_header ne 'FacilitySampleName')){
+            push @error_messages, 'Column 2 header must be "SampleName" or "FacilitySampleName" in the KASP result File.';
         }
-
 
         if ($snpcall_header ne 'SNPcall'){
             push @error_messages, 'Column 3 header must be "SNPcall" in the KASP result File.';
@@ -199,7 +198,6 @@ sub _validate_with_plugin {
         if ($Yvalue_header ne 'Yvalue'){
             push @error_messages, 'Column 5 header must be "Yvalue" in the KASP result File.';
         }
-
 
         while (my $line = <$F>) {
             my @line_info;
@@ -219,15 +217,19 @@ sub _validate_with_plugin {
             $yvalue =~ s/^\s+|\s+$//g;
 
             if (!defined $marker_name){
-                push @error_messages, 'Marker name is required for all rows.';
+                push @error_messages, 'Marker name or facility marker name is required for all rows.';
             } elsif (!exists($seen_marker_names{$marker_name})) {
                 push @error_messages, "Marker $marker_name in the result file is not found in the marker info file.";
             }
 
             if (!defined $sample_name){
-                push @error_messages, 'Sample name is required for all rows.';
+                push @error_messages, 'Sample name or facility sample name is required for all rows.';
             } else {
-                $seen_sample_names{$sample_name}++;
+                if ($sample_name_header eq 'SampleName') {
+                    $seen_sample_names{$sample_name}++;
+                } elsif ($sample_name_header eq 'FacilitySampleName') {
+                    $seen_facility_sample_names{$sample_name}++
+                }
             }
 
             if (!defined $snpcall){
@@ -249,12 +251,22 @@ sub _validate_with_plugin {
     my $validate_type = $stock_type.'s';
     print STDERR "VALIDATE TYPE =".Dumper($validate_type)."\n";
 
-    my @all_sample_names = keys %seen_sample_names;
-    my $sample_validator = CXGN::List::Validate->new();
-    my @sample_missing = @{$sample_validator->validate($schema,$validate_type,\@all_sample_names)->{'missing'}};
+    if ($sample_name_header eq 'SampleName') {
+        my @all_sample_names = keys %seen_sample_names;
+        my $sample_validator = CXGN::List::Validate->new();
+        my @sample_missing = @{$sample_validator->validate($schema,$validate_type,\@all_sample_names)->{'missing'}};
 
-    if (scalar(@sample_missing) > 0) {
-        push @error_messages, "The following sample names are not in the database, or are not in the database as uniquenames: ".join(',',@sample_missing);
+        if (scalar(@sample_missing) > 0) {
+            push @error_messages, "The following sample names are not in the database, or are not in the database as uniquenames: ".join(',',@sample_missing);
+        }
+    } elsif ($sample_name_header eq 'FacilitySampleName') {
+        my @all_facility_sample_names = keys %seen_facility_sample_names;
+        my $facility_sample_validator = CXGN::List::Validate->new();
+        my @facility_sample_missing = @{$facility_sample_validator->validate($schema,'facility_identifiers',\@all_facility_sample_names)->{'missing'}};
+
+        if (scalar(@facility_sample_missing) > 0) {
+            push @error_messages, "The following facility sample names are not in the database: ".join(',',@facility_sample_sample_missing);
+        }
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -262,6 +274,8 @@ sub _validate_with_plugin {
         $self->_set_parse_errors(\%errors);
         return;
     }
+
+
 
     return 1;
 }
@@ -311,7 +325,7 @@ sub _parse_with_plugin {
             }
         }
         print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
-
+        my %marker_facility_link;
         while (my $marker_line = <$MF>) {
             my @marker_line_info;
             if ($marker_info_csv->parse($marker_line)) {
@@ -320,6 +334,7 @@ sub _parse_with_plugin {
 
             my $customer_marker_name = $marker_line_info[0];
             my $facility_marker_name = $marker_line_info[1];
+            $marker_facility_link{$facility_marker_name} = $customer_marker_name;
             my $ref = $marker_line_info[2];
             my $alt = $marker_line_info[3];
             my $chromosome = $marker_line_info[4];
@@ -376,14 +391,27 @@ sub _parse_with_plugin {
             @header_info = $csv->fields();
         }
 
+        my $marker_name_type = $header_info[0];
+        $marker_name_type =~ s/^\s+|\s+$//g;
+
+        my $sample_name_type = $header_info[1];
+        $sample_name_type =~ s/^\s+|\s+$//g;
+
         while (my $line = <$F>) {
             my @line_info;
+            my $marker_name;
             if ($csv->parse($line)) {
                 @line_info = $csv->fields();
             }
 
-            my $marker_name = $line_info[0];
-            $marker_name =~ s/^\s+|\s+$//g;
+            if ($marker_name_type eq 'FacilityMarkerName') {
+                my $facility_name = $line_info[0];
+                $facility_name =~ s/^\s+|\s+$//g;
+                $marker_name = $marker_facility_link{$facility_name};
+            } else {
+                $marker_name = $line_info[0];
+                $marker_name =~ s/^\s+|\s+$//g;
+            }
             my $sample_name = $line_info[1];
             $sample_name =~ s/^\s+|\s+$//g;
             my $snpcall = $line_info[2];
