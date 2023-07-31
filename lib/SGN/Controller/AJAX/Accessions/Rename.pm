@@ -186,6 +186,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
     
+    
     my ($header, $rename) = $self->_get_rename_accessions_from_file($c, $archived_filename);
 
     my $info = $self->validate_rename_accessions($c, $header, $rename);
