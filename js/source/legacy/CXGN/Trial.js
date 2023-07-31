@@ -325,44 +325,41 @@ function edit_trial_details(){
     //create bootstrap daterangepickers for planting, transplanting and harvest dates
     var planting_date_element = jQuery("#edit_trial_planting_date");
     set_daterangepicker_default (planting_date_element);
-    jQuery('input[title="planting_date"]').daterangepicker(
-        {
-            "singleDatePicker": true,
-            "showDropdowns": true,
-            "autoUpdateInput": false,
-        },
-        function(start){
-            planting_date_element.val(start.format('MM/DD/YYYY'));
-            highlight_changed_details(planting_date_element);
-        }
+    jQuery('input[title="planting_date"]').daterangepicker({
+        "singleDatePicker": true,
+        "showDropdowns": true,
+        "autoUpdateInput": false,
+    },
+    function(start){
+        planting_date_element.val(start.format('MM/DD/YYYY'));
+        highlight_changed_details(planting_date_element);
+    }
     );
 
     var transplanting_date_element = jQuery("#edit_trial_transplanting_date");
     set_daterangepicker_default (transplanting_date_element);
-    jQuery('input[title="transplanting_date"]').daterangepicker(
-        {
-            "singleDatePicker": true,
-            "showDropdowns": true,
-            "autoUpdateInput": false,
-        },
-        function(start){
-            transplanting_date_element.val(start.format('MM/DD/YYYY'));
-            highlight_changed_details(transplanting_date_element);
-        }
+    jQuery('input[title="transplanting_date"]').daterangepicker({
+        "singleDatePicker": true,
+        "showDropdowns": true,
+        "autoUpdateInput": false,
+    },
+    function(start){
+        transplanting_date_element.val(start.format('MM/DD/YYYY'));
+        highlight_changed_details(transplanting_date_element);
+    }
     );
     
     var harvest_date_element = jQuery("#edit_trial_harvest_date");
     set_daterangepicker_default (harvest_date_element);
-    harvest_date_element.daterangepicker(
-        {
-            "singleDatePicker": true,
-            "showDropdowns": true,
-            "autoUpdateInput": false,
-        },
-        function(start){
-            harvest_date_element.val(start.format('MM/DD/YYYY'));
-            highlight_changed_details(harvest_date_element);
-        }
+    harvest_date_element.daterangepicker({
+        "singleDatePicker": true,
+        "showDropdowns": true,
+        "autoUpdateInput": false,
+    },
+    function(start){
+        harvest_date_element.val(start.format('MM/DD/YYYY'));
+        highlight_changed_details(harvest_date_element);
+    }
     );
 
     jQuery('#edit_trial_details_cancel_button').click(function(){
