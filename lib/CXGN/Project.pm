@@ -1332,7 +1332,7 @@ sub get_transplanting_date {
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
 	    project_id => $self->get_trial_id(),
 	    type_id => $transplanting_date_cvterm_id,
-	    });
+	});
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
@@ -1354,8 +1354,7 @@ sub set_transplanting_date {
     if (my $transplanting_event = $calendar_funcs->check_value_format($transplanting_date)) {
 
 	    my $transplanting_date_cvterm_id = $self->get_transplanting_date_cvterm_id();
-	    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
-		{
+	    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
 		    project_id => $self->get_trial_id(),
 		    type_id => $transplanting_date_cvterm_id,
 		});
