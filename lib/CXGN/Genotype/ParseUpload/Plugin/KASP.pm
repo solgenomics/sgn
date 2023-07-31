@@ -6,7 +6,8 @@ use Data::Dumper;
 use Text::CSV;
 use CXGN::Genotype::Protocol;
 use CXGN::List::Validate;
-use CXGN::Stock::FacilityIdentifiers;
+use CXGN::Stock::TissueSample::FacilityIdentifiers;
+
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -42,6 +43,7 @@ sub _validate_with_plugin {
     my $MI_F;
 
     my %seen_marker_names;
+    my %seen_facility_marker_names;
     open($MI_F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
         my $marker_info_header_row = <$MI_F>;
@@ -137,9 +139,12 @@ sub _validate_with_plugin {
             }
 
             $seen_marker_names{$customer_marker_name} = 1;
+            $seen_facility_marker_names{$facility_marker_name} = 1;
         }
 
     close($MI_F);
+    print STDERR "SEEN MARKER NAMES =".Dumper(\%seen_marker_names)."\n";
+    print STDERR "SEEN FACILITY MARKER NAMES =".Dumper(\%seen_facility_marker_names)."\n";
 
     my @file_marker_names = keys %seen_marker_names;
 
@@ -167,10 +172,10 @@ sub _validate_with_plugin {
 
         my $marker_name_header = $header_info[0];
         $marker_name_header =~ s/^\s+|\s+$//g;
-
+        print STDERR "MARKER NAME HEADER =".Dumper($marker_name_header)."\n";
         my $sample_name_header = $header_info[1];
         $sample_name_header =~ s/^\s+|\s+$//g;
-
+        print STDERR "SAMPLE NAME HEADER =".Dumper($sample_name_header)."\n";
         my $snpcall_header = $header_info[2];
         $snpcall_header =~ s/^\s+|\s+$//g;
 
@@ -180,11 +185,11 @@ sub _validate_with_plugin {
         my $Yvalue_header = $header_info[4];
         $Yvalue_header =~ s/^\s+|\s+$//g;
 
-        if (($marker_name_header ne 'MarkerName') || ($marker_name_header ne 'FacilityMarkerName')){
+        if (($marker_name_header ne 'MarkerName') && ($marker_name_header ne 'FacilityMarkerName')){
             push @error_messages, 'Column 1 header must be "MarkerName" or "FacilityMarkerName" in the KASP result File.';
         }
 
-        if (($sample_name_header ne 'SampleName') || ($sample_name_header ne 'FacilitySampleName')){
+        if (($sample_name_header ne 'SampleName') && ($sample_name_header ne 'FacilitySampleName')){
             push @error_messages, 'Column 2 header must be "SampleName" or "FacilitySampleName" in the KASP result File.';
         }
 
@@ -219,7 +224,7 @@ sub _validate_with_plugin {
 
             if (!defined $marker_name){
                 push @error_messages, 'Marker name or facility marker name is required for all rows.';
-            } elsif (!exists($seen_marker_names{$marker_name})) {
+            } elsif (!exists($seen_marker_names{$marker_name}) && !exists($seen_facility_marker_names{$marker_name})) {
                 push @error_messages, "Marker $marker_name in the result file is not found in the marker info file.";
             }
 
@@ -266,7 +271,7 @@ sub _validate_with_plugin {
         my @facility_sample_missing = @{$facility_sample_validator->validate($schema,'facility_identifiers',\@all_facility_sample_names)->{'missing'}};
 
         if (scalar(@facility_sample_missing) > 0) {
-            push @error_messages, "The following facility sample names are not in the database: ".join(',',@facility_sample_sample_missing);
+            push @error_messages, "The following facility sample names are not in the database: ".join(',',@facility_sample_missing);
         }
     }
 
@@ -434,7 +439,7 @@ sub _parse_with_plugin {
     my %facility_sample_name_link;
     if ($sample_name_type eq 'FacilitySampleName') {
         my @facility_sample_list = keys %seen_samples;
-        my $facility_identifiers_obj = CXGN::Stock::FacilityIdentifiers->new();
+        my $facility_identifiers_obj = CXGN::Stock::TissueSample::FacilityIdentifiers->new(bcs_schema => $schema, facility_identifier_list => \@facility_sample_list);
         my $db_sample_name_info = $facility_identifiers_obj->get_tissue_samples();
         %facility_sample_name_link = %{$db_sample_name_info};
         @observation_unit_names = values %facility_sample_name_link
@@ -443,7 +448,7 @@ sub _parse_with_plugin {
     }
 
     print STDERR "FACILITY NAME LINK =".Dumper(\%facility_sample_name_link)."\n";
-    print STDERR "OBSERVATION UNIT NAMES =".Dumper(\@observation_unit_uniquenames)."\n";
+    print STDERR "OBSERVATION UNIT NAMES =".Dumper(\@observation_unit_names)."\n";
 
     my %genotype_info;
 
