@@ -128,6 +128,9 @@ jQuery(document).ready(function(){
                     { title: 'Logged in user' },
                     { title: 'Before' },
                     { title: 'After' },
+                    { title: 'Transaction Code'},
+                    { title: 'Primary Key'},
+                    { title: 'Is Undo'},
                 ],
                 "rowCallback" : function (row, data, index){
                     if(data[1] == "INSERT"){

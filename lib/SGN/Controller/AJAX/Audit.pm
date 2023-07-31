@@ -36,8 +36,8 @@ sub retrieve_results : Path('/ajax/audit/retrieve_results'){
     my @all_audits;
     my $counter = 0;
 
-    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after) = $h->fetchrow_array) {
-        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after];
+    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
+        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo];
         $counter++;
         };
 
@@ -79,10 +79,10 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my @after;
     my $counter = 0;
 
-    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after) = $h->fetchrow_array) {
+    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
         $after[$counter] = $after;
         $before[$counter] = $before;
-        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after];
+        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo];
         $counter++;
         }
 
@@ -109,6 +109,7 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     print STDERR Dumper(@matches)."\n";
 
 
+
     my $stock_match_json = new JSON;
     $stock_match_json = encode_json(\@matches);
 
@@ -130,20 +131,20 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
     my @after;
     my $counter = 0;
 
-    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after) = $h->fetchrow_array) {
+    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
         $after[$counter] = $after;
         $before[$counter] = $before;
-        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after];
+        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo];
         $counter++;
         }
 
     
     my @matches;
-    my $j = 0; #this is to make sure only matched audits go into the matches array
+    my $num_matches = 0; #this is to make sure only matched audits go into the matches array
 
     for (my $i = 0; $i<$counter; $i++){
         my $operation = $all_audits[$i][1];
-        print STDERR ($operation)."\n";
+        print STDERR Dumper($operation)."\n";
         my $json_string = new JSON;
         if($operation eq "DELETE"){
             $json_string = decode_json($before[$i]);
@@ -151,16 +152,20 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
             $json_string = decode_json($after[$i]);
         }
         my $desired_trial_id = $json_string->{'project_id'};
-        print STDERR ($desired_trial_id)."\n";
+        
         if($trial_id eq $desired_trial_id){
-            $matches[$j] = $all_audits[$i];
-            $j++;
+        
+
+            $matches[$num_matches] = $all_audits[$i];
+            $num_matches++;
 
         }
     }
 
+
     my $match_trial_json = new JSON;
     $match_trial_json = encode_json(\@matches);
+    
 
     $c->stash->{rest} = {
         match_project => $match_trial_json,

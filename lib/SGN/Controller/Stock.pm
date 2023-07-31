@@ -403,6 +403,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     } else {
 	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
 	my $dl_token = $c->req->param("gbs_download_token") || "no_token";
 	my $dl_cookie = "download".$dl_token;
 

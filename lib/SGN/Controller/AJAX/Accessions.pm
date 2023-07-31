@@ -374,7 +374,8 @@ sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') 
 
 sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
     my $full_info = $c->req->param('full_info') ? _parse_list_from_json($c, $c->req->param('full_info')) : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? _parse_list_from_json($c, $c->req->param('allowed_organisms')) : [];
@@ -385,7 +386,7 @@ sub add_accession_list_POST : Args(0) {
         $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
         return;
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    
     my $user_name = $c->user()->get_object()->get_username();
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {

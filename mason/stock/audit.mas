@@ -60,7 +60,26 @@ jQuery(document).ready(function(){
             timeout: 300000,
             success: function(response){
             var json_object = JSON.parse(response.stock_match_after);
-            /*alert(json_object);*/
+            var datastring;
+            for (var row = 0; row < json_object.length; row++){
+                for (var column = 4; column <= 5; column++){
+                    datastring = json_object[row][column];
+                    if(datastring != null){
+                        for(var character = 0; character < datastring.length; character++){
+                            if(datastring[character] == '{' || datastring[character] == '}' || datastring[character] == '"' || datastring[character] == ','){
+                                if(datastring[character] == ','){
+                                    datastring = datastring.replace(datastring[character],'\n');
+                                }else{
+                                    datastring = datastring.replace(datastring[character],'');
+                                    character --;
+                                }
+                            }
+                        }
+                    }
+                    json_object[row][column] = datastring;
+                }
+            }
+            
             jQuery('#stock_audit_results').DataTable({
                 data: json_object,
                 columns: [
@@ -70,6 +89,9 @@ jQuery(document).ready(function(){
                     { title: 'Logged in user' },
                     { title: 'Before' },
                     { title: 'After' },
+                    { title: 'Transaction Code'},
+                    { title: 'Primary Key'},
+                    { title: 'Is Undo'},
                 ],
                 
             });

@@ -54,9 +54,9 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
-CREATE TABLE public.logged_in_user (sp_person_id INT);
-INSERT INTO public.logged_in_user (sp_person_id) VALUES (57);
-ALTER TABLE public.logged_in_user OWNER TO web_usr;
+--CREATE TABLE public.logged_in_user (sp_person_id INT);
+--INSERT INTO public.logged_in_user (sp_person_id) VALUES (57);
+--ALTER TABLE public.logged_in_user OWNER TO web_usr;
 
 CREATE SCHEMA IF NOT EXISTS audit;
 ALTER SCHEMA audit OWNER TO web_usr;
@@ -67,7 +67,10 @@ CREATE TABLE audit.cv_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cv_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cv_audit OWNER TO web_usr;
@@ -78,24 +81,25 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cv_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cv_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cv_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cv_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cv_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cv_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -113,7 +117,10 @@ CREATE TABLE audit.cvprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cvprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cvprop_audit OWNER TO web_usr;
@@ -124,24 +131,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cvprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cvprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cvprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cvprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cvprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cvprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -159,7 +168,10 @@ CREATE TABLE audit.cvterm_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cvterm_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cvterm_audit OWNER TO web_usr;
@@ -170,24 +182,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cvterm_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cvterm_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cvterm_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cvterm_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cvterm_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -205,7 +219,10 @@ CREATE TABLE audit.cvterm_dbxref_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cvterm_dbxref_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cvterm_dbxref_audit OWNER TO web_usr;
@@ -216,24 +233,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cvterm_dbxref_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cvterm_dbxref_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cvterm_dbxref_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cvterm_dbxref_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cvterm_dbxref_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cvterm_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -251,7 +270,10 @@ CREATE TABLE audit.cvterm_relationship_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cvterm_relationship_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cvterm_relationship_audit OWNER TO web_usr;
@@ -262,24 +284,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cvterm_relationship_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cvterm_relationship_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cvterm_relationship_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cvterm_relationship_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cvterm_relationship_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cvterm_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -297,7 +321,10 @@ CREATE TABLE audit.cvtermpath_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cvtermpath_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cvtermpath_audit OWNER TO web_usr;
@@ -308,24 +335,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cvtermpath_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cvtermpath_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cvtermpath_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cvtermpath_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cvtermpath_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cvtermpath_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -343,7 +372,10 @@ CREATE TABLE audit.cvtermprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cvtermprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cvtermprop_audit OWNER TO web_usr;
@@ -354,24 +386,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cvtermprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cvtermprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cvtermprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cvtermprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cvtermprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cvtermprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -389,7 +423,10 @@ CREATE TABLE audit.cvtermsynonym_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       cvtermsynonym_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.cvtermsynonym_audit OWNER TO web_usr;
@@ -400,24 +437,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.cvtermsynonym_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.cvtermsynonym_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.cvtermsynonym_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.cvtermsynonym_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.cvtermsynonym_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.cvtermsynonym_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -435,7 +474,10 @@ CREATE TABLE audit.db_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       db_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.db_audit OWNER TO web_usr;
@@ -446,24 +488,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.db_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.db_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.db_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.db_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.db_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.db_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -481,7 +525,10 @@ CREATE TABLE audit.dbxref_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       dbxref_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.dbxref_audit OWNER TO web_usr;
@@ -492,24 +539,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.dbxref_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.dbxref_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.dbxref_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.dbxref_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.dbxref_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -527,7 +576,10 @@ CREATE TABLE audit.dbxrefprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       dbxrefprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.dbxrefprop_audit OWNER TO web_usr;
@@ -538,24 +590,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.dbxrefprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.dbxrefprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.dbxrefprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.dbxrefprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.dbxrefprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.dbxrefprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -573,7 +627,10 @@ CREATE TABLE audit.genotype_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       genotype_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.genotype_audit OWNER TO web_usr;
@@ -584,24 +641,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.genotype_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.genotype_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.genotype_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.genotype_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.genotype_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.genotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -619,7 +678,10 @@ CREATE TABLE audit.nd_experiment_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_audit OWNER TO web_usr;
@@ -630,24 +692,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -665,7 +729,10 @@ CREATE TABLE audit.nd_experiment_contact_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_contact_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_contact_audit OWNER TO web_usr;
@@ -676,24 +743,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_contact_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_contact_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_contact_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_contact_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_contact_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_contact_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -711,7 +780,10 @@ CREATE TABLE audit.nd_experiment_dbxref_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_dbxref_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_dbxref_audit OWNER TO web_usr;
@@ -722,24 +794,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_dbxref_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_dbxref_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_dbxref_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_dbxref_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_dbxref_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -757,7 +831,10 @@ CREATE TABLE audit.nd_experiment_genotype_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_genotype_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_genotype_audit OWNER TO web_usr;
@@ -768,24 +845,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_genotype_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_genotype_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_genotype_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_genotype_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_genotype_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_genotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -803,7 +882,10 @@ CREATE TABLE audit.nd_experiment_phenotype_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_phenotype_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_phenotype_audit OWNER TO web_usr;
@@ -814,24 +896,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_phenotype_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_phenotype_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_phenotype_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_phenotype_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_phenotype_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_phenotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -849,7 +933,10 @@ CREATE TABLE audit.nd_experiment_project_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_project_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_project_audit OWNER TO web_usr;
@@ -860,24 +947,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_project_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_project_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_project_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_project_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_project_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_project_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -895,7 +984,10 @@ CREATE TABLE audit.nd_experiment_protocol_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_protocol_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_protocol_audit OWNER TO web_usr;
@@ -906,24 +998,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_protocol_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_protocol_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_protocol_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_protocol_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_protocol_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_protocol_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -941,7 +1035,10 @@ CREATE TABLE audit.nd_experiment_pub_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_pub_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_pub_audit OWNER TO web_usr;
@@ -952,24 +1049,25 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_pub_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_pub_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_pub_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_pub_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_pub_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -987,7 +1085,10 @@ CREATE TABLE audit.nd_experiment_stock_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_stock_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_stock_audit OWNER TO web_usr;
@@ -998,24 +1099,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_stock_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_stock_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_stock_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_stock_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_stock_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_stock_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1033,7 +1136,10 @@ CREATE TABLE audit.nd_experiment_stock_dbxref_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_stock_dbxref_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_stock_dbxref_audit OWNER TO web_usr;
@@ -1044,24 +1150,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_stock_dbxref_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_stock_dbxref_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_stock_dbxref_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_stock_dbxref_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_stock_dbxref_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_stock_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1079,7 +1187,10 @@ CREATE TABLE audit.nd_experiment_stockprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experiment_stockprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experiment_stockprop_audit OWNER TO web_usr;
@@ -1090,24 +1201,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experiment_stockprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_stockprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experiment_stockprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experiment_stockprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experiment_stockprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experiment_stockprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1125,7 +1238,10 @@ CREATE TABLE audit.nd_experimentprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_experimentprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_experimentprop_audit OWNER TO web_usr;
@@ -1136,24 +1252,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_experimentprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_experimentprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_experimentprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_experimentprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_experimentprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_experimentprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1171,7 +1289,10 @@ CREATE TABLE audit.nd_geolocation_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_geolocation_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_geolocation_audit OWNER TO web_usr;
@@ -1182,24 +1303,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_geolocation_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_geolocation_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_geolocation_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_geolocation_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_geolocation_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_geolocation_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1217,7 +1340,10 @@ CREATE TABLE audit.nd_geolocationprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_geolocationprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_geolocationprop_audit OWNER TO web_usr;
@@ -1228,24 +1354,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_geolocationprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_geolocationprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_geolocationprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_geolocationprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_geolocationprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_geolocationprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1263,7 +1391,10 @@ CREATE TABLE audit.nd_protocol_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_protocol_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_protocol_audit OWNER TO web_usr;
@@ -1274,24 +1405,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_protocol_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_protocol_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_protocol_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_protocol_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_protocol_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_protocol_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1309,7 +1442,10 @@ CREATE TABLE audit.nd_protocol_reagent_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_protocol_reagent_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_protocol_reagent_audit OWNER TO web_usr;
@@ -1320,24 +1456,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_protocol_reagent_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_protocol_reagent_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_protocol_reagent_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_protocol_reagent_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_protocol_reagent_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_protocol_reagent_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1355,7 +1493,10 @@ CREATE TABLE audit.nd_protocolprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_protocolprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_protocolprop_audit OWNER TO web_usr;
@@ -1366,24 +1507,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_protocolprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_protocolprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_protocolprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_protocolprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_protocolprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_protocolprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1401,7 +1544,10 @@ CREATE TABLE audit.nd_reagent_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_reagent_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_reagent_audit OWNER TO web_usr;
@@ -1412,24 +1558,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_reagent_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_reagent_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_reagent_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_reagent_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_reagent_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_reagent_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1447,7 +1595,10 @@ CREATE TABLE audit.nd_reagent_relationship_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_reagent_relationship_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_reagent_relationship_audit OWNER TO web_usr;
@@ -1458,24 +1609,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_reagent_relationship_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_reagent_relationship_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_reagent_relationship_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_reagent_relationship_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_reagent_relationship_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_reagent_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1493,7 +1646,10 @@ CREATE TABLE audit.nd_reagentprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       nd_reagentprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.nd_reagentprop_audit OWNER TO web_usr;
@@ -1504,24 +1660,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.nd_reagentprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.nd_reagentprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.nd_reagentprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.nd_reagentprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.nd_reagentprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.nd_reagentprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1539,7 +1697,10 @@ CREATE TABLE audit.organism_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       organism_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.organism_audit OWNER TO web_usr;
@@ -1550,24 +1711,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.organism_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.organism_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.organism_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.organism_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.organism_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.organism_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1585,7 +1748,10 @@ CREATE TABLE audit.organism_dbxref_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       organism_dbxref_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.organism_dbxref_audit OWNER TO web_usr;
@@ -1596,24 +1762,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.organism_dbxref_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.organism_dbxref_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.organism_dbxref_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.organism_dbxref_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.organism_dbxref_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.organism_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1631,7 +1799,10 @@ CREATE TABLE audit.organism_relationship_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       organism_relationship_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.organism_relationship_audit OWNER TO web_usr;
@@ -1642,24 +1813,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.organism_relationship_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.organism_relationship_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.organism_relationship_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.organism_relationship_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.organism_relationship_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.organism_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1677,7 +1850,10 @@ CREATE TABLE audit.organismpath_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       organismpath_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.organismpath_audit OWNER TO web_usr;
@@ -1688,24 +1864,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.organismpath_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.organismpath_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.organismpath_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.organismpath_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.organismpath_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.organismpath_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1723,7 +1901,10 @@ CREATE TABLE audit.organismprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       organismprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.organismprop_audit OWNER TO web_usr;
@@ -1734,24 +1915,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.organismprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.organismprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.organismprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.organismprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.organismprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.organismprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1769,7 +1952,10 @@ CREATE TABLE audit.phenotype_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       phenotype_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.phenotype_audit OWNER TO web_usr;
@@ -1780,24 +1966,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.phenotype_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.phenotype_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.phenotype_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.phenotype_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.phenotype_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.phenotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1815,7 +2003,10 @@ CREATE TABLE audit.phenotype_cvterm_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       phenotype_cvterm_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.phenotype_cvterm_audit OWNER TO web_usr;
@@ -1826,24 +2017,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.phenotype_cvterm_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.phenotype_cvterm_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.phenotype_cvterm_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.phenotype_cvterm_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.phenotype_cvterm_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.phenotype_cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1861,7 +2054,10 @@ CREATE TABLE audit.phenotypeprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       phenotypeprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.phenotypeprop_audit OWNER TO web_usr;
@@ -1872,24 +2068,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.phenotypeprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.phenotypeprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.phenotypeprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.phenotypeprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.phenotypeprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.phenotypeprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1907,7 +2105,10 @@ CREATE TABLE audit.project_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       project_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.project_audit OWNER TO web_usr;
@@ -1918,24 +2119,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.project_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.project_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.project_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.project_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.project_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.project_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1953,7 +2156,10 @@ CREATE TABLE audit.project_contact_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       project_contact_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.project_contact_audit OWNER TO web_usr;
@@ -1964,24 +2170,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.project_contact_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.project_contact_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.project_contact_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.project_contact_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.project_contact_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.project_contact_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1999,7 +2207,10 @@ CREATE TABLE audit.project_pub_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       project_pub_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.project_pub_audit OWNER TO web_usr;
@@ -2010,24 +2221,25 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.project_pub_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.project_pub_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.project_pub_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.project_pub_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.project_pub_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.project_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2045,7 +2257,10 @@ CREATE TABLE audit.project_relationship_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       project_relationship_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.project_relationship_audit OWNER TO web_usr;
@@ -2056,24 +2271,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.project_relationship_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.project_relationship_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.project_relationship_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.project_relationship_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.project_relationship_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.project_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2091,7 +2308,10 @@ CREATE TABLE audit.projectprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       projectprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.projectprop_audit OWNER TO web_usr;
@@ -2102,24 +2322,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.projectprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.projectprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.projectprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.projectprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.projectprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.projectprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2137,7 +2359,10 @@ CREATE TABLE audit.pub_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       pub_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.pub_audit OWNER TO web_usr;
@@ -2148,24 +2373,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.pub_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.pub_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.pub_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.pub_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.pub_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2183,7 +2410,10 @@ CREATE TABLE audit.pub_dbxref_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       pub_dbxref_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.pub_dbxref_audit OWNER TO web_usr;
@@ -2194,24 +2424,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.pub_dbxref_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.pub_dbxref_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.pub_dbxref_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.pub_dbxref_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.pub_dbxref_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.pub_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2229,7 +2461,10 @@ CREATE TABLE audit.pub_relationship_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       pub_relationship_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.pub_relationship_audit OWNER TO web_usr;
@@ -2240,24 +2475,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.pub_relationship_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.pub_relationship_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.pub_relationship_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.pub_relationship_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.pub_relationship_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.pub_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2275,7 +2512,10 @@ CREATE TABLE audit.pubabstract_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       pubabstract_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.pubabstract_audit OWNER TO web_usr;
@@ -2286,24 +2526,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.pubabstract_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.pubabstract_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.pubabstract_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.pubabstract_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.pubabstract_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.pubabstract_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2321,7 +2563,10 @@ CREATE TABLE audit.pubauthor_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       pubauthor_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.pubauthor_audit OWNER TO web_usr;
@@ -2332,24 +2577,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.pubauthor_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.pubauthor_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.pubauthor_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.pubauthor_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.pubauthor_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.pubauthor_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2367,7 +2614,10 @@ CREATE TABLE audit.pubprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       pubprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.pubprop_audit OWNER TO web_usr;
@@ -2378,24 +2628,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.pubprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.pubprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.pubprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.pubprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.pubprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.pubprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2413,7 +2665,10 @@ CREATE TABLE audit.stock_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_audit OWNER TO web_usr;
@@ -2424,24 +2679,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2459,7 +2716,10 @@ CREATE TABLE audit.stock_cvterm_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_cvterm_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_cvterm_audit OWNER TO web_usr;
@@ -2470,24 +2730,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_cvterm_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_cvterm_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_cvterm_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_cvterm_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_cvterm_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2505,7 +2767,10 @@ CREATE TABLE audit.stock_cvtermprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_cvtermprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_cvtermprop_audit OWNER TO web_usr;
@@ -2516,24 +2781,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_cvtermprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_cvtermprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_cvtermprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_cvtermprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_cvtermprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_cvtermprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2551,7 +2818,10 @@ CREATE TABLE audit.stock_dbxref_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_dbxref_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_dbxref_audit OWNER TO web_usr;
@@ -2562,24 +2832,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_dbxref_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_dbxref_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_dbxref_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_dbxref_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_dbxref_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2597,7 +2869,10 @@ CREATE TABLE audit.stock_dbxrefprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_dbxrefprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_dbxrefprop_audit OWNER TO web_usr;
@@ -2608,24 +2883,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_dbxrefprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_dbxrefprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_dbxrefprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_dbxrefprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_dbxrefprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_dbxrefprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2643,7 +2920,10 @@ CREATE TABLE audit.stock_genotype_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_genotype_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_genotype_audit OWNER TO web_usr;
@@ -2654,24 +2934,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_genotype_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_genotype_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_genotype_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_genotype_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_genotype_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_genotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2689,7 +2971,10 @@ CREATE TABLE audit.stock_pub_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_pub_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_pub_audit OWNER TO web_usr;
@@ -2700,24 +2985,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_pub_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_pub_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_pub_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_pub_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_pub_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2735,7 +3022,10 @@ CREATE TABLE audit.stock_relationship_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_relationship_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_relationship_audit OWNER TO web_usr;
@@ -2746,24 +3036,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_relationship_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_relationship_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_relationship_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_relationship_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_relationship_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2781,7 +3073,10 @@ CREATE TABLE audit.stock_relationship_cvterm_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_relationship_cvterm_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_relationship_cvterm_audit OWNER TO web_usr;
@@ -2792,24 +3087,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_relationship_cvterm_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_relationship_cvterm_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_relationship_cvterm_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_relationship_cvterm_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_relationship_cvterm_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_relationship_cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2827,7 +3124,10 @@ CREATE TABLE audit.stock_relationship_pub_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stock_relationship_pub_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stock_relationship_pub_audit OWNER TO web_usr;
@@ -2838,24 +3138,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stock_relationship_pub_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stock_relationship_pub_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stock_relationship_pub_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stock_relationship_pub_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stock_relationship_pub_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stock_relationship_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2873,7 +3175,10 @@ CREATE TABLE audit.stockcollection_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stockcollection_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stockcollection_audit OWNER TO web_usr;
@@ -2884,24 +3189,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stockcollection_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stockcollection_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stockcollection_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stockcollection_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stockcollection_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stockcollection_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2919,7 +3226,10 @@ CREATE TABLE audit.stockcollection_stock_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stockcollection_stock_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stockcollection_stock_audit OWNER TO web_usr;
@@ -2930,24 +3240,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stockcollection_stock_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stockcollection_stock_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stockcollection_stock_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stockcollection_stock_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stockcollection_stock_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stockcollection_stock_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2965,7 +3277,10 @@ CREATE TABLE audit.stockcollectionprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stockcollectionprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stockcollectionprop_audit OWNER TO web_usr;
@@ -2976,24 +3291,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stockcollectionprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stockcollectionprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stockcollectionprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stockcollectionprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stockcollectionprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stockcollectionprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3011,7 +3328,10 @@ CREATE TABLE audit.stockprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stockprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stockprop_audit OWNER TO web_usr;
@@ -3022,24 +3342,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stockprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stockprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stockprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stockprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stockprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stockprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3057,7 +3379,10 @@ CREATE TABLE audit.stockprop_pub_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       stockprop_pub_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.stockprop_pub_audit OWNER TO web_usr;
@@ -3068,24 +3393,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.stockprop_pub_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.stockprop_pub_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.stockprop_pub_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.stockprop_pub_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.stockprop_pub_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.stockprop_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3103,7 +3430,10 @@ CREATE TABLE audit.list_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       list_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.list_audit OWNER TO web_usr;
@@ -3114,24 +3444,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.list_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.list_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.list_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.list_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.list_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.list_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3149,7 +3481,10 @@ CREATE TABLE audit.list_item_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       list_item_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.list_item_audit OWNER TO web_usr;
@@ -3160,24 +3495,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.list_item_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.list_item_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.list_item_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.list_item_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.list_item_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.list_item_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3195,7 +3532,10 @@ CREATE TABLE audit.sp_dataset_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_dataset_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_dataset_audit OWNER TO web_usr;
@@ -3206,24 +3546,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_dataset_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_dataset_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_dataset_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_dataset_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_dataset_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_dataset_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3241,7 +3583,10 @@ CREATE TABLE audit.sp_order_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_order_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_order_audit OWNER TO web_usr;
@@ -3252,24 +3597,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_order_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_order_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_order_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_order_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_order_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_order_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3287,7 +3634,10 @@ CREATE TABLE audit.sp_orderprop_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_orderprop_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_orderprop_audit OWNER TO web_usr;
@@ -3298,24 +3648,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_orderprop_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_orderprop_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_orderprop_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_orderprop_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_orderprop_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_orderprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3333,7 +3685,10 @@ CREATE TABLE audit.sp_person_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_person_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_person_audit OWNER TO web_usr;
@@ -3344,24 +3699,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_person_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_person_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_person_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_person_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_person_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_person_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3379,7 +3736,10 @@ CREATE TABLE audit.sp_roles_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_roles_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_roles_audit OWNER TO web_usr;
@@ -3390,24 +3750,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_roles_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_roles_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_roles_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_roles_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_roles_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_roles_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3425,7 +3787,10 @@ CREATE TABLE audit.sp_token_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_token_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_token_audit OWNER TO web_usr;
@@ -3436,24 +3801,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_token_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_token_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_token_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_token_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_token_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_token_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3471,7 +3838,10 @@ CREATE TABLE audit.sp_person_roles_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_person_roles_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_person_roles_audit OWNER TO web_usr;
@@ -3482,24 +3852,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_person_roles_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_person_roles_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_person_roles_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_person_roles_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_person_roles_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_person_roles_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3517,7 +3889,10 @@ CREATE TABLE audit.sp_organization_audit(
        username TEXT NOT NULL DEFAULT "current_user"(),
        logged_in_user INT,
        before JSONB,
-       after JSONB
+       after JSONB,
+       transactioncode VARCHAR(40),
+       sp_organization_audit_id SERIAL PRIMARY KEY,
+       is_undo BOOLEAN
 );
 
 ALTER TABLE audit.sp_organization_audit OWNER TO web_usr;
@@ -3528,24 +3903,26 @@ LANGUAGE plpgsql
 AS \$function\$
 BEGIN
 
+CREATE TEMPORARY TABLE IF NOT EXISTS logged_in_user(sp_person_id bigint);
+
 IF TG_OP = 'INSERT'
 THEN
-INSERT INTO audit.sp_organization_audit (logged_in_user, operation, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW));
+INSERT INTO audit.sp_organization_audit (logged_in_user, operation, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN NEW;
 
 ELSIF TG_OP = 'UPDATE'
 THEN
 IF NEW != OLD THEN
-INSERT INTO audit.sp_organization_audit (logged_in_user, operation, before, after)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+INSERT INTO audit.sp_organization_audit (logged_in_user, operation, before, after, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), to_jsonb(NEW), (SELECT NOW()::TEXT || txid_current()), FALSE);
 END IF;
 RETURN NEW;
 
 ELSIF TG_OP = 'DELETE'
 THEN
-INSERT INTO audit.sp_organization_audit (logged_in_user, operation, before)
-VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD));
+INSERT INTO audit.sp_organization_audit (logged_in_user, operation, before, transactioncode, is_undo)
+VALUES ((SELECT sp_person_id FROM logged_in_user LIMIT 1), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
