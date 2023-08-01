@@ -190,18 +190,20 @@ sub trial_phenotypes_fully_uploaded_POST  {
 
 sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
 
-sub trial_details_GET   {
+sub trial_details_GET{
     my $self = shift;
     my $c = shift;
 
     my $trial = $c->stash->{trial};
     my $planting_date = $trial->get_planting_date();
+    my $transplanting_date = $trial->get_transplanting_date();
     my $harvest_date = $trial->get_harvest_date();
     my $get_location_noaa_station_id = $trial->get_location_noaa_station_id();
 
     $c->stash->{rest} = {
         details => {
             planting_date => $planting_date,
+            transplanting_date => $transplanting_date,
             harvest_date => $harvest_date,
             location_noaa_station_id => $get_location_noaa_station_id
         }
@@ -262,25 +264,30 @@ sub trial_details_POST  {
     # set each new detail that is defined
     #print STDERR Dumper $details;
     eval {
-      if ($details->{name}) { $trial->set_name($details->{name}); }
-      if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
-      if ($details->{location}) { $trial->set_location($details->{location}); }
-      if ($details->{year}) { $trial->set_year($details->{year}); }
-      if ($details->{type}) { $trial->set_project_type($details->{type}); }
-      if ($details->{planting_date}) {
+        if ($details->{name}) { $trial->set_name($details->{name}); }
+        if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
+        if ($details->{location}) { $trial->set_location($details->{location}); }
+        if ($details->{year}) { $trial->set_year($details->{year}); }
+        if ($details->{type}) { $trial->set_project_type($details->{type}); }
+        if ($details->{planting_date}) {
         if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
         else { $trial->set_planting_date($details->{planting_date}); }
-      }
-      if ($details->{harvest_date}) {
-        if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
-        else { $trial->set_harvest_date($details->{harvest_date}); }
-      }
-      if ($details->{description}) { $trial->set_description($details->{description}); }
-      if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
-      if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
-      if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
-      if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
-      if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
+    }
+        if ($details->{transplanting_date}) {
+            if ($details->{transplanting_date} eq 'remove') { $trial->remove_transplanting_date($trial->get_transplanting_date()); }
+            else { $trial->set_transplanting_date($details->{transplanting_date}); }
+        }
+        if ($details->{harvest_date}) {
+            if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
+            else { $trial->set_harvest_date($details->{harvest_date}); }
+        }
+
+        if ($details->{description}) { $trial->set_description($details->{description}); }
+        if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
+        if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
+        if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
+        if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
+        if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
     };
 
     if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }

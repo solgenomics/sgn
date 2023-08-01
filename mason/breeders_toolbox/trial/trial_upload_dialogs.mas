@@ -150,6 +150,18 @@ $design_types => ()
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Planting Date (MM-DD-YYYY): </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="trial_upload_planting_date" name="trial_upload_planting_date" type="text" value="<%my$planting_date%>" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Transplanting Date(MM-DD-YYYY): </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="trial_upload_transplanting_date " name="trial_upload_transplanting_date" type="text" value="<%my$transplanting_date%>" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Width (m): </label>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control" id="trial_upload_plot_width" name="trial_upload_plot_width" />
@@ -688,6 +700,7 @@ $design_types => ()
                                 <td>breeding_program</td>
                                 <td>location</td>
                                 <td>year</td>
+                                <td>transplanting_date</td>
                                 <td>design_type</td>
                                 <td>description</td>
                                 <td>trial_type</td>
@@ -713,14 +726,15 @@ $design_types => ()
                     </table>
 
                     <b>Header as a string:</b><br/>
-                    <p>trial_name,breeding_program,location,year,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                    <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
 
                     <b> Required fields:</b>
                     <ul>
-                    <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, purpose, unique number, and location.)</li>
+                    <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, transplanting_date, purpose, unique number, and location.)</li>
                     <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
                     <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
-                    <li>year (The year the trial was held.)</li>                    
+                    <li>year (The year the trial was held.)</li>
+                    <li>transplanting_date(The transplanting_date of the trial was conducted.)<li>                    
                     <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
                     <li>plot_name (Must be unique across entire database. It is often a concatenation of the trial name and the plot number.)</li>
