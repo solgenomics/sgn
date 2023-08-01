@@ -514,10 +514,7 @@ sub _parse_with_plugin {
         }
         if ($include_facility_identifiers) {
             $design{$key}->{facility_identifier} = $facility_identifier;
-        } else {
-            $design{$key}->{facility_identifier} = 'NA';
         }
-
     }
 
     #print STDERR Dumper \%design;
