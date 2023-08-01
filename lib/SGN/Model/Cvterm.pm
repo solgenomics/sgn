@@ -348,54 +348,50 @@ sub get_cv_names_from_db_name {
 
 }
 
-
-sub get_protocol_vcf_genotyping_cvterm_id {
+sub get_vcf_genotyping_cvterm_id {
     my $self = shift;
     my $schema = shift;
-    my $protocol_id = shift;
-  
-    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name,  genotypeprop.type_id 
-                        FROM stock  
-                        JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) 
-                        JOIN nd_experiment USING (nd_experiment_id) 
-                        JOIN nd_experiment_protocol USING (nd_experiment_id) 
-                        JOIN nd_experiment_project USING(nd_experiment_id) 
-                        JOIN nd_experiment_genotype USING (nd_experiment_id) 
-                        JOIN nd_protocol USING (nd_protocol_id) 
-                        LEFT JOIN nd_protocolprop ON (nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id) 
-                        JOIN genotype USING (genotype_id) 
-                        LEFT JOIN genotypeprop USING (genotype_id) 
-                        WHERE nd_protocol.nd_protocol_id = ? 
-                        LIMIT 1";
+    my $arg = shift;
+    my $protocol_id = $arg->{protocol_id};
+    my $genotype_id = $arg->{genotype_id};
+    
+    my $q;
+    my $id;
+
+    if ( $protocol_id) {
+        $q = "SELECT genotypeprop.type_id 
+                FROM stock  
+                JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) 
+                JOIN nd_experiment USING (nd_experiment_id) 
+                JOIN nd_experiment_protocol USING (nd_experiment_id) 
+                JOIN nd_experiment_project USING(nd_experiment_id) 
+                JOIN nd_experiment_genotype USING (nd_experiment_id) 
+                JOIN nd_protocol USING (nd_protocol_id) 
+                LEFT JOIN nd_protocolprop ON (nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id) 
+                JOIN genotype USING (genotype_id) 
+                LEFT JOIN genotypeprop USING (genotype_id) 
+                WHERE nd_protocol.nd_protocol_id = ? 
+                LIMIT 1";
+
+        $id = $protocol_id;
+    } elsif ($genotype_id) {
+        $q = "SELECT  type_id 
+                FROM genotypeprop 
+                WHERE genotype_id = ? 
+                LIMIT 1";
+
+        $id = $genotype_id;
+    }
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($protocol_id);
+    $h->execute($id);
 
-    my ($protocol_id, $protocol_name, $vcf_genotype_type_id) = $h->fetchrow_array();
+    my $vcf_genotype_type_id = $h->fetchrow_array();
     
     return $vcf_genotype_type_id;
 
 }
 
-
-sub get_vcf_genotyping_cvterm_id_from_genotype_id {
-    my $self = shift;
-    my $schema = shift;
-    my $genotype_id = shift;
-
-    my $q = "SELECT  type_id 
-                        FROM genotypeprop 
-                        WHERE genotype_id = ? 
-                        LIMIT 1";
-
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotype_id);
-
-    my $vcf_genotype_type_id = $h->fetchrow_array();
-
-    return $vcf_genotype_type_id;
-
-}
     
 
 1;
