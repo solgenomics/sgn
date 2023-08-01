@@ -264,8 +264,8 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'stock_additional_info_section'){
                                 <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
 % } #End stock_additional_info_section
-% if ($info_section_id eq 'stock_trials_section'){
-                                <& /stock/trials.mas, stock_id => $stock_id &>
+% if ($info_section_id eq 'stock_upload_files'){
+                                <& /stock/accession_files.mas, stock_id => $stock_id &>
 % } #End stock_trials_section
 % if ($info_section_id eq 'stock_traits_section'){
                                 <& /stock/traits.mas, stock_id => $stock_id &>

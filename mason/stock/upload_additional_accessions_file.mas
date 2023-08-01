@@ -1,0 +1,161 @@
+<%args>
+$stock_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<div id="accession_additional_uploaded_files_div">
+[Loading...]
+</div>
+
+<div class="modal fade" id="accession_upload_additional_file_dialog" name="accession_upload_additional_file_dialog" tabindex="-1" role="dialog" aria-labelledby="accessionUploadAdditionalFileDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="accessionUploadAdditionalFileDialog">Upload Additional File to Accession</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File upload information</b>
+                            <br>
+                            <a id="accession_upload_additional_file_format">Upload Information</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="accession_upload_additional_file_form" name="accession_upload_additional_file_form">
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <div class="col-sm-8" >
+                                <input type="file" name="accession_upload_additional_file" id="accession_upload_additional_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="accession_upload_additional_file_cancel_button" id="accession_upload_additional_file_cancel_button"     data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="accession_upload_additional_file_submit_button" id="accession_upload_additional_file_submit_button" title="Submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="accession_upload_additional_file_info_dialog" name="accession_upload_additional_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="accessionUploadAdditionalFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="accessionUploadAdditionalFileInfoDialog">Upload Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading any additional files you may have for the accession.</b>
+                    <br/><br/>
+                    <p>Possible additional files inlude, but are not limited to:</p>
+                    <ul>
+                        <li>Accession Related Images, such as a physical field image or an aerial picture of the field.</li>
+                        <li>Accession Related Documentation, such as protocols or permits for the accession.</li>
+                        <li>Accession Related Reports, such as supplementary information or publications.</li>
+                        <li>Accession Related Recordings, whether audio or video.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_accession_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+ jQuery(document).ready(function(){
+
+    display_accession_additional_upload_files();
+
+    jQuery('#accession_upload_additional_files_link').click( function(){
+        jQuery('#accession_upload_additional_file_dialog').modal('show');
+    });
+
+    jQuery('#accession_upload_additional_file_format').click( function(){
+        jQuery('#accession_upload_additional_file_info_dialog').modal('show');
+    });
+
+    jQuery('#accession_upload_additional_file_submit_button').click(function () {
+        accession_upload_additional_file_submit();
+    });
+    function accession_upload_additional_file_submit() {
+        var uploadFile = jQuery("#accession_upload_additional_file").val();
+        jQuery('#accession_upload_additional_file_form').attr("action", "/ajax/stock/<% $stock_id %>/upload_additional_file");
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#accession_upload_additional_file_form").submit();
+    }
+
+    jQuery('#accession_upload_additional_file_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedAdditionalFile = jQuery("#accession_upload_additional_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedAdditionalFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                alert("File uploaded successfully");
+                display_accession_additional_upload_files();
+            }
+        }
+    });
+
+
+     function display_accessiom_additional_upload_files (){
+        jQuery.ajax ({
+            url : '/ajax/stock/'+<% $stock_id %>+'/get_uploaded_additional_file',
+            beforeSend : function(){
+                jQuery('#accession_additional_uploaded_files_div').html("[LOADING...]");
+            },
+            success: function(response){
+                //console.log(response);
+                var html = "<table class='table table-hover table-condensed table-bordered' id='accession_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
+                for (i=0; i<response.files.length; i++) {
+                    html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a> | <a href="javascript:obsolete_additional_file('+<% $stock_id %>+', '+response.files[i][0]+')">Remove</a></td></tr>';
+                }
+                html = html + "</tbody></table>";
+                jQuery('#accession_additional_uploaded_files_div').html(html);
+                jQuery('#accession_additional_uploaded_files_table').DataTable();
+            },
+            error: function(response){
+                alert("Error retrieving additional uploaded files.");
+            }
+       });
+   
+    }                          
+   
+
+ 
+
+});                      
+
+
+</script>
