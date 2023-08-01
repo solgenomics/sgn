@@ -325,6 +325,7 @@ sub get_description {
 sub set_description {
     my $self = shift;
     my $description = shift;
+    my $dbh = $self->bcs_schema->storage->dbh;
 
     my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
 
@@ -333,6 +334,12 @@ sub set_description {
     $row->description($description);
 
     $row->update();
+
+    my $logged_in_user_q = "select * from logged_in_user";
+    my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
+    $logged_in_user_h->execute();
+    my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
+    print STDERR "logged in user Project.pm: ".Dumper($logged_in_user_arr)."\n";
 
 }
 

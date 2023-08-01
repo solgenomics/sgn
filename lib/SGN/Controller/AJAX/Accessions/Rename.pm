@@ -183,9 +183,14 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to rename accessions." };
 	return;
     }
+    #print STDERR "this is user_sp_person_id before dbic_schema: ".$user_id."\n";
+   # open my $log_fh, '>>', 'log-file';
+   # local *STDOUT = $log_fh;
+  #  local *STDERR = $log_fh;
+   # my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
-    
+
     
     my ($header, $rename) = $self->_get_rename_accessions_from_file($c, $archived_filename);
 

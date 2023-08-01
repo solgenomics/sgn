@@ -53,10 +53,15 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
-
-    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $sp_person_id = undef;
+    if($c->user){
+        $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    }
+    
+    print STDERR "This is sp_person_id from trial detail edit: $sp_person_id \n";
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{schema} =  $bcs_schema;
@@ -261,7 +266,28 @@ sub trial_details_POST  {
 
     # set each new detail that is defined
     #print STDERR Dumper $details;
+
+    my $dbh = $trial->bcs_schema->storage->dbh;
+
+    my $logged_in_user_q = "select * from logged_in_user";
+    my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
+    $logged_in_user_h->execute();
+    my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
+    print STDERR "logged in user TrialMetadata.pm BEFORE EVAL: ".Dumper($logged_in_user_arr)."\n";
+
+
     eval {
+
+        #my $dbh = $trial->bcs_schema->storage->dbh;
+
+
+        my $logged_in_user_q = "select * from logged_in_user";
+        my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
+        $logged_in_user_h->execute();
+        my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
+        print STDERR "logged in user TrialMetadata.pm INSIDE EVAL: ".Dumper($logged_in_user_arr)."\n";
+
+
       if ($details->{name}) { $trial->set_name($details->{name}); }
       if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
       if ($details->{location}) { $trial->set_location($details->{location}); }
@@ -311,7 +337,6 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
     #get userinfo from db
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user = $c->user();
     if (! $c->user) {
       $c->stash->{rest} = {
@@ -319,6 +344,8 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
       };
       return;
     }
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $display = $c->req->param('display');
     my $trait = $c->req->param('trait');
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
