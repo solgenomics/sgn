@@ -85,6 +85,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_type_id} = $trial_type_data->[0];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
+    $c->stash->{show_transplanting_date} = $c->config->{show_transplanting_date};
+    $c->stash->{transplanting_date} = $trial->get_transplanting_date();
+    warn "Transplanting Date: ".$c->stash->{transplanting_date};
     $c->stash->{harvest_date} = $trial->get_harvest_date();
 
     $c->stash->{plot_width} = $trial->get_plot_width();
