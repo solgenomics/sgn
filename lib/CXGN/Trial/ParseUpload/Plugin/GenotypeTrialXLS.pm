@@ -349,14 +349,16 @@ sub _validate_with_plugin {
         push @error_messages, "Cell B".$seen_sample_ids{$r->uniquename}.": sample_id already exists: ".$r->uniquename;
     }
 
-    my $facility_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'facility_identifier', 'stock_property')->cvterm_id();
-    my @identifiers = keys %seen_facility_identifiers;
-    my $identifier_rs = $schema->resultset("Stock::Stockprop")->search({
-        'type_id' => {$facility_identifier_type_id},
-        'value' => { -in => \@identifiers }
-    });
-    while (my $each_id=$identifier_rs->next){
-        push @error_messages, "Cell B".$seen_facility_identifiers{$each_id->value}.": facility identifier already exists: ".$each_id->value;
+    if ($include_facility_identifiers) {
+        my $facility_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'facility_identifier', 'stock_property')->cvterm_id();
+        my @identifiers = keys %seen_facility_identifiers;
+        my $identifier_rs = $schema->resultset("Stock::Stockprop")->search({
+            'type_id' => $facility_identifier_type_id,
+            'value' => { -in => \@identifiers }
+        });
+        while (my $each_id=$identifier_rs->next){
+            push @error_messages, "Cell O".$seen_facility_identifiers{$each_id->value}.": facility identifier already exists: ".$each_id->value;
+        }
     }
 
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
