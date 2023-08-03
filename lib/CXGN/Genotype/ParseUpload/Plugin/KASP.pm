@@ -38,6 +38,7 @@ sub _validate_with_plugin {
     $supported_marker_info{'Info'} = 1;
     $supported_marker_info{'Format'} = 1;
     $supported_marker_info{'Sequence'} = 1;
+    $supported_marker_info{'FacilityMarkerName'} = 1;
 
     my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
     my $MI_F;
@@ -53,47 +54,44 @@ sub _validate_with_plugin {
             @marker_header_info = $marker_info_csv->fields();
         }
 
-        my $customer_marker_name_header = $marker_header_info[0];
-        $customer_marker_name_header =~ s/^\s+|\s+$//g;
+        my $marker_name_header = $marker_header_info[0];
+        $marker_name_header =~ s/^\s+|\s+$//g;
 
-        my $facility_marker_name_header = $marker_header_info[1];
-        $facility_marker_name_header =~ s/^\s+|\s+$//g;
-
-        my $Xallele_header = $marker_header_info[2];
+        my $Xallele_header = $marker_header_info[1];
         $Xallele_header =~ s/^\s+|\s+$//g;
 
-        my $Yallele_header = $marker_header_info[3];
+        my $Yallele_header = $marker_header_info[2];
         $Yallele_header =~ s/^\s+|\s+$//g;
 
-        my $chrom_header = $marker_header_info[4];
+        my $chrom_header = $marker_header_info[3];
         $chrom_header =~ s/^\s+|\s+$//g;
 
-        my $position_header = $marker_header_info[5];
+        my $position_header = $marker_header_info[4];
         $position_header =~ s/^\s+|\s+$//g;
 
-        if ($customer_marker_name_header ne 'CustomerMarkerName'){
-            push @error_messages, 'Column 1 header must be "CustomerMarkerName" in the marker Info File.';
-        }
-        if ($facility_marker_name_header ne 'FacilityMarkerName'){
-            push @error_messages, 'Column 2 header must be "FacilityMarkerName" in the marker Info File.';
+        if ($marker_name_header ne 'MarkerName'){
+            push @error_messages, 'Column 1 header must be "MarkerName" in the marker Info File.';
         }
         if ($Xallele_header ne 'Xallele'){
-            push @error_messages, 'Column 3 header must be "Xallele" in the marker Info File.';
+            push @error_messages, 'Column 2 header must be "Xallele" in the marker Info File.';
         }
         if ($Yallele_header ne 'Yallele'){
-            push @error_messages, 'Column 4 header must be "Yallele" in the marker Info File.';
+            push @error_messages, 'Column 3 header must be "Yallele" in the marker Info File.';
         }
         if ($chrom_header ne 'Chromosome'){
-            push @error_messages, 'Column 5 header must be "Chromosome" in the SNP Info File.';
+            push @error_messages, 'Column 4 header must be "Chromosome" in the SNP Info File.';
         }
         if ($position_header ne 'Position'){
-            push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
+            push @error_messages, 'Column 5 header must be "Position" in the SNP Info File.';
         }
 
-        for my $i (6 .. $#marker_header_info){
+        my $facility_marker_name_column_location;
+        for my $i (5 .. $#marker_header_info){
             my $each_header = $marker_header_info[$i];
             $each_header =~ s/^\s+|\s+$//g;
-
+            if ($each_header eq 'FacilityMarkerName') {
+                $facility_marker_name_column_location = $i;
+            }
             if (!$supported_marker_info{$each_header}){
                 push @error_messages, "Invalid  marker info type: $each_header";
             }
@@ -105,25 +103,29 @@ sub _validate_with_plugin {
                 @marker_line_info = $marker_info_csv->fields();
             }
 
-            my $customer_marker_name = $marker_line_info[0];
-            $customer_marker_name =~ s/^\s+|\s+$//g;
-            my $facility_marker_name = $marker_line_info[1];
-            $facility_marker_name =~ s/^\s+|\s+$//g;
-            my $Xallele = $marker_line_info[2];
+            my $marker_name = $marker_line_info[0];
+            $marker_name =~ s/^\s+|\s+$//g;
+            my $Xallele = $marker_line_info[1];
             $Xallele =~ s/^\s+|\s+$//g;
-            my $Yallele = $marker_line_info[3];
+            my $Yallele = $marker_line_info[2];
             $Yallele =~ s/^\s+|\s+$//g;
-            my $chrom = $marker_line_info[4];
+            my $chrom = $marker_line_info[3];
             $chrom =~ s/^\s+|\s+$//g;
-            my $position = $marker_line_info[5];
+            my $position = $marker_line_info[4];
             $position =~ s/^\s+|\s+$//g;
 
-
-            if (!defined $customer_marker_name){
-                push @error_messages, 'Customer marker name is required for all markers.';
+            my $facility_marker_name;
+            if (defined $facility_marker_name_column_location) {
+                $facility_marker_name = $marker_line_info[$facility_marker_name_column_location];
+                $facility_marker_name =~ s/^\s+|\s+$//g;
+                if (!defined $facility_marker_name){
+                    push @error_messages, 'Facility marker name is required for all markers.';
+                }
+                $seen_facility_marker_names{$facility_marker_name} = 1;
             }
-            if (!defined $facility_marker_name){
-                push @error_messages, 'Facility marker name is required for all markers.';
+
+            if (!defined $marker_name){
+                push @error_messages, 'Marker name is required for all markers.';
             }
             if (!defined $Xallele){
                 push @error_messages, 'X allele info is required for all markers.';
@@ -138,8 +140,7 @@ sub _validate_with_plugin {
                 push @error_messages, 'Position is required for all markers.';
             }
 
-            $seen_marker_names{$customer_marker_name} = 1;
-            $seen_facility_marker_names{$facility_marker_name} = 1;
+            $seen_marker_names{$marker_name} = 1;
         }
 
     close($MI_F);
@@ -304,7 +305,7 @@ sub _parse_with_plugin {
     my $MF;
     my %marker_info;
     my %marker_info_details;
-    my @marker_info_keys = qw(name facility_name chrom pos alt ref);
+    my @marker_info_keys = qw(name chrom pos alt ref);
 
     open($MF, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
@@ -315,7 +316,7 @@ sub _parse_with_plugin {
             @marker_header_info = $marker_info_csv->fields();
         }
 
-        for my $i (6 .. $#marker_header_info){
+        for my $i (5 .. $#marker_header_info){
             my $header = $marker_header_info[$i];
             $header =~ s/^\s+|\s+$//g;
             if ($header eq 'Quality') {
@@ -328,6 +329,8 @@ sub _parse_with_plugin {
                 push @marker_info_keys, 'format';
             } elsif ($header eq 'Sequence') {
                 push @marker_info_keys, 'sequence';
+            } elsif ($header eq 'FacilityMarkerName') {
+                push @marker_info_keys, 'facility_name';
             }
         }
         print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
@@ -338,22 +341,19 @@ sub _parse_with_plugin {
                 @marker_line_info = $marker_info_csv->fields();
             }
 
-            my $customer_marker_name = $marker_line_info[0];
-            my $facility_marker_name = $marker_line_info[1];
-            $marker_facility_link{$facility_marker_name} = $customer_marker_name;
-            my $ref = $marker_line_info[2];
-            my $alt = $marker_line_info[3];
-            my $chromosome = $marker_line_info[4];
-            my $position = $marker_line_info[5];
+            my $marker_name = $marker_line_info[0];
+            my $ref = $marker_line_info[1];
+            my $alt = $marker_line_info[2];
+            my $chromosome = $marker_line_info[3];
+            my $position = $marker_line_info[4];
             my %marker = (
                 ref => $ref,
                 alt => $alt,
-                facility_name => $facility_marker_name,
                 chrom => $chromosome,
                 pos => $position,
-                name => $customer_marker_name,
+                name => $marker_name,
             );
-            for my $i (6 .. $#marker_header_info){
+            for my $i (5 .. $#marker_header_info){
                 my $header = $marker_header_info[$i];
                 $header =~ s/^\s+|\s+$//g;
                 if ($header eq 'Quality') {
@@ -366,14 +366,17 @@ sub _parse_with_plugin {
                     $marker{'format'} = $marker_line_info[$i];
                 } elsif ($header eq 'Sequence') {
                     $marker{'sequence'} = $marker_line_info[$i];
+                } elsif ($header eq 'FacilityMarkerName') {
+                    $marker{'facility_name'} = $marker_line_info[$i];
+                    $marker_facility_link{$marker_line_info[$i]} = $marker_name;
                 }
             }
 
-            push @{$protocolprop_info{'marker_names'}}, $customer_marker_name;
-            $marker_info_details{$customer_marker_name} = \%marker;
+            push @{$protocolprop_info{'marker_names'}}, $marker_name;
+            $marker_info_details{$marker_name} = \%marker;
 
             push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
-            $marker_info{$chromosome}->{$customer_marker_name} = \%marker;
+            $marker_info{$chromosome}->{$marker_name} = \%marker;
         }
 
     close($MF);
