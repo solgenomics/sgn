@@ -88,7 +88,7 @@ markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 modelPhenoFile <- grep('model_phenodata', outputFiles, value = TRUE)
 message('model input trait pheno file ', modelPhenoFile)
 modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
-message('model input trait geno file ', modelPhenoFile)
+message('model input trait geno file ', modelGenoFile)
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 analysisReportFile <- grep("_report_", outputFiles, value = TRUE)
@@ -105,7 +105,7 @@ if (is.null(genoFile)) {
 }
 
 if (file.info(genoFile)$size == 0) {
-  stop("genotype data file is empty.")
+  stop(paste0("genotype data file ", genoFile, " is empty."))
 }
 
 readfilteredTrainingGenoData <- c()
@@ -187,7 +187,8 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
     }
 
     if (file.info(phenoFile)$size == 0) {
-        stop("phenotype data file is empty.")
+       stop(paste0("phenotype data file ", phenoFile, " is empty."))
+
     }
 
     phenoData <- data.frame(fread(phenoFile,

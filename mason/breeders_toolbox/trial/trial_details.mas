@@ -8,6 +8,7 @@ $country_name
 $year
 $trial_type
 $planting_date
+$transplanting_date
 $harvest_date
 $trial_description
 $folder_name
@@ -135,7 +136,18 @@ $latest_trial_activity => undef
                     </div>
                 </td>
             </tr>
-
+            <tr>
+                <td><b>Transplanting Date</b></td>
+                <td>
+                    <div id="transplanting_date">
+% if ($transplanting_date) {
+    <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $transplanting_date %>" ><% $transplanting_date %></a>
+% } else {
+    %  print "<span class='text-danger'>[No Transplanting Date]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
             <tr>
                 <td><b>Harvest Date</b></td>
                 <td>

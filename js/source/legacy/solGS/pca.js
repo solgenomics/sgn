@@ -1008,8 +1008,8 @@ jQuery(document).ready(function () {
             jQuery(jobSubmit).appendTo("body");
 
             jQuery("#pca_submit").dialog({
-              height: 200,
-              width: 400,
+              height: "auto",
+              width: "auto",
               modal: true,
               title: "pca job submission",
               buttons: {

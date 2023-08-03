@@ -375,13 +375,8 @@ sub check_cached_genotype_data {
     $c->controller('solGS::Files')->genotype_file_name( $c, $pop_id );
     my $file = $c->stash->{genotype_file_name};
 
-    my $cached;
-    if ( -s $file ) {
-        my @rows = read_file( $file, { binmode => ':utf8' } );
-        $cached = 1 if $rows[1];
-    }
-
-    return $cached;
+    my $count = $c->controller('solGS::Utils')->count_data_rows($file);
+    return $count;
 
 }
 
@@ -391,13 +386,8 @@ sub check_cached_phenotype_data {
     $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id );
     my $file = $c->stash->{phenotype_file_name};
 
-    my $cached;
-    if ( -s $file ) {
-        my @rows = read_file( $file, { binmode => ':utf8' } );
-        $cached = 1 if $rows[1];
-    }
-
-    return $cached;
+    my $count = $c->controller('solGS::Utils')->count_data_rows($file);
+    return $count;
 
 }
 
