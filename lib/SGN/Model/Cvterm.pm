@@ -348,12 +348,22 @@ sub get_cv_names_from_db_name {
 
 }
 
+=head2 get_vcf_genotyping_cvterm_id
+
+ Usage: my $cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($schema, {'protocol_id' => $protocol_id});
+ Desc: A vcf genotyping file, associated with a genotyping protocol, used to load to the db could be SNP or PHG data. This method queries for the id of the cvterm describing the genotype data type of the vcf file for a genotyping protocol using a protocol id or genotype id. Querying using the genotype id is useful when interested on a single accession genotype data from a genotyping protocol.
+ Ret: the cvterm id for the vcf (snp or phg) genotyping cvterm
+Args: schema object, a hashref of either {'protocol_id' => $protocol_id} or {'genotype_id' => $genotype_id}
+ Side Effects:
+ Example:
+
+=cut
 sub get_vcf_genotyping_cvterm_id {
     my $self = shift;
     my $schema = shift;
-    my $arg = shift;
-    my $protocol_id = $arg->{protocol_id};
-    my $genotype_id = $arg->{genotype_id};
+    my $id_hashref = shift;
+    my $protocol_id = $id_hashref->{protocol_id};
+    my $genotype_id = $id_hashref->{genotype_id};
     
     my $q;
     my $id;

@@ -1122,7 +1122,6 @@ sub get_next_genotype_info {
     my $snp_genotyping_cvterm_id = $self->_snp_genotyping_cvterm_id();
     my $phg_genotyping_cvterm_id = $self->_phg_genotyping_cvterm_id();
     my $vcf_genotyping_cvterm_id = $self->_vcf_genotyping_cvterm_id();
-    # my $vcf_phg_genotyping_cvterm_id = $self->_vcf_phg_genotyping_cvterm_id();
     my $vcf_map_details_cvterm_id = $self->_vcf_map_details_cvterm_id();
     my $vcf_map_details_markers_cvterm_id = $self->_vcf_map_details_markers_cvterm_id();
     my $vcf_map_details_markers_array_cvterm_id = $self->_vcf_map_details_markers_array_cvterm_id();
