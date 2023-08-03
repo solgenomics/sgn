@@ -239,7 +239,6 @@ solGS.kinship = {
   },
 
   addDowloandLinks: function (res) {
-    console.log(`adddownloadlinks res: ${JSON.stringify(res)}`);
     var popName = res.kinship_pop_name;
     var kinFileId = res.kinship_file_id;
     var kinshipFile = res.kinship_table_file;
@@ -366,8 +365,8 @@ jQuery(document).ready(function () {
             jQuery(jobSubmit).appendTo("body");
 
             jQuery("#kinship_submit").dialog({
-              height: 200,
-              width: 400,
+              height: "auto",
+              width: "auto",
               modal: true,
               title: "Kinship job submission",
               buttons: {
