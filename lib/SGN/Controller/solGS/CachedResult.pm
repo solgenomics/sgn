@@ -332,7 +332,7 @@ sub _check_combined_trials_model_selection_output {
 sub _check_kinship_output {
     my ( $self, $c, $kinship_pop_id, $protocol_id, $trait_id ) = @_;
 
-    $c->stash->{rest}{cached} =
+    $c->stash->{rest} =
       $self->check_kinship_output( $c, $kinship_pop_id, $protocol_id,
         $trait_id );
 }
@@ -346,7 +346,7 @@ sub _check_pca_output {
 sub _check_cluster_output {
     my ( $self, $c, $file_id ) = @_;
     my $cached = $self->check_cluster_output( $c, $file_id );
-    $c->stash->{rest}{cached} = $self->check_cluster_output( $c, $file_id );
+    $c->stash->{rest} = $self->check_cluster_output( $c, $file_id );
 }
 
 sub check_single_trial_training_data {
@@ -375,13 +375,8 @@ sub check_cached_genotype_data {
     $c->controller('solGS::Files')->genotype_file_name( $c, $pop_id );
     my $file = $c->stash->{genotype_file_name};
 
-    my $cached;
-    if ( -s $file ) {
-        my @rows = read_file( $file, { binmode => ':utf8' } );
-        $cached = 1 if $rows[1];
-    }
-
-    return $cached;
+    my $count = $c->controller('solGS::Utils')->count_data_rows($file);
+    return $count;
 
 }
 
@@ -391,20 +386,15 @@ sub check_cached_phenotype_data {
     $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id );
     my $file = $c->stash->{phenotype_file_name};
 
-    my $cached;
-    if ( -s $file ) {
-        my @rows = read_file( $file, { binmode => ':utf8' } );
-        $cached = 1 if $rows[1];
-    }
-
-    return $cached;
+    my $count = $c->controller('solGS::Utils')->count_data_rows($file);
+    return $count;
 
 }
 
 sub check_single_trial_model_output {
     my ( $self, $c, $pop_id, $trait_id, $protocol_id ) = @_;
 
-    $c->stash->{trait_id} = $trait_id;
+    $c->stash->{trait_id}        = $trait_id;
     $c->stash->{training_pop_id} = $pop_id;
 
     $c->controller('solGS::Files')
@@ -453,8 +443,8 @@ sub check_combined_trials_model_all_traits_output {
 sub check_selection_pop_output {
     my ( $self, $c, $tr_pop_id, $sel_pop_id, $trait_id ) = @_;
 
-    $c->stash->{trait_id} = $trait_id;
-    $c->stash->{training_pop_id} = $tr_pop_id;
+    $c->stash->{trait_id}         = $trait_id;
+    $c->stash->{training_pop_id}  = $tr_pop_id;
     $c->stash->{selection_pop_id} = $sel_pop_id;
 
     $c->controller('solGS::Files')
@@ -531,10 +521,14 @@ sub check_kinship_output {
     my $files = $c->controller('solGS::Kinship')
       ->get_kinship_coef_files( $c, $pop_id, $protocol_id, $trait_id );
 
-    my $cached =
-      -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'} ? 1 : 0;
-
-    return $cached;
+    if ( -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'} ) {
+        my $res =
+          $c->controller('solGS::Kinship')->structure_kinship_response($c);
+        return $res;
+    }
+    else {
+        return { cached => 0 };
+    }
 
 }
 
@@ -575,10 +569,11 @@ sub check_cluster_output {
             $cached_file = $c->stash->{"${cluster_type}_result_newick_file"};
         }
         if ( -s $cached_file ) {
-            return 1;
+            my $res = $c->controller('solGS::Cluster')->prepare_response($c);
+            return $res;
         }
         else {
-            return 0;
+            return { cached => 0 };
         }
     }
 
