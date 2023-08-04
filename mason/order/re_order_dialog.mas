@@ -1,0 +1,137 @@
+<%args>
+
+$ordering_service_name => undef
+$additional_order_info => undef
+$ordering_type => undef
+$order_properties => undef
+$order_properties_dialog => undef
+$order_values => undef
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="modal fade" id="re_order_dialog" name="re_order_dialog" tabindex="-1" role="dialog" aria-labelledby="reOrderDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOrderDialog">Ordering Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="ordering_info_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_re_order_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="re_order_submit" type="button" class="btn btn-primary" >Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="re_order_response_dialog" name="re_order_response_dialog" tabindex="-1" role="dialog" aria-labelledby="reOrderResponseDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOrderResponseDialog">Your Order</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="re_order_response_div"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_re_order_response_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+jQuery(document).ready( function() {
+    var order_properties = "<% $order_properties %>";
+    var properties = order_properties.split(",");
+    properties.unshift("Item Name");
+
+    var order_values = "<% $order_values %>";
+
+    jQuery('#re_order_link').click(function(){
+        reOrderInfo(order_properties, order_values)
+    });
+
+    jQuery('#re_order_submit').click(function(){
+        var order_details = {};
+        var item_name = jQuery('#0').val();
+        for(var i=1; i<properties.length; i++){
+            var each_value = jQuery('#'+ i +'').val();
+            order_details[properties[i]] = each_value;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/order/single_step_submission',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'item_name' : item_name,
+                'order_details': JSON.stringify(order_details),
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success) {
+                    jQuery('#re_order_response_div').html(response.success);
+
+                    jQuery('#re_order_response_dialog').modal('show');
+                    jQuery('#re_order_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving your request');
+            }
+        });
+    });
+
+
+});
+
+function reOrderInfo(order_properties, order_values){
+    var properties = order_properties.split(",");
+    properties.unshift("Item Name");
+    var values = order_values.split(",");
+    var html = '';
+
+    for(var i=0; i<properties.length; i++){
+        var each_property_info = properties[i].split(":");
+        if (each_property_info.length == 1) {
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' value="'+values[i]+'" ></div><br><br>';
+        } else {
+            html = html + '<label class="col-sm-3 control-label">'+ each_property_info[0] +'</label><div class="col-sm-9" ><select class="form-control" id= '+ i +' name= '+ i +'> ';
+            for (var j=1; j<each_property_info.length; j++) {
+                html = html + "<option value='"+each_property_info[j]+"'>" + each_property_info[j] + "</option>";
+            }
+            html = html + "</select></div><br><br><br>";
+        }
+    }
+    html = html + '</div></div></form>';
+
+    jQuery('#ordering_info_div').html(html);
+    jQuery('#re_order_dialog').modal('show');
+
+}
+
+
+</script>

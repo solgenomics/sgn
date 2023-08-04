@@ -7,13 +7,13 @@ $facilities
 <div class="modal fade" id="upload_genotypes_dialog" name="upload_genotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypesDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypesDialog">Upload Genotypes</h4>
-            </div>
-            <div class="modal-body">
-                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_form" name="upload_genotypes_form" action="/ajax/genotype/upload">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_form" name="upload_genotypes_form" action="/ajax/genotype/upload">
 
+                <div class="modal-header">
+                    <button type="reset" class="close" id="upload_genotype_data_close_modal_1" name="upload_genotype_data_close_modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="uploadGenotypesDialog">Upload Genotypes</h4>
+                </div>
+                <div class="modal-body">
                     <div class="container-fluid">
 
                         <&| /util/workflow.mas, id=> "upload_genotypes_workflow" &>
@@ -351,7 +351,8 @@ $facilities
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    <button type="button" class="btn btn-default" name="file_check_button" id="file_check_button">Check File Type</button>
+                                    <button type="button" style="display:none" class="btn btn-primary" disabled onclick="Workflow.complete(this); return false;" id="genotyping_data_upload_next">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
@@ -397,13 +398,12 @@ $facilities
                                 <br/>
                             </&>
                         </&>
-
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+                    <div class="modal-footer">
+                        <button type="reset" id="upload_genotype_data_close_modal_2" name="upload_genotype_data_close_modal" class="btn btn-default" >Close</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -1012,6 +1012,45 @@ jQuery(document).ready(function(){
         return false;
     });
 
+    jQuery('#file_check_button').click(function(){
+        var data_type = jQuery('#genotype_data_type_select').val();
+        if (data_type == 'vcf') {
+            if (jQuery('#upload_genotype_vcf_file_input').val() == ''){
+                alert('Please select a VCF file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'tassel_hdf5') {
+            if (jQuery('#upload_genotype_tassel_hdf5_file_input').val() == ''){
+                alert('Please select a Tassel HDF5 file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'intertek') {
+            if (jQuery('#upload_genotype_intertek_file_input').val() == ''){
+                alert('Please select an Intertek SNP Result Grid file.');
+            } else if (jQuery('#upload_genotype_intertek_snp_file_input').val() == ''){
+                alert('Please select an Intertek SNP Information File.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'ssr') {
+            if (jQuery('#upload_genotype_ssr_file_input').val() == ''){
+                alert('Please select a SSR file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        }
+    });
+
     jQuery('#upload_genotype_vcf_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_vcf_spreadsheet_info_format_dialog').modal('show');
     });
@@ -1088,6 +1127,13 @@ jQuery(document).ready(function(){
 
         }
     });
+
+    jQuery("[name='upload_genotype_data_close_modal']").click(function() {
+        jQuery('#upload_genotypes_dialog').modal('hide');
+        location.reload();
+    });
+
+
 
 });
 </script>

@@ -20,6 +20,7 @@ use File::Temp 'tempfile';
 use File::Basename;
 use File::Copy;
 use URI::FromHash 'uri';
+use CXGN::List;
 use CXGN::List::Transform;
 use Excel::Writer::XLSX;
 use CXGN::Trial::Download;
@@ -183,7 +184,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    #print STDERR Dumper $list_json;
+#    print STDERR "LIST JSON: ". Dumper $list_json;
     my $json = new JSON;
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
@@ -236,23 +237,50 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
 
     my @trait_list;
-    if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
+    if ($trait_list && $trait_list ne 'null') {
+	print STDERR "trait_list: ".Dumper $trait_list."\n";
+	@trait_list = @{_parse_list_from_json($trait_list)};
+    }
     my @trait_component_list;
-    if ($trait_component_list && $trait_component_list ne 'null') { print STDERR "trait_component_list: ".Dumper $trait_component_list."\n"; @trait_component_list = @{_parse_list_from_json($trait_component_list)}; }
+    if ($trait_component_list && $trait_component_list ne 'null') {
+	print STDERR "trait_component_list: ".Dumper $trait_component_list."\n";
+	@trait_component_list = @{_parse_list_from_json($trait_component_list)};
+    }
     my @trait_contains_list;
-    if ($trait_contains && $trait_contains ne 'null') { print STDERR "trait_contains: ".Dumper $trait_contains."\n"; @trait_contains_list = @{_parse_list_from_json($trait_contains)}; }
+    if ($trait_contains && $trait_contains ne 'null') {
+	print STDERR "trait_contains: ".Dumper $trait_contains."\n";
+	@trait_contains_list = @{_parse_list_from_json($trait_contains)};
+    }
     my @year_list;
-    if ($year_list && $year_list ne 'null') { print STDERR "year list: ".Dumper $year_list."\n"; @year_list = @{_parse_list_from_json($year_list)}; }
+    if ($year_list && $year_list ne 'null') {
+	print STDERR "year list: ".Dumper $year_list."\n";
+	@year_list = @{_parse_list_from_json($year_list)};
+    }
     my @location_list;
-    if ($location_list && $location_list ne 'null') { print STDERR "location list: ".Dumper $location_list."\n"; @location_list = @{_parse_list_from_json($location_list)}; }
+    if ($location_list && $location_list ne 'null') {
+	print STDERR "location list: ".Dumper $location_list."\n";
+	@location_list = @{_parse_list_from_json($location_list)};
+    }
     my @trial_list;
-    if ($trial_list && $trial_list ne 'null') { print STDERR "trial list: ".Dumper $trial_list."\n"; @trial_list = @{_parse_list_from_json($trial_list)}; }
+    if ($trial_list && $trial_list ne 'null') {
+	print STDERR "trial list: ".Dumper $trial_list."\n";
+	@trial_list = @{_parse_list_from_json($trial_list)};
+    }
     my @accession_list;
-    if ($accession_list && $accession_list ne 'null') { print STDERR "accession list: ".Dumper $accession_list."\n";@accession_list = @{_parse_list_from_json($accession_list)}; }
+    if ($accession_list && $accession_list ne 'null') {
+	print STDERR "accession list: ".Dumper $accession_list."\n";
+	@accession_list = @{_parse_list_from_json($accession_list)};
+    }
     my @plot_list;
-    if ($plot_list && $plot_list ne 'null') { print STDERR "plot list: ".Dumper $plot_list."\n"; @plot_list = @{_parse_list_from_json($plot_list)}; }
+    if ($plot_list && $plot_list ne 'null') {
+	print STDERR "plot list: ".Dumper $plot_list."\n";
+	@plot_list = @{_parse_list_from_json($plot_list)};
+    }
     my @plant_list;
-    if ($plant_list && $plant_list ne 'null') { print STDERR "plant list: ".Dumper $plant_list."\n"; @plant_list = @{_parse_list_from_json($plant_list)}; }
+    if ($plant_list && $plant_list ne 'null') {
+	print STDERR "plant list: ".Dumper $plant_list."\n";
+	@plant_list = @{_parse_list_from_json($plant_list)};
+    }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
     my @trait_list_int;
@@ -827,14 +855,18 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh = $schema->storage->dbh;
+
     my $input_format = $c->req->param("input_format") || 'list_id';
     my @accession_ids = [];
+    my $source_description;         # used as a comment in the helium output file
     if ($input_format eq 'accession_ids') {       #use accession ids supplied directly
-      my $id_string = $c->req->param("ids");
-      @accession_ids = split(',',$id_string);
+        my $id_string = $c->req->param("ids");
+        @accession_ids = split(',',$id_string);
+        $source_description = "Pedigrees of provided Accession IDs: $id_string";
     }
     elsif ($input_format eq 'list_id') {        #get accession names from list and tranform them to ids
-        my$accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+        my $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
         my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
         my @accession_list = map { $_->[1] } @$accession_data;
 
@@ -842,40 +874,70 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
         my $acc_t = $t->can_transform("accessions", "accession_ids");
         my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
         @accession_ids = @{$accession_id_hash->{transform}};
+
+        my $list = CXGN::List->new({ dbh => $dbh, list_id => $accession_list_id });
+        my $list_name = $list->name();
+        $source_description = "Pedigrees of Accessions in List: $list_name";
     }
 
-    my $ped_format = $c->req->param("ped_format");
+    my $ped_format = $c->req->param("ped_format") || "parents_only";
+    my $ped_include = $c->req->param("ped_include") || "ancestors";
+    my $file_format = $c->req->param("file_format") || ".txt";
     my $dl_token = $c->req->param("pedigree_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
-    print STDERR "Token is: $dl_token\n";
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
-
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+    my $filename;
 
-    print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
-    my $pedigrees_found = 0;
+    # Get the pedigrees
     my $stock = CXGN::Stock->new ( schema => $schema);
-    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format);
+    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format, $ped_include);
 
-    foreach my $row (@$pedigree_rows) {
-        print $FILE $row;
-        $pedigrees_found++;
+    # HELIUM FORMAT
+    if ( $file_format eq ".helium" ) {
+        print $FILE "# $source_description\n";
+        print $FILE "# Pedigree Format: $ped_format\n";
+        print $FILE "# Include: " . join(' and ', split(/_/, $ped_include))  . "\n";
+        if (scalar(@$pedigree_rows) == 0) {
+            print $FILE "# No pedigrees found for the provided source\n";
+        }
+
+        print $FILE "# heliumInput = PEDIGREE\n";
+        print $FILE "LineName\tFemaleParent\tMaleParent\n";
+        foreach my $row (@$pedigree_rows) {
+            my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+            my $string = join ("\t", $progeny, $female_parent ? $female_parent : '', $male_parent ? $male_parent : '');
+            print $FILE "$string\n";
+        }
+
+        close $FILE;
+        $filename = "pedigree.helium";
     }
 
-    unless ($pedigrees_found > 0) {
-        print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
-    }
-    close $FILE;
+    # GENERAL TEXT FORMAT
+    else {
+        print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
+        my $pedigrees_found = 0;
+        foreach my $row (@$pedigree_rows) {
+            print $FILE $row;
+            $pedigrees_found++;
+        }
 
-    my $filename = "pedigree.txt";
+        unless ($pedigrees_found > 0) {
+            print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
+        }
+        close $FILE;
+
+        $filename = "pedigree.txt";
+    }
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
       value => $dl_token,
       expires => '+1m',
     };
-
+    $c->res->header("Filename", $filename);
     $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
 
 
@@ -885,7 +947,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $output = "";
     open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
     while (<$F>) {
-	$output .= $_;
+        $output .= $_;
     }
     close($F);
 

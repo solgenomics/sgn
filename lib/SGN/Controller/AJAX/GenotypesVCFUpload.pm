@@ -85,6 +85,9 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
+    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
     my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');
@@ -134,7 +137,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->stash->{rest} = { error => 'Do not try to upload both Intertek and Tassel HDF5 at the same time!' };
         $c->detach();
     }
-    if (defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) {
+    if ((defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) || (!defined($upload_intertek_genotypes) && defined($upload_inteterk_marker_info))) {
         $c->stash->{rest} = { error => 'To upload Intertek genotype data please provide both the Grid Genotypes File and the Marker Info File.' };
         $c->detach();
     }
@@ -330,6 +333,9 @@ sub upload_genotype_verify_POST : Args(0) {
         });
         $organism_species = $protocol->species_name;
         $obs_type = $protocol->sample_observation_unit_type_name;
+        if ($obs_type eq 'accession') {
+            $include_lab_numbers = 1;
+        }
     }
 
     my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
@@ -425,15 +431,21 @@ sub upload_genotype_verify_POST : Args(0) {
 
             $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
             my $verified_errors = $store_genotypes->validate();
-            # print STDERR Dumper $verified_errors;
+
             if (scalar(@{$verified_errors->{error_messages}}) > 0){
-                my $error_string = join ', ', @{$verified_errors->{error_messages}};
+                my $error_string;
+                foreach my $error (@{$verified_errors->{error_messages}}) {
+                    $error_string .= $error."<br>";
+                }
                 $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
                 $c->detach();
             }
+
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-                #print STDERR Dumper $verified_errors->{warning_messages};
-                my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+                my $warning_string;
+                foreach my $error_string (@{$verified_errors->{'warning_messages'}}){
+                    $warning_string .= $error_string."<br>";
+                }
                 if (!$accept_warnings){
                     $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                     $c->detach();
@@ -442,6 +454,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
             if ($protocol_id) {
                 my @protocol_match_errors;
+                my $new_marker_data = $protocol->{markers};
                 my $stored_protocol = CXGN::Genotype::Protocol->new({
                     bcs_schema => $schema,
                     nd_protocol_id => $protocol_id
@@ -449,18 +462,25 @@ sub upload_genotype_verify_POST : Args(0) {
                 my $stored_markers = $stored_protocol->markers();
 
                 while (my ($marker_name, $marker_obj) = each %$stored_markers) {
-                    my $new_marker_obj = $protocol->{markers}->{$marker_name};
-                    while (my ($key, $value) = each %$marker_obj) {
-                        if ($value ne $new_marker_obj->{$key}) {
-                            push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$new_marker_obj->{$key};
+                    while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+                        if ($new_marker_data_1->{$marker_name}) {
+                            my $protocol_data_obj = $new_marker_data_1->{$marker_name};
+                            while (my ($key, $value) = each %$marker_obj) {
+                                if ($value ne $protocol_data_obj->{$key}) {
+                                    push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$protocol_data_obj->{$key};
+                                }
+                            }
                         }
                     }
                 }
 
                 if (scalar(@protocol_match_errors) > 0){
-                    my $warning_string = join ', ', @protocol_match_errors;
+                    my $protocol_warning;
+                    foreach my $match_error (@protocol_match_errors) {
+                        $protocol_warning .= $match_error."<br>";
+                    }
                     if (!$accept_warnings){
-                        $c->stash->{rest} = { warning => $warning_string };
+                        $c->stash->{rest} = { warning => $protocol_warning };
                         $c->detach();
                     }
                 }
@@ -487,7 +507,10 @@ sub upload_genotype_verify_POST : Args(0) {
         $return = $store_genotypes->store_genotypeprop_table();
     }
     #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
-    elsif ($parser_plugin eq 'GridFileIntertekCSV' || $parser_plugin eq 'IntertekCSV') {
+    elsif ($parser_plugin eq 'IntertekCSV') {
+        if (defined $protocol_id) {
+            $parser->{nd_protocol_id} = $protocol_id;
+        }
         my $parsed_data = $parser->parse();
         my $parse_errors;
         if (!$parsed_data) {
@@ -518,14 +541,21 @@ sub upload_genotype_verify_POST : Args(0) {
 
         my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
         my $verified_errors = $store_genotypes->validate();
+
         if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string = join ', ', @{$verified_errors->{error_messages}};
+            my $error_string;
+            foreach my $error (@{$verified_errors->{error_messages}}) {
+                $error_string .= $error."<br>";
+            }
             $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
             $c->detach();
         }
+
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            #print STDERR Dumper $verified_errors->{warning_messages};
-            my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+            my $warning_string;
+            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
+                $warning_string .= $error_string."<br>";
+            }
             if (!$accept_warnings){
                 $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                 $c->detach();
@@ -534,6 +564,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
         if ($protocol_id) {
             my @protocol_match_errors;
+            my $new_marker_data = $protocol_info->{markers};
             my $stored_protocol = CXGN::Genotype::Protocol->new({
                 bcs_schema => $schema,
                 nd_protocol_id => $protocol_id
@@ -541,18 +572,25 @@ sub upload_genotype_verify_POST : Args(0) {
             my $stored_markers = $stored_protocol->markers();
 
             while (my ($marker_name, $marker_obj) = each %$stored_markers) {
-                my $new_marker_obj = $protocol_info->{markers}->{$marker_name};
-                while (my ($key, $value) = each %$marker_obj) {
-                    if ($value ne $new_marker_obj->{$key}) {
-                        push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$new_marker_obj->{$key};
+                while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+                    if ($new_marker_data_1->{$marker_name}) {
+                        my $protocol_data_obj = $new_marker_data_1->{$marker_name};
+                        while (my ($key, $value) = each %$marker_obj) {
+                            if ($value ne $protocol_data_obj->{$key}) {
+                                push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$protocol_data_obj->{$key};
+                            }
+                        }
                     }
                 }
             }
 
             if (scalar(@protocol_match_errors) > 0){
-                my $warning_string = join ', ', @protocol_match_errors;
+                my $protocol_warning;
+                foreach my $match_error (@protocol_match_errors) {
+                    $protocol_warning .= $match_error."<br>";
+                }
                 if (!$accept_warnings){
-                    $c->stash->{rest} = { warning => $warning_string };
+                    $c->stash->{rest} = { warning => $protocol_warning };
                     $c->detach();
                 }
             }
@@ -608,14 +646,21 @@ sub upload_genotype_verify_POST : Args(0) {
 
         my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
         my $verified_errors = $store_genotypes->validate();
+
         if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string = join ', ', @{$verified_errors->{error_messages}};
+            my $error_string;
+            foreach my $error (@{$verified_errors->{error_messages}}) {
+                $error_string .= $error."<br>";
+            }
             $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
             $c->detach();
         }
+
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            #print STDERR Dumper $verified_errors->{warning_messages};
-            my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+            my $warning_string;
+            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
+                $warning_string .= $error_string."<br>";
+            }
             if (!$accept_warnings){
                 $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                 $c->detach();

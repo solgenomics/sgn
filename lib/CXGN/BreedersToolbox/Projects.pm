@@ -710,6 +710,14 @@ sub get_related_treatments {
     my $trial_ids = shift;
     my $relevant_obsunits = shift;
 
+    if ( (ref($trial_ids) eq "ARRAY") && (scalar(@$trial_ids) == 0)) {
+	return {
+	    treatment_names => [],
+	    treatment_details => {},
+	};
+
+	
+    }
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
 
     my $q = "SELECT treatment.name, nds.stock_id

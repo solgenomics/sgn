@@ -365,9 +365,10 @@ sub verify {
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
-                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
-                    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-                }
+                #Trait values can be non alphanumeric 
+                #if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
+                #    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                #}
 
                 #check that trait value is valid for trait name
                 if (exists($check_trait_format{$trait_cvterm_id})) {
@@ -583,8 +584,12 @@ sub store {
                     # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
                     if ($overwrite_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-                            push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+
+                            #skip when observation is provided since overwriting doesn't create records it updates observations.
+                            if (!$observation) {
+                                push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+                                push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+                            }
                             $plot_trait_uniquename .= ", overwritten: $upload_date";
                             $overwrite_count++;
                         } else {
@@ -644,7 +649,6 @@ sub store {
                             value => $trait_value ,
                             uniquename => $plot_trait_uniquename,
                         });
-
                         $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
                         $self->handle_operator($operator, $phenotype->phenotype_id);
 
@@ -661,35 +665,44 @@ sub store {
                             $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                         }
                     }
-
+                    my $additional_info_stored;
                     if($additional_info){
-                        my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->create({
+                        my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                             phenotype_id => $phenotype->phenotype_id,
                             type_id       => $phenotype_addtional_info_type_id,
+                        });
+                        $pheno_additional_info = $pheno_additional_info->update({
                             value => encode_json $additional_info,
                         });
+                        $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
                     }
-
+                    my $external_references_stored;
                     if($external_references){
-                        my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->create({
+                        my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
                             phenotype_id => $phenotype->phenotype_id,
                             type_id      => $external_references_type_id,
+                        });
+                        $phenotype_external_references = $phenotype_external_references->update({
                             value => encode_json $external_references,
                         });
+                        $external_references_stored = $phenotype_external_references->value ? decode_json $phenotype_external_references->value : undef;
                     }
 
                     my $observationVariableDbId = $trait_cvterm->cvterm_id;
+                    my $observation_id = $phenotype->phenotype_id;
                     my %details = (
-                        "germplasmDbId"=> $linked_data{$plot_name}->{germplasmDbId},
+                        "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
                         "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
-                        "observationDbId"=> $phenotype->phenotype_id,
+                        "observationDbId"=> qq|$observation_id|,
                         "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
-                        "observationUnitDbId"=> $linked_data{$plot_name}->{observationUnitDbId},
+                        "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
                         "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
                         "observationVariableDbId"=> qq|$observationVariableDbId|,
                         "observationVariableName"=> $trait_cvterm->name,
-                        "studyDbId"=> $project_id,
+                        "studyDbId"=> qq|$project_id|,
                         "uploadedBy"=> $operator ? $operator : "",
+                        "additionalInfo" => $additional_info_stored,
+                        "externalReferences" => $external_references_stored,
                         "value" => $trait_value
                     );
 
@@ -825,7 +838,6 @@ sub delete_previous_phenotypes {
     if ($delete_phenotype_values_error) {
         die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
     }
-
     return @deleted_phenotypes;
 }
 

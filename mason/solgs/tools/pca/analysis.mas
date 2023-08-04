@@ -65,6 +65,7 @@ $collapsed = 1;
 
 %}
 
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.pca"] &>
 <&| /page/info_section.mas,
   collapsible => 1,
   collapsed   => $collapsed,
@@ -81,7 +82,9 @@ $collapsed = 1;
 % if ($url !~ /pca\/analysis/ ) {
   <& pca_options.mas &>
 %} else {
-   <& select_menu.mas &>
+
+  <& /solgs/tools/select_menu.mas,
+  analysis_type => 'pca', &>
 %}
 
   <& plot.mas,
