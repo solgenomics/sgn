@@ -930,7 +930,7 @@ $facilities
                     <b>Please use csv formatted files</b>
                     <br/>
                     <br/>
-                    <b>For KASP Marker Information File:</b>
+                    <u><b>For KASP Marker Information File:</b></u>
                     <br>
                     <p>The header must be:</p>
                     <table class="table table-hover table-bordered table-condensed" >
@@ -946,9 +946,9 @@ $facilities
                             </tr>
                         </tbody>
                     </table>
-                    <b>
-                        Optional columns:
-                    </b>
+                    <b>Note:</b> For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1).
+                    <br>
+                    <b>Optional columns:</b>
                     You can include additional marker information by selecting one or more column headers listed below. Please add the selected column(s) after "Position" column. </li>
                     <ul>
                         <li>Quality</li>
@@ -956,25 +956,21 @@ $facilities
                         <li>Info</li>
                         <li>Format</li>
                         <li>Sequence</li>
-                        <li>FacilityMarkerName: if you are uploading genotyping data by using facility marker names, please include these names in the KASP marker information file </li>
+                        <li><b>FacilityMarkerName:</b> if you are uploading genotyping data by using facility marker names, please include these names in the KASP marker information file using "FacilityMarkerName" header</li>
                     </ul>
-
-                    <b>For KASP Result File:</b>
+                    <hr class ="solid">
+                    <u><b>For KASP Result File:</b></u>
                     <br>
-                    <b>Note:</b> In some cases, when you submit your samples to a genotyping facility using your marker names and sample names, your genotyping facility may assign facility marker names and facility sample names for genotyping data.
-                    <br>
-                    <br>
-                    In addition to using your marker names and sample names, you have an option to upload genotyping data using facility marker names and facility sample names provided by your genotyping facility. After uploaded into database, the genotyping data will be directly link to the original marker names and sample names.
+                    <b>Note:</b> If your genotyping facility assigned facility marker names and facility sample names for the genotyping data generated, you have an option to directly use these facility names for uploading. After uploaded into database, the genotyping data will be automatically linked to the original marker names and sample names.
                     <br>
                     <br>
                     <p>If you are uploading genotyping data using your marker names and sample names, the header must be:</p>
                     <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
                         <tbody>
                             <tr>
                                 <td>MarkerName</td>
                                 <td>SampleName</td>
-                                <td>SNPCall</td>
+                                <td>SNPcall</td>
                                 <td>Xvalue</td>
                                 <td>Yvalue</td>
                             </tr>
@@ -986,7 +982,9 @@ $facilities
                     <ul>
                         <li><b>MarkerName:</b> Must exist in the marker information file. If you are uploading genotyping data using previously stored protocol, marker names must exist in the selected protocol.
                         <li><b>SampleName:</b> Must exist in the database as uniquenames.</li>
-
+                        <li><b>SNPcall:</b> Allele separated by ":" (for example A:G).
+                        <li><b>Xvalue:</b> raw data of X.
+                        <li><b>Yvalue:</b> raw data of Y.
                     </ul>
                     <br>
                     <p>If you are uploading genotyping data using facility marker names and facility sample names, the header must be:</p>
@@ -1008,6 +1006,9 @@ $facilities
                     <ul>
                         <li><b>FacilityMarkerName:</b> Must exist in the marker information file.
                         <li><b>FacilitySampleName:</b> Must exist in the database. You can create a link between each sample name and facility sample name by including facility sample name during uploading genotyping plates</li>
+                        <li><b>SNPcall:</b> Allele separated by ":" (for example A:G).
+                        <li><b>Xvalue:</b> raw data of X.
+                        <li><b>Yvalue:</b> raw data of Y.    
                     </ul>
                 </div>
             </div>
@@ -1021,6 +1022,8 @@ $facilities
 <style>
 
 .ui-autocomplete { z-index:2147483647; }
+
+hr.solid { border-top: 3px solid #bbb; }
 
 </style>
 
