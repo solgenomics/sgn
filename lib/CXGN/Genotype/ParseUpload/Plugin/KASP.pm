@@ -298,7 +298,7 @@ sub _parse_with_plugin {
     my %errors;
 
     my %protocolprop_info;
-    $protocolprop_info{'header_information_lines'} = [];
+    $protocolprop_info{'header_information_lines'} = ["This protocol is for KASP data. For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1)."];
     $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
 
     my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
