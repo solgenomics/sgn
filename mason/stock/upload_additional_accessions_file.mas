@@ -4,16 +4,16 @@ $stock_id
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<div id="accession_additional_uploaded_files_div">
+<div id="trial_additional_uploaded_files_div">
 [Loading...]
 </div>
 
-<div class="modal fade" id="accession_upload_additional_file_dialog" name="accession_upload_additional_file_dialog" tabindex="-1" role="dialog" aria-labelledby="accessionUploadAdditionalFileDialog">
+<div class="modal fade" id="trial_upload_additional_file_dialog" name="trialupload_additional_file_dialog" tabindex="-1" role="dialog" aria-labelledby="trialUploadAdditionalFileDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="accessionUploadAdditionalFileDialog">Upload Additional File to Accession</h4>
+                <h4 class="modal-title" id="trialUploadAdditionalFileDialog">Upload Additional File to Accession</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -21,7 +21,7 @@ $stock_id
                         <p>
                             <b>File upload information</b>
                             <br>
-                            <a id="accession_upload_additional_file_format">Upload Information</a>
+                            <a id="trial_upload_additional_file_format">Upload Information</a>
                         </p>
                     </&>
 
@@ -30,7 +30,7 @@ $stock_id
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Upload File: </label>
                             <div class="col-sm-8" >
-                                <input type="file" name="accession_upload_additional_file" id="accession_upload_additional_file" encoding="multipart/form-data" />
+                                <input type="file" name="trial_upload_additional_file" id="accession_upload_additional_file" encoding="multipart/form-data" />
                             </div>
                         </div>
 
@@ -38,19 +38,19 @@ $stock_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="accession_upload_additional_file_cancel_button" id="accession_upload_additional_file_cancel_button"     data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="accession_upload_additional_file_submit_button" id="accession_upload_additional_file_submit_button" title="Submit">Submit</button>
+                <button type="button" class="btn btn-default" name="trial_upload_additional_file_cancel_button" id="trial_upload_additional_file_cancel_button"     data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="trial_upload_additional_file_submit_button" id="trial_upload_additional_file_submit_button" title="Submit">Submit</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="accession_upload_additional_file_info_dialog" name="accession_upload_additional_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="accessionUploadAdditionalFileInfoDialog">
+<div class="modal fade" id="trial_upload_additional_file_info_dialog" name="trial_upload_additional_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="trialUploadAdditionalFileInfoDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="accessionUploadAdditionalFileInfoDialog">Upload Information</h4>
+                <h4 class="modal-title" id="trialUploadAdditionalFileInfoDialog">Upload Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -66,7 +66,7 @@ $stock_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_accession_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_trial_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -76,22 +76,22 @@ $stock_id
 
  jQuery(document).ready(function(){
 
-    display_accession_additional_upload_files();
+    display_trial_additional_upload_files();
 
-    jQuery('#accession_upload_additional_files_link').click( function(){
-        jQuery('#accession_upload_additional_file_dialog').modal('show');
+    jQuery('#trial_upload_additional_files_link').click( function(){
+        jQuery('#trial_upload_additional_file_dialog').modal('show');
     });
 
-    jQuery('#accession_upload_additional_file_format').click( function(){
-        jQuery('#accession_upload_additional_file_info_dialog').modal('show');
+    jQuery('#trial_upload_additional_file_format').click( function(){
+        jQuery('#trial_upload_additional_file_info_dialog').modal('show');
     });
 
-    jQuery('#accession_upload_additional_file_submit_button').click(function () {
-        accession_upload_additional_file_submit();
+    jQuery('#trial_upload_additional_file_submit_button').click(function () {
+        trial_upload_additional_file_submit();
     });
     function accession_upload_additional_file_submit() {
-        var uploadFile = jQuery("#accession_upload_additional_file").val();
-        jQuery('#accession_upload_additional_file_form').attr("action", "/ajax/stock/<% $stock_id %>/upload_additional_file");
+        var uploadFile = jQuery("#trial_upload_additional_file").val();
+        jQuery('#trial_upload_additional_file_form').attr("action", "/ajax/stock/<% $stock_id %>/upload_additional_file");
         if (uploadFile === '') {
             alert("Please select a file");
             return;
@@ -99,10 +99,10 @@ $stock_id
         jQuery("#accession_upload_additional_file_form").submit();
     }
 
-    jQuery('#accession_upload_additional_file_form').iframePostForm({
+    jQuery('#trial_upload_additional_file_form').iframePostForm({
         json: true,
         post: function () {
-            var uploadedAdditionalFile = jQuery("#accession_upload_additional_file").val();
+            var uploadedAdditionalFile = jQuery("#trial_upload_additional_file").val();
             jQuery('#working_modal').modal("show");
             if (uploadedAdditionalFile === '') {
                 jQuery('#working_modal').modal("hide");
@@ -129,21 +129,21 @@ $stock_id
     });
 
 
-     function display_accessiom_additional_upload_files (){
+     function display_trial_additional_upload_files (){
         jQuery.ajax ({
             url : '/ajax/stock/'+<% $stock_id %>+'/get_uploaded_additional_file',
             beforeSend : function(){
-                jQuery('#accession_additional_uploaded_files_div').html("[LOADING...]");
+                jQuery('#trial_additional_uploaded_files_div').html("[LOADING...]");
             },
             success: function(response){
                 //console.log(response);
-                var html = "<table class='table table-hover table-condensed table-bordered' id='accession_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
+                var html = "<table class='table table-hover table-condensed table-bordered' id='trial_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
                 for (i=0; i<response.files.length; i++) {
                     html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a> | <a href="javascript:obsolete_additional_file('+<% $stock_id %>+', '+response.files[i][0]+')">Remove</a></td></tr>';
                 }
                 html = html + "</tbody></table>";
-                jQuery('#accession_additional_uploaded_files_div').html(html);
-                jQuery('#accession_additional_uploaded_files_table').DataTable();
+                jQuery('#trial_additional_uploaded_files_div').html(html);
+                jQuery('#trial_additional_uploaded_files_table').DataTable();
             },
             error: function(response){
                 alert("Error retrieving additional uploaded files.");
@@ -156,6 +156,4 @@ $stock_id
  
 
 });                      
-
-
 </script>
