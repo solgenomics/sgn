@@ -8,6 +8,46 @@ use CXGN::Genotype::Protocol;
 use CXGN::List::Validate;
 use CXGN::Stock::TissueSample::FacilityIdentifiers;
 
+has 'marker_facility_link' => (
+    isa => 'HashRef|Undef',
+    is => 'rw',
+);
+
+has 'protocolprop_info' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
+has 'marker_info_details' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
+has 'kasp_result' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
+has 'marker_name_type' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+has 'sample_name_type' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+has 'seen_samples' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
+has 'marker_info_keys' => (
+    isa => 'ArrayRef',
+    is => 'rw',
+);
+
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -45,6 +85,11 @@ sub _validate_with_plugin {
 
     my %seen_marker_names;
     my %seen_facility_marker_names;
+
+    my %marker_info;
+    my %marker_info_details;
+    my @marker_info_keys = qw(name chrom pos alt ref);
+
     open($MI_F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
         my $marker_info_header_row = <$MI_F>;
@@ -94,10 +139,26 @@ sub _validate_with_plugin {
             }
             if (!$supported_marker_info{$each_header}){
                 push @error_messages, "Invalid  marker info type: $each_header";
+            } else {
+                if ($each_header eq 'Quality') {
+                    push @marker_info_keys, 'qual';
+                } elsif ($each_header eq 'Filter') {
+                    push @marker_info_keys, 'filter';
+                } elsif ($each_header eq 'Info') {
+                    push @marker_info_keys, 'info';
+                } elsif ($each_header eq 'Format') {
+                    push @marker_info_keys, 'format';
+                } elsif ($each_header eq 'Sequence') {
+                    push @marker_info_keys, 'sequence';
+                } elsif ($each_header eq 'FacilityMarkerName') {
+                    push @marker_info_keys, 'facility_name';
+                }
             }
         }
 
+        my %marker_facility_link;
         while (my $marker_line = <$MI_F>) {
+            my %marker = ();
             my @marker_line_info;
             if ($marker_info_csv->parse($marker_line)) {
                 @marker_line_info = $marker_info_csv->fields();
@@ -120,30 +181,73 @@ sub _validate_with_plugin {
                 $facility_marker_name =~ s/^\s+|\s+$//g;
                 if (!defined $facility_marker_name){
                     push @error_messages, 'Facility marker name is required for all markers.';
+                } else {
+                    $seen_facility_marker_names{$facility_marker_name} = 1;
+                    $marker_facility_link{$facility_marker_name} = $marker_name;
                 }
-                $seen_facility_marker_names{$facility_marker_name} = 1;
             }
 
             if (!defined $marker_name){
                 push @error_messages, 'Marker name is required for all markers.';
+            } else {
+                $marker{'name'} = $marker_name;
             }
+
             if (!defined $Xallele){
                 push @error_messages, 'X allele info is required for all markers.';
+            } else {
+                $marker{'ref'} = $Xallele;
             }
+
             if (!defined $Yallele){
                 push @error_messages, 'Y allele info is required for all markers.';
+            } else {
+                $marker{'alt'} = $Yallele;
             }
+
             if (!defined $chrom) {
                 push @error_messages, 'Chromosome is required for all markers.';
+            } else {
+                $marker{'chrom'} = $chrom;
             }
+
             if (!defined $position) {
                 push @error_messages, 'Position is required for all markers.';
+            } else {
+                $marker{'pos'} = $position;
+            }
+
+            for my $i (5 .. $#marker_header_info){
+                my $header = $marker_header_info[$i];
+                $header =~ s/^\s+|\s+$//g;
+                if ($header eq 'Quality') {
+                    $marker{'qual'} = $marker_line_info[$i];
+                } elsif ($header eq 'Filter') {
+                    $marker{'filter'} = $marker_line_info[$i];
+                } elsif ($header eq 'Info') {
+                    $marker{'info'} = $marker_line_info[$i];
+                } elsif ($header eq 'Format') {
+                    $marker{'format'} = $marker_line_info[$i];
+                } elsif ($header eq 'Sequence') {
+                    $marker{'sequence'} = $marker_line_info[$i];
+                } elsif ($header eq 'FacilityMarkerName') {
+                    $marker{'facility_name'} = $marker_line_info[$i];
+                }
             }
 
             $seen_marker_names{$marker_name} = 1;
+
+            push @{$protocolprop_info{'marker_names'}}, $marker_name;
+            $marker_info_details{$marker_name} = \%marker;
+
+            push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
+            $marker_info{$chromosome}->{$marker_name} = \%marker;
+
         }
 
     close($MI_F);
+
+    $protocolprop_info{'markers'} = \%marker_info;
     print STDERR "SEEN MARKER NAMES =".Dumper(\%seen_marker_names)."\n";
     print STDERR "SEEN FACILITY MARKER NAMES =".Dumper(\%seen_facility_marker_names)."\n";
 
@@ -160,8 +264,12 @@ sub _validate_with_plugin {
     my $csv = Text::CSV->new({ sep_char => ',' });
     my $F;
 
+    my $marker_name_type;
+    my $sample_name_type;
     my %seen_sample_names;
     my %seen_facility_sample_names;
+    my %kasp_results;
+    my %seen_samples;
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
         my $header_row = <$F>;
@@ -188,10 +296,14 @@ sub _validate_with_plugin {
 
         if (($marker_name_header ne 'MarkerName') && ($marker_name_header ne 'FacilityMarkerName')){
             push @error_messages, 'Column 1 header must be "MarkerName" or "FacilityMarkerName" in the KASP result File.';
+        } else {
+            $marker_name_type = $marker_name_header;
         }
 
         if (($sample_name_header ne 'SampleName') && ($sample_name_header ne 'FacilitySampleName')){
             push @error_messages, 'Column 2 header must be "SampleName" or "FacilitySampleName" in the KASP result File.';
+        } else {
+            $sample_name_type = $sample_name_header;
         }
 
         if ($snpcall_header ne 'SNPcall'){
@@ -208,12 +320,13 @@ sub _validate_with_plugin {
 
         while (my $line = <$F>) {
             my @line_info;
+            my $marker_name;
             if ($csv->parse($line)) {
                 @line_info = $csv->fields();
             }
 
-            my $marker_name = $line_info[0];
-            $marker_name =~ s/^\s+|\s+$//g;
+            my $m_name = $line_info[0];
+            $m_name =~ s/^\s+|\s+$//g;
             my $sample_name = $line_info[1];
             $sample_name =~ s/^\s+|\s+$//g;
             my $snpcall = $line_info[2];
@@ -223,10 +336,16 @@ sub _validate_with_plugin {
             my $yvalue = $line_info[4];
             $yvalue =~ s/^\s+|\s+$//g;
 
-            if (!defined $marker_name){
+            if (!defined $m_name){
                 push @error_messages, 'Marker name or facility marker name is required for all rows.';
             } elsif (!exists($seen_marker_names{$marker_name}) && !exists($seen_facility_marker_names{$marker_name})) {
-                push @error_messages, "Marker $marker_name in the result file is not found in the marker info file.";
+                push @error_messages, "Marker $m_name in the result file is not found in the marker info file.";
+            } else {
+                if ($marker_name_type eq 'FacilityMarkerName') {
+                    $marker_name = $marker_facility_link{$m_name};
+                } else {
+                    $marker_name = $m_name;
+                }
             }
 
             if (!defined $sample_name){
@@ -249,6 +368,13 @@ sub _validate_with_plugin {
 
             if (!defined $yvalue){
                 push @error_messages, 'Y value is required for all value.';
+            }
+
+            if ((defined $marker_name) && (defined $sample_name) && (defined $snpcall) && (defined $xvalue) && (defined $yvalue)) {
+                $kasp_results{$marker_name}{$sample_name}{'call'} = $snpcall;
+                $kasp_result{$marker_name}{$sample_name}{'XV'} = $xvalue;
+                $kasp_result{$marker_name}{$sample_name}{'YV'} = $yvalue;
+                $seen_samples{$sample_name}++;
             }
         }
 
@@ -282,7 +408,17 @@ sub _validate_with_plugin {
         return;
     }
 
+    $protocolprop_info{'header_information_lines'} = ["This protocol is for KASP data. For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1)."];
+    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
 
+    $self->marker_facility_link(\%marker_facility_link);
+    $self->protocolprop_info(\%protocolprop_info);
+    $self->marker_info_details(\%marker_info_details);
+    $self->kasp_results(\%kasp_results);
+    $self->marker_name_type($marker_name_type);
+    $self->sample_name_type($sample_name_type);
+    $self->seen_samples(\%seen_samples);
+    $self->maker_info_keys(\@marker_info_keys);
 
     return 1;
 }
@@ -290,153 +426,174 @@ sub _validate_with_plugin {
 
 sub _parse_with_plugin {
     my $self = shift;
-    my $filename = $self->get_filename();
-    my $marker_info_filename = $self->get_filename_marker_info();
+#    my $filename = $self->get_filename();
+#    my $marker_info_filename = $self->get_filename_marker_info();
     my $schema = $self->get_chado_schema();
-    my $stock_type = $self->get_observation_unit_type_name;
+#    my $stock_type = $self->get_observation_unit_type_name;
+    my $marker_facility_link_ref = $self->marker_facility_link;
+    my %marker_facility_link = %{$marker_facility_link_ref};
+    my $marker_info_details_ref = $self->marker_info_details;
+    my %marker_info_details = %{$marker_info_details_ref};
+    my $kasp_results_ref = $self->kasp_result;
+    my %kasp_results = %{$kasp_results_ref};
+    my $sample_name_type = $self->sample_name_type;
+    my $marker_name_type = $self->marker_name_type;
+    my $seen_samples_ref = $self->seen_samples;
+    my %seen_samples = %{$seen_samples_ref};
+    my $marker_info_keys_ref = $self->marker_info_keys;
+    my @marker_info_keys = @$marker_info_keys_ref;
+
     my @error_messages;
     my %errors;
 
-    my %protocolprop_info;
-    $protocolprop_info{'header_information_lines'} = ["This protocol is for KASP data. For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1)."];
-    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
+    print STDERR "VALIDATE MARKER FACILITY LINK =".Dumper(\@marker_facility_link)."\n";
+    print STDERR "VALIDATE MARKER INFO DETAILS =".Dumper(\%marker_info_details)."\n";
+    print STDERR "VALIDATE KASP RESULTS =".Dumper(\%kasp_results)."\n";
+    print STDERR "VALIDATE SAMPLE NAME TYPE =".Dumper($sample_name_type)."\n";
+    print STDERR "VALIDATE MARKER NAME TYPE =".Dumper($marker_name_type)."\n";
+    print STDERR "VALIDATE SEEN SAMPLES =".Dumper(\%seen_samples)."\n";
+    print STDERR "VALIDATE MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
 
-    my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
-    my $MF;
-    my %marker_info;
-    my %marker_info_details;
-    my @marker_info_keys = qw(name chrom pos alt ref);
+#    my %protocolprop_info;
+#    $protocolprop_info{'header_information_lines'} = ["This protocol is for KASP data. For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1)."];
+#    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
 
-    open($MF, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
+#    my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
+#    my $MF;
+#    my %marker_info;
+#    my %marker_info_details;
+#    my @marker_info_keys = qw(name chrom pos alt ref);
 
-        my $marker_header_row = <$MF>;
-        my @marker_header_info;
+#    open($MF, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
-        if ($marker_info_csv->parse($marker_header_row)) {
-            @marker_header_info = $marker_info_csv->fields();
-        }
+#        my $marker_header_row = <$MF>;
+#        my @marker_header_info;
 
-        for my $i (5 .. $#marker_header_info){
-            my $header = $marker_header_info[$i];
-            $header =~ s/^\s+|\s+$//g;
-            if ($header eq 'Quality') {
-                push @marker_info_keys, 'qual';
-            } elsif ($header eq 'Filter') {
-                push @marker_info_keys, 'filter';
-            } elsif ($header eq 'Info') {
-                push @marker_info_keys, 'info';
-            } elsif ($header eq 'Format') {
-                push @marker_info_keys, 'format';
-            } elsif ($header eq 'Sequence') {
-                push @marker_info_keys, 'sequence';
-            } elsif ($header eq 'FacilityMarkerName') {
-                push @marker_info_keys, 'facility_name';
-            }
-        }
-        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
-        my %marker_facility_link;
-        while (my $marker_line = <$MF>) {
-            my @marker_line_info;
-            if ($marker_info_csv->parse($marker_line)) {
-                @marker_line_info = $marker_info_csv->fields();
-            }
+#        if ($marker_info_csv->parse($marker_header_row)) {
+#            @marker_header_info = $marker_info_csv->fields();
+#        }
 
-            my $marker_name = $marker_line_info[0];
-            my $ref = $marker_line_info[1];
-            my $alt = $marker_line_info[2];
-            my $chromosome = $marker_line_info[3];
-            my $position = $marker_line_info[4];
-            my %marker = (
-                ref => $ref,
-                alt => $alt,
-                chrom => $chromosome,
-                pos => $position,
-                name => $marker_name,
-            );
-            for my $i (5 .. $#marker_header_info){
-                my $header = $marker_header_info[$i];
-                $header =~ s/^\s+|\s+$//g;
-                if ($header eq 'Quality') {
-                    $marker{'qual'} = $marker_line_info[$i];
-                } elsif ($header eq 'Filter') {
-                    $marker{'filter'} = $marker_line_info[$i];
-                } elsif ($header eq 'Info') {
-                    $marker{'info'} = $marker_line_info[$i];
-                } elsif ($header eq 'Format') {
-                    $marker{'format'} = $marker_line_info[$i];
-                } elsif ($header eq 'Sequence') {
-                    $marker{'sequence'} = $marker_line_info[$i];
-                } elsif ($header eq 'FacilityMarkerName') {
-                    $marker{'facility_name'} = $marker_line_info[$i];
-                    $marker_facility_link{$marker_line_info[$i]} = $marker_name;
-                }
-            }
+#        for my $i (5 .. $#marker_header_info){
+#            my $header = $marker_header_info[$i];
+#            $header =~ s/^\s+|\s+$//g;
+#            if ($header eq 'Quality') {
+#                push @marker_info_keys, 'qual';
+#            } elsif ($header eq 'Filter') {
+#                push @marker_info_keys, 'filter';
+#            } elsif ($header eq 'Info') {
+#                push @marker_info_keys, 'info';
+#            } elsif ($header eq 'Format') {
+#                push @marker_info_keys, 'format';
+#            } elsif ($header eq 'Sequence') {
+#                push @marker_info_keys, 'sequence';
+#            } elsif ($header eq 'FacilityMarkerName') {
+#                push @marker_info_keys, 'facility_name';
+#            }
+#        }
+#        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
+#        my %marker_facility_link;
+#        while (my $marker_line = <$MF>) {
+#            my @marker_line_info;
+#            if ($marker_info_csv->parse($marker_line)) {
+#                @marker_line_info = $marker_info_csv->fields();
+#            }
 
-            push @{$protocolprop_info{'marker_names'}}, $marker_name;
-            $marker_info_details{$marker_name} = \%marker;
+#            my $marker_name = $marker_line_info[0];
+#            my $ref = $marker_line_info[1];
+#            my $alt = $marker_line_info[2];
+#            my $chromosome = $marker_line_info[3];
+#            my $position = $marker_line_info[4];
+#            my %marker = (
+#                ref => $ref,
+#                alt => $alt,
+#                chrom => $chromosome,
+#                pos => $position,
+#                name => $marker_name,
+#            );
+#            for my $i (5 .. $#marker_header_info){
+#                my $header = $marker_header_info[$i];
+#                $header =~ s/^\s+|\s+$//g;
+#                if ($header eq 'Quality') {
+#                    $marker{'qual'} = $marker_line_info[$i];
+#                } elsif ($header eq 'Filter') {
+#                    $marker{'filter'} = $marker_line_info[$i];
+#                } elsif ($header eq 'Info') {
+#                    $marker{'info'} = $marker_line_info[$i];
+#                } elsif ($header eq 'Format') {
+#                    $marker{'format'} = $marker_line_info[$i];
+#                } elsif ($header eq 'Sequence') {
+#                    $marker{'sequence'} = $marker_line_info[$i];
+#                } elsif ($header eq 'FacilityMarkerName') {
+#                    $marker{'facility_name'} = $marker_line_info[$i];
+#                    $marker_facility_link{$marker_line_info[$i]} = $marker_name;
+#                }
+#            }
 
-            push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
-            $marker_info{$chromosome}->{$marker_name} = \%marker;
-        }
+#            push @{$protocolprop_info{'marker_names'}}, $marker_name;
+#            $marker_info_details{$marker_name} = \%marker;
 
-    close($MF);
+#            push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
+#            $marker_info{$chromosome}->{$marker_name} = \%marker;
+#        }
+
+#    close($MF);
         #print STDERR Dumper \%marker_info_lookup;
-    $protocolprop_info{'markers'} = \%marker_info;
-    print STDERR "MARKER INFO =".Dumper(\%marker_info)."\n";
+#    $protocolprop_info{'markers'} = \%marker_info;
+#    print STDERR "MARKER INFO =".Dumper(\%marker_info)."\n";
 
 
-    my %kasp_result;
+#    my %kasp_result;
 
-    my $csv = Text::CSV->new({ sep_char => ',' });
-    my $F;
+#    my $csv = Text::CSV->new({ sep_char => ',' });
+#    my $F;
 
-    my %seen_samples;
-    open($F, "<", $filename) || die "Can't open file $filename\n";
+#    my %seen_samples;
+#    open($F, "<", $filename) || die "Can't open file $filename\n";
 
-        my $header_row = <$F>;
-        my @header_info;
+#        my $header_row = <$F>;
+#        my @header_info;
 
-        if ($csv->parse($header_row)) {
-            @header_info = $csv->fields();
-        }
+#        if ($csv->parse($header_row)) {
+#            @header_info = $csv->fields();
+#        }
 
-        my $marker_name_type = $header_info[0];
-        $marker_name_type =~ s/^\s+|\s+$//g;
+#        my $marker_name_type = $header_info[0];
+#        $marker_name_type =~ s/^\s+|\s+$//g;
 
-        my $sample_name_type = $header_info[1];
-        $sample_name_type =~ s/^\s+|\s+$//g;
+#        my $sample_name_type = $header_info[1];
+#        $sample_name_type =~ s/^\s+|\s+$//g;
 
-        while (my $line = <$F>) {
-            my @line_info;
-            my $marker_name;
-            if ($csv->parse($line)) {
-                @line_info = $csv->fields();
-            }
+#        while (my $line = <$F>) {
+#            my @line_info;
+#            my $marker_name;
+#            if ($csv->parse($line)) {
+#                @line_info = $csv->fields();
+#            }
 
-            if ($marker_name_type eq 'FacilityMarkerName') {
-                my $facility_name = $line_info[0];
-                $facility_name =~ s/^\s+|\s+$//g;
-                $marker_name = $marker_facility_link{$facility_name};
-            } else {
-                $marker_name = $line_info[0];
-                $marker_name =~ s/^\s+|\s+$//g;
-            }
-            my $sample_name = $line_info[1];
-            $sample_name =~ s/^\s+|\s+$//g;
-            my $snpcall = $line_info[2];
-            $snpcall =~ s/^\s+|\s+$//g;
-            my $xvalue = $line_info[3];
-            $xvalue =~ s/^\s+|\s+$//g;
-            my $yvalue = $line_info[4];
-            $yvalue =~ s/^\s+|\s+$//g;
+#            if ($marker_name_type eq 'FacilityMarkerName') {
+#                my $facility_name = $line_info[0];
+#                $facility_name =~ s/^\s+|\s+$//g;
+#                $marker_name = $marker_facility_link{$facility_name};
+#            } else {
+#                $marker_name = $line_info[0];
+#                $marker_name =~ s/^\s+|\s+$//g;
+#            }
+#            my $sample_name = $line_info[1];
+#            $sample_name =~ s/^\s+|\s+$//g;
+#            my $snpcall = $line_info[2];
+#            $snpcall =~ s/^\s+|\s+$//g;
+#            my $xvalue = $line_info[3];
+#            $xvalue =~ s/^\s+|\s+$//g;
+#            my $yvalue = $line_info[4];
+#            $yvalue =~ s/^\s+|\s+$//g;
 
-           $kasp_result{$marker_name}{$sample_name}{'call'} = $snpcall;
-           $kasp_result{$marker_name}{$sample_name}{'XV'} = $xvalue;
-           $kasp_result{$marker_name}{$sample_name}{'YV'} = $yvalue;
-           $seen_samples{$sample_name}++;
-        }
+#           $kasp_result{$marker_name}{$sample_name}{'call'} = $snpcall;
+#           $kasp_result{$marker_name}{$sample_name}{'XV'} = $xvalue;
+#           $kasp_result{$marker_name}{$sample_name}{'YV'} = $yvalue;
+#           $seen_samples{$sample_name}++;
+#        }
 
-    close($F);
+#    close($F);
 
     my @observation_unit_names;
     my %facility_sample_name_link;
@@ -455,12 +612,12 @@ sub _parse_with_plugin {
 
     my %genotype_info;
 
-    foreach my $marker_name_key (keys %kasp_result) {
+    foreach my $marker_name_key (keys %kasp_results) {
         my %sample_kasp_result = ();
         my $ref = $marker_info_details{$marker_name_key}{'ref'};
         my $alt = $marker_info_details{$marker_name_key}{'alt'};
         my $chrom = $marker_info_details{$marker_name_key}{'chrom'};
-        my $sample_result = $kasp_result{$marker_name_key};
+        my $sample_result = $kasp_results{$marker_name_key};
         %sample_kasp_result = %{$sample_result};
         foreach my $sample (keys %sample_kasp_result) {
             my $sample_data = $sample_kasp_result{$sample};
