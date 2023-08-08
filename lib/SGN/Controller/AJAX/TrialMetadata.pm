@@ -53,7 +53,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
-    my $sp_person_id = undef;
+    my $sp_person_id;
     if($c->user){
         $sp_person_id = $c->user->get_object()->get_sp_person_id();
     }
@@ -217,6 +217,8 @@ sub trial_details_GET   {
 sub trial_details_POST  {
     my $self = shift;
     my $c = shift;
+    my $sp_person_id;
+    $sp_person_id = $c->user->get_object()->get_sp_person_id();
 
     my @categories = $c->req->param("categories[]");
 

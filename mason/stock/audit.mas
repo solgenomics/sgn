@@ -86,13 +86,25 @@ jQuery(document).ready(function(){
                     { title: 'Timestamp' },
                     { title: 'Operation' },
                     { title: 'Username' },
-                    { title: 'Logged in user' },
+                    { title: 'Logged in User' },
                     { title: 'Before' },
                     { title: 'After' },
                     { title: 'Transaction Code'},
                     { title: 'Primary Key'},
                     { title: 'Is Undo'},
                 ],
+                "rowCallback" : function (row, data, index){
+                    if(data[1] == "INSERT"){
+                        jQuery('td', row).css('background-color', 'HoneyDew');
+                    }
+                    if(data[1] == "UPDATE"){
+                        jQuery('td',row).css('background-color', 'LightCyan');
+                    }
+                    if(data[1] == "DELETE"){
+                        jQuery('td',row).css('background-color', 'LightSalmon');
+                    }
+
+                }
                 
             });
 

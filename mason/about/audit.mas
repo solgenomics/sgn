@@ -125,7 +125,7 @@ jQuery(document).ready(function(){
                     { title: 'Timestamp' },
                     { title: 'Operation' },
                     { title: 'Username' },
-                    { title: 'Logged in user' },
+                    { title: 'Logged in User' },
                     { title: 'Before' },
                     { title: 'After' },
                     { title: 'Transaction Code'},
@@ -140,7 +140,7 @@ jQuery(document).ready(function(){
                         jQuery('td',row).css('background-color', 'LightCyan');
                     }
                     if(data[1] == "DELETE"){
-                        jQuery('td',row).css('background-color', 'Red');
+                        jQuery('td',row).css('background-color', 'LightSalmon');
                     }
 
                 }
