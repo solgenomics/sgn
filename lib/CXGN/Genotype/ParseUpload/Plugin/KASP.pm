@@ -23,7 +23,7 @@ has 'marker_info_details' => (
     is => 'rw',
 );
 
-has 'kasp_result' => (
+has 'kasp_results' => (
     isa => 'HashRef',
     is => 'rw',
 );
@@ -60,6 +60,7 @@ sub _validate_with_plugin {
     my %missing_accessions;
     my %stored_marker_info;
     my %supported_marker_info;
+    my %protocolprop_info;
 
     if (defined $protocol_id) {
         my $stored_protocol = CXGN::Genotype::Protocol->new({
@@ -240,8 +241,8 @@ sub _validate_with_plugin {
             push @{$protocolprop_info{'marker_names'}}, $marker_name;
             $marker_info_details{$marker_name} = \%marker;
 
-            push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
-            $marker_info{$chromosome}->{$marker_name} = \%marker;
+            push @{$protocolprop_info{'markers_array'}->{$chrom}}, \%marker;
+            $marker_info{$chrom}->{$marker_name} = \%marker;
 
         }
 
@@ -338,7 +339,7 @@ sub _validate_with_plugin {
 
             if (!defined $m_name){
                 push @error_messages, 'Marker name or facility marker name is required for all rows.';
-            } elsif (!exists($seen_marker_names{$marker_name}) && !exists($seen_facility_marker_names{$marker_name})) {
+            } elsif (!exists($seen_marker_names{$m_name}) && !exists($seen_facility_marker_names{$m_name})) {
                 push @error_messages, "Marker $m_name in the result file is not found in the marker info file.";
             } else {
                 if ($marker_name_type eq 'FacilityMarkerName') {
@@ -372,8 +373,8 @@ sub _validate_with_plugin {
 
             if ((defined $marker_name) && (defined $sample_name) && (defined $snpcall) && (defined $xvalue) && (defined $yvalue)) {
                 $kasp_results{$marker_name}{$sample_name}{'call'} = $snpcall;
-                $kasp_result{$marker_name}{$sample_name}{'XV'} = $xvalue;
-                $kasp_result{$marker_name}{$sample_name}{'YV'} = $yvalue;
+                $kasp_results{$marker_name}{$sample_name}{'XV'} = $xvalue;
+                $kasp_results{$marker_name}{$sample_name}{'YV'} = $yvalue;
                 $seen_samples{$sample_name}++;
             }
         }
@@ -418,7 +419,7 @@ sub _validate_with_plugin {
     $self->marker_name_type($marker_name_type);
     $self->sample_name_type($sample_name_type);
     $self->seen_samples(\%seen_samples);
-    $self->maker_info_keys(\@marker_info_keys);
+    $self->marker_info_keys(\@marker_info_keys);
 
     return 1;
 }
@@ -434,7 +435,7 @@ sub _parse_with_plugin {
     my %marker_facility_link = %{$marker_facility_link_ref};
     my $marker_info_details_ref = $self->marker_info_details;
     my %marker_info_details = %{$marker_info_details_ref};
-    my $kasp_results_ref = $self->kasp_result;
+    my $kasp_results_ref = $self->kasp_results;
     my %kasp_results = %{$kasp_results_ref};
     my $sample_name_type = $self->sample_name_type;
     my $marker_name_type = $self->marker_name_type;
@@ -442,17 +443,21 @@ sub _parse_with_plugin {
     my %seen_samples = %{$seen_samples_ref};
     my $marker_info_keys_ref = $self->marker_info_keys;
     my @marker_info_keys = @$marker_info_keys_ref;
+    my $protocolprop_info_ref = $self->protocolprop_info;
+    my %protocolprop_info = %{$protocolprop_info_ref};
 
     my @error_messages;
     my %errors;
 
-    print STDERR "VALIDATE MARKER FACILITY LINK =".Dumper(\@marker_facility_link)."\n";
+    print STDERR "VALIDATE MARKER FACILITY LINK =".Dumper(\%marker_facility_link)."\n";
     print STDERR "VALIDATE MARKER INFO DETAILS =".Dumper(\%marker_info_details)."\n";
     print STDERR "VALIDATE KASP RESULTS =".Dumper(\%kasp_results)."\n";
     print STDERR "VALIDATE SAMPLE NAME TYPE =".Dumper($sample_name_type)."\n";
     print STDERR "VALIDATE MARKER NAME TYPE =".Dumper($marker_name_type)."\n";
     print STDERR "VALIDATE SEEN SAMPLES =".Dumper(\%seen_samples)."\n";
     print STDERR "VALIDATE MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
+    print STDERR "VALIDATE PROTOCOLPROP INFO =".Dumper(\%protocolprop_info)."\n";
+
 
 #    my %protocolprop_info;
 #    $protocolprop_info{'header_information_lines'} = ["This protocol is for KASP data. For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1)."];
