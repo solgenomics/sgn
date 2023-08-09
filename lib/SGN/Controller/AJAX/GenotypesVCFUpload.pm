@@ -127,6 +127,11 @@ sub upload_genotype_verify_POST : Args(0) {
     my $upload_ssr_data = $c->req->upload('upload_genotype_ssr_file_input');
     my $upload_kasp_genotypes = $c->req->upload('upload_genotype_data_kasp_file_input');
     my $upload_kasp_marker_info = $c->req->upload('upload_genotype_kasp_marker_info_file_input');
+    if (defined $upload_kasp_genotypes) {
+        if (!defined $assay_type) {
+            $assay_type = 'KASP';
+        }
+    }
 
     if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
         $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };

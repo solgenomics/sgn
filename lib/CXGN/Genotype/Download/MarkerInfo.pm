@@ -55,6 +55,7 @@ sub download {
         nd_protocol_id => $protocol_id->[0],
     });
     my $marker_info_keys = $protocol->marker_info_keys;
+    my $assay_type = $protocol->assay_type;
     my $marker_search = CXGN::Genotype::MarkersSearch->new({
         bcs_schema => $schema,
         protocol_id_list => $protocol_id
@@ -74,10 +75,18 @@ sub download {
                 push @headers, 'CHROMOSOME';
             } elsif ($header_key eq 'pos') {
                 push @headers, 'POSITION';
-            } elsif ($header_key eq 'alt') {
-                push @headers, 'ALTERNATE';
             } elsif ($header_key eq 'ref') {
-                push @headers, 'REFERENCE';
+                if ($assay_type eq 'KASP') {
+                    push @headers, 'X-ALLELE';
+                } else {
+                    push @headers, 'REFERENCE';
+                }
+            } elsif ($header_key eq 'alt') {
+                if ($assay_type eq 'KASP') {
+                    push @headers, 'Y-ALLELE';
+                } else {
+                    push @headers, 'ALTERNATE';
+                }
             } elsif ($header_key eq 'qual') {
                 push @headers, 'QUALITY';
             } elsif ($header_key eq 'filter') {

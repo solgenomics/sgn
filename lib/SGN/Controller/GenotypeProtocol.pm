@@ -50,7 +50,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     }
 
     my $marker_info_keys = $protocol->marker_info_keys;
-#    print STDERR "INFO KEYS =".Dumper($marker_info_keys)."\n";
+    my $assay_type = $protocol->assay_type;
     my @marker_info_headers = ();
     if (defined $marker_info_keys) {
         foreach my $info_key (@$marker_info_keys) {
@@ -63,9 +63,17 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
             } elsif ($info_key eq 'pos') {
                 push @marker_info_headers, 'Position';
             } elsif ($info_key eq 'alt') {
-                push @marker_info_headers, 'Alternate';
+                if ($assay_type eq 'KASP') {
+                    push @marker_info_headers, 'Y-allele';
+                } else {
+                    push @marker_info_headers, 'Alternate';
+                }
             } elsif ($info_key eq 'ref') {
-                push @marker_info_headers, 'Reference';
+                if ($assay_type eq 'KASP') {
+                    push @marker_info_headers, 'X-allele';
+                } else {
+                    push @marker_info_headers, 'Reference';
+                }
             } elsif ($info_key eq 'qual') {
                 push @marker_info_headers, 'Quality';
             } elsif ($info_key eq 'filter') {
