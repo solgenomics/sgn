@@ -128,28 +128,6 @@ sub search {
     }
 #    print STDERR "PROTOCOLPROP HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
 
-    #check keys
-#    my @intertek_name_key;
-#    my @protocolprop_marker_hash_array = @$protocolprop_marker_hash_select;
-#    foreach my $id (@$protocol_id_list) {
-#        my $check_keys_q = "SELECT nd_protocolprop.value from nd_protocolprop where nd_protocol_id = ? and type_id = ? FETCH FIRST 1 ROWS ONLY";
-#        my $check_keys_h = $schema->storage->dbh()->prepare($check_keys_q);
-#        $check_keys_h->execute($id, $vcf_map_details_markers_array_cvterm_id);
-
-#        my @check_keys_data = ();
-#        my @all_keys = ();
-#        @check_keys_data = $check_keys_h->fetchrow_array();
-#        my $each_data = decode_json$check_keys_data[0];
-#        my $each_marker_info = $each_data->[0];
-#        if ($each_marker_info->{'intertek_name'}) {
-#            push @protocolprop_marker_hash_array, 'intertek_name';
-#            $protocolprop_marker_hash_select = \@protocolprop_marker_hash_array;
-#            last:
-#        }
-#    }
-#    print STDERR "HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
-
-
     #protocol_id_list is required
     my $protocol_where;
     if ($protocol_id_list && scalar(@$protocol_id_list)>0) {

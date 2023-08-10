@@ -71,18 +71,6 @@ sub _validate_with_plugin {
         my $position_header = $marker_header_info[5];
         $position_header =~ s/^\s+|\s+$//g;
 
-#        my $quality_header = $marker_header_info[6];
-#        $quality_header =~ s/^\s+|\s+$//g;
-
-#        my $filter_header = $marker_header_info[7];
-#        $filter_header =~ s/^\s+|\s+$//g;
-
-#        my $info_header = $marker_header_info[8];
-#        $info_header =~ s/^\s+|\s+$//g;
-
-#        my $format_header = $marker_header_info[9];
-#        $format_header =~ s/^\s+|\s+$//g;
-
         # Check that the columns in the marker info file are what we expect
         if ($intertek_snp_id_header ne 'IntertekSNPID'){
             push @error_messages, 'Column 1 header must be "IntertekSNPID" in the SNP Info File.';
@@ -102,18 +90,6 @@ sub _validate_with_plugin {
         if ($position_header ne 'Position'){
             push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
         }
-#        if ($quality_header ne 'Quality'){
-#            push @error_messages, 'Column 7 header must be "Quality" in the SNP Info File.';
-#        }
-#        if ($filter_header ne 'Filter'){
-#            push @error_messages, 'Column 8 header must be "Filter" in the SNP Info File.';
-#        }
-#        if ($info_header ne 'Info'){
-#            push @error_messages, 'Column 9 header must be "Info" in the SNP Info File.';
-#        }
-#        if ($format_header ne 'Format'){
-#            push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
-#        }
 
         for my $i (6 .. $#marker_header_info){
             my $each_header = $marker_header_info[$i];
@@ -308,7 +284,7 @@ sub _parse_with_plugin {
     my $MF;
     my %marker_info;
     my %marker_info_nonseparated;
-    my @marker_info_keys = qw(name intertek_name chrom pos alt ref);
+    my @marker_info_keys = qw(name intertek_name chrom pos ref alt);
 
 
     # Open Marker Info File and parse into the %marker_info for later use
@@ -352,10 +328,6 @@ sub _parse_with_plugin {
             my $alt = $marker_line_info[3];
             my $chromosome = $marker_line_info[4];
             my $position = $marker_line_info[5];
-#            my $quality = $line_info[6];
-#            my $filter = $line_info[7];
-#            my $info = $line_info[8];
-#            my $format = $line_info[9];
             my %marker = (
                 ref => $ref,
                 alt => $alt,
@@ -363,10 +335,6 @@ sub _parse_with_plugin {
                 chrom => $chromosome,
                 pos => $position,
                 name => $customer_snp_id,
-#                qual => $quality,
-#                filter => $filter,
-#                info => $info,
-#                format => $format,
             );
 
             for my $i (6 .. $#marker_header_info){

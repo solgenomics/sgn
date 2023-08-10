@@ -89,7 +89,7 @@ sub _validate_with_plugin {
 
     my %marker_info;
     my %marker_info_details;
-    my @marker_info_keys = qw(name chrom pos alt ref);
+    my @marker_info_keys = qw(name chrom pos ref alt);
 
     open($MI_F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
