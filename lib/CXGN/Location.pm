@@ -169,7 +169,7 @@ sub store_location {
     my $breeding_program_ids = join '&', @breeding_program_ids;
 
     if ($location_type && !$self->_is_valid_type($location_type)) {
-        return { error => "Location type $location_type must be must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
+        return { error => "Location type $location_type must be must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
     }
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
@@ -428,6 +428,7 @@ sub _is_valid_type {
     my $self = shift;
     my $type = shift;
     my %valid_types = (
+        Town => 1,
         Farm => 1,
         Field => 1,
         Greenhouse => 1,
