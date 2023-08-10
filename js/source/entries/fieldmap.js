@@ -527,6 +527,9 @@ export function init() {
             this.addEventListeners();
             var cc = this.clickcancel();
             const colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"];
+            const trial_colors = ['#2f4f4f', '#ff8c00', '#ffff00', '#00ff00', '#9400d3', '#00ffff', '#1e90ff', '#ff1493', '#ffdab9', '#228b22'];
+            const trial_colors_text = ['#ffffff', '#000000', '#000000', '#000000', '#ffffff', '#000000', '#ffffff', '#ffffff', '#000000', '#ffffff'];
+            const trial_colors_map = {};
             var trait_name = this.heatmap_selection;
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected ? this.fieldmap_plot_click : this.heatmap_plot_click;
@@ -598,6 +601,18 @@ export function init() {
                 return stroke_color;
             }
 
+            var get_trial_label_color = function(plot) {
+                const key = plot.trialName;
+                if ( !trial_colors_map.hasOwnProperty(key) ) {
+                    const index = Object.keys(trial_colors_map).length % trial_colors.length;
+                    trial_colors_map[key] = {
+                        bg: trial_colors[index],
+                        fg: trial_colors_text[index]
+                    }
+                }
+                return trial_colors_map[key];
+            }
+
             var get_plot_message = function(plot) {
                 let html = '';
                 if ( is_plot_overlapping(plot) ) {
@@ -607,7 +622,7 @@ export function init() {
                 }
                 else {
                     html += jQuery("#include_linked_trials_checkmark").is(":checked") ?
-                        `<strong>Trial Name:</strong> ${plot.studyName}<br />` :
+                        `<strong>Trial Name:</strong> <span style='padding: 1px 2px; border-radius: 4px; color: ${get_trial_label_color(plot).fg}; background-color: ${get_trial_label_color(plot).bg}'>${plot.studyName}</span><br />` :
                         "";
                     html += `<strong>Plot Name:</strong> ${plot.observationUnitName}<br />`;
                     if ( plot.type == "data" ) {
@@ -753,6 +768,17 @@ export function init() {
                     window.open('/stock/'+d.observationUnitDbId+'/view');        
                 }
             });
+
+            // Add a colored band to the bottom of the plot box to indicate different trials
+            if ( jQuery("#include_linked_trials_checkmark").is(":checked") ) {
+                plots.enter().append("rect")
+                    .attr("x", (d) => { return plot_x_coord(d) * 50 + 4 })
+                    .attr("y", (d) => { return plot_y_coord(d) * 50 + 54 + y_offset })
+                    .attr("rx", 2)
+                    .attr("width", 40)
+                    .attr("height", 6)
+                    .style("fill", (d) => { return get_trial_label_color(d).bg })
+            }
 
             plots.append("text");
             plots.enter().append("text")
