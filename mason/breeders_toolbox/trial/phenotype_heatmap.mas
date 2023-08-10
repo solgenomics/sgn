@@ -1110,6 +1110,7 @@ jQuery(document).ready( function() {
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
+            jQuery("#include_linked_trials").css("display", "block");
             d3.select("#container_heatmap_geo_div").remove();
             FieldMap.heatmap_selected = false;
             FieldMap.load();
@@ -1124,6 +1125,7 @@ jQuery(document).ready( function() {
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
+            jQuery("#include_linked_trials").css("display", "none");
             geo_field_map_view();
             jQuery('#working_modal').modal("hide");
         } else  if (selected != ''){
@@ -1132,6 +1134,7 @@ jQuery(document).ready( function() {
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#view_ctrl_button").show();
+            jQuery("#include_linked_trials").css("display", "none");
             FieldMap.heatmap_selected = true;
             FieldMap.heatmap_selection = selected;
             heatmap(selected);
