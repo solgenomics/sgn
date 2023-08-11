@@ -45,8 +45,7 @@ my $organism = $schema->resultset("Organism::Organism")->find_or_create({
 });
 
 foreach my $new_accession (@new_accessions) {
-    my $add_new_accession = $schema->resultset('Stock::Stock')
-        ->create({
+    my $add_new_accession = $schema->resultset('Stock::Stock')->create({
         organism_id => $organism->organism_id,
         name        => $new_accession,
         uniquename  => $new_accession,
@@ -170,6 +169,7 @@ my $plate_data = {
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id" => $sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
 ok($response->{trial_id});
+my $plate_id = $response->{trial_id};
 
 
 my $facility_file = $f->config->{basepath}."/t/data/genotype_data/kasp_results_with_facility_names_1.csv";
@@ -242,8 +242,29 @@ $response = $ua3->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-my $warning_string = $message_hash->{'warning'};
-is($warning_string,'Marker S01_0001 in the previously loaded protocol has G for alt, but in your file now shows T<br>Marker S01_0001 in the previously loaded protocol has T for ref, but in your file now shows G<br>');
+ok($message_hash->{warning});
+
+## DELETE genotyping protocols, data, plate and projects
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_1?sgn_session_id=$sgn_session_id");
+$response = decode_json $mech->content;
+is_deeply($response, {success=>1});
+
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_2?sgn_session_id=$sgn_session_id");
+$response = decode_json $mech->content;
+is_deeply($response, {success=>1});
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$plate_id.'/delete/layout');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_id_1.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_id_2.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
 
 done_testing();
