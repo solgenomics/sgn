@@ -778,6 +778,7 @@ export function init() {
                     .attr("width", 40)
                     .attr("height", 6)
                     .style("fill", (d) => { return get_trial_label_color(d).bg })
+                    .style("opacity", (d) => { return is_plot_overlapping(d) ? '0' : '100' })
             }
 
             plots.append("text");
