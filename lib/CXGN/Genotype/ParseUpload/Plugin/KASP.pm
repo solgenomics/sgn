@@ -249,9 +249,6 @@ sub _validate_with_plugin {
     close($MI_F);
 
     $protocolprop_info{'markers'} = \%marker_info;
-    print STDERR "SEEN MARKER NAMES =".Dumper(\%seen_marker_names)."\n";
-    print STDERR "SEEN FACILITY MARKER NAMES =".Dumper(\%seen_facility_marker_names)."\n";
-
     my @file_marker_names = keys %seen_marker_names;
 
     if (defined $protocol_id) {
@@ -383,7 +380,6 @@ sub _validate_with_plugin {
 
     my $stock_type = $self->get_observation_unit_type_name;
     my $validate_type = $stock_type.'s';
-    print STDERR "VALIDATE TYPE =".Dumper($validate_type)."\n";
 
     if ($sample_name_header eq 'SampleName') {
         my @all_sample_names = keys %seen_sample_names;
@@ -427,10 +423,7 @@ sub _validate_with_plugin {
 
 sub _parse_with_plugin {
     my $self = shift;
-#    my $filename = $self->get_filename();
-#    my $marker_info_filename = $self->get_filename_marker_info();
     my $schema = $self->get_chado_schema();
-#    my $stock_type = $self->get_observation_unit_type_name;
     my $marker_facility_link_ref = $self->marker_facility_link;
     my %marker_facility_link = %{$marker_facility_link_ref};
     my $marker_info_details_ref = $self->marker_info_details;
@@ -449,157 +442,6 @@ sub _parse_with_plugin {
     my @error_messages;
     my %errors;
 
-    print STDERR "VALIDATE MARKER FACILITY LINK =".Dumper(\%marker_facility_link)."\n";
-    print STDERR "VALIDATE MARKER INFO DETAILS =".Dumper(\%marker_info_details)."\n";
-    print STDERR "VALIDATE KASP RESULTS =".Dumper(\%kasp_results)."\n";
-    print STDERR "VALIDATE SAMPLE NAME TYPE =".Dumper($sample_name_type)."\n";
-    print STDERR "VALIDATE MARKER NAME TYPE =".Dumper($marker_name_type)."\n";
-    print STDERR "VALIDATE SEEN SAMPLES =".Dumper(\%seen_samples)."\n";
-    print STDERR "VALIDATE MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
-    print STDERR "VALIDATE PROTOCOLPROP INFO =".Dumper(\%protocolprop_info)."\n";
-
-
-#    my %protocolprop_info;
-#    $protocolprop_info{'header_information_lines'} = ["This protocol is for KASP data. For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1)."];
-#    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
-
-#    my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
-#    my $MF;
-#    my %marker_info;
-#    my %marker_info_details;
-#    my @marker_info_keys = qw(name chrom pos alt ref);
-
-#    open($MF, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
-
-#        my $marker_header_row = <$MF>;
-#        my @marker_header_info;
-
-#        if ($marker_info_csv->parse($marker_header_row)) {
-#            @marker_header_info = $marker_info_csv->fields();
-#        }
-
-#        for my $i (5 .. $#marker_header_info){
-#            my $header = $marker_header_info[$i];
-#            $header =~ s/^\s+|\s+$//g;
-#            if ($header eq 'Quality') {
-#                push @marker_info_keys, 'qual';
-#            } elsif ($header eq 'Filter') {
-#                push @marker_info_keys, 'filter';
-#            } elsif ($header eq 'Info') {
-#                push @marker_info_keys, 'info';
-#            } elsif ($header eq 'Format') {
-#                push @marker_info_keys, 'format';
-#            } elsif ($header eq 'Sequence') {
-#                push @marker_info_keys, 'sequence';
-#            } elsif ($header eq 'FacilityMarkerName') {
-#                push @marker_info_keys, 'facility_name';
-#            }
-#        }
-#        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
-#        my %marker_facility_link;
-#        while (my $marker_line = <$MF>) {
-#            my @marker_line_info;
-#            if ($marker_info_csv->parse($marker_line)) {
-#                @marker_line_info = $marker_info_csv->fields();
-#            }
-
-#            my $marker_name = $marker_line_info[0];
-#            my $ref = $marker_line_info[1];
-#            my $alt = $marker_line_info[2];
-#            my $chromosome = $marker_line_info[3];
-#            my $position = $marker_line_info[4];
-#            my %marker = (
-#                ref => $ref,
-#                alt => $alt,
-#                chrom => $chromosome,
-#                pos => $position,
-#                name => $marker_name,
-#            );
-#            for my $i (5 .. $#marker_header_info){
-#                my $header = $marker_header_info[$i];
-#                $header =~ s/^\s+|\s+$//g;
-#                if ($header eq 'Quality') {
-#                    $marker{'qual'} = $marker_line_info[$i];
-#                } elsif ($header eq 'Filter') {
-#                    $marker{'filter'} = $marker_line_info[$i];
-#                } elsif ($header eq 'Info') {
-#                    $marker{'info'} = $marker_line_info[$i];
-#                } elsif ($header eq 'Format') {
-#                    $marker{'format'} = $marker_line_info[$i];
-#                } elsif ($header eq 'Sequence') {
-#                    $marker{'sequence'} = $marker_line_info[$i];
-#                } elsif ($header eq 'FacilityMarkerName') {
-#                    $marker{'facility_name'} = $marker_line_info[$i];
-#                    $marker_facility_link{$marker_line_info[$i]} = $marker_name;
-#                }
-#            }
-
-#            push @{$protocolprop_info{'marker_names'}}, $marker_name;
-#            $marker_info_details{$marker_name} = \%marker;
-
-#            push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
-#            $marker_info{$chromosome}->{$marker_name} = \%marker;
-#        }
-
-#    close($MF);
-        #print STDERR Dumper \%marker_info_lookup;
-#    $protocolprop_info{'markers'} = \%marker_info;
-#    print STDERR "MARKER INFO =".Dumper(\%marker_info)."\n";
-
-
-#    my %kasp_result;
-
-#    my $csv = Text::CSV->new({ sep_char => ',' });
-#    my $F;
-
-#    my %seen_samples;
-#    open($F, "<", $filename) || die "Can't open file $filename\n";
-
-#        my $header_row = <$F>;
-#        my @header_info;
-
-#        if ($csv->parse($header_row)) {
-#            @header_info = $csv->fields();
-#        }
-
-#        my $marker_name_type = $header_info[0];
-#        $marker_name_type =~ s/^\s+|\s+$//g;
-
-#        my $sample_name_type = $header_info[1];
-#        $sample_name_type =~ s/^\s+|\s+$//g;
-
-#        while (my $line = <$F>) {
-#            my @line_info;
-#            my $marker_name;
-#            if ($csv->parse($line)) {
-#                @line_info = $csv->fields();
-#            }
-
-#            if ($marker_name_type eq 'FacilityMarkerName') {
-#                my $facility_name = $line_info[0];
-#                $facility_name =~ s/^\s+|\s+$//g;
-#                $marker_name = $marker_facility_link{$facility_name};
-#            } else {
-#                $marker_name = $line_info[0];
-#                $marker_name =~ s/^\s+|\s+$//g;
-#            }
-#            my $sample_name = $line_info[1];
-#            $sample_name =~ s/^\s+|\s+$//g;
-#            my $snpcall = $line_info[2];
-#            $snpcall =~ s/^\s+|\s+$//g;
-#            my $xvalue = $line_info[3];
-#            $xvalue =~ s/^\s+|\s+$//g;
-#            my $yvalue = $line_info[4];
-#            $yvalue =~ s/^\s+|\s+$//g;
-
-#           $kasp_result{$marker_name}{$sample_name}{'call'} = $snpcall;
-#           $kasp_result{$marker_name}{$sample_name}{'XV'} = $xvalue;
-#           $kasp_result{$marker_name}{$sample_name}{'YV'} = $yvalue;
-#           $seen_samples{$sample_name}++;
-#        }
-
-#    close($F);
-
     my @observation_unit_names;
     my %facility_sample_name_link;
     if ($sample_name_type eq 'FacilitySampleName') {
@@ -611,9 +453,6 @@ sub _parse_with_plugin {
     } else {
         @observation_unit_names = keys %seen_samples;
     }
-
-    print STDERR "FACILITY NAME LINK =".Dumper(\%facility_sample_name_link)."\n";
-    print STDERR "OBSERVATION UNIT NAMES =".Dumper(\@observation_unit_names)."\n";
 
     my %genotype_info;
 
@@ -679,11 +518,6 @@ sub _parse_with_plugin {
         }
 
     }
-
-    print STDERR "KASP PLUGIN PROTOCOLPROP INFO =".Dumper(\%protocolprop_info)."\n";
-    print STDERR "KASP PLUGIN GENOTYPE INFO =".Dumper(\%genotype_info)."\n";
-    print STDERR "KASP PLUGIN OBSERVATION UNIT NAME =".Dumper(\@observation_unit_names)."\n";
-    print STDERR "KASP PLUGIN MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
 
     if (scalar(@error_messages)>0) {
         $errors{'error_messages'} = \@error_messages;
