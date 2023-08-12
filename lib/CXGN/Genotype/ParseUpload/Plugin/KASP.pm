@@ -48,7 +48,6 @@ has 'marker_info_keys' => (
     is => 'rw',
 );
 
-
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
@@ -69,7 +68,6 @@ sub _validate_with_plugin {
         });
 
         my $stored_markers = $stored_protocol->markers();
-        print STDERR "STORED MARKERS =".Dumper($stored_markers)."\n";
         %stored_marker_info = %$stored_markers;
     }
 

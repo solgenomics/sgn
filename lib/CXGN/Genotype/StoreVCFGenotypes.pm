@@ -670,18 +670,6 @@ sub validate {
                 if(!exists($marker_info->{'alt'})){
                     push @error_messages, "protocol_info missing alt key";
                 }
-#                if(!exists($marker_info->{'qual'})){
-#                    push @error_messages, "protocol_info missing qual key";
-#                }
-#                if(!exists($marker_info->{'filter'})){
-#                    push @error_messages, "protocol_info missing filter key";
-#                }
-#                if(!exists($marker_info->{'info'})){
-#                    push @error_messages, "protocol_info missing info key";
-#                }
-#                if(!exists($marker_info->{'format'})){
-#                    push @error_messages, "protocol_info missing format key";
-#                }
             }
         }
         if (scalar(@{$protocol_info->{marker_names}}) == 0){

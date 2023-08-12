@@ -6,9 +6,7 @@ CXGN::Genotype::Download::KASPdata - an object to handle downloading KASP genoty
 
 =head1 USAGE
 
-
 =head1 DESCRIPTION
-
 
 =head1 AUTHORS
 
@@ -61,7 +59,6 @@ has 'filename' => (
     required => 1,
 );
 
-
 sub download {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -78,7 +75,6 @@ sub download {
     });
 
     my ($total_count, $data) = $genotypes_search->get_genotype_info();
-    print STDERR "PLUGIN DATA =".Dumper($data)."\n";
     my @all_data = @$data;
     my $number_of_samples = scalar @all_data;
     my %data_hash;
@@ -98,8 +94,6 @@ sub download {
         }
     }
 
-    print STDERR "PLUGIN DATA HASH =".Dumper(\%data_hash)."\n";
-
     my @info_lines;
     foreach my $marker_name (keys %data_hash) {
         my $sample_data_ref = $data_hash{$marker_name};
@@ -114,8 +108,6 @@ sub download {
             push @info_lines, [@each_info_line];
         }
     }
-
-    print STDERR "INFO LINES =".Dumper(\@info_lines)."\n";
 
     my @headers = ('MARKER NAME', 'SAMPLE NAME', 'SNP CALL (X,Y)', 'X VALUE', 'Y VALUE');
     my @lines;

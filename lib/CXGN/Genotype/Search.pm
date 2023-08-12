@@ -1603,7 +1603,6 @@ sub get_cached_file_VCF {
     } else {
         # Set the temp dir and temp output file
         my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_VCF";
-	    print STDERR "creating cached VCF file in $tmp_output_dir\n";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",

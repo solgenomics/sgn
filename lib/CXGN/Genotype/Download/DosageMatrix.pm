@@ -199,7 +199,6 @@ sub download {
     my $end_position = $self->end_position;
     my $compute_from_parents = $self->compute_from_parents;
     my $forbid_cache = $self->forbid_cache;
-    print STDERR "CHECK PLUGIN DOSAGE FORBID CACHE =".Dumper($forbid_cache)."\n";
     my $prevent_transpose = $self->prevent_transpose;
 
     my $genotypes_search = CXGN::Genotype::Search->new({

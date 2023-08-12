@@ -126,7 +126,6 @@ sub search {
     } else {
         $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
     }
-#    print STDERR "PROTOCOLPROP HASH SELECT =".Dumper($protocolprop_marker_hash_select)."\n";
 
     #protocol_id_list is required
     my $protocol_where;
@@ -186,7 +185,7 @@ sub search {
     my $count_h = $schema->storage->dbh()->prepare($count_q);
     $count_h->execute();
     my ($total_marker_count) = $count_h->fetchrow_array();
-#    print STDERR "MARKER RESULTS =".Dumper(\@results)."\n";
+    
     return (\@results, $total_marker_count);
 }
 

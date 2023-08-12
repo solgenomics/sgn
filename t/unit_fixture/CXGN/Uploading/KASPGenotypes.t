@@ -147,8 +147,8 @@ $response = $plate_ua->post(
             "plate_with_identifier_upload.xls",
             Content_Type => 'application/vnd.ms-excel',
         ],
-        "sgn_session_id"               => $sgn_session_id,
-        "genotyping_trial_name"        => '2023_plate_1',
+        "sgn_session_id" => $sgn_session_id,
+        "genotyping_trial_name" => '2023_plate_1',
         "upload_include_facility_identifiers" => 1,
     ]
 );

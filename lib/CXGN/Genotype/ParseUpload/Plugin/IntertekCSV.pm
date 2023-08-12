@@ -37,7 +37,6 @@ sub _validate_with_plugin {
     $supported_marker_info{'Format'} = 1;
     $supported_marker_info{'Sequence'} = 1;
 
-
     my $marker_info_csv = Text::CSV->new({ sep_char => ',' });
     my $MI_F;
 
@@ -314,8 +313,6 @@ sub _parse_with_plugin {
             }
         }
 
-        print STDERR "MARKER INFO KEYS =".Dumper(\@marker_info_keys)."\n";
-
         # Iterate over all rows to get all the marker's info
         while (my $marker_line = <$MF>) {
             my @marker_line_info;
@@ -363,7 +360,6 @@ sub _parse_with_plugin {
     close($MF);
         #print STDERR Dumper \%marker_info_lookup;
     $protocolprop_info{'markers'} = \%marker_info;
-    print STDERR "MARKER INFO =".Dumper(\%marker_info)."\n";
 
     # Open GRID FILE and parse
     my $csv = Text::CSV->new({ sep_char => ',' });

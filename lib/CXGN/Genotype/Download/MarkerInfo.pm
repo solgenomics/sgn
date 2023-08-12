@@ -6,9 +6,7 @@ CXGN::Genotype::Download::MarkerInfo - an object to handle downloading all proto
 
 =head1 USAGE
 
-
 =head1 DESCRIPTION
-
 
 =head1 AUTHORS
 
