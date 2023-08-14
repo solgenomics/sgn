@@ -994,7 +994,7 @@ $facilities
                             <tr>
                                 <td>FacilityMarkerName</td>
                                 <td>FacilitySampleName</td>
-                                <td>SNPCall</td>
+                                <td>SNPcall</td>
                                 <td>Xvalue</td>
                                 <td>Yvalue</td>
                             </tr>
@@ -1008,7 +1008,7 @@ $facilities
                         <li><b>FacilitySampleName:</b> Must exist in the database. You can create a link between each sample name and facility sample name by including facility sample name during uploading genotyping plates</li>
                         <li><b>SNPcall:</b> Allele separated by ":" (for example A:G).
                         <li><b>Xvalue:</b> raw data of X.
-                        <li><b>Yvalue:</b> raw data of Y.    
+                        <li><b>Yvalue:</b> raw data of Y.
                     </ul>
                 </div>
             </div>
