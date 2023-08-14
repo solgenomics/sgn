@@ -4,7 +4,6 @@
  *
  */
 
-// JSAN.use('jquery.blockUI');
 
 var solGS = solGS || function solGS() {};
 
@@ -12,16 +11,17 @@ solGS.sIndex = {
   canvas: "#si_canvas",
   siPlotDivPrefix: "#si_plot",
   siMsgDiv: "#si_message",
-  siPopsDiv: "#si_select_a_pop_div",
-  siPopsSelectMenuId: "#si_select_pops",
+  siPopsDiv: "#si_select_pops_div",
+  siPopsSelectMenuId: "#si_pops_select",
+  siFormId: "#si_form",
 
   populateSindexMenu: function () {
     var modelData = this.getTrainingPopulationData();
 
     var sIndexPops = [modelData];
 
-    if (modelData.id.match(/list/) == null) {
-      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+    if (!modelData.id.match(/list/)) {
+      var trialSelPopsList = solGS.selectionPopulation.getPredictedTrialTypeSelectionPops();
       if (trialSelPopsList) {
         sIndexPops.push(trialSelPopsList);
       }
@@ -29,18 +29,17 @@ solGS.sIndex = {
 
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
       if (listTypeSelPops) {
         sIndexPops.push(listTypeSelPops);
       }
     }
 
     var menuId = this.siPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     sIndexPops = sIndexPops.flat();
     var menuElem = menu.addOptions(sIndexPops);
     var siPopsDiv = this.siPopsDiv;
-
     jQuery(siPopsDiv).empty().append(menuElem).show();
   },
 
@@ -67,74 +66,24 @@ solGS.sIndex = {
     solGS.sIndex.indexed.push(siId);
   },
 
-  getPredictedTrialTypeSelectionPops: function () {
-    var selPopsTable = jQuery("#selection_pops_list").html();
-    var selPopsRows;
-
-    if (selPopsTable !== null) {
-      selPopsRows = jQuery("#selection_pops_list").find("tbody > tr");
+  displaySindexForm: function (modelId, siPopId) {
+    if (modelId === siPopId) {
+      siPopId = undefined;
     }
 
-    var popsList = [];
-
-    for (var i = 0; i < selPopsRows.length; i++) {
-      var row = selPopsRows[i];
-      var popRow = row.innerHTML;
-      var predict = popRow.match(/predict/gi);
-      if (!predict) {
-        var selPopsInput = row.getElementsByTagName("input")[0];
-        var sIndexPopData = selPopsInput.value;
-        popsList.push(JSON.parse(sIndexPopData));
-      }
-    }
-
-    return popsList;
-  },
-
-  displaySindexForm: function (modelId, selectedPopId) {
-    if (modelId === selectedPopId) {
-      selectedPopId = undefined;
-    }
-
-    var protocolId = jQuery("#genotyping_protocol_id").val();
-    var trainingTraitsIds = jQuery("#training_traits_ids").val();
-    var traitsCode = jQuery("#training_traits_code").val();
-    if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-    }
-
-    var args = {
-      selection_pop_id: selectedPopId,
-      training_pop_id: modelId,
-      training_traits_ids: trainingTraitsIds,
-      training_traits_code: traitsCode,
-      genotyping_protocol_id: protocolId,
-    };
+    var args = solGS.getModelArgs();
+    args.selection_pop_id = siPopId;
 
     args = JSON.stringify(args);
 
-    jQuery.ajax({
+    var siForm = jQuery.ajax({
       type: "POST",
       dataType: "json",
       url: "/solgs/selection/index/form",
       data: { arguments: args },
-      success: function (res) {
-        if (res.status == "success") {
-          var table;
-          var traits = res.traits;
-
-          if (traits.length > 1) {
-            table = solGS.sIndex.selectionIndexForm(traits);
-          } else {
-            var msg = "There is only one trait with valid GEBV predictions.";
-            jQuery("#si_select_a_pop_div").empty();
-            jQuery("#si_select_a_pop_div_text").empty().append(msg);
-          }
-
-          jQuery("#si_canvas #selection_index_form").empty().append(table);
-        }
-      },
     });
+
+    return siForm;
   },
 
   selectionIndexForm: function (predictedTraits) {
@@ -172,124 +121,25 @@ solGS.sIndex = {
     return trait;
   },
 
-  calcSelectionIndex: function (params, legend, trainingPopId, selectionPopId) {
-    if (params) {
-      var canvas = this.canvas;
-      var siMsgDiv = this.siMsgDiv;
+  calcSelectionIndex: function (params, legend, trainingPopId, siPopId) {
+    var siArgs = solGS.getModelArgs();
 
-      jQuery(`${canvas} .multi-spinner-container`).show();
-      var msg = "Calculating selection index...please wait...";
-      jQuery(siMsgDiv).html(msg).show();
-
-      var trainingTraitsIds = jQuery("#training_traits_ids").val();
-      if (trainingTraitsIds) {
-        trainingTraitsIds = trainingTraitsIds.split(",");
-      }
-      var protocolId = jQuery("#genotyping_protocol_id").val();
-      var traitsCode = jQuery("#training_traits_code").val();
-
-      if (trainingPopId == selectionPopId) {
-        selectionPopId = "";
-      }
-
-      var siArgs = {
-        training_pop_id: trainingPopId,
-        selection_pop_id: selectionPopId,
-        rel_wts: params,
-        training_traits_ids: trainingTraitsIds,
-        training_traits_code: traitsCode,
-        genotyping_protocol_id: protocolId,
-      };
-
-      siArgs = JSON.stringify(siArgs);
-
-      jQuery.ajax({
-        type: "POST",
-        dataType: "json",
-        data: { arguments: siArgs },
-        url: "/solgs/calculate/selection/index/",
-        success: function (res) {
-          if (res.status == "success") {
-            var sindexFile = res.sindex_file;
-            var gebvsSindexFile = res.gebvs_sindex_file;
-
-            var fileNameSindex = sindexFile.split("/").pop();
-            var fileNameGebvsSindex = gebvsSindexFile.split("/").pop();
-            var sindexLink = `<a href="${sindexFile}" download="${fileNameSindex}">Indices</a>`;
-            var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">Weighted GEBVs+indices</a>`;
-
-            var sIndexName = res.sindex_name;
-
-            let caption = `<br/><strong>Index Name:</strong> ${sIndexName} <strong>Download:</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
-            let histo = {
-              canvas: canvas,
-              plot_id: `#${sIndexName}`,
-              named_values: res.indices,
-              caption: caption,
-            };
-
-            solGS.histogram.plotHistogram(histo);
-
-            var popType = jQuery("#si_selected_pop_type").val();
-            var popId = jQuery("#si_selected_pop_id").val();
-            jQuery(siMsgDiv).hide();
-
-            var genArgs = solGS.correlation.getGeneticCorrArgs(
-              popId,
-              popType,
-              res.index_file,
-              sIndexName
-            );
-            // var canvas = genArgs.canvas;
-            var corrPlotDivId = genArgs.corr_plot_div;
-            // var corrMsgDiv = genArgs.corr_msg_div;
-            jQuery(`${canvas} .multi-spinner-container`).show();
-            jQuery(siMsgDiv).html("Running correlation... please wait...").show();
-
-            solGS.correlation
-              .runGeneticCorrelation(genArgs)
-              .done(function (res) {
-                if (res.status.match(/success/)) {
-                  genArgs["corr_table_file"] = res.corre_table_file;
-                  var corrDownload = solGS.correlation.createCorrDownloadLink(genArgs);
-
-                  solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
-                  var popName = jQuery("#si_selected_pop_name").val();
-                  var legendValues = solGS.sIndex.legendParams();
-
-                  var popDiv = popName.replace(/\s+/g, "");
-                  var relWtsId = legendValues.params.replace(/[{",}:\s+<b/>]/gi, "");
-
-                  var corLegDiv = `<div id="si_correlation_${popDiv}_${relWtsId}">`;
-
-                  var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
-
-                  jQuery(canvas).append(corLegDivVal).show();
-                  jQuery(`${canvas} .multi-spinner-container`).hide();
-                  jQuery(siMsgDiv).empty();
-                }
-              })
-              .fail(function (res) {
-                jQuery(siMsgDiv).html("Error occured running correlation analysis.").fadeOut(8400);
-              });
-
-            jQuery("#si_canvas #selected_pop").val("");
-
-            var sIndexed = {
-              sindex_id: popId,
-              sindex_name: sIndexName,
-            };
-
-            solGS.sIndex.saveIndexedPops(sIndexed);
-            solGS.cluster.listClusterPopulations();
-          }
-        },
-        error: function (res) {
-          var msg = "error occured calculating selection index.";
-          jQuery(siMsgDiv).html(msg).show();
-        },
-      });
+    if (trainingPopId != siPopId) {
+      siArgs["selection_pop_id"] = siPopId;
     }
+
+    siArgs["rel_wts"] = params;
+
+    siArgs = JSON.stringify(siArgs);
+
+    var calcSindex = jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: { arguments: siArgs },
+      url: "/solgs/calculate/selection/index/",
+    });
+
+    return calcSindex;
   },
 
   validateRelativeWts: function (nm, val) {
@@ -342,13 +192,13 @@ solGS.sIndex = {
   },
 
   legendParams: function () {
-    var selectedPopName = jQuery("#si_canvas #si_selected_pop_name").val();
+    var siPopName = jQuery("#si_canvas #si_selected_pop_name").val();
 
-    if (!selectedPopName) {
-      selectedPopName = jQuery("#si_canvas #default_si_selected_pop_name").val();
+    if (!siPopName) {
+      siPopName = jQuery("#si_canvas #default_si_selected_pop_name").val();
     }
 
-    var rel_form = document.getElementById("selection_index_form");
+    var rel_form = document.getElementById("si_form");
     var all = rel_form.getElementsByTagName("input");
 
     var params = {};
@@ -396,10 +246,10 @@ solGS.sIndex = {
       }
     }
     var legend;
-    if (selectedPopName) {
-      var popName = "<strong>Population name:</strong> " + selectedPopName;
+    if (siPopName) {
+      var popName = "<strong>Population name:</strong> " + siPopName;
 
-      var divId = selectedPopName.replace(/\s/g, "");
+      var divId = siPopName.replace(/\s/g, "");
       var relWtsId = trRelWts.replace(/[:\s+relative<>b/weigths]/gi, "");
       legend =
         `<div id="si_legend_${divId}_${relWtsId}">` +
@@ -416,33 +266,12 @@ solGS.sIndex = {
     };
   },
 
-  getListTypeSelPopulations: function () {
-    var listTypeSelPopsDiv = document.getElementById("list_type_selection_pops_selected");
-    var listTypeSelPopsTable = listTypeSelPopsDiv.getElementsByTagName("table");
-    var listTypeSelPopsRows = listTypeSelPopsTable[0].rows;
-
-    var popsList = [];
-    for (var i = 1; i < listTypeSelPopsRows.length; i++) {
-      var row = listTypeSelPopsRows[i];
-      var popRow = row.innerHTML;
-
-      var predict = popRow.match(/predict/gi);
-      if (!predict) {
-        var selPopsInput = row.getElementsByTagName("input")[0];
-        var sIndexPopData = selPopsInput.value;
-        popsList.push(JSON.parse(sIndexPopData));
-      }
-    }
-    return popsList;
-  },
-
   getTrainingPopulationData: function () {
-    var modelId = jQuery("#si_canvas #model_id").val();
-    var modelName = jQuery("#si_canvas #model_name").val();
+    var modelArgs = solGS.getModelArgs();
 
     return {
-      id: modelId,
-      name: modelName,
+      id: modelArgs.training_pop_id,
+      name: modelArgs.training_pop_name,
       pop_type: "training",
     };
   },
@@ -451,13 +280,41 @@ solGS.sIndex = {
 };
 ////
 
-solGS.sIndex.indexed = [];
+
 
 jQuery(document).ready(function () {
+  solGS.sIndex.indexed = [];
+
   setTimeout(function () {
     solGS.sIndex.populateSindexMenu();
     var modelId = jQuery("#training_pop_id").val();
-    solGS.sIndex.displaySindexForm(modelId, modelId);
+    var canvas = solGS.sIndex.canvas;
+    var siPopsDiv = solGS.sIndex.siPopsDiv;
+    var siMsgDiv = solGS.sIndex.siMsgDiv;
+    var siFormId = solGS.sIndex.siFormId;
+
+    solGS.sIndex
+      .displaySindexForm(modelId, modelId)
+      .done(function (res) {
+        if (res.status == "success") {
+          var table;
+          var traits = res.traits;
+
+          if (traits.length > 1) {
+            table = solGS.sIndex.selectionIndexForm(traits);
+          } else {
+            var msg = "There is only one trait with valid GEBV predictions.";
+            jQuery(siPopsDiv).empty();
+            jQuery(siMsgDiv).empty().append(msg);
+          }
+
+          jQuery(`${canvas} ${siFormId}`).empty().append(table);
+        }
+      })
+      .fail(function () {
+        var msg = "Error occured creating the selection index form.";
+        jQuery(siMsgDiv).empty().append(msg);
+      });
   }, 5000);
 });
 
@@ -466,22 +323,116 @@ jQuery(document).ready(function () {
   jQuery(siPopsDiv).change(function () {
     var selectedPop = jQuery("option:selected", this).data("pop");
 
-    var selectedPopId = selectedPop.id;
-    var selectedPopName = selectedPop.name;
+    var siPopId = selectedPop.id;
+    var siPopName = selectedPop.name;
     var selectedPopType = selectedPop.pop_type;
-    console.log(`sindex selectedPop ${(selectedPopId, selectedPopName, selectedPopType)}`);
-    jQuery("#si_selected_pop_name").val(selectedPopName);
-    jQuery("#si_selected_pop_id").val(selectedPopId);
+    jQuery("#si_selected_pop_name").val(siPopName);
+    jQuery("#si_selected_pop_id").val(siPopId);
     jQuery("#si_selected_pop_type").val(selectedPopType);
   });
 });
 
 jQuery(document).on("click", "#calculate_si", function () {
-  var modelId = jQuery("#training_pop_id").val();
-  var selectionPopId = jQuery("#si_canvas #si_selected_pop_id").val();
-  var popType = jQuery("#si_canvas #si_selected_pop_type").val();
+  var canvas = solGS.sIndex.canvas;
+  var siMsgDiv = solGS.sIndex.siMsgDiv;
 
-  solGS.sIndex.selectionIndex(modelId, selectionPopId);
+  jQuery(`${canvas} .multi-spinner-container`).show();
+  var msg = "Calculating selection index...please wait...";
+  jQuery(siMsgDiv).html(msg).show();
+
+  var modelId = jQuery("#training_pop_id").val();
+  var siPopId = jQuery(`${canvas} #si_selected_pop_id`).val();
+  var popType = jQuery(`${canvas} #si_selected_pop_type`).val();
+
+  solGS.sIndex.selectionIndex(modelId, siPopId);
+  var legendValues = solGS.sIndex.legendParams();
+
+  var legend = legendValues.legend;
+  var params = legendValues.params;
+  var validate = legendValues.validate;
+  if (params && validate) {
+    solGS.sIndex
+      .calcSelectionIndex(params, legend, modelId, siPopId)
+      .done(function (res) {
+        if (res.status == "success") {
+          var sindexFile = res.sindex_file;
+          var gebvsSindexFile = res.gebvs_sindex_file;
+
+          var fileNameSindex = sindexFile.split("/").pop();
+          var fileNameGebvsSindex = gebvsSindexFile.split("/").pop();
+          var sindexLink = `<a href="${sindexFile}" download="${fileNameSindex}">Indices</a>`;
+          var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">Weighted GEBVs+indices</a>`;
+
+          var sIndexName = res.sindex_name;
+
+          let caption = `<br/><strong>Index Name:</strong> ${sIndexName} <strong>Download:</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
+          let histo = {
+            canvas: canvas,
+            plot_id: `#${sIndexName}`,
+            named_values: res.indices,
+            caption: caption,
+          };
+
+          solGS.histogram.plotHistogram(histo);
+
+          
+          jQuery(siMsgDiv).hide();
+
+          var genArgs = solGS.correlation.getGeneticCorrArgs(
+            siPopId,
+            popType,
+            res.index_file,
+            sIndexName
+          );
+      
+          var corrPlotDivId = genArgs.corr_plot_div;
+         
+          jQuery(`${canvas} .multi-spinner-container`).show();
+          jQuery(siMsgDiv).html("Running correlation... please wait...").show();
+
+          solGS.correlation
+            .runGeneticCorrelation(genArgs)
+            .done(function (res) {
+              if (res.status.match(/success/)) {
+                genArgs["corr_table_file"] = res.corre_table_file;
+                var corrDownload = solGS.correlation.createCorrDownloadLink(genArgs);
+
+                solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
+                var popName = jQuery("#si_selected_pop_name").val();
+                var legendValues = solGS.sIndex.legendParams();
+
+                var popDiv = popName.replace(/\s+/g, "");
+                var relWtsId = legendValues.params.replace(/[{",}:\s+<b/>]/gi, "");
+
+                var corLegDiv = `<div id="si_correlation_${popDiv}_${relWtsId}">`;
+
+                var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
+
+                jQuery(canvas).append(corLegDivVal).show();
+                jQuery(`${canvas} .multi-spinner-container`).hide();
+                jQuery(siMsgDiv).empty();
+              }
+            })
+            .fail(function (res) {
+              jQuery(siMsgDiv).html("Error occured running correlation analysis.").fadeOut(8400);
+            });
+
+          jQuery("#si_canvas #selected_pop").val("");
+
+          var sIndexed = {
+            sindex_id: siPopId,
+            sindex_name: sIndexName,
+          };
+
+          solGS.sIndex.saveIndexedPops(sIndexed);
+          solGS.cluster.listClusterPopulations();
+        }
+      })
+      .fail(function () {
+        var msg = "error occured calculating selection index.";
+        jQuery(siMsgDiv).html(msg).show();
+      });
+  }
 });
 
 jQuery(document).ready(function () {

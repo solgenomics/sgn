@@ -34,6 +34,7 @@ $year => undef
 $trial_type => undef
 $design_name => undef
 $planting_date => undef
+$transplanting_date => undef
 $harvest_date => undef
 $trial_description => undef
 $folder_name => undef
@@ -254,7 +255,7 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
 % } #End trial_data_agreement_section
 % if ($info_section_id eq 'trial_status_section'){
-                                <& /breeders_toolbox/trial/trial_status.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_id => $folder_id, design_name => $design_name, has_plant_entries => $has_plant_entries, phenotypes_fully_uploaded => $phenotypes_fully_uploaded, user_can_modify => $user_can_modify, user_name => $user_name &>
+                                <& /breeders_toolbox/trial/trial_status.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, transplanting_date => $transplanting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_id => $folder_id, design_name => $design_name, has_plant_entries => $has_plant_entries, phenotypes_fully_uploaded => $phenotypes_fully_uploaded, user_can_modify => $user_can_modify, user_name => $user_name &>
 % } #End trial_status_section
 % if ($info_section_id eq 'trial_soil_data_section'){
                                 <& /breeders_toolbox/trial/trial_soil_data.mas, trial_id => $trial_id &>
@@ -341,7 +342,7 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/tissue_samples/sampling_trials.mas &>
 % } #End manage_tissue_samples_sampling_trials
 % if ($info_section_id eq 'trial_details'){
-                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
+                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, transplanting_date=>$transplanting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
 % } #End trial_details
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
@@ -393,7 +394,7 @@ $analytics_protocol_result_summary => {}
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
-                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner &>
+                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, transplanting_date=>$transplanting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner &>
 % } #End crossingtrial_details
 
 % if ($info_section_id eq 'target_numbers_crossingtrial_section'){

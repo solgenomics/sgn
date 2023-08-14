@@ -335,7 +335,8 @@ sub check_training_population : Path('/solgs/check/training/population/')
 sub search_selection_pops : Path('/solgs/search/selection/populations/') {
     my ( $self, $c, $tr_pop_id ) = @_;
 
-    $c->stash->{training_pop_id} = $tr_pop_id;
+    $c->controller('solGS::Utils')
+      ->stash_json_args( $c, $c->req->param('arguments') );
 
     $self->search_all_relevant_selection_pops( $c, $tr_pop_id );
     my $selection_pops_list = $c->stash->{all_relevant_selection_pops};

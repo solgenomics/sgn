@@ -1,76 +1,87 @@
-/* 
-A library with methods for adding populations select menu and 
-getting selected population id. 
+/*
+creates and populates select menu with lists and datasets for analysis tools.
 */
 
-var solGS = solGS || function solGS () {};
-
-solGS.selectMenu = {
-
-    divPrefix: function(div) {
-
-    if (!div.match(/pops/)) {
-        div = `${div}_pops`;
+class SelectMenu {
+  constructor(menuId, menuClass, label) {
+    menuId = menuId.replace(/#/, "");
+    if(menuClass) {
+    menuClass = menuClass.replace(/\./, "");
     }
 
-    console.log(`selectMenu div ${div}`)
-    return div;
+    this.menuId = menuId;
+    this.menuClass = menuClass || "form-control";
+    this.label = label || ''; // || "Select a population";
+    this.menu;
+  }
 
-    },
+  createSelectMenu() {
+    var menu = document.createElement("select");
+    menu.id = this.menuId;
+    menu.className = this.menuClass;
 
-    divListId: function(div) {
-        div = this.divPrefix(div)
-        return `#${div}_list`;
-    },
+    var option = document.createElement("option");
+    option.selected = this.label;
+    option.value = "";
+    option.innerHTML = this.label;
+    // option.disabled = true;
 
-    divListSelectId: function(div) {
-        return this.divListId(div) + '_select';
-    },
+    menu.appendChild(option);
 
-    populateMenu: function(div, listTypes, dsTypes) {
-        div = this.divPrefix(div);
-        
-        var list = new CXGN.List();
-        var listMenu = list.listSelect(div, listTypes);
-        var dMenu = solGS.dataset.getDatasetsMenu(dsTypes);
+    this.menu = menu;
+    return menu;
+  }
 
-        if (listMenu.match(/option/) != null) {
-            var divListId = this.divListId(div);
-            var divListSelectId = this.divListSelectId(div);
+  addOptions(data) {
+    var menu = this.menu;
+    if (!menu) {
+      menu = this.createSelectMenu();
+    }
 
-            jQuery( divListId).append(listMenu);
-            jQuery(divListSelectId).append(dMenu);
+    data.forEach(function (dt) {
+      var option = document.createElement("option");
 
-            jQuery("<option>", {
-            value: '',
-            selected: true
-            }).prependTo(divListSelectId);
+      option.value = dt.id;
+      option.dataset.pop = JSON.stringify(dt);
+      option.innerHTML = dt.name;
 
-        } else {
-            jQuery(divListId).append("<select><option>no lists found - Log in</option></select>");
-        }
-    },
+      menu.appendChild(option);
 
-    getSelectedPop: function(div) {
-        
-        var divId = this.divListSelectId(div);
+    });
 
-        var selectedId = jQuery(divId).find("option:selected").val();
-        selectedId = parseInt(selectedId);
-        var selectedName = jQuery(divId).find("option:selected").text();
-        var dataStr = jQuery(divId).find("option:selected").attr('name');
+    return menu;
+  }
 
-        if (!dataStr) {
-            dataStr = 'list';
-        }
-        
-        return {'selected_id': selectedId,
-        'selected_name': selectedName,
-        'data_str': dataStr
-    };
+  addOptionsSeparator (text) {
+    var option = document.createElement("option");
+    option.innerHTML = `-------- ${text.toUpperCase()} --------`;
+    option.disabled = true;
 
-    },
+    this.menu.appendChild(option);
+  }
 
+  getSelectMenuByTypes (listTypes, datasetTypes) {
+    var list = new CXGN.List();
+    var lists = list.getLists(listTypes);
+    var privateLists = list.convertArrayToJson(lists.private_lists);
+
+    privateLists = privateLists.flat();
+    var selectMenu = this.addOptions(privateLists);
+
+    if (lists.public_lists[0]) {
+      var publicLists = list.convertArrayToJson(lists.public_lists);
+      this.addOptionsSeparator("public lists");
+      selectMenu = this.addOptions(publicLists);
+    }
+
+    var datasetPops = solGS.dataset.getDatasetPops(datasetTypes);
+    if (datasetPops) {
+      this.addOptionsSeparator("datasets");
+      selectMenu = this.addOptions(datasetPops);
+    }
+
+    return selectMenu;
+   
+  }
 
 }
-		
