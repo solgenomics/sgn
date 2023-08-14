@@ -95,10 +95,10 @@ sub download {
     }
 
     my @info_lines;
-    foreach my $marker_name (keys %data_hash) {
+    foreach my $marker_name (sort keys %data_hash) {
         my $sample_data_ref = $data_hash{$marker_name};
         my %sample_data = %{$sample_data_ref};
-        foreach my $sample_name (keys %sample_data ) {
+        foreach my $sample_name (sort keys %sample_data ) {
             my @each_info_line = ();
             my $genotype_data_ref = $sample_data{$sample_name};
             my $sample_nt = $genotype_data_ref->{NT};
