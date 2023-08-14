@@ -400,6 +400,8 @@ sub get_genotype_info {
         $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($self->bcs_schema, {protocol_id => $protocol_id_list->[0]});
     } elsif ($markerprofile_id_list->[0]) {
         $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($self->bcs_schema, {genotype_id => $markerprofile_id_list->[0]});
+    } else {
+        $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     }
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
@@ -564,9 +566,9 @@ sub get_genotype_info {
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
     }
-    print STDERR "CXGN::Genotype::Search has genotype_ids $total_count\n";
 
     my @found_protocolprop_ids = keys %protocolprop_hash;
+
     my @protocolprop_marker_hash_select_arr;
     foreach (@$protocolprop_marker_hash_select){
         push @protocolprop_marker_hash_select_arr, "s.value->>'$_'";
@@ -674,13 +676,10 @@ sub get_genotype_info {
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
 
         foreach my $genotype_id (@genotype_id_array){
-                    print STDERR "\nvcf_snp_genotyping_cvterm_id -- $vcf_genotyping_cvterm_id --genotype_id: $genotype_id\n";
-
             $h2->execute($genotype_id);
             while (my ($genotypeprop_id) = $h2->fetchrow_array()) {
                 $genotypeprop_h->execute($genotypeprop_id);
                 while (my ($marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
-                    print STDERR "\nvcf_snp_genotyping_cvterm_id -- $vcf_genotyping_cvterm_id --marker_name: $marker_name\n";
                     for my $s (0 .. scalar(@genotypeprop_hash_select_arr)-1){
                         $genotype_hash{$genotype_id}->{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
                     }
@@ -761,6 +760,8 @@ sub init_genotype_iterator {
         $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($self->bcs_schema, {protocol_id => $protocol_id_list->[0]});
     } elsif ($markerprofile_id_list->[0]) {
         $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($self->bcs_schema, {genotype_id => $markerprofile_id_list->[0]});
+    } else {
+        $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     }
 
     $self->_vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
@@ -1130,7 +1131,6 @@ sub get_next_genotype_info {
     my $tissue_sample_cvterm_id = $self->_tissue_sample_cvterm_id();
     my $tissue_sample_of_cvterm_id = $self->_tissue_sample_of_cvterm_id();
 
-print STDERR "\nget_next_genotype_info: vcf_genotyping_cvterm_id --$vcf_genotyping_cvterm_id\n";
     my $total_count = 0;
     my @genotypeprop_array;
     my %protocolprop_hash;
@@ -1630,7 +1630,7 @@ sub get_cached_file_VCF {
     my $file_handle;
     if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
-print STDERR "\nget_cached_file_VCF: go file handle $file_handle\n";
+        print STDERR "\nget_cached_file_VCF: go file handle $file_handle\n";
         
     } else {
         # Set the temp dir and temp output file
