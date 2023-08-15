@@ -58,7 +58,6 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-
     print STDERR "INSERTING CV TERMS...\n";
 
     my $terms = {
@@ -76,7 +75,6 @@ sub patch {
 			});
 		}
 	}
-
 
     print "You're done!\n";
 }
