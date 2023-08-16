@@ -2280,7 +2280,8 @@ sub search_vcf_genotyping_cvterm_id {
     if (defined($search_param->{protocol_id}) || defined($search_param->{genotype_id} )) {
         $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($schema, $search_param);
     } else {
-        $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+        my $vcf_genotyping_type = $search_param->{vcf_genotyping_type} || 'vcf_snp_genotyping'; 
+        $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
     }
 
     return $vcf_genotyping_cvterm_id;
