@@ -476,18 +476,18 @@ has 'tissue_sample_type_id' => (
     is => 'rw',
     );
 
-has 'snp_vcf_cvterm_id' => (
-    isa => 'Int',
+has 'vcf_genotyping_cvterm_id' => (
+    isa => 'Int|Undef',
     is => 'rw',
     );
 
 has 'vcf_genotyping_type' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
     );
 
 has 'genotyping_type' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
     );
 
@@ -554,7 +554,7 @@ sub validate {
     my @warning_messages;
 
     #to disntiguish genotyprop between old dosage only format and more info vcf format
-    if ($self->archived_file_type && $self->archived_file_type ne 'genotype_vcf' && $self->archived_file_type ne 'genotype_dosage'){
+    if ($self->archived_file_type && $self->archived_file_type ne 'genotype_vcf' && $self->archived_file_type ne 'genotype_dosage') {
         push @error_messages, 'Archived filetype must be either genotype_vcf or genotype_dosage';
         return {error_messages => \@error_messages};
     }
@@ -564,18 +564,24 @@ sub validate {
         push @error_messages, "No observtaion_unit_names in file";
     }
 
-    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
-    $self->snp_vcf_cvterm_id($snp_vcf_cvterm_id);
-    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
-    $self->snp_genotype_id($snp_genotype_id);
+    my $vcf_genotyping_type = $vcf_genotyping_type || 'vcf_snp_genotyping';
+    my $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
+    $self->vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
+
+    my $snp_genotype_id;
+    if ($genotyping_type) {
+        $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
+        $self->snp_genotype_id($snp_genotype_id);
+    }
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
+
     my $pcr_marker_genotypeprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
     $self->pcr_marker_genotyping_type_id($pcr_marker_genotypeprop_cvterm_id);
 
     my $snp_genotypingprop_cvterm_id;
     if ($self->archived_file_type eq 'genotype_vcf'){
-        $snp_genotypingprop_cvterm_id = $snp_vcf_cvterm_id;
+        $snp_genotypingprop_cvterm_id = $vcf_genotyping_cvterm_id;
     } elsif ($self->archived_file_type eq 'genotype_dosage'){
         $snp_genotypingprop_cvterm_id = $snp_genotype_id;
     }
@@ -807,14 +813,19 @@ sub store_metadata {
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
     $self->igd_number_cvterm_id($igd_number_cvterm_id);
 
-    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
-    $self->snp_vcf_cvterm_id($snp_vcf_cvterm_id);
+    my $vcf_genotyping_type = $vcf_genotyping_type || 'vcf_snp_genotyping';
+    my $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
+    
+    $self->vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
 
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
 
-    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
-    $self->snp_genotype_id($snp_genotype_id);
+    my $snp_genotype_id;
+    if ($genotyping_type) {
+        $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
+        $self->snp_genotype_id($snp_genotype_id);
+    }
 
     my $pcr_marker_genotyping_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
     $self->pcr_marker_genotyping_type_id($pcr_marker_genotyping_type_id);
@@ -977,7 +988,7 @@ sub store_metadata {
         LEFT JOIN stockprop USING(stock_id)
         JOIN nd_experiment_stock USING(stock_id)
         JOIN nd_experiment_genotype USING(nd_experiment_id)
-        JOIN genotypeprop ON(genotypeprop.genotype_id=nd_experiment_genotype.genotype_id AND genotypeprop.type_id=".$self->snp_vcf_cvterm_id.")
+        JOIN genotypeprop ON(genotypeprop.genotype_id=nd_experiment_genotype.genotype_id AND genotypeprop.type_id=".$self->vcf_genotyping_cvterm_id.")
         JOIN nd_experiment_protocol USING(nd_experiment_id)
         JOIN nd_experiment_project USING(nd_experiment_id)
         WHERE $stock_lookup_where stock.is_obsolete = 'F' AND nd_protocol_id=$protocol_id AND project_id=$project_id;";
