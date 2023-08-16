@@ -1143,6 +1143,7 @@ jQuery(document).ready( function() {
 
     jQuery(document).on('change', '#include_linked_trials_checkmark', () => {
         trial_ids = [trial_id];
+        FieldMap.set_linked_trials();
 
         let include_linked_trials = jQuery("#include_linked_trials_checkmark").is(":checked");
         if ( include_linked_trials ) {
@@ -1151,9 +1152,16 @@ jQuery(document).ready( function() {
                 success: (response) => {
                     let html = "";
                     if ( response && response.trials ) {
-                        response.trials.forEach((t) => {
+                        FieldMap.set_linked_trials(response.trials);
+                        const lt = FieldMap.get_linked_trials();
+                        trial_ids = [];
+                        response.trials.forEach((t, i) => {
                             trial_ids.push(t.trial_id);
-                            html += `<li>${t.trial_name}</li>`;
+                            html += `<li style='margin-bottom: 5px'>`;
+                            html += `<span style='background-color: ${lt[t.trial_name].bg}; color: ${lt[t.trial_name].fg}; padding: 2px 4px; border-radius: 4px;'>`;
+                            html += `${t.trial_name}`;
+                            html += `</span>`
+                            html += `</li>`;
                         });
                     }
                     else if ( response && response.error ) {

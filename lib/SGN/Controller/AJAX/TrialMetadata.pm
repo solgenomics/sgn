@@ -4938,9 +4938,7 @@ sub get_linked_field_trials : Chained('trial') PathPart('linked_field_trials') A
     # Parse Results
     my @rtn;
     foreach my $t (@$data) {
-        if ( $t->{'trial_id'} ne $trial_id ) {
-            push(@rtn, $t);
-        }
+        push(@rtn, $t);
     }
 
     # No matches found...

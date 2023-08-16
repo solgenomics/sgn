@@ -2,6 +2,9 @@ import '../legacy/d3/d3Min.js';
 import '../legacy/jquery.js';
 import '../legacy/brapi/BrAPI.js';
 
+// Colors to use when labelling multiple trials
+const trial_colors = ['#2f4f4f', '#ff8c00', '#ffff00', '#00ff00', '#9400d3', '#00ffff', '#1e90ff', '#ff1493', '#ffdab9', '#228b22'];
+const trial_colors_text = ['#ffffff', '#000000', '#000000', '#000000', '#ffffff', '#000000', '#ffffff', '#ffffff', '#000000', '#ffffff'];
 
 export function init() {
     class FieldMap {
@@ -16,10 +19,28 @@ export function init() {
             this.heatmap_selection = String;
             this.heatmap_object = Object;
             this.display_borders = true;
+            this.linked_trials = {};
         }
 
         set_id(trial_id) {
             this.trial_id = trial_id;
+        }
+
+        set_linked_trials(trials = []) {
+            this.linked_trials = {};
+            trials.forEach((t, i) => {
+                const index = i % trial_colors.length;
+                this.linked_trials[t.trial_name] = {
+                    id: t.trial_id,
+                    name: t.trial_name,
+                    bg: trial_colors[index],
+                    fg: trial_colors_text[index]
+                };
+            });
+        }
+
+        get_linked_trials() {
+            return this.linked_trials;
         }
 
         format_brapi_post_object() {
@@ -527,9 +548,6 @@ export function init() {
             this.addEventListeners();
             var cc = this.clickcancel();
             const colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"];
-            const trial_colors = ['#2f4f4f', '#ff8c00', '#ffff00', '#00ff00', '#9400d3', '#00ffff', '#1e90ff', '#ff1493', '#ffdab9', '#228b22'];
-            const trial_colors_text = ['#ffffff', '#000000', '#000000', '#000000', '#ffffff', '#000000', '#ffffff', '#ffffff', '#000000', '#ffffff'];
-            const trial_colors_map = {};
             var trait_name = this.heatmap_selection;
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected ? this.fieldmap_plot_click : this.heatmap_plot_click;
@@ -601,18 +619,6 @@ export function init() {
                 return stroke_color;
             }
 
-            var get_trial_label_color = function(plot) {
-                const key = plot.trialName;
-                if ( !trial_colors_map.hasOwnProperty(key) ) {
-                    const index = Object.keys(trial_colors_map).length % trial_colors.length;
-                    trial_colors_map[key] = {
-                        bg: trial_colors[index],
-                        fg: trial_colors_text[index]
-                    }
-                }
-                return trial_colors_map[key];
-            }
-
             var get_plot_message = function(plot) {
                 let html = '';
                 if ( is_plot_overlapping(plot) ) {
@@ -622,7 +628,7 @@ export function init() {
                 }
                 else {
                     html += jQuery("#include_linked_trials_checkmark").is(":checked") ?
-                        `<strong>Trial Name:</strong> <span style='padding: 1px 2px; border-radius: 4px; color: ${get_trial_label_color(plot).fg}; background-color: ${get_trial_label_color(plot).bg}'>${plot.studyName}</span><br />` :
+                        `<strong>Trial Name:</strong> <span style='padding: 1px 2px; border-radius: 4px; color: ${local_this.linked_trials[plot.studyName].fg}; background-color: ${local_this.linked_trials[plot.studyName].bg}'>${plot.studyName}</span><br />` :
                         "";
                     html += `<strong>Plot Name:</strong> ${plot.observationUnitName}<br />`;
                     if ( plot.type == "data" ) {
@@ -777,7 +783,7 @@ export function init() {
                     .attr("rx", 2)
                     .attr("width", 40)
                     .attr("height", 6)
-                    .style("fill", (d) => { return get_trial_label_color(d).bg })
+                    .style("fill", (d) => { return local_this.linked_trials[d.studyName].bg })
                     .style("opacity", (d) => { return is_plot_overlapping(d) ? '0' : '100' })
             }
 
