@@ -547,7 +547,7 @@ sub validate {
     my $include_igd_numbers = $self->igd_numbers_included;
     my $include_lab_numbers = $self->lab_numbers_included;
     my $genotyping_data_type = $self->genotyping_data_type;
-    my $vcf_genotyping_type = $self->vcf_genotyping_type;
+    my $vcf_genotyping_type = $self->vcf_genotyping_type || 'vcf_snp_genotyping';
     my $genotyping_type = $self->genotyping_type;
 
     my @error_messages;
@@ -564,7 +564,6 @@ sub validate {
         push @error_messages, "No observtaion_unit_names in file";
     }
 
-    my $vcf_genotyping_type = $vcf_genotyping_type || 'vcf_snp_genotyping';
     my $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
     $self->vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
 
@@ -802,7 +801,7 @@ sub store_metadata {
     my $organism_id = $self->organism_id;
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
     my $genotyping_data_type = $self->genotyping_data_type;
-    my $vcf_genotyping_type = $self->vcf_genotyping_type;
+    my $vcf_genotyping_type = $self->vcf_genotyping_type || 'vcf_snp_genotyping';
     my $genotyping_type = $self->genotyping_type;
 
     $dbh->do('SET search_path TO public,sgn');
@@ -813,7 +812,6 @@ sub store_metadata {
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
     $self->igd_number_cvterm_id($igd_number_cvterm_id);
 
-    my $vcf_genotyping_type = $vcf_genotyping_type || 'vcf_snp_genotyping';
     my $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
     
     $self->vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
