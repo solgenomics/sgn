@@ -25,6 +25,7 @@ Will do the following:
         design => $design_hash,
         program => $breeding_program->name(),
         trial_year => $year,
+        trial_planting_date => $planting_date,
         trial_description => $project_description,
         trial_location => $location->name(),
         trial_name => $trial_name,
@@ -51,6 +52,7 @@ Will do the following:
 		owner_id => $c->user()->get_object()->get_sp_person_id(),
         operator => $c->user()->get_object()->get_username(),
         trial_year => $year,
+        trial_planting_date => $planting_date,
         trial_location => $location->name(),
         program => $breeding_program->name(),
         trial_description => $description,
@@ -278,6 +280,7 @@ sub save_trial {
 	}
 
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
+    my $project_planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project planting date', 'project_property');
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
     my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
     my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
