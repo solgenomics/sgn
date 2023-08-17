@@ -30,17 +30,6 @@ $ordering_type => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Material Type: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_material_type">
-                                    <option value="">Select a material type</option>
-                                    <option value="seed">seed</option>
-                                    <option value="plant">plant</option>
-                                    <option value="construct">construct</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
                             <label class="col-sm-3 control-label">Category: </label>
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_category">
@@ -126,7 +115,6 @@ jQuery(document).ready(function(){
     jQuery('#submit_catalog_item').click( function() {
         var name = jQuery('#item_name').val();
         var type = jQuery('#item_type').val();
-        var material_type = jQuery('#item_material_type').val();
         var category = jQuery('#item_category').val();
         var additional_info = jQuery('#item_additional_info').val();
         var material_source = jQuery('#item_material_source').val();
@@ -139,10 +127,6 @@ jQuery(document).ready(function(){
         }
         if (type == '') {
             alert("Please select an item type");
-            return;
-        }
-        if (material_type == '') {
-            alert("Please select a material type");
             return;
         }
         if (category == '') {
@@ -165,7 +149,6 @@ jQuery(document).ready(function(){
             data : {
                 'name' : name,
                 'type': type,
-                'material_type': material_type,
                 'category': category,
                 'additional_info': additional_info,
                 'material_source': material_source,

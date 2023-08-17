@@ -6,6 +6,8 @@ use Data::Dumper;
 use JSON;
 use CXGN::People::Person;
 use SGN::Image;
+use CXGN::Stock::StockLookup;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -27,7 +29,6 @@ sub add_catalog_item_POST : Args(0) {
 
     my $item_name = $c->req->param('name');
     my $item_type = $c->req->param('type');
-    my $item_material_type = $c->req->param('material_type');
     my $item_category = $c->req->param('category');
     my $item_additional_info = $c->req->param('additional_info');
     my $item_material_source = $c->req->param('material_source');
@@ -39,32 +40,49 @@ sub add_catalog_item_POST : Args(0) {
         $availability = 'available';
     }
 
-    my $item_stock_id;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
         $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
         return;
     }
 
+    my $item_material_type;
+    my $item_rs;
     my $item_stock_id;
     my $item_species;
     my $item_variety;
-    my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
-    my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
 
-    if (!$item_rs) {
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+    $stock_lookup->set_stock_name($item_name);
+    $item_rs = $stock_lookup->get_stock_exact();
+
+    if (!defined $item_rs) {
         $c->stash->{rest} = {error_string => "Item name is not in the database!",};
         return;
     } else {
         $item_stock_id = $item_rs->stock_id();
+        my $item_type_id = $item_rs->type_id();
         my $organism_id = $item_rs->organism_id();
         my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
         $item_species = $organism->species();
-        my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_stock_id, type_id => $variety_type_id});
-        if ($item_stockprop) {
-            $item_variety = $item_stockprop->value();
+
+        my $variety_result = $stock_lookup->get_stock_variety();
+        if (defined $variety_result) {
+            $item_variety = $variety_result;
         } else {
             $item_variety = 'NA';
+        }
+
+        if ($item_type_id == $accession_cvterm_id) {
+            $item_material_type = 'plant';
+        } elsif ($item_type_id == $seedlot_cvterm_id) {
+            $item_material_type = 'seed';
+        } elsif ($item_type_id == $vector_construct_cvterm_id) {
+            $item_material_type = 'construct';
         }
     }
 
