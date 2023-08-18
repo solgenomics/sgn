@@ -19,6 +19,7 @@ $order_properties_dialog => undef
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
+                    <button id="add_catalog_using_list_button" class="btn btn-primary">Add Catalog Items Using List</button>
                     <button id="upload_catalog_items_button" class="btn btn-primary">Upload Catalog Items</button>
                     <button id="add_catalog_item_button" class="btn btn-primary">Add a Catalog Item</button>
                 </div>
@@ -143,6 +144,8 @@ $order_properties_dialog => undef
 
 <& /order/upload_catalog_items_dialog.mas, ordering_type => $ordering_type&>
 <& /order/add_catalog_item_dialog.mas, ordering_type => $ordering_type &>
+<& /order/add_catalog_using_list_dialog.mas, ordering_type => $ordering_type &>
+
 
 <script>
 
