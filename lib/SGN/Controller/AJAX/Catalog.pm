@@ -62,7 +62,7 @@ sub add_catalog_item_POST : Args(0) {
     $item_rs = $stock_lookup->get_stock_exact();
 
     if (!defined $item_rs) {
-        $c->stash->{rest} = {error_string => "Item name is not in the database!",};
+        $c->stash->{rest} = {error_string => "Item name is not in the database or not unique in the database!",};
         return;
     } else {
         $item_stock_id = $item_rs->stock_id();
@@ -208,7 +208,6 @@ sub upload_catalog_items_POST : Args(0) {
     $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
-    #print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
 
     if (!$parsed_data){
         my $return_error = '';
@@ -231,33 +230,66 @@ sub upload_catalog_items_POST : Args(0) {
         my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
         my %catalog_info = %{$parsed_data};
         foreach my $item_name (keys %catalog_info) {
+            my $item_stock_id;
             my $item_species;
             my $item_variety;
-            my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
-            my $stock_id = $stock_rs->stock_id();
-            my $organism_id = $stock_rs->organism_id();
-            my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
-            $item_species = $organism->species();
-            my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $variety_type_id});
-            if ($item_stockprop) {
-                $item_variety = $item_stockprop->value();
+            my $item_type;
+            my $item_material_type;
+            my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+            my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+            my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+            my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
+
+            my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+            $stock_lookup->set_stock_name($item_name);
+            $item_rs = $stock_lookup->get_stock_exact();
+
+            if (!defined $item_rs) {
+                $c->stash->{rest} = {error_string => "Item name is not unique in the database!",};
+                return;
             } else {
-                $item_variety = 'NA';
+                $item_stock_id = $item_rs->stock_id();
+                my $item_type_id = $item_rs->type_id();
+                my $organism_id = $item_rs->organism_id();
+                my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+                $item_species = $organism->species();
+
+                my $variety_result = $stock_lookup->get_stock_variety();
+                if (defined $variety_result) {
+                    $item_variety = $variety_result;
+                } else {
+                    $item_variety = 'NA';
+                }
+
+                if ($item_type_id == $accession_cvterm_id) {
+                    $item_material_type = 'plant';
+                    $item_type = 'single item';
+                } elsif ($item_type_id == $seedlot_cvterm_id) {
+                    $item_material_type = 'seed';
+                    $item_type = 'single item';
+                } elsif ($item_type_id == $vector_construct_cvterm_id) {
+                    $item_material_type = 'construct';
+                    $item_type = 'single item';
+                } elsif ($item_type_id == $population_cvterm_id) {
+                    $item_material_type = 'plant';
+                    $item_type = 'set of items';
+                }
+
             }
 
             my %catalog_info_hash = %{$catalog_info{$item_name}};
 
             my $stock_catalog = CXGN::Stock::Catalog->new({
                 bcs_schema => $schema,
-                item_type => $catalog_info_hash{item_type},
-                material_type => $catalog_info_hash{material_type},
+                item_type => $item_type,
+                material_type => $item_material_type,
                 species => $item_species,
                 variety => $item_variety,
                 category => $catalog_info_hash{category},
+                availability => 'available';
                 additional_info => $catalog_info_hash{additional_info},
                 material_source => $catalog_info_hash{material_source},
                 breeding_program => $catalog_info_hash{breeding_program},
-#                availability => $catalog_info_hash{availability},
                 contact_person_id => $catalog_info_hash{contact_person_id},
                 parent_id => $stock_id
             });
