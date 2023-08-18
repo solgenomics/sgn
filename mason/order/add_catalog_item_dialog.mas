@@ -20,16 +20,6 @@ $ordering_type => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Item Type: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_type">
-                                    <option value="">Select an item type</option>
-                                    <option value="single item">single item</option>
-                                    <option value="set of items">set of items</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
                             <label class="col-sm-3 control-label">Category: </label>
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_category">
@@ -114,7 +104,6 @@ jQuery(document).ready(function(){
 
     jQuery('#submit_catalog_item').click( function() {
         var name = jQuery('#item_name').val();
-        var type = jQuery('#item_type').val();
         var category = jQuery('#item_category').val();
         var additional_info = jQuery('#item_additional_info').val();
         var material_source = jQuery('#item_material_source').val();
@@ -123,10 +112,6 @@ jQuery(document).ready(function(){
 
         if (name == '') {
             alert("Please provide a name");
-            return;
-        }
-        if (type == '') {
-            alert("Please select an item type");
             return;
         }
         if (category == '') {
@@ -148,7 +133,6 @@ jQuery(document).ready(function(){
             type: 'POST',
             data : {
                 'name' : name,
-                'type': type,
                 'category': category,
                 'additional_info': additional_info,
                 'material_source': material_source,

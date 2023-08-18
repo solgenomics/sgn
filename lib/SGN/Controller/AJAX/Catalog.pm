@@ -28,7 +28,6 @@ sub add_catalog_item_POST : Args(0) {
     my $ordering_site = $c->config->{ordering_site};
 
     my $item_name = $c->req->param('name');
-    my $item_type = $c->req->param('type');
     my $item_category = $c->req->param('category');
     my $item_additional_info = $c->req->param('additional_info');
     my $item_material_source = $c->req->param('material_source');
@@ -47,6 +46,7 @@ sub add_catalog_item_POST : Args(0) {
     }
 
     my $item_material_type;
+    my $item_type;
     my $item_rs;
     my $item_stock_id;
     my $item_species;
@@ -55,6 +55,7 @@ sub add_catalog_item_POST : Args(0) {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+    my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
 
     my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
     $stock_lookup->set_stock_name($item_name);
@@ -79,11 +80,18 @@ sub add_catalog_item_POST : Args(0) {
 
         if ($item_type_id == $accession_cvterm_id) {
             $item_material_type = 'plant';
+            $item_type = 'single item';
         } elsif ($item_type_id == $seedlot_cvterm_id) {
             $item_material_type = 'seed';
+            $item_type = 'single item';
         } elsif ($item_type_id == $vector_construct_cvterm_id) {
             $item_material_type = 'construct';
+            $item_type = 'single item';
+        } elsif ($item_type_id == $population_cvterm_id) {
+            $item_material_type = 'plant';
+            $item_type = 'set of items';
         }
+
     }
 
     my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person);
