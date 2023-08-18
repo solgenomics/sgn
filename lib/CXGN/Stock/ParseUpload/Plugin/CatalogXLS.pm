@@ -88,23 +88,23 @@ sub _validate_with_plugin {
         $item_name_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
-        $category_header  = $worksheet->get_cell(0,3)->value();
+        $category_header  = $worksheet->get_cell(0,1)->value();
         $category_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
-        $additional_info_header  = $worksheet->get_cell(0,4)->value();
+        $additional_info_header  = $worksheet->get_cell(0,2)->value();
         $additional_info_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
-        $material_source_header  = $worksheet->get_cell(0,5)->value();
+        $material_source_header  = $worksheet->get_cell(0,3)->value();
         $material_source_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
-        $breeding_program_header  = $worksheet->get_cell(0,6)->value();
+        $breeding_program_header  = $worksheet->get_cell(0,4)->value();
         $breeding_program_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
-        $contact_person_header  = $worksheet->get_cell(0,7)->value();
+        $contact_person_header  = $worksheet->get_cell(0,5)->value();
         $contact_person_header =~ s/^\s+|\s+$//g;
     }
 
@@ -124,7 +124,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell E1: breeding_program is missing from the header";
     }
     if (!$contact_person_header || $contact_person_header ne 'contact_person_username') {
-        push @error_messages, "Cell H1: contact_person_username is missing from the header";
+        push @error_messages, "Cell F1: contact_person_username is missing from the header";
     }
 
     my %seen_stock_names;
@@ -172,12 +172,6 @@ sub _validate_with_plugin {
         } elsif (!$supported_categories{$category}) {
             push @error_messages, "Cell C$row_name: category is not supported: $category";
         }
-
-#        if (!$material_source || $material_source eq '') {
-#            push @error_messages, "Cell E$row_name: material_source missing";
-#        } elsif (!$supported_material_sources{$material_source}) {
-#            push @error_messages, "Cell E$row_name: material source is not supported: $material_source";
-#        }
 
         if (!$breeding_program || $breeding_program eq '') {
             push @error_messages, "Cell G$row_name: breeding_program missing";
@@ -275,23 +269,23 @@ sub _parse_with_plugin {
             $item_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
-            $category = $worksheet->get_cell($row,3)->value();
+            $category = $worksheet->get_cell($row,1)->value();
             $category =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
-            $additional_info =  $worksheet->get_cell($row,4)->value();
+            $additional_info =  $worksheet->get_cell($row,2)->value();
             $additional_info =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
-            $material_source =  $worksheet->get_cell($row,5)->value();
+            $material_source =  $worksheet->get_cell($row,3)->value();
             $material_source =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
-            $breeding_program =  $worksheet->get_cell($row,6)->value();
+            $breeding_program =  $worksheet->get_cell($row,4)->value();
             $breeding_program =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
-            $contact_person_username =  $worksheet->get_cell($row,7)->value();
+            $contact_person_username =  $worksheet->get_cell($row,5)->value();
             $contact_person_username =~ s/^\s+|\s+$//g;
         }
 
@@ -308,7 +302,6 @@ sub _parse_with_plugin {
             'contact_person_id' => $contact_person_id,
         }
     }
-    print STDERR "PLUGIN PARSED RESULT =".Dumper(\%parsed_result)."\n";
 
     $self->_set_parsed_data(\%parsed_result);
 

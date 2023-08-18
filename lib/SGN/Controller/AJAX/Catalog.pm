@@ -47,7 +47,6 @@ sub add_catalog_item_POST : Args(0) {
 
     my $item_material_type;
     my $item_type;
-    my $item_rs;
     my $item_stock_id;
     my $item_species;
     my $item_variety;
@@ -59,7 +58,7 @@ sub add_catalog_item_POST : Args(0) {
 
     my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
     $stock_lookup->set_stock_name($item_name);
-    $item_rs = $stock_lookup->get_stock_exact();
+    my $item_rs = $stock_lookup->get_stock_exact();
 
     if (!defined $item_rs) {
         $c->stash->{rest} = {error_string => "Item name is not in the database or not unique in the database!",};
@@ -242,7 +241,7 @@ sub upload_catalog_items_POST : Args(0) {
 
             my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
             $stock_lookup->set_stock_name($item_name);
-            $item_rs = $stock_lookup->get_stock_exact();
+            my $item_rs = $stock_lookup->get_stock_exact();
 
             if (!defined $item_rs) {
                 $c->stash->{rest} = {error_string => "Item name is not unique in the database!",};
@@ -286,12 +285,12 @@ sub upload_catalog_items_POST : Args(0) {
                 species => $item_species,
                 variety => $item_variety,
                 category => $catalog_info_hash{category},
-                availability => 'available';
+                availability => 'available',
                 additional_info => $catalog_info_hash{additional_info},
                 material_source => $catalog_info_hash{material_source},
                 breeding_program => $catalog_info_hash{breeding_program},
                 contact_person_id => $catalog_info_hash{contact_person_id},
-                parent_id => $stock_id
+                parent_id => $item_stock_id
             });
 
             $stock_catalog->store();
