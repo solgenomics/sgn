@@ -461,4 +461,43 @@ sub delete_catalog_item_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
+
+sub add_catalog_item_list : Path('/ajax/catalog/add_item_list') : ActionClass('REST'){ }
+
+sub add_catalog_item_list_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $ordering_site = $c->config->{ordering_site};
+
+    my $list_type = $c->req->param('list_type');
+    my $item_list = $c->req->param('catalog_list');
+    my $item_category = $c->req->param('category');
+    my $item_additional_info = $c->req->param('additional_info');
+    my $item_material_source = $c->req->param('material_source');
+    my $item_breeding_program_id = $c->req->param('breeding_program_id');
+    my $contact_person = $c->req->param('contact_person');
+    my $availability = 'available';
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not adding catalog items.\n";
+        $c->stash->{rest} = {error_string => "You must be logged in to add catalog items." };
+        return;
+    }
+
+
+
+    my $item_material_type;
+    my $item_type;
+    my $item_stock_id;
+    my $item_species;
+    my $item_variety;
+
+
+    $c->stash->{rest} = {success => "1",};
+
+}
+
+
 1;

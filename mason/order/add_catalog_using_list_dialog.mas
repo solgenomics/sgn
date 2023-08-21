@@ -1,6 +1,5 @@
 <%args>
 $timestamp => localtime()
-$ordering_type => undef
 </%args>
 
 <div class="modal fade" id="add_catalog_using_list_dialog" name="add_catalog_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addCatalogUsingListDialog">
@@ -16,7 +15,7 @@ $ordering_type => undef
                         <div class="form-group">
                             <label class="col-sm-3 control-label">List Type: </label>
                             <div class="col-sm-9">
-                                <select class="form-control" id="category_list_type">
+                                <select class="form-control" id="catalog_list_type">
                                     <option value="">Select a list type</option>
                                     <option value="accessions">accessions</option>
                                     <option value="seedlots">seedlots</option>
@@ -25,56 +24,53 @@ $ordering_type => undef
                                 </select>
                             </div>
                         </div>
-                        <div id="list_for_catalog" style="display:none">
+                        <div id="catalog_info_section" style="display:none">
+                            <div class="form-group" id="catalog_list_section" >
+                                <label class="col-sm-3 control-label">Select a List:</label>
+                                <div class="col-sm-9" id="select_catalog_list" name="select_catalog_list"></div>
+                            </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Select a List: </label>
+                                <label class="col-sm-3 control-label">Category: </label>
                                 <div class="col-sm-9">
-                                    <div id="upload_crosses_crossing_experiment_select_div" name="upload_crosses_crossing_experiment_select_div" >
-                                    </div>
+                                    <select class="form-control" id="item_category">
+                                        <option value="">Select a category</option>
+                                        <option value="released variety">released variety</option>
+                                        <option value="pathogen assay ">pathogen assay</option>
+                                        <option value="control">control</option>
+                                        <option value="transgenic line">transgenic line</option>
+                                    </select>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Category: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_category">
-                                    <option value="">Select a category</option>
-                                    <option value="released variety">released variety</option>
-                                    <option value="pathogen assay ">pathogen assay</option>
-                                    <option value="control">control</option>
-                                    <option value="transgenic line">transgenic line</option>
-                                </select>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Additional Info: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="list_item_additional_info" placeholder="optional">
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Additional Info: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="list_item_additional_info" placeholder="optional">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Material Source: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="list_item_material_source" placeholder="">
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Material Source: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="list_item_material_source" placeholder="">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Breeding Program: </label>
+                                <div class="col-sm-9" >
+                                    <div id="list_item_breeding_program_div"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
-                            <div class="col-sm-9" >
-                                <div id="list_item_breeding_program_div"></div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Contact Person Username: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="list_contact_person_name" placeholder="Please provide contact person username">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Contact Person Username: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="list_contact_person_name" placeholder="Please provide contact person username">
+                                </div>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id = "close_catalog_list_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button id="submit_catalog_using_list" type="button" class="btn btn-primary" >Add</button>
             </div>
         </div>
@@ -110,19 +106,32 @@ jQuery(document).ready(function(){
     jQuery("#add_catalog_using_list_button").click( function() {
 
         jQuery('#add_catalog_using_list_dialog').modal('show');
+    });
+
+    jQuery(document).on('change', '#catalog_list_type', function () {
+        var list = new CXGN.List();
+        var list_type = jQuery('#catalog_list_type').val();
+        jQuery("#catalog_info_section").show();
+        document.getElementById("select_catalog_list").innerHTML = list.listSelect("select_catalog_list", [ list_type ], 'select a list','', undefined);
         get_select_box('breeding_programs', 'list_item_breeding_program_div', { 'name' : 'item_breeding_program_id', 'id' : 'item_breeding_program_id' });
     });
 
-    jQuery('#submit_catalog_item').click( function() {
-        var name = jQuery('#item_name').val();
+    jQuery('#submit_catalog_using_list').click( function() {
+        var catalog_list_type = jQuery('#catalog_list_type').val();
+        var catalog_list = jQuery('#select_catalog_list_list_select').val();
         var category = jQuery('#item_category').val();
         var additional_info = jQuery('#item_additional_info').val();
         var material_source = jQuery('#item_material_source').val();
         var breeding_program = jQuery('#item_breeding_program_id').val();
         var contact_person = jQuery('#contact_person_name').val();
 
-        if (name == '') {
-            alert("Please provide a name");
+        if (catalog_list_type == '') {
+            alert("Please select a list type");
+            return;
+        }
+
+        if (catalog_list == '') {
+            alert("Please select a list");
             return;
         }
         if (category == '') {
@@ -139,11 +148,12 @@ jQuery(document).ready(function(){
         }
 
         jQuery.ajax({
-            url: '/ajax/catalog/add_item',
+            url: '/ajax/catalog/add_item_list',
             dataType: "json",
             type: 'POST',
             data : {
-                'name' : name,
+                'list_type': catalog_list_type,
+                'catalog_list' : catalog_list,
                 'category': category,
                 'additional_info': additional_info,
                 'material_source': material_source,
@@ -170,7 +180,8 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery("#dismiss_item_saved_dialog").click(function(){
+
+    jQuery("#dismiss_list_saved_dialog").click(function(){
         location.reload();
     });
 
