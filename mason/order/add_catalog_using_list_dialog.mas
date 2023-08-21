@@ -32,7 +32,7 @@ $timestamp => localtime()
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Category: </label>
                                 <div class="col-sm-9">
-                                    <select class="form-control" id="item_category">
+                                    <select class="form-control" id="list_category">
                                         <option value="">Select a category</option>
                                         <option value="released variety">released variety</option>
                                         <option value="pathogen assay ">pathogen assay</option>
@@ -44,13 +44,13 @@ $timestamp => localtime()
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Additional Info: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="list_item_additional_info" placeholder="optional">
+                                    <input class="form-control" id="list_additional_info" placeholder="optional">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Material Source: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="list_item_material_source" placeholder="">
+                                    <input class="form-control" id="list_material_source" placeholder="">
                                 </div>
                             </div>
                             <div class="form-group">
@@ -113,18 +113,17 @@ jQuery(document).ready(function(){
         var list_type = jQuery('#catalog_list_type').val();
         jQuery("#catalog_info_section").show();
         document.getElementById("select_catalog_list").innerHTML = list.listSelect("select_catalog_list", [ list_type ], 'select a list','', undefined);
-        get_select_box('breeding_programs', 'list_item_breeding_program_div', { 'name' : 'item_breeding_program_id', 'id' : 'item_breeding_program_id' });
+        get_select_box('breeding_programs', 'list_item_breeding_program_div', { 'name' : 'list_breeding_program_id', 'id' : 'list_breeding_program_id' });
     });
 
     jQuery('#submit_catalog_using_list').click( function() {
         var catalog_list_type = jQuery('#catalog_list_type').val();
         var catalog_list = jQuery('#select_catalog_list_list_select').val();
-        var category = jQuery('#item_category').val();
-        var additional_info = jQuery('#item_additional_info').val();
-        var material_source = jQuery('#item_material_source').val();
-        var breeding_program = jQuery('#item_breeding_program_id').val();
-        var contact_person = jQuery('#contact_person_name').val();
-
+        var category = jQuery('#list_category').val();
+        var additional_info = jQuery('#list_additional_info').val();
+        var material_source = jQuery('#list_material_source').val();
+        var breeding_program = jQuery('#list_breeding_program_id').val();
+        var contact_person = jQuery('#list_contact_person_name').val();
         if (catalog_list_type == '') {
             alert("Please select a list type");
             return;
@@ -166,7 +165,7 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    jQuery('#add_catalog_item_dialog').modal('hide');
+                    jQuery('#add_catalog_using_list_dialog').modal('hide');
                     jQuery('#add_item_saved_dialog_message').modal("show");
                 }
                 if (response.error_string) {

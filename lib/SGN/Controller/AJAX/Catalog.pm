@@ -8,6 +8,8 @@ use CXGN::People::Person;
 use SGN::Image;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::List::Validate;
+use CXGN::List;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -472,13 +474,12 @@ sub add_catalog_item_list_POST : Args(0) {
     my $ordering_site = $c->config->{ordering_site};
 
     my $list_type = $c->req->param('list_type');
-    my $item_list = $c->req->param('catalog_list');
-    my $item_category = $c->req->param('category');
-    my $item_additional_info = $c->req->param('additional_info');
-    my $item_material_source = $c->req->param('material_source');
-    my $item_breeding_program_id = $c->req->param('breeding_program_id');
-    my $contact_person = $c->req->param('contact_person');
-    my $availability = 'available';
+    my $list_id = $c->req->param('catalog_list');
+    my $list_category = $c->req->param('category');
+    my $list_additional_info = $c->req->param('additional_info');
+    my $list_material_source = $c->req->param('material_source');
+    my $list_breeding_program_id = $c->req->param('breeding_program_id');
+    my $list_contact_person = $c->req->param('contact_person');
 
     if (!$c->user()) {
         print STDERR "User not logged in... not adding catalog items.\n";
@@ -486,14 +487,92 @@ sub add_catalog_item_list_POST : Args(0) {
         return;
     }
 
+    my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $list_contact_person);
+    if (!$sp_person_id) {
+        $c->stash->{rest} = {error_string => "Contact person has no record in the database!",};
+        return;
+    }
 
-
-    my $item_material_type;
     my $item_type;
-    my $item_stock_id;
-    my $item_species;
-    my $item_variety;
+    my $item_material_type;
+    if ($list_type eq 'accessions') {
+        $item_material_type = 'plant';
+        $item_type = 'single item';
+    } elsif ($list_type eq 'seedlots') {
+        $item_material_type = 'seed';
+        $item_type = 'single item';
+    } elsif ($list_type eq 'vector_constructs') {
+        $item_material_type = 'construct';
+        $item_type = 'single item';
+    } elsif ($list_type eq 'populations') {
+        $item_material_type = 'plant';
+        $item_type = 'set of items';
+    }
 
+    my $item_list = CXGN::List->new({dbh => $dbh, list_id => $list_id});
+    my $items = $item_list->retrieve_elements($list_id);
+    my @item_names = @$items;
+
+    print STDERR "ITEM NAMES =".Dumper($items)."\n";
+
+    my $list_error_message;
+    my $item_validator = CXGN::List::Validate->new();
+    my @item_missing = @{$item_validator->validate($schema, $list_type,\@item_names)->{'missing'}};
+    if (scalar(@item_missing) > 0) {
+        $list_error_message = "The following items are not in database or are not the specified list type: ".join("\n", @item_missing);
+        $c->stash->{rest} = { error_string => $list_error_message };
+        $c->detach();
+    } else {
+        foreach my $item (@item_names) {
+            my $item_stock_id;
+            my $item_species;
+            my $item_variety;
+
+            my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+            $stock_lookup->set_stock_name($item);
+            my $item_rs = $stock_lookup->get_stock_exact();
+
+            if (!defined $item_rs) {
+                $c->stash->{rest} = {error_string => "Item name is not unique in the database!",};
+                return;
+            } else {
+                $item_stock_id = $item_rs->stock_id();
+                my $organism_id = $item_rs->organism_id();
+                my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+                $item_species = $organism->species();
+
+                my $variety_result = $stock_lookup->get_stock_variety();
+                if (defined $variety_result) {
+                    $item_variety = $variety_result;
+                } else {
+                    $item_variety = 'NA';
+                }
+            }
+
+            my $stock_catalog = CXGN::Stock::Catalog->new({
+                bcs_schema => $schema,
+                item_type => $item_type,
+                material_type => $item_material_type,
+                species => $item_species,
+                variety => $item_variety,
+                category => $list_category,
+                availability => 'available',
+                additional_info => $list_additional_info,
+                material_source => $list_material_source,
+                breeding_program => $list_breeding_program_id,
+                contact_person_id => $sp_person_id,
+                parent_id => $item_stock_id
+            });
+
+            $stock_catalog->store();
+
+            if (!$stock_catalog->store()){
+                $c->stash->{rest} = {error_string => "Error saving catalog items",};
+                return;
+            }
+        }
+
+    }
 
     $c->stash->{rest} = {success => "1",};
 
