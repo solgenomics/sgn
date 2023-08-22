@@ -304,6 +304,16 @@ trait_property	trait_details
 trait_property	trait_format
 trait_property	trait_maximum
 trait_property	trait_minimum
+trait_property	trait_method_name
+trait_property	trait_method_description
+trait_property	trait_method_class
+trait_property	trait_method_formula
+trait_property	trait_decimal_places
+trait_property	trait_categories_label
+trait_property	trait_categories_value
+trait_property	cvterm_additional_info
+trait_property	trait_entity
+trait_property	trait_attribute
 trial_type	genotyping_trial
 trial_type	phenotyping_trial
 cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076

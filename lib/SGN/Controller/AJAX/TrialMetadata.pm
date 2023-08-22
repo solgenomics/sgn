@@ -4620,7 +4620,8 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
         overwrite_values=>1,
         ignore_new_values=>0,
         metadata_hash=>\%phenotype_metadata,
-        composable_validation_check_name=>$c->config->{composable_validation_check_name}
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();

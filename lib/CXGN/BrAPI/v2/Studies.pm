@@ -101,8 +101,14 @@ sub search {
 	my @year_list = $search_params->{seasonDbIds} ? @{$search_params->{seasonDbIds}} : ();
 	my @obs_variable_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
 	my @study_puis = $search_params->{studyPUI} ? @{$search_params->{studyPUIs}} : ();
-	my @externalReferenceID = $search_params->{externalReferenceID} ? @{$search_params->{externalReferenceIDs}} : ();
-	my @externalReferenceSource = $search_params->{externalReferenceSource} ? @{$search_params->{externalReferenceSources}} : ();
+	my @externalReferenceIds = $search_params->{externalReferenceIds} ? @{$search_params->{externalReferenceIds}} : ();
+
+	# externalReferenceIDs is DEPRECATED,but still supported in BrAPI (if possible, use externalReferenceIds instead).
+	if(!scalar(@externalReferenceIds)){
+		@externalReferenceIds = $search_params->{externalReferenceIDs} ? @{$search_params->{externalReferenceIDs}} : ();
+	}
+
+	my @externalReferenceSource = $search_params->{externalReferenceSources} ? @{$search_params->{externalReferenceSources}} : ();
     my @crop = $search_params->{commonCropNames} ? @{$search_params->{commonCropNames}} : ();
     my $active = $search_params->{active} || undef;
     my $sortBy = $search_params->{sortBy} || undef;
@@ -111,15 +117,15 @@ sub search {
     if (scalar(@crop)>0 && !grep { lc($_) eq lc($supported_crop) } @crop ){
     	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('commonCropName not found!'));
     }
+
     if ($active && lc($active) ne 'true'){
     	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Not found!'));
     }
+	if (scalar(@study_puis)>0  ){
+		push @$status, { 'error' => 'The studyPUI search parameters are not implemented.' };
+	}
 
-    if (scalar(@study_puis)>0 || scalar(@externalReferenceID)>0  || scalar(@externalReferenceSource)>0 ){
-        push @$status, { 'error' => 'The following search parameters are not implemented: studyPUI, externalReferenceID, externalReferenceSource' };
-    }
-
-    my ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names, \@year_list,$sortBy,$sortOrder);
+    my ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names,\@year_list,\@externalReferenceIds,\@externalReferenceSource,$sortBy,$sortOrder);
 
     my %result = (data=>$data_out);
     my @data_files;
@@ -181,6 +187,7 @@ sub store {
 	    my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	    my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
 		my $raw_additional_info = $params->{additionalInfo} || undef;
+		my $external_references = $params->{externalReferences} || [];
 		my %specific_keys = map { $_ => 1 } ("field_size", "plot_width", "plot_length");
 		my %additional_info;
 		if (defined $raw_additional_info) {
@@ -296,10 +303,10 @@ sub store {
 	        }
 	        return $save->{project_id};
 	    };
-
-	    #save data
+		my $trial_id;
+		#save data
 	    eval {
-	        my $trial_id = $schema->txn_do($coderef);
+	        $trial_id = $schema->txn_do($coderef);
 	        if (ref \$trial_id eq 'SCALAR'){
 		    	push @study_dbids, $trial_id;
 
@@ -317,6 +324,24 @@ sub store {
 			warn $@;
 			return CXGN::BrAPI::JSONResponse->return_error($self->status, 'There was an error saving the study', 500);
 		};
+		# save external references if specified
+		if ($external_references) {
+			my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+				bcs_schema          => $schema,
+				external_references => $external_references,
+				table_name          => 'project',
+				table_id_key       	=> 'project_id',
+				id             		=> $trial_id,
+			});
+
+			$references->store();
+
+			if ($references->{'error'}) {
+				return { error => $references->{'error'} };
+			}
+		}
+
+
 	}
 
 	my $data_out;
@@ -526,6 +551,8 @@ sub _search {
 	my $germplasm_dbids = shift;
 	my $germplasm_names = shift;
 	my $year_list = shift;
+	my $externalReferenceIds = shift;
+	my $externalReferenceSources = shift;
 	my $sort_by = shift;
 	my $sort_order = shift;
 
@@ -533,7 +560,7 @@ sub _search {
 	my $page_obj = CXGN::Page->new();
     my $main_production_site_url = $page_obj->get_hostname();
 
-	my $trial_search = CXGN::Trial::Search->new({
+		my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,
         location_list=>$location_names,
         location_id_list=>$location_ids,
@@ -550,11 +577,13 @@ sub _search {
         accession_list => $germplasm_dbids,
         accession_name_list => $germplasm_names,
         year_list => $year_list,
+			externalReferenceSources => $externalReferenceSources,
+			externalReferenceIds => $externalReferenceIds,
         limit => $page_size,
         offset => $page_size*$page,
         sort_by => $sort_by,
         order_by => $sort_order,
-        field_trials_only => 1
+        field_trials_only => 1,
     });
     my ($data, $total_count) = $trial_search->search();
     #print STDERR Dumper $data;
@@ -651,7 +680,18 @@ sub _search {
 		}
 
 		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
-        my %data_obj = (
+
+		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+			bcs_schema => $schema,
+			table_name => 'project',
+			table_id_key => 'project_id',
+			id => qq|$_->{trial_id}|,
+		});
+		my $external_references = $references->search();
+		my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+
+
+		my %data_obj = (
 			active                      => JSON::true,
 			additionalInfo              => $additional_info,
 			commonCropName              => $supported_crop,
@@ -662,7 +702,7 @@ sub _search {
 			endDate                     => $harvest_date ? $harvest_date : undef,
 			environmentParameters       => undef,
 			experimentalDesign          => \%experimental_design,
-			externalReferences          => undef,
+			externalReferences          => @formatted_external_references,
 			growthFacility              => undef,
 			lastUpdate                  => undef,
 			license                     => $data_agreement,

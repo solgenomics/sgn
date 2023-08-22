@@ -109,6 +109,11 @@ has 'year_list' => (
     is => 'rw',
 );
 
+has 'observation_id_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -295,7 +300,7 @@ sub search {
       LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id)";
     my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, count(phenotype.phenotype_id) OVER() AS full_count, string_agg(distinct(notes.value), ', ') AS notes ".$design_layout_select;
 
-    my $order_clause = " ORDER BY 6, 2, 29 DESC";
+    my $order_clause = " ORDER BY 6, 2, 29";
 
     my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator ".$design_layout_select;
 
@@ -361,6 +366,12 @@ sub search {
         foreach (@{$self->trait_contains}) {
             push @where_clause, "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text like '%".lc($_)."%'";
         }
+    }
+    if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
+        my $arrayref = $self->observation_id_list;
+        my $sql = join ("','" , @$arrayref);
+        my $phenotype_id_sql = "'" . $sql . "'";
+        push @where_clause, "phenotype.phenotype_id in ($phenotype_id_sql)";
     }
     if ($self->phenotype_min_value && !$self->phenotype_max_value) {
         push @where_clause, "phenotype.value::real >= ".$self->phenotype_min_value;

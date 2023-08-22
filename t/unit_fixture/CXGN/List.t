@@ -25,8 +25,8 @@ print STDERR Dumper \@lists_sorted;
             '76451',
             'accessions',
 	           '0',
-             undef,
-             undef
+               '0001-01-01 00:00:00',
+               '0001-01-01 00:00:00'
           ],
           [
             '5',
@@ -36,8 +36,8 @@ print STDERR Dumper \@lists_sorted;
             '76451',
             'accessions',
 	           '0',
-             undef,
-             undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             '6',
@@ -47,8 +47,8 @@ print STDERR Dumper \@lists_sorted;
             '76451',
             'accessions',
 	          '0',
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             '7',
@@ -58,8 +58,8 @@ print STDERR Dumper \@lists_sorted;
             undef,
             undef,
 	          '0',
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             12,
@@ -69,8 +69,8 @@ print STDERR Dumper \@lists_sorted;
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             13,
@@ -80,8 +80,8 @@ print STDERR Dumper \@lists_sorted;
             76455,
             'traits',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
 	  [
             '809',
@@ -91,8 +91,8 @@ print STDERR Dumper \@lists_sorted;
             undef,
             undef,
 	          '1',
-            undef,
-            undef
+          '0001-01-01 00:00:00',
+          '0001-01-01 00:00:00'
           ],
 	  [
             '811',
@@ -102,8 +102,8 @@ print STDERR Dumper \@lists_sorted;
             undef,
             undef,
 	          '0',
-            undef,
-            undef
+          '0001-01-01 00:00:00',
+          '0001-01-01 00:00:00'
           ],
 	   ], "check available lists initially");
 
@@ -178,8 +178,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'accessions_for_solgs_tests',
@@ -188,8 +188,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'accessions_for_trial2',
@@ -198,8 +198,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'selection_acc',
@@ -208,8 +208,8 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'desynonymize_test_list',
@@ -218,8 +218,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'traits',
@@ -228,8 +228,8 @@ is_deeply(\@lists_minus_ids, [
             76455,
             'traits',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'new_test_name',
@@ -248,8 +248,8 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             1,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'janedoe_1_private',
@@ -258,8 +258,8 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ]
         ],
         "check available lists after additions");
@@ -289,8 +289,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'accessions_for_trial2',
@@ -299,8 +299,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'selection_acc',
@@ -309,8 +309,8 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'desynonymize_test_list',
@@ -319,8 +319,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'traits',
@@ -329,8 +329,8 @@ is_deeply(\@lists_minus_ids, [
             76455,
             'traits',
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'new_test_name',
@@ -349,8 +349,8 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             1,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ],
           [
             'janedoe_1_private',
@@ -359,8 +359,8 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
-            undef,
-            undef
+              '0001-01-01 00:00:00',
+              '0001-01-01 00:00:00'
           ]
         ]
 	  , "check available lists after deletion");
