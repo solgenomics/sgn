@@ -10,6 +10,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use CXGN::List;
+use CXGN::Stock::Seedlot;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -68,9 +69,6 @@ sub add_catalog_item_POST : Args(0) {
     } else {
         $item_stock_id = $item_rs->stock_id();
         my $item_type_id = $item_rs->type_id();
-        my $organism_id = $item_rs->organism_id();
-        my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
-        $item_species = $organism->species();
 
         my $variety_result = $stock_lookup->get_stock_variety();
         if (defined $variety_result) {
@@ -80,14 +78,22 @@ sub add_catalog_item_POST : Args(0) {
         }
 
         if ($item_type_id == $accession_cvterm_id) {
+            my $organism_id = $item_rs->organism_id();
+            my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+            $item_species = $organism->species();
             $item_material_type = 'plant';
             $item_type = 'single item';
+
         } elsif ($item_type_id == $seedlot_cvterm_id) {
+            my $seedlot_species = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$item_stock_id);
+            $item_species = $seedlot_species->get_seedlot_species();
             $item_material_type = 'seed';
             $item_type = 'single item';
+
         } elsif ($item_type_id == $vector_construct_cvterm_id) {
             $item_material_type = 'construct';
             $item_type = 'single item';
+
         } elsif ($item_type_id == $population_cvterm_id) {
             $item_material_type = 'plant';
             $item_type = 'set of items';
@@ -251,9 +257,6 @@ sub upload_catalog_items_POST : Args(0) {
             } else {
                 $item_stock_id = $item_rs->stock_id();
                 my $item_type_id = $item_rs->type_id();
-                my $organism_id = $item_rs->organism_id();
-                my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
-                $item_species = $organism->species();
 
                 my $variety_result = $stock_lookup->get_stock_variety();
                 if (defined $variety_result) {
@@ -263,14 +266,22 @@ sub upload_catalog_items_POST : Args(0) {
                 }
 
                 if ($item_type_id == $accession_cvterm_id) {
+                    my $organism_id = $item_rs->organism_id();
+                    my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+                    $item_species = $organism->species();
                     $item_material_type = 'plant';
                     $item_type = 'single item';
+
                 } elsif ($item_type_id == $seedlot_cvterm_id) {
+                    my $seedlot_species = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$item_stock_id);
+                    $item_species = $seedlot_species->get_seedlot_species();
                     $item_material_type = 'seed';
                     $item_type = 'single item';
+
                 } elsif ($item_type_id == $vector_construct_cvterm_id) {
                     $item_material_type = 'construct';
                     $item_type = 'single item';
+
                 } elsif ($item_type_id == $population_cvterm_id) {
                     $item_material_type = 'plant';
                     $item_type = 'set of items';
@@ -495,6 +506,7 @@ sub add_catalog_item_list_POST : Args(0) {
 
     my $item_type;
     my $item_material_type;
+
     if ($list_type eq 'accessions') {
         $item_material_type = 'plant';
         $item_type = 'single item';
@@ -513,7 +525,6 @@ sub add_catalog_item_list_POST : Args(0) {
     my $items = $item_list->retrieve_elements($list_id);
     my @item_names = @$items;
 
-    print STDERR "ITEM NAMES =".Dumper($items)."\n";
 
     my $list_error_message;
     my $item_validator = CXGN::List::Validate->new();
@@ -537,9 +548,6 @@ sub add_catalog_item_list_POST : Args(0) {
                 return;
             } else {
                 $item_stock_id = $item_rs->stock_id();
-                my $organism_id = $item_rs->organism_id();
-                my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
-                $item_species = $organism->species();
 
                 my $variety_result = $stock_lookup->get_stock_variety();
                 if (defined $variety_result) {
@@ -547,6 +555,17 @@ sub add_catalog_item_list_POST : Args(0) {
                 } else {
                     $item_variety = 'NA';
                 }
+
+                if ($list_type eq 'accessions') {
+                    my $organism_id = $item_rs->organism_id();
+                    my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
+                    $item_species = $organism->species();
+
+                } elsif ($list_type eq 'seedlots') {
+                    my $seedlot_species = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$item_stock_id);
+                    $item_species = $seedlot_species->get_seedlot_species();
+                }
+
             }
 
             my $stock_catalog = CXGN::Stock::Catalog->new({
