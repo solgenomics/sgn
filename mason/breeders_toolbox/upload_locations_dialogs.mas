@@ -39,7 +39,7 @@
                 <b>Country Code:</b> must be an <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO Alpha-3 country code</a><br>
                 <b>Country Name:</b> must be an uppercase english short name from the <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO standard</a><br>
                 <b>Program:</b> must be an exisiting Breeding Program in the database, or multiple breeding programs separated by '&'<br>
-                <b>Type:</b> must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other<br>
+                <b>Type:</b> must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other<br>
                 <b>Latitude:</b> (in degrees) must be a number between 90 and -90.<br>
                 <b>Longitude:</b> (in degrees) must be a number between 180 and -180.<br>
                 <b>Altitude:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
