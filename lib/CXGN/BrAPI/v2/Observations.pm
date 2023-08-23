@@ -61,7 +61,7 @@ sub search {
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$observation_level,
-            trial_list=>$trial_ids,
+            trial_list=>$study_ids_arrayref,
             folder_list=>$trial_ids_arrayref,
             include_timestamp=>1,
             year_list=>$season_arrayref,

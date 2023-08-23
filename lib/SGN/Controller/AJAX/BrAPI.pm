@@ -2698,7 +2698,7 @@ sub observation_units_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
+	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs}, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2799,7 +2799,7 @@ sub observation_unit_single_GET {
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
     my $brapi_package_result = $brapi_module->detail(
-    	 $c->stash->{observation_unit_db_id});
+    	 $c->stash->{observation_unit_db_id}, $c);
     _standard_response_construction($c, $brapi_package_result);
 }
 
