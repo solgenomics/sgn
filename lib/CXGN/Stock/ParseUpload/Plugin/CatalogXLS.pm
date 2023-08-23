@@ -168,17 +168,17 @@ sub _validate_with_plugin {
         }
 
         if (!$category || $category eq '') {
-            push @error_messages, "Cell D$row_name: category missing";
+            push @error_messages, "Cell B$row_name: category missing";
         } elsif (!$supported_categories{$category}) {
-            push @error_messages, "Cell C$row_name: category is not supported: $category";
+            push @error_messages, "Cell B$row_name: category is not supported: $category";
         }
 
         if (!$breeding_program || $breeding_program eq '') {
-            push @error_messages, "Cell G$row_name: breeding_program missing";
+            push @error_messages, "Cell E$row_name: breeding_program missing";
         }
 
         if (!$contact_person_username || $contact_person_username eq '') {
-            push @error_messages, "Cell H$row_name: contact person username missing";
+            push @error_messages, "Cell F$row_name: contact person username missing";
         }
 
         my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_username);
@@ -196,7 +196,6 @@ sub _validate_with_plugin {
 
     }
 
-#    my @stocks_missing;
     my @catalog_items = keys %seen_stock_names;
     my $catalog_item_validator = CXGN::List::Validate->new();
 

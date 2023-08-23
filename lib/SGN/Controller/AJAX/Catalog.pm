@@ -28,7 +28,6 @@ sub add_catalog_item_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
-    my $ordering_site = $c->config->{ordering_site};
 
     my $item_name = $c->req->param('name');
     my $item_category = $c->req->param('category');
@@ -482,7 +481,6 @@ sub add_catalog_item_list_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
-    my $ordering_site = $c->config->{ordering_site};
 
     my $list_type = $c->req->param('list_type');
     my $list_id = $c->req->param('catalog_list');
@@ -524,7 +522,6 @@ sub add_catalog_item_list_POST : Args(0) {
     my $item_list = CXGN::List->new({dbh => $dbh, list_id => $list_id});
     my $items = $item_list->retrieve_elements($list_id);
     my @item_names = @$items;
-
 
     my $list_error_message;
     my $item_validator = CXGN::List::Validate->new();

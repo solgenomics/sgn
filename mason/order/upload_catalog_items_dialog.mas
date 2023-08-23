@@ -100,8 +100,6 @@
                         <tbody>
                             <tr>
                                 <td>item_name</td>
-                                <td>item_type</td>
-                                <td>material_type</td>
                                 <td>category</td>
                                 <td>additional_info</td>
                                 <td>material_source</td>
@@ -113,11 +111,9 @@
                     <b>Required columns:</b>
                     <ul>
                         <li><b>item_name:</b>Item name must be in the database.</li>
-                        <li><b>item_type:</b>Must be one of the following (single item, set of items). This field can be customized, please contact us.</li>
-                        <li><b>material_type:</b>Must be one of the following (plant, seed, construct). This field can be customized, please contact us.</li>
                         <li><b>category:</b>Must be one of the following (released variety, pathogen assay, control, transgenic line). This field can be customized, please contact us. </li>
-                        <li><b>additional_info:</b> (optional) </li>
-                        <li><b>material_source:</b> (optional)</li>
+                        <li><b>additional_info:</b> Required in the header, but value may be left blank.</li>
+                        <li><b>material_source:</b> Required in the header, but value may be left blank.</li>
                         <li><b>breeding_program:</b>Breeding program must be in the database.</li>
                         <li><b>contact_person_username:</b>Please indicate contact person of each item. Contact person username must be in the database</li>
                     </ul>

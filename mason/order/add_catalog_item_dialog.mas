@@ -40,7 +40,7 @@ $ordering_type => undef
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Material Source: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_material_source" placeholder="">
+                                <input class="form-control" id="item_material_source" placeholder="optional">
                             </div>
                         </div>
                         <div class="form-group">
