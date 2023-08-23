@@ -36,7 +36,8 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'subplots_names', #For splotplot
         'treatments', #For splitplot
         'subplots_plant_names', #For splitplot
-        'additional_info' # For brapi additional info storage
+        'additional_info', # For brapi additional info storage
+        'external_refs' # For brapi external reference storage
 	]);
 
 }

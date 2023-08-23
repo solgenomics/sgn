@@ -88,6 +88,9 @@ sub search {
     my ($result, $total_count) = $image_search->search();
 
     my @data;
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter = 0;
 
     foreach (@$result) {
         my $mimetype = _get_mimetype($_->{'image_file_ext'});
@@ -134,36 +137,39 @@ sub search {
             push @sorted_tags, $unique_tags{$tag_id};
         }
 
-        push @data, {
-            additionalInfo => {
-                observationLevel => $_->{'stock_type_name'},
-                observationUnitName => $_->{'stock_uniquename'},
-                tags => \@sorted_tags,
-            },
-            copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
-            description => $_->{'image_description'},
-            descriptiveOntologyTerms => \@cvterm_names,
-            externalReferences => [],
-            imageDbId => qq|$_->{'image_id'}|,
-            imageFileName => $_->{'image_original_filename'},
-            imageFileSize => $size,
-            imageHeight => $height,
-            imageWidth => $width,
-            imageName => $_->{'image_name'},
-            imageTimeStamp => $_->{'image_modified_date'},
-            imageURL => $url,
-            mimeType => _get_mimetype($_->{'image_file_ext'}),
-            observationUnitDbId => qq|$_->{'stock_id'}|,
-            # location and linked phenotypes are not yet available for images in the db
-            imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
+        if ($counter >= $start_index && $counter <= $end_index) {
+            push @data, {
+                additionalInfo           => {
+                    observationLevel    => $_->{'stock_type_name'},
+                    observationUnitName => $_->{'stock_uniquename'},
+                    tags                => \@sorted_tags,
                 },
-                type => '',
-            },
-            observationDbIds => [@observationDbIds],
-        };
+                copyright                => $_->{'image_username'} . " " . substr($_->{'image_modified_date'}, 0, 4),
+                description              => $_->{'image_description'},
+                descriptiveOntologyTerms => \@cvterm_names,
+                externalReferences       => [],
+                imageDbId                => qq|$_->{'image_id'}|,
+                imageFileName            => $_->{'image_original_filename'},
+                imageFileSize            => $size,
+                imageHeight              => $height,
+                imageWidth               => $width,
+                imageName                => $_->{'image_name'},
+                imageTimeStamp           => $_->{'image_modified_date'},
+                imageURL                 => $url,
+                mimeType                 => _get_mimetype($_->{'image_file_ext'}),
+                observationUnitDbId      => qq|$_->{'stock_id'}|,
+                # location and linked phenotypes are not yet available for images in the db
+                imageLocation            => {
+                    geometry => {
+                        coordinates => [],
+                        type        => '',
+                    },
+                    type     => '',
+                },
+                observationDbIds         => [ @observationDbIds ],
+            };
+        }
+        $counter++;
     }
 
     my %result = (data => \@data);
@@ -240,11 +246,11 @@ sub detail {
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
             imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
-                },
-                type => '',
+               geometry => {
+                   coordinates => [],
+                   type=> '',
+               },
+               type => '',
             },
             observationDbIds => [@observationDbIds],
         );
@@ -459,11 +465,11 @@ sub image_metadata_store {
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
             imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
-                },
-                type => '',
+               geometry => {
+                   coordinates => [],
+                   type=> '',
+               },
+               type => '',
             },
             observationDbIds => [@observationDbIds],
         };
@@ -471,9 +477,15 @@ sub image_metadata_store {
         $counter++;
     }
 
-    my %result = (data => \@data);
+    my $result;
+    if ($image_id) {
+        $result = $data[0];
+    } else {
+        $result = {data => \@data};
+    }
+
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), 'Image metadata stored');
+    return CXGN::BrAPI::JSONResponse->return_success( $result, $pagination, undef, $self->status(), 'Image metadata stored');
 }
 
 sub image_data_store {
@@ -566,11 +578,11 @@ sub image_data_store {
          observationUnitDbId => $_->{'stock_id'},
          # location and linked phenotypes are not yet available for images in the db
          imageLocation => {
-             geometry => {
-                 coordinates => [],
-                 type=> '',
-             },
-             type => '',
+            geometry => {
+                coordinates => [],
+                type=> '',
+            },
+            type => '',
          },
          observationDbIds => [@observationDbIds],
      );

@@ -129,6 +129,7 @@ sub parse {
     my %data = ();
     my %seen = ();
     my (@observations, @unit_dbids, @variables, @values, @timestamps);
+
     foreach my $obs (@data){
 
         my $obsunit_db_id = $obs->{'observationUnitDbId'};
