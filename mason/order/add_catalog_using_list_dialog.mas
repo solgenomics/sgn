@@ -6,7 +6,6 @@ $timestamp => localtime()
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addCatalogUsingListDialog">Add New Catalog Items Using List</h4>
             </div>
             <div class="modal-body">
@@ -33,7 +32,7 @@ $timestamp => localtime()
                                 <label class="col-sm-3 control-label">Category: </label>
                                 <div class="col-sm-9">
                                     <select class="form-control" id="list_category">
-                                        <option value="">Select a category</option>
+                                        <option value="">Please select a category</option>
                                         <option value="released variety">released variety</option>
                                         <option value="pathogen assay ">pathogen assay</option>
                                         <option value="control">control</option>
@@ -66,13 +65,13 @@ $timestamp => localtime()
                                 </div>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button id = "close_catalog_list_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="submit_catalog_using_list" type="button" class="btn btn-primary" >Add</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="reset" id="close_catalog_list_dialog" name="close_catalog_list_dialog" class="btn btn-default" >Close</button>
+                    <button id="submit_catalog_using_list" type="button" class="btn btn-primary" >Add</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -112,8 +111,8 @@ jQuery(document).ready(function(){
         var list = new CXGN.List();
         var list_type = jQuery('#catalog_list_type').val();
         jQuery("#catalog_info_section").show();
-        document.getElementById("select_catalog_list").innerHTML = list.listSelect("select_catalog_list", [ list_type ], 'select a list','', undefined);
-        get_select_box('breeding_programs', 'list_item_breeding_program_div', { 'name' : 'list_breeding_program_id', 'id' : 'list_breeding_program_id' });
+        document.getElementById("select_catalog_list").innerHTML = list.listSelect("select_catalog_list", [ list_type ], 'Please select a list','', undefined);
+        get_select_box('breeding_programs', 'list_item_breeding_program_div', { 'name' : 'list_breeding_program_id', 'id' : 'list_breeding_program_id', 'empty': 1 });
     });
 
     jQuery('#submit_catalog_using_list').click( function() {
@@ -179,6 +178,10 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery("#close_catalog_list_dialog").click(function() {
+        jQuery("#add_catalog_using_list_dialog").modal('hide');
+        location.reload();
+    });
 
     jQuery("#dismiss_list_saved_dialog").click(function(){
         location.reload();

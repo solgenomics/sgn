@@ -110,7 +110,7 @@
                     </table>
                     <b>Required columns:</b>
                     <ul>
-                        <li><b>item_name:</b>Item name must be in the database.</li>
+                        <li><b>item_name:</b>Item name must be in the database, can be accession, seedlot, population or vector_construct stock type</li>
                         <li><b>category:</b>Must be one of the following (released variety, pathogen assay, control, transgenic line). This field can be customized, please contact us. </li>
                         <li><b>additional_info:</b> Required in the header, but value may be left blank.</li>
                         <li><b>material_source:</b> Required in the header, but value may be left blank.</li>

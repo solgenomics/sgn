@@ -7,7 +7,6 @@ $ordering_type => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addCatalogItemDialog">Add New Catalog Item</h4>
             </div>
             <div class="modal-body">
@@ -23,7 +22,7 @@ $ordering_type => undef
                             <label class="col-sm-3 control-label">Category: </label>
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_category">
-                                    <option value="">Select a category</option>
+                                    <option value="">Please select a category</option>
                                     <option value="released variety">released variety</option>
                                     <option value="pathogen assay ">pathogen assay</option>
                                     <option value="control">control</option>
@@ -55,13 +54,13 @@ $ordering_type => undef
                                 <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="submit_catalog_item" type="button" class="btn btn-primary" >Add</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="reset" id="close_add_item_dialog" name="close_add_item_dialog" class="btn btn-default" >Close</button>
+                    <button id="submit_catalog_item" type="button" class="btn btn-primary" >Add</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -99,7 +98,8 @@ jQuery(document).ready(function(){
         });
 
         jQuery('#add_catalog_item_dialog').modal('show');
-        get_select_box('breeding_programs', 'item_breeding_program_div', { 'name' : 'item_breeding_program_id', 'id' : 'item_breeding_program_id' });
+        get_select_box('breeding_programs', 'item_breeding_program_div', { 'name' : 'item_breeding_program_id', 'id' : 'item_breeding_program_id', 'empty': 1 });
+
     });
 
     jQuery('#submit_catalog_item').click( function() {
@@ -157,6 +157,11 @@ jQuery(document).ready(function(){
                 alert('An error occurred adding item');
             }
         });
+    });
+
+    jQuery("#close_add_item_dialog").click(function() {
+        jQuery("#add_catalog_item_dialog").modal('hide');
+        location.reload();
     });
 
     jQuery("#dismiss_item_saved_dialog").click(function(){
