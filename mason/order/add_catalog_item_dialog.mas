@@ -9,13 +9,13 @@ $ordering_type => undef
             <div class="modal-header">
                 <h4 class="modal-title" id="addCatalogItemDialog">Add New Catalog Item</h4>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id = "catalog_dialog">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="add_new_catalog_item_form" name="add_new_catalog_form">
-                        <div class="form-group">
+                        <div class="form-group" id = "get_item_name">
                             <label class="col-sm-3 control-label">Item Name: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_name" placeholder="Item name must be in the database">
+                                <input class="form-control" type="text" id="item_name" name="item_name" placeholder="Item name must be in the database">
                             </div>
                         </div>
                         <div class="form-group">
@@ -94,7 +94,8 @@ jQuery(document).ready(function(){
     jQuery("#add_catalog_item_button").click( function() {
 
         jQuery("#item_name").autocomplete({
-            source: '/ajax/stock/accession_autocomplete',
+            source: '/ajax/stock/accession_or_seedlot_or_population_or_vector_construct_autocomplete',
+            appendTo : catalog_dialog
         });
 
         jQuery('#add_catalog_item_dialog').modal('show');
