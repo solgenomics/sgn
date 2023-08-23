@@ -10785,7 +10785,8 @@ sub _perform_phenotype_calculation {
                 values_hash=>\%zonal_stat_phenotype_data,
                 has_timestamps=>1,
                 metadata_hash=>\%phenotype_metadata,
-                composable_validation_check_name=>$c->config->{composable_validation_check_name}
+                composable_validation_check_name=>$c->config->{composable_validation_check_name},
+                allow_repeat_measures=>$c->config->{allow_repeat_measures}
             };
 
             if ($overwrite_phenotype_values) {
@@ -12188,7 +12189,8 @@ sub _perform_keras_cnn_predict {
             metadata_hash=>\%phenotype_metadata,
             ignore_new_values=>undef,
             overwrite_values=>1,
-            composable_validation_check_name=>$c->config->{composable_validation_check_name}
+            composable_validation_check_name=>$c->config->{composable_validation_check_name},
+            allow_repeat_measures=>$c->config->{allow_repeat_measures}
         });
         my ($verified_warning, $verified_error) = $store_phenotypes->verify();
         my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
@@ -12703,7 +12705,8 @@ sub _perform_autoencoder_keras_cnn_vi {
             metadata_hash=>\%phenotype_metadata,
             overwrite_values=>1,
             #ignore_new_values=>1,
-            composable_validation_check_name=>$c->config->{composable_validation_check_name}
+            composable_validation_check_name=>$c->config->{composable_validation_check_name},
+            allow_repeat_measures=>$c->config->{allow_repeat_measures}
         };
 
         my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
