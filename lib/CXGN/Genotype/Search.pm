@@ -199,15 +199,15 @@ has '_filtered_markers' => (
     default => sub {{}}
 );
 
-has '_snp_genotyping_cvterm_id' => (
-    isa => 'Int',
-    is => 'rw'
-);
+# has '_snp_genotyping_cvterm_id' => (
+#     isa => 'Int',
+#     is => 'rw'
+# );
 
-has '_phg_genotyping_cvterm_id' => (
-    isa => 'Int',
-    is => 'rw'
-);
+# has '_phg_genotyping_cvterm_id' => (
+#     isa => 'Int',
+#     is => 'rw'
+# );
 
 has '_vcf_genotyping_cvterm_id' => (
     isa => 'Int',
@@ -391,9 +391,9 @@ sub get_genotype_info {
     my %search_params;
     my @where_clause;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    # my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 
-    my $phg_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phg genotyping', 'genotype_property')->cvterm_id();
+    # my $phg_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phg genotyping', 'genotype_property')->cvterm_id();
 
     my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id({protocol_id => $protocol_id_list->[0],genotype_id => $markerprofile_id_list->[0]});
     my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id();
@@ -743,11 +743,11 @@ sub init_genotype_iterator {
     my %search_params;
     my @where_clause;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-    $self->_snp_genotyping_cvterm_id($snp_genotyping_cvterm_id);
+    # my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    # $self->_snp_genotyping_cvterm_id($snp_genotyping_cvterm_id);
 
-     my $phg_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phg genotyping', 'genotype_property')->cvterm_id();
-    $self->_phg_genotyping_cvterm_id($phg_genotyping_cvterm_id);
+    #  my $phg_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phg genotyping', 'genotype_property')->cvterm_id();
+    # $self->_phg_genotyping_cvterm_id($phg_genotyping_cvterm_id);
     
     my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id({protocol_id => $protocol_id_list->[0],genotype_id => $markerprofile_id_list->[0]});
     $self->_vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
@@ -1106,8 +1106,8 @@ sub get_next_genotype_info {
     my $protocolprop_marker_hash_select_arr = $self->_protocolprop_marker_hash_select_arr();
     my $protocolprop_top_key_select_arr = $self->_protocolprop_top_key_select_arr();
     my $genotypeprop_hash_select_arr = $self->_genotypeprop_hash_select_arr();
-    my $snp_genotyping_cvterm_id = $self->_snp_genotyping_cvterm_id();
-    my $phg_genotyping_cvterm_id = $self->_phg_genotyping_cvterm_id();
+    # my $snp_genotyping_cvterm_id = $self->_snp_genotyping_cvterm_id();
+    # my $phg_genotyping_cvterm_id = $self->_phg_genotyping_cvterm_id();
     my $vcf_genotyping_cvterm_id = $self->_vcf_genotyping_cvterm_id();
     my $vcf_map_details_cvterm_id = $self->_vcf_map_details_cvterm_id();
     my $vcf_map_details_markers_cvterm_id = $self->_vcf_map_details_markers_cvterm_id();

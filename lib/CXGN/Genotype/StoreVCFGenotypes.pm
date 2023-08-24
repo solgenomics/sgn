@@ -440,12 +440,6 @@ has 'snp_genotypingprop_cvterm_id' => (
     is => 'rw',
     );
 
-
-has 'snp_genotype_id' => (
-    isa => 'Int',
-    is => 'rw',
-    );
-
 has 'population_stock_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
@@ -567,11 +561,6 @@ sub validate {
     my $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
     $self->vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
 
-    my $snp_genotype_id;
-    if ($genotyping_type) {
-        $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
-        $self->snp_genotype_id($snp_genotype_id);
-    }
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
 
@@ -582,8 +571,9 @@ sub validate {
     if ($self->archived_file_type eq 'genotype_vcf'){
         $snp_genotypingprop_cvterm_id = $vcf_genotyping_cvterm_id;
     } elsif ($self->archived_file_type eq 'genotype_dosage'){
-        $snp_genotypingprop_cvterm_id = $snp_genotype_id;
+        $snp_genotypingprop_cvterm_id = $vcf_genotyping_cvterm_id;
     }
+    
     $self->snp_genotypingprop_cvterm_id($snp_genotypingprop_cvterm_id);
 
     #remove extra numbers, such as igd after : symbol
@@ -744,7 +734,7 @@ sub validate {
     if ($genotyping_data_type eq 'ssr') {
         $genotype_cvterm_id = $pcr_marker_genotypeprop_cvterm_id;
     } else {
-        $genotype_cvterm_id = $snp_genotype_id;
+        $genotype_cvterm_id = $vcf_genotyping_cvterm_id;
     }
 
     my $previous_genotypes_search_params = {
@@ -818,12 +808,6 @@ sub store_metadata {
 
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
-
-    my $snp_genotype_id;
-    if ($genotyping_type) {
-        $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, $genotyping_type, 'genotype_property')->cvterm_id();
-        $self->snp_genotype_id($snp_genotype_id);
-    }
 
     my $pcr_marker_genotyping_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
     $self->pcr_marker_genotyping_type_id($pcr_marker_genotyping_type_id);
@@ -1104,7 +1088,7 @@ sub store_identifiers {
                     $genotype_type_id = $self->pcr_marker_genotyping_type_id();
                 } else {
                     $genotype_description = "$genotyping_data_type genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
-                    $genotype_type_id = $self->snp_genotype_id();
+                    $genotype_type_id = $self->vcf_genotyping_cvterm_id();
                 }
 
                 my $genotype = $genotype_schema->create({

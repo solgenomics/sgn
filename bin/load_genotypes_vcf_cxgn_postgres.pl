@@ -45,7 +45,7 @@ perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D imagebreedv4 -U pos
 
  -h project_id (Will associate genotype data to an existing project_id)
  -j protocol_id (Will associate genotype data to an existing nd_protocol_id)
- -T type fo genotype data in the vcf file (either 'vcf_snp_genotypying'' or 'vcf_phg_genotyping''). Default is vcf_snp_genotyping. vcf_phg_genotyping refers to partial haplotype graph (PHG) type of genotype vcf data file.
+ -T cvterm for genotype data in the vcf file (either 'vcf_snp_genotypying'' or 'vcf_phg_genotyping''). Default is vcf_snp_genotyping. vcf_phg_genotyping refers to Practical Haplotype Graph (PHG) type of genotype vcf data file.
 
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
@@ -280,18 +280,14 @@ $protocol->{'species_name'} = $organism_species;
 
 
 my $vcf_genotyping_type = $opt_T ? $opt_T : 'vcf_snp_genotyping';
-my $genotyping_type;
+# my $genotyping_type;
 my $genotype_data_type;
 
 if ($vcf_genotyping_type =~ /vcf_phg_genotyping/) {
-    $genotyping_type = 'phg genotyping';
     $genotype_data_type = 'PHG';
-
 } else {
-    $genotyping_type = 'snp genotyping';
     $genotype_data_type = 'SNP';
 }
-
 
 my $store_args = {
     bcs_schema=>$schema,
@@ -319,7 +315,6 @@ my $store_args = {
     temp_file_sql_copy=>$opt_B,
     genotyping_data_type=> $genotype_data_type,
     vcf_genotyping_type => $vcf_genotyping_type,
-    genotyping_type => $genotyping_type
 };
 
 if ($opt_c eq 'VCF') {
