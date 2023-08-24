@@ -53,6 +53,61 @@ my %ADDITIONAL_LIST_DATA = (
                 $values{$list_item_ids->[$index]} = $list_item_db_ids->[$index];
             }
             return \%values;
+        },
+
+        'accession pedigree' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+            my $mother_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+            my $father_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+            foreach my $stock_id ( @$list_item_db_ids) {
+
+                # Get the pedigree of the stock
+                my $prs = $schema->resultset("Stock::StockRelationship")->search([
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $father_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    },
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $mother_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    }
+                ], {
+                    'join' => 'subject',
+                    '+select' => ['subject.uniquename'],
+                    '+as' => ['subject_uniquename']
+                });
+
+                # Retrieve the names of the parents
+                my $parents = {};
+                while ( my $p = $prs->next() ) {
+                    if ( $p->type_id == $mother_type_id ) {
+                        $parents->{'mother'} = $p->get_column('subject_uniquename');
+                    }
+                    else {
+                        $parents->{'father'} = $p->get_column('subject_uniquename');
+                    }
+                }
+
+                # Build pedigree string
+                my $pedigree = 'NA/NA';
+                if ( $parents->{'mother'} && $parents->{'father'} ) {
+                    $pedigree = $parents->{'mother'} . '/' . $parents->{'father'};
+                }
+
+                # Add pedigree to return hash
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $stock_id ) {
+                        $values{$list_item_ids->[$index]} = $pedigree;
+                    }
+                }
+            }
+
+            return \%values;
         }
 
     },
@@ -92,6 +147,75 @@ my %ADDITIONAL_LIST_DATA = (
                 for my $index (0 .. $#$list_item_db_ids ) {
                     if ( $list_item_db_ids->[$index] eq $seedlot_id ) {
                         $values{$list_item_ids->[$index]} = $accession_name;
+                    }
+                }
+            }
+
+            return \%values;
+        },
+
+        'seedlot contents pedigree' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+            my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+            my $mother_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+            my $father_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+            my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
+            # Get the stock ids of the seedlot contents
+            my $rs = $schema->resultset("Stock::StockRelationship")->search({
+                'me.object_id' => { in => $list_item_db_ids },
+                'me.type_id' => $type_id,
+                'subject.type_id' => { in => [$accession_type_id, $cross_type_id] }
+            }, {
+                'join' => 'subject',
+                '+select' => ['subject.uniquename', 'subject.stock_id'],
+                '+as' => ['subject_uniquename', 'subject_stockid']
+            });
+            while ( my $row = $rs->next() ) {
+                my $seedlot_id = $row->object_id();
+                my $stock_id = $row->get_column('subject_stockid');
+
+                # Get the pedigree of the contents
+                my $prs = $schema->resultset("Stock::StockRelationship")->search([
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $father_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    },
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $mother_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    }
+                ], {
+                    'join' => 'subject',
+                    '+select' => ['subject.uniquename'],
+                    '+as' => ['subject_uniquename']
+                });
+
+                # Retrieve the names of the parents
+                my $parents = {};
+                while ( my $p = $prs->next() ) {
+                    if ( $p->type_id == $mother_type_id ) {
+                        $parents->{'mother'} = $p->get_column('subject_uniquename');
+                    }
+                    else {
+                        $parents->{'father'} = $p->get_column('subject_uniquename');
+                    }
+                }
+
+                # Build pedigree string
+                my $pedigree = 'NA/NA';
+                if ( $parents->{'mother'} && $parents->{'father'} ) {
+                    $pedigree = $parents->{'mother'} . '/' . $parents->{'father'};
+                }
+
+                # Add pedigree to return hash
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $seedlot_id ) {
+                        $values{$list_item_ids->[$index]} = $pedigree;
                     }
                 }
             }
@@ -193,13 +317,27 @@ __PACKAGE__->config(
 
         # Get additional list data for just the longest item
         if ( $data_type eq 'Lists' ) {
-            my $additional_list_data = get_additional_list_data($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
+            my %longest_additional_list_data;
+            my $additional_list_data = get_additional_list_data($c, $source_id);
             if ( $additional_list_data ) {
-                my $fields = $additional_list_data->{$longest_hash{'list_item_id'}};
-		if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) {
-		    %longest_hash = (%longest_hash, %$fields);
-		}
+                foreach my $key ( keys(%$additional_list_data) ) {
+                    my $fields = $additional_list_data->{$key};
+                    if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) {
+                        foreach my $field_name ( keys(%$fields) ) {
+                            my $field_value = $fields->{$field_name};
+                            if (exists $longest_additional_list_data{$field_name} ) {
+                                if ( length($field_value) > length($longest_additional_list_data{$field_name}) ) {
+                                    $longest_additional_list_data{$field_name} = $field_value;
+                                }
+                            }
+                            else {
+                                $longest_additional_list_data{$field_name} = $field_value;
+                            }
+                        }
+                    }
+                }
             }
+            %longest_hash = (%longest_hash, %longest_additional_list_data);
         }
 
         $c->stash->{rest} = {
