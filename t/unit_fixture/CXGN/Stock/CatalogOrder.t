@@ -14,7 +14,6 @@ use CXGN::Stock::Order;
 use CXGN::Stock::OrderBatch;
 use CXGN::UploadFile;
 use CXGN::Stock::ParseUpload;
-use CXGN::List;
 use Test::WWW::Mechanize;
 use DateTime;
 
@@ -110,6 +109,9 @@ my $after_adding_catalog_list_all_stockprop = $schema->resultset("Stock::Stockpr
 
 is($after_adding_catalog_list, $before_adding_catalog_list + 3);
 is($after_adding_catalog_list_all_stockprop, $before_adding_catalog_list_all_stockprop + 3);
+
+#delete list after testing
+CXGN::List::delete_list($dbh, $list_id);
 
 #check catalog items
 $mech->post_ok("http://localhost:3010/ajax/catalog/items");
