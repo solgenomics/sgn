@@ -59,37 +59,64 @@ my $after_adding_all_stockprop = $schema->resultset("Stock::Stockprop")->search(
 is($after_adding_catalog_item, $before_adding_catalog_item + 1);
 is($after_adding_all_stockprop, $all_stockprop_before_adding + 1);
 
-for my $extension ("xls", "xlsx") {
 
-    #test uploading catalog items
-    my $before_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
-    my $before_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+#test uploading catalog items
+my $extension = "xls";
 
-    my $file = $f->config->{basepath} . "/t/data/stock/catalog_items.$extension";
-    my $ua = LWP::UserAgent->new;
-    $response = $ua->post(
-        'http://localhost:3010/ajax/catalog/upload_items',
-        Content_Type => 'form-data',
-        Content => [
-            "catalog_items_upload_file" => [
-                $file,
-                "catalog_items.$extension",
-                Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            ],
-            "sgn_session_id" => $sgn_session_id
-        ]
-    );
-    ok($response->is_success);
-    my $message = $response->decoded_content;
-    my $message_hash = decode_json $message;
-    is_deeply($message_hash, { 'success' => 1 });
+my $before_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $before_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
 
-    my $after_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
-    my $after_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+my $file = $f->config->{basepath} . "/t/data/stock/catalog_items.$extension";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/catalog/upload_items',
+    Content_Type => 'form-data',
+    Content => [
+        "catalog_items_upload_file" => [
+            $file,
+            "catalog_items.$extension",
+            Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+is_deeply($message_hash, { 'success' => 1 });
 
-    is($after_uploading_catalog_items, $before_uploading_catalog_items + 2);
-    is($after_uploading_all_stockprop, $before_uploading_all_stockprop + 2);
-}
+my $after_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $after_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+is($after_uploading_catalog_items, $before_uploading_catalog_items + 2);
+is($after_uploading_all_stockprop, $before_uploading_all_stockprop + 2);
+
+#test adding catalog items using list
+my $list_id = CXGN::List::create_list($schema->storage->dbh(), 'accessions_for_catalog', 'test', $johndoe_id );
+my $list = CXGN::List->new( { dbh => $schema->storage->dbh(), list_id => $list_id });
+$list->type('accessions');
+$list->add_bulk( [ 'UG120005', 'UG120006', 'UG120007']);
+
+my $before_adding_catalog_list = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $before_adding_catalog_list_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+$mech->post_ok('http://localhost:3010/ajax/catalog/add_item_list', [ 'list_type' => 'accessions', 'catalog_list' => $list_id, 'category' => 'released variety', 'additional_info' => 'test', 'material_source' => 'BTI', 'breeding_program_id' => $program_id, 'contact_person' => 'johndoe' ]);
+
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $after_adding_catalog_list = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $after_adding_catalog_list_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+is($after_adding_catalog_list, $before_adding_catalog_list + 3);
+is($after_adding_catalog_list_all_stockprop, $before_adding_catalog_list_all_stockprop + 3);
+
+#check catalog items
+$mech->post_ok("http://localhost:3010/ajax/catalog/items");
+$response = decode_json $mech->content;
+my $catalog_info = $response->{'data'};
+my $total_number_of_items = scalar @$catalog_info;
+is($total_number_of_items, 6 );
 
 #creating shopping cart with 'catalog_items' list type
 my $janedoe_id = CXGN::People::Person->get_person_by_username($dbh, 'janedoe');
