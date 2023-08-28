@@ -21,6 +21,7 @@ extends 'CXGN::BrAPI::v2::Common';
 sub search {
     my $self = shift;
     my $params = shift;
+    my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -45,6 +46,8 @@ sub search {
     my $level_code_arrayref = $params->{observationUnitLevelCode} || ($params->{observationUnitLevelCodes} || ());
     my $levels_relation_arrayref = $params->{observationLevelRelationships} || ();
     my $levels_arrayref = $params->{observationLevels} || ();
+    my $reference_ids_arrayref = $params->{externalReferenceId} || $params->{externalReferenceID} || ($params->{externalReferenceIds} || $params->{externalReferenceIDs} || ());
+    my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
     
     my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
@@ -65,14 +68,6 @@ sub search {
     }
     my $page_obj = CXGN::Page->new();
     my $main_production_site_url = $page_obj->get_hostname();
-
-    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-        bcs_schema => $self->bcs_schema,
-        table_name => 'stock',
-        table_id_key => 'stock_id',
-        id => $observation_unit_db_id
-    });
-    my $reference_result = $references->search();
 
     my $lt = CXGN::List::Transform->new();
     
@@ -99,7 +94,11 @@ sub search {
             plot_list=>$observation_unit_db_id,
             limit=>$limit,
             offset=>$offset,
+            # Order by plot_number, account for non-numeric plot numbers
+            order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::int' : undef,
             observation_unit_names_list=>$observation_unit_names_list,
+            xref_id_list=>$reference_ids_arrayref,
+            xref_source_list=>$reference_sources_arrayref
             # phenotype_min_value=>$phenotype_min_value,
             # phenotype_max_value=>$phenotype_max_value,
             # exclude_phenotype_outlier=>$exclude_phenotype_outlier
@@ -238,9 +237,14 @@ sub search {
         if ($replicate) {
             push @observationLevelRelationships, {
                 levelCode => $replicate,
+                levelName => "rep",
+                levelOrder => _order("replicate"),
+            };
+            push @observationLevelRelationships, {
+                levelCode => $replicate,
                 levelName => "replicate",
                 levelOrder => _order("replicate"),
-            }
+            };
         }
         if ($block) {
             push @observationLevelRelationships, {
@@ -283,28 +287,14 @@ sub search {
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
         #Get external references
-        my @references;
-
-        if (%$reference_result{$obs_unit->{observationunit_stock_id}}){
-            foreach (@{%$reference_result{$obs_unit->{observationunit_stock_id}}}){
-                my $reference_source = $_->[0] || undef;
-                my $url = $_->[1];
-                my $accession = $_->[2];
-                my $reference_id;
-
-                if($reference_source eq 'DOI') { 
-                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
-                } else {
-                    $reference_id = ($accession) ? "$url$accession" : $url;
-                }
-
-                push @references, {
-                    referenceID => $reference_id,
-                    referenceSource => $reference_source
-                };
-                
-            }
-        }
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            table_name => 'stock',
+            table_id_key => 'stock_id',
+            id => qq|$obs_unit->{observationunit_stock_id}|
+        });
+        my $external_references = $references->search();
+        my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
         my @plot_image_ids;
 			eval {
@@ -321,7 +311,7 @@ sub search {
         
 
         push @data_window, {
-            externalReferences => \@references,
+            externalReferences => @formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
@@ -444,8 +434,9 @@ sub observationunits_update {
             if($_->{levelName} eq 'block'){
                 $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
             }
-            if($_->{levelName} eq 'replicate'){
+            if($_->{levelName} eq 'replicate' || $_->{levelName} eq 'rep'){
                 $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
+                $_->{levelName} = 'replicate';
             }
         }
         if (defined $raw_additional_info) {
@@ -573,7 +564,7 @@ sub observationunits_update {
         if ($observationUnit_x_ref){
             my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                 bcs_schema => $self->bcs_schema,
-                table_name => 'Stock::StockDbxref',
+                table_name => 'stock',
                 table_id_key => 'stock_id',
                 external_references => $observationUnit_x_ref,
                 id => $observation_unit_db_id
@@ -646,6 +637,7 @@ sub observationunits_store {
         my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
         my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
         my $ou_level = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
+        my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $raw_additional_info = $params->{additionalInfo} || undef;
         my %specific_keys = map { $_ => 1 } ("observationUnitParent","control");
         my %additional_info;
@@ -685,8 +677,9 @@ sub observationunits_store {
             if($_->{levelName} eq 'block'){
                 $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
             }
-            if($_->{levelName} eq 'replicate'){
+            if($_->{levelName} eq 'replicate' || $_->{levelName} eq 'rep'){
                 $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
+                $_->{levelName} = 'replicate';
             }
         }
 
@@ -706,19 +699,20 @@ sub observationunits_store {
             }
 
             $plot_hash = {
-                plot_name => $plot_parent_name,
-                plant_names => [$plot_name],
+                plot_name       => $plot_parent_name,
+                plant_names     => [ $plot_name ],
                 # accession_name => $accession_name,
-                stock_name => $accession_name,
-                plot_number => $plot_number,
-                block_number => $block_number,
-                is_a_control => $is_a_control,
-                rep_number => $rep_number,
-                range_number => $range_number,
-                row_number => $row_number,
-                col_number => $col_number,
+                stock_name      => $accession_name,
+                plot_number     => $plot_number,
+                block_number    => $block_number,
+                is_a_control    => $is_a_control,
+                rep_number      => $rep_number,
+                range_number    => $range_number,
+                row_number      => $row_number,
+                col_number      => $col_number,
                 # plot_geo_json => $plot_geo_json,
-                additional_info => \%additional_info
+                additional_info => \%additional_info,
+                external_refs   => $observationUnit_x_ref
             };
         } else {
             $plot_hash = {
@@ -733,7 +727,8 @@ sub observationunits_store {
                 row_number => $row_number,
                 col_number => $col_number,
                 # plot_geo_json => $plot_geo_json,
-                additional_info => \%additional_info
+                additional_info => \%additional_info,
+                external_refs   => $observationUnit_x_ref
             };
         }
 
@@ -810,7 +805,21 @@ sub observationunits_store {
                     $param{experiment_type} = 'field_layout';
                 }
                 my $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
-                $trial_layout->generate_and_cache_layout();
+                my $design = $trial_layout->generate_and_cache_layout();
+
+                foreach my $plot_num (keys %{$design}) {
+                    my $observationUnit_x_ref = $study->{$plot_num}->{external_refs};
+                    if ($observationUnit_x_ref){
+                        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                            bcs_schema => $self->bcs_schema,
+                            table_name => 'stock',
+                            table_id_key => 'stock_id',
+                            external_references => $observationUnit_x_ref,
+                            id => $design->{$plot_num}->{plot_id}
+                        });
+                        my $reference_result = $references->store();
+                    }
+                }
             }
         }
     };
@@ -847,12 +856,12 @@ sub _refresh_matviews {
     # Refresh materialized view so data can be retrieved
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     # Wait until materialized view is reset. Wait 5 minutes total, then throw an error
-    my $refreshing = 0;
+    my $refreshing = 1;
     my $refresh_time = 0;
     while ($refreshing && $refresh_time < $timeout) {
         my $refresh_status = $bs->matviews_status();
-        if ($refresh_status->{timestamp}) {
-            $refreshing = 1;
+        if (!$refresh->{connection}->alive) {
+            $refreshing = 0;
         } elsif ($refresh_time >= $timeout) {
             return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, "Refreshing materialized views is taking too long to return a response", 500)};
         } else {

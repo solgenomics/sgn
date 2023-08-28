@@ -374,9 +374,9 @@ sub refresh_matviews {
             }
 
             if ($refresh_finished) {
-                return { message => $materialized_view.' update completed!' };
+                return { message => $materialized_view . ' update completed!', connection => $async_refresh };
             } else {
-                return { message => $materialized_view.' update initiated.' };
+                return { message => $materialized_view.' update initiated.', connection => $async_refresh  };
             }
         } catch {
             print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";

@@ -271,6 +271,17 @@ sub _authenticate_user {
 		$server_permission{$wildcard} = 1;
 	}
 
+	# Check if there is a config for default brapi user. This will be overwritten if a token is passed.
+	# Will still throw error if auth is required
+	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
+		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+		$user_type = $c->config->{brapi_default_user_role};
+		if (! defined $user_id) {
+			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
+			_standard_response_construction($c, $brapi_package_result, 500);
+		}
+	}
+
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
 	# authentication or serverinfo call method request auth, we authenticate.
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
@@ -578,9 +589,24 @@ sub observation_levels_GET {
 sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }
 
 sub seasons_POST {
-    my $self = shift;
-    my $c = shift;
-    seasons_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	my ($auth, $user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $postedData = $clean_inputs;
+	my @data;
+	foreach my $season (values %{$postedData}) {
+		push @data, {
+			seasonDbId=>$season->{year},
+			season=>undef,
+			year=>$season->{year}
+		}
+	}
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response(scalar(@data), scalar(@data), 1);
+	my %result = (data=>\@data);
+	my @data_files;
+	my $status;
+	_standard_response_construction($c, CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, "Season created successfully"));
 }
 
 sub seasons_GET {
@@ -1023,6 +1049,7 @@ sub trials_search_process {
 		searchDateRangeEnd  => $clean_inputs->{searchDateRangeEnd},
 		trialPUIs => $clean_inputs->{trialPUI},
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceIds => $clean_inputs->{externalReferenceId},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		active  => $clean_inputs->{active},
 		commonCropNames  => $clean_inputs->{commonCropName},
@@ -1698,11 +1725,16 @@ sub lists : Chained('brapi') PathPart('lists') Args(0) : ActionClass('REST') { }
 sub lists_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c,1);
+	my ($auth,$user_id) = _authenticate_user($c, $c->config->{brapi_lists_require_login});
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
-	my $brapi_package_result = $brapi_module->search($clean_inputs,$user_id);
+	my $brapi_package_result;
+	if($c->config->{brapi_lists_require_login}) {
+		$brapi_package_result = $brapi_module->search($clean_inputs, $user_id, 1);
+	} else {
+		$brapi_package_result = $brapi_module->search($clean_inputs, undef, 0);
+	}
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -1902,7 +1934,8 @@ sub programs_list_POST {
 	}
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
-	my $brapi_package_result = $brapi_module->store(\@all_programs,$user_id);
+
+	my $brapi_package_result = $brapi_module->store(\@all_programs, $user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -1953,6 +1986,7 @@ sub programs_detail_PUT {
 	my $self = shift;
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	$data->{programDbId} = $c->stash->{program_id};
@@ -2669,7 +2703,7 @@ sub observation_units_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
+	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs}, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2678,7 +2712,7 @@ sub observation_units_POST {
 	my $self = shift;
 	my $c = shift;
 	# The observation units need an operator, so login required
-	my $force_authenticate = 1;
+	my $force_authenticate = $c->config->{brapi_observation_units_require_login};
 	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
@@ -2707,7 +2741,8 @@ sub observation_units_PUT {
 
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	my $force_authenticate = $c->config->{brapi_observation_units_require_login};
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my %data = %$clean_inputs;
     my @all_units;
@@ -2934,7 +2969,7 @@ sub traits_list_GET {
 	my $brapi_package_result = $brapi_module->list({
         trait_ids => $clean_inputs->{traitDbIds},
         names => $clean_inputs->{names}
-    });
+    }, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2958,7 +2993,7 @@ sub trait_detail_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Traits');
 	my $brapi_package_result = $brapi_module->detail(
-		$c->stash->{trait_id}
+		$c->stash->{trait_id}, $c
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -3299,6 +3334,7 @@ sub locations_detail_PUT {
 	my $c = shift;
 	my $location_id = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	my @all_locations;
@@ -3430,6 +3466,53 @@ sub variables_search_retrieve : Chained('brapi') PathPart('search/variables') Ar
 
 sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : ActionClass('REST') { }
 
+# Endpoint for POST variables
+sub observationvariable_list_POST {
+	my $self = shift;
+	my $c = shift;
+
+	my $can_post_variables = $c->config->{brapi_post_variables};
+	if (not $can_post_variables){
+		my $error = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to post Observation Variables");
+		_standard_response_construction($c, $error, 404);
+	}
+
+	my $force_authenticate = $c->config->{brapi_variables_require_login};
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
+
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	_validate_request($c, 'ARRAY', $data, [
+		'observationVariableName',
+		{'scale' => ['dataType', 'scaleName']},
+		{'method' => ['methodName', 'methodClass']},
+		{'trait' => ['traitName', 'status']}
+	]);
+
+	my $response;
+	try {
+		my @all_variables;
+		foreach my $variable (values %{$data}) {
+			push @all_variables, $variable;
+		}
+
+		my $brapi = $self->brapi_module;
+		my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+		$response = $brapi_module->store(\@all_variables, $c);
+	} catch {
+		if ($_->isa('CXGN::BrAPI::Exceptions::ConflictException')){
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], $_->message);
+			_standard_response_construction($c, $error, 409);
+		} else {
+			warn Dumper($_);
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], "An unknown error has occurred.");
+			_standard_response_construction($c, $error, 500);
+		}
+	};
+
+	_standard_response_construction($c, $response);
+}
+
 sub observationvariable_list_GET {
 	my $self = shift;
 	my $c = shift;
@@ -3464,6 +3547,44 @@ sub observationvariable_detail_GET {
 		$trait_id,$c
 	);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+# Endpoint for PUT variables
+sub observationvariable_detail_PUT {
+	my $self = shift;
+	my $c = shift;
+	my $variableDbId = shift;
+	my $force_authenticate = $c->config->{brapi_variables_require_login};
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
+
+	my $can_put_variables = $c->config->{brapi_put_variables};
+	if (not $can_put_variables){
+		my $error = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to update Observation Variables");
+		_standard_response_construction($c, $error, 404);
+	}
+
+	my $response;
+	try {
+		my $clean_inputs = $c->stash->{clean_inputs};
+		#TODO: Parse into a trait object to check bad requests
+		my $data = $clean_inputs;
+		$data->{observationVariableDbId} = $variableDbId;
+
+		my $brapi = $self->brapi_module;
+		my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+		$response = $brapi_module->update($data,$c);
+	} catch {
+		warn Dumper($_);
+		if ($_->isa('CXGN::BrAPI::Exceptions::NotFoundException')){
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], $_->message);
+			_standard_response_construction($c, $error, 404);
+		} else {
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], "An unknown error has occurred.");
+			_standard_response_construction($c, $error, 500);
+		}
+	};
+
+	_standard_response_construction($c, $response);
 }
 
 
@@ -3786,7 +3907,7 @@ sub observations_PUT {
 	my $version = $c->request->captures->[0];
 	my $brapi_package_result;
 	if ($version eq 'v2'){
-		my $force_authenticate = 1;
+		my $force_authenticate = $c->config->{brapi_observations_require_login};
 		my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
 	    my $clean_inputs = $c->stash->{clean_inputs};
 	    my %observations = %$clean_inputs;
@@ -3844,7 +3965,7 @@ sub observations_GET {
 sub observations_POST {
 	my $self = shift;
 	my $c = shift;
-    my $force_authenticate = 1;
+    my $force_authenticate = $c->config->{brapi_observations_require_login};
 	my ($auth,$user_id,$user_type) = _authenticate_user($c, $force_authenticate);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
@@ -3930,9 +4051,9 @@ sub observations_detail_PUT {
 sub observation_search_save : Chained('brapi') PathPart('search/observations') Args(0) : ActionClass('REST') { }
 
 sub observation_search_save_POST {
-    my $self = shift;
-    my $c = shift;
-    save_results($self,$c,$c->stash->{clean_inputs},'Observations');
+   my $self = shift;
+   my $c = shift;
+   save_results($self,$c,$c->stash->{clean_inputs},'Observations');
 }
 
 sub observation_search_retrieve  : Chained('brapi') PathPart('search/observations') Args(1) {
@@ -3949,7 +4070,7 @@ sub save_observation_results {
     my $version = shift;
 
 	# Check that the user is a user. We don't check other permissions for now.
-	my $force_authenticate = 1;
+	my $force_authenticate = $c->config->{brapi_observations_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
 	my $dbh = $c->dbc->dbh;
@@ -4376,7 +4497,7 @@ sub images_POST {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 1;
+	my $force_authenticate = $c->config->{brapi_images_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -4422,7 +4543,7 @@ sub images_single_PUT {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 1;
+	my $force_authenticate = $c->config->{brapi_images_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -4450,7 +4571,7 @@ sub image_content_store_PUT {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 0;
+	my $force_authenticate = $c->config->{brapi_images_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
@@ -5452,7 +5573,7 @@ sub save_results {
     my $results_module = $brapi->brapi_wrapper('Results');
     my $brapi_package_result = $results_module->save_results($tempfile, $search_result, $search_type);
 
-    _standard_response_construction($c, $brapi_package_result);
+    _standard_response_construction($c, $brapi_package_result, 202);
 }
 
 sub retrieve_results {

@@ -8,6 +8,8 @@ use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
 use Encode;
+use CXGN::BrAPI::v2::ExternalReferences;
+use Try::Tiny;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -27,6 +29,11 @@ has 'name' => (
 has 'description' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
+);
+
+has 'external_references' => (
+    isa => 'ArrayRef[HashRef[Str]]',
+    is  => 'ro',
 );
 
 
@@ -52,7 +59,21 @@ sub get_breeding_programs {
 
     my @projects;
     while (my $row = $rs->next()) {
-	push @projects, [ $row->project_id, $row->name, $row->description ];
+
+        my @project_array = ($row->project_id);
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->schema,
+            table_name => 'project',
+            table_id_key => 'project_id',
+            id => \@project_array
+        });
+        my $external_references = $references->search();
+        my @external_references_array;
+        foreach my $values (values %{$external_references}) {
+            push @external_references_array, $values;
+        }
+
+	    push @projects, [ $row->project_id, $row->name, $row->description, @external_references_array ];
     }
 
     return \@projects;
@@ -475,6 +496,7 @@ sub store_breeding_program {
     my $id = $self->id();
     my $name = $self->name();
     my $description = $self->description();
+    my $external_references = $self->external_references();
 
     my $type_id = $self->get_breeding_program_cvterm_id();
 
@@ -484,7 +506,9 @@ sub store_breeding_program {
 
     my $existing_name_rs = $schema->resultset("Project::Project")->search({ name => $name });
     if (!$id && $existing_name_rs->count() > 0) {
-        return { error => "A breeding program with name '$name' already exists." };
+        return { error => "A breeding program with name '$name' already exists.",
+            nameExists => 1
+        };
     }
 
     # Add new program if no id supplied
@@ -512,6 +536,23 @@ sub store_breeding_program {
 
                 });
             $prop_row->insert();
+
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $self->schema,
+                    external_references => $external_references,
+                    table_name          => 'project',
+                    table_id_key         => 'project_id',
+                    id             => $id
+                });
+
+                $references->store();
+
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
+            }
         }
         catch {
             $error =  $_;
@@ -546,6 +587,23 @@ sub store_breeding_program {
 
             $row->insert();
             $id = $row->project_id();
+
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $self->schema,
+                    external_references => $external_references,
+                    table_name          => 'project',
+                    table_id_key         => 'project_id',
+                    id             => $id
+                });
+
+                $references->store();
+
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
+            }
 
         }
         catch {
