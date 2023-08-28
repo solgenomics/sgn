@@ -1616,13 +1616,6 @@ sub get_cached_file_VCF {
         my %unique_germplasm;
         my @protocol_names;
 
-         if (!$protocol_ids->[0]) {
-            if ($self->markerprofile_id_list()) {
-                my $protocol_id = $self->get_protocol_id_from_genotype_id($self->markerprofile_id_list());                
-                push @$protocol_ids,  $protocol_id;
-            }
-        }
-
         foreach (@$protocol_ids) {
             my $protocol = CXGN::Genotype::Protocol->new({
                 bcs_schema => $self->bcs_schema,
