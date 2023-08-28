@@ -178,6 +178,8 @@ jQuery(document).ready( function() {
         var default_material_type = document.getElementById("edit_material_type").getAttribute("value");
         jQuery('#edit_material_type option[value="'+default_material_type+'"]').prop("selected", true);
 
+        var default_availability = document.getElementById("edit_availability").getAttribute("value");
+        jQuery('#edit_availability option[value="'+default_availability+'"]').prop("selected", true);
 
     });
 
