@@ -5,6 +5,7 @@ use Data::Dumper;
 use Bio::Chado::Schema;
 use CXGN::Trial;
 use CXGN::Trial::TrialLookup;
+use CXGN::Trial::Search;
 use Math::Round::Var;
 use File::Temp 'tempfile';
 use Text::CSV;
@@ -4898,6 +4899,65 @@ sub update_trial_design_type_POST : Args(0) {
 
     return;
 
+}
+
+#
+# GET LINKED FIELD TRIALS
+# Get additional field trials that share the same physical field (to display together in the plot layout tool)
+# A linked trial: shares the same year, the same location, and the location type is 'Field'
+# path param: trial id
+# return:
+#   error: error message
+#   trials: list of linked trials
+#       trial_id: id of trial
+#       trial_name: name of trial
+#       ...
+#
+sub get_linked_field_trials : Chained('trial') PathPart('linked_field_trials') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->stash->{trial_id};
+    my $trial_location = $c->stash->{trial}->get_location();
+    my $trial_location_id = $trial_location->[0];
+    my $trial_year = $c->stash->{trial}->get_year();
+
+    # Check Trial Location: ensure that it is a "field" type location
+    my $locations = CXGN::Trial::get_all_locations($schema);
+    foreach my $l (@$locations) {
+        if ( $l->[0] eq $trial_location_id ) {
+            my $location_type = $l->[8];
+            if ( $location_type ne "Field" ) {
+                $c->stash->{rest} = { error => "The location for this trial is a \"$location_type\" location.  In order to group trials together: they must share the same year, the same location, and the location type must be \"Field\"" };
+                return;
+            }
+        }
+    }
+
+    # Get Trials that share the same year and location
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema => $schema,
+        location_id_list => [$trial_location_id],
+        year_list => [$trial_year],
+        field_trials_only => 1
+    });
+    my ($data, $total_count) = $trial_search->search();
+
+    # Parse Results
+    my @rtn;
+    foreach my $t (@$data) {
+        push(@rtn, $t);
+    }
+
+    # No matches found...
+    if ( scalar(@rtn) == 0 ) {
+        $c->stash->{rest} = { error => "No linked Trials found.  In order to group trials together: they must share the same year, the same location, and the location type must be \"Field\"" };
+        return;
+    }
+
+    # Return the matches...
+    $c->stash->{rest} = { trials => \@rtn };
+    return;
 }
 
 
