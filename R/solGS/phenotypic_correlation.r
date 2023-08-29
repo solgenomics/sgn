@@ -47,9 +47,8 @@ if ( length(refererQtl) != 0 ) {
 
    phenoData <- data.frame(fread(phenoDataFile,
 				header=TRUE,
-                                   sep=",",
-                                   na.strings=c("NA", "-", " ", ".", "..")
-                                   ))
+        sep=",",
+        na.strings=c("NA", "-", " ", ".", "..")))
 }
 # else {
 #
@@ -95,71 +94,45 @@ if (length(refererQtl) == 0  ) {
 
 }
 
-# if (!is.null(correPhenoData) && length(refererQtl) == 0) {
-
-#     for (i in allTraitNames) {
-#       if (class(correPhenoData[, i]) != 'numeric') {
-#           correPhenoData[, i] <- as.numeric(as.character(correPhenoData[, i]))
-#       }
-
-#       if (all(is.nan(correPhenoData[, i]))) {
-#           correPhenoData[, i] <- sapply(correPhenoData[, i], function(x) ifelse(is.numeric(x), x, NA))
-#       }
-
-#       if (sum(is.na(correPhenoData[,i])) > (0.5 * nrow(correPhenoData))) {
-#           correPhenoData$i <- NULL
-#           naTraitNames <- c(naTraitNames, i)
-#           message('dropped trait ', i, ' no of missing values: ', sum(is.na(correPhenoData[,i])))
-#       }
-#   }
-# }
-
-# correPhenoData <- correPhenoData[, colSums(is.na(correPhenoData)) < nrow(correPhenoData) ]
-# filteredTraits <- allTraitNames[!allTraitNames %in% naTraitNames]
-
 coefpvalues <- rcor.test(correPhenoData,
                          method="pearson",
                          use="pairwise"
                          )
+
 coefficients <- coefpvalues$cor.mat
-allcordata   <- coefpvalues$cor.mat
-
-allcordata[lower.tri(allcordata)] <- coefpvalues$p.values[, 3]
-diag(allcordata) <- 1.00
-
-pvalues <- as.matrix(allcordata)
-pvalues <- round(pvalues, 2)
-
-coefficients <- round(coefficients, 3)
-allcordata   <- round(allcordata, 3)
-
 #remove rows and columns that are all "NA"
 if (apply(coefficients, 1, function(x)any(is.na(x))) ||
     apply(coefficients, 2, function(x)any(is.na(x))))
   {
-
-    coefficients<-coefficients[-which(apply(coefficients, 1, function(x)all(is.na(x)))),
+    coefficients <- coefficients[-which(apply(coefficients, 1, function(x)all(is.na(x)))),
                                -which(apply(coefficients, 2, function(x)all(is.na(x))))]
   }
-
-
-pvalues[upper.tri(pvalues)]           <- NA
+coefficients <- round(coefficients, 3)
 coefficients[upper.tri(coefficients)] <- NA
 coefficients <- data.frame(coefficients)
 
-coefficients2json <- coefficients
-names(coefficients2json) <- NULL
+pvalues <- coefpvalues$cor.mat
+pvalues[lower.tri(pvalues)] <- coefpvalues$p.values[, 3]
+pvalues <- round(pvalues, 3)
+pvalues[upper.tri(pvalues)] <- NA
+pvalues <- data.frame(pvalues)
+
+allcordata   <- coefpvalues$cor.mat
+allcordata[upper.tri(allcordata)] <- coefpvalues$p.values[, 3]
+diag(allcordata) <- 1
+allcordata   <- round(allcordata, 3)
 
 traits <- colnames(coefficients)
 
 correlationList <- list(
                      labels = traits,
-                     values  = coefficients
+                    values  = coefficients,
+                    pvalues = pvalues
                    )
 
 correlationJson <- jsonlite::toJSON(correlationList)
 
-write.table(coefficients,
+write.table(allcordata,
        file = correCoefficientsFile,
        sep  = "\t",
        row.names = TRUE,
@@ -169,14 +142,5 @@ write.table(coefficients,
 write(correlationJson,
        file = correCoefficientsJsonFile)
 
-## if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
-##   fwrite(formattedPhenoData,
-##          file      = formattedPhenoFile,
-##          sep       = "\t",
-##          row.names = TRUE,
-##          quote     = FALSE,
-##          )
-## }
-
-
+message("Done running correlation.")
 q(save = "no", runLast = FALSE)
