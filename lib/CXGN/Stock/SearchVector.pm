@@ -413,7 +413,7 @@ sub search {
     my $using_stockprop_filter;
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
         $using_stockprop_filter = 1;
-        #print STDERR Dumper $self->stockprops_values;
+
         my @stockprop_wheres;
         foreach my $term_name (keys %{$self->stockprops_values}){
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
@@ -475,130 +475,138 @@ sub search {
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
     }
+
+    my $skip_next = 0;
     if ( scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
+    } elsif ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0 && scalar(@stockprop_filtered_stock_ids)<1){
+        #skip since stockprop value privided and not found
+        $skip_next = 1;
     }
 
-    my $rs = $schema->resultset("Stock::Stock")->search(
-    $search_query,
-    {
-        join => ['type', 'organism', 'stockprops', $stock_join],
-        '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
-        '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
-        order_by  => 'me.name',
-        distinct=>1
-    });
-
-    my $records_total = $rs->count();
-    if (defined($limit) && defined($offset)){
-        $rs = $rs->slice($offset, $limit);
-    }
-
-    my $owners_hash;
-    if (!$self->minimal_info){
-        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-        $owners_hash = $stock_lookup->get_owner_hash_lookup();
-    }
-
+    #skip rest of query if no results
     my @result;
-    my %result_hash;
-    my @result_stock_ids;
-    while (my $a = $rs->next()) {
-        my $uniquename  = $a->uniquename;
-        my $stock_id    = $a->stock_id;
-        push @result_stock_ids, $stock_id;
+    my $records_total = 0;
+    if ($skip_next < 1){
+        my $rs = $schema->resultset("Stock::Stock")->search(
+        $search_query,
+        {
+            join => ['type', 'organism', 'stockprops', $stock_join],
+            '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
+            '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
+            order_by  => 'me.name',
+            distinct=>1
+        });
 
+        $records_total = $rs->count();
+        if (defined($limit) && defined($offset)){
+            $rs = $rs->slice($offset, $limit);
+        }
+
+        my $owners_hash;
         if (!$self->minimal_info){
-            # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
-            my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
-            my $type_id     = $a->type_id ;
-            my $type        = $a->get_column('cvterm_name');
-            my $organism_id = $a->organism_id;
-            my $species    = $a->get_column('species');
-            my $stock_name  = $a->name;
-            my $common_name = $a->get_column('common_name');
-            my $genus       = $a->get_column('genus');
-
-            $result_hash{$stock_id} = {
-                stock_id => $stock_id,
-                uniquename => $uniquename,
-                stock_name => $stock_name,
-                stock_type => $type,
-                stock_type_id => $type_id,
-                species => $species,
-                genus => $genus,
-                common_name => $common_name,
-                organism_id => $organism_id,
-                owners => \@owners,
-            };
-        } else {
-            $result_hash{$stock_id} = {
-                stock_id => $stock_id,
-                uniquename => $uniquename
-            };
+            my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+            $owners_hash = $stock_lookup->get_owner_hash_lookup();
         }
-    }
-    #print STDERR Dumper \%result_hash;
 
-    # Comma separated list of query placeholders for the result stock ids
-    my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
-    
-    # Get additional stock properties (pedigree, synonyms, donor info)
-    my $stock_query = "SELECT stock_id, uniquename, organism_id, stock_synonym
-        FROM materialized_stockprop
-        WHERE stock_id IN ($id_ph);";
-    my $sth = $schema->storage()->dbh()->prepare($stock_query);
-    $sth->execute(@result_stock_ids);
-    
-    # Add additional organism and stock properties to the result hash for each stock
-    while (my @r = $sth->fetchrow_array()) {
-        my $stock_id = $r[0];
-        my $organism_id = $r[2];
-        my $syn_json = $r[3] ? decode_json(encode("utf8",$r[3])) : {};
-        my @synonyms = sort keys %{$syn_json};
+        
+        my %result_hash;
+        my @result_stock_ids;
+        while (my $a = $rs->next()) {
+            my $uniquename  = $a->uniquename;
+            my $stock_id    = $a->stock_id;
+            push @result_stock_ids, $stock_id;
 
-        # add stock props to the result hash
-        $result_hash{$stock_id}{synonyms} = \@synonyms;
-    }
+            if (!$self->minimal_info){
+                # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
+                my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
+                my $type_id     = $a->type_id ;
+                my $type        = $a->get_column('cvterm_name');
+                my $organism_id = $a->organism_id;
+                my $species    = $a->get_column('species');
+                my $stock_name  = $a->name;
+                my $common_name = $a->get_column('common_name');
+                my $genus       = $a->get_column('genus');
 
-    if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
-        my @stockprop_view = keys %{$self->stockprop_columns_view};
-        my $result_stock_ids_sql = join ",", @result_stock_ids;
-        my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
-
-        $self->_refresh_materialized_stockprop(\@stockprop_view);
-
-        my $stockprop_select_sql .= ', "' . join ('","', @stockprop_view) . '"';
-        my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
-        my $h = $schema->storage->dbh()->prepare($stockprop_query);
-        $h->execute();
-        while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
-            for my $s (0 .. scalar(@stockprop_view)-1){
-                # my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
-                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json(encode("utf8",$stockprop_select_return[$s])) : {};
-                my @stockprop_vals_string;
-                foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
-                    push @stockprop_vals_string, $_;
-                }
-                my $stockprop_vals_string = join ',', @stockprop_vals_string;
-                $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
+                $result_hash{$stock_id} = {
+                    stock_id => $stock_id,
+                    uniquename => $uniquename,
+                    stock_name => $stock_name,
+                    stock_type => $type,
+                    stock_type_id => $type_id,
+                    species => $species,
+                    genus => $genus,
+                    common_name => $common_name,
+                    organism_id => $organism_id,
+                    owners => \@owners,
+                };
+            } else {
+                $result_hash{$stock_id} = {
+                    stock_id => $stock_id,
+                    uniquename => $uniquename
+                };
             }
         }
 
-        while (my ($uniquename, $info) = each %result_hash){
-            foreach (@stockprop_view){
-                if (!$info->{$_}){
-                    $info->{$_} = '';
+        # Comma separated list of query placeholders for the result stock ids
+        my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
+        
+        # Get additional stock properties (pedigree, synonyms, donor info)
+        my $stock_query = "SELECT stock_id, uniquename, organism_id, stock_synonym
+            FROM materialized_stockprop
+            WHERE stock_id IN ($id_ph);";
+        my $sth = $schema->storage()->dbh()->prepare($stock_query);
+        $sth->execute(@result_stock_ids);
+        
+        # Add additional organism and stock properties to the result hash for each stock
+        while (my @r = $sth->fetchrow_array()) {
+            my $stock_id = $r[0];
+            my $organism_id = $r[2];
+            my $syn_json = $r[3] ? decode_json(encode("utf8",$r[3])) : {};
+            my @synonyms = sort keys %{$syn_json};
+
+            # add stock props to the result hash
+            $result_hash{$stock_id}{synonyms} = \@synonyms;
+        }
+
+        if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
+            my @stockprop_view = keys %{$self->stockprop_columns_view};
+            my $result_stock_ids_sql = join ",", @result_stock_ids;
+            my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
+
+            $self->_refresh_materialized_stockprop(\@stockprop_view);
+
+            my $stockprop_select_sql .= ', "' . join ('","', @stockprop_view) . '"';
+            my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
+            my $h = $schema->storage->dbh()->prepare($stockprop_query);
+            $h->execute();
+            while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
+                for my $s (0 .. scalar(@stockprop_view)-1){
+                    # my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
+                    my $stockprop_vals = $stockprop_select_return[$s] ? decode_json(encode("utf8",$stockprop_select_return[$s])) : {};
+                    my @stockprop_vals_string;
+                    foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
+                        push @stockprop_vals_string, $_;
+                    }
+                    my $stockprop_vals_string = join ',', @stockprop_vals_string;
+                    $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
+                }
+            }
+
+            while (my ($uniquename, $info) = each %result_hash){
+                foreach (@stockprop_view){
+                    if (!$info->{$_}){
+                        $info->{$_} = '';
+                    }
                 }
             }
         }
+
+        foreach (sort keys %result_hash){
+            push @result, $result_hash{$_};
+        }
     }
 
-    foreach (sort keys %result_hash){
-        push @result, $result_hash{$_};
-    }
-
-    #print STDERR Dumper \@result;
     print STDERR "CXGN::Stock::SearchVector search end\n";
     return (\@result, $records_total);
 }
@@ -625,7 +633,6 @@ sub _refresh_materialized_stockprop {
                 push @additional_terms, $_;
             }
         }
-        print STDERR Dumper \@additional_terms;
 
         my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
         my $h = $schema->storage->dbh()->prepare($q);
