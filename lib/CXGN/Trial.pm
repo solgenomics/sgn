@@ -188,7 +188,8 @@ sub get_all_locations {
             id => \@reference_locations
         });
         my $external_references_search = $references->search();
-        my $external_references = $external_references_search->{$s->nd_geolocation_id()};
+        my $external_references = $external_references_search->{$s->nd_geolocation_id()} || [];
+
 
         push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address, $external_references],
     }

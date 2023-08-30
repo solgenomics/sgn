@@ -187,7 +187,7 @@ sub store {
 	    my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	    my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
 		my $raw_additional_info = $params->{additionalInfo} || undef;
-		my $external_references = $params->{externalReferences} || undef;
+		my $external_references = $params->{externalReferences} || [];
 		my %specific_keys = map { $_ => 1 } ("field_size", "plot_width", "plot_length");
 		my %additional_info;
 		if (defined $raw_additional_info) {
@@ -689,7 +689,7 @@ sub _search {
 			id => qq|$_->{trial_id}|,
 		});
 		my $external_references = $references->search();
-		my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+		my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
 
 		my %data_obj = (

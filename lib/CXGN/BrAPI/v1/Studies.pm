@@ -474,7 +474,7 @@ sub studies_observation_variables {
 					reference=>""
 				},
 				name => $trait->name . "|" . $trait->term,
-				observationVariableDbId => $trait_id,
+				observationVariableDbId => $trait->name . "|" . $trait->term,
 				observationVariableName => $trait->name,
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
@@ -698,12 +698,11 @@ sub observation_units {
         }
 
 		# Get the pedigree of the germplasm
-		# TODO: Improve performance and re-enable at some point
-		#my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
+		my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
 		my $pedigree_string = "";
-		#if ($s) {
-		#	$pedigree_string = $s->get_pedigree_string('Parents');
-		#}
+		if ($s) {
+			$pedigree_string = $s->get_pedigree_string('Parents');
+		}
 
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
         push @data_window, {

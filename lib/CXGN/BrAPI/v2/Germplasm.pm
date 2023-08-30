@@ -188,7 +188,7 @@ sub search {
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
             additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne ''? decode_json $_->{'stock_additional_info'} : undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
@@ -241,6 +241,8 @@ sub germplasm_detail {
 
     my @result = _simple_search($self,[$stock_id]);
     my $total_count = scalar(@result);
+
+    print STDERR "germ detail: " . Dumper @result ."\n";
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(@result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
@@ -563,7 +565,7 @@ sub germplasm_mcpd {
             subtaxon=>$_->{subtaxa},
             subtaxonAuthority=>$_->{subtaxaAuthority},
             donorInfo=>\@donors,
-            acquisitionDate=>$_->{'acquisition date'}
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'}
         );
     }
     my $total_count = (%result) ? 1 : 0;
@@ -1087,8 +1089,9 @@ sub _simple_search {
             germplasmPUI=>$_->{donors}->[0]->{germplasmPUI}
         };
         my @synonyms;
-        if($_->{synonyms}){
+        if($_->{synonyms} && scalar @{ $_->{synonyms} } > 0){
             foreach(@{ $_->{synonyms} }){
+                print STDERR "pushing synonym: " . Dumper $_;
                 push @synonyms, {
                     synonym=>$_,
                     type=>undef
@@ -1122,7 +1125,7 @@ sub _simple_search {
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
             additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' ? decode_json $_->{'stock_additional_info'} : undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
@@ -1150,7 +1153,7 @@ sub _simple_search {
             storageTypes=>\@type_of_germplasm_storage_codes,
             subtaxa=>$_->{subtaxa},
             subtaxaAuthority=>$_->{subtaxaAuthority},
-            synonyms=> \@synonyms,
+            synonyms=> @synonyms ? \@synonyms : [],
             taxonIds=>\@taxons,
         };
     }

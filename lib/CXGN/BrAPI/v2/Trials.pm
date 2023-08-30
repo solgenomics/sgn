@@ -152,7 +152,7 @@ sub details {
                 id => $folder_id,
             });
             my $external_references = $references->search();
-            my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+            my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
 			my %result = (
                 active=>JSON::true,
@@ -491,7 +491,7 @@ sub _get_folders {
         id => $self->{'id'},
     });
     my $external_references = $references->search();
-    my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
+    my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
     if(scalar(keys %xref_id_list) > 0 || scalar(keys %xref_source_list) > 0) {
         if(!_xref_match(@formatted_external_references, \%xref_id_list, \%xref_source_list)) {

@@ -57,17 +57,13 @@ sub patch {
         $self->dbh->do(<<EOSQL);
 
  --do your SQL here
-delete from sgn_people.list where list_id in (11, 9, 3, 5, 4, 10, 6, 14, 13, 808, 7, 12, 810, 811, 809, 8);
 alter table sgn_people.list add constraint list_id_unique unique(list_id);
 CREATE TABLE sgn_people.list_dbxref (
-	list_dbxref_id serial4 NOT null,
-	list_id int4 NOT NULL,
-	dbxref_id int4 NOT NULL,
+	list_dbxref_id serial4 NOT null PRIMARY KEY,
+	list_id int4 NOT NULL REFERENCES sgn_people.list(list_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+	dbxref_id int4 NOT NULL REFERENCES public.dbxref(dbxref_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
 	is_current bool NOT NULL DEFAULT true,
-	CONSTRAINT list_dbxref_c1 UNIQUE (list_id, dbxref_id),
-	CONSTRAINT list_dbxref_pkey PRIMARY KEY (list_dbxref_id),
-	CONSTRAINT list_dbxref_dbxref_id_fkey FOREIGN KEY (dbxref_id) REFERENCES public.dbxref(dbxref_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-	CONSTRAINT list_dbxref_stock_id_fkey FOREIGN KEY (list_id) REFERENCES sgn_people.list(list_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+	CONSTRAINT list_dbxref_c1 UNIQUE (list_id, dbxref_id)
 );
 CREATE INDEX IF NOT EXISTS list_dbxref_idx1 ON sgn_people.list_dbxref USING btree (list_id);
 CREATE INDEX IF NOT EXISTS list_dbxref_idx2 ON sgn_people.list_dbxref USING btree (dbxref_id);

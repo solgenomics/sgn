@@ -1,5 +1,3 @@
-name: test breedbase
-
 on:
   pull_request:
     paths-ignore:
@@ -90,9 +88,8 @@ jobs:
   test_breedbase:
     if: false #disabled for now, as testing script is broken
     runs-on: ubuntu-latest
-    needs: [test_docker_build]
     container:
-      image: breedbase/breedbase:v0.69
+      image: breedbase/breedbase:v0.80
       env:
         HOME: /root
         MODE: 'TESTING'
@@ -106,13 +103,10 @@ jobs:
       options: --network-alias test_breedbase
 
     services:
-      breedbase_db11:
+      breedbase_db:
         image: postgres:12.9
-        ports:
-          - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: db
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -149,7 +143,7 @@ jobs:
         run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
 
       - name: Run unit_mech tests
-        run: /entrypoint.sh --nopatch t/unit_mech 2>/dev/null
+        run: /entrypoint.sh --nopatch t/unit_mech
 
       # selenium tests for a moment as separate folders - will change once full solgs are ready 
       # but anyway, it will is still fully functional for tests purpose

@@ -25,7 +25,8 @@ sub search {
     my $reference_ids_arrayref = $params->{externalReferenceId} || $params->{externalReferenceID} || ($params->{externalReferenceIds} || $params->{externalReferenceIDs} || ());
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 	my $list_owner_array_refs = $params->{listOwnerPersonDbIds};
-	my $user_id = $list_owner_array_refs->[0];
+	my $user_id = shift || $list_owner_array_refs->[0];
+	my $brapi_require_login = shift;
 
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -46,7 +47,16 @@ sub search {
 		}
 	}
 
-	$lists = CXGN::List::all_lists($self->bcs_schema()->storage->dbh(),$user_id,$list_type);
+	if($brapi_require_login) {
+		if ($user_id) {
+			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(), $user_id, $list_type);
+		}
+		else {
+			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(), $list_type);
+		}
+	} else {
+		$lists = CXGN::List::all_lists($self->bcs_schema()->storage->dbh(),$user_id,$list_type);
+	}
 
 	my @list_ids;
 	for (@$lists) {

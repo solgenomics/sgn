@@ -127,6 +127,11 @@ has 'xref_source_list' => (
     is => 'rw',
 );
 
+has 'observation_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -267,27 +272,51 @@ sub search {
         push @where_clause, "LOWER(observationunit_uniquename) in ($sql)";
     }
 
+    my @or_clause;
+
     my %trait_list_check;
     my $filter_trait_ids;
-    my @or_clause;
+    my @trait_ids_or;
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
         print STDERR "A trait list was included\n";
         foreach (@{$self->trait_list}){
             if ($_){
                 #print STDERR "Working on trait $_\n";
-                push @or_clause, "observations @> '[{\"trait_id\" : $_}]'";
+                push @trait_ids_or, "observations @> '[{\"trait_id\" : $_}]'";
                 $trait_list_check{$_}++;
                 $filter_trait_ids = 1;
             }
         }
+        if($filter_trait_ids) {
+            push @where_clause, "(".join(" OR ", @trait_ids_or).")";
+        }
     }
+
     my $filter_trait_names;
+    my @trait_names_or;
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
             if ($_){
-                push @or_clause, "observations @> '[{\"trait_name\" : \"$_\"}]'";
+                push @trait_names_or, "observations @> '[{\"trait_name\" : \"$_\"}]'";
                 $filter_trait_names = 1;
             }
+        }
+        if($filter_trait_names) {
+            push @where_clause, "(".join(" OR ", @trait_names_or).")";
+        }
+    }
+
+    my $filter_observation_ids;
+    my @observation_ids_or;
+    if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
+        foreach (@{$self->observation_id_list}) {
+            if ($_){
+                push @observation_ids_or, "observations @> '[{\"phenotype_id\" : $_}]'";
+                $filter_observation_ids = 1;
+            }
+        }
+        if($filter_observation_ids) {
+            push @where_clause, "(".join(" OR ", @observation_ids_or).")";
         }
     }
     #if ($self->phenotype_min_value && !$self->phenotype_max_value) {
@@ -321,7 +350,7 @@ sub search {
 
     my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
 
-    # print STDERR "QUERY: $q\n\n";
+    print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
@@ -351,7 +380,7 @@ sub search {
             $ordered_observations{$_->{phenotype_id}} = $_;
         }
 
-        my @return_observations;;
+        my @return_observations;
         foreach my $pheno_id (sort keys %ordered_observations){
             my $o = $ordered_observations{$pheno_id};
             my $trait_name = $o->{trait_name};
@@ -371,6 +400,19 @@ sub search {
                     next;
                 }
             }
+
+            if ($filter_observation_ids){
+                my $skip;
+                foreach (@{$self->observation_id_list}){
+                    if (index($o->{phenotype_id}, $_) == -1) {
+                        $skip = 1;
+                    }
+                }
+                if ($skip){
+                    next;
+                }
+            }
+
             my $phenotype_uniquename = $o->{uniquename};
             $unique_traits{$trait_name}++;
             if ($include_timestamp){

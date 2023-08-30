@@ -109,6 +109,11 @@ has 'year_list' => (
     is => 'rw',
 );
 
+has 'observation_id_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -361,6 +366,12 @@ sub search {
         foreach (@{$self->trait_contains}) {
             push @where_clause, "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text like '%".lc($_)."%'";
         }
+    }
+    if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
+        my $arrayref = $self->observation_id_list;
+        my $sql = join ("','" , @$arrayref);
+        my $phenotype_id_sql = "'" . $sql . "'";
+        push @where_clause, "phenotype.phenotype_id in ($phenotype_id_sql)";
     }
     if ($self->phenotype_min_value && !$self->phenotype_max_value) {
         push @where_clause, "phenotype.value::real >= ".$self->phenotype_min_value;

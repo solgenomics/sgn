@@ -1176,8 +1176,8 @@ jQuery(document).ready(function () {
             jQuery(jobSubmit).appendTo("body");
 
             jQuery("#cluster_submit").dialog({
-              height: 200,
-              width: 400,
+              height: "auto",
+              width: "auto",
               modal: true,
               title: "cluster job submission",
               buttons: {

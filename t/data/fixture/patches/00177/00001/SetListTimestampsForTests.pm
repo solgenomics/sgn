@@ -3,18 +3,18 @@
 
 =head1 NAME
 
-AddNdGeolocationDbXref.pm
+AddListCreateDate.pm
 
 =head1 SYNOPSIS
 
-mx-run AddNdGeolocationDbXref [options] -H hostname -D dbname -u username [-F]
+mx-run AddListCreateDate [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch creates a nd_geolocation_dbxref table to allow projects to store external references for brapi
+This patch add create date to list objects
 
 =head1 AUTHOR
 
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddNdGeolocationDbXref;
+package SetListTimestampsForTests;
 
 use Moose;
 use Try::Tiny;
@@ -40,7 +40,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch creates a nd_geolocation_dbxref table to allow projects to store external references for brapi
+This patch sets the created/modified dates of lists used for testing
 
 
 sub patch {
@@ -57,12 +57,10 @@ sub patch {
         $self->dbh->do(<<EOSQL);
 
  --do your SQL here
-CREATE TABLE IF NOT EXISTS public.nd_geolocation_dbxref (
-	nd_geolocation_dbxref_id int4,
-	nd_geolocation_id int4,
-	dbxref_id int4,
-	is_current bool
-);
+    -- update lists used for tests to have a known create/modified date
+    update sgn_people.list set create_date = to_timestamp('0001-01-01 00:00:00', 'YYYY-MM-DD hh24:mi:ss'),
+    modified_date = to_timestamp('0001-01-01 00:00:00', 'YYYY-MM-DD hh24:mi:ss')
+    where list_id in (11, 9, 3, 5, 4, 10, 6, 14, 13, 808, 7, 12, 810, 811, 809, 8);
 EOSQL
 
         return 1;
