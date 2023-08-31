@@ -185,9 +185,10 @@ sub _remove_external_references {
     my $table = $self->table_name();
     my $table_id = $self->table_id_key();
     my $id = $self->id();
+    my $table_dbxref = sprintf "%s_dbxref", $self->table_name();
 
     # Clear $table_dbxref, we'll leave the dbxref because those can be shared
-    my $delete_table_dbxref_query = "delete from $table\_dbxref where $table_id = $id";
+    my $delete_table_dbxref_query = "delete from $table_dbxref where $table_id = $id";
     $self->bcs_schema->storage()->dbh()->prepare($delete_table_dbxref_query)->execute();
 }
 

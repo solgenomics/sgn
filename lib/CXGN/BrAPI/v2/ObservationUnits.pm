@@ -405,6 +405,9 @@ sub observationunits_update {
 
     foreach my $params (@$data) {
         my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
+        print "assign observation unit dbid\n";
+        print "$observation_unit_db_id";
+        print"\n";
         my $data_level = $params->{observationUnitLevelName}->[0] || 'all';
         my $years_arrayref = $params->{seasonDbId} ? $params->{seasonDbId} : undef;
         my $location_ids_arrayref = $params->{locationDbId} ? $params->{locationDbId} : undef;
@@ -591,7 +594,7 @@ sub observationunits_update {
     my @observation_unit_db_ids;
     foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
-    $self->search($search_params, $c);
+    return $self->search($search_params, $c);
 }
 
 sub _get_existing_germplasm {
