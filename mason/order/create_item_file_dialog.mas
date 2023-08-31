@@ -1,0 +1,50 @@
+<%args>
+
+$order_id
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="modal fade" id="download_item_file_dialog" name="download_item_file_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadItemFileDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="downloadItemFileDialog">Create Ordering Item File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="item_file_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_create_item_file_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="create_item_file_submit" type="button" class="btn btn-primary" >Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+jQuery(document).ready( function() {
+
+var order_id = <% $order_id %>;
+
+jQuery("#download_item_file_button").click( function() {
+
+    jQuery('#download_item_file_dialog').modal('show');
+
+
+});
+
+});
+
+
+
+</script>
