@@ -48,11 +48,12 @@ sub upload_drone_imagery_check_drone_name_GET : Args(0) {
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $drone_name = $c->req->param('drone_run_name');
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my ($user_id, $user_name, $user_role) = _check_user_login_drone_imagery_upload($c, 0, 0, 0);
+
     my $project_rs = $schema->resultset("Project::Project")->search({name=>$drone_name});
     if ($project_rs->count > 0) {
-        $c->stash->{rest} = { error => "Please use a globally unique drone run name! The name you specified has already ben used." };
+        $c->stash->{rest} = { error => "The name you specified has already been used. Try giving the specific time of day for the imaging/rover event." };
         $c->detach();
     }
     else {
@@ -61,16 +62,17 @@ sub upload_drone_imagery_check_drone_name_GET : Args(0) {
     }
 }
 
+#DEPRECATED. USE /drone_imagery/upload_drone_imagery instead!
 sub upload_drone_imagery : Path('/api/drone_imagery/upload_drone_imagery') : ActionClass('REST') { }
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login_drone_imagery_upload($c, 'submitter', 0, 0);
     print STDERR Dumper $c->req->params();
 
     my $selected_trial_id = $c->req->param('drone_run_field_trial_id');
@@ -161,6 +163,8 @@ sub upload_drone_imagery_POST : Args(0) {
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute();
         my ($odm_running_count) = $h->fetchrow_array();
+        $h = undef;
+
         if ($odm_running_count >= $c->config->{opendronemap_max_processes}) {
             $c->stash->{rest} = { error => "There are already the maximum number of OpenDroneMap processes running on this machine! Please check back later when those processes are complete." };
             $c->detach();
@@ -204,6 +208,7 @@ sub upload_drone_imagery_POST : Args(0) {
                 $seen_field_trial_drone_run_dates{$epoch_seconds}++;
             }
         }
+        $drone_run_date_h = undef;
         my $drone_run_date_obj = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
         if (exists($seen_field_trial_drone_run_dates{$drone_run_date_obj->epoch})) {
             $c->stash->{rest} = { error => "An imaging event has already occured on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
@@ -250,6 +255,7 @@ sub upload_drone_imagery_POST : Args(0) {
         my $day_term_string = "day $time_diff_days";
         $h->execute($day_term_string, 'cxgn_time_ontology');
         my ($day_cvterm_id) = $h->fetchrow_array();
+        $h = undef;
 
         if (!$day_cvterm_id) {
             my $new_day_term = $schema->resultset("Cv::Cvterm")->create_with({
@@ -330,6 +336,8 @@ sub upload_drone_imagery_POST : Args(0) {
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $original_image_resize_ratio_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_original_image_resize_ratio', 'project_property')->cvterm_id();
+    my $rotated_image_resize_ratio_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_rotated_image_resize_ratio', 'project_property')->cvterm_id();
 
     my @return_drone_run_band_project_ids;
     my @return_drone_run_band_image_ids;
@@ -425,14 +433,6 @@ sub upload_drone_imagery_POST : Args(0) {
             }
         }
         foreach (@new_drone_run_bands) {
-            my $project_rs = $schema->resultset("Project::Project")->create({
-                name => $_->{name},
-                description => $_->{description},
-                projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $_->{type}}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
-                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
-            });
-            my $selected_drone_run_band_id = $project_rs->project_id();
-
             my $upload_file = $_->{upload_file};
             my $upload_original_name = $upload_file->filename();
             my $upload_tempfile = $upload_file->tempname;
@@ -457,17 +457,39 @@ sub upload_drone_imagery_POST : Args(0) {
             unlink $upload_tempfile;
             print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
-            my ($check_image_width, $check_image_height) = imgsize($archived_filename_with_path);
-            if ($check_image_width > 16384) {
-                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --width 16384';
-                print STDERR Dumper $cmd_resize;
-                my $status_resize = system($cmd_resize);
+            my @original_image_resize_ratio = (1,1);
+            if ($c->config->{drone_imagery_allow_resize}) {
+                my ($check_image_width, $check_image_height) = imgsize($archived_filename_with_path);
+                my $check_image_width_original = $check_image_width;
+                my $check_image_height_original = $check_image_height;
+                if ($check_image_width > 16384) {
+                    my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --width 16384';
+                    print STDERR Dumper $cmd_resize;
+                    my $status_resize = system($cmd_resize);
+                    my ($check_image_width_resized, $check_image_height_resized) = imgsize($archived_filename_with_path);
+                    $check_image_width = $check_image_width_resized;
+                    $check_image_height = $check_image_height_resized;
+                }
+                if ($check_image_height > 16384) {
+                    my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --height 16384';
+                    print STDERR Dumper $cmd_resize;
+                    my $status_resize = system($cmd_resize);
+                }
+                my ($check_image_width_saved, $check_image_height_saved) = imgsize($archived_filename_with_path);
+                @original_image_resize_ratio = ($check_image_width_original/$check_image_width_saved, $check_image_height_original/$check_image_height_saved);
             }
-            elsif ($check_image_height > 16384) {
-                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --height 16384';
-                print STDERR Dumper $cmd_resize;
-                my $status_resize = system($cmd_resize);
-            }
+
+            my $project_rs = $schema->resultset("Project::Project")->create({
+                name => $_->{name},
+                description => $_->{description},
+                projectprops => [
+                    {type_id => $drone_run_band_type_cvterm_id, value => $_->{type}},
+                    {type_id => $design_cvterm_id, value => 'drone_run_band'},
+                    {type_id => $original_image_resize_ratio_cvterm_id, value => encode_json \@original_image_resize_ratio}
+                ],
+                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
+            });
+            my $selected_drone_run_band_id = $project_rs->project_id();
 
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             $image->set_sp_person_id($user_id);
@@ -1248,7 +1270,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
                 my $odm_radiometric_calibration = $new_drone_run_band_stitching_odm_radiocalibration ? '--radiometric-calibration camera' : '';
 
-                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm '.$odm_radiometric_calibration.' > '.$temp_file_docker_log;
+                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --feature-quality ultra --min-num-features 50000 '.$odm_radiometric_calibration.' > '.$temp_file_docker_log;
                 print STDERR $odm_command."\n";
                 my $odm_status = system($odm_command);
 
@@ -1257,7 +1279,7 @@ sub upload_drone_imagery_POST : Args(0) {
                 my $odm_b3 = "$image_path_remaining/odm_orthophoto/b3.png";
                 my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
                 my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
-                my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
+                my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage5band.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
                 my $odm_open_status = system($odm_cmd);
 
                 my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
@@ -1276,7 +1298,7 @@ sub upload_drone_imagery_POST : Args(0) {
                 );
             }
             elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
+                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --feature-quality ultra --min-num-features 50000 > '.$temp_file_docker_log;
                 print STDERR $odm_command."\n";
                 my $odm_status = system($odm_command);
 
@@ -1352,16 +1374,21 @@ sub upload_drone_imagery_POST : Args(0) {
 }
 
 sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehicle') : ActionClass('REST') { }
-sub upload_drone_imagery_new_vehicle_GET : Args(0) {
+sub upload_drone_imagery_new_vehicle_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $private_company_id = $c->req->param('private_company_id');
     my $vehicle_name = $c->req->param('vehicle_name');
     my $vehicle_desc = $c->req->param('vehicle_description');
     my $battery_names_string = $c->req->param('battery_names');
     my @battery_names = split ',', $battery_names_string;
+    my ($user_id, $user_name, $user_role) = _check_user_login_drone_imagery_upload($c, 'submitter', $private_company_id, 'submitter_access');
+
+    my $private_companies = CXGN::PrivateCompany->new( { schema=> $schema } );
+    my ($private_companies_array, $private_companies_ids, $allowed_private_company_ids_hash, $allowed_private_company_access_hash, $private_company_access_is_private_hash) = $private_companies->get_users_private_companies($user_id, 0);
+    my $company_is_private = $private_company_access_is_private_hash->{$private_company_id} ? 1 : 0;
 
     my $vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
     my $vehicle_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
@@ -1389,36 +1416,84 @@ sub upload_drone_imagery_new_vehicle_GET : Args(0) {
     });
     my $new_vehicle_id = $new_vehicle->stock_id();
 
-    $c->stash->{rest} = {success => 1, new_vehicle_id => $new_vehicle_id};
+    my $q_priv = "UPDATE stock SET private_company_id=?, is_private=? WHERE stock_id=?;";
+    my $h_priv = $schema->storage->dbh()->prepare($q_priv);
+    $h_priv->execute($private_company_id, $company_is_private, $new_vehicle_id);
+    $h_priv = undef;
+
+    $c->stash->{rest} = {
+        success => 1,
+        new_vehicle_id => $new_vehicle_id
+    };
 }
 
-sub _check_user_login {
+sub upload_drone_imagery_new_vehicle_rover : Path('/api/drone_imagery/new_imaging_vehicle_rover') : ActionClass('REST') { }
+sub upload_drone_imagery_new_vehicle_rover_POST : Args(0) {
+    my $self = shift;
     my $c = shift;
-    my $user_id;
-    my $user_name;
-    my $user_role;
-    my $session_id = $c->req->param("sgn_session_id");
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $private_company_id = $c->req->param('private_company_id');
+    my $vehicle_name = $c->req->param('vehicle_name');
+    my $vehicle_desc = $c->req->param('vehicle_description');
+    my $battery_names_string = $c->req->param('battery_names');
+    my @battery_names = split ',', $battery_names_string;
+    my ($user_id, $user_name, $user_role) = _check_user_login_drone_imagery_upload($c, 'submitter', $private_company_id, 'submitter_access');
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
+    my $private_companies = CXGN::PrivateCompany->new( { schema=> $schema } );
+    my ($private_companies_array, $private_companies_ids, $allowed_private_company_ids_hash, $allowed_private_company_access_hash, $private_company_access_is_private_hash) = $private_companies->get_users_private_companies($user_id, 0);
+    my $company_is_private = $private_company_access_is_private_hash->{$private_company_id} ? 1 : 0;
+
+    my $vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_rover', 'stock_type')->cvterm_id();
+    my $vehicle_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $v_check = $schema->resultset("Stock::Stock")->find({uniquename => $vehicle_name});
+    if ($v_check) {
+        $c->stash->{rest} = {error => "Vehicle name $vehicle_name is already in use!"};
+        $c->detach();
     }
+
+    my %vehicle_prop;
+    foreach (@battery_names) {
+        $vehicle_prop{batteries}->{$_} = {
+            usage => 0,
+            obsolete => 0
+        };
+    }
+
+    my $new_vehicle = $schema->resultset("Stock::Stock")->create({
+        uniquename => $vehicle_name,
+        name => $vehicle_name,
+        description => $vehicle_desc,
+        type_id => $vehicle_cvterm_id,
+        stockprops => [{type_id => $vehicle_prop_cvterm_id, value => encode_json \%vehicle_prop}]
+    });
+    my $new_vehicle_id = $new_vehicle->stock_id();
+
+    my $q_priv = "UPDATE stock SET private_company_id=?, is_private=? WHERE stock_id=?;";
+    my $h_priv = $schema->storage->dbh()->prepare($q_priv);
+    $h_priv->execute($private_company_id, $company_is_private, $new_vehicle_id);
+    $h_priv = undef;
+
+    $c->stash->{rest} = {
+        success => 1,
+        new_vehicle_id => $new_vehicle_id
+    };
+}
+
+sub _check_user_login_drone_imagery_upload {
+    my $c = shift;
+    my $check_priv = shift;
+    my $original_private_company_id = shift;
+    my $user_access = shift;
+
+    my $login_check_return = CXGN::Login::_check_user_login($c, $check_priv, $original_private_company_id, $user_access);
+    if ($login_check_return->{error}) {
+        $c->stash->{rest} = $login_check_return;
+        $c->detach();
+    }
+    my ($user_id, $user_name, $user_role) = @{$login_check_return->{info}};
+
     return ($user_id, $user_name, $user_role);
 }
 
