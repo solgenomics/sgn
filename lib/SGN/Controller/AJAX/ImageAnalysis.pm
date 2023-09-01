@@ -56,15 +56,15 @@ sub image_analysis_submit : Path('/ajax/image_analysis/submit') : ActionClass('R
 sub image_analysis_submit_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $image_ids = decode_json $c->req->param('selected_image_ids');
     my $service = $c->req->param('service');
     my $trait = $c->req->param('trait');
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login_image_analysis($c, 'submitter', 0, 0);
     my $main_production_site_url = $c->config->{main_production_site_url};
-    _log_analysis_activity($c,$image_ids,$service,$trait);
+    _log_analysis_activity($c, $user_name, $image_ids, $service, $trait);
 
     unless (ref($image_ids) eq 'ARRAY') { $image_ids = [$image_ids]; }
 
@@ -81,6 +81,9 @@ sub image_analysis_submit_POST : Args(0) {
         people_schema=>$people_schema,
         phenome_schema=>$phenome_schema,
         image_id_list=>$image_ids,
+        must_be_linked_to_stock=>1,
+        sp_person_id=>$user_id,
+        subscription_model=>$c->config->{subscription_model}
     });
 
     my ($result, $records_total) = $image_search->search();
@@ -176,7 +179,6 @@ sub image_analysis_submit_POST : Args(0) {
                 }
                 print STDERR Dumper $message_hashref;
                 $res{'value'} = $message_hashref->{trait_value};
-                $res{'analysis_info'} = $message_hashref->{info};
                 $res{'trait'} = $trait;
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
             }
@@ -197,7 +199,7 @@ sub image_analysis_submit_POST : Args(0) {
                 '/DroneImageScripts/' . $script . ' --' . $input_image . ' \'' . $_ .
                 '\' --' . $outfile_image . ' \'' . $archive_temp_image . '\' --' .
                 $results_outfile . ' \'' . $archive_temp_results . '\' ';
-            # print STDERR Dumper $cmd;
+            print STDERR Dumper $cmd;
             my $status = system($cmd);
 
             my $csv = Text::CSV->new({ sep_char => ',' });
@@ -282,6 +284,8 @@ sub image_analysis_group_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $result = decode_json $c->req->param('result');
+    my ($user_id, $user_name, $user_role) = _check_user_login_image_analysis($c, 0, 0, 0);
+
     # print STDERR Dumper($result);
     my %grouped_results = ();
     my @table_data = ();
@@ -362,58 +366,26 @@ sub image_analysis_group_POST : Args(0) {
 sub get_activity_data : Path('/ajax/image_analysis/activity') Args(0) {
   my $self = shift;
   my $c = shift;
+  my ($user_id, $user_name, $user_role) = _check_user_login_image_analysis($c, 0, 0, 0);
 
   my @activity;
-  my $logfile = $c->config->{image_analysis_log};
-  if (-e $logfile) {
-        my @file_data = read_file($logfile, chomp => 1);
-        foreach my $line (@file_data) {
-            my @values = split("\t", $line);
-            my @ts_parts = split(" ", $values[0]);
-            push @activity, { date => $ts_parts[0]};
-        }
-    } else {
-        $c->stash->{rest} = {error=>'No activity log set up.'};
-        $c->detach();
+  if ($c->config->{image_analysis_log}) {
+    my $logfile = $c->config->{image_analysis_log};
+    my @file_data = read_file($logfile, chomp => 1);
+    foreach my $line (@file_data) {
+        my @values = split("\t", $line);
+        my @ts_parts = split(" ", $values[0]);
+        push @activity, { date => $ts_parts[0]};
     }
+  }
 
   my $json = JSON->new();
   $c->stash->{rest} = { activity => $json->encode(\@activity)};
 
 }
-
-sub _check_user_login {
-    my $c = shift;
-    my $user_id;
-    my $user_name;
-    my $user_role;
-    my $session_id = $c->req->param("sgn_session_id");
-
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
-    return ($user_id, $user_name, $user_role);
-}
-
 sub _log_analysis_activity {
     my $c = shift;
+    my $user_name = shift;
     my $image_ids = shift;
     my $service = shift;
     my $trait = shift;
@@ -424,7 +396,7 @@ sub _log_analysis_activity {
       open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
       print $F join("\t", (
             $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
-            $c->user->get_object->get_username(),
+            $user_name,
             $service,
             $trait,
             $image_ids
@@ -436,6 +408,22 @@ sub _log_analysis_activity {
     else {
       print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
     }
+}
+
+sub _check_user_login_image_analysis {
+    my $c = shift;
+    my $check_priv = shift;
+    my $original_private_company_id = shift;
+    my $user_access = shift;
+
+    my $login_check_return = CXGN::Login::_check_user_login($c, $check_priv, $original_private_company_id, $user_access);
+    if ($login_check_return->{error}) {
+        $c->stash->{rest} = $login_check_return;
+        $c->detach();
+    }
+    my ($user_id, $user_name, $user_role) = @{$login_check_return->{info}};
+
+    return ($user_id, $user_name, $user_role);
 }
 
 1;
