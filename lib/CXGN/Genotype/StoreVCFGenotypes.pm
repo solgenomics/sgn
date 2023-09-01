@@ -651,7 +651,7 @@ sub validate {
                     push @error_messages, "No genotype info provided";
                 }
                 foreach (keys %$marker_info){
-                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
+                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name' && $_ ne 'sequence' && $_ ne 'facility_name'){
                         push @error_messages, "protocol_info key not recognized: $_";
                     }
                 }
@@ -669,18 +669,6 @@ sub validate {
                 }
                 if(!exists($marker_info->{'alt'})){
                     push @error_messages, "protocol_info missing alt key";
-                }
-                if(!exists($marker_info->{'qual'})){
-                    push @error_messages, "protocol_info missing qual key";
-                }
-                if(!exists($marker_info->{'filter'})){
-                    push @error_messages, "protocol_info missing filter key";
-                }
-                if(!exists($marker_info->{'info'})){
-                    push @error_messages, "protocol_info missing info key";
-                }
-                if(!exists($marker_info->{'format'})){
-                    push @error_messages, "protocol_info missing format key";
                 }
             }
         }

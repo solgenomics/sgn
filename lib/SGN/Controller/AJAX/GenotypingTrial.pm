@@ -84,7 +84,6 @@ sub generate_genotype_trial_POST : Args(0) {
         $_->{acquisition_date} = $plate_info->{well_date};
         $_->{notes} = $plate_info->{well_notes};
         $_->{ncbi_taxonomy_id} = $plate_info->{ncbi_taxonomy_id};
-        $_->{facility_identifier} = 'NA';
     }
     #print STDERR Dumper($design);
 
