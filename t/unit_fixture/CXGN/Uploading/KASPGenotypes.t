@@ -219,7 +219,7 @@ is($total_count_2, 4);
 
 #upload with incorrect marker info
 my $facility_file_3 = $f->config->{basepath}."/t/data/genotype_data/kasp_results_with_facility_names_2.csv";
-my $facility_marker_info_file_3 = $f->config->{basepath}."/t/data/genotype_data/kasp_marker_info_with_facility_namesXXXX.csv";
+my $facility_marker_info_file_3 = $f->config->{basepath}."/t/data/genotype_data/kasp_marker_info_with_facility_names_error.csv";
 
 my $ua3 = LWP::UserAgent->new;
 $response = $ua3->post(
