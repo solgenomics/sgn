@@ -37,6 +37,8 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use JSON;
+use CXGN::Genotype::Protocol;
+use List::MoreUtils qw(uniq);
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -86,7 +88,6 @@ sub search {
     my $protocol_id_list = $self->protocol_id_list;
     my $protocol_name_list = $self->protocol_name_list;
     my $marker_name_list = $self->marker_name_list;
-    my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
     my $limit = $self->limit;
     my $offset = $self->offset;
     my @data;
@@ -103,6 +104,28 @@ sub search {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+    my $protocolprop_marker_hash_select;
+    my @all_marker_info_keys = ();
+    if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
+        foreach my $protocol_id (@$protocol_id_list) {
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $protocol_id
+            });
+            my $marker_info_keys = $protocol->marker_info_keys;
+            if (defined $marker_info_keys) {
+                push @all_marker_info_keys, @$marker_info_keys;
+            }
+        }
+        @all_marker_info_keys = uniq @all_marker_info_keys;
+    }
+
+    if (scalar(@all_marker_info_keys)>0) {
+        $protocolprop_marker_hash_select = \@all_marker_info_keys;
+    } else {
+        $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
+    }
 
     #protocol_id_list is required
     my $protocol_where;
@@ -162,9 +185,8 @@ sub search {
     my $count_h = $schema->storage->dbh()->prepare($count_q);
     $count_h->execute();
     my ($total_marker_count) = $count_h->fetchrow_array();
-
+    
     return (\@results, $total_marker_count);
 }
 
 1;
-

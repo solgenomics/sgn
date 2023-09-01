@@ -89,6 +89,8 @@ $create_date => undef
 $sample_observation_unit_type_name => undef
 $marker_type => undef
 $genotype_data_type => undef
+$marker_info_headers => undef
+$assay_type => undef
 
 #Specific to drone run detail page
 $drone_run_date => undef
@@ -373,10 +375,10 @@ $analytics_protocol_result_summary => {}
 % } #End management_factor_design
 
 % if ($info_section_id eq 'genotyping_protocol_details'){
-                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type &>
+                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type, assay_type => $assay_type &>
 % } #End genotyping_protocol_details
 % if ($info_section_id eq 'genotyping_protocol_markers'){
-                                <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id &>
+                                <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id, marker_info_headers => $marker_info_headers &>
 % } #End genotyping_protocol_markers
 % if ($info_section_id eq 'genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>
