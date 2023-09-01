@@ -169,7 +169,6 @@ sub pcr_genotyping_data_search_GET : Args(0) {
         foreach my $marker (@marker_name_arrays) {
             my @positive_bands = ();
             my $product_sizes_ref = $marker_genotype_hash{$marker};
-
             if (!$product_sizes_ref) {
                 push @each_genotype, 'NA';
             } else {
@@ -178,6 +177,8 @@ sub pcr_genotyping_data_search_GET : Args(0) {
                     my $pcr_result = $product_sizes_hash{$product_size};
                     if ($pcr_result eq '1') {
                         push @positive_bands, $product_size;
+                    } elsif ($pcr_result eq '?') {
+                        push @positive_bands, $pcr_result;
                     }
                 }
                 if (scalar @positive_bands == 0) {

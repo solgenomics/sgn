@@ -685,18 +685,16 @@ sub validate {
     if ($genotyping_data_type eq 'ssr') {
         my @stock_keys = keys %{$genotype_info};
         my @marker_keys = sort keys %{$genotype_info->{$stock_keys[0]}};
-#        print STDERR "MARKER KEYS =".Dumper(\@marker_keys)."\n";
 
         my $protocol_marker_names = $protocol_info->{'marker_names'};
         my @protocol_marker_array =  sort @$protocol_marker_names;
-#        print STDERR "PROTOCOL MARKER ARRAY =".Dumper(\@protocol_marker_array)."\n";
 
-        my @diff_markers = array_diff(@marker_keys, @protocol_marker_array);
-        print STDERR "DIFF MARKERS =".Dumper(\@diff_markers)."\n";
+        my %stored_marker_hash = map {$_=>1} @protocol_marker_array;
+        my @not_stored_markers = grep {!exists $stored_marker_hash{$_}} @marker_keys;
 
-        if (scalar(@diff_markers) > 0) {
-            my $mismatch_markers = join(",", @diff_markers);
-            push @error_messages, "Markers in SSR genotyping data and the selected protocol are not the same. Mismatch markers: $mismatch_markers";
+        if (scalar(@not_stored_markers) > 0) {
+            my $missing_markers = join(",", @not_stored_markers);
+            push @error_messages, "Error: some markers in SSR genotyping data are not in the selected protocol. Missing markers: $missing_markers";
         }
     }
 
