@@ -21,7 +21,7 @@ $order_id
             </div>
             <div class="modal-footer">
                 <button id="close_create_item_file_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="create_item_file_submit" type="button" class="btn btn-primary" >Submit</button>
+                <button id="create_item_file_submit" type="button" class="btn btn-primary" >Create</button>
             </div>
         </div>
     </div>
@@ -43,10 +43,16 @@ jQuery(document).ready( function() {
             success: function(response){
                 console.log(response);
                 var html = '';
-                for(var i=0; i<response.names.length; i++){
-                    html = html + '<label class="col-sm-3 control-label">'+ response.names[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' value="'+response.ids[i]+'" ></div><br><br>';
+                html += '<div class="well well-sm"><table class="table table-hover table-condensed">';
+                html += '<thead><tr><th>Order Number</th><th>Order Tracking ID</th><th>Order Tracking Name</th></tr></thead><tbody>';
+
+                for(var i=0; i<response.tracking_info.length; i++){
+                    html += '<td>'+response.tracking_info[i][0]+'</td>';
+                    html += '<td>'+response.tracking_info[i][1]+'</td>';
+                    html += '<td>'+response.tracking_info[i][2]+'</td></tr>';
                 }
-                html = html + '</div></div></form>';
+                html = html + '</tbody></table></div>';
+
                 jQuery('#item_tracking_ids_div').html(html);
                 jQuery('#download_item_file_dialog').modal('show');
             }
