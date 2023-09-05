@@ -736,4 +736,46 @@ END_HEREDOC
 }
 
 
+sub get_order_tracking_ids :Path('/ajax/order/order_tracking_ids') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+    my $order_number = $c->req->param('order_id');
+    my $user_id;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
+        $c->detach();
+    }
+
+    if ($c->user) {
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+    }
+
+    my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_number});
+    my $order_result = $order_obj->get_order_details();
+
+    my $all_items = $order_result->[3];
+    my @tracking_names;
+    my @tracking_ids;
+    foreach my $item (@$all_items) {
+        my %item_details = %$item;
+        my ($name, $value) = %item_details;
+        my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $name});
+        my $item_stock_id = $item_rs->stock_id();
+
+        push @tracking_ids, $order_number.$item_stock_id;
+        push @tracking_names, "order".$order_number.":".$name;
+    }
+
+    print STDERR "TRACKING IDS =".Dumper(\@tracking_ids)."\n";
+    print STDERR "TRACKING NAMES =".Dumper(\@tracking_names)."\n";
+    $c->stash->{rest} = {ids => \@tracking_ids, names => \@tracking_names};
+
+}
+
+
+
 1;

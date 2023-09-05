@@ -16,8 +16,7 @@ $order_id
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <div id="item_file_div">
-                    </div>
+                    <div id="item_tracking_ids_div"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -29,20 +28,31 @@ $order_id
 </div>
 
 
-
 <script>
 
 jQuery(document).ready( function() {
 
-var order_id = <% $order_id %>;
+    var order_id = <% $order_id %>;
 
-jQuery("#download_item_file_button").click( function() {
+    jQuery("#download_item_file_button").click( function() {
 
-    jQuery('#download_item_file_dialog').modal('show');
+        jQuery.ajax({
+            url:'/ajax/order/order_tracking_ids',
+            data:{'order_id': order_id },
 
+            success: function(response){
+                console.log(response);
+                var html = '';
+                for(var i=0; i<response.names.length; i++){
+                    html = html + '<label class="col-sm-3 control-label">'+ response.names[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' value="'+response.ids[i]+'" ></div><br><br>';
+                }
+                html = html + '</div></div></form>';
+                jQuery('#item_tracking_ids_div').html(html);
+                jQuery('#download_item_file_dialog').modal('show');
+            }
 
-});
-
+        });
+    });
 });
 
 
