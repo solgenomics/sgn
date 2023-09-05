@@ -64,3 +64,4 @@ $ordering_type => undef
 <& /order/re_order_dialog.mas, order_properties => $order_properties, order_values => $order_values&>
 <& /order/re_open_dialog.mas, order_id => $order_id, order_to => $order_to &>
 <& /order/create_item_file_dialog.mas, order_id => $order_id &>
+<& /order/create_ontology_file_dialog.mas &>
