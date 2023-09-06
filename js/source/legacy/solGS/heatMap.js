@@ -48,11 +48,12 @@ solGS.heatmap = {
           rwVl = "NA";
         }
 
-        corr.push({ row: i, col: j, value: rwVl, pvalue: rwPV });
-
         if (rwVl != "NA") {
+          rwVl = d3.format(".2f")(rwVl);
           coefs.push(rwVl);
         }
+
+        corr.push({ row: i, col: j, value: rwVl, pvalue: rwPV });
       }
     }
 
@@ -110,40 +111,41 @@ solGS.heatmap = {
       if (-rmin > rmax) {
         rmax = -rmin;
       }
-      coefDom = [-rmax, 0, rmax];
+      coefDom = [-rmax, 0,  rmax];
       coefRange = [nve, "white", pve];
     } else if (rmin <= 0 && rmax < 0) {
       coefDom = [rmin, 0];
       coefRange = [nve, "white"];
     }
 
-    var corXscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([0, width]);
-    var corYscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([height, 0]);
-    var corZscale = d3.scale.linear().domain(coefDom).range(coefRange);
+    var corZscale = d3.scaleLinear().domain(coefDom).range(coefRange);
 
-    var xAxisScale = d3.scale.ordinal().domain(labels).rangeBands([0, width]);
+    var xAxisScale = d3.scaleBand()
+		.range([0, width])	
+		.domain(labels)
+		.padding(0.00);
 
-    var yAxisScale = d3.scale.ordinal().domain(labels).rangeRoundBands([height, 0]);
+    var yAxisScale = d3.scaleBand()
+		.range([height, 0])
+		.domain(labels)
+		.padding(0.00);
 
-    var svg = d3
+    var corrplot = d3
       .select(heatmapPlotDivId)
       .insert("svg", ":first-child")
       .attr("height", totalH)
-      .attr("width", totalW);
+      .attr("width", totalW)
+	  .append("g")
+    .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
 
-    var xAxis = d3.svg.axis().scale(xAxisScale).orient("bottom");
 
-    var yAxis = d3.svg.axis().scale(yAxisScale).orient("left");
-
-    var corrplot = svg
-      .append("g")
-      .attr("id", heatmapPlotDivId)
-      .attr("transform", "translate(0, 0)");
-
+    var xAxis = d3.axisBottom(xAxisScale);
+    var yAxis = d3.axisLeft(yAxisScale);
+	
     corrplot
       .append("g")
-      .attr("class", "y axis")
-      .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+      .attr("class", "y_axis")
+      // .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
       .call(yAxis)
       .selectAll("text")
       .attr("x", -10)
@@ -154,11 +156,11 @@ solGS.heatmap = {
 
     corrplot
       .append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(" + pad.left + "," + (pad.top + height) + ")")
+      .attr("class", "x_axis")
+      .attr("transform", "translate(0,"+ height +")")
       .call(xAxis)
       .selectAll("text")
-      .attr("x", 10)
+      .attr("x", 30)
       .attr("y", 0)
       .attr("dy", ".1em")
       .attr("transform", "rotate(90)")
@@ -168,26 +170,27 @@ solGS.heatmap = {
     corrplot
       .selectAll()
       .data(corr)
-      .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+    //   .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
       .enter()
       .append("rect")
       .attr("class", "cell")
       .attr("x", function (d) {
-        return pad.left + corXscale(d.col);
+        return xAxisScale(labels[d.col]);
       })
       .attr("y", function (d) {
-        return pad.top + corYscale(d.row);
+        return yAxisScale(labels[d.row]);
       })
-      .attr("width", corXscale.rangeBand())
-      .attr("height", corYscale.rangeBand())
+      .attr("width", xAxisScale.bandwidth())
+      .attr("height", yAxisScale.bandwidth())
       .attr("fill", function (d) {
         if (d.value == "NA") {
           return "white";
         } else if (d.value == 0) {
           return nral;
         } else {
-          return corZscale(d.value);
+				return corZscale(d.value);
         }
+		
       })
       .attr("stroke", "white")
       .attr("stroke-width", 1)
@@ -199,12 +202,12 @@ solGS.heatmap = {
             .attr("id", "corrtext")
             .text(function () {
               if (d.pvalue != "NA") {
-                return `[${labels[d.row]} vs. ${labels[d.col]}:  
-							${d3.format(".3f")(d.value)}, 
-							p-value: ${d3.format(".3f")(d.pvalue)}]`;
+                return `${labels[d.row]} vs. ${labels[d.col]}:  
+							${d.value}, 
+							p-value: ${d3.format(".3f")(d.pvalue)}`;
               } else {
-                return `[${labels[d.row]} vs. ${labels[d.col]}:  
-								${d3.format(".3f")(d.value)}]`;
+                return `${labels[d.row]} vs. ${labels[d.col]}:  
+								${d.value}`;
               }
             })
             .style("fill", function () {
@@ -218,12 +221,12 @@ solGS.heatmap = {
             })
             .attr("x", function () {
               if (nLabels < 20) {
-                return pad.left + width;
+                return pad.left + width * 0.3;
               } else {
                 return pad.left + width * 0.5;
               }
             })
-            .attr("y", pad.top + height * 0.9)
+            .attr("y", pad.top + height * 0.8)
             .attr("font-weight", "bold")
             .attr("dominant-baseline", "middle")
             .attr("text-anchor", "middle");
@@ -237,7 +240,7 @@ solGS.heatmap = {
 
     corrplot
       .append("rect")
-      .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+      // .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
       .attr("height", height)
       .attr("width", width)
       .attr("fill", "none")
@@ -272,6 +275,7 @@ solGS.heatmap = {
         [4, "Off-diagonals: kinship coefficients"]
       );
     }
+
     var legend = corrplot
       .append("g")
       .attr("class", "cell")
@@ -341,6 +345,23 @@ solGS.heatmap = {
       })
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "start");
+
+	corrplot
+      .append("g")
+      .attr("class", "legend")
+      .attr(
+        "transform",
+        "translate(" + (pad.left + width + 10) + "," + (pad.top + height * 0.25) + ")"
+      )
+    
+	// var legend = d3.legendColor()
+	// .shapeWidth(20)
+	// .orient("vertical")
+	// .scale(corZscale)
+
+	// corrplot.select("legend")
+	// .call(legend)
+
 
     if (downloadLinks) {
       if (!heatmapPlotDivId.match("#")) {
