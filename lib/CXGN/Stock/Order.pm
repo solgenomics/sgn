@@ -27,6 +27,8 @@ has 'completion_date' => ( isa => 'Str', is => 'rw');
 
 has 'batches' => ( isa => 'Ref', is => 'rw', default => sub { return []; } );
 
+has 'bcs_schema' => ( isa => 'Bio::Chado::Schema', is => 'rw');
+
 
 sub BUILD {
     my $self = shift;
@@ -190,6 +192,38 @@ sub get_order_details {
     return \@order_details;
 
 }
+
+
+sub get_tracking_info {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $people_schema = $self->people_schema();
+    my $dbh = $self->dbh();
+    my $order_number = $self->sp_order_id();
+
+    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_number } );
+    my $item_json = $orderprop_rs->value();
+    my $item_hash = JSON::Any->jsonToObj($item_json);
+    my $all_items = $item_hash->{'clone_list'};
+
+    my @all_tracking_info;
+    my $item_number = 0;
+    foreach my $item (@$all_items) {
+        my %item_details = %$item;
+        my ($name, $value) = %item_details;
+        my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $name});
+        my $item_stock_id = $item_rs->stock_id();
+        my $required_quantity = $value->{'Required Quantity'};
+        my $required_stage = $value->{'Required Stage'};
+        $item_number++;
+
+        push @all_tracking_info, [ "order".$order_number.":".$name, $order_number."_".$item_stock_id,  $order_number, $item_number, $required_quantity, $required_stage,]
+    }
+
+    return \@all_tracking_info;
+
+}
+
 
 
 1;

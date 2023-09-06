@@ -754,25 +754,10 @@ sub get_order_tracking_ids :Path('/ajax/order/order_tracking_ids') Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
-    my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_number});
-    my $order_result = $order_obj->get_order_details();
+    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_number});
+    my $tracking_info = $order_obj->get_tracking_info();
 
-    my $all_items = $order_result->[3];
-    my @all_tracking_info;
-    my $item_number = 0;
-    foreach my $item (@$all_items) {
-        my %item_details = %$item;
-        my ($name, $value) = %item_details;
-        my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $name});
-        my $item_stock_id = $item_rs->stock_id();
-        my $required_quantity = $value->{'Required Quantity'};
-        my $required_stage = $value->{'Required Stage'};
-        $item_number++;
-
-        push @all_tracking_info, [ "order".$order_number.":".$name, $order_number."_".$item_stock_id,  $order_number, $item_number, $required_quantity, $required_stage,]
-    }
-
-    $c->stash->{rest} = {tracking_info => \@all_tracking_info};
+    $c->stash->{rest} = {tracking_info => $tracking_info};
 
 }
 
