@@ -759,12 +759,17 @@ sub get_order_tracking_ids :Path('/ajax/order/order_tracking_ids') Args(0) {
 
     my $all_items = $order_result->[3];
     my @all_tracking_info;
+    my $item_number = 0;
     foreach my $item (@$all_items) {
         my %item_details = %$item;
         my ($name, $value) = %item_details;
         my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $name});
         my $item_stock_id = $item_rs->stock_id();
-        push @all_tracking_info, ["order"."_".$order_number,$order_number.$item_stock_id, "order".$order_number.":".$name]
+        my $required_quantity = $value->{'Required Quantity'};
+        my $required_stage = $value->{'Required Stage'};
+        $item_number++;
+
+        push @all_tracking_info, [ "order".$order_number.":".$name, $order_number."_".$item_stock_id,  $order_number, $item_number, $required_quantity, $required_stage,]
     }
 
     $c->stash->{rest} = {tracking_info => \@all_tracking_info};

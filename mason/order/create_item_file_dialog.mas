@@ -44,12 +44,15 @@ jQuery(document).ready( function() {
                 console.log(response);
                 var html = '';
                 html += '<div class="well well-sm"><table class="table table-hover table-condensed">';
-                html += '<thead><tr><th>Order Number</th><th>Order Tracking ID</th><th>Order Tracking Name</th></tr></thead><tbody>';
+                html += '<thead><tr><th>order_tracking_name</th><th>order_tracking_id</th><th>order_number</th><th>item_number</th><th>required_quantity</th><th>required_stage</th></tr></thead><tbody>';
 
                 for(var i=0; i<response.tracking_info.length; i++){
                     html += '<td>'+response.tracking_info[i][0]+'</td>';
                     html += '<td>'+response.tracking_info[i][1]+'</td>';
-                    html += '<td>'+response.tracking_info[i][2]+'</td></tr>';
+                    html += '<td>'+response.tracking_info[i][2]+'</td>';
+                    html += '<td>'+response.tracking_info[i][3]+'</td>';
+                    html += '<td>'+response.tracking_info[i][4]+'</td>';
+                    html += '<td>'+response.tracking_info[i][5]+'</td></tr>';
                 }
                 html = html + '</tbody></table></div>';
 
