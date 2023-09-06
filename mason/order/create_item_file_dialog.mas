@@ -27,6 +27,24 @@ $order_id
     </div>
 </div>
 
+<style>
+
+.table_1 table {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.table_1 thead th {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.table_1 td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+</style>
 
 <script>
 
@@ -43,11 +61,11 @@ jQuery(document).ready( function() {
             success: function(response){
                 console.log(response);
                 var html = '';
-                html += '<div class="well well-sm"><table class="table table-hover table-condensed">';
+                html += '<div class="well well-sm"><table class="table table_1 table-hover table-condensed">';
                 html += '<thead><tr><th>order_tracking_name</th><th>order_tracking_id</th><th>order_number</th><th>item_number</th><th>required_quantity</th><th>required_stage</th></tr></thead><tbody>';
 
                 for(var i=0; i<response.tracking_info.length; i++){
-                    html += '<td>'+response.tracking_info[i][0]+'</td>';
+                    html += '<tr><td>'+response.tracking_info[i][0]+'</td>';
                     html += '<td>'+response.tracking_info[i][1]+'</td>';
                     html += '<td>'+response.tracking_info[i][2]+'</td>';
                     html += '<td>'+response.tracking_info[i][3]+'</td>';
