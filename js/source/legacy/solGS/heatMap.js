@@ -185,8 +185,6 @@ solGS.heatmap = {
       .attr("fill", function (d) {
         if (d.value == "NA") {
           return "white";
-        } else if (d.value == 0) {
-          return nral;
         } else {
 				return corZscale(d.value);
         }
@@ -240,7 +238,6 @@ solGS.heatmap = {
 
     corrplot
       .append("rect")
-      // .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
       .attr("height", height)
       .attr("width", width)
       .attr("fill", "none")
@@ -250,29 +247,18 @@ solGS.heatmap = {
 
     var legendValues = [];
 
-    if (d3.min(coefs) >= 0 && d3.max(coefs) > 0) {
-      legendValues = [
-        [0, 0],
-        [1, d3.max(coefs)],
-      ];
-    } else if (d3.min(coefs) < 0 && d3.max(coefs) < 0) {
-      legendValues = [
-        [0, d3.min(coefs)],
-        [1, 0],
-        [2, 1],
-      ];
-    } else {
-      legendValues = [
-        [0, d3.min(coefs)],
-        [1, 0],
-        [2, d3.max(coefs)],
-      ];
+    var bins = d3.ticks(d3.min(coefs), d3.max(coefs), 10)
+    console.log(`bins: ${bins}`)
+
+    legendValues = []
+    for (var i = 0; i< bins.length; i++) {
+      legendValues.push([i, bins[i]])
     }
 
     if (heatmapCanvasDiv.match(/kinship/)) {
       legendValues.push(
-        [3, "Diagonals: inbreeding coefficients"],
-        [4, "Off-diagonals: kinship coefficients"]
+        [legendValues.length + 1, "Diag: inbreeding coefficients"],
+        [legendValues.length + 2, "Off-diag: kinship coefficients"]
       );
     }
 
@@ -281,11 +267,9 @@ solGS.heatmap = {
       .attr("class", "cell")
       .attr(
         "transform",
-        "translate(" + (pad.left + width + 10) + "," + (pad.top + height * 0.25) + ")"
+        "translate(" + (width + 10) + "," + (pad.top) + ")"
       )
-      .attr("height", 100)
-      .attr("width", 100);
-
+    
     var recLH = 20;
     var recLW = 20;
 
@@ -298,7 +282,7 @@ solGS.heatmap = {
         return 1;
       })
       .attr("y", function (d) {
-        return 1 + d[0] * recLH + d[0] * 5;
+        return 1 + d[0] * recLH;
       })
       .attr("width", recLH)
       .attr("height", recLW)
@@ -306,9 +290,7 @@ solGS.heatmap = {
       .attr("fill", function (d) {
         if (d == "NA") {
           return "white";
-        } else if (d[1] == 0) {
-          return nral;
-        } else {
+         } else {
           return corZscale(d[1]);
         }
       });
@@ -317,7 +299,7 @@ solGS.heatmap = {
       .append("g")
       .attr(
         "transform",
-        "translate(" + (pad.left + width + 40) + "," + (pad.top + height * 0.25 + 0.5 * recLW) + ")"
+        "translate(" + (width + 40) + "," + (pad.top + 0.5 * recLW) + ")"
       )
       .attr("id", "legendtext");
 
@@ -330,38 +312,20 @@ solGS.heatmap = {
       .style("fill", "#523CB5")
       .attr("x", 1)
       .attr("y", function (d) {
-        return 1 + d[0] * recLH + d[0] * 5;
+        return 1 + d[0] * recLH;
       })
-      .text(function (d) {
-        if (d[1] > 0) {
-          return "> 0";
-        } else if (d[1] < 0) {
-          return "< 0";
-        } else if (d[1] == 0) {
-          return "0";
-        } else {
-          return d[1];
-        }
+      .text(function (d) { return d[1];
       })
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "start");
 
-	corrplot
-      .append("g")
-      .attr("class", "legend")
-      .attr(
-        "transform",
-        "translate(" + (pad.left + width + 10) + "," + (pad.top + height * 0.25) + ")"
-      )
-    
-	// var legend = d3.legendColor()
-	// .shapeWidth(20)
-	// .orient("vertical")
-	// .scale(corZscale)
-
-	// corrplot.select("legend")
-	// .call(legend)
-
+	// corrplot
+  //     .append("g")
+  //     .attr("class", "legend")
+  //     .attr(
+  //       "transform",
+  //       "translate(" + (pad.left + width + 10) + "," + (pad.top + height * 0.25) + ")"
+  //     )
 
     if (downloadLinks) {
       if (!heatmapPlotDivId.match("#")) {
