@@ -295,6 +295,7 @@ $user_id => undef
       	      <div class="col-sm-10">
                   <select class="form-control" id="location_type" name="location_type">
                       <option value=""></option>
+                      <option value="Town">Town</option>
                       <option value="Farm">Farm</option>
                       <option value="Field">Field</option>
                       <option value="Greenhouse">Greenhouse</option>
@@ -566,6 +567,15 @@ function style(feature) {
     //console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
 
     var label = feature.properties.Abbreviation || feature.properties.Id;
+
+    var townMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        markerColor: 'purple',
+        shape: 'circle',
+        prefix: ''
+    });
+
     var farmMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
@@ -639,6 +649,7 @@ function style(feature) {
     });
 
     switch (feature.properties.Type) {
+        case 'Town':   return { icon: townMarker };
         case 'Farm':   return { icon: farmMarker };
         case 'Field': return { icon: fieldMarker };
         case 'Greenhouse':   return { icon: greenhouseMarker };

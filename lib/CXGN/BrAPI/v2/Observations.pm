@@ -22,8 +22,10 @@ sub search {
     my $page = $self->page;
     my $status = $self->status;
 
-    my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ()); 
+    my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ());
+
     my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
+    my @observation_variable_names = $params->{observationVariableNames} ? @{$params->{observationVariableNames}} : ();
     # externalReferenceID
     # externalReferenceSource
     my $observation_level = $params->{observationLevel}->[0] || 'all'; # need to be changed in v2
@@ -55,22 +57,28 @@ sub search {
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
 
-    my ($data, $unique_traits)  = _search_observation_id(
-            $self->bcs_schema,
-            $observation_level,
-            $trial_ids,
-            $trial_ids_arrayref,
-            1,
-            $season_arrayref,
-            $location_ids_arrayref,
-            $accession_ids_arrayref,
-            $program_ids_arrayref,
-            \@observation_variable_db_ids,
-            $observation_db_id,
-            $observation_unit_db_id, #plot_list
-            $limit,
-            $offset,
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$observation_level,
+            trial_list=>$trial_ids,
+            folder_list=>$trial_ids_arrayref,
+            include_timestamp=>1,
+            year_list=>$season_arrayref,
+            location_list=>$location_ids_arrayref,
+            accession_list=>$accession_ids_arrayref,
+            program_list=>$program_ids_arrayref,
+            trait_list=>\@observation_variable_db_ids,
+            trait_contains=>\@observation_variable_names,
+            plot_list=>$observation_unit_db_id,
+            observation_id_list=>$observation_db_id,
+            limit=>$limit,
+            offset=>$offset,
+            order_by=>"plot_number"
+        }
     );
+    my ($data, $unique_traits) = $phenotypes_search->search();
 
     my @data_window;
     my $counter = 0;
@@ -81,12 +89,11 @@ sub search {
         foreach (@$observations){
             my $observation_id = "$_->{phenotype_id}";
             # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
-                my @season = {
+                my %season = (
                     year => $obs_unit->{year},
                     season => $obs_unit->{year},
                     seasonDbId => $obs_unit->{year}
-                };
-
+                );
                 my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
                 if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
                 if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
@@ -103,7 +110,7 @@ sub search {
                         observationVariableDbId => qq|$_->{trait_id}|,
                         observationVariableName => $_->{trait_name},
                         observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
-                        season => \@season,
+                        season => \%season,
                         collector => $_->{operator},
                         studyDbId => qq|$obs_unit->{trial_id}|,
                         uploadedBy=> $_->{operator},
@@ -153,6 +160,7 @@ sub detail {
     my $limit;
     my $offset;
 
+    # TODO: change to use search factory if we want to stick with that
     my ($data, $unique_traits)  = _search_observation_id(
             $self->bcs_schema,
             $observation_level,
@@ -340,8 +348,10 @@ sub observations_store {
         metadata_hash=>\%phenotype_metadata,
         overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
-        composable_validation_check_name=>$c->config->{composable_validation_check_name}
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
+
     my ($verified_warning, $verified_error) = $store_observations->verify();
 
     if ($verified_error) {
