@@ -9,6 +9,7 @@ use JSON;
 use DateTime;
 use CXGN::People::Person;
 use CXGN::Contact;
+use CXGN::Trial::Download;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -760,6 +761,55 @@ sub get_order_tracking_ids :Path('/ajax/order/order_tracking_ids') Args(0) {
     $c->stash->{rest} = {tracking_info => $tracking_info};
 
 }
+
+
+sub download_order_item_file : Path('/ajax/order/download_order_item_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    my $order_id = $c->req->param('order_id');
+    print STDERR "ORDER ID =".Dumper($order_id)."\n";
+    my $file_format = "xls";
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = "order_items". "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".$file_format";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+#    print STDERR "TEMPFILE : $tempfile\n";
+
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        people_schema => $people_schema,
+        dbh => $dbh,
+        filename => $tempfile,
+        format => 'OrderItemFileXLS',
+        trial_id => $order_id
+    });
+
+    my $error = $download->download();
+
+    my $file_name = "order_items" . "_" . "$timestamp" . ".$file_format";
+    $c->res->content_type('Application/'.$file_format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
+
+
+}
+
 
 
 

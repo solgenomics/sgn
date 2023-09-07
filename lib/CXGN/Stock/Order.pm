@@ -217,7 +217,7 @@ sub get_tracking_info {
         my $required_stage = $value->{'Required Stage'};
         $item_number++;
 
-        push @all_tracking_info, [ "order".$order_number.":".$name, $order_number."_".$item_stock_id,  $order_number, $item_number, $required_quantity, $required_stage,]
+        push @all_tracking_info, [ "order".$order_number.":".$name, "order".$order_number.":".$item_stock_id,  $order_number, $item_number, $required_quantity, $required_stage,]
     }
 
     return \@all_tracking_info;
