@@ -53,7 +53,7 @@ jQuery(document).ready(function ($) {
         var breeding_program = $("#select_breeding_program").val();
         var location = $("#add_project_location").val().toString().trim(); // remove whitespace
         var trial_year = $("#add_project_year").val();
-        var trial_planting_date = $("add_project_planting_date").val();
+        var trial_planting_date = $("#add_project_planting_date").val();
         var description = $("#add_project_description").val();
         var design_type = $("#select_design_method").val();
         var stock_type = $("#select_stock_type").val();
@@ -2025,7 +2025,7 @@ jQuery(document).ready(function ($) {
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
         var year = jQuery('#add_project_year').val();
-        var planting_date = jQuery('add_project_planting_date').val();
+        var planting_date = jQuery('#add_project_planting_date').val();
         var desc = jQuery('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
