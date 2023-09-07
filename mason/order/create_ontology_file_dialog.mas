@@ -9,19 +9,11 @@
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" >
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="select_list_list_select">Select a list of ontologies: </label>
-                            <div class="col-sm-9">
-                                <span id="select_list_div"></span>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" for="select_traits_for_trait_file">Or select traits directly: </label>
-                            <div class="col-sm-9">
-                                <div id="select_traits_for_trait_file">
-                                    [Loading...]
+                            <label class="control-label col-sm-3">Ontologies:</label>
+                            <div class="col-sm-9" >
+                                <div class="input-group">
+                                    <select class="form-control" id="ontology_list_select"></select>
                                 </div>
-                                <hr style="margin-top:4px;margin-bottom:4px" />
-                                <div class="well well-sm"><div id="trait_select_count">No Selection</div></div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -44,6 +36,9 @@
 <script>
 
 jQuery(document).ready( function() {
+
+    var lo = new CXGN.List();
+    jQuery('#ontology_list_select').html(lo.listSelect('ontology_list_select', ['traits'], 'Select a list of ontologies', undefined, undefined));
 
     jQuery("#download_ontology_file_button").click( function() {
         jQuery('#create_ontology_file_dialog').modal('show');
