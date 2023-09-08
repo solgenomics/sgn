@@ -66,4 +66,4 @@ $ordering_type => undef
 <& /order/re_open_dialog.mas, order_id => $order_id, order_to => $order_to &>
 <& /order/create_item_file_dialog.mas, order_id => $order_id &>
 <& /order/create_ontology_file_dialog.mas &>
-<& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => 'ID'."$order_id", trial_id=> "$order_id", trial_name=> "order number"."$order_id", trial_stock_type => '' &>
+<& /order/generate_identifier_barcode_dialog.mas, identifier => "", order_id=> "$order_id" &>
