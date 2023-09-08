@@ -309,6 +309,33 @@ $trial_stock_type => undef
     </div>
 </div>
 
+<div class="modal fade" id="generate_item_barcode_dialog" name="generate_item_barcode_dialog" tabindex="-1" role="dialog" aria-labelledby="generateItemBarcodeDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateItemBarcodeDialog">Generate Barcode</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Generate barcodes for requested items in this order.
+                    </p>
+                    <center>
+                        <p>
+                            <button type="button" class="btn btn-primary" name="item_barcodes" id="item_barcodes">Requested Item Barcodes</button>
+                        </p>
+                    </center>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="trial_barcode_dialog_ok_buttonxx" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <script>
@@ -619,7 +646,34 @@ jQuery(document).ready(function () {
         });
     });
 
+    jQuery('#generate_item_barcode_button').click(function(){
+        jQuery('#generate_item_barcode_dialog').modal("show");
+    });
 
+    jQuery('#item_barcodes').click(function() {
+        jQuery('#generate_item_barcode_dialog').modal("hide");
+        jQuery('#generate_trial_barcode_dialog').modal("show");
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for requested items');
+
+        jQuery.ajax({
+            url:'/ajax/order/order_tracking_ids',
+            data:{'order_id': <% $trial_id %> },
+            success: function(response){
+                var order_item_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                for (i=0; i<response.tracking_info.length; i++) {
+                    order_item_html = order_item_html + response.tracking_info[i][0] + "\n";
+                }
+                order_item_html = order_item_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(order_item_html);
+
+            },
+            error: function(response){
+                alert("Error retrieving requested item info.");
+            }
+        });
+    });
 
 });
 

@@ -56,6 +56,7 @@ $ordering_type => undef
             <div class = "panel-body">
                 <button id="download_item_file_button" class="btn btn-primary">Download Item File</button>
                 <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
+                <button id="generate_item_barcode_button" class="btn btn-primary">Generate Item Barcode</button>
             </div>
         </div>
     </div>
@@ -65,3 +66,4 @@ $ordering_type => undef
 <& /order/re_open_dialog.mas, order_id => $order_id, order_to => $order_to &>
 <& /order/create_item_file_dialog.mas, order_id => $order_id &>
 <& /order/create_ontology_file_dialog.mas &>
+<& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => 'ID'."$order_id", trial_id=> "$order_id", trial_name=> "order number"."$order_id", trial_stock_type => '' &>
