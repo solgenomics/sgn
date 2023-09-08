@@ -57,56 +57,21 @@ sub generate_check_value : Path('/solgs/generate/checkvalue') Args(0) {
 
 }
 
-sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection') Args(0) {
+sub check_predicted_list_selection :
+  Path('/solgs/check/predicted/list/selection') Args(0) {
     my ( $self, $c ) = @_;
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    my $training_pop_id = $c->stash->{training_pop_id}; 
-    my $selection_pop_id = $c->stash->{selection_pop_id};    
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
 
     $c->controller('solGS::Download')
       ->selection_prediction_download_urls( $c, $training_pop_id,
         $selection_pop_id );
 
     my $ret->{output} = $c->stash->{selection_prediction_download};
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-sub load_list_selection_pop : Path('/solgs/load/genotypes/list/selection') Args(0) {
-    my ( $self, $c ) = @_;
-
-    my $args = $c->req->param('arguments');
-    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
-
-    my $training_pop_id = $c->stash->{training_pop_id};   
-    my $selection_pop_id = $c->stash->{selection_pop_id};    
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    $self->get_genotypes_list_details($c);
-
-    my $genotypes_list = $c->stash->{genotypes_list};
-    my $genotypes_ids  = $c->stash->{genotypes_ids};
-
-    $self->genotypes_list_genotype_file( $c, $selection_pop_id, $protocol_id );
-    my $genotype_file = $c->stash->{genotypes_list_genotype_file};
-
-    $self->create_list_population_metadata_file( $c, $selection_pop_id );
-
-    my $ret->{status} = 'failed';
-
-    if ( -s $genotype_file ) {
-        $self->predict_list_selection_gebvs($c);
-
-        $ret->{status} = $c->stash->{status};
-        $ret->{output} = $c->stash->{selection_prediction_download};
-    }
 
     $ret = to_json($ret);
 
@@ -541,44 +506,6 @@ sub map_plots_genotypes {
         $c->stash->{genotypes_list} = \@genotypes;
         $c->stash->{genotypes_ids}  = \@genotypes_ids;
     }
-
-}
-
-sub load_plots_list_training : Path('/solgs/load/plots/list/training') Args(0) {
-    my ( $self, $c ) = @_;
-
-    my $args = $c->req->param('arguments');
-
-    my $json = JSON->new();
-    $args = $json->decode($args);
-
-    $c->stash->{list_name}              = $args->{list_name};
-    $c->stash->{list_id}                = $args->{list_id};
-    $c->stash->{model_id}               = $args->{training_pop_id};
-    $c->stash->{population_type}        = $args->{population_type};
-    $c->stash->{list_id}                = $args->{list_id};
-    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
-
-    my $model_id = $c->stash->{model_id};
-
-    $self->plots_list_phenotype_file($c);
-    my $pheno_file = $c->stash->{plots_list_phenotype_file};
-
-    $self->genotypes_list_genotype_file( $c, $model_id );
-    my $geno_file = $c->stash->{genotypes_list_genotype_file};
-
-    $self->create_list_population_metadata_file( $c, $model_id );
-
-    my $ret->{status} = 'failed';
-
-    if ( -s $geno_file && -s $pheno_file ) {
-        $ret->{status} = 'success';
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 

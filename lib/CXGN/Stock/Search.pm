@@ -241,6 +241,16 @@ has 'display_pedigree' => (
 	default => 0
 );
 
+has 'external_ref_id_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'external_ref_source_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 sub search {
     my $self = shift;
     print STDERR "CXGN::Stock::Search search start\n";
@@ -267,6 +277,8 @@ sub search {
     my @species_array = $self->species_list ? @{$self->species_list} : ();
     my @crop_name_array = $self->crop_name_list ? @{$self->crop_name_list} : ();
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
+    my @external_ref_id_array = $self->external_ref_id_list ? @{$self->external_ref_id_list} : ();
+    my @external_ref_source_array = $self->external_ref_source_list ? @{$self->external_ref_source_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
 
@@ -443,7 +455,13 @@ sub search {
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
+                    my $stockprop_list_search_sql = "stock_id in " .
+                        "(" .
+                            "select id from (" .
+	                            "select jsonb_object_keys(\"$term_name\") as accession_number_key, stock_id as id from materialized_stockprop" .
+                            ") as json_return where json_return.accession_number_key in ($search_vals_sql)" .
+                        ")";
+                    push @stockprop_wheres, $stockprop_list_search_sql;
                 } else {
                     push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
                 }
@@ -483,6 +501,28 @@ sub search {
     if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
     }
+
+    if(scalar(@external_ref_id_array) > 0 || scalar(@external_ref_source_array) > 0) {
+        my $stock_xref_search_sql = "select stock_id
+            from (select sxref.stock_id as stock_id, array_agg(d.accession) as ids, array_agg(d2.name) as sources
+                  from stock_dbxref sxref
+                           join dbxref d on sxref.dbxref_id = d.dbxref_id
+                           join db d2 on d.db_id = d2.db_id
+                  group by sxref.stock_id) stock_xref
+            where ";
+
+        my @xref_search_ands;
+        if(scalar(@external_ref_id_array)>0) {
+            push @xref_search_ands, "ids @> '{\"" . join('","', @external_ref_id_array) . "\"}'";
+        }
+        if(scalar(@external_ref_source_array)>0) {
+            push @xref_search_ands, "sources @> '{\"" . join('","', @external_ref_source_array) . "\"}'";
+        }
+
+        $stock_xref_search_sql = $stock_xref_search_sql . join(" and ", @xref_search_ands);
+        $search_query->{'me.stock_id'} = {'in'=>\$stock_xref_search_sql};
+    }
+
     print STDERR "**stock search q " . Dumper($search_query)  ."\n";
     print STDERR "***stock_join= " . Dumper($stock_join) ." \n\n";
     my $rs = $schema->resultset("Stock::Stock")->search(
@@ -496,6 +536,7 @@ sub search {
     });
 
     my $records_total = $rs->count();
+    print STDERR "total records: ".$records_total;
     $any_name =~ s/^\s+|\s+$//g;
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
@@ -582,12 +623,14 @@ ORDER BY organism_id ASC;";
     # Get additional stock properties (pedigree, synonyms, donor info)
     my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\"
+               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name
         FROM stock
         LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
         LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
         LEFT JOIN stock_relationship f_rel ON (stock.stock_id = f_rel.object_id AND f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
+        LEFT JOIN stock_relationship family_rel ON (stock.stock_id = family_rel.subject_id AND family_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of'))
+        LEFT JOIN stock family ON (family_rel.object_id = family.stock_id)
         LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
         WHERE stock.stock_id IN ($id_ph);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
@@ -607,6 +650,7 @@ ORDER BY organism_id ASC;";
         my @donor_accessions = keys %{$donor_json};
         my @donor_institutes = keys %{$donor_inst_json};
         my @donor_puis = keys %{$donor_pui_json};
+        my $population_name = $r[10] || undef;
 
         # add stock props to the result hash
         $result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
@@ -628,6 +672,8 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
         $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
+
+        $result_hash{$stock_id}{population_name} = $population_name;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
@@ -649,8 +695,11 @@ ORDER BY organism_id ASC;";
                 foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
                     push @stockprop_vals_string, $_;
                 }
-                my $stockprop_vals_string = join ',', @stockprop_vals_string;
-                $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
+                if (@stockprop_vals_string){
+                    my $stockprop_vals_string = join ',', @stockprop_vals_string;
+                    print STDERR $stockprop_view[$s].": ". $stockprop_vals_string;
+                    $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
+                }
             }
         }
 
@@ -700,9 +749,6 @@ sub _refresh_materialized_stockprop {
         my $h = $schema->storage->dbh()->prepare($q);
 
         my $stockprop_refresh_q = "
-        DROP EXTENSION IF EXISTS tablefunc CASCADE;
-        CREATE EXTENSION tablefunc;
-
         DROP MATERIALIZED VIEW IF EXISTS public.materialized_stockprop CASCADE;
         CREATE MATERIALIZED VIEW public.materialized_stockprop AS
         SELECT *

@@ -558,7 +558,7 @@ sub _validate_with_plugin {
 
       push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
 
-      @accessions = grep !/$matched_synonym/, @accessions;
+      @accessions = grep !/\Q$matched_synonym/, @accessions;
       push @accessions, $found_acc_name_from_synonym;
   }
 

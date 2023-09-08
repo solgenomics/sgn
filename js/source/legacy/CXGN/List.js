@@ -672,16 +672,15 @@ CXGN.List.prototype = {
         return addeditems;
     },
 
-    /* listSelect: Creates an html select with lists of requested types.
+
+    /* getLists: Creates a js object with private and public  lists of the requested list types.
 
        Parameters:
-         div_name: The div_name where the select should appear
-         types: a list of list types that should be listed in the menu
-         add_empty_element: text. if present, add an empty element with the
-           provided text as description
+        types: a list of list types e.g. ['accessions', 'trials']
+      Returns:
+       a js object with 'private_lists' and public_lists, each with arrays of the requested list types
     */
-
-    listSelect: function(div_name, types, empty_element, refresh, hide_public_lists) {
+    getLists: function(types) {
         var lists = new Array();
         var public_lists = new Array();
 
@@ -705,6 +704,50 @@ CXGN.List.prototype = {
             lists = this.availableLists();
             public_lists = this.publicLists();
         }
+
+        return {
+            'private_lists': lists,
+            'public_lists': public_lists
+        }
+    },
+
+    /*
+    converts an array of list data arrays into an array of list data objects (named values)
+    */
+    convertArrayToJson: function (listsArray) {
+
+        var jsonArray = [];
+        if (listsArray) {
+            listsArray.forEach(function (array) {
+
+                var listObj = {
+                    id: array[0],
+                    name: array[1],
+                    type:array[5],
+                    count: array[3]
+                }
+
+                jsonArray.push(listObj);
+            });
+        }
+
+        return jsonArray;
+    },
+
+    /* listSelect: Creates an html select with lists of requested types.
+
+       Parameters:
+         div_name: The div_name where the select should appear
+         types: a list of list types that should be listed in the menu
+         add_empty_element: text. if present, add an empty element with the
+           provided text as description
+    */
+
+    listSelect: function(div_name, types, empty_element, refresh, hide_public_lists) {
+    
+        var allLists = this.getLists(types);
+        var lists = allLists.private_lists;
+        var public_lists = allLists.public_lists;
 
         var html = '<select class="form-control input-sm" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
         if (empty_element) {

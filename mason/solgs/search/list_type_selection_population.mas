@@ -21,7 +21,7 @@ my $referer = $c->req->path;
 my $search_params = '?dsp=genotyping_protocols,trials|accessions&dsr=/' . $referer;
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation"] &>
+<& /util/import_javascript.mas, classes => ["solGS.List", "solGS.listTypeSelectionPopulation"] &>
 
 <& /solgs/tools/select_menu.mas,
 analysis_type => 'list_type_selection',

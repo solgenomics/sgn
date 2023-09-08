@@ -24,6 +24,7 @@ library(jsonlite)
 library(data.table)
   }))
 library(genoDataFilter)
+library(Matrix)
 
 allArgs <- commandArgs()
 
@@ -87,7 +88,7 @@ markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 modelPhenoFile <- grep('model_phenodata', outputFiles, value = TRUE)
 message('model input trait pheno file ', modelPhenoFile)
 modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
-message('model input trait geno file ', modelPhenoFile)
+message('model input trait geno file ', modelGenoFile)
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 analysisReportFile <- grep("_report_", outputFiles, value = TRUE)
@@ -104,7 +105,7 @@ if (is.null(genoFile)) {
 }
 
 if (file.info(genoFile)$size == 0) {
-  stop("genotype data file is empty.")
+  stop(paste0("genotype data file ", genoFile, " is empty."))
 }
 
 readfilteredTrainingGenoData <- c()
@@ -186,7 +187,8 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
     }
 
     if (file.info(phenoFile)$size == 0) {
-        stop("phenotype data file is empty.")
+       stop(paste0("phenotype data file ", phenoFile, " is empty."))
+
     }
 
     phenoData <- data.frame(fread(phenoFile,
@@ -419,7 +421,7 @@ if (length(relationshipMatrixFile) != 0) {
   } else {
     relationshipMatrix           <- A.mat(genoData)
   diag(relationshipMatrix)     <- diag(relationshipMatrix) %>% replace(., . < 1, 1)
-relationshipMatrix <- relationshipMatrix %>% replace(., . < 0, 0)
+relationshipMatrix <- relationshipMatrix %>% replace(., . <= 0, 0.00001)
 
     inbreeding <- diag(relationshipMatrix)
     inbreeding <- inbreeding - 1
@@ -438,11 +440,18 @@ relationshipMatrix <- data.frame(relationshipMatrix)
 colnames(relationshipMatrix) <- rownames(relationshipMatrix)
 
 relationshipMatrix <- rownames_to_column(relationshipMatrix, var="genotypes")
-relationshipMatrix <- relationshipMatrix %>% mutate_if(is.numeric, round, 3)
+relationshipMatrix <- relationshipMatrix %>% mutate_if(is.numeric, round, 5)
 relationshipMatrix <- column_to_rownames(relationshipMatrix, var="genotypes")
 
 traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in% commonObs), ]
 traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% commonObs)]
+
+kinshipLog <- c()
+if (any(eigen(traitRelationshipMatrix)$values < 0) ) {
+kinshipLog <- paste0("\n\nNote: The kinship matrix of this dataset causes 'Not positive semi-definite error' while running the Cholesky decomposition. To fix this and run the modeling, a corrected positive semi-definite matrix was computed using the 'Matrix::nearPD' function. The negative eigen values from this decomposition nudged to positive values.\n\n")
+
+traitRelationshipMatrix <- Matrix::nearPD(as.matrix(traitRelationshipMatrix))$mat
+}
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
 
@@ -456,6 +465,10 @@ if (nCores > 1) {
 varCompData <- c()
 modelingLog <- paste0("\n\n#Training a model for ", traitAbbr, ".\n\n")
 modelingLog <- append(modelingLog, paste0("The genomic prediction modeling follows a two-step approach. First trait average values, as described above, are computed for each genotype. This is followed by the model fitting on the basis of single phenotype value for each genotype entry and kinship  matrix computed from their marker data.\n"))
+
+if (length(kinshipLog)) {
+modelingLog <- append(modelingLog, paste0(kinshipLog))
+}
 
 if (length(selectionData) == 0) {
 
