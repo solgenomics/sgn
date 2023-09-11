@@ -31,7 +31,7 @@ $identifier
                         </div>
                           <div class="col-md-10 col-lg-10">
 
-                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/pdf" >
+                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf" >
 
                              <div class="form-group form-group-sm" >
                                <label class="col-sm-4 control-label">List of Identifiers: </label>
@@ -184,7 +184,6 @@ $identifier
                                        <option value="NCSU">NCSU printing format</option>
                                        <option value="IITA-3">IITA-3-barcode</option>
                                        <option value="IITA-2">IITA-2-barcode</option>
-                                       <option value="crossing">CROSS</option>
                                      </select>
                                  </div>
                                </div>
@@ -249,7 +248,7 @@ jQuery(document).ready(function () {
             url:'/ajax/order/order_tracking_ids',
             data:{'order_id': <% $order_id %> },
             success: function(response){
-                var order_item_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+                var order_item_html = '<textarea class="form-control" id="identifier_names" name="identifier_names" >';
 
                 for (i=0; i<response.tracking_info.length; i++) {
                     order_item_html = order_item_html + response.tracking_info[i][0] + "\n";
