@@ -14,7 +14,6 @@ use CXGN::Stock::Order;
 use CXGN::Stock::OrderBatch;
 use CXGN::UploadFile;
 use CXGN::Stock::ParseUpload;
-use CXGN::List;
 use Test::WWW::Mechanize;
 use DateTime;
 
@@ -33,7 +32,6 @@ $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username" => "janedoe"
 my $response = decode_json $mech->content;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
-print STDERR $sgn_session_id . "\n";
 
 #add vendor role for johndoe
 my $johndoe_id = CXGN::People::Person->get_person_by_username($dbh, 'johndoe');
@@ -49,36 +47,10 @@ my $all_stockprop_before_adding = $schema->resultset("Stock::Stockprop")->search
 
 my $program_id = $schema->resultset('Project::Project')->find({ name => 'test' })->project_id();
 
-my $item_rs = $schema->resultset("Stock::Stock")->find({ name => 'UG120001' });
-my $item_id = $item_rs->stock_id();
-my $stock_catalog = CXGN::Stock::Catalog->new({
-    bcs_schema => $schema,
-    parent_id  => $item_id,
-});
+$mech->post_ok('http://localhost:3010/ajax/catalog/add_item', [ 'name' => 'UG120001', 'category' => 'released variety', 'additional_info' => 'test', 'material_source' => 'BTI', 'breeding_program_id' => $program_id, 'contact_person' => 'johndoe' ]);
 
-my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
-my $organism_id = $item_rs->organism_id();
-my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
-my $item_species = $organism->species();
-my $item_variety;
-my $item_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $variety_type_id});
-if ($item_stockprop) {
-    $item_variety = $item_stockprop->value();
-} else {
-    $item_variety = 'NA';
-}
-
-$stock_catalog->item_type('single item');
-$stock_catalog->material_type('plant');
-$stock_catalog->material_source('BTI');
-$stock_catalog->category('released variety');
-$stock_catalog->species($item_species);
-$stock_catalog->variety($item_variety);
-$stock_catalog->breeding_program($program_id);
-$stock_catalog->additional_info('test adding info');
-$stock_catalog->contact_person_id($johndoe_id);
-
-ok($stock_catalog->store(), "check adding catalog");
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
 my $after_adding_catalog_item = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
 my $after_adding_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
@@ -86,67 +58,67 @@ my $after_adding_all_stockprop = $schema->resultset("Stock::Stockprop")->search(
 is($after_adding_catalog_item, $before_adding_catalog_item + 1);
 is($after_adding_all_stockprop, $all_stockprop_before_adding + 1);
 
-for my $extension ("xls", "xlsx") {
 
-    #test uploading catalog items
-    my $before_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
-    my $before_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+#test uploading catalog items
+my $extension = "xls";
 
-    my $file_name = "t/data/stock/catalog_items.$extension";
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd() . "_" . $time->hms();
+my $before_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $before_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
 
-    #Test archive upload file
-    my $uploader = CXGN::UploadFile->new({
-        tempfile         => $file_name,
-        subdirectory     => 'temp_catalog_upload',
-        archive_path     => '/tmp',
-        archive_filename => "catalog_items.$extension",
-        timestamp        => $timestamp,
-        user_id          => $johndoe_id,
-        user_role        => 'curator'
-    });
+my $file = $f->config->{basepath} . "/t/data/stock/catalog_items.$extension";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/catalog/upload_items',
+    Content_Type => 'form-data',
+    Content => [
+        "catalog_items_upload_file" => [
+            $file,
+            "catalog_items.$extension",
+            Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+is_deeply($message_hash, { 'success' => 1 });
 
-    ## Store uploaded temporary file in archive
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    ok($archived_filename_with_path);
-    ok($md5);
+my $after_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $after_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
 
-    my @stock_props = ('stock_catalog_json');
-    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props => \@stock_props);
-    $parser->load_plugin('CatalogXLS');
-    my $parsed_data = $parser->parse();
-    ok($parsed_data, "Check if parse validate excel file works");
-    ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
-    #print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
+is($after_uploading_catalog_items, $before_uploading_catalog_items + 2);
+is($after_uploading_all_stockprop, $before_uploading_all_stockprop + 2);
 
-    my %catalog_info = %{$parsed_data};
-    foreach my $item_name (keys %catalog_info) {
-        my $stock_id = $schema->resultset("Stock::Stock")->find({ uniquename => $item_name })->stock_id();
-        my %catalog_info_hash = %{$catalog_info{$item_name}};
+#test adding catalog items using list
+my $list_id = CXGN::List::create_list($schema->storage->dbh(), 'accessions_for_catalog', 'test', $johndoe_id );
+my $list = CXGN::List->new( { dbh => $schema->storage->dbh(), list_id => $list_id });
+$list->type('accessions');
+$list->add_bulk( [ 'UG120005', 'UG120006', 'UG120007']);
 
-        my $stock_catalog = CXGN::Stock::Catalog->new({
-            bcs_schema        => $schema,
-            item_type         => $catalog_info_hash{item_type},
-            category          => $catalog_info_hash{category},
-            material_type       => $catalog_info_hash{material_type},
-            material_source   => $catalog_info_hash{material_source},
-            breeding_program  => $catalog_info_hash{breeding_program},
-            additional_info      => $catalog_info_hash{additional_info},
-            contact_person_id => $catalog_info_hash{contact_person_id},
-            parent_id         => $stock_id
-        });
+my $before_adding_catalog_list = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $before_adding_catalog_list_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
 
-        ok($stock_catalog->store(), "check uploading catalog item");
-    }
+$mech->post_ok('http://localhost:3010/ajax/catalog/add_item_list', [ 'list_type' => 'accessions', 'catalog_list' => $list_id, 'category' => 'released variety', 'additional_info' => 'test', 'material_source' => 'BTI', 'breeding_program_id' => $program_id, 'contact_person' => 'johndoe' ]);
 
-    my $after_uploading_catalog_items = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
-    my $after_uploading_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
-    is($after_uploading_catalog_items, $before_uploading_catalog_items + 2);
-    is($after_uploading_all_stockprop, $before_uploading_all_stockprop + 2);
-}
+my $after_adding_catalog_list = $schema->resultset("Stock::Stockprop")->search({ type_id => $catalog_type_id })->count();
+my $after_adding_catalog_list_all_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+is($after_adding_catalog_list, $before_adding_catalog_list + 3);
+is($after_adding_catalog_list_all_stockprop, $before_adding_catalog_list_all_stockprop + 3);
+
+#delete list after testing
+CXGN::List::delete_list($dbh, $list_id);
+
+#check catalog items
+$mech->post_ok("http://localhost:3010/ajax/catalog/items");
+$response = decode_json $mech->content;
+my $catalog_info = $response->{'data'};
+my $total_number_of_items = scalar @$catalog_info;
+is($total_number_of_items, 6 );
 
 #creating shopping cart with 'catalog_items' list type
 my $janedoe_id = CXGN::People::Person->get_person_by_username($dbh, 'janedoe');
