@@ -35,7 +35,7 @@ has "config_file" => (
 
 sub run {
     my $self = shift;
-    my $secs = 60 * 4;
+    my $secs = 30; #60 * 4;
 
     my $pre_jobs = $self->run_prerequisite_jobs();
     sleep($secs);
