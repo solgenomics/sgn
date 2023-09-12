@@ -19,21 +19,23 @@ $identifier
                     <p id = "barcode_dialog_subtitle2">
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                     </p>
-                    <center>
-                        <div class="well">
-                            <h4 class="modal-title">Order:<% $order_id %></h4>
-                        </div>
-                    </center>
-
                     <div class="well well-sm">
                         <div class="row">
                             <div class="col-md-1 col-lg-1">
                         </div>
                         <div class="col-md-10 col-lg-10">
-                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf" >
+                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?order_id=<%$order_id%>" >
+                                <div class="form-group" form-group-sm>
+                                    <label class="col-sm-4 control-label" for="tracking_order_id">Order ID: </label>
+                                    <div class="col-sm-8 ">
+                                        <div class="input-group">
+                                            <input class="form-control col-sm-8" id="tracking_order_id" type="text" value="<%$order_id%>" disabled/>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="form-group form-group-sm" >
                                     <label class="col-sm-4 control-label">List of Identifiers: </label>
-                                    <div class="col-sm-8" id="trial_accessions">
+                                    <div class="col-sm-8" id="item_list">
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
@@ -231,8 +233,8 @@ jQuery(document).ready(function () {
                     order_item_html = order_item_html + response.tracking_info[i][0] + "\n";
                 }
                 order_item_html = order_item_html + "</textarea>";
-                jQuery('#trial_accessions').empty();
-                jQuery('#trial_accessions').html(order_item_html);
+                jQuery('#item_list').empty();
+                jQuery('#item_list').html(order_item_html);
 
             },
             error: function(response){

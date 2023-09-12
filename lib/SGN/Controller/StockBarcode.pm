@@ -9,6 +9,7 @@ use CXGN::Stock::StockBarcode;
 use Data::Dumper;
 use CXGN::Stock;
 use SGN::Model::Cvterm;
+use CXGN::Stock::Order;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -1399,7 +1400,9 @@ sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
 sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0) {
     my ($self, $c) = @_;
 
-    my $stock_names = $c->req->param("identifier_names");
+    my $item_names = $c->req->param("identifier_names");
+    my $order_id = $c->req->param("order_id");
+    print STDERR "TRACKING ORDER ID =".Dumper($order_id);
     my $labels_per_page = $c->req->param("label_rows") || 10;
     my $labels_per_row  = $c->req->param("label_cols") || 1;
     my $page_format = $c->req->param("page_format") || "letter";
@@ -1421,6 +1424,8 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
     my $parents;
     my $type_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
     my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
@@ -1443,13 +1448,25 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
         $right_margin_mm
     );
 
-    $stock_names =~ s/\r//g;
-    my @names = split /\n/, $stock_names;
+    $item_names =~ s/\r//g;
+    my @names = split /\n/, $item_names;
     my @found;
     my @not_found;
-    print STDERR "IDENTIFIER NAME =".Dumper(\@names)."\n";
-    foreach my $id (@names) {
-        push @found, [$id, $id];
+
+    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
+    my $tracking_info = $order_obj->get_tracking_info();
+    my @tracking_list = @$tracking_info;
+    my @id_list;
+    foreach my $item_info (@tracking_list) {
+        push @id_list, $item_info->[0];
+    }
+
+    foreach my $name (@names) {
+        if ($name ~~ @id_list) {
+            push @found, [$name, $name];
+        } else {
+            push @not_found, $name;
+        }
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
