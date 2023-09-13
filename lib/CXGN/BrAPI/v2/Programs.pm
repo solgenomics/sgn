@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -27,8 +28,8 @@ sub search {
 	my @program_ids = $inputs->{programDbIds} ? @{$inputs->{programDbIds}} : ();
 	my @program_names = $inputs->{programNames} ? @{$inputs->{programNames}} : ();
 
-	if (scalar(@abbreviations)>0 || scalar(@externalreference_sources)>0 || scalar(@externalreference_ids)>0){
-        push @$status, { 'error' => 'The following parameters are not implemented: abbreviations, externalReferenceID, externalReferenceSource' };
+	if (scalar(@abbreviations)>0){
+        push @$status, { 'error' => 'The following parameters are not implemented: abbreviations' };
     }
 
 	my $ps = CXGN::BreedersToolbox::Projects->new({ schema => $self->bcs_schema });
@@ -38,10 +39,13 @@ sub search {
 	my %program_names = map { $_ => 1 } @program_names;
 	my %program_ids = map { $_ => 1 } @program_ids;
 	my %objectives = map { $_ => 1 } @objectives;
+	my %reference_ids = map { $_ => 1 } @externalreference_ids;
+	my %reference_sources = map { $_ => 1 } @externalreference_sources;
 
 	foreach (@$programs){
 		my $passes_search;
-		if (scalar(@program_names)>0 || scalar(@program_ids)>0 || scalar(@objectives)>0 || scalar(@commoncrop_names)>0 ){
+		if (scalar(@program_names)>0 || scalar(@program_ids)>0 || scalar(@objectives)>0 || scalar(@commoncrop_names)>0 ||
+		 	scalar(@externalreference_ids)>0){
 			if(exists($program_names{$_->[1]})){
 				$passes_search = 1;
 			}
@@ -51,6 +55,21 @@ sub search {
 			if(exists($objectives{$_->[2]})){
 				$passes_search = 1;
 			}
+
+			# combine referenceID and referenceSource into AND check as used by bi-api filter
+			# won't work with general search but wasn't implemented anyways
+			if ($_->[3]) {
+				foreach my $reference (@{$_->[3]}) {
+
+					my $ref_id = $reference->{'referenceID'};
+					my $ref_source = $reference->{'referenceSource'};
+
+					if (exists($reference_ids{$ref_id}) && exists($reference_sources{$ref_source})) {
+						$passes_search = 1;
+					}
+				}
+			}
+
 			if ( grep( /^$crop$/, @commoncrop_names ) ) {
 				$passes_search = 1;
 			}
@@ -62,6 +81,8 @@ sub search {
 			push @available, $_;
 		}
 	}
+
+
 
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@available, $page_size, $page);
 	my @data;
@@ -96,6 +117,17 @@ sub search {
 		}
 
 		if ($passes_search){
+
+			my @projects = ($_->[0]);
+			my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+				bcs_schema => $self->bcs_schema,
+				table_name => 'project',
+				table_id_key => 'project_id',
+				id => \@projects
+			});
+			my $external_references = $references->search();
+			my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+
 			push @data, {
 				programDbId=>qq|$_->[0]|,
 				programName=>$_->[1],
@@ -103,7 +135,7 @@ sub search {
 				additionalInfo => {},
 	            commonCropName => $inputs->{crop},
 	            documentationURL => undef,
-	            externalReferences  => [],
+	            externalReferences  => @formatted_external_references,
 	            leadPersonDbId => $person_id,
 	            leadPersonName=> $names,
 	            objective=>$_->[2],
@@ -148,7 +180,17 @@ sub detail {
 	}
     my $names = join ',', @sp_person_names;
     my $person_id = join ',',  @sp_persons;
+	my @ids = ($id);
 
+	my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+		bcs_schema => $self->bcs_schema,
+		table_name => 'project',
+		table_id_key => 'project_id',
+		id => \@ids
+	});
+	my $external_references = $references->search();
+	my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+    
 	%result = (
 		programDbId=>qq|$id|,
 		programName=>$name,
@@ -156,7 +198,7 @@ sub detail {
 		additionalInfo => {},
         commonCropName => $crop,
         documentationURL => undef,
-        externalReferences  => [],
+        externalReferences  => @formatted_external_references,
         leadPersonDbId => $person_id ? $person_id : undef,
         leadPersonName=> $names ? $names : undef,
         objective=>$description,
@@ -170,32 +212,39 @@ sub detail {
 sub store {
 	my $self = shift;
     my $data = shift;
-    my $user_id =shift;
-
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema();
 
-    if (!$user_id) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	}
 	my @program_ids;
 
 	foreach my $params (@{$data}) {
+
 		my $name = $params->{programName} || undef;
-		my $desc = $params->{objective} || undef;
+		my $desc = $params->{objective} || 'N/A'; # needs an objective due to db constraints
+		my $external_references = $params->{externalReferences};
 
 		my $p = CXGN::BreedersToolbox::Projects->new({
-            schema => $schema,
-            name => $name,
-            description => $desc,
+			schema              => $schema,
+			name                => $name,
+			description         => $desc,
+			external_references => $external_references,
         });
 
 		my $new_program = $p->store_breeding_program();
 
-		print STDERR "New program is ".Dumper($new_program)."\n";
+		if ($new_program->{'error'}) {
+			warn $new_program->{'error'};
 
+			my $code = 500;
+			if($new_program->('nameExists') == 1) {
+				$code = 409;
+			}
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $new_program->{'error'}, $code);
+		}
+
+		print STDERR "New program is " . Dumper($new_program) . "\n";
 		push @program_ids, $new_program;
 
 	}
@@ -210,25 +259,23 @@ sub store {
 sub update {
 	my $self = shift;
     my $params = shift;
-    my $user_id =shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema();
 
-    if (!$user_id) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	}
 	my @program_ids;
 
 	my $name = $params->{programName} || undef;
-	my $desc = $params->{objective} || undef;
+	my $desc = $params->{objective} || 'N/A'; # needs an objective due to db constraints
 	my $id = $params->{programDbId} || undef;
 
 	my $program = $schema->resultset('Project::Project')->find({project_id => $id});
 	if (!$program) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program id %s does not exist.',$id));
+		my $err_msg = sprintf('Program id %s does not exist.',$id);
+		warn $err_msg;
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_msg, 404);
 	}
 
 	my $row = $schema->resultset("Project::Project")->update_or_create(

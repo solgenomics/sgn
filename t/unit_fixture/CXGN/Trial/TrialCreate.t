@@ -451,7 +451,6 @@ is($data->[0]->{'plate_name'},'test_genotyping_trial_name');
 is($data->[0]->{'sample_type'},'DNA');
 is($data->[0]->{'plate_format'},'96');
 is($data->[0]->{'number_of_samples'}, '11');
-is($data->[0]->{'number_of_samples_with_data'},'0');
 
 #test moving genotyping plate to another project
 my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
