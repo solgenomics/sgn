@@ -23,7 +23,7 @@ $t->while_logged_in_as("submitter", sub {
 
     # Add new image
     my $upload_input = $t->find_element_ok("file", "name", "find image input");
-    my $filename = $f->config->{basepath}."/t/data/cassava_image.jpg";
+    my $filename = $f->config->{basepath}."/t/data/tv_test_1.png";
 
     $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
@@ -41,7 +41,7 @@ $t->while_logged_in_as("submitter", sub {
         'id',
         "find content of image name")->get_attribute('innerHTML');
 
-    ok($page_title =~ /cassava_image.jpg/, "Verify page title name: cassava_image.jpg");
+    ok($page_title =~ /tv_test_1.png/, "Verify page title name: tv_test_1.png");
 
     # check image content on base page for stock view in image section
     $t->get_ok('stock/38879/view');
@@ -56,7 +56,7 @@ $t->while_logged_in_as("submitter", sub {
         'id',
         "find content of image section")->get_attribute('innerHTML');
 
-    ok($image_section =~ /cassava_image.jpg/, "Verify image file name in image section: cassava_image.jpg");
+    ok($image_section =~ /tv_test_1.png/, "Verify image file name in image section: tv_test_1.png");
 
     }
 );
