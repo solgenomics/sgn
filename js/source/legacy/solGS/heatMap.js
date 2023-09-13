@@ -198,14 +198,19 @@ solGS.heatmap = {
       })
       .attr("width", corXscale.rangeBand())
       .attr("height", corYscale.rangeBand())
+      .style("stroke",  function (d) {
+        if (d.value == "NA") {
+          return "white";
+        } else {
+				return txtColor;
+        }})
+      .style("stroke-opacity", 0.2)
       .attr("fill", function (d) {
         if (d.value == "NA") {
           return "white";
         } else {
 				return corZscale(d.value);
-        }
-		
-      })
+        }})
       .attr("stroke", "white")
       .attr("stroke-width", 1)
       .on("mouseover", function (d) {
@@ -223,7 +228,7 @@ solGS.heatmap = {
                   pv = d.pvalue;
                 }
                 return `${labels[d.row]} vs. ${labels[d.col]}:  
-							${d.value}, p-value: <${d3.format(".3f")(pv)}`;
+							${d.value}, &alpha;: <${d3.format(".3f")(pv)}`;
               } else {
                 return `${labels[d.row]} vs. ${labels[d.col]}:  
 								${d.value}`;
