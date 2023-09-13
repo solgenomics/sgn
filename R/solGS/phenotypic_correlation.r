@@ -106,9 +106,7 @@ coefficients <- data.frame(coefficients)
   coefficients <- coefficients[ , colSums(is.na(coefficients)) < nrow(coefficients)] 
 }
 
-pvalues[upper.tri(pvalues)]           <- NA
-coefficients[upper.tri(coefficients)] <- NA
-coefficients <- data.frame(coefficients)
+ coefficients[upper.tri(coefficients)] <- NA
 
 pvalues <- coefpvalues$cor.mat
 pvalues[lower.tri(pvalues)] <- coefpvalues$p.values[, 3]
