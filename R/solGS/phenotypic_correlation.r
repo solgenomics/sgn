@@ -101,13 +101,12 @@ coefpvalues <- rcor.test(correPhenoData,
 
 coefficients <- coefpvalues$cor.mat
 #remove rows and columns that are all "NA"
-if (apply(coefficients, 1, function(x)any(is.na(x))) ||
-    apply(coefficients, 2, function(x)any(is.na(x))))
-  {
-    coefficients <- coefficients[-which(apply(coefficients, 1, function(x)all(is.na(x)))),
-                               -which(apply(coefficients, 2, function(x)all(is.na(x))))]
-  }
-coefficients <- round(coefficients, 3)
+coefficients <- data.frame(coefficients)
+ if (any(is.na(coefficients))) {
+  coefficients <- coefficients[ , colSums(is.na(coefficients)) < nrow(coefficients)] 
+}
+
+pvalues[upper.tri(pvalues)]           <- NA
 coefficients[upper.tri(coefficients)] <- NA
 coefficients <- data.frame(coefficients)
 

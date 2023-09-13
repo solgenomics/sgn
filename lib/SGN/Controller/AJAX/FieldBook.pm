@@ -238,7 +238,14 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
       my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_ids[$order] );
       my $synonym = $cvterm->get_uppercase_synonym();
-      my $name = $synonym || $trait_name; # use uppercase synonym if defined, otherwise use full trait name
+      my $name;
+      if($c->config->{fieldbook_trait_synonym}) {
+          print STDERR "synonym: $synonym, trait_name: $trait_name\n";
+          $name = $synonym || $trait_name; # use uppercase synonym if defined, otherwise use full trait name
+      } else {
+          print STDERR "trait_name: $trait_name\n";
+          $name = $trait_name;
+      }
       $order++;
 
       #get trait info

@@ -108,6 +108,16 @@ has 'marker_type' => (
     is => 'rw'
 );
 
+has 'marker_info_keys' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw'
+);
+
+has 'assay_type' => (
+    isa => 'Str',
+    is => 'rw'
+);
+
 #Filtering KEYS
 
 has 'chromosome_list' => (
@@ -148,6 +158,10 @@ sub BUILD {
 
     my $map_details = $value ? decode_json $value : {};
     my $marker_names = $map_details->{marker_names} || [];
+    my $assay_type = $map_details->{assay_type};
+    if (!defined $assay_type) {
+        $assay_type = 'NA';
+    }
     my $marker_type = $map_details->{marker_type};
     if (!$marker_type) {
         $marker_type = 'SNP';
@@ -161,9 +175,11 @@ sub BUILD {
     }
     my $species_name = $map_details->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
     my $sample_observation_unit_type_name = $map_details->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
+
     $self->marker_names($marker_names);
     $self->protocol_name($nd_protocol_name);
     $self->marker_type($marker_type);
+    $self->assay_type($assay_type);
     if ($header_information_lines) {
         $self->header_information_lines($header_information_lines);
     }
@@ -178,6 +194,9 @@ sub BUILD {
     if ($description) {
         $self->protocol_description($description);
     }
+
+    my $marker_info_keys = $map_details->{marker_info_keys};
+    $self->marker_info_keys($marker_info_keys);
 
     return;
 }

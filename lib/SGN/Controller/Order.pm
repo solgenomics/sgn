@@ -54,8 +54,10 @@ sub order_details :Path('/order/details/view') : Args(1) {
 
     my $all_items = $order_result->[3];
     my $item_name;
-    my $all_details_string;
     my $value_string;
+    my $empty_string = '';
+    my @all_item_details = ();
+    my $all_details_string;
 
     foreach my $each_item (@$all_items) {
         my @item_details = ();
@@ -69,9 +71,13 @@ sub order_details :Path('/order/details/view') : Args(1) {
             my $detail_string = $field. ":"."".$each_detail;
             push @item_details, $detail_string;
         }
-        $all_details_string = join("<br>", @item_details);
+
+        push @item_details, $empty_string;
+        my $details_string = join("<br>", @item_details);
         $value_string = join(",", @all_values);
+        push @all_item_details, $details_string;
     }
+    $all_details_string = join("<br>", @all_item_details);
 
     $c->stash->{order_id} = $order_result->[0];
     $c->stash->{order_from} = $order_result->[1];

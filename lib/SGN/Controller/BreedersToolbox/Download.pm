@@ -1604,6 +1604,86 @@ sub wellsort {
     }
 }
 
+sub download_protocol_marker_info : Path('/breeders/download_protocol_marker_info') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $protocol_id = $c->req->param("protocol_id");
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = $protocol_id . "_" . "marker_info" . "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".csv";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $marker_info_download = CXGN::Genotype::DownloadFactory->instantiate(
+        'MarkerInfo',
+        {
+            bcs_schema=>$schema,
+            protocol_id_list=>[$protocol_id],
+            filename => $tempfile,
+        }
+    );
+
+    my $download = $marker_info_download->download();
+
+    my $format = 'csv';
+    my $download_file_name = 'BreedbaseMarkerInfo'.$format;
+
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
+
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
+
+}
+
+
+sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping_data_csv') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $protocol_id = $c->req->param("protocol_id");
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = $protocol_id . "_" . "KASP_data" . "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".csv";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $kasp_genotyping_data_download = CXGN::Genotype::DownloadFactory->instantiate(
+        'KASPdata',
+        {
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            protocol_id_list=>[$protocol_id],
+            filename => $tempfile,
+        }
+    );
+
+    my $download = $kasp_genotyping_data_download->download();
+
+    my $format = 'csv';
+    my $download_file_name = 'BreedbaseKASPdata'.$format;
+
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
+
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
+
+}
+
+
 
 #=pod
 1;
