@@ -242,7 +242,12 @@ sub store {
 			}
 		}
 
-		my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+		my $existing_name_count = 0;
+		if($id) {
+			$existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name, nd_geolocation_id => { '!=' => $id } })->count();
+		} else {
+			$existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name })->count();
+		}
 		if ($existing_name_count > 0) {
 			my $err_string = sprintf('Location name %s already exists.', $name );
 			warn $err_string;

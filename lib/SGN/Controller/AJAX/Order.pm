@@ -335,7 +335,6 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $ordering_site = $c->config->{ordering_site};
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
     my $user_id;
@@ -388,7 +387,6 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $ordering_site = $c->config->{ordering_site};
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
     my $user_id;
@@ -444,7 +442,6 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $ordering_site = $c->config->{ordering_site};
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
     my $user_id;
@@ -502,7 +499,6 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $ordering_site = $c->config->{ordering_site};
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
     my $user_id;

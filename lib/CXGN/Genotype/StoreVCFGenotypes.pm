@@ -651,7 +651,7 @@ sub validate {
                     push @error_messages, "No genotype info provided";
                 }
                 foreach (keys %$marker_info){
-                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
+                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name' && $_ ne 'sequence' && $_ ne 'facility_name'){
                         push @error_messages, "protocol_info key not recognized: $_";
                     }
                 }
@@ -670,18 +670,6 @@ sub validate {
                 if(!exists($marker_info->{'alt'})){
                     push @error_messages, "protocol_info missing alt key";
                 }
-                if(!exists($marker_info->{'qual'})){
-                    push @error_messages, "protocol_info missing qual key";
-                }
-                if(!exists($marker_info->{'filter'})){
-                    push @error_messages, "protocol_info missing filter key";
-                }
-                if(!exists($marker_info->{'info'})){
-                    push @error_messages, "protocol_info missing info key";
-                }
-                if(!exists($marker_info->{'format'})){
-                    push @error_messages, "protocol_info missing format key";
-                }
             }
         }
         if (scalar(@{$protocol_info->{marker_names}}) == 0){
@@ -697,18 +685,16 @@ sub validate {
     if ($genotyping_data_type eq 'ssr') {
         my @stock_keys = keys %{$genotype_info};
         my @marker_keys = sort keys %{$genotype_info->{$stock_keys[0]}};
-#        print STDERR "MARKER KEYS =".Dumper(\@marker_keys)."\n";
 
         my $protocol_marker_names = $protocol_info->{'marker_names'};
         my @protocol_marker_array =  sort @$protocol_marker_names;
-#        print STDERR "PROTOCOL MARKER ARRAY =".Dumper(\@protocol_marker_array)."\n";
 
-        my @diff_markers = array_diff(@marker_keys, @protocol_marker_array);
-        print STDERR "DIFF MARKERS =".Dumper(\@diff_markers)."\n";
+        my %stored_marker_hash = map {$_=>1} @protocol_marker_array;
+        my @not_stored_markers = grep {!exists $stored_marker_hash{$_}} @marker_keys;
 
-        if (scalar(@diff_markers) > 0) {
-            my $mismatch_markers = join(",", @diff_markers);
-            push @error_messages, "Markers in SSR genotyping data and the selected protocol are not the same. Mismatch markers: $mismatch_markers";
+        if (scalar(@not_stored_markers) > 0) {
+            my $missing_markers = join(",", @not_stored_markers);
+            push @error_messages, "Error: some markers in SSR genotyping data are not in the selected protocol. Missing markers: $missing_markers";
         }
     }
 

@@ -27,6 +27,7 @@ jQuery(document).ready(function () {
     var soil_data_table = jQuery('#soil_data_table').DataTable({
         'searching': false,
         'order': false,
+        'autoWidth': false,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_soil_data',
         columns: [
             { title: "Soil Data ID", "data": "prop_id" },
