@@ -53,7 +53,7 @@ jQuery(document).ready(function ($) {
         var breeding_program = $("#select_breeding_program").val();
         var location = $("#add_project_location").val().toString().trim(); // remove whitespace
         var trial_year = $("#add_project_year").val();
-        var trial_planting_date = $("#add_project_planting_date").val();
+        var planting_date = $("#add_project_planting_date").val();
         var description = $("#add_project_description").val();
         var design_type = $("#select_design_method").val();
         var stock_type = $("#select_stock_type").val();
@@ -75,8 +75,8 @@ jQuery(document).ready(function ($) {
         else if (trial_year === '') {
             alert("Please select a trial year");
         }
-        else if (trial_planting_date === '') {
-            alert("Please select a trial planting date");
+        else if (planting_date === '') {
+            alerrt("Please select a trial planting date");
         }
         else if (plot_width < 0 ){
             alert("Please check the plot width");
@@ -654,7 +654,7 @@ jQuery(document).ready(function ($) {
                 'project_name': name,
                 'project_description': desc,
                 'year': year,
-                'planting_date' : planting_date,
+                'planting date' : planting_date,
                 'trial_location': trial_location,
                 'trial_stock_type': trial_stock_type,
                 'stock_list': stock_list,
@@ -921,7 +921,7 @@ jQuery(document).ready(function ($) {
         jQuery("#container_field_map_view").css("display", "none");
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
-        var planting_date = $('#add_project_planting_date').val();
+        var planting_date = $('#add_porject_planting_date').val();
         var desc = $('textarea#add_project_description').val();
         if (name == '') {
             alert('Trial name required');
@@ -931,11 +931,10 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
-        if (planting_date === '' || desc === '') {
+        if(planting_date === '' || desc === '') {
             alert('Planting date and description are required.');
             return;
         }
-
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
             generate_experimental_design();
         } else if (cross_list_verified == 1 && stock_list_verified == 0 && family_name_list_verified == 0){
@@ -2093,7 +2092,7 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
-	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
 	
         jQuery.ajax({
            type: 'POST',
