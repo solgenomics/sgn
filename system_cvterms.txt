@@ -812,6 +812,8 @@ stock_property SelectionMarker	Vector property 1/19/2023	mrf252	00164
 stock_property CassetteName	Vector property 1/19/2023	mrf252	00164	
 stock_property Gene	Vector property 1/19/2023	mrf252	00164	
 stock_property Promotors	Vector property 1/19/2023	mrf252	00164	
-stock_property Terminators	Vector property 1/19/2023	mrf252	00164	
+stock_property Terminators	Vector property 1/19/2023	mrf252	00164
+genotype_property   phg genotyping  specifies the PHG type of genotype data   08/15/2023    iyt2    00167
+genotype_property   vcf_phg_genotyping  specifies the PHG type of genotype data in vcf  08/15/2023  iyt2  00167
 stock_property PlantAntibioticResistantMarker	Vector property 4/17/2023	mrf252	00167	
 stock_property BacterialResistantMarker	Vector property 4/17/2023	mrf252	00167	

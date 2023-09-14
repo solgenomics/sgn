@@ -432,10 +432,10 @@ sub germplasm_markerprofiles {
     my $status = $self->status;
     my @marker_profiles;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
 
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-        {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},
+        {'genotypeprops.type_id' => $vcf_snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},
         {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
         select=> ['genotypeprops.genotypeprop_id'],
         as=> ['genotypeprop_id'],
