@@ -1,0 +1,192 @@
+<%args>
+$timestamp => localtime()
+</%args>
+
+<div class="modal fade" id="add_catalog_using_list_dialog" name="add_catalog_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addCatalogUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addCatalogUsingListDialog">Add New Catalog Items Using List</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="add_new_catalog_using_list_form" name="add_new_catalog_using_list_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">List Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="catalog_list_type">
+                                    <option value="">Select a list type</option>
+                                    <option value="accessions">accessions</option>
+                                    <option value="seedlots">seedlots</option>
+                                    <option value="vector_constructs">vector_constructs</option>
+                                    <option value="populations">populations</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="catalog_info_section" style="display:none">
+                            <div class="form-group" id="catalog_list_section" >
+                                <label class="col-sm-3 control-label">Select a List:</label>
+                                <div class="col-sm-9" id="select_catalog_list" name="select_catalog_list"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Category: </label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" id="list_category">
+                                        <option value="">Please select a category</option>
+                                        <option value="released variety">released variety</option>
+                                        <option value="pathogen assay ">pathogen assay</option>
+                                        <option value="control">control</option>
+                                        <option value="transgenic line">transgenic line</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Additional Info: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="list_additional_info" placeholder="optional">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Material Source: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="list_material_source" placeholder="optional">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Breeding Program: </label>
+                                <div class="col-sm-9" >
+                                    <div id="list_item_breeding_program_div"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Contact Person Username: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="list_contact_person_name" placeholder="Please provide contact person username">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" id="close_catalog_list_dialog" name="close_catalog_list_dialog" class="btn btn-default" >Close</button>
+                    <button id="submit_catalog_using_list" type="button" class="btn btn-primary" >Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_item_list_saved_dialog_message" name="add_item_list_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addItemListSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addItemListSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The catalog items were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery("#add_catalog_using_list_button").click( function() {
+
+        jQuery('#add_catalog_using_list_dialog').modal('show');
+    });
+
+    jQuery(document).on('change', '#catalog_list_type', function () {
+        var list = new CXGN.List();
+        var list_type = jQuery('#catalog_list_type').val();
+        jQuery("#catalog_info_section").show();
+        document.getElementById("select_catalog_list").innerHTML = list.listSelect("select_catalog_list", [ list_type ], 'Please select a list','', undefined);
+        get_select_box('breeding_programs', 'list_item_breeding_program_div', { 'name' : 'list_breeding_program_id', 'id' : 'list_breeding_program_id', 'empty': 1 });
+    });
+
+    jQuery('#submit_catalog_using_list').click( function() {
+        var catalog_list_type = jQuery('#catalog_list_type').val();
+        var catalog_list = jQuery('#select_catalog_list_list_select').val();
+        var category = jQuery('#list_category').val();
+        var additional_info = jQuery('#list_additional_info').val();
+        var material_source = jQuery('#list_material_source').val();
+        var breeding_program = jQuery('#list_breeding_program_id').val();
+        var contact_person = jQuery('#list_contact_person_name').val();
+        if (catalog_list_type == '') {
+            alert("Please select a list type");
+            return;
+        }
+
+        if (catalog_list == '') {
+            alert("Please select a list");
+            return;
+        }
+        if (category == '') {
+            alert("Please select a category");
+            return;
+        }
+        if (breeding_program == '') {
+            alert("Please select a program");
+            return;
+        }
+        if (contact_person == '') {
+            alert("Please provide contact username");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/catalog/add_item_list',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'list_type': catalog_list_type,
+                'catalog_list' : catalog_list,
+                'category': category,
+                'additional_info': additional_info,
+                'material_source': material_source,
+                'breeding_program_id': breeding_program,
+                'contact_person': contact_person,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#add_catalog_using_list_dialog').modal('hide');
+                    jQuery('#add_item_list_saved_dialog_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding item');
+            }
+        });
+    });
+
+    jQuery("#close_catalog_list_dialog").click(function() {
+        jQuery("#add_catalog_using_list_dialog").modal('hide');
+        location.reload();
+    });
+
+    jQuery("#dismiss_list_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>
