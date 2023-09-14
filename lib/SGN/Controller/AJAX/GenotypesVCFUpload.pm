@@ -407,6 +407,19 @@ sub upload_genotype_verify_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
     my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
 
+    my $vcf_genotyping_type =  'vcf_snp_genotyping';#for now only SNP type are uploaded from VCF using the web interface
+    my $genotyping_type;
+    my $genotype_data_type;
+
+    if ($vcf_genotyping_type =~ /vcf_phg_genotyping/) {
+    $genotyping_type = 'phg genotyping';
+    $genotype_data_type = 'PHG';
+
+} else {
+    $genotyping_type = 'snp genotyping';
+    $genotype_data_type = 'SNP';
+}
+
     my $store_args = {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
@@ -428,7 +441,10 @@ sub upload_genotype_verify_POST : Args(0) {
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
         archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-        temp_file_sql_copy=>$temp_file_sql_copy
+        temp_file_sql_copy=>$temp_file_sql_copy,
+        vcf_genotyping_type => $vcf_genotyping_type,
+        genotyping_type => $genotyping_type,
+        genotyping_data_type=> $genotype_data_type,
     };
 
     my $return;
