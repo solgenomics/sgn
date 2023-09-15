@@ -12,6 +12,8 @@ sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
+
+    ##need to clean up about project_type vs project_property
     my $crossing_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
 
     my @missing = ();

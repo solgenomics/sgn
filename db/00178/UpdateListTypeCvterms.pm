@@ -43,7 +43,8 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch changes the cvterms name from genotyping_trials to genotyping_plates list_type.
+This patch changes the cvterms name from genotyping_trials to genotyping_plates list_type
+
 has '+prereq' => (
 	default => sub {
         ['AddGenotypingTrialListCvterm'],
