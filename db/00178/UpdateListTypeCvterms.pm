@@ -1,20 +1,19 @@
 #!/usr/bin/env perl
 
-
 =head1 NAME
 
- UpdateListTypes.pm
+ UpdateListTypeCvterms.pm
 
 =head1 SYNOPSIS
 
-mx-run ThisPackageName [options] -H hostname -D dbname -u username [-F]
+mx-run UpdateListTypeCvterms [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch change the cvterm name genotyping_trials to genotyping_plates list_type.
+This patch changes the cvterm name genotyping_trials to genotyping_plates and adds crossing_experiments, genotyping_projects list types.
 
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
@@ -32,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package UpdateListTypes;
+package UpdateListTypeCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -43,7 +42,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch changes the cvterms name from genotyping_trials to genotyping_plates list_type
+This patch changes the cvterms name from genotyping_trials to genotyping_plates and adds crossing_experiments, genotyping_projects list types
 
 has '+prereq' => (
 	default => sub {
@@ -62,7 +61,7 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    my $genotyping_trials_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trials', 'list_type');
+    my $genotyping_trials_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trials', 'list_types');
 
     $genotyping_trials_cvterm->update( { name => 'genotyping_plates'  } );
 
