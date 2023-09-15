@@ -66,7 +66,7 @@ sub patch {
     $genotyping_trials_cvterm->update( { name => 'genotyping_plates'  } );
 
     my $terms = {
-        'list_type' => [
+        'list_types' => [
             'crossing_experiments',
             'genotyping_projects',
 	    ],
