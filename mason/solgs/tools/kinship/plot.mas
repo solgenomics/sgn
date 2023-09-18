@@ -32,7 +32,7 @@ $pop_id = undef if $list_id;
 $pop_id = $trial_id if $trial_id;
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.heatMap", "solGS.kinship", "save-svg-as-png.saveSvgAsPng"] &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "d3.d3ArrayMin", "solGS.solGS", "solGS.heatMap", "solGS.kinship", "save-svg-as-png.saveSvgAsPng"] &>
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 
