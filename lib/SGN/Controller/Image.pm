@@ -63,10 +63,9 @@ sub confirm :Path('/image/confirm') {
     if (! -e $tempfile) {
         die "No tempfile $tempfile\n";
     }
-    
+
     my $filename_validation_msg =  $self->validate_image_filename($filename);
 
- 
     my $image_url = $c->tempfiles_subdir('image')."/".basename($tempfile);
     my $confirm_filename = $c->get_conf('basepath')."/".$image_url;
     if (! -e $tempfile) { die "Temp file does not exit $tempfile\n"; }
@@ -82,7 +81,7 @@ sub confirm :Path('/image/confirm') {
         unlink $tempfile;  # remove upload! prevents more errors on item we have rejected
 
 	my $message = "";
-	
+
 	$c->stash->{template} = '/generic_message.mas';
 	if ($filename_validation_msg) {
 	    $message = "There is a problem with the image file you selected: $filename <br />Error: $filename_validation_msg.<br />";
@@ -90,7 +89,6 @@ sub confirm :Path('/image/confirm') {
 	if ($duplicate_image_id) {
 	    $message .= "This image has already been uploaded with the id <a href=\"/image/view/$duplicate_image_id\">$duplicate_image_id</a> <br />"; 
 	}
-
 	$c->stash->{message} = $message;
 	return;
     }
@@ -98,8 +96,6 @@ sub confirm :Path('/image/confirm') {
 	print STDERR "CHECKS YIELDED: $filename_validation_msg and $duplicate_image_id\n";
     }
 
-    
-    
     $c->stash(
         type => $c->req->param('type'),
         refering_page => $c->req->param('refering_page'),
