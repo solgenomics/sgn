@@ -115,6 +115,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("heritability_files");
+
     my $heritability_tmp_output = $c->config->{cluster_shared_tempdir}."/heritability_files";
     mkdir $heritability_tmp_output if ! -d $heritability_tmp_output;
     print STDERR "heritability_files subdir = $heritability_tmp_output\n";
@@ -174,11 +175,6 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     $cmd->alive;
     $cmd->is_cluster(1);
     $cmd->wait;
-
-    # my $newpath = $c -> {basepath} . "/home/production/cxgn/sgn/documents/tempfiles/heritability_files";
-    # copy($h2File,$newpath) or die "Copy failed: $!";
-    # copy($figure3file,$newpath) or die "Copy failed: $!";
-    # copy($figure4file,$newpath) or die "Copy failed: $!";
    
     my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
     copy($h2File, $figure_path);
