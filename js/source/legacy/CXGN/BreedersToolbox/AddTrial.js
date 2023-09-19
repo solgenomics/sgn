@@ -492,6 +492,10 @@ jQuery(document).ready(function ($) {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var planting_date = $('#add_project_planting_date').val();
+        // date formatting here from js to breedbase format
+        if (planting_date) {
+            planting_date = new Date(planting_date).toLocaleDateString("en-CA");
+        }
         var desc = $('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
@@ -501,7 +505,7 @@ jQuery(document).ready(function ($) {
         var row_number_per_block=$('#row_number_per_block').val();
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
-	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
 
         var stock_list_id;
         var control_stock_list_id;
@@ -921,7 +925,7 @@ jQuery(document).ready(function ($) {
         jQuery("#container_field_map_view").css("display", "none");
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
-        var planting_date = $('#add_porject_planting_date').val();
+        var planting_date = $('#add_project_planting_date').val();
         var desc = $('textarea#add_project_description').val();
         if (name == '') {
             alert('Trial name required');
@@ -2025,6 +2029,10 @@ jQuery(document).ready(function ($) {
         var name = jQuery('#new_trial_name').val();
         var year = jQuery('#add_project_year').val();
         var planting_date = jQuery('#add_project_planting_date').val();
+        // date formatting here from js to breedbase format
+        if (planting_date) {
+            planting_date = new Date(planting_date).toLocaleDateString("en-CA");
+        }
         var desc = jQuery('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
