@@ -392,11 +392,11 @@ sub save_trial {
     if ($self->get_trial_type){
         $t->set_project_type($self->get_trial_type);
     }
-    if ($self->get_planting_date){
-        $t->set_planting_date($self->get_planting_date);
+    if ($self->get_planting_date()){ # here is local getter
+        $t->set_planting_date($self->get_planting_date); # here is Project.pm unusual setter with writing to db instead of object
     }
-    if ($self->get_harvest_date){
-        $t->set_harvest_date($self->get_harvest_date);
+    if ($self->get_harvest_date()){ # here is local getter
+        $t->set_harvest_date($self->get_harvest_date); # here is Project.pm unusual setter with writing to db instead of object
     }
 
     #link to the project
