@@ -138,14 +138,16 @@ sub pcr_genotyping_data_search_GET : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
     my $protocol_id = $clean_inputs->{protocol_id_list};
+    my $project_id = $clean_inputs->{genotype_project_list};
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$bcs_schema,
         people_schema=>$people_schema,
         protocol_id_list=>$protocol_id,
+        genotype_data_project_list=>$project_id
     });
     my $result = $genotypes_search->get_pcr_genotype_info();
-#    print STDERR "PCR RESULTS =".Dumper($result)."\n";
+    print STDERR "PCR RESULTS =".Dumper($result)."\n";
     my $protocol_marker_names = $result->{'marker_names'};
     my $protocol_genotype_data = $result->{'protocol_genotype_data'};
 
