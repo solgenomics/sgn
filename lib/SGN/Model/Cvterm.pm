@@ -438,6 +438,16 @@ sub get_vcf_genotyping_cvterm_id {
 
 }
 
+=head2 get_trial_data_levels
+
+ Usage: my $data_levels = SGN::Model::Cvterm->get_trial_data_levels($schema, $trial_id);
+ Desc: Queries for the measurement (data) levels for traits in a trial. For some trials meaurements are at plot levels or plant levels or another level. Some trials have some traits measured at plot level while others at plant level. This function returns all the data levels associated with a trial.
+ Ret: an arrayref of data level cvterms 
+Args: bcs schema object, trial_id
+ Example:
+
+=cut
+
 sub get_trial_data_levels {
     my $self     = shift;
     my $schema   = shift;
