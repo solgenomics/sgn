@@ -43,6 +43,19 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
       return;
     }
 
+    if (! ($c->user->check_roles('curator') || $c->user()->check_roles('postcomposing'))) {
+	print STDERR "USER DOES NOT HAVE CURATOR OR POSTCOMPOSING ROLES\n";
+
+	$c->throw_client_error( title => 'You do not have the necessary privileges to access this page. ',
+                     public_message => 'Please contact the database and request to be added to the respective user roles.',
+                     developer_message => '',
+                     notify => 0,   #< does not send an error email
+                     is_server_error => 0, #< is not really an error, more of a message
+                     is_client_error => 1, #< is not really an error, more of a message
+                   );
+
+    }
+    
     my @composable_cvs = split ",", $c->config->{composable_cvs};
     my $dbh = $c->dbc->dbh();
     my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
@@ -55,7 +68,6 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
         }
         my $cv_type = $name."_ontology";
         #print STDERR "cv_type = $cv_type\n";
-
 
         my @root_nodes = $onto->get_root_nodes($cv_type);
         #print STDERR Dumper \@root_nodes;
