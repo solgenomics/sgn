@@ -76,7 +76,7 @@ jQuery(document).ready(function ($) {
             alert("Please select a trial year");
         }
         else if (planting_date === '') {
-            alerrt("Please select a trial planting date");
+            alert("Please select a trial planting date");
         }
         else if (plot_width < 0 ){
             alert("Please check the plot width");
