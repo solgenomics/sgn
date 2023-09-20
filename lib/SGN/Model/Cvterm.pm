@@ -409,6 +409,33 @@ sub get_vcf_genotyping_cvterm_id {
 
 }
 
-    
+ sub get_trial_data_levels {
+    my $self = shift;
+    my $schema = shift;
+    my $trial_id = shift;
+
+    my $q = "SELECT DISTINCT(stock.type_id),  cvterm.name, project_id 
+                        FROM nd_experiment_project 
+                        JOIN nd_experiment_stock USING (nd_experiment_id) 
+                        JOIN stock USING (stock_id) 
+                        JOIN cvterm ON (stock.type_id = cvterm_id) 
+                        JOIN cv USING (cv_id)
+                        JOIN nd_experiment_phenotype USING (nd_experiment_id) 
+                        JOIN phenotype ON (nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id) 
+                        WHERE cv.name ilike 'stock_type'  
+                        AND project_id =  ?";
+
+   my $h = $schema->storage->dbh()->prepare($q) ;
+    $h->execute($trial_id); 
+    my @data_levels;
+
+    while (my ($cvterm_id, $data_level, $project_id) = $h->fetchrow_array()) {
+        push @data_levels, $data_level;
+    }
+
+    return \@data_levels;
+ }   
+
+
 
 1;
