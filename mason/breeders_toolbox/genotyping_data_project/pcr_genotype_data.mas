@@ -46,8 +46,8 @@ jQuery(document).ready(function () {
 
     var project_id = "<% $trial_id %>";
 
-    var pcr_genotypes_data_table = jQuery('#project_pcr_protocol_genotype_data').DataTable({
-        'ajax': '/ajax/pcr_genotyping_data/search?project_id_list=<% $trial_id %>',
+    var pcr_genotypes_data_table = jQuery('#project_pcr_genotype_data').DataTable({
+        'ajax': '/ajax/pcr_genotyping_data/search?genotype_project_id_list=<% $trial_id %>',
 
     });
 
