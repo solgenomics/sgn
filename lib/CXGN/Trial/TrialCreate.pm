@@ -280,7 +280,7 @@ sub save_trial {
 	}
 
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
-    my $project_planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project planting date', 'project_property');
+    my $project_planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_planting_date', 'project_property');
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
     my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
     my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
