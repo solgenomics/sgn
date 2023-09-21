@@ -51,19 +51,19 @@ jQuery(document).ready(function () {
 
     });
 
-    jQuery('#download_ssr_data_link').click(function(){
-        downloadSSRData(protocol_id);
+    jQuery('#download_project_ssr_data_link').click(function(){
+        downloadProjectSSRData(project_id);
     });
 
 });
 
-function downloadSSRData(protocol_id) {
+function downloadProjectSSRData(project_id) {
     jQuery.ajax({
         url: '/ajax/pcr_genotyping_data/download',
         dataType: "json",
         type: 'POST',
         data:{
-            'ssr_protocol_id': protocol_id,
+            'ssr_project_id': project_id,
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
@@ -73,8 +73,8 @@ function downloadSSRData(protocol_id) {
             if (response.error) {
                 alert(response.error);
             } else {
-                jQuery('#pcr_genotyping_data_download_link').attr('href', "/protocol_genotype_data/pcr_download/" + response.file_id);
-                jQuery("#download_pcr_genotype_data_dialog_message").modal("show");
+                jQuery('#project_pcr_genotyping_data_download_link').attr('href', "/protocol_genotype_data/pcr_download/" + response.file_id);
+                jQuery("#download_project_pcr_genotype_data_dialog_message").modal("show");
             }
         },
     });

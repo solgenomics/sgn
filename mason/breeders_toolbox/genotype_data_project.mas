@@ -63,7 +63,7 @@ $marker_names => undef
 % if ($genotype_data_type ne 'SSR') {
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_data_project_data" &>
 % } elsif ($genotype_data_type eq 'SSR') {
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, marker_names => $marker_names, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this project.',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="download_ssr_data_project_link">Download SSR Data</button>', icon_class => "glyphicon glyphicon-save-file", info_section_id => "project_pcr_genotype_data" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, marker_names => $marker_names, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this project.',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="download_project_ssr_data_link">Download SSR Data</button>', icon_class => "glyphicon glyphicon-save-file", info_section_id => "project_pcr_genotype_data" &>
 % }
 
 % my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
