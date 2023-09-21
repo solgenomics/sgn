@@ -132,7 +132,7 @@ Display a search index page.
 sub search_index : Path('/search/index.pl') Path('/search') Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash->{template} = '/search/index.mas';
+    $c->stash->{template} = '/search/advanced_search.mas';
 }
 
 sub family_search : Path('/search/family') Args(0) {
