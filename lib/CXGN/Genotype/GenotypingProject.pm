@@ -207,4 +207,26 @@ sub get_plate_info {
 }
 
 
+sub get_associated_protocol_id {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $genotyping_project_id = $self->project_id();
+
+    my $q = "SELECT nd_experiment_protocol.nd_protocol_id
+        FROM nd_experiment_project
+        JOIN nd_experiment_genotype ON (nd_experiment_project.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+        JOIN nd_experiment_protocol ON (nd_experiment_project.nd_experiment_id = nd_experiment_protocol.nd_experiment_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($genotyping_project_id);
+
+    my ($protocol_id) = $h->fetchrow_array();
+
+    return $protocol_id;
+
+}
+
+
+
 1;
