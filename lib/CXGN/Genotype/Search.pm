@@ -2257,14 +2257,14 @@ sub get_pcr_genotype_info {
     $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
     my $marker_names = $h1->fetchrow_array();
 
-    my %protocol_genotype_data = (
+    my %ssr_genotype_data = (
         marker_names => $marker_names,
-        protocol_genotype_data => \@pcr_genotype_data
+        ssr_genotype_data => \@pcr_genotype_data
     );
 
-    print STDERR "PCR GENOTYPE INFO =".Dumper(\%protocol_genotype_data)."\n";
+#    print STDERR "PCR GENOTYPE INFO =".Dumper(\%ssr_genotype_data)."\n";
 
-    return \%protocol_genotype_data;
+    return \%ssr_genotype_data;
 
 }
 
