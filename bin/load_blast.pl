@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-=head1
+=head1 NAME
 
 load_blast.pl - loading blast tables into cxgn databases
 
@@ -44,18 +44,18 @@ This script populates blast tables (sgn.blast_db, sgn.blast_db_group and the lin
 
 The input file is xlsx format, and should have the following columns (column order is not important):
 
-file_base      # starts where blast_path ends in sgn_local.conf
-title
-type           # either nucleotide or protein
-source_url
-lookup_url
-update_freq
-info_url
-index_seqs
-blast_db_group
-web_interface_visible
-description
-jbrowse_src
+ file_base      # starts where blast_path ends in sgn_local.conf
+ title
+ type           # either nucleotide or protein
+ source_url
+ lookup_url
+ update_freq
+ info_url
+ index_seqs
+ blast_db_group
+ web_interface_visible
+ description
+ jbrowse_src
 
 Only file_base, title, type and blast_db_group are required. web_interface_visible is 'T' by default.
 
