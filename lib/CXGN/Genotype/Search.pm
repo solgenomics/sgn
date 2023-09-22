@@ -417,7 +417,7 @@ sub get_genotype_info {
     }
 
     #For genotyping_data_project
-    if ($genotype_data_project_list && scalar($genotype_data_project_list)>0) {
+    if ($genotype_data_project_list && scalar(@$genotype_data_project_list)>0) {
         my $sql = join ("," , @$genotype_data_project_list);
         push @where_clause, "project.project_id in ($sql)";
     }
@@ -2255,7 +2255,7 @@ sub get_pcr_genotype_info {
     my $q1 = "SELECT nd_protocolprop.value->>'marker_names' FROM nd_protocolprop WHERE nd_protocol_id = ? AND nd_protocolprop.type_id = ?";
     my $h1 = $schema->storage->dbh()->prepare($q1);
     $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
-    my $marker_names = $h1->fetchrow_array();
+    my ($marker_names) = $h1->fetchrow_array();
 
     my %ssr_genotype_data = (
         marker_names => $marker_names,
