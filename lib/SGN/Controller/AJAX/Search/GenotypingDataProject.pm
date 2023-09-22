@@ -155,7 +155,7 @@ sub genotyping_project_protocols_GET : Args(0) {
         project_id => $genotyping_project_id
     });
     my $associated_protocol  = $protocol_info->get_associated_protocol();
-    print STDERR "ASSOCIATED PROTOCOL =".Dumper($associated_protocol)."\n";
+#    print STDERR "ASSOCIATED PROTOCOL =".Dumper($associated_protocol)."\n";
     my @info;
     if ( defined $associated_protocol && scalar(@$associated_protocol)>1) {
         $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
