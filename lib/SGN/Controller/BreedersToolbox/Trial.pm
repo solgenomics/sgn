@@ -220,14 +220,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
         $c->stash->{has_plate} = $has_plate;
         my @genotyping_project_list = ($project_id);
-        my @protocol_list;
-        my @accession_list;
-        my @tissue_sample_list;
-        my $limit;
-        my $offset;
-        my $protocol_info = CXGN::Genotype::Protocol::list($schema, \@protocol_list, \@accession_list, \@tissue_sample_list, $limit, $offset, \@genotyping_project_list);
+        my $protocol_info = CXGN::Genotype::Protocol::list($schema, undef, undef, undef, undef, undef, \@genotyping_project_list);
         if ($protocol_info) {
-            print STDERR "MARKER NAMES =".Dumper($protocol_info->[0]->{marker_names})."\n";
             $c->stash->{marker_names} = $protocol_info->[0]->{marker_names} || [];
         }
 
