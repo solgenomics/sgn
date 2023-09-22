@@ -7,6 +7,7 @@ use CXGN::Trial::Folder;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use JSON;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -27,7 +28,7 @@ sub search {
     my @contact_dbids = $search_params->{contactDbIds} ? @{$search_params->{contactDbIds}} : ();
     my @daterange_start = $search_params->{searchDateRangeStart} ? @{$search_params->{searchDateRangeStart}} : ();
     my @daterange_end = $search_params->{searchDateRangeEnd} ? @{$search_params->{searchDateRangeEnd}} : ();
-    my @externalreference_ids = $search_params->{externalReferenceIDs} ? @{$search_params->{externalReferenceIDs}} : ();
+    my @externalreference_ids = $search_params->{externalReferenceIds} ? @{$search_params->{externalReferenceIds}} : ();
     my @externalreference_sources = $search_params->{externalReferenceSources} ? @{$search_params->{externalReferenceSources}} : ();
     my @location_dbids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
     my @location_names = $search_params->{locationNames} ? @{$search_params->{locationNames}} : ();
@@ -39,8 +40,13 @@ sub search {
     my @trial_names = $search_params->{trialNames} ? @{$search_params->{trialNames}} : ();
     my @trial_PUIs = $search_params->{trialPUIs} ? @{$search_params->{trialPUIs}} : ();
 
-    if (scalar(@contact_dbids)>0 || scalar(@daterange_start)>0 || scalar(@daterange_end)>0 || scalar(@trial_PUIs)>0 || scalar(@externalreference_sources)>0 || scalar(@externalreference_ids)>0){
-        push @$status, { 'error' => 'The following search parameters are not implemented: contactDbId, searchDateRangeStart, searchDateRangeEnd, trialPUI, externalReferenceID, externalReferenceSource' };
+    # externalReferenceIDs is DEPRECATED,but still supported in BrAPI (if possible, use externalReferenceIds instead).
+    if(!scalar(@externalreference_ids)){
+        @externalreference_ids = $search_params->{externalReferenceIDs} ? @{$search_params->{externalReferenceIDs}} : ();
+    }
+
+    if (scalar(@contact_dbids)>0 || scalar(@daterange_start)>0 || scalar(@daterange_end)>0 || scalar(@trial_PUIs)>0){
+        push @$status, { 'error' => 'The following search parameters are not implemented: contactDbId, searchDateRangeStart, searchDateRangeEnd, trialPUI' };
     }
 
     my %location_id_list;
@@ -83,6 +89,16 @@ sub search {
         %trial_name_list = map { $_ => 1} @trial_names;
     }
 
+    my %xref_id_list;
+    if (scalar(@externalreference_ids)>0){
+        %xref_id_list = map { $_ => 1} @externalreference_ids;
+    }
+
+    my %xref_source_list;
+    if (scalar(@externalreference_sources)>0){
+        %xref_source_list = map { $_ => 1} @externalreference_sources;
+    }
+
     if (scalar(@commoncrop_names)>0) {
         if ( !grep( /^$crop$/, @commoncrop_names ) ) {
             $continue = $continue + 1;
@@ -97,7 +113,7 @@ sub search {
         foreach my $program (@$programs) {
             unless (%program_id_list && !exists($program_id_list{$program->[0]}) || %program_name_list && !exists($program_name_list{$program->[1]})) { # for each program not excluded, retrieve folders and studies
                 $program = { "id" => $program->[0], "name" => $program->[1], "program_id" => $program->[0], "program_name" => $program->[1],  "program_description" => $program->[2] };
-                $data = _get_folders($program, $schema, $data, 'breeding_program', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
+                $data = _get_folders($program, $schema, $data, 'breeding_program', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list, \%xref_id_list, \%xref_source_list);
             }
         }
     }
@@ -129,6 +145,15 @@ sub details {
             my $folder_description = $folder->description;
             my $breeding_program_id = $folder->breeding_program->project_id();
 
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema => $schema,
+                table_name => 'project',
+                table_id_key => 'project_id',
+                id => $folder_id,
+            });
+            my $external_references = $references->search();
+            my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+
 			my %result = (
                 active=>JSON::true,
 				additionalInfo=>$additional_info,
@@ -137,7 +162,7 @@ sub details {
                 datasetAuthorships=>undef,
                 documentationURL=>undef,
                 endDate=>undef,
-                externalReferences=>undef,
+                externalReferences=>@formatted_external_references,
                 programDbId=>qq|$breeding_program_id|,
                 programName=>$folder->breeding_program->name(),
                 publications=>undef,
@@ -186,6 +211,7 @@ sub store {
         my $breeding_program_id = $params->{programDbId} || undef;
         my $description = $params->{trialDescription} || undef;
         my $additional_info = $params->{additionalInfo} || undef;
+        my $external_references = $params->{externalReferences} || undef;
         my $folder_for_trials = 1;
         my $folder_for_crosses = 0;
         my $folder_for_genotyping_trials = 0;
@@ -211,6 +237,23 @@ sub store {
             additional_info              => $additional_info
         });
 
+        # save external references if specified
+        if ($external_references) {
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema          => $schema,
+                external_references => $external_references,
+                table_name          => 'project',
+                table_id_key         => 'project_id',
+                id             => $folder->folder_id(),
+            });
+
+            $references->store();
+
+            if ($references->{'error'}) {
+                return { error => $references->{'error'} };
+            }
+        }
+
         push @stored_ids, $folder->folder_id();
     }
 
@@ -230,7 +273,7 @@ sub store {
 
         foreach my $program (@$programs) {
             $program = { "id" => $program->[0], "name" => $program->[1], "program_id" => $program->[0], "program_name" => $program->[1],  "program_description" => $program->[2] };
-            $result_data = _get_folders($program, $schema, $result_data, 'breeding_program', undef, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
+            $result_data = _get_folders($program, $schema, $result_data, 'breeding_program', undef, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list, {}, {});
         }
     }
 
@@ -262,6 +305,7 @@ sub update {
     my $breeding_program_id = $params->{programDbId} || undef;
     my $description = $params->{trialDescription} || undef;
     my $additional_info = $params->{additionalInfo} || undef;
+    my $updated_external_references = $params->{externalReferences} || undef;
 
     # Check that the breeding program was passed and exists
     if (! defined $breeding_program_id) {
@@ -310,6 +354,21 @@ sub update {
     my $folder_description = $folder->name; #description doesn't exist 
     my $breeding_program_id = $folder->breeding_program->project_id();
 
+    # external references
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        external_references => $updated_external_references,
+        bcs_schema          => $schema,
+        table_name          => 'project',
+        table_id_key        => 'project_id',
+        id                  => $folder->folder_id(),
+
+    });
+    $references->store();
+
+    if ($references->{'error'}) {
+        return { error => $references->{'error'} };
+    }
+
     my %result = (
         active=>JSON::true,
         additionalInfo=>$folder->additional_info,
@@ -318,7 +377,7 @@ sub update {
         datasetAuthorships=>undef,
         documentationURL=>undef,
         endDate=>undef,
-        externalReferences=>undef,
+        externalReferences=>$updated_external_references,
         programDbId=>qq|$breeding_program_id|,
         programName=>$folder->breeding_program->name(),
         publications=>undef,
@@ -345,12 +404,16 @@ sub _get_folders {
     my $study_name_list = shift;
     my $trial_id_list = shift;
     my $trial_name_list = shift;
+    my $xref_id_list = shift;
+    my $xref_source_list = shift;
     my %location_id_list = %{$location_id_list};
     my %location_names_list = %{$location_names_list};
     my %study_id_list = %{$study_id_list};
     my %study_name_list = %{$study_name_list};
     my %trial_id_list = %{$trial_id_list};
     my %trial_name_list = %{$trial_name_list};
+    my %xref_id_list = %{$xref_id_list};
+    my %xref_source_list = %{$xref_source_list};
     my %additional_info;
     my @folder_studies;
 
@@ -361,10 +424,10 @@ sub _get_folders {
         foreach my $study (sort keys %studies) {
 
 			if ($studies{$study}->{'folder_for_trials'}) { # it's a folder, recurse a layer deeper
-                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
+                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list, \%xref_id_list, \%xref_source_list);
             }
             elsif (!$studies{$study}->{'folder_for_crosses'} && !$studies{$study}->{'folder_for_trials'} && $studies{$study}->{'trial_folder'}) { # it's a folder, recurse a layer deeper
-                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
+                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list, \%xref_id_list, \%xref_source_list);
             }
             elsif (exists $studies{$study}->{'design'}) { # it's a study, add it to studies array
                 my $passes_search = 1;
@@ -421,9 +484,22 @@ sub _get_folders {
         # Filter our trials that don't have required search studies if filter was passed
         $trial_filter = 1;
     }
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $schema,
+        table_name => 'project',
+        table_id_key => 'project_id',
+        id => $self->{'id'},
+    });
+    my $external_references = $references->search();
+    my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+
+    if(scalar(keys %xref_id_list) > 0 || scalar(keys %xref_source_list) > 0) {
+        if(!_xref_match(@formatted_external_references, \%xref_id_list, \%xref_source_list)) {
+            $trial_filter = 1;
+        }
+    }
 
     if ($trial_filter < 1){
-        print Dumper($self);
         push @{$data}, {
             active=>JSON::true,
             additionalInfo=>$self->{project_additional_info} ? decode_json($self->{project_additional_info}) : undef,
@@ -432,7 +508,7 @@ sub _get_folders {
             datasetAuthorships=>undef,
             documentationURL=>undef,
             endDate=>undef,
-            externalReferences=>undef,
+            externalReferences=>@formatted_external_references,
             programDbId=>qq|$self->{'program_id'}|,
             programName=>$self->{'program_name'},
             publications=>undef,
@@ -441,11 +517,41 @@ sub _get_folders {
             trialName=>$self->{'name'},
             trialDescription=>$self->{'description'},
             trialPUI=>undef
-        }
+        };
     };
 
 	return $data;
 
+}
+
+sub _xref_match {
+    my $external_references = shift;
+    my $xref_id_list = shift;
+    my $xref_source_list = shift;
+    my %xref_id_list = %{$xref_id_list};
+    my %xref_source_list = %{$xref_source_list};
+
+    my $xref_id_match = 0;
+    my $xref_source_match = 0;
+
+    if(!scalar(keys %xref_id_list)) {
+        $xref_id_match = 1;
+    }
+
+    if(!scalar(keys %xref_source_list)) {
+        $xref_source_match = 1;
+    }
+
+    foreach my $xref (@{$external_references}) {
+        if(scalar(keys %xref_id_list) && exists($xref_id_list{ $xref->{'referenceID'} })) {
+            $xref_id_match = 1;
+        }
+        if(scalar(keys %xref_source_list) && exists($xref_source_list{ $xref->{'referenceSource'} })) {
+            $xref_source_match = 1;
+        }
+    }
+
+    return $xref_id_match && $xref_source_match;
 }
 
 sub _get_studies {

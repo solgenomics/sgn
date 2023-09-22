@@ -1167,18 +1167,30 @@ sub get_descendant_hash {
  Usage:
  Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
  Ret:
- Args: $accession_ids, $format (either 'parents_only' or 'full')
+ Args: $accession_ids, $format (either 'parents_only' or 'full'), $include (either 'ancestors' or 'ancestors_descendants')
  Side Effects:
  Example:
 
 =cut
 
 sub get_pedigree_rows {
-    my ($self, $accession_ids, $format) = @_;
+    my ($self, $accession_ids, $format, $include) = @_;
     #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
 
     my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my @values = ();
+
+    # set the filter criteria based on whether to include ancestors and descendants
     my ($query, $pedigree_rows);
+    my $where = "";
+    if ( $include eq 'ancestors_descendants' ) {
+        $where = "child.stock_id IN ($placeholders) OR m_rel.subject_id IN ($placeholders) OR f_rel.subject_id IN ($placeholders)";
+        push(@values, @$accession_ids, @$accession_ids, @$accession_ids);
+    }
+    else {
+        $where = "child.stock_id IN ($placeholders)";
+        push(@values, @$accession_ids);
+    }
 
     if ($format eq 'parents_only') {
         $query = "
@@ -1191,29 +1203,29 @@ sub get_pedigree_rows {
         LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
         LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
-        WHERE child.stock_id IN ($placeholders)
+        WHERE $where
         GROUP BY 1,2,3,4
         ORDER BY 1";
     }
     elsif ($format eq 'full') {
         $query = "
         WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type, depth, path, cycle) AS (
-                SELECT c.uniquename AS child,
-                c.stock_id AS child_id,
+                SELECT child.uniquename AS child,
+                child.stock_id AS child_id,
                 m.uniquename AS mother,
                 m.stock_id AS mother_id,
                 f.uniquename AS father,
                 f.stock_id AS father_id,
                 m_rel.value AS type,
                 1,
-                ARRAY[c.stock_id],
+                ARRAY[child.stock_id],
                 false
-                FROM stock c
-                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                FROM stock child
+                LEFT JOIN stock_relationship m_rel ON(child.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
                 LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
-                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
                 LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
-                WHERE c.stock_id IN ($placeholders)
+                WHERE $where
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
             UNION
                 SELECT c.uniquename AS child,
@@ -1234,14 +1246,15 @@ sub get_pedigree_rows {
                 WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
         )
-        SELECT child, mother, father, type, depth
+        SELECT child, mother, father, type
         FROM included_rows
-        GROUP BY 1,2,3,4,5
-        ORDER BY 5,1;";
+        GROUP BY 1,2,3,4
+        ORDER BY 1;";
+        # depth was removed from this query since including it was creating a lot of duplicate rows
     }
 
     my $sth = $self->schema()->storage()->dbh()->prepare($query);
-    $sth->execute(@$accession_ids);
+    $sth->execute(@values);
 
     no warnings 'uninitialized';
     while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
@@ -1327,6 +1340,28 @@ sub _update_stockprop {
     $self->_store_stockprop($type,$value);
 }
 
+# Doesn't split the value like the _store_stockprop method
+sub _store_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    # print STDERR Dumper $type;
+    my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
+    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+}
+
+sub _update_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $stockprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->stock->search_related('stockprops', {'type_id'=>$stockprop_cvterm_id});
+    while(my $r=$rs->next){
+        $r->delete();
+    }
+    $self->_store_stockprop_raw($type,$value);
+}
+
 =head2 _retrieve_stockprop
 
  Usage:
@@ -1409,6 +1444,29 @@ sub _remove_stockprop {
 
 }
 
+sub _remove_stockprop_all_of_type {
+
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id() } );
+    
+    if ($rs->count() > 0) {
+        while (my $row = $rs->next()) {
+            $row->delete();
+        }
+        return 1;
+    }
+    elsif ($rs->count() == 0) {
+        return 0;
+    }
+    else {
+        print STDERR "Error removing stockprop from stock ".$self->stock_id().". Please check this manually.\n";
+        return 0;
+    }
+}
+
 sub _retrieve_organismprop {
     my $self = shift;
     my $type = shift;
@@ -1489,6 +1547,47 @@ sub _retrieve_populations {
         $self->population_name($pop_string);
     }
 }
+
+sub _store_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_accession = shift;
+    my $cross_type = shift;
+    my $schema = $self->schema;
+    my $parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my %return;
+
+    print STDERR "***STOCK.PM : Storing parent relationship $parent_cvterm_id \n\n";
+    my $parent = $schema->resultset("Stock::Stock")->find({
+        uniquename => $parent_accession
+    });
+
+    # TODO: Check the cross type
+
+    if (defined $parent) {
+        # Object is the child, subject is the mother
+        $self->stock->find_or_create_related('stock_relationship_subjects', {
+            type_id    => $parent_cvterm_id,
+            object_id  => $self->stock_id(),
+            subject_id => $parent->stock_id(),
+            value      => $cross_type
+        });
+    } else {
+        return $return{error} = "Parent accession not found: ".$parent_accession;
+    }
+}
+
+sub _remove_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id=>$parent_cvterm_id, object_id => $self->stock_id() } );
+
+    while (my $r=$rs->next){
+        $r->delete();
+    }
+}
+
 ###
 
 =head2 _new_metadata_id()

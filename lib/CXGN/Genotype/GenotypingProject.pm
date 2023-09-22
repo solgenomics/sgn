@@ -24,6 +24,7 @@ use JSON;
 use CXGN::Trial::Search;
 use Try::Tiny;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -56,7 +57,6 @@ has 'new_genotyping_plate_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
-
 
 sub BUILD {
 
@@ -173,6 +173,8 @@ sub get_plate_info {
     my $number_of_plates = scalar (@$plate_list);
     my $data;
     my $total_count;
+    my @all_plates;
+    my $number_of_samples;
     if ($number_of_plates > 0) {
         my $trial_search = CXGN::Trial::Search->new({
             bcs_schema => $schema,
@@ -180,9 +182,27 @@ sub get_plate_info {
             trial_id_list => $plate_list
         });
         ($data, $total_count) = $trial_search->search();
+
+        foreach my $plate (@$data){
+            my $plate_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $plate->{trial_id}, experiment_type => 'genotyping_layout'});
+            my $sample_names = $plate_layout->get_plot_names();
+            my $number_of_samples = '';
+            if ($sample_names){
+                $number_of_samples = scalar(@{$sample_names});
+            }
+
+            push @all_plates, {
+                plate_id => $plate->{trial_id},
+                plate_name => $plate->{trial_name},
+                plate_description => $plate->{description},
+                plate_format => $plate->{genotyping_plate_format},
+                sample_type => $plate->{genotyping_plate_sample_type},
+                number_of_samples => $number_of_samples,
+            };
+        }
     }
 
-    return ($data, $number_of_plates);
+    return (\@all_plates, $number_of_plates);
 
 }
 

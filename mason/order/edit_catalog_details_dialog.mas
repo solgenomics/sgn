@@ -37,10 +37,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_type">Item Type: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_type" value="<%$item_type%>">
-                                        <option value="single item">single item</option>
-                                        <option value="set of items">set of items</option>
-                                    </select>
+                                    <input class="form-control col-sm-8" id="edit_item_type" type="text" value="<%$item_type%>" disabled/>
                                 </div>
                             </div>
                         </div>
@@ -64,11 +61,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_material_type">Material Type: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_material_type" value="<%$material_type%>">
-                                        <option value="plant">plant</option>
-                                        <option value="seed">seed</option>
-                                        <option value="construct">construct</option>
-                                    </select>
+                                    <input class="form-control col-sm-8" id="edit_material_type" type="text" value="<%$material_type%>" disabled/>
                                 </div>
                             </div>
                         </div>
@@ -185,6 +178,8 @@ jQuery(document).ready( function() {
         var default_material_type = document.getElementById("edit_material_type").getAttribute("value");
         jQuery('#edit_material_type option[value="'+default_material_type+'"]').prop("selected", true);
 
+        var default_availability = document.getElementById("edit_availability").getAttribute("value");
+        jQuery('#edit_availability option[value="'+default_availability+'"]').prop("selected", true);
 
     });
 

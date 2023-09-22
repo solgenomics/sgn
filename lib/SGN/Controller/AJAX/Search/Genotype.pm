@@ -54,7 +54,7 @@ sub genotyping_data_search_GET : Args(0) {
         cache_root=>$c->config->{cache_file_path},
         accession_list=>$clean_inputs->{accession_id_list},
         tissue_sample_list=>$clean_inputs->{tissue_sample_id_list},
-        trial_list=>$clean_inputs->{genotyping_data_project_id_list},
+        genotype_data_project_list=>$clean_inputs->{genotyping_data_project_id_list},
         protocol_id_list=>$clean_inputs->{protocol_id_list},
         #marker_name_list=>['S80_265728', 'S80_265723']
         #marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
@@ -80,7 +80,7 @@ sub genotyping_data_search_GET : Args(0) {
         while (my $gt_line = <$fh>) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my $g = decode_json $gt_line;
-                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
+#                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
                 my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
                 push @result, [
                     "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
@@ -169,7 +169,6 @@ sub pcr_genotyping_data_search_GET : Args(0) {
         foreach my $marker (@marker_name_arrays) {
             my @positive_bands = ();
             my $product_sizes_ref = $marker_genotype_hash{$marker};
-
             if (!$product_sizes_ref) {
                 push @each_genotype, 'NA';
             } else {
@@ -178,6 +177,8 @@ sub pcr_genotyping_data_search_GET : Args(0) {
                     my $pcr_result = $product_sizes_hash{$product_size};
                     if ($pcr_result eq '1') {
                         push @positive_bands, $product_size;
+                    } elsif ($pcr_result eq '?') {
+                        push @positive_bands, $pcr_result;
                     }
                 }
                 if (scalar @positive_bands == 0) {

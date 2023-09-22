@@ -4,28 +4,27 @@ use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::TimeUtils;
 
 extends 'CXGN::BrAPI::v2::Common';
 
 sub search {
 	my $self = shift;
 	my $params = shift;
-	my $user_id = shift;
 
 	my $page_obj = CXGN::Page->new();
     my $hostname = $page_obj->get_hostname();
     my $status = $self->status;
 
-    my $types_arrayref = $params->{listType} || ($params->{listTypes} || ());
+    my $list_type = $params->{listType} || ($params->{listTypes});
     my $names_arrayref = $params->{listName} || ($params->{listNames} || ());
     my $list_ids_arrayref = $params->{listDbId} || ($params->{listDbIds} || ());
     my $list_source_arrayref = $params->{listSource} || ($params->{listSources} || ());
-    my $reference_ids_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $reference_ids_arrayref = $params->{externalReferenceId} || $params->{externalReferenceID} || ($params->{externalReferenceIds} || $params->{externalReferenceIDs} || ());
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
-
-    if (($reference_ids_arrayref && scalar(@$reference_ids_arrayref)>0) || ($reference_sources_arrayref && scalar(@$reference_sources_arrayref)>0) ){
-        push @$status, { 'error' => 'The following search parameters are not implemented: externalReferenceID, externalReferenceSources' };
-    }
+	my $list_owner_array_refs = $params->{listOwnerPersonDbIds};
+	my $user_id = shift || $list_owner_array_refs->[0];
+	my $brapi_require_login = shift;
 
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -35,33 +34,90 @@ sub search {
 	my @data;
 	my $lists;
 
-	if ($user_id){
-		$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(),$user_id,$types_arrayref->[0]);
-	} else {
-		$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(),$types_arrayref->[0]);
+	my $list_type = convert_to_breedbase_type($list_type);
+	if ($list_type) {
+		my $q = "SELECT cvterm_id FROM cvterm WHERE name =?";
+		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+		$h->execute($list_type);
+		my ($cvterm_id) = $h->fetchrow_array();
+		if (!$cvterm_id) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide a valid BrAPI list type: %s',$list_type), 400);
+		}
 	}
+
+	if($brapi_require_login) {
+		if ($user_id) {
+			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(), $user_id, $list_type);
+		}
+		else {
+			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(), $list_type);
+		}
+	} else {
+		$lists = CXGN::List::all_lists($self->bcs_schema()->storage->dbh(),$user_id,$list_type);
+	}
+
+	my @list_ids;
+	for (@$lists) {
+		push @list_ids, $_->[0];
+	}
+	my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+		bcs_schema => $self->bcs_schema,
+		table_name => 'sgn_people.list',
+		table_id_key => 'list_id',
+		id => \@list_ids
+	});
+	my $reference_result = $references->search();
 
 	foreach (@$lists){
 		my $name = $_->[1];
 		my $id = $_->[0];
+		my $create_date = $_->[-2];
+		my $modified_date = $_->[-1];
 		if ( $names_arrayref && ! grep { $_ eq $name } @{$names_arrayref} ) { next;};
 		if ( $list_ids_arrayref && ! grep { $_ eq $id } @{$list_ids_arrayref} ) { next;};
 		if ( $list_source_arrayref && ! grep { $_ eq $hostname } @{$list_source_arrayref} ) { next;};
 
+		#Get external references
+		my @references;
+		my $match_found = $reference_ids_arrayref || $reference_sources_arrayref ? 0 : 1;
+		my %externalRefIdMap = map { $_ => 1 } @$reference_ids_arrayref;
+		my %externalRefSourceMap = map { $_ => 1 } @$reference_sources_arrayref;
+		if (%$reference_result{$id}){
+			foreach (@{%$reference_result{$id}}){
+				push @references, $_;
+
+				if(!$match_found) {
+					my $source_found = %externalRefSourceMap ? 0 : 1;
+					my $id_found = %externalRefIdMap ? 0 : 1;
+					if (!$id_found) {
+						$id_found = %externalRefIdMap{$_->{referenceID}} ? 1 : 0;
+					}
+					if (!$source_found) {
+						$source_found = %externalRefSourceMap{$_->{referenceSource}} ? 1 : 0;
+					}
+					$match_found = $id_found && $source_found;
+				}
+			}
+		}
+
+		if(!$match_found) {
+			next;
+		}
+
 		if ($counter >= $start_index && $counter <= $end_index) {
 			push @data , {
-				additionalInfo => {},
-				dateCreated => undef,
-				dateModified => undef,
-				externalReferences => [],
-				listDbId => qq|$id|,
-				listDescription => $_->[2],
-				listName => $name,
-				listOwnerName => $_->[6],
+				additionalInfo      => {},
+				dateCreated         => CXGN::TimeUtils::db_time_to_iso_utc($create_date),
+				dateModified        => CXGN::TimeUtils::db_time_to_iso_utc($modified_date),
+				listDbId            => qq|$id|,
+				listDescription     => $_->[2],
+				listName            => $name,
+				listOwnerName       => $_->[6],
 				listOwnerPersonDbId => undef,
-				listSize => $_->[3],
-				listSource => $hostname,
-				listType => $_->[5],
+				listSize            => $_->[3],
+				listSource          => $hostname,
+				listType            => convert_to_brapi_type($_->[5]),
+				externalReferences  => \@references
 			}
 		}
 		$counter++;
@@ -72,6 +128,29 @@ sub search {
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Lists result constructed');
+}
+
+sub convert_to_brapi_type {
+	my $type = shift;
+	if ($type eq 'accessions') {
+		return 'germplasm';
+	}
+	if ($type eq 'traits') {
+		return 'observationVariables';
+	}
+	return $type;
+}
+
+sub convert_to_breedbase_type {
+	my $type = shift;
+	return $type if !$type;
+	if ('germplasm' eq $type) {
+		return 'accessions';
+	}
+	if ('observationVariables' eq $type) {
+		return 'traits';
+	}
+	return $type;
 }
 
 sub detail {
@@ -112,20 +191,34 @@ sub detail {
 		my @data = $list->{elements};
 		my $size = scalar(@{$list->{elements}});;
 
+		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+			bcs_schema => $self->bcs_schema,
+			table_name => 'sgn_people.list',
+			table_id_key => 'list_id',
+			id => [$list_id]
+		});
+		my $reference_result = $references->search();
+		my @references;
+		if (%$reference_result{$list_id}){
+			foreach (@{%$reference_result{$list_id}}){
+				push @references, $_;
+			}
+		}
+
 		%result = (
-				additionalInfo => {},
-				dateCreated => undef,
-				dateModified => undef,
-				externalReferences => [],
-				listDbId => qq|$list_id|,
-				listDescription => $list->{description},
-				listName => $list->{name},
-				listOwnerName => $owner_name,
-				listOwnerPersonDbId => qq|$list->{owner}|,
-				listSize => $size,
-				listSource => $hostname,
-				listType => $list->{type},
-				data => @data,
+			additionalInfo      => {},
+			dateCreated         => $list->{create_date},
+			dateModified        => undef,
+			listDbId            => qq|$list_id|,
+			listDescription     => $list->{description},
+			listName            => $list->{name},
+			listOwnerName       => $owner_name,
+			listOwnerPersonDbId => qq|$list->{owner}|,
+			listSize            => $size,
+			listSource          => $hostname,
+			listType            => convert_to_brapi_type($list->{type}),
+			data                => @data,
+			externalReferences  => \@references
 			);
 	}
     my $counter = %result;
@@ -151,6 +244,7 @@ sub store {
     my $status = $self->status;
     my $page = $self->page;
     my $counter = 0;
+	my @new_lists_ids;
 
 	foreach my $params (@$data){
 		my $additional_info = $params->{additionalInfo} || undef; #not supported
@@ -159,21 +253,23 @@ sub store {
 		my $owner_name = $params->{listOwnerName} || undef; #not supported
 		my $list_size = $params->{listSize} || undef; #not supported, counted from data
 		my $list_source = $params->{listSource} || undef;  #not supported, db name
+		my $externalReferences = $params->{externalReferences} || undef;
 		my $list_name = $params->{listName} || undef;
 		my $list_type = $params->{listType} || undef;
 		my $list_description = $params->{listDescription} || undef;
-		my $owner_id = $params->{listOwnerPersonDbId} || undef;
+		my $owner_id = $params->{listOwnerPersonDbId} || $user_id;
 		my $data = $params->{data} || undef;
 
+		$list_type = convert_to_breedbase_type($list_type);
 		#verify if list exists
 		my $check_list_id = CXGN::List::exists_list($dbh, $list_name, $owner_id);
 		if ($check_list_id->{list_id}){
-        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('List name %s already exist in the database!',$list_name));		
+        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('List name %s already exist in the database!',$list_name), 409);
 		}
 
 	    #check entries
 		if (!$list_type || !$data) {
-        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide list type and data!'));		
+        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide list type and data!'), 400);
 		}
 
 		my $q = "SELECT cvterm_id FROM cvterm WHERE name =?";
@@ -181,7 +277,7 @@ sub store {
 		$h->execute($list_type);
 		my ($cvterm_id) = $h->fetchrow_array();
 		if (!$cvterm_id) {
-	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide valid list type: %s',$list_type));
+	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide a valid BrAPI list typee: %s',$list_type));
 		}
 
 	    #validate
@@ -210,14 +306,29 @@ sub store {
 		    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error ocurred!'));
 		    }
 		}
+
+		# Store external references
+		if ($externalReferences && scalar $externalReferences > 0) {
+			my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+				bcs_schema => $self->bcs_schema,
+				table_name => 'sgn_people.list',
+				table_id_key => 'list_id',
+				external_references => $externalReferences,
+				id => $new_list_id
+			});
+			my $reference_result = $references->store();
+		}
 	    $counter++;
+		push @new_lists_ids, $new_list_id;
 
 	}
 
   	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(1, $pagination, \@data_files, $status, $counter . ' Lists stored');
+	my $params;
+	$params->{listDbIds} = \@new_lists_ids;
+	return $self->search($params);
 }
 
 sub update {
@@ -242,6 +353,7 @@ sub update {
 	my $owner_name = $params->{listOwnerName} || undef; #not supported
 	my $list_size = $params->{listSize} || undef; #not supported, counted from data
 	my $list_source = $params->{listSource} || undef;  #not supported, db name
+	my $externalReferences = $params->{externalReferences} || undef;
 	my $list_id = $params->{listDbId} || undef;
 	my $list_name = $params->{listName} || undef;
 	my $list_type = $params->{listType} || undef;
@@ -256,10 +368,13 @@ sub update {
     	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide valid list name.'));
     }
 	$list->name($list_name);
-	$list->description($list_description);
+	if ($list_description) {
+		$list->description($list_description);
+	}
 
 	#add list type
 	if ($list_type ) {
+		$list_type = convert_to_breedbase_type($list_type);
 		my $q = "SELECT cvterm_id FROM cvterm WHERE name =?";
 		my $h = $dbh->prepare($q);
 		$h->execute($list_type);
@@ -286,6 +401,18 @@ sub update {
 	    if ($response->{error}) {
 	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error ocurred!'));
 	    }
+	}
+
+	# Update external references
+	if ($externalReferences && scalar $externalReferences > 0) {
+		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+			bcs_schema          => $self->bcs_schema,
+			table_name          => 'sgn_people.list',
+			table_id_key        => 'list_id',
+			external_references => $externalReferences,
+			id                  => $list_id
+		});
+		my $reference_result = $references->store();
 	}
 
   	my @data_files;

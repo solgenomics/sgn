@@ -85,7 +85,7 @@ for (i in 31:nCols){
 # Preparing variance vectors
 her = rep(NA, nTraits)
 Vg = rep(NA, nTraits)
-Ve = rep(NA, nTraits)
+Vres = rep(NA, nTraits)
 resp_var = rep(NA, nTraits)
 
 counter = 1
@@ -108,21 +108,21 @@ for (i in 31:nCols) {
     H2nw = format(round(H2, 4), nsmall = 4)
     her[counter] = round(as.numeric(H2nw), digits =3)
     Vg[counter] = round(as.numeric(variance$vcov[1]), digits = 3)
-    Ve[counter] = round(as.numeric(variance$vcov[2]), digits = 3)
+    Vres[counter] = round(as.numeric(variance$vcov[2]), digits = 3)
     resp_var[counter] = colnames(phenoData)[i]
     
     counter = counter + 1
 }
 
 #Prepare information to export data
-Heritability = data.frame(resp_var,Vg, Ve, her)
+Heritability = data.frame(resp_var,Vg, Vres, her)
 print(Heritability)
 Heritability = Heritability %>% 
   dplyr::rename(
     trait = resp_var,
     Hert = her,
     Vg = Vg,
-    Ve = Ve
+    Vres = Vres
   )
 print(Heritability)
 

@@ -810,7 +810,7 @@ for my $extension ("xls", "xlsx") {
 				'plot_number'         => 'A01',
 				'row_number'          => 'A',
 				'tissue_type'         => 'leaf',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'A03' => {
 				'notes'               => 'test well A03',
@@ -827,7 +827,7 @@ for my $extension ("xls", "xlsx") {
 				'concentration'       => '5',
 				'acquisition_date'    => '2018/02/16',
 				'col_number'          => '3',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'A02' => {
 				'extraction'          => undef,
@@ -844,7 +844,7 @@ for my $extension ("xls", "xlsx") {
 				'acquisition_date'    => '2018/02/16',
 				'concentration'       => undef,
 				'dna_person'          => 'nmorales',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			}
 		}
 	});
@@ -903,7 +903,7 @@ for my $extension ("xls", "xlsx") {
 				'col_number'          => '12',
 				'acquisition_date'    => '8/23/2018',
 				'stock_name'          => 'BLANK',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'A01' => {
 				'stock_name'          => 'KASESE_TP2013_1671',
@@ -920,7 +920,7 @@ for my $extension ("xls", "xlsx") {
 				'concentration'       => 'NA',
 				'ncbi_taxonomy_id'    => 'NA',
 				'notes'               => 'newplate',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'B01' => {
 				'plot_name'           => '18DNA00101_B01',
@@ -937,7 +937,7 @@ for my $extension ("xls", "xlsx") {
 				'plot_number'         => 'B01',
 				'volume'              => 'NA',
 				'tissue_type'         => 'leaf',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'C01' => {
 				'col_number'          => '01',
@@ -954,7 +954,7 @@ for my $extension ("xls", "xlsx") {
 				'volume'              => 'NA',
 				'ncbi_taxonomy_id'    => 'NA',
 				'notes'               => 'newplate',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'D01' => {
 				'ncbi_taxonomy_id'    => 'NA',
@@ -971,7 +971,7 @@ for my $extension ("xls", "xlsx") {
 				'acquisition_date'    => '8/23/2018',
 				'stock_name'          => 'KASESE_TP2013_885',
 				'col_number'          => '01',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			}
 		}
 	}, 'test upload parse of coordinate genotyping plate');
@@ -1027,7 +1027,7 @@ for my $extension ("xls", "xlsx") {
 				'plot_number'         => 'B01',
 				'row_number'          => 'B',
 				'dna_person'          => 'Trevor_Rife',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'B04' => {
 				'tissue_type'         => 'leaf',
@@ -1044,7 +1044,7 @@ for my $extension ("xls", "xlsx") {
 				'stock_name'          => 'BLANK',
 				'concentration'       => 'NA',
 				'volume'              => 'NA',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'C01' => {
 				'is_blank'            => 0,
@@ -1061,7 +1061,7 @@ for my $extension ("xls", "xlsx") {
 				'plot_number'         => 'C01',
 				'dna_person'          => 'Trevor_Rife',
 				'row_number'          => 'C',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'C04' => {
 				'ncbi_taxonomy_id'    => 'NA',
@@ -1078,7 +1078,7 @@ for my $extension ("xls", "xlsx") {
 				'plot_number'         => 'C04',
 				'dna_person'          => 'Trevor_Rife',
 				'row_number'          => 'C',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'A01' => {
 				'is_blank'            => 0,
@@ -1095,7 +1095,7 @@ for my $extension ("xls", "xlsx") {
 				'plot_number'         => 'A01',
 				'dna_person'          => 'Trevor_Rife',
 				'row_number'          => 'A',
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			},
 			'D01' => {
 				'dna_person'          => 'Trevor_Rife',
@@ -1112,7 +1112,7 @@ for my $extension ("xls", "xlsx") {
 				'plot_name'           => '18DNA00001_D01',
 				'ncbi_taxonomy_id'    => 'NA',
 				'is_blank'            => 0,
-				'facility_identifier' => 'NA'
+				'facility_identifier' => undef
 			}
 		},
 		'success' => '1'
@@ -1200,12 +1200,12 @@ for my $extension ("xls", "xlsx") {
 		[
 			undef,
 			'Comments',
-			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
-			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
-			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
-			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
-			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA',
-			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA'
+			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: ',
+			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: ',
+			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: ',
+			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: ',
+			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: ',
+			'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB Facility Identifier: '
 		]
 	], 'test intertek genotyping plate download');
 
