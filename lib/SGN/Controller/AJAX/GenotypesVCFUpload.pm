@@ -29,6 +29,7 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
 use JSON;
 
@@ -85,8 +86,8 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
-    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
-    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+#    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
 
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
     my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
@@ -116,6 +117,25 @@ sub upload_genotype_verify_POST : Args(0) {
     my $accept_warnings;
     if ($accept_warnings_input){
         $accept_warnings = 1;
+    }
+
+    if (defined $project_id && defined $protocol_id) {
+        my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $project_id
+        });
+        my $associated_protocol  = $protocol_info->get_associated_protocol();
+        my @info;
+        if ( defined $associated_protocol && scalar(@$associated_protocol)>1) {
+            $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+            $c->detach();
+        } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
+            my ($stored_protocol_id, $stored_protocol_name) = $associated_protocol->[0];
+            if ($stored_protocol_id != $protocol_id) {
+                $c->stash->{rest} = { error => "The selected genotyping project is already associated with different protocol. Each project should be associated with only one protocol" };
+                $c->detach();
+            }
+        }
     }
 
     #archive uploaded file
