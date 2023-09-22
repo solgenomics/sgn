@@ -2205,7 +2205,7 @@ sub get_pcr_genotype_info {
 #    print STDERR "GENOTYPE ID =".Dumper($genotype_id_list)."\n";
 #    print STDERR "PROTOCOL ID =".Dumper($protocol_id_list)."\n";
 
-    if ($genotype_data_project_list && scalar($genotype_data_project_list)>0) {
+    if ($genotype_data_project_list && scalar(@$genotype_data_project_list)>0) {
         my $sql = join ("," , @$genotype_data_project_list);
         push @where_clause, "nd_experiment_project.project_id in ($sql)";
     }
