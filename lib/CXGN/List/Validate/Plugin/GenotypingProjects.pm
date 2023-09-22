@@ -1,11 +1,11 @@
 
-package CXGN::List::Validate::Plugin::GenotypingTrials;
+package CXGN::List::Validate::Plugin::GenotypingProjects;
 
 use Moose;
 use Data::Dumper;
 
 sub name {
-    return "genotyping_plates";
+    return "genotyping_projects";
 }
 
 sub validate {
@@ -20,7 +20,7 @@ sub validate {
         {
             'me.name' => { -in => $list },
             'projectprops.type_id' => $design_cvterm_id,
-            'projectprops.value' => 'genotyping_plate'
+            'projectprops.value' => 'genotype_data_project'
         },
         {
             join => 'projectprops'
