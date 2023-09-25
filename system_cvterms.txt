@@ -42,7 +42,7 @@ geolocation_property	region	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	alternative_name	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	noaa_station_id	For storing the nearest NOAA Station ID for a location	09/02/2019	nm529	00114
 list_types	identifier_generation		08/21/2018	nm529	00102
-list_types	genotyping_trials		03/23/2018	nm529	00092
+list_types	genotyping_trials  ##### obsoleted, replaced with genotyping_plates		03/23/2018	nm529	00092
 list_types	tissue_samples		02/15/2018	nm529	00091
 list_types	seedlots		07/20/2017	nm529	00081
 list_types	subplots		08/23/2017	nm529	00084
@@ -60,6 +60,9 @@ list_types	unigene_ids
 list_types	vector_constructs				00049
 list_types	years
 list_types  family_names            00111
+list_types  crossing_experiments  tt15 00178
+list_types  genotyping_plates  tt15  00178
+list_types  genotyping_projects  tt15  00178
 local	date
 local	months after planting
 local	operator
@@ -804,16 +807,16 @@ project_md_image	image_analysis_necrosis_solomon_nsumba	Image analysis necrosis 
 project_md_image	image_analysis_white_fly_count_solomon_nsumba	Image analysis white fly count as implemented in Solomon's service	08/19/2019	nm529	00114
 project_md_image	standard_process_interactive_match_temporary_drone_imagery	Standard interactive process for drone imagery showing the match of captures	07/06/2020	nm529	00126
 project_md_image	standard_process_interactive_align_temporary_drone_imagery	Standard interactive process for drone imagery showing the alignment of captures	07/06/2020	nm529	00126
-stock_property strain	Vector property 1/19/2023	mrf252	00164	
-stock_property Backbone	Vector property 1/19/2023	mrf252	00164	
-stock_property CloningOrganism	Vector property 1/19/2023	mrf252	00164	
-stock_property InherentMarker	Vector property 1/19/2023	mrf252	00164	
-stock_property SelectionMarker	Vector property 1/19/2023	mrf252	00164	
-stock_property CassetteName	Vector property 1/19/2023	mrf252	00164	
-stock_property Gene	Vector property 1/19/2023	mrf252	00164	
-stock_property Promotors	Vector property 1/19/2023	mrf252	00164	
+stock_property strain	Vector property 1/19/2023	mrf252	00164
+stock_property Backbone	Vector property 1/19/2023	mrf252	00164
+stock_property CloningOrganism	Vector property 1/19/2023	mrf252	00164
+stock_property InherentMarker	Vector property 1/19/2023	mrf252	00164
+stock_property SelectionMarker	Vector property 1/19/2023	mrf252	00164
+stock_property CassetteName	Vector property 1/19/2023	mrf252	00164
+stock_property Gene	Vector property 1/19/2023	mrf252	00164
+stock_property Promotors	Vector property 1/19/2023	mrf252	00164
 stock_property Terminators	Vector property 1/19/2023	mrf252	00164
 genotype_property   phg genotyping  specifies the PHG type of genotype data   08/15/2023    iyt2    00167
 genotype_property   vcf_phg_genotyping  specifies the PHG type of genotype data in vcf  08/15/2023  iyt2  00167
-stock_property PlantAntibioticResistantMarker	Vector property 4/17/2023	mrf252	00167	
-stock_property BacterialResistantMarker	Vector property 4/17/2023	mrf252	00167	
+stock_property PlantAntibioticResistantMarker	Vector property 4/17/2023	mrf252	00167
+stock_property BacterialResistantMarker	Vector property 4/17/2023	mrf252	00167
