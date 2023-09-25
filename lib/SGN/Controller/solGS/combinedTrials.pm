@@ -437,11 +437,6 @@ sub selection_combined_pops_trait : Path('/solgs/combined/model/') Args() {
 
     $c->controller('solGS::solGS')->top_blups( $c, $gebvs_file );
 
-# my $training_pop_name = $c->stash->{training_pop_name};
-# my $model_link = "$training_pop_name -- $trait_abbr";
-# $model_page = $c->controller('solGS::Path')->create_hyperlink($model_page, $model_link);
-# $c->stash->{model_page_url} = $model_page;
-
     $c->stash->{template} = $c->controller('solGS::Files')
       ->template('/population/selection_prediction_detail.mas');
 
@@ -1086,7 +1081,6 @@ sub combine_data_build_model {
 
     $c->stash->{prerequisite_type} = 'combine_populations';
 
-    #$self->r_combine_populations_args($c);
     $self->build_model_combined_trials_trait($c);
 
 }
@@ -1318,16 +1312,8 @@ sub find_common_traits {
 
     my @common_traits;
     foreach my $trial_id (@$combined_pops_list) {
-
-#	my $trial_traits = $c->controller('solGS::Search')->model($c)->trial_traits($pop_id);
-#	my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($c, $trial_traits);
         my $trait_names = $c->controller('solGS::Utils')
           ->get_clean_trial_trait_names( $c, $trial_id );
-
-        # foreach my $tr (@$clean_traits)
-        # {
-        #     push @trait_names, $tr->{trait_name};
-        # }
 
         if (@common_traits) {
             @common_traits = intersect( @common_traits, @$trait_names );
@@ -1387,7 +1373,6 @@ sub prepare_multi_pops_data {
 
     if ( $prerequisite_jobs =~ /^:+$/ ) { $prerequisite_jobs = undef; }
 
-    #$c->stash->{prerequisite_jobs} = $prerequisite_jobs;
     $c->stash->{multi_pops_data_jobs} = $prerequisite_jobs;
 }
 
@@ -1409,12 +1394,7 @@ sub combine_trait_data_input {
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
-# my $trait_info  = $trait_id . "\t" . $trait_abbr;
-# my $trait_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "trait_info_${trait_id}");
-# write_file($trait_file, {binmode => ':utf8'}, $trait_info);
-
     $c->controller('solGS::solGS')->save_model_info_file($c);
-
     $c->controller('solGS::Files')->model_info_file($c);
     my $model_info_file = $c->stash->{model_info_file};
 
