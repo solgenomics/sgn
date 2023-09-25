@@ -590,6 +590,7 @@ sub output_files {
       $c->controller('solGS::Path')->page_type( $c, $c->req->referer );
     my $analysis_type = $c->stash->{analysis_type} || $page_type;
     $analysis_type =~ s/\s+/_/g;
+   
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
     $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
@@ -914,11 +915,10 @@ sub selection_population_predicted_traits :
   Path('/solgs/selection/population/predicted/traits/') Args(0) {
     my ( $self, $c ) = @_;
 
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-   my $args = $c->req->param('arguments');
-    $c->controller('solGS::Utils')->stash_json_args($c, $args);
-
-    my $training_pop_id  = $c->stash->{training_pop_id}; 
+    my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
 
     my $ret->{selection_traits} = undef;

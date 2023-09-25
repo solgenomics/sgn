@@ -1321,6 +1321,75 @@ sub remove_planting_date {
 		}
 }
 
+=head2 accessors get_transplanting_date(), set_transplanting_date()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_transplanting_date {
+    my $self = shift;
+    my $transplanting_date_cvterm_id = $self->get_transplanting_date_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $transplanting_date_cvterm_id,
+    });
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+    if ($row){
+        my $harvest_date = $calendar_funcs->display_start_date($row->value());
+        return $harvest_date;
+    } 
+    else {
+        return;
+    }
+}
+
+sub set_transplanting_date {
+    my $self = shift;
+    my $transplanting_date = shift;
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if (my $transplanting_event = $calendar_funcs->check_value_format($transplanting_date)) {
+        my $transplanting_date_cvterm_id = $self->get_transplanting_date_cvterm_id();
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+            project_id => $self->get_trial_id(),
+            type_id => $transplanting_date_cvterm_id,
+        });
+        $row->value($transplanting_event);
+        $row->update();
+    } 
+    else{
+        print STDERR "date format did not pass check while preparing to set transplanting date: $transplanting_date \n";
+    }
+}
+
+sub remove_transplanting_date {
+    my $self = shift;
+    my $transplanting_date = shift;
+    my $calendar_funcs = CXGN::Calendar->new({});
+    if (my $transplanting_event = $calendar_funcs->check_value_format($transplanting_date) ) {
+        my $transplanting_date_cvterm_id = $self->get_transplanting_date_cvterm_id();
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+            project_id => $self->get_trial_id(),
+            type_id => $transplanting_date_cvterm_id,  
+            value => $transplanting_event,
+        });
+        if ($row){
+            print STDERR "Removing transplanting date $transplanting_event from trial ".$self->get_trial_id()."\n";
+            $row->delete();
+        }   
+    } 
+    else {
+        print STDERR "date format did not pass check while preparing to delete transplanting date: $transplanting_date  \n";
+    }
+}
+
 
 =head2 accessors get_temperature_averaged_gdd(), set_temperature_averaged_gdd()
 
@@ -3726,6 +3795,7 @@ sub create_tissue_samples {
     my $self = shift;
     my $tissue_names = shift;
     my $inherits_plot_treatments = shift;
+    my $use_tissue_numbers = shift;
     my $tissue_sample_owner = shift;
     my $username = shift;
 
@@ -3763,7 +3833,7 @@ sub create_tissue_samples {
         if ($rs_previous_tissue->count > 0) {
             $previous_tissue_number = $rs_previous_tissue->first->value;
         }
-        my $new_tissue_number = $previous_tissue_number + scalar(@$tissue_names);
+        my $new_tissue_number = $previous_tissue_number + ($use_tissue_numbers ? scalar(@$tissue_names) : 0);
 
         my $treatments;
         my %treatment_experiments;
@@ -3831,7 +3901,12 @@ sub create_tissue_samples {
 
                 my $tissue_index_number = $previous_tissue_number + 1;
                 foreach my $tissue_name (@$tissue_names){
-                    my $tissue_sample_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
+                    my $tissue_sample_name;
+                    if ($use_tissue_numbers) {
+                        $tissue_sample_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
+                    } else {
+                        $tissue_sample_name = $parent_plant_name."_".$tissue_name;
+                    }
                     print STDERR "... ... creating tissue $tissue_sample_name...\n";
 
                     my $plant_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plant, 'me.type_id'=>$plant_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm]}, {'join'=>'object'});
@@ -4365,13 +4440,21 @@ sub has_subplot_entries {
 
 }
 
- sub get_planting_date_cvterm_id {
-     my $self = shift;
-     my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_planting_date', 'project_property');
+sub get_planting_date_cvterm_id {
+    my $self = shift;
+    my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_planting_date', 'project_property');
 
-     return $planting_date->cvterm_id();
+    return $planting_date->cvterm_id();
 
  }
+
+sub get_transplanting_date_cvterm_id {
+    my $self = shift;
+    my $transplanting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_transplanting_date', 'project_property');
+
+    return $transplanting_date->cvterm_id();
+
+}
 
 =head2 accessors set_design_type(), get_design_type()
 

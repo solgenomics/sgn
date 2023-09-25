@@ -12,8 +12,8 @@ solGS.correlation = {
   canvas: "#corr_canvas",
   corrPlotDivPrefix: "#corr_plot",
   corrMsgDiv: "#corr_message",
-  corrPopsSelectMenuId: "#corr_select_pops",
-  corrPopsDiv: "#corr_select_a_pop_div",
+  corrPopsSelectMenuId: "#corr_pops_select",
+  corrPopsDiv: "#corr_pops_select_div",
 
   getPhenoCorrArgs: function () {
     var corrPopId = jQuery("#corr_pop_id").val();
@@ -47,9 +47,9 @@ solGS.correlation = {
     return args;
   },
 
-  loadCorrelationPopsList: function (selectId, selectName, dataStr) {
-    var corrPopId = this.getCorrPopId(selectId, dataStr);
-    if (selectId.length === 0) {
+  displaySelectedCorrPop: function (selectedPop) {
+    var corrPopId = this.getCorrPopId(selectedPop.id, selectedPop.data_str);
+    if (selectedPop.length === 0) {
       alert("The list is empty. Please select a list with content.");
     } else {
       var tableId = "corr_pops_list_table";
@@ -59,7 +59,7 @@ solGS.correlation = {
         jQuery("#corr_pops_selected").append(corrTable).show();
       }
 
-      var addRow = this.selectRow(selectId, selectName, dataStr);
+      var addRow = this.selectRow(selectedPop);
       var tdId = "#corr_" + corrPopId;
       var addedRow = jQuery(tdId).doesExist();
 
@@ -101,8 +101,12 @@ solGS.correlation = {
     return table;
   },
 
-  selectRow: function (selectId, selectName, dataStr) {
-    var corrPopId = this.getCorrPopId(selectId, dataStr);
+  selectRow: function (selectedPop) {
+    var selectedId = selectedPop.id;
+    var selectedName = selectedPop.name;
+    var dataStr = selectedPop.data_str;
+
+    var corrPopId = this.getCorrPopId(selectedId, dataStr);
 
     // var dataTypeOpts = this.getDataTypeOpts({
     // 	'select_id': selectId,
@@ -115,9 +119,9 @@ solGS.correlation = {
     var datasetId;
 
     if (dataStr.match(/dataset/)) {
-      datasetId = selectId;
+      datasetId = selectedId;
     } else if (dataStr.match(/list/)) {
-      listId = selectId;
+      listId = selectedId;
     }
 
     var runCorrBtnId = this.getRunCorrBtnId(corrPopId);
@@ -128,7 +132,7 @@ solGS.correlation = {
       data_structure: dataStr,
       dataset_id: datasetId,
       list_id: listId,
-      corre_pop_name: selectName,
+      corre_pop_name: selectedName,
       data_type: "phenotype",
       correlation_type: "phenotypic",
       canvas: corrDivs.canvas,
@@ -147,7 +151,7 @@ solGS.correlation = {
       corrPopId +
       '">' +
       "<td>" +
-      selectName +
+      selectedName +
       "</td>" +
       "<td>" +
       dataStr +
@@ -194,12 +198,17 @@ solGS.correlation = {
   },
 
   populateGenCorrMenu: function () {
-    var modelData = solGS.sIndex.getTrainingPopulationData();
-
+    var modelData = solGS.getModelArgs();
+    modelData = {
+      id: modelData.training_pop_id,
+      name: modelData.training_pop_name,
+      pop_type: 'training'
+    }
     var corrPops = [modelData];
 
-    if (modelData.id.match(/list/) == null) {
-      var trialSelPopsList = solGS.sIndex.getPredictedTrialTypeSelectionPops();
+    if (!modelData.id.match(/list/)) {
+      var trialSelPopsList = solGS.selectionPopulation.getPredictedTrialTypeSelectionPops();
+
       if (trialSelPopsList) {
         corrPops.push(trialSelPopsList);
       }
@@ -207,14 +216,14 @@ solGS.correlation = {
 
     var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
     if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.sIndex.getListTypeSelPopulations();
+      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
       if (listTypeSelPops) {
         corrPops.push(listTypeSelPops);
       }
     }
 
     var menuId = this.corrPopsSelectMenuId;
-    var menu = new OptionsMenu(menuId);
+    var menu = new SelectMenu(menuId);
     corrPops = corrPops.flat();
     var menuElem = menu.addOptions(corrPops);
     var corrPopDiv = this.corrPopsDiv;
@@ -338,6 +347,17 @@ solGS.correlation = {
     }
 
     return { canvas: canvas, corr_msg_div: corrMsgDiv, corr_plot_div: corrPlotDiv };
+  },
+
+  populateCorrPopsMenu: function () {
+    var listTypes = ["plots", "trials"];
+    var datasetTypes = ["accessions", "plots", "trials"];
+    var menuId = this.corrPopsSelectMenuId;
+    var menu = new SelectMenu(menuId);
+    var selectMenu = menu.getSelectMenuByTypes(listTypes, datasetTypes);
+
+    var corrPopsDiv = this.corrPopsDiv;
+    jQuery(corrPopsDiv).append(selectMenu).show();
   },
 
   ///////
@@ -486,12 +506,6 @@ jQuery(document).ready(function () {
         jQuery(corrMsgDiv).html("Error occured running correlation analysis.").fadeOut(8400);
       });
   });
-
-  var url = location.pathname;
-
-  if (url.match(/correlation\/analysis/)) {
-    solGS.selectMenu.populateMenu("corr_pops", ["plots", "trials"], ["plots", "trials"]);
-  }
 });
 
 jQuery(document).ready(function () {
@@ -510,21 +524,26 @@ jQuery(document).ready(function () {
 });
 
 jQuery(document).ready(function () {
-  jQuery("#corr_pops_list_select").change(function () {
-    var selectedPop = solGS.selectMenu.getSelectedPop("corr_pops");
-console.log(`selectedPop ${JSON.stringify(selectedPop)}`)
-    if (selectedPop.selected_id) {
-      jQuery("#corr_pop_go_btn").click(function () {
-console.log(`click corr_pop_go_btn selectedPop ${JSON.stringify(selectedPop)}`)
+  var corrPopsDiv = solGS.correlation.corrPopsDiv;
+  jQuery(corrPopsDiv).change(function () {
 
-        solGS.correlation.loadCorrelationPopsList(
-          selectedPop.selected_id,
-          selectedPop.selected_name,
-          selectedPop.data_str
-        );
+    var selectedPop = jQuery("option:selected", this).data("pop");
+    if (selectedPop.id) {
+      jQuery("#corr_pop_go_btn").click(function () {
+        if (!selectedPop.data_str) {
+          selectedPop.data_str = "list";
+        }
+        solGS.correlation.displaySelectedCorrPop(selectedPop);
       });
     }
   });
+});
+
+jQuery(document).ready(function () {
+  var url = location.pathname;
+  if (url.match(/correlation\/analysis/)) {
+    solGS.correlation.populateCorrPopsMenu();
+  }
 });
 
 jQuery(document).ready(function () {

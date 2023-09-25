@@ -24,7 +24,7 @@ $pop_type
 
 <div class="row">
   <div class="form-group col-sm-3"
-       id="cluster_select_a_pop_div"
+       id="cluster_pops_select_div"
        style="margin-right:25px">
   </div>
 

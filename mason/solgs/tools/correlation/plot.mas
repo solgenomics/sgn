@@ -27,7 +27,7 @@ $data_structure => undef
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS",  "solGS.correlation"] &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "d3.d3ArrayMin", "solGS.solGS",  "solGS.correlation"] &>
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <style>

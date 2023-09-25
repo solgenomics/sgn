@@ -2212,5 +2212,41 @@ sub get_accessions_missing_pedigree_GET {
 }
 
 
+=head2 accession_or_seedlot_or_population_or_vector_construct_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub accession_or_seedlot_or_population_or_vector_construct_autocomplete : Local : ActionClass('REST') { }
+
+sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='seedlot' or cvterm.name='population' or cvterm.name='vector_construct') ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
+
 
 1;

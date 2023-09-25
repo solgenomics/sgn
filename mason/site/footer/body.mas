@@ -1,7 +1,18 @@
 <%init>
-  my $tag = `git describe --abbrev=0 --tags`;
-  my $commit = `git rev-parse --short HEAD`;
-  my $updated = `git log -1 --format=%cd`;
+  my $tag;
+    my $commit;
+    my $updated;
+
+    system("git -C . rev-parse 2>/dev/null");
+    my $isGit = `echo $?`;
+    if($isGit == 0) {
+        $tag = `git describe --abbrev=0 --tags`;
+        $commit = `git rev-parse --short HEAD`;
+        $updated = `git log -1 --format=%cd`;
+    } else {
+        $tag = eval{ $c->get_conf('version') };
+        $updated = eval{ $c->get_conf('version_updated') };
+    }
 </%init>
 
 <!-- BEGIN SITE SPECIFIC FOOTER. -->
@@ -20,8 +31,12 @@
               <p>
                 <strong>Version</strong>
                 <br />
+% if($isGit == 0) {
                 <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;
                 <span class="git-version-tag"><a href="https://github.com/solgenomics/sgn/commits/<% $tag %>"><% $tag %></a></span>
+% } else {
+                <span class="git-version-tag"><% $tag %></span>&nbsp;
+% }
                 <br />
                 <span class="git-version-updated"><% $updated %></span>
               </p>
