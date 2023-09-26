@@ -13,7 +13,16 @@ use Carp qw/ carp confess croak /;
 use Scalar::Util 'reftype';
 use URI;
 
-BEGIN { extends 'Catalyst::Controller' }
+# BEGIN { extends 'Catalyst::Controller' }
+
+BEGIN { extends 'Catalyst::Controller::REST' }
+
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON' },
+);
+
 
 sub check_user_login : Path('/solgs/check/user/login') Args(0) {
     my ( $self, $c ) = @_;
@@ -24,14 +33,9 @@ sub check_user_login : Path('/solgs/check/user/login') Args(0) {
     if ($user) {
         my $contact = $self->get_user_detail($c);
 
-        $ret->{contact}  = $contact;
-        $ret->{loggedin} = 1;
+        $c->stash->{rest}{contact}  = $contact;
+        $c->stash->{rest}{loggedin} = 1;
     }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 
