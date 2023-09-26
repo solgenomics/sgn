@@ -126,16 +126,25 @@ sub upload_genotype_verify_POST : Args(0) {
         });
         my $associated_protocol  = $protocol_info->get_associated_protocol();
         my @info;
-        if ( defined $associated_protocol && scalar(@$associated_protocol)>1) {
+        if ((defined $associated_protocol) && (scalar(@$associated_protocol)>1)) {
             $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
             $c->detach();
         } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
             my $stored_protocol_id = $associated_protocol->[0]->[0];
-#            print STDERR "STORED PROTOCOL ID =".Dumper($stored_protocol_id)."\n";
             if ($stored_protocol_id != $protocol_id) {
                 $c->stash->{rest} = { error => "The selected genotyping project is already associated with different protocol. Each project should be associated with only one protocol" };
                 $c->detach();
             }
+        }
+    } elsif ((defined $project_id) && (defined $protocol_name)) {
+        my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $project_id
+        });
+        my $associated_protocol  = $protocol_info->get_associated_protocol();
+        if ((defined $associated_protocol) && (scalar(@$associated_protocol) > 0) {
+            $c->stash->{rest} = { error => "The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol" };
+            $c->detach();
         }
     }
 

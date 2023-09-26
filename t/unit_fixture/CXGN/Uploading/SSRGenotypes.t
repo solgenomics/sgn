@@ -155,6 +155,7 @@ for my $extension ("xls", "xlsx") {
 	my $stored_data = $store_genotypes->store_identifiers();
 	is($stored_data->{'success'}, '1');
 	is($stored_data->{'nd_protocol_id'}, $ssr_protocol_id);
+	print STDERR "STORED DATA =".Dumper($stored_data)."\n";
 
 	#test retrieving data
 	my @protocol_id_list;
@@ -167,8 +168,7 @@ for my $extension ("xls", "xlsx") {
 	});
 	my $result = $genotypes_search->get_pcr_genotype_info();
 	my $protocol_marker_names = $result->{'marker_names'};
-	my $ssr_genotype_data = $result->{'protocol_genotype_data'};
-
+	my $ssr_genotype_data = $result->{'ssr_genotype_data'};
 	my $protocol_marker_names_ref = decode_json $protocol_marker_names;
 	my @marker_name_arrays = sort @$protocol_marker_names_ref;
 
