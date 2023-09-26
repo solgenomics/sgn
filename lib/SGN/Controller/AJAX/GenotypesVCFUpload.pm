@@ -142,7 +142,7 @@ sub upload_genotype_verify_POST : Args(0) {
             project_id => $project_id
         });
         my $associated_protocol  = $protocol_info->get_associated_protocol();
-        if ((defined $associated_protocol) && (scalar(@$associated_protocol) > 0) {
+        if ((defined $associated_protocol) && (scalar(@$associated_protocol) > 0)) {
             $c->stash->{rest} = { error => "The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol" };
             $c->detach();
         }
