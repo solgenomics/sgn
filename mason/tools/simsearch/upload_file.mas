@@ -30,26 +30,31 @@ $format => ""
          <tr><th>Group #</th><th>Member count</th><th>Max score</th><th>Average score</th><th>Group members</th></tr>
    </table>
 
+   <div id="simsearch_results_histogram">[HISTOGRAM]</div>
+
 </div>
 
 <script>
 
+
 jQuery(document).ready( function() { 
     jQuery('#simsearch_run_button').click( function() {
-
+        alert("HELLO!");
         var filename = jQuery('#simsearch_filename').val();
         var reference_file = jQuery('#reference_file').val();
-	var format = '<% $format %>';
 
+	var histogram;
 	jQuery.ajax({
             url: '/ajax/tools/simsearch/process_file',
-	    data: { 'filename' : filename, 'reference_file' : reference_file, 'format' : format },
+	    data: { 'filename' : filename, 'reference_file' : reference_file },
 	    method: 'post',
 	    timeout: 360000
         }).done( function(response) {
             jQuery('#simsearch_results_table').DataTable({
-                data: response.data
+                data: response.data,
 	    });
+	    alert('HISTOGRAM: '+response.histogram);
+	    jQuery('#simsearch_results_histogram').html('<img src="'+response.histogram+'"  />');
         
         });
     });

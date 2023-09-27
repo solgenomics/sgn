@@ -22,6 +22,7 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
 
     
     my $filename = $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/simsearch/".$c->req->param("filename");
+    my $fileurl = '/simsearch/'.$c->req->param("filename");
     my $format = $c->req->param("format");
 
     print STDERR "FORMAT = $format\n";
@@ -47,7 +48,7 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     
 #    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
 
-    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -alt_marker_ids -nofull_cluster_output -vcf $filename $ref_option -output $filename.out";
+    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -alt_marker_ids -nofull_cluster_output -in $filename $ref_option -output $filename.out";
     print STDERR "running command $cmd...\n";
     system($cmd);
 
@@ -78,9 +79,8 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     #
     # (use gnuplot or R)
 
-#    $c->stash->{template} = '/tools/simsearch/results.mas';
-
-    $c->stash->{rest} = { data => \@data };
+    $c->stash->{rest} = { data => \@data,
+                          histogram => '/documents/tempfiles/'.$fileurl.".out_distances_histogram.png"   };
     
 }
 
