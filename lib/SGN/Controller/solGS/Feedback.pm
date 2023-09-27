@@ -22,21 +22,18 @@ sub submission_feedback : Path('/solgs/submission/feedback/') Args() {
 sub message_content {
     my ($self, $c, $job_type) = @_;
 
-    my $job_type =~ s/[_|-]/ /g;
+    $job_type =~ s/[_|-]/ /g;
     $job_type = lc($job_type);
 
     my $user_id  = $c->user()->get_object()->get_sp_person_id();
     my $referer  = $c->req->referer;
 
     my $msg =
-        "<p>$job_type</p>"
+        "<p>Your $job_type job is submitted.</p>"
       . "<p>You will receive an email when it is completed. "
       . "You can also check the status of the job in "
-      . "<a href=\"/solpeople/profile/$user_id\">your profile page</a>"
+      . "<a href=\"/solpeople/profile/$user_id\">your profile page</a>."
       . "<p><a href=\"$referer\">[ Go back ]</a></p>";
-
-    
-    $msg = "Your $job job is submitted.";
 
     return $msg;
 
