@@ -18,7 +18,6 @@ sub submission_feedback : Path('/solgs/submission/feedback/') Args() {
 
 }
 
-
 sub message_content {
     my ($self, $c, $job_type) = @_;
 
@@ -26,23 +25,17 @@ sub message_content {
     $job_type = lc($job_type);
 
     my $user_id  = $c->user()->get_object()->get_sp_person_id();
-    my $referer  = $c->req->referer;
+    my $profile_link = "<a href=\"/solpeople/profile/$user_id\">your profile page</a>";
 
-    my $msg =
-        "<p>Your $job_type job is submitted.</p>"
+    my $referer  = $c->req->referer;
+    my $back_link = "<a href=\"$referer\">[ Go back ]</a>";
+    
+    my $msg = "<p>Your $job_type job is submitted.</p>"
       . "<p>You will receive an email when it is completed. "
-      . "You can also check the status of the job in "
-      . "<a href=\"/solpeople/profile/$user_id\">your profile page</a>."
-      . "<p><a href=\"$referer\">[ Go back ]</a></p>";
+      . "You can also check the status of the job in $profile_link."
+      . "<p>$back_link</p>";
 
     return $msg;
-
-}
-
-sub begin : Private {
-    my ( $self, $c ) = @_;
-
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
 
 }
 
