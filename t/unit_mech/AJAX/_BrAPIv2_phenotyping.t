@@ -209,7 +209,98 @@ is_deeply($response, {'result' => {'data' => [{'institution' => undef,'language'
 $mech->get_ok('http://localhost:3010/brapi/v2/traits?pageSize=2');
 $response = decode_json $mech->content;
 print STDERR "\n\n" . Dumper$response;
-is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=2'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Traits'},{'message' => 'Traits list result constructed','messageType' => 'INFO'}],'pagination' => {'pageSize' => 2,'totalPages' => 3510,'totalCount' => 7019,'currentPage' => 0},'datafiles' => []},'result' => {'data' => [{'entity' => undef,'traitName' => '0 germination','additionalInfo' => {},'traitDescription' => 'The resumption of growth by the embryo in a seed.','alternativeAbbreviations' => undef,'synonyms' => [],'attribute' => undef,'mainAbbreviation' => undef,'status' => 'active','externalReferences' => [{ 'referenceSource' => 'ISBN', 'referenceID' => '047124529' },{ 'referenceSource' => 'GR', 'referenceID' => 'ap' },{ 'referenceSource' => 'Crop Ontology', 'referenceID' => 'http://www.cropontology.org/terms/PO:0007057/' }],'ontologyReference' => {'documentationLinks' => undef,'version' => undef,'ontologyDbId' => 102,'ontologyName' => 'PO'},'traitClass' => undef,'traitDbId' => '70403'},{'synonyms' => [],'alternativeAbbreviations' => undef,'traitDescription' => 'A protein complex that catalyzes the transfer of a glucose group from UDP-glucose to a 1,3-beta-D-glucan chain.','additionalInfo' => {},'traitName' => '1,3-beta-D-glucan synthase complex','entity' => undef,'traitDbId' => '68621','traitClass' => undef,'ontologyReference' => {'documentationLinks' => undef,'version' => undef,'ontologyDbId' => 5,'ontologyName' => 'GO'},'status' => 'active','externalReferences' => [{ 'referenceID' => '2.4.1.34', 'referenceSource' => 'EC' },{ 'referenceSource' => 'Crop Ontology', 'referenceID' => 'http://www.cropontology.org/terms/GO:0000148/' } ],'mainAbbreviation' => undef,'attribute' => undef}]}});
+is_deeply($response,  {
+  'metadata' => {
+    'datafiles' => [],
+    'status' => [
+      {
+        'messageType' => 'INFO',
+        'message' => 'BrAPI base call found with page=0, pageSize=2'
+      },
+      {
+        'messageType' => 'INFO',
+        'message' => 'Loading CXGN::BrAPI::v2::Traits'
+      },
+      {
+        'message' => 'Traits list result constructed',
+        'messageType' => 'INFO'
+      }
+    ],
+    'pagination' => {
+      'pageSize' => 2,
+      'currentPage' => 0,
+      'totalPages' => 3512,
+      'totalCount' => 7024
+    }
+  },
+  'result' => {
+    'data' => [
+      {
+        'traitName' => '0 germination',
+        'ontologyReference' => {
+          'version' => undef,
+          'ontologyDbId' => 102,
+          'ontologyName' => 'PO',
+          'documentationLinks' => undef
+        },
+        'traitDbId' => '70403',
+        'entity' => undef,
+        'status' => 'active',
+        'attribute' => undef,
+        'traitClass' => undef,
+        'externalReferences' => [
+          {
+            'referenceID' => '047124529',
+            'referenceSource' => 'ISBN'
+          },
+          {
+            'referenceSource' => 'GR',
+            'referenceID' => 'ap'
+          },
+          {
+            'referenceID' => 'http://www.cropontology.org/terms/PO:0007057/',
+            'referenceSource' => 'Crop Ontology'
+          }
+        ],
+        'traitDescription' => 'The resumption of growth by the embryo in a seed.',
+        'additionalInfo' => {},
+        'mainAbbreviation' => undef,
+        'synonyms' => [],
+        'alternativeAbbreviations' => undef
+      },
+      {
+        'status' => 'active',
+        'attribute' => undef,
+        'traitClass' => undef,
+        'traitDbId' => '68621',
+        'entity' => undef,
+        'traitName' => '1,3-beta-D-glucan synthase complex',
+        'ontologyReference' => {
+          'version' => undef,
+          'documentationLinks' => undef,
+          'ontologyName' => 'GO',
+          'ontologyDbId' => 5
+        },
+        'alternativeAbbreviations' => undef,
+        'synonyms' => [],
+        'mainAbbreviation' => undef,
+        'externalReferences' => [
+          {
+            'referenceSource' => 'EC',
+            'referenceID' => '2.4.1.34'
+          },
+          {
+            'referenceID' => 'http://www.cropontology.org/terms/GO:0000148/',
+            'referenceSource' => 'Crop Ontology'
+          }
+        ],
+        'additionalInfo' => {},
+        'traitDescription' => 'A protein complex that catalyzes the transfer of a glucose group from UDP-glucose to a 1,3-beta-D-glucan chain.'
+      }
+    ]
+  }
+});
+
 $mech->get_ok('http://localhost:3010/brapi/v2/traits/77216');
 $response = decode_json $mech->content;
 print STDERR "\n\n" . Dumper$response;

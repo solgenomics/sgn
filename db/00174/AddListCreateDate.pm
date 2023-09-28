@@ -57,7 +57,7 @@ sub patch {
         $self->dbh->do(<<EOSQL);
 
  --do your SQL here
-alter table sgn_people.list add column create_date timestamp NULL DEFAULT now();
+ALTER TABLE sgn_people.list ADD COLUMN IF NOT EXISTS create_date timestamp NULL DEFAULT now();
 EOSQL
 
         return 1;
