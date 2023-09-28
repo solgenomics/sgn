@@ -1259,8 +1259,8 @@ sub get_planting_date {
     my $calendar_funcs = CXGN::Calendar->new({});
 
     if ($row) {
-        my $harvest_date = $calendar_funcs->display_start_date($row->value());
-        return $harvest_date;
+        my $planting_date = $calendar_funcs->display_start_date($row->value());
+        return $planting_date;
     } else {
         return;
     }
@@ -1272,7 +1272,7 @@ sub set_planting_date {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
-    if (my $planting_event = $calendar_funcs->check_value_format($planting_date) ) {
+    if (my $planting_event = $calendar_funcs->check_value_format($planting_date) ) { # It should be a format : "YYYY/MM/DD HH:MM:SS" or "YYYY-MM-DD"
 
 	    my $planting_date_cvterm_id = $self->get_planting_date_cvterm_id();
 
@@ -3193,7 +3193,7 @@ sub create_plant_entities {
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
         foreach my $plot (keys %$design) {
-            print STDERR " ... creating plants for plot $plot...\n";
+            #print STDERR " ... creating plants for plot $plot...\n";
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
 
             if (! $plot_row) {
