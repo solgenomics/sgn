@@ -417,7 +417,8 @@ __PACKAGE__->config(
        my @sorted_keys = sort { 
             ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) || 
             ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
-            ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3})
+            ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) || 
+            ncmp($a, $b)
        }  keys %design;
 
        my $qrcode = Imager::QRCode->new(
