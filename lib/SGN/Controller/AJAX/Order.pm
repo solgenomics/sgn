@@ -807,6 +807,37 @@ sub download_order_item_file : Path('/ajax/order/download_order_item_file') Args
 }
 
 
+sub get_active_order_tracking_ids :Path('/ajax/order/active_order_tracking_ids') Args(0) {
+
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+    my $order_properties = $c->config->{order_properties};
+    my @properties = split ',',$order_properties;
+    my $user_id;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
+        $c->detach();
+    }
+
+    if ($c->user){
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+    }
+
+    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, bcs_schema => $schema});
+    my $active_item_tracking_ids = $orders->get_active_item_tracking_info();
+    print STDERR "ACTIVE TRACKING IDS =".Dumper($active_item_tracking_ids)."\n";
+
+    $c->stash->{rest} = {tracking_info => $active_item_tracking_ids};
+
+}
+
+
+
+
 
 
 1;
