@@ -691,10 +691,11 @@ sub get_trial_design {
         field_trial_tissue_samples => {tissue_sample_name=>1,tissue_sample_id=>1,plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,tissue_sample_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1}
     );
     my %unique_identifier = (
-        plots => 'plot_id',
-        plants => 'plant_id',
-        subplots => 'subplot_id',
-        field_trial_tissue_samples => 'tissue_sample_id',
+        plate => 'tissue_sample_name',
+        plots => 'plot_name',
+        plants => 'plant_name',
+        subplots => 'subplot_name',
+        field_trial_tissue_samples => 'tissue_sample_name',
     );
 
     my %mapped_design;
@@ -813,9 +814,11 @@ sub get_data {
             }
             elsif ( $list_type eq "plots" ) {
                 my $plot_ids = convert_stock_list($c, $schema, $id);
+                my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+                my @list_items = map { $_->[1] } @$list_data;
                 my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $plot_ids);
                 $design = get_trial_design($c, $schema, $trial_ids, 'plots');
-                $design = filter_by_list_items($design, $plot_ids, 'plot_id');
+                $design = filter_by_list_items($design, \@list_items, 'plot_name');
             }
         }
     }
@@ -825,9 +828,11 @@ sub get_data {
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
             my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_ids, 'plants');
-            $design = filter_by_list_items($design, $list_ids, 'plant_id');
+            $design = filter_by_list_items($design, \@list_items, 'plant_name');
         }
     }
     elsif ($data_level eq "subplots") {
@@ -836,9 +841,11 @@ sub get_data {
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
             my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_ids, 'subplots');
-            $design = filter_by_list_items($design, $list_ids, 'subplot_id');
+            $design = filter_by_list_items($design, \@list_items, 'subplot_name');
         }
     }
     elsif ($data_level eq "tissue_samples") {
@@ -847,9 +854,11 @@ sub get_data {
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
             my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_ids, 'field_trial_tissue_samples');
-            $design = filter_by_list_items($design, $list_ids, 'tissue_sample_id');
+            $design = filter_by_list_items($design, \@list_items, 'tissue_sample_name');
         }
     }
     elsif ($data_level eq "crosses") {
