@@ -1,6 +1,6 @@
 <%args>
 
-$order_id
+$order_id => undef
 
 </%args>
 

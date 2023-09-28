@@ -1,7 +1,7 @@
 
 <%args>
-$order_id
-$identifier
+$order_id => undef
+$identifier => undef
 </%args>
 
 
