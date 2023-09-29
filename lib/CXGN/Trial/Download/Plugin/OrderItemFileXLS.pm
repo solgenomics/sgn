@@ -47,13 +47,13 @@ sub download {
     my $schema = $self->bcs_schema,
     my $people_schema = $self->people_schema();
     my $dbh = $self->dbh();
-    my $order_id = $self->trial_id;
-
+#    my $order_id = $self->trial_id;
+    my $user_id = $self->user_id;
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
 
     my $ws = $ss->add_worksheet();
 
-    my @header = ('order_tracking_name', 'order_tracking_id', 'order_number', 'item_number', 'required_quantity', 'required_stage');
+    my @header = ('order_tracking_name', 'order_tracking_id', 'item_name', 'order_number', 'item_number', 'required_quantity', 'required_stage');
 
     my $col_count = 0;
     foreach (@header){
@@ -63,8 +63,9 @@ sub download {
 
     my $row_count = 1;
 
-    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
-    my $tracking_info = $order_obj->get_tracking_info();
+    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+#    my $tracking_info = $order_obj->get_tracking_info();
+    my $tracking_info = $order_obj->get_active_item_tracking_info();
     my @all_item_info = @$tracking_info;
 
     for my $k (0 .. $#all_item_info) {

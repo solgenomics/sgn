@@ -771,8 +771,10 @@ sub download_order_item_file : Path('/ajax/order/download_order_item_file') Args
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
-    my $order_id = $c->req->param('order_id');
-    print STDERR "ORDER ID =".Dumper($order_id)."\n";
+    my $user_id = $user->get_object()->get_sp_person_id();
+
+#    my $order_id = $c->req->param('order_id');
+#    print STDERR "ORDER ID =".Dumper($order_id)."\n";
     my $file_format = "xls";
 
     my $time = DateTime->now();
@@ -790,7 +792,8 @@ sub download_order_item_file : Path('/ajax/order/download_order_item_file') Args
         dbh => $dbh,
         filename => $tempfile,
         format => 'OrderItemFileXLS',
-        trial_id => $order_id
+        user_id => $user_id
+#        trial_id => $order_id
     });
 
     my $error = $download->download();

@@ -265,7 +265,7 @@ sub get_active_item_tracking_info {
                 $item_number++;
                 $item_number_string = $order_id.'-'.$item_number;
 
-                push @all_tracking_info, [ "order".$order_id.":".$name, "order".$order_id.":".$item_stock_id,  $order_id, $item_number_string, $required_quantity, $required_stage,]
+                push @all_tracking_info, [ "order".$order_id.":".$name, "order".$order_id.":".$item_stock_id, $name, $order_id, $item_number_string, $required_quantity, $required_stage,]
             }
         }
 
