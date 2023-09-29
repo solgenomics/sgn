@@ -89,6 +89,7 @@ organism_property	species authority	From BrAPI	03/27/2017	nm529	00076
 organism_property	subtaxa authority	From BrAPI	03/27/2017	nm529	00076
 organism_property	subtaxa	From BrAPI	03/27/2017	nm529	00076
 phenotype_property	phenotype_outlier suppressed phenotype measurement	01/04/2018	aco46 00089
+phenotype_property	phenotype_stderr phenotype standard error	09/29/2023	nm249 00178
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
 project_md_image	calculate_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1	Calculate fourier transform high pass filter 20 on bgr tgi channel 1	10/5/2018	nm529	00103
 project_md_image	calculate_fourier_transform_hpf20_bgr_calculate_vari_drone_imagery_channel_1	Calculate fourier transform high pass filter 20 on bgr vari channel 1	10/5/2018	nm529	00103
