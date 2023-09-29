@@ -1401,8 +1401,9 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
     my ($self, $c) = @_;
 
     my $item_names = $c->req->param("identifier_names");
-    my $order_id = $c->req->param("order_id");
-    print STDERR "TRACKING ORDER ID =".Dumper($order_id);
+#    my $order_id = $c->req->param("order_id");
+#    print STDERR "TRACKING ORDER ID =".Dumper($order_id);
+    my $user_id = $c->req->param("user_id");
     my $labels_per_page = $c->req->param("label_rows") || 10;
     my $labels_per_row  = $c->req->param("label_cols") || 1;
     my $page_format = $c->req->param("page_format") || "letter";
@@ -1453,8 +1454,12 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
     my @found;
     my @not_found;
 
-    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
-    my $tracking_info = $order_obj->get_tracking_info();
+#    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
+#    my $tracking_info = $order_obj->get_tracking_info();
+
+    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, bcs_schema => $schema});
+    my $tracking_info = $orders->get_active_item_tracking_info();
+
     my @tracking_list = @$tracking_info;
     my @id_list;
     foreach my $item_info (@tracking_list) {

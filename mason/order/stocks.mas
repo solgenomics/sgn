@@ -1,8 +1,11 @@
-
 <%args>
+
 $role => "stock_orderer"
 $check_vendor_role
+$user_id
+
 </%args>
+
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
 
@@ -176,7 +179,7 @@ $check_vendor_role
 
 <& /order/create_item_file_dialog.mas&>
 <& /order/create_ontology_file_dialog.mas &>
-<& /order/generate_identifier_barcode_dialog.mas, identifier => ""&>
+<& /order/generate_identifier_barcode_dialog.mas, identifier => "", user_id => $user_id &>
 
 <script>
 

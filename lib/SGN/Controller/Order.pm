@@ -22,6 +22,8 @@ sub order_stocks :Path('/order/stocks/view') :Args(0) {
     if ($c->user) {
         my $check_vendor_role = $c->user->check_roles('vendor');
         $c->stash->{check_vendor_role} = $check_vendor_role;
+        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        $c->stash->{user_id} = $user_id;
     }
 
     $c->stash->{template} = '/order/stocks.mas';

@@ -1,7 +1,9 @@
-
 <%args>
+
 $order_id => undef
 $identifier => undef
+$user_id => undef
+
 </%args>
 
 
@@ -24,15 +26,17 @@ $identifier => undef
                             <div class="col-md-1 col-lg-1">
                         </div>
                         <div class="col-md-10 col-lg-10">
-                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?order_id=<%$order_id%>" >
+                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?user_id=<%$user_id%>" >
+                            <!--
                                 <div class="form-group" form-group-sm>
                                     <label class="col-sm-4 control-label" for="tracking_order_id">Order ID: </label>
                                     <div class="col-sm-8 ">
                                         <div class="input-group">
-                                            <input class="form-control col-sm-8" id="tracking_order_id" type="text" value="<%$order_id%>" disabled/>
+                                            <input class="form-control col-sm-8" id="tracking_order_id" type="text" value="" disabled/>
                                         </div>
                                     </div>
                                 </div>
+                            -->
                                 <div class="form-group form-group-sm" >
                                     <label class="col-sm-4 control-label">List of Identifiers: </label>
                                     <div class="col-sm-8" id="item_list">
@@ -217,16 +221,40 @@ jQuery(document).ready(function () {
     var dialog_subtitle2 = '';
     var barcode_button_label = '';
 
-    jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
+//    jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
 
-    jQuery('#generate_item_barcode_button').click(function() {
+//    jQuery('#generate_item_barcode_button').click(function() {
+//        jQuery('#generate_identifier_barcode_dialog').modal("show");
+//        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for requested items');
+
+//        jQuery.ajax({
+//            url:'/ajax/order/order_tracking_ids',
+//            data:{'order_id': <% $order_id %> },
+//            success: function(response){
+//                var order_item_html = '<textarea class="form-control" id="identifier_names" name="identifier_names" >';
+
+//                for (i=0; i<response.tracking_info.length; i++) {
+//                    order_item_html = order_item_html + response.tracking_info[i][0] + "\n";
+//                }
+//                order_item_html = order_item_html + "</textarea>";
+//                jQuery('#item_list').empty();
+//                jQuery('#item_list').html(order_item_html);
+
+//            },
+//            error: function(response){
+//                alert("Error retrieving requested item info.");
+//            }
+//        });
+//    });
+
+    jQuery('#generate_active_item_barcode_button').click(function() {
         jQuery('#generate_identifier_barcode_dialog').modal("show");
         jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for requested items');
 
         jQuery.ajax({
-            url:'/ajax/order/order_tracking_ids',
-            data:{'order_id': <% $order_id %> },
+            url:'/ajax/order/active_order_tracking_ids',
             success: function(response){
+                console.log(response);
                 var order_item_html = '<textarea class="form-control" id="identifier_names" name="identifier_names" >';
 
                 for (i=0; i<response.tracking_info.length; i++) {
@@ -242,6 +270,7 @@ jQuery(document).ready(function () {
             }
         });
     });
+
 
 });
 
