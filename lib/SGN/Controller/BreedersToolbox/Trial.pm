@@ -20,6 +20,7 @@ use CXGN::TrialStatus;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Stock::TissueSample::Search;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -201,6 +202,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
     elsif (($design_type eq "genotype_data_project") || ($design_type eq "pcr_genotype_data_project")){
+        my $project_id = $c->stash->{trial_id};
         if ($design_type eq "pcr_genotype_data_project") {
             $c->stash->{genotype_data_type} = 'SSR'
         } else {
@@ -209,7 +211,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
         my $plate_info = CXGN::Genotype::GenotypingProject->new({
             bcs_schema => $schema,
-            project_id => $c->stash->{trial_id}
+            project_id => $project_id
         });
         my ($data, $tc) = $plate_info->get_plate_info();
         my $has_plate;
@@ -217,6 +219,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $has_plate = 'none';
         }
         $c->stash->{has_plate} = $has_plate;
+        my @genotyping_project_list = ($project_id);
+        my $protocol_info = CXGN::Genotype::Protocol::list($schema, undef, undef, undef, undef, undef, \@genotyping_project_list);
+        if ($protocol_info) {
+            $c->stash->{marker_names} = $protocol_info->[0]->{marker_names} || [];
+        }
 
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
