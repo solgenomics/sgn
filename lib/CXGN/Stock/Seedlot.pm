@@ -1534,6 +1534,42 @@ sub remove_event {
     $m->delete();
 }
 
+
+=head2 get_seedlot_species()
+
+ Usage:         $seedlot->get_seedlot_species($id)
+ Desc:          retrieve species of seedlot content
+ Ret:
+
+=cut
+
+sub get_seedlot_species {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $seedlot_id = $self->seedlot_id();
+
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT organism.species FROM stock_relationship
+    JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ?
+    JOIN organism ON (stock.organism_id = organism.organism_id)
+    WHERE stock_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($collection_of_type_id, $seedlot_id);
+
+    my @data = ();
+    while(my($species) = $h->fetchrow_array()){
+        push @data, [$species];
+    }
+
+    my $species_info = $data[0][0];
+
+    return $species_info
+}
+
+
+
 1;
 
 no Moose;

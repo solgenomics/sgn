@@ -207,4 +207,30 @@ sub get_plate_info {
 }
 
 
+sub get_associated_protocol {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $genotyping_project_id = $self->project_id();
+
+    my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id, nd_protocol.name
+        FROM nd_experiment_project
+        JOIN nd_experiment_genotype ON (nd_experiment_project.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+        JOIN nd_experiment_protocol ON (nd_experiment_project.nd_experiment_id = nd_experiment_protocol.nd_experiment_id)
+        JOIN nd_protocol ON (nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($genotyping_project_id);
+
+    my @associated_protocol = ();
+    while (my ($protocol_id, $protocol_name) = $h->fetchrow_array()){
+        push @associated_protocol, [$protocol_id, $protocol_name]
+    }
+
+    return \@associated_protocol;
+
+}
+
+
+
 1;

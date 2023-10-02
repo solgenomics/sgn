@@ -51,7 +51,12 @@ geolocation_property	geolocation year				00052
 geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	location_type	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	noaa_station_id	For storing the nearest NOAA Station ID for a location	09/02/2019	nm529	00114
-geolocation_property	region	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	region	From BrAPI	03/27/2017	nm529	00076ff
+list_types	identifier_generation		08/21/2018	nm529	00102
+list_types	genotyping_trials  ##### obsoleted, replaced with genotyping_plates		03/23/2018	nm529	00092
+list_types	tissue_samples		02/15/2018	nm529	00091
+list_types	seedlots		07/20/2017	nm529	00081
+list_types	subplots		08/23/2017	nm529	00084
 list_types	accessions
 list_types	crosses				00067
 list_types	dataset				00067
@@ -816,3 +821,16 @@ trait_property	trait_method_name
 trait_property	trait_minimum
 trial_type	genotyping_trial
 trial_type	phenotyping_trial
+stock_property strain	Vector property 1/19/2023	mrf252	00164
+stock_property Backbone	Vector property 1/19/2023	mrf252	00164
+stock_property CloningOrganism	Vector property 1/19/2023	mrf252	00164
+stock_property InherentMarker	Vector property 1/19/2023	mrf252	00164
+stock_property SelectionMarker	Vector property 1/19/2023	mrf252	00164
+stock_property CassetteName	Vector property 1/19/2023	mrf252	00164
+stock_property Gene	Vector property 1/19/2023	mrf252	00164
+stock_property Promotors	Vector property 1/19/2023	mrf252	00164
+stock_property Terminators	Vector property 1/19/2023	mrf252	00164
+genotype_property   phg genotyping  specifies the PHG type of genotype data   08/15/2023    iyt2    00167
+genotype_property   vcf_phg_genotyping  specifies the PHG type of genotype data in vcf  08/15/2023  iyt2  00167
+stock_property PlantAntibioticResistantMarker	Vector property 4/17/2023	mrf252	00167
+stock_property BacterialResistantMarker	Vector property 4/17/2023	mrf252	00167

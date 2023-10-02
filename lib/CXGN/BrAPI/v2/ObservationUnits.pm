@@ -95,7 +95,7 @@ sub search {
             limit=>$limit,
             offset=>$offset,
             # Order by plot_number, account for non-numeric plot numbers
-            order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::int' : undef,
+            order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::numeric' : undef,
             observation_unit_names_list=>$observation_unit_names_list,
             xref_id_list=>$reference_ids_arrayref,
             xref_source_list=>$reference_sources_arrayref
@@ -178,13 +178,16 @@ sub search {
         }
 
         my @brapi_treatments;
-        my $treatments = $obs_unit->{treatments};
-        while (my ($factor, $modality) = each %$treatments){
-            my $modality = $modality ? $modality : undef;
-            push @brapi_treatments, {
-                factor => $factor,
-                modality => $modality,
-            };
+
+        if ($c->config->{brapi_treatments_no_management_factor}) {
+            my $treatments = $obs_unit->{treatments};
+            while (my ($factor, $modality) = each %$treatments) {
+                my $modality = $modality ? $modality : undef;
+                push @brapi_treatments, {
+                    factor   => $factor,
+                    modality => $modality,
+                };
+            }
         }
 
         my $sp_rs ='';
@@ -365,12 +368,13 @@ sub _get_plants_plot_parent {
 sub detail {
     my $self = shift;
     my $observation_unit_db_id = shift;
+    my $c = shift;
 
     my $search_params = {
         observationUnitDbIds => [ $observation_unit_db_id ],
         includeObservations  => 'true' 
     };
-    my $response = $self->search($search_params);
+    my $response = $self->search($search_params, $c);
     $response->{result} = scalar $response->{result}->{data} > 0 ? $response->{result}->{data}->[0] : {};
     return $response;
 }
@@ -578,7 +582,7 @@ sub observationunits_update {
     my @observation_unit_db_ids;
     foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
-    $self->search($search_params);
+    $self->search($search_params, $c);
 }
 
 sub _get_existing_germplasm {
@@ -842,7 +846,7 @@ sub observationunits_store {
     foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; }
     my $search_params = {observationUnitNames => \@observationUnitNames};
     $self->page_size(scalar @{$data});
-    return $self->search($search_params);
+    return $self->search($search_params, $c);
 }
 
 sub _refresh_matviews {

@@ -48,6 +48,7 @@ sub seq {
 
     return $self->whole_seq->seq;
 }
+
 sub length {
     my $self = shift;
     croak ref($self)." objects are immutable, cannot set length" if @_;
@@ -59,9 +60,14 @@ sub length {
 sub whole_seq {
     my ( $self ) = @_;
 
+    print STDERR "RETRIEVE SEQUENCE USING whole_seq().\n";
+    
     return $self->{seq_obj} ||= do {
         my $ffbn    = $self->_bdb->full_file_basename;
         my $seqname = $self->id;
+
+	print STDERR "DATABASE $ffbn. SEQNAME: $seqname\n";
+	
         CORE::open my $fc, "blastdbcmd -db '$ffbn' -entry '$seqname' 2>&1 |";
 
         # we can't know how big this sequence is.  blastdbcmd has no way (or
@@ -83,6 +89,9 @@ sub trunc {
 
     my $ffbn    = $self->_bdb->full_file_basename;
     my $seqname = $self->id;
+
+    print STDERR "DATABASE $ffbn. SEQNAME: $seqname\n";
+    
     open my $fc, "blastdbcmd -db '$ffbn' -entry '$seqname' -range $start-$end 2>&1 |";
 
     return $length > 4_000_000
