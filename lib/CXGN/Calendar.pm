@@ -49,20 +49,24 @@ sub check_value_format {
 
     if ($value) {
         #Events saved through the calendar will have this format
+        # "YYYY-MM-DDTHH:MM:SS"
         if ($value =~ /^{"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","/) {
             return $value;
         }
         #Dates saved through the trial 'Add Harvest Date' or 'Add Planting Date' will have this format
+        # "YYYY/MM/DD HH:MM:SS"
         elsif ($value =~ /^\d\d\d\d\/\d\d\/\d\d\s\d\d:\d\d:\d\d$/) {
             $value = $self->format_time($value)->datetime;
             return '{"'.$value.'","'.$value.'","","#"}';
         }
-				#Harvest and Planting Dates uploaded via Upload Trial Design files will have this format
+        #Harvest and Planting Dates uploaded via Upload Trial Design files will have this format
+        # "YYYY-MM-DD"
         elsif ($value =~ /^\d{4}-\d\d-\d\d$/) {
             $value = $self->format_time($value)->datetime;
             return '{"'.$value.'","'.$value.'","","#"}';
         }
         #Historical dates in the database often have this format
+        # "YYYY-Month-DD"
         elsif ($value =~ /^(\d{4})-(Jan|January|Feb|February|March|Mar|April|Apr|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec)-(\d)/) {
             $value = $self->format_time($value)->datetime;
             return '{"'.$value.'","'.$value.'","","#"}';
