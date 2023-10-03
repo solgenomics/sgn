@@ -211,7 +211,9 @@ jQuery(document).ready(function() {
       $('#heritability_output').empty();
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
+        console.log("dataset_id", dataset_id);
         var trait_id = $('#pheno_select').val();
+        console.log("trait_id", trait_id)
         var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
         $.ajax({
           url: '/ajax/heritability/generate_results',

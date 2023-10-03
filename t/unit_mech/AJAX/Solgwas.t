@@ -11,6 +11,7 @@ use Test::WWW::Mechanize;
 use Data::Dumper;
 use JSON;
 use Spreadsheet::Read;
+use Text::CSV ("csv");
 
 use CXGN::Dataset;
 
@@ -71,6 +72,7 @@ print STDERR "SYSTEM_MODE = $SYSTEM_MODE";
 #
 ok($rdata->{figure3}, "Manhattan plot returned");
 ok($rdata->{figure4}, "QQ plot returned");
+ok($rdata->{gwas_csv_response}, "Gwas csv response returned");
 
 ### START: GITACTION PROBLEM
 if ($SYSTEM_MODE !~ /GITACTION/) {
@@ -78,10 +80,39 @@ if ($SYSTEM_MODE !~ /GITACTION/) {
     #
     ok(-e "static/" . $rdata->{figure3}, "Manhattan plot file created");
     ok(-e "static/" . $rdata->{figure4}, "QQ plot file created");
+    ok(-e "static/" . $rdata->{gwas_csv_response}, "Gwas csv response csv  file created");
 
     ok(-s "static/" . $rdata->{figure3} > 10000, "Manhattan plot file has contents");
     ok(-s "static/" . $rdata->{figure4} > 10000, "QQ plot file has contents");
+    # check if csv test file exist
 }
+
+# Test for outliers dataset
+my $outliers_excluded_dataset_id = 1;
+my $outliers_excluded_trait_id = "dry matter content percentage";
+# run test for dataset with outliers but with false outliers parameter
+
+# Test for dataset with outliers but with false outliers parameter
+$mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$outliers_excluded_dataset_id.'&trait_id='.$outliers_excluded_trait_id.'&pc_check=0&kinship_check=0', 'run the solgwas analysis for outliers dataset with outliers included');
+my $rdata_outliers_included = JSON::Any->decode($mech->content());
+ok($rdata_outliers_included->{figure3}, "Manhattan plot returned");
+ok($rdata_outliers_included->{figure4}, "QQ plot returned");
+ok($rdata_outliers_included->{gwas_csv_response}, "Gwas csv response returned");
+
+# Because problem with gitaction in given test - just check value of gwas
+my $gwas_outliers_included = csv(in => "static/".$rdata_outliers_included->{gwas_csv_response});
+is(@$gwas_outliers_included[10]->[1], '0.0998829512097445', "check value of row 10 in a gwas table");
+
+# Test for dataset with outliers but with true outliers parameter -> outliers points are excluded from computation
+$mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$outliers_excluded_dataset_id.'&trait_id='.$outliers_excluded_trait_id.'&pc_check=0&kinship_check=0&dataset_trait_outliers=1', 'run the solgwas analysis for outliers dataset with outliers excluded');
+my $rdata_outliers_excluded = JSON::Any->decode($mech->content());
+ok($rdata_outliers_excluded->{figure3}, "Manhattan plot returned");
+ok($rdata_outliers_excluded->{figure4}, "QQ plot returned");
+ok($rdata_outliers_excluded->{gwas_csv_response}, "Gwas csv response returned");
+
+# Because problem with gitaction in given test - just check value of gwas
+my $gwas_outliers_excluded = csv(in => "static/".$rdata_outliers_excluded->{gwas_csv_response});
+is(@$gwas_outliers_excluded[10]->[1], '0.245047511269146', "check value of row 10 in a gwas table");
 ### END: GITACTION PROBLEM
 
 # remove changes to the database

@@ -64,7 +64,8 @@ export function init(main_div){
           "observationLevelName" : ou,
           "includeObservations" : "true",
           "pageSize" : 100000
-        })
+        })able-select-div, .boxplotter-group-list, .brapp-wrapper, .boxplots").show();
+          }
         boxplot.setData(obsUnits);
         obsUnits.all(function(d){
           console.log(d);
@@ -79,8 +80,7 @@ export function init(main_div){
           else{
             readGrouping();
             bp.find('.boxplotter-result .not-enough-data').remove();
-            bp.find(".boxplotter-variable-select-div, .boxplotter-group-list, .brapp-wrapper, .boxplots").show();
-          }
+            bp.find(".boxplotter-vari
           bp.find(".boxplotter-loading").html('');
           bp.find(".boxplotter-result").show();
 
