@@ -29,6 +29,7 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
 use JSON;
 
@@ -85,8 +86,8 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
-    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
-    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+#    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
 
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
     my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
@@ -116,6 +117,35 @@ sub upload_genotype_verify_POST : Args(0) {
     my $accept_warnings;
     if ($accept_warnings_input){
         $accept_warnings = 1;
+    }
+
+    if (defined $project_id && defined $protocol_id) {
+        my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $project_id
+        });
+        my $associated_protocol  = $protocol_info->get_associated_protocol();
+        my @info;
+        if ((defined $associated_protocol) && (scalar(@$associated_protocol)>1)) {
+            $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+            $c->detach();
+        } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
+            my $stored_protocol_id = $associated_protocol->[0]->[0];
+            if ($stored_protocol_id != $protocol_id) {
+                $c->stash->{rest} = { error => "The selected genotyping project is already associated with different protocol. Each project should be associated with only one protocol" };
+                $c->detach();
+            }
+        }
+    } elsif ((defined $project_id) && (defined $protocol_name)) {
+        my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $project_id
+        });
+        my $associated_protocol  = $protocol_info->get_associated_protocol();
+        if ((defined $associated_protocol) && (scalar(@$associated_protocol) > 0)) {
+            $c->stash->{rest} = { error => "The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol" };
+            $c->detach();
+        }
     }
 
     #archive uploaded file
@@ -515,18 +545,34 @@ sub upload_genotype_verify_POST : Args(0) {
                 });
                 my $stored_markers = $stored_protocol->markers();
 
-                while (my ($marker_name, $marker_obj) = each %$stored_markers) {
-                    while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-                        if ($new_marker_data_1->{$marker_name}) {
-                            my $protocol_data_obj = $new_marker_data_1->{$marker_name};
-                            while (my ($key, $value) = each %$marker_obj) {
-                                if ($value ne $protocol_data_obj->{$key}) {
-                                    push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$protocol_data_obj->{$key};
+                my @all_stored_markers = keys %$stored_markers;
+                my %compare_marker_names = map {$_ => 1} @all_stored_markers;
+                my @mismatch_marker_names;
+                while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+                    while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
+                        if (exists($compare_marker_names{$marker_name})) {
+                            while (my ($key, $value) = each %$new_marker_details) {
+                                if ($value ne ($stored_markers->{$marker_name}->{$key})) {
+                                    push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
                                 }
                             }
+                        } else {
+                            push @mismatch_marker_names, $marker_name;
                         }
                     }
                 }
+
+                if (scalar(@mismatch_marker_names) > 0){
+                    my $marker_name_error;
+                    $marker_name_error .= "<br>";
+                    foreach my $error ( sort @mismatch_marker_names) {
+                        $marker_name_error .= $error."<br>";
+                    }
+
+                    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
+                    $c->detach();
+                }
+
 
                 if (scalar(@protocol_match_errors) > 0){
                     my $protocol_warning;

@@ -149,22 +149,25 @@ sub genotyping_project_protocols_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $genotyping_project_id = $c->req->param('genotyping_project_id');
-    my @project_list = ($genotyping_project_id);
-    my $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema, undef, undef, undef, undef, undef ,\@project_list);
-#    print STDERR "PROTOCOL SEARCH RESULT =".Dumper($protocol_search_result)."\n";
-    my @protocol_info;
-    foreach my $protocol (@$protocol_search_result){
-        my $protocol_id = $protocol->{protocol_id};
-        my $protocol_name = $protocol->{protocol_name};
-        push @protocol_info, {
-            protocol_id => $protocol_id,
-            protocol_name => $protocol_name
-        }
 
+    my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $bcs_schema,
+        project_id => $genotyping_project_id
+    });
+    my $associated_protocol  = $protocol_info->get_associated_protocol();
+#    print STDERR "ASSOCIATED PROTOCOL =".Dumper($associated_protocol)."\n";
+    my @info;
+    if ( defined $associated_protocol && scalar(@$associated_protocol)>1) {
+        $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+        return;
+    } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
+        push @info, {
+            protocol_id => $associated_protocol->[0]->[0],
+            protocol_name => $associated_protocol->[0]->[1]
+        }
     }
 
-
-    $c->stash->{rest} = { data => \@protocol_info };
+    $c->stash->{rest} = { data => \@info };
 
 }
 

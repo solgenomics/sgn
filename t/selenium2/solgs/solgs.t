@@ -78,7 +78,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(90);
+    sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -127,7 +127,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
-    sleep(120);
+    sleep(150);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
 
@@ -185,7 +185,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Analysis log', 'partial_link_text',  'download analysis log');
     sleep(3);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
-    sleep(120);
+    sleep(150);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
     

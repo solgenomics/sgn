@@ -44,6 +44,11 @@ has 'protocol_id_list' => (
     is => 'rw',
 );
 
+has 'genotype_data_project_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'markerprofile_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
@@ -67,24 +72,26 @@ sub download {
     my $schema = $self->bcs_schema;
     my $people_schema = $self->people_schema;
     my $protocol_id_list = $self->protocol_id_list;
+    my $genotype_project_list = $self->genotype_data_project_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
         protocol_id_list=>$protocol_id_list,
+        genotype_data_project_list=>$genotype_project_list
     });
     my $result = $genotypes_search->get_pcr_genotype_info();
 #    print STDERR "PCR DOWNLOAD RESULTS =".Dumper($result)."\n";
 
-    my $protocol_genotype_data = $result->{'protocol_genotype_data'};
-    my @protocol_genotype_data_array = @$protocol_genotype_data;
+    my $ssr_genotype_data = $result->{'ssr_genotype_data'};
+    my @ssr_genotype_data_array = @$ssr_genotype_data;
     my @results;
     my @lines;
     my @headers;
     push @headers, 'sample_names';
 
-    my $marker_info = $protocol_genotype_data->[0];
+    my $marker_info = $ssr_genotype_data->[0];
     my $marker_genotype_json = $marker_info->[6];
     my $marker_genotype_ref = decode_json $marker_genotype_json;
     my %marker_genotype_hash = %{$marker_genotype_ref};
@@ -98,7 +105,7 @@ sub download {
         }
     }
 
-    foreach my $genotype_data (@protocol_genotype_data_array) {
+    foreach my $genotype_data (@ssr_genotype_data_array) {
         my @each_result = ();
         my $stock_name = $genotype_data->[1];
         push @each_result, $stock_name;
@@ -120,7 +127,7 @@ sub download {
 #    print STDERR "RESULTS =".Dumper(\@results)."\n";
     push @lines, [@headers];
     push @lines, @results;
-    print STDERR "LINES =".Dumper(@lines)."\n";
+#    print STDERR "LINES =".Dumper(@lines)."\n";
 
     no warnings 'uninitialized';
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();

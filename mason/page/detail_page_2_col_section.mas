@@ -349,6 +349,8 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
+
+
 % if ($info_section_id eq 'genotyping_data_project_details'){
                                 <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type, trial_owner => $trial_owner &>
 % } #End genotyping_data_project_details
@@ -364,6 +366,11 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_project_deletion_section'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_deletion_section
+% if ($info_section_id eq 'project_pcr_genotype_data'){
+                                <& /breeders_toolbox/genotyping_data_project/pcr_genotype_data.mas, trial_id => $trial_id, marker_names => $marker_names &>
+% } #End project_pcr_genotype_data
+
+
 % if ($info_section_id eq 'identifier_generation_list'){
                                 <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
 % } #End identifier_generation_list
