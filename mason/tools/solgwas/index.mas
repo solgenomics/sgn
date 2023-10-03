@@ -64,21 +64,19 @@
       <center>
         <div id="pca_output"></div>
       </center>
-
-
     <br>
 
-
     <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
-        <br>
+    <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
+    <br>
+    <input type="checkbox" id="dataset_trait_outliers" />
+    <label>Exclude dataset outliers &nbsp; </label>
+    </div>
 
-        </div>
-
-            <div style="text-align: center">
-              <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
-            </div>
-            <br />
+    <div style="text-align: center">
+      <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
+    </div>
+    <br />
 
     <div id="tempfile" style="display:none" >
     </div>
@@ -268,13 +266,20 @@ jQuery(document).ready(function() {
         if ($('#kinshipmat').is(':checked')) {
           var kinship_check = 1;
         }
+        var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
         //alert(pc_check);
         //alert(kinship_check);
         //alert("Dataset ID: "+dataset_id);
         //alert("Pheno ID: "+trait_id);
         $.ajax({
           url: '/ajax/solgwas/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
+          data: {
+            'dataset_id': dataset_id,
+            'trait_id': trait_id,
+            'pc_check': pc_check,
+            'kinship_check': kinship_check,
+            'dataset_trait_outliers': dataset_trait_outliers,
+            },
   	      beforeSend: function() {
             jQuery("#working_modal").modal("show");
   	      },
