@@ -34,6 +34,8 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
@@ -64,7 +66,7 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
 #    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
 #    my $phenotypes = $ds->retrieve_phenotypes();
@@ -146,6 +148,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     my $kinship_check = $c->req->param('kinship_check');
 	my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
 
+
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
@@ -171,7 +174,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
 #    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
 
-##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
+    ##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
     my $protocols = $ds->retrieve_genotyping_protocols();
     my $protocol_id;

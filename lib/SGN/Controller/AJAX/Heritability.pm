@@ -31,6 +31,8 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
@@ -46,7 +48,7 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
     print STDERR "***** temppath = $temppath\n";
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
     print STDERR Dumper(@trait_info);

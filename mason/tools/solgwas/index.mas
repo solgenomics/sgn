@@ -35,51 +35,49 @@
     <br>
 
     </div>
-
-
       <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
-      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="trait_histogram_plot">
-        </div>
-      </center>
-      <br>
-      <br>
-      <div class="form-group form-inline">
-      <input type="checkbox" id="kinshipmat" />
-      <label>Include kinship matrix in model &nbsp; </label>
+        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>        
+        <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>                
+        <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
         <br>
-        <input type="checkbox" id="princomp" />
-        <label>Include principal components in model &nbsp; </label>
-        <button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA Plot</button>
+        <input type="checkbox" id="dataset_trait_outliers" />
+        <label>Exclude dataset outliers &nbsp; </label>
+        <br>
+        <br>
+        <center>
+          <div id="trait_histogram_plot">
+          </div>
+        </center>
+        <br>
+        <br>
+        <div class="form-group form-inline">
+          <input type="checkbox" id="kinshipmat" />
+          <label>Include kinship matrix in model &nbsp; </label>
+          <br>
+          <input type="checkbox" id="princomp" />
+          <label>Include principal components in model &nbsp; </label>
+          <button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA Plot</button>
+        </div>
+        <br>
+        <br>
+        <br>
+        <center>
+          <div id="pca_output"></div>
+        </center>
+        <br>
+
+        <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
+        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
+        <br>    
       </div>
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="pca_output"></div>
-      </center>
-    <br>
 
-    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-    <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
-    <br>
-    <input type="checkbox" id="dataset_trait_outliers" />
-    <label>Exclude dataset outliers &nbsp; </label>
-    </div>
+      <div style="text-align: center">
+        <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
+      </div>
+      <br />
 
-    <div style="text-align: center">
-      <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
-    </div>
-    <br />
-
-    <div id="tempfile" style="display:none" >
-    </div>
+      <div id="tempfile" style="display:none" >
+      </div>
 
 
 
@@ -119,8 +117,8 @@
 
 <script>
 
-
 jQuery(document).ready(function() {
+
   if (isLoggedIn()) {
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
   }
@@ -141,28 +139,60 @@ jQuery(document).ready(function() {
     $('#princomp').attr('checked', false);
     $('#kinshipmat').attr('checked', false);
   });
+
   jQuery('#selectDataset').click(function() {
     var dataset_id = get_dataset_id();
+    if (!dataset_id) {
+      return;
+    }
+    var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
     $.ajax({
       url: '/ajax/solgwas/shared_phenotypes',
-      data: {'dataset_id': dataset_id},
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+      },
       success: function(response) {
         if (response.error) {
           $('#dataset_select').val('ERROR');
         }
         else {
-//	    alert(response.options);
-//	    	    alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
+          //	    alert(response.options);
+          //	    	    alert(response.options.length);
+	        var option_html = '<option selected="selected" value=""> </option>';
+	        for (var i = 0; i < response.options.length; i++) {
+	          option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+	        }
+	        $('#pheno_select').attr("disabled",false).html(option_html);
+          jQuery('#tempfile').html(response.tempfile);
+	      }
+      },
+      error: function(response) {
+        alert("An error occurred, the service may temporarily be unavailable");
+      }
+    });
+  });
 
-
-	}
-
+  jQuery('#dataset_trait_outliers').click(function() {
+    var dataset_id = get_dataset_id();
+    if (!dataset_id) {
+      return;
+    }
+    var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    $.ajax({
+      url: '/ajax/solgwas/shared_phenotypes',
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+      },
+      success: function(response) {
+        if (response.error) {
+          $('#dataset_select').val('ERROR');
+          alert("An error occurred, the is some problem with data");
+        }        
+        else {         	       
+          jQuery('#tempfile').html(response.tempfile);
+	      }
       },
       error: function(response) {
         alert("An error occurred, the service may temporarily be unavailable");
@@ -204,7 +234,7 @@ jQuery(document).ready(function() {
              }
             };
 
-   //alert("embedding"+ JSON.stringify(v));
+            //alert("embedding"+ JSON.stringify(v));
             vegaEmbed("#trait_histogram_plot", v);
             //alert("done");
           },
@@ -223,11 +253,14 @@ jQuery(document).ready(function() {
       $('#pca_output').empty();
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
-        var trait_id = $('#pheno_select').val();
+        var trait_id = $('#pheno_select').val();        
         $.ajax({
           url: '/ajax/solgwas/generate_pca',
           async: true,
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          data: {
+            'dataset_id': dataset_id, 
+            'trait_id': trait_id,            
+            },
   	      beforeSend: function() {
             jQuery("#working_modal").modal("show");
   	      },
