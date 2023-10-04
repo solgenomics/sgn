@@ -39,6 +39,7 @@
         <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>        
         <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>                
         <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+        <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
         <br>
         <input type="checkbox" id="dataset_trait_outliers" />
         <label>Exclude dataset outliers &nbsp; </label>
@@ -146,6 +147,8 @@ jQuery(document).ready(function() {
       return;
     }
     var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;
+    document.getElementById("loading-spinner").style.visibility = 'visible'; 
     $.ajax({
       url: '/ajax/solgwas/shared_phenotypes',
       data: {
@@ -155,6 +158,7 @@ jQuery(document).ready(function() {
       success: function(response) {
         if (response.error) {
           $('#dataset_select').val('ERROR');
+          document.getElementById("loading-spinner").style.visibility = 'hidden'; 
         }
         else {
           //	    alert(response.options);
@@ -165,10 +169,14 @@ jQuery(document).ready(function() {
 	        }
 	        $('#pheno_select').attr("disabled",false).html(option_html);
           jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden'; 
 	      }
       },
       error: function(response) {
         alert("An error occurred, the service may temporarily be unavailable");
+        document.getElementById("preview_trait_histogram_btn").disabled = false;
+        document.getElementById("loading-spinner").style.visibility = 'hidden'; 
       }
     });
   });
@@ -179,6 +187,8 @@ jQuery(document).ready(function() {
       return;
     }
     var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;
+    document.getElementById("loading-spinner").style.visibility = 'visible'; 
     $.ajax({
       url: '/ajax/solgwas/shared_phenotypes',
       data: {
@@ -189,13 +199,19 @@ jQuery(document).ready(function() {
         if (response.error) {
           $('#dataset_select').val('ERROR');
           alert("An error occurred, the is some problem with data");
+          document.getElementById("preview_trait_histogram_btn").disabled = false;          
+          document.getElementById("loading-spinner").style.visibility = 'hidden'; 
         }        
         else {         	       
           jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden'; 
 	      }
       },
       error: function(response) {
         alert("An error occurred, the service may temporarily be unavailable");
+        document.getElementById("preview_trait_histogram_btn").disabled = false;
+        document.getElementById("loading-spinner").style.visibility = 'hidden'; 
       }
     });
   });

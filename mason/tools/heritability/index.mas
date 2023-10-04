@@ -15,9 +15,9 @@
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
-<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
 
 <& /page/page_title.mas, title=>"Heritability" &>
 
@@ -41,9 +41,10 @@
         <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
       <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
       <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+      <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
       <br>
       <input type="checkbox" id="dataset_trait_outliers" />
-      <label>Exclude dataset outliers &nbsp; </label>
+      <label>Exclude dataset outliers &nbsp; </label>          
       <br>
       <br>
       <br>
@@ -126,12 +127,13 @@ jQuery(document).ready(function() {
   });
   
   jQuery('#selectDataset').click(function() {
-    var dataset_id = get_dataset_id();
-    
+    var dataset_id = get_dataset_id();    
     if (!dataset_id) {
       return;
     }
     var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;  
+    document.getElementById("loading-spinner").style.visibility = 'visible'; 
     $.ajax({
       url: '/ajax/heritability/shared_phenotypes',      
       data: {
@@ -140,26 +142,31 @@ jQuery(document).ready(function() {
         },
       success: function(response) {
         if (response.error) {
-            $('#dataset_select').val('ERROR');
+          $('#dataset_select').val('ERROR');            
+          document.getElementById("loading-spinner").style.visibility = 'hidden';  
         }
-        else {
-	        // alert(response.options);
-          // alert(response.options.length);
+        else {	        
 	        var option_html = '<option selected="selected" value=""> </option>';
 	        for (var i = 0; i < response.options.length; i++) {
 	          option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
 	        }
 	        $('#pheno_select').attr("disabled",false).html(option_html);
           jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden';
 	      }
 
       },
       error: function(response) {
         alert("An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ");
+        document.getElementById("preview_trait_histogram_btn").disabled = false;
+        document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
     });
   });
 
+
+  // jakby to zrobic ???
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
@@ -206,8 +213,10 @@ jQuery(document).ready(function() {
     var dataset_id = get_dataset_id();
     if (!dataset_id) {
       return;
-    }
+    }  
     var  dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;  
+    document.getElementById("loading-spinner").style.visibility = 'visible';    
     $.ajax({
       url: '/ajax/heritability/shared_phenotypes',
       data: {
@@ -217,14 +226,19 @@ jQuery(document).ready(function() {
       success: function(response) {
         if (response.error) {
           $('#dataset_select').val('ERROR');          
-          alert("An error occurred, the is some problem with data");
+          alert("An error occurred, the is some problem with data");          
+          document.getElementById("loading-spinner").style.visibility = 'hidden';
         }
         else {	        
           jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden'; 
 	      }
       },
       error: function(response) {
         alert("An error occurred, the service may temporarily be unavailable");
+        document.getElementById("preview_trait_histogram_btn").disabled = false; 
+        document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
     });
 
