@@ -57,7 +57,7 @@ export function init(datasetId, datasetName) {
                 success: function(response) {
                     console.log("response from ajax stored outliers:");
                     console.log(response.outliers);
-                    LocalThis.storedOutliersIds = response.outliers;
+                    LocalThis.storedOutliersIds = response.outliers !== null ? response.outliers : [];
                 },
                 error: function(response) {
                     alert('Error');
