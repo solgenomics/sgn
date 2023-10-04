@@ -107,11 +107,6 @@
   <div id="Basic_output"></div>
 
 </&>
-
-
-
-
-
 <script>
 
 
@@ -128,31 +123,38 @@ jQuery(document).ready(function() {
     $('#trait_histogram_plot').html('');
     $('#heritability_output').empty();
   });
+  
   jQuery('#selectDataset').click(function() {
     var dataset_id = get_dataset_id();
+    
+    if (!dataset_id) {
+      return;
+    }
+    var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
     $.ajax({
-      url: '/ajax/heritability/shared_phenotypes',
-      data: {'dataset_id': dataset_id},
+      url: '/ajax/heritability/shared_phenotypes',      
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+        },
       success: function(response) {
         if (response.error) {
-          $('#dataset_select').val('ERROR');
+            $('#dataset_select').val('ERROR');
         }
         else {
-	    // alert(response.options);
-	    	    // alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
-
-
-	}
+	        // alert(response.options);
+          // alert(response.options.length);
+	        var option_html = '<option selected="selected" value=""> </option>';
+	        for (var i = 0; i < response.options.length; i++) {
+	          option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+	        }
+	        $('#pheno_select').attr("disabled",false).html(option_html);
+          jQuery('#tempfile').html(response.tempfile);
+	      }
 
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable, ponto 1");
+        alert("An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ");
       }
     });
   });
@@ -190,30 +192,55 @@ jQuery(document).ready(function() {
               }
              }
             };
-
-   //alert("embedding"+ JSON.stringify(v));
+            //alert("embedding"+ JSON.stringify(v));
             vegaEmbed("#trait_histogram_plot", v);
             //alert("done");
           },
-
-
         error: function(e) { alert('error!'); }
       });
     };
   });
 
+  jQuery('#dataset_trait_outliers').on('click', function() {
+    var dataset_id = get_dataset_id();
+    if (!dataset_id) {
+      return;
+    }
+    var  dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    $.ajax({
+      url: '/ajax/heritability/shared_phenotypes',
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+      },            
+      success: function(response) {
+        if (response.error) {
+          $('#dataset_select').val('ERROR');          
+          alert("An error occurred, the is some problem with data");
+        }
+        else {	        
+          jQuery('#tempfile').html(response.tempfile);
+	      }
+      },
+      error: function(response) {
+        alert("An error occurred, the service may temporarily be unavailable");
+      }
+    });
+
+  });
+
 
   jQuery('#runH2').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
-      $('#heritability_output').empty();
+      alert("Please select a dataset and trait.");
+      $('#heritability_output').empty();      
     } else {
       $('#heritability_output').empty();
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
         console.log("dataset_id", dataset_id);
         var trait_id = $('#pheno_select').val();
-        console.log("trait_id", trait_id)
+        console.log("trait_id", trait_id);
         var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
         $.ajax({
           url: '/ajax/heritability/generate_results',
