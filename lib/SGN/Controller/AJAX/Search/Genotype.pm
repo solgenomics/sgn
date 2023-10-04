@@ -138,23 +138,25 @@ sub pcr_genotyping_data_search_GET : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
     my $protocol_id = $clean_inputs->{protocol_id_list};
+    my $project_id = $clean_inputs->{genotype_project_list};
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$bcs_schema,
         people_schema=>$people_schema,
         protocol_id_list=>$protocol_id,
+        genotype_data_project_list=>$project_id
     });
     my $result = $genotypes_search->get_pcr_genotype_info();
-#    print STDERR "PCR RESULTS =".Dumper($result)."\n";
+    print STDERR "PCR RESULTS =".Dumper($result)."\n";
     my $protocol_marker_names = $result->{'marker_names'};
-    my $protocol_genotype_data = $result->{'protocol_genotype_data'};
+    my $ssr_genotype_data = $result->{'ssr_genotype_data'};
 
     my $protocol_marker_names_ref = decode_json $protocol_marker_names;
     my @marker_name_arrays = sort @$protocol_marker_names_ref;
 
-    my @protocol_genotype_data_array = @$protocol_genotype_data;
+    my @ssr_genotype_data_array = @$ssr_genotype_data;
     my @results;
-    foreach my $genotype_data (@protocol_genotype_data_array) {
+    foreach my $genotype_data (@ssr_genotype_data_array) {
         my @each_genotype = ();
         my $stock_id = $genotype_data->[0];
         my $stock_name = $genotype_data->[1];
@@ -213,15 +215,15 @@ sub pcr_genotyping_data_summary_search_GET : Args(0) {
     my $result = $genotypes_search->get_pcr_genotype_info();
 #    print STDERR "PCR RESULTS =".Dumper($result)."\n";
     my $protocol_marker_names = $result->{'marker_names'};
-    my $protocol_genotype_data = $result->{'protocol_genotype_data'};
+    my $ssr_genotype_data = $result->{'ssr_genotype_data'};
 
     my $protocol_marker_names_ref = decode_json $protocol_marker_names;
     my @marker_name_arrays = @$protocol_marker_names_ref;
     my $number_of_markers = scalar @marker_name_arrays;
 
-    my @protocol_genotype_data_array = @$protocol_genotype_data;
+    my @ssr_genotype_data_array = @$ssr_genotype_data;
     my @results;
-    foreach my $genotype_info (@protocol_genotype_data_array) {
+    foreach my $genotype_info (@ssr_genotype_data_array) {
         push @results, {
             stock_id => $genotype_info->[0],
             stock_name => $genotype_info->[1],
@@ -244,17 +246,32 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
-    my $ssr_protocol_id = $clean_inputs->{ssr_protocol_id};
-    my $downloaded_protocol_id = $ssr_protocol_id->[0];
-    print STDERR "PROTOCOL ID = $downloaded_protocol_id\n";
+    my $ssr_protocol_id_list = $clean_inputs->{ssr_protocol_id};
+    my $ssr_project_id_list = $clean_inputs->{ssr_project_id};
+    print STDERR "SSR PROTOCOL ID =".Dumper($ssr_protocol_id_list)."\n";
+    print STDERR "SSR PROJECT ID =".Dumper($ssr_project_id_list)."\n";
+
+    my $downloaded_protocol_id;
+    my $downloaded_project_id;
+    if ($ssr_protocol_id_list && scalar($ssr_protocol_id_list)>0) {
+        $downloaded_protocol_id = $ssr_protocol_id_list->[0];
+    } elsif ($ssr_project_id_list && scalar($ssr_project_id_list)>0) {
+        $downloaded_project_id = $ssr_project_id_list->[0];
+    }
 
     my $dir = $c->tempfiles_subdir('download');
-    my $temp_file_name = $downloaded_protocol_id . "_" . "genotype_data" . "XXXX";
+    my $temp_file_name;
+    if (defined $downloaded_protocol_id) {
+        $temp_file_name = "protocol".$downloaded_protocol_id . "_" . "ssr_genotype_data" . "XXXX";
+    } elsif (defined $downloaded_project_id) {
+        $temp_file_name = "project".$downloaded_project_id . "_" . "ssr_genotype_data" . "XXXX";
+    }
+
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".csv";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
+#    print STDERR "TEMPFILE : $tempfile\n";
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to download genotype data" };
@@ -267,7 +284,7 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory_name = "ssr_download";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".'genotype_data'.".csv");
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".'ssr_genotype_data'.".csv");
     my $archive_path = $c->config->{archive_path};
     my $file_destination =  catfile($archive_path, $archived_file_name);
     my $dbh = $c->dbc->dbh();
@@ -277,12 +294,13 @@ sub pcr_genotyping_data_download_POST : Args(0) {
         {
             bcs_schema=>$schema,
             people_schema=>$people_schema,
-            protocol_id_list=>$ssr_protocol_id,
+            protocol_id_list=>$ssr_protocol_id_list,
+            genotype_data_project_list=>$ssr_project_id_list,
             filename => $tempfile,
         }
     );
     my $file_handle = $genotypes->download();
-    print STDERR "FILE HANDLE =".Dumper($file_handle)."\n";
+#    print STDERR "FILE HANDLE =".Dumper($file_handle)."\n";
 
     open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
     binmode $F;
@@ -317,8 +335,8 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     $file_row->insert();
 
     my $file_id = $file_row->file_id();
-    print STDERR "FILE ID =".Dumper($file_id)."\n";
-    print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
 
     move($tempfile,$file_destination);
     unlink $tempfile;

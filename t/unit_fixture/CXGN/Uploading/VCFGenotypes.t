@@ -190,9 +190,7 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-#print STDERR Dumper $message_hash;
-is($message_hash->{success}, 1);
-is($project_id, $message_hash->{project_id});
+is($message_hash->{'error'}, 'The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol');
 
 #adding genotype data using same project to same protocol
 $ua = LWP::UserAgent->new;
@@ -215,7 +213,6 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-#print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 is($project_id, $message_hash->{project_id});
 is($protocol_id, $message_hash->{nd_protocol_id});
@@ -247,7 +244,7 @@ my $stock_id = $schema->resultset("Stock::Stock")->find({uniquename => 'SRLI1_90
 $mech->get_ok('http://localhost:3010/stock/'.$stock_id.'/datatables/genotype_data');
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
-is(scalar(@{$response->{data}}), 4);
+is(scalar(@{$response->{data}}), 3);
 
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";

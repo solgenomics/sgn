@@ -471,16 +471,41 @@ sub get_genotyping_trials_select : Path('/ajax/html/select/genotyping_trials') A
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_label_data_source_types_select : Path('/ajax/html/select/label_data_source_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "label_data_source_types_select";
+    my $name = $c->req->param("name") || "label_data_source_types_select";
+    my @types = (
+        ["any", "Any Data Type..."],
+        ["field_trials", "Field Trials"],
+        ["genotyping_plates", "Genotyping Plates"], 
+        ["crossing_experiments", "Crossing Experiments"],
+        ["lists", "Lists"],
+        ["public_lists", "Public Lists"]
+    );
+
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@types,
+      params => 0
+    );
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR "Retrieving list items . . .\n";
 
     my $id = $c->req->param("id") || "label_data_sources_select";
     my $name = $c->req->param("name") || "label_data_sources_select";
     my $empty = $c->req->param("empty") || "";
     my $live_search = $c->req->param("live_search") ? 'data-live-search="true"' : '';
     my $default = $c->req->param("default") || 0;
+    my $type = $c->req->param("type");
 
     my $user_id = $c->user()->get_sp_person_id();
 
@@ -507,31 +532,41 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     }
 
     my @choices = [];
-    push @choices, '__Field Trials';
-    @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
-    foreach my $trial (@field_trials) {
-        push @choices, $trial;
+    if ( !defined $type || $type eq 'any' || $type eq 'field_trials' ) {
+        push @choices, '__Field Trials';
+        @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
+        foreach my $trial (@field_trials) {
+            push @choices, $trial;
+        }
     }
-    push @choices, '__Genotyping Plates';
-    @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
-    foreach my $trial (@genotyping_trials) {
-        push @choices, $trial;
+    if ( !defined $type || $type eq 'any' || $type eq 'genotyping_plates' ) {
+        push @choices, '__Genotyping Plates';
+        @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
+        foreach my $trial (@genotyping_trials) {
+            push @choices, $trial;
+        }
     }
-    push @choices, '__Crossing Experiments';
-    @crossing_experiments = sort { $a->[1] cmp $b->[1] } @crossing_experiments;
-    foreach my $crossing_experiment (@crossing_experiments) {
-         push @choices, $crossing_experiment;
+    if ( !defined $type || $type eq 'any' || $type eq 'crossing_experiments' ) {
+        push @choices, '__Crossing Experiments';
+        @crossing_experiments = sort { $a->[1] cmp $b->[1] } @crossing_experiments;
+        foreach my $crossing_experiment (@crossing_experiments) {
+            push @choices, $crossing_experiment;
+        }
     }
-    push @choices, '__Lists';
-    foreach my $item (@$lists) {
-        push @choices, [@$item[0], @$item[1]];
+    if ( !defined $type || $type eq 'any' || $type eq 'lists' ) {
+        push @choices, '__Lists';
+        foreach my $item (@$lists) {
+            push @choices, [@$item[0], @$item[1]];
+        }
     }
-    push @choices, '__Public Lists';
-    foreach my $item (@$public_lists) {
-        push @choices, [@$item[0], @$item[1]];
+    if ( !defined $type || $type eq 'any' || $type eq 'public_lists' ) {
+        push @choices, '__Public Lists';
+        foreach my $item (@$public_lists) {
+            push @choices, [@$item[0], @$item[1]];
+        }
     }
 
-    print STDERR "Choices are:\n".Dumper(@choices);
+    # print STDERR "Choices are:\n".Dumper(@choices);
 
     if ($default) { unshift @choices, [ '', $default ]; }
 

@@ -417,7 +417,7 @@ sub get_genotype_info {
     }
 
     #For genotyping_data_project
-    if ($genotype_data_project_list && scalar($genotype_data_project_list)>0) {
+    if ($genotype_data_project_list && scalar(@$genotype_data_project_list)>0) {
         my $sql = join ("," , @$genotype_data_project_list);
         push @where_clause, "project.project_id in ($sql)";
     }
@@ -727,7 +727,7 @@ sub init_genotype_iterator {
     my @data;
     my %search_params;
     my @where_clause;
-    
+
     my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id({protocol_id => $protocol_id_list->[0],genotype_id => $markerprofile_id_list->[0]});
     $self->_vcf_genotyping_cvterm_id($vcf_genotyping_cvterm_id);
 
@@ -1182,7 +1182,7 @@ sub get_cached_file_search_json {
     my $metadata_only_string = $metadata_only ? "metadata_only" : "all_data";
     my $key = $self->key("get_cached_file_search_json_v03_".$metadata_only_string);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
-    
+
     my $file_handle;
     if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
@@ -1595,7 +1595,7 @@ sub get_cached_file_VCF {
     if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
         print STDERR "\nget_cached_file_VCF: go file handle $file_handle\n";
-        
+
     } else {
         # Set the temp dir and temp output file
         my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_VCF";
@@ -2205,6 +2205,11 @@ sub get_pcr_genotype_info {
 #    print STDERR "GENOTYPE ID =".Dumper($genotype_id_list)."\n";
 #    print STDERR "PROTOCOL ID =".Dumper($protocol_id_list)."\n";
 
+    if ($genotype_data_project_list && scalar(@$genotype_data_project_list)>0) {
+        my $sql = join ("," , @$genotype_data_project_list);
+        push @where_clause, "nd_experiment_project.project_id in ($sql)";
+    }
+
     if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
         my $query = join ("," , @$protocol_id_list);
         push @where_clause, "nd_protocol.nd_protocol_id in ($query)";
@@ -2222,15 +2227,11 @@ sub get_pcr_genotype_info {
     my $pcr_protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
     my $ploidy_level_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "ploidy_level", "stock_property")->cvterm_id();
 
-    my $q1 = "SELECT nd_protocolprop.value->>'marker_names' FROM nd_protocolprop WHERE nd_protocol_id = ? AND nd_protocolprop.type_id = ?";
-    my $h1 = $schema->storage->dbh()->prepare($q1);
-    $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
-    my $marker_names = $h1->fetchrow_array();
-
-    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, cvterm.name, genotype.genotype_id, genotype.description, genotypeprop.value
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, cvterm.name, genotype.genotype_id, genotype.description, genotypeprop.value, nd_protocol.nd_protocol_id
         FROM nd_protocol
         JOIN nd_experiment_protocol ON (nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id)
         JOIN nd_experiment_genotype ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+        JOIN nd_experiment_project ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_project.nd_experiment_id)
         JOIN genotype ON (nd_experiment_genotype.genotype_id = genotype.genotype_id)
         JOIN genotypeprop ON (genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ?
         JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -2243,18 +2244,27 @@ sub get_pcr_genotype_info {
     $h->execute($pcr_genotyping_cvterm_id, $ploidy_level_cvterm_id);
 
     my @pcr_genotype_data = ();
-    while (my ($stock_id, $stock_name, $ploidy_level, $stock_type, $genotype_id, $genotype_description, $genotype_data, $protocol_id) = $h->fetchrow_array()){
-        push @pcr_genotype_data, [$stock_id, $stock_name, $stock_type, $ploidy_level, $genotype_description, $genotype_id, $genotype_data]
+    while (my ($stock_id, $stock_name, $ploidy_level, $stock_type, $genotype_id, $genotype_description, $genotype_data, $nd_protocol_id) = $h->fetchrow_array()){
+        push @pcr_genotype_data, [$stock_id, $stock_name, $stock_type, $ploidy_level, $genotype_description, $genotype_id, $genotype_data, $nd_protocol_id]
     }
 
-    my %protocol_genotype_data = (
+    if (!defined $protocol_id) {
+        $protocol_id = $pcr_genotype_data[0][7];
+    }
+
+    my $q1 = "SELECT nd_protocolprop.value->>'marker_names' FROM nd_protocolprop WHERE nd_protocol_id = ? AND nd_protocolprop.type_id = ?";
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+    $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
+    my ($marker_names) = $h1->fetchrow_array();
+
+    my %ssr_genotype_data = (
         marker_names => $marker_names,
-        protocol_genotype_data => \@pcr_genotype_data
+        ssr_genotype_data => \@pcr_genotype_data
     );
 
-#    print STDERR "PCR GENOTYPE INFO =".Dumper(\%protocol_genotype_data)."\n";
+#    print STDERR "PCR GENOTYPE INFO =".Dumper(\%ssr_genotype_data)."\n";
 
-    return \%protocol_genotype_data;
+    return \%ssr_genotype_data;
 
 }
 
@@ -2262,12 +2272,12 @@ sub search_vcf_genotyping_cvterm_id {
     my $self = shift;
     my $search_param = shift;
     my $schema = $self->bcs_schema;
-    
+
     my $vcf_genotyping_cvterm_id;
     if (defined($search_param->{protocol_id}) || defined($search_param->{genotype_id} )) {
         $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($schema, $search_param);
     } else {
-        my $vcf_genotyping_type = $search_param->{vcf_genotyping_type} || 'vcf_snp_genotyping'; 
+        my $vcf_genotyping_type = $search_param->{vcf_genotyping_type} || 'vcf_snp_genotyping';
         $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
     }
 
