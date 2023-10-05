@@ -61,8 +61,9 @@ sub factors :Path('/ajax/gcpc/factors') Args(0) {
 
     my $dataset_id = $c->req->param('dataset_id');
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
 
     $c->tempfiles_subdir("gcpc_files");
@@ -202,7 +203,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     print STDERR "FIXED FACTORS: $fixed_factors\n";
     print STDERR "RANDOM FACTORS: $random_factors\n";
 
-    my $list = CXGN::List->new( { dbh => $c->dbic_schema("Bio::Chado::Schema")->storage->dbh() , list_id => $sin_list_id });
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $list = CXGN::List->new( { dbh => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id)->storage->dbh() , list_id => $sin_list_id });
     my $elements = $list->elements();
 
     print STDERR "ELEMENTS: ".Dumper($elements);
@@ -237,8 +239,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     my $geno_filepath  = $tempfile . "_genotype.txt";
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     #my $temppath = $stability_tmp_output . "/" . $tempfile;
     my $temppath =  $tempfile;
@@ -470,8 +472,9 @@ sub get_trait_for_accessions {
     my $accessions = shift;
 
     print STDERR "GET TRAIT FOR ACCESSIONS...\n";
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     $c->tempfiles_subdir("gcpc_files");
     my $gcpc_tmp_output = $c->config->{cluster_shared_tempdir}."/gcpc_files";
