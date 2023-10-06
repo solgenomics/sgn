@@ -46,6 +46,7 @@ $genotype_data_type => undef
 $trial_owner => undef
 $has_plate => undef
 $marker_names => undef
+$marker_info_headers => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>

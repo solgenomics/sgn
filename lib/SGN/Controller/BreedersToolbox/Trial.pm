@@ -209,20 +209,72 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $c->stash->{genotype_data_type} = 'SNP'
         }
 
-        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        my $project_info = CXGN::Genotype::GenotypingProject->new({
             bcs_schema => $schema,
             project_id => $project_id
         });
-        my ($data, $tc) = $plate_info->get_plate_info();
+        my ($data, $tc) = $project_info->get_plate_info();
         my $has_plate;
         if (!$data) {
             $has_plate = 'none';
         }
         $c->stash->{has_plate} = $has_plate;
-        my @genotyping_project_list = ($project_id);
-        my $protocol_info = CXGN::Genotype::Protocol::list($schema, undef, undef, undef, undef, undef, \@genotyping_project_list);
-        if ($protocol_info) {
-            $c->stash->{marker_names} = $protocol_info->[0]->{marker_names} || [];
+
+        my $associated_protocol  = $project_info->get_associated_protocol();
+
+        if ( defined $associated_protocol && scalar(@$associated_protocol)>0) {
+            my $protocol_id = $associated_protocol->[0]->[0];
+            my $protocol_info = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $protocol_id
+            });
+
+            my $marker_names = $protocol_info->{marker_names};
+            my $assay_type = $protocol_info->{assay_type};
+            
+            $c->stash->{marker_names} = $marker_names;
+            $c->stash->{assay_type} = $assay_type;
+
+            my $marker_info_keys = $protocol_info->marker_info_keys;
+            my @marker_info_headers = ();
+            if (defined $marker_info_keys) {
+                foreach my $info_key (@$marker_info_keys) {
+                    if ($info_key eq 'name') {
+                        push @marker_info_headers, 'Marker Name';
+                    } elsif (($info_key eq 'intertek_name') || ($info_key eq 'facility_name')) {
+                        push @marker_info_headers, 'Facility Marker Name';
+                    } elsif ($info_key eq 'chrom') {
+                        push @marker_info_headers, 'Chromosome';
+                    } elsif ($info_key eq 'pos') {
+                        push @marker_info_headers, 'Position';
+                    } elsif ($info_key eq 'alt') {
+                        if ($assay_type eq 'KASP') {
+                            push @marker_info_headers, 'Y-allele';
+                        } else {
+                            push @marker_info_headers, 'Alternate';
+                        }
+                    } elsif ($info_key eq 'ref') {
+                        if ($assay_type eq 'KASP') {
+                            push @marker_info_headers, 'X-allele';
+                        } else {
+                            push @marker_info_headers, 'Reference';
+                        }
+                    } elsif ($info_key eq 'qual') {
+                        push @marker_info_headers, 'Quality';
+                    } elsif ($info_key eq 'filter') {
+                        push @marker_info_headers, 'Filter';
+                    } elsif ($info_key eq 'info') {
+                        push @marker_info_headers, 'Info';
+                    } elsif ($info_key eq 'format') {
+                        push @marker_info_headers, 'Format';
+                    } elsif ($info_key eq 'sequence') {
+                        push @marker_info_headers, 'Sequence';
+                    }
+                }
+            } else {
+                @marker_info_headers = ('Marker Name','Chromosome','Position','Alternate','Reference','Quality','Filter','Info','Format');
+            }
+            $c->stash->{marker_info_headers} = \@marker_info_headers;
         }
 
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
