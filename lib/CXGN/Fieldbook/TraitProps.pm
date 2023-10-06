@@ -205,7 +205,9 @@ sub store {
 
     foreach my $trait_props (@trait_props_data) {
 
+	
       my $trait_name = $trait_props->{'trait_name'};
+      my $accession;
       
       if ($trait_name =~ /(.*)\|.*$/) {
 	  $trait_name = $1;
