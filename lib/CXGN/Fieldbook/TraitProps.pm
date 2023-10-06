@@ -120,6 +120,7 @@ sub validate {
         $accession = $2;
     }
 
+    print STDERR "Working with trait $trait_name, accession $accession\n";
     my $trait_cvterm;
     
     if ($accession) { 
