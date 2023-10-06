@@ -42,6 +42,7 @@ use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
 use Try::Tiny;
 use CXGN::Metadata::Metadbdata;
+use File::Basename qw | basename dirname|;
 
 =head2 accessor schema()
 
@@ -74,6 +75,23 @@ has 'schema' => (
 
 has 'phenome_schema' => (
     isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+);
+
+=head2 accessor metadata_schema()
+
+ Usage:
+ Desc:         provides access the the CXGN::Metadata::Schema, needed for
+               certain user related functions
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
     is => 'rw',
 );
 
@@ -992,6 +1010,47 @@ sub associate_owner {
     $sth->execute($self->stock_id, $owner_id, $metadata_id);
     my ($id) =  $sth->fetchrow_array;
     return $id;
+}
+
+sub associate_uploaded_file {
+
+    my $self = shift;
+    my $user_id = shift;
+    my $archived_filename_with_path = shift;
+    my $md5checksum = shift;
+    my $stock_id = shift;
+
+    my $metadata_id = $self->_new_metadata_id($user_id);
+
+    my $metadata_schema = CXGN::Metadata::Schema->connect(
+        sub { $self->schema()->storage()->dbh() },
+        { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
+        );
+
+    my $file_row = $metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_filename_with_path),
+            dirname  => dirname($archived_filename_with_path),
+            filetype => 'accession_additional_file_upload',
+            md5checksum => $md5checksum,
+            metadata_id => $metadata_id,
+        });
+    my $file_id = $file_row->file_id();
+
+    my $phenome_schema = CXGN::Phenome::Schema->connect(
+	sub { $self->schema()->storage()->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }
+	);
+
+    my $stock_file = $phenome_schema->resultset("StockFile")
+        ->create({
+            stock_id => $stock_id,
+            file_id => $file_id,
+            metadata_id => $metadata_id,
+        });
+
+    return {success => 1, file_id=>$file_id};
+
+
 }
 
 =head2 get_trait_list()
