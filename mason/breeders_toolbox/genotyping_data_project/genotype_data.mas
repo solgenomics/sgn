@@ -36,8 +36,10 @@ jQuery(document).ready(function () {
         'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>',
     });
 
+    var refresh_results;
     jQuery("#project_genotype_data_forbid_cache").change(function(){
         if (jQuery(this).is(":checked")) {
+            refresh_results = '1';
             var project_genotypes_data_table = jQuery('#genotyping_data_project_genotype_data').DataTable({
                 'destroy' : true,
                 'searching' : false,
@@ -47,6 +49,21 @@ jQuery(document).ready(function () {
                 'lengthMenu': [ 10, 50, 100, 2000 ],
                 'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>&forbid_cache=1',
             });
+        }
+    });
+
+    jQuery('#project_genotype_data_download_all_vcf').click(function(){
+        if (refresh_results) {
+            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=VCF&format=accession_ids&forbid_cache=1");
+        } else {
+            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=VCF&format=accession_ids");
+        }
+    });
+    jQuery('#project_genotype_data_download_all_dosagematrix').click(function(){
+        if (refresh_results) {
+            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=DosageMatrix&format=accession_ids&forbid_cache=1");
+        } else {
+            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=DosageMatrix&format=accession_ids");
         }
     });
 

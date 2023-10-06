@@ -1057,7 +1057,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
-
+    my $genotyping_project_id = $c->req->param("genotyping_project_id");
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
 
     $trial_id_string = $c->req->param("trial_ids");
@@ -1069,11 +1069,12 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         $id_string = $c->req->param("ids");
         @accession_ids = split(',',$id_string);
         $protocol_id = $c->req->param("protocol_id");
-        if (!$protocol_id){
+        if ((!defined $protocol_id) && (!defined $genotyping_project_id)){
             my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
             $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
         }
     }
+
     elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
         my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
         $protocol_id = $c->req->param("genotyping_protocol_select");
@@ -1115,6 +1116,16 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         }
     }
 
+    my @protocol_list;
+    if (defined $protocol_id) {
+        push @protocol_list, $protocol_id;
+    }
+
+    my @genotyping_project_list;
+    if (defined $genotyping_project_id) {
+        push @genotyping_project_list, $genotyping_project_id;
+    }
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
@@ -1124,7 +1135,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             accession_list=>\@accession_ids,
             #tissue_sample_list=>$tissue_sample_list,
             trial_list=>\@trial_ids,
-            protocol_id_list=>[$protocol_id],
+            protocol_id_list=>\@protocol_list,
             chromosome_list=>$chromosome_numbers,
             start_position=>$start_position,
             end_position=>$end_position,
@@ -1133,7 +1144,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             marker_name_list=>\@marker_name_list,
             return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
             #markerprofile_id_list=>$markerprofile_id_list,
-            #genotype_data_project_list=>$genotype_data_project_list,
+            genotype_data_project_list=>\@genotyping_project_list,
             #limit=>$limit,
             #offset=>$offset
         }
