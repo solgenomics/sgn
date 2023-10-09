@@ -1012,6 +1012,17 @@ sub associate_owner {
     return $id;
 }
 
+=head2 associate_owner()
+
+ Usage: $self->associate_uploaded_file($owner_sp_person_id, $archived_filename_with_path, $md5checksum, $stock_id )
+ Desc:  Associate files with metadata and stock
+ Ret:   a database id
+ Args:  owner_id, archived_filename_with_path, md5checksum, stock_id
+ Side Effects:  store a metadata row
+ Example:
+
+=cut
+
 sub associate_uploaded_file {
 
     my $self = shift;
@@ -1045,12 +1056,59 @@ sub associate_uploaded_file {
         ->create({
             stock_id => $stock_id,
             file_id => $file_id,
-            metadata_id => $metadata_id,
         });
 
     return {success => 1, file_id=>$file_id};
+}
 
+=head2 obsolete_uploaded_file()
 
+ Usage: $self->obsolete_uploaded_file($file_id, $user_id, $role )
+ Desc:  Obsolete files with metadata 
+ Side Effects:  
+ Example:
+
+=cut
+
+sub obsolete_uploaded_file {
+
+    my $self = shift;
+    my $file_id = shift;
+    my $user_id = shift;
+    my $role = shift;
+
+    my @errors;
+    # check ownership of that file
+    my $q = "SELECT metadata.md_metadata.create_person_id, metadata.md_metadata.metadata_id, metadata.md_files.file_id 
+    FROM metadata.md_metadata 
+    join metadata.md_files using(metadata_id) 
+    where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
+
+    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $h = $dbh->prepare($q);
+
+    $h->execute($file_id, $user_id);
+
+    if (my ($create_person_id, $metadata_id, $file_id) = $h->fetchrow_array()) {
+	if ($create_person_id == $user_id || $role eq "curator") {
+	    my $uq = "UPDATE metadata.md_metadata SET obsolete=1 where metadata_id = ?";
+	    my $uh = $dbh->prepare($uq);
+	    $uh->execute($metadata_id);
+	}
+	else {
+	    push @errors, "Only the owner of the uploaded file, or a curator, can delete this file.";
+	}
+
+    }
+    else {
+	push @errors, "No such file currently exists.";
+    }
+
+    if (@errors >0) {
+	return { errors => \@errors };
+    }
+
+    return { success => 1 };
 }
 
 =head2 get_trait_list()
