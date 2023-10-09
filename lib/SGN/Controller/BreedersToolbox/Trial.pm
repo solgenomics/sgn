@@ -31,7 +31,7 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $trial_id = shift;
 
     $c->stash->{trial_id} = $trial_id;
-    print STDERR "TRIAL ID = $trial_id\n";
+#    print STDERR "TRIAL ID = $trial_id\n";
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{schema} = $schema;
@@ -231,7 +231,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
             my $marker_names = $protocol_info->{marker_names};
             my $assay_type = $protocol_info->{assay_type};
-            
             $c->stash->{marker_names} = $marker_names;
             $c->stash->{assay_type} = $assay_type;
 
@@ -374,8 +373,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
-    print STDERR "WHAT =".Dumper($what)."\n";
-    print STDERR Dumper $c->req->params();
+#    print STDERR "WHAT =".Dumper($what)."\n";
+#    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -487,7 +486,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
+#    print STDERR "TEMPFILE : $tempfile\n";
 
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
@@ -526,7 +525,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR Dumper $c->req->params();
+#    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -562,7 +561,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
+#    print STDERR "TEMPFILE : $tempfile\n";
 
     my $trial_download_args = {
         bcs_schema => $schema,

@@ -47,6 +47,7 @@ $trial_owner => undef
 $has_plate => undef
 $marker_names => undef
 $marker_info_headers => undef
+$assay_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -61,10 +62,12 @@ $marker_info_headers => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Protocols</h4>", info_section_subtitle => 'View basic information about the genotyping protocols used in this genotyping project.', icon_class => "glyphicon glyphicon-cog", info_section_id => "genotyping_data_project_protocols" &>
 
-% if ($genotype_data_type ne 'SSR') {
-    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button>', info_section_id => "genotyping_data_project_data" &>
-% } elsif ($genotype_data_type eq 'SSR') {
+% if ($genotype_data_type eq 'SSR') {
     <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, marker_names => $marker_names, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this project.',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="download_project_ssr_data_link">Download SSR Data</button>', icon_class => "glyphicon glyphicon-save-file", info_section_id => "project_pcr_genotype_data" &>
+% } elsif ($assay_type eq 'KASP') {
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="kasp_project_genotype_data_download_all_csv">Download All Genotype Data (CSV)</button>', info_section_id => "genotyping_data_project_data" &>
+% } else {
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button>', info_section_id => "genotyping_data_project_data" &>
 % }
 
 % my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';

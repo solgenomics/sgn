@@ -1660,6 +1660,18 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $protocol_id = $c->req->param("protocol_id");
+    my $genotyping_project_id = $c->req->param("genotyping_project_id");
+
+    my @protocol_list;
+    if (defined $protocol_id) {
+        push @protocol_list, $protocol_id;
+    }
+
+    my @genotyping_project_list;
+    if (defined $genotyping_project_id) {
+        push @genotyping_project_list, $genotyping_project_id;
+    }
+
 
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = $protocol_id . "_" . "KASP_data" . "XXXX";
@@ -1675,7 +1687,8 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
         {
             bcs_schema=>$schema,
             people_schema=>$people_schema,
-            protocol_id_list=>[$protocol_id],
+            protocol_id_list=>\@protocol_list,
+            genotype_data_project_list=>\@genotyping_project_list,
             filename => $tempfile,
         }
     );
