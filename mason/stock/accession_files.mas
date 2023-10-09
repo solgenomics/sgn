@@ -1,7 +1,5 @@
 <%args>
 $stock_id
-$trial_stock_type => undef
-$for_analysis_page => undef
 </%args>
 
 <div class="well well-sm">
@@ -17,20 +15,3 @@ $for_analysis_page => undef
 
 </div><!-- closes well -->
 
-<script>
-jQuery(document).ready(function() {
-    jQuery('#trial_upload_files_onswitch').one("click", function(){
-        jQuery('#trial_phenotype_files_datatables').DataTable({
-            'ajax': { 'url': '/ajax/stock/<% $stock_id %>' },
-            columns: [
-                { title: "Filename", "data": null, "render": function ( data, type, row ) { return row[4]; } },
-                { title: "Date Uploaded", "data": null, "render": function ( data, type, row ) { return row[1]; } },
-                { title: "Uploaded By", "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
-                { title: "File Type", "data": null, "render": function ( data, type, row ) { return row[6]; } },
-                { title: "Options", "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+'">View</a> | <a href="/breeders/phenotyping/download/'+row[0]+'">Download</a>'; } },
-            ]
-        });
-
-    });
-});
-</script>
