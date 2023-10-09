@@ -145,8 +145,10 @@ for my $row ( 1 .. $row_max ) {
 
   my $prop_column = 1;
   foreach my $property_name (@trait_property_names) {
-    if ($worksheet->get_cell($row,$prop_column)) {
-      if (($worksheet->get_cell($row,$prop_column)->value()) && ($worksheet->get_cell($row,$prop_column)->value() ne '')) {
+      if ($worksheet->get_cell($row,$prop_column)) {
+	  my $value = $worksheet->get_cell($row, $prop_column)->value();
+	  
+	  if ((defined($value)) { 
 	$trait_props{$property_name}=$worksheet->get_cell($row,$prop_column)->value();
       }
     }
