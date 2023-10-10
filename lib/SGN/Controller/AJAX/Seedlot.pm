@@ -1129,7 +1129,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $amount = $c->req->param("amount");
     my $weight = $c->req->param("weight");
     my $timestamp = $c->req->param("timestamp");
-    my $description = $c->req->param("description");
+    my $description = $c->req->param("transaction_description");
     my $factor = $c->req->param("factor");
     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema});
     $transaction->factor($factor);
