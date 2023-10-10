@@ -654,6 +654,7 @@ $maintenance_enabled => undef
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
+                        jQuery('#edit_seedlot_transaction_dialog').modal('hide');                
                         alert('Transaction updated!');
                         seedlot_transactions_table.ajax.reload();
                     }
