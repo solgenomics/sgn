@@ -880,8 +880,9 @@ sub seedlot_transaction_base :Chained('seedlot_base') PathPart('transaction') Ca
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $seedlot_id = $c->stash->{seedlot}->seedlot_id();
     my $transaction_id = shift;
-    my $t_obj = CXGN::Stock::Seedlot::Transaction->new(schema=>$schema, transaction_id=>$transaction_id);
+    my $t_obj = CXGN::Stock::Seedlot::Transaction->new(schema=>$schema, transaction_id=>$transaction_id, seedlot_id=>$seedlot_id);
     $c->stash->{transaction_id} = $transaction_id;
     $c->stash->{transaction_object} = $t_obj;
 }
@@ -890,6 +891,14 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
     my $self = shift;
     my $c = shift;
     my $t = $c->stash->{transaction_object};
+    my $factor = $t->factor;
+    my $action;
+    if ($factor == 1) {
+        $action = 'add';
+    } elsif ($factor == -1) {
+        $action = 'remove';
+    }
+
     $c->stash->{rest} = {
         success => 1,
         transaction_id => $t->transaction_id,
@@ -897,7 +906,9 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
         amount=>$t->amount,
         weight_gram=>$t->weight_gram,
         operator=>$t->operator,
-        timestamp=>$t->timestamp
+        timestamp=>$t->timestamp,
+        factor=>$t->factor,
+        action=>$action
     };
 }
 
