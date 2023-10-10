@@ -53,38 +53,11 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    my $coderef = sub {
-        $self->dbh->do(<<EOSQL);
-
- --do your SQL here
-INSERT into db (name)
-select 'null' where not exists(
-    select name from db where name = 'null'
-);
-
-INSERT into public.dbxref (db_id, accession)
-select db_id, 'list_additional_info'
-from public.db
-WHERE name = 'null'
-and not exists(
-  select accession from dbxref where accession = 'list_additional_info' and db_id = (select db_id from db where name = 'null')
-);
-
-INSERT INTO public.cv (name)
-select 'list_properties' where not exists (
-    select name from cv where name = 'list_properties'
-);
-
-INSERT INTO public.cvterm (cv_id, name, dbxref_id)
-select (SELECT cv_id FROM public.cv WHERE cv.name = 'list_properties'), 'list_additional_info', (SELECT dbxref_id FROM public.dbxref WHERE accession = 'list_additional_info')
-where not exists (
-    select * from cvterm where name = 'list_additional_info' and cv_id = (SELECT cv_id FROM public.cv WHERE cv.name = 'list_properties') and dbxref_id = (SELECT dbxref_id FROM public.dbxref WHERE accession = 'list_additional_info')
-);
-
-EOSQL
-
-        return 1;
-    };
+    my $list_prop_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'list_additional_info',
+        cv   => 'list_properties',
+        db   => 'local'
+    });
 
     try {
         $schema->txn_do($coderef);
