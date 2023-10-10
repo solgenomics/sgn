@@ -60,8 +60,8 @@ sub patch {
 
 CREATE TABLE phenome.stock_file (
     stock_file_id serial primary key, 
-    stock_id bigint REFERENCES stock, 
-    file_id bigint REFERENCES metadata.md_files
+    stock_id int4 NOT NULL REFERENCES stock ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED, 
+    file_id int4 NOT NULL REFERENCES metadata.md_files ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED 
 );
 
 GRANT UPDATE, INSERT, SELECT ON phenome.stock_file TO web_usr;
