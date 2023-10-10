@@ -8,7 +8,7 @@ jobs:
   test_breedbase:
     runs-on: ubuntu-latest
     container:
-      image: breedbase/breedbase:v0.69
+      image: breedbase/breedbase:latest
       env:
         HOME: /root
         MODE: 'TESTING'
@@ -62,7 +62,7 @@ jobs:
         run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
 
       - name: Run unit_mech tests
-        run: /entrypoint.sh --nopatch t/unit_mech 2>/dev/null
+        run: /entrypoint.sh --nopatch t/unit_mech
 
       # selenium tests for a moment as separate folders - will change once full solgs are ready 
       # but anyway, it will is still fully functional for tests purpose

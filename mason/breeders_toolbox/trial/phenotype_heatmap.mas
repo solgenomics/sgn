@@ -114,10 +114,15 @@ $data_level => 'plot'
                 </div>
             </div>
         </div>
-        <!-- TODO: Enable the display of linked trials -->
-        <div id="include_linked_trials" class="form-group form-group-sm" style="display: none">
-            <label for="include_linked_trials_checkmark" class="control-label">Display Linked Trials:</label><br />
-            <input type="checkbox" id="include_linked_trials_checkmark" name="invert_row_checkmark">
+        <div id="include_linked_trials" class="form-group form-group-sm">
+            <label for="include_linked_trials_checkmark" class="control-label">Display Trials in Same Field:</label><br />
+            <input type="checkbox" id="include_linked_trials_checkmark" name="include_linked_trials_checkmark">
+            <div id="include_linked_trials_list_container" style="margin-top: 10px; display: none">
+                <p><strong>Trials in Same Field:</strong></p>
+                <ul id="include_linked_trials_list">
+                    <p>Loading...</p>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -619,23 +624,6 @@ var num_real_plots;
 
 var trial_ids = [trial_id];
 
-// TODO: Remove this when we get fetch the linked trials from the DB
-var linked_trial_ids = [];
-function display_linked_trials(trials) {
-    if ( trials ) {
-        linked_trial_ids = trials;
-        jQuery("#include_linked_trials").css("display", "block");
-        jQuery("#include_linked_trials_checkmark").prop('checked', false);
-        jQuery("#include_linked_trials_checkmark").click();
-    }
-    else {
-        linked_trials = [];
-        jQuery("#include_linked_trials_checkmark").prop('checked', true);
-        jQuery("#include_linked_trials_checkmark").click();
-        jQuery("#include_linked_trials").css("display", "none");
-    }
-}
-
 jQuery(document).ready( function() {
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
@@ -1122,6 +1110,7 @@ jQuery(document).ready( function() {
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
+            jQuery("#include_linked_trials").css("display", "block");
             d3.select("#container_heatmap_geo_div").remove();
             FieldMap.heatmap_selected = false;
             FieldMap.load();
@@ -1136,6 +1125,7 @@ jQuery(document).ready( function() {
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
+            jQuery("#include_linked_trials").css("display", "none");
             geo_field_map_view();
             jQuery('#working_modal').modal("hide");
         } else  if (selected != ''){
@@ -1144,6 +1134,7 @@ jQuery(document).ready( function() {
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#view_ctrl_button").show();
+            jQuery("#include_linked_trials").css("display", "none");
             FieldMap.heatmap_selected = true;
             FieldMap.heatmap_selection = selected;
             heatmap(selected);
@@ -1152,17 +1143,52 @@ jQuery(document).ready( function() {
 
     jQuery(document).on('change', '#include_linked_trials_checkmark', () => {
         trial_ids = [trial_id];
+        FieldMap.set_linked_trials();
 
         let include_linked_trials = jQuery("#include_linked_trials_checkmark").is(":checked");
         if ( include_linked_trials ) {
-            // TODO: Get actual list of additional trials
-            trial_ids = trial_ids.concat(linked_trial_ids);
+            jQuery.ajax({
+                url: "/ajax/breeders/trial/<% $trial_id %>/linked_field_trials",
+                success: (response) => {
+                    let html = "";
+                    if ( response && response.trials ) {
+                        FieldMap.set_linked_trials(response.trials);
+                        const lt = FieldMap.get_linked_trials();
+                        trial_ids = [];
+                        response.trials.forEach((t, i) => {
+                            trial_ids.push(t.trial_id);
+                            html += `<li style='margin-bottom: 5px'>`;
+                            html += `<span style='background-color: ${lt[t.trial_name].bg}; color: ${lt[t.trial_name].fg}; padding: 2px 4px; border-radius: 4px;'>`;
+                            html += `${t.trial_name}`;
+                            html += `</span>`
+                            html += `</li>`;
+                        });
+                    }
+                    else if ( response && response.error ) {
+                        html += `ERROR: ${response.error}`;
+                    }
+                    else {
+                        html += "ERROR: Could not load linked trials";
+                    }
+                    jQuery("#include_linked_trials_list").html(html);
+                    _finish();
+                },
+                error: () => {
+                    jQuery("#include_linked_trials_list").html("ERROR: Could not load linked trials");
+                    _finish();
+                }
+            });
         }
-        
-        jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
-        jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
+        else {
+            _finish();
+        }
 
-        field_map_view();
+        function _finish() {
+            jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
+            jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
+            jQuery("#include_linked_trials_list_container").css("display", include_linked_trials ? 'block' : 'none');
+            field_map_view();
+        }
     });
 
   jQuery("#trial_fieldmap_download_layout_button").click( function () {

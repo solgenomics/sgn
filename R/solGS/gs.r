@@ -497,11 +497,10 @@ modelingLog <- paste0(modelingLog, "The model training is based on rrBLUP R pack
 
   trGEBVSE <- full_join(trGEBV, trGEBVSE)
 
-  trGEBVSE <-  trGEBVSE %>% arrange_(.dots= paste0('desc(', traitAbbr, ')'))
-
+  trGEBVSE <-  trGEBVSE %>% arrange(across(traitAbbr, desc))
   trGEBVSE <- column_to_rownames(trGEBVSE, var="genotypes")
-
-  trGEBV <- trGEBV %>% arrange_(.dots = paste0('desc(', traitAbbr, ')'))
+  
+  trGEBV <-  trGEBV %>% arrange(across(traitAbbr, desc))
   trGEBV <- column_to_rownames(trGEBV, var="genotypes")
 
   phenoTraitMarker    <- data.matrix(phenoTraitMarker)

@@ -116,7 +116,7 @@ sub search {
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} + 0,
+            biologicalStatusOfAccessionCode=> $_->{'biological status of accession code'} ? ($_->{'biological status of accession code'} + 0) : 0,
             countryOfOriginCode=>$_->{'country of origin'},
             typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},
@@ -188,7 +188,7 @@ sub germplasm_detail {
         commonCropName=>$result->[0]->{common_name},
         instituteCode=>$result->[0]->{'institute code'},
         instituteName=>$result->[0]->{'institute name'},
-        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
+        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} ? ($result->[0]->{'biological status of accession code'} + 0) : 0,
         countryOfOriginCode=>$result->[0]->{'country of origin'},
         typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
         genus=>$result->[0]->{genus},
@@ -432,10 +432,10 @@ sub germplasm_markerprofiles {
     my $status = $self->status;
     my @marker_profiles;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
 
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-        {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},
+        {'genotypeprops.type_id' => $vcf_snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},
         {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
         select=> ['genotypeprops.genotypeprop_id'],
         as=> ['genotypeprop_id'],

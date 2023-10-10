@@ -13,25 +13,28 @@ use Carp qw/ carp confess croak /;
 use Scalar::Util 'reftype';
 use URI;
 
-BEGIN { extends 'Catalyst::Controller' }
+
+BEGIN { extends 'Catalyst::Controller::REST' }
+
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON' },
+);
+
 
 sub check_user_login : Path('/solgs/check/user/login') Args(0) {
     my ( $self, $c ) = @_;
 
     my $user = $c->user();
-    my $ret->{loggedin} = 0;
+    $c->stash->{rest}{loggedin} = 0;
 
     if ($user) {
-        my $contact = $self->get_user_detail($c);
-
-        $ret->{contact}  = $contact;
-        $ret->{loggedin} = 1;
+        $c->stash->{rest} = {
+          contact => $self->get_user_detail($c),
+          loggedin => 1
+        };
     }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 
@@ -44,19 +47,14 @@ sub save_analysis_profile : Path('/solgs/save/analysis/profile') Args(0) {
     my $analysis_page = $analysis_profile->{analysis_page};
     $c->stash->{analysis_page} = $analysis_page;
 
-    my $ret->{result} = 0;
-
+    $c->stash->{rest}{result} = 0;
     $self->save_profile($c);
     my $error_saving = $c->stash->{error};
 
     if ( !$error_saving ) {
-        $ret->{result} = 1;
+      $c->stash->{rest}{result} = 1;
+
     }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 
@@ -69,13 +67,10 @@ sub run_saved_analysis : Path('/solgs/run/saved/analysis/') Args(0) {
     $self->structure_output_details($c);
     $self->run_analysis($c);
 
-    my $ret->{result} = $c->stash->{status};
-    $ret->{arguments} = $analysis_profile->{arguments};
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
+    $c->stash->{rest} = {
+      result => $c->stash->{status},
+      arguments => $analysis_profile->{arguments}
+    };
 
 }
 
@@ -85,46 +80,14 @@ sub check_analysis_name : Path('/solgs/check/analysis/name') Args() {
     my $new_name = $c->req->param('name');
     my $match    = $self->check_analyses_names( $c, $new_name );
 
-    my $ret->{analysis_exists} = $match;
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-sub submission_feedback : Path('/solgs/submission/feedback/') Args() {
-    my ( $self, $c ) = @_;
-
-    my $job = $c->req->param('job');
-
-    my $job_type = $self->get_confirm_msg( $c, $job );
-    my $user_id  = $c->user()->get_object()->get_sp_person_id();
-    my $referer  = $c->req->referer;
-
-    my $msg =
-        "<p>$job_type</p>"
-      . "<p>You will receive an email when it is completed. "
-      . "You can also check the status of the job in "
-      . "<a href=\"/solpeople/profile/$user_id\">your profile page</a>"
-      . "<p><a href=\"$referer\">[ Go back ]</a></p>";
-
-    $c->controller('solGS::Utils')->generic_message( $c, $msg );
+    $c->stash->{rest}{analysis_exists} = $match;
 
 }
 
 sub display_analysis_status : Path('/solgs/display/analysis/status') Args(0) {
     my ( $self, $c ) = @_;
 
-    my $panel_data = $self->get_user_solgs_analyses($c);
-
-    my $ret->{data} = $panel_data;
-    my $json = JSON->new();
-    $ret = $json->encode($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
+    $c->stash->{rest}{data} = $self->get_user_solgs_analyses($c);
 }
 
 sub check_analyses_names {
@@ -1270,17 +1233,6 @@ sub analysis_log_file {
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
-
-}
-
-sub get_confirm_msg {
-    my ( $self, $c, $job ) = @_;
-
-    $job =~ s/[_|-]/ /g;
-    $job = lc($job);
-
-    my $msg = "Your $job job is submitted.";
-    return $msg;
 
 }
 

@@ -4,11 +4,11 @@ package CXGN::List::Validate::Plugin::GenotypingTrials;
 use Moose;
 use Data::Dumper;
 
-sub name { 
-    return "genotyping_trials";
+sub name {
+    return "genotyping_plates";
 }
 
-sub validate { 
+sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;

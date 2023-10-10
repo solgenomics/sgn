@@ -19,6 +19,8 @@ use Data::Dumper;
 use CXGN::TrialStatus;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::GenotypingProject;
+use CXGN::Stock::TissueSample::Search;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -85,6 +87,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_type_id} = $trial_type_data->[0];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
+    $c->stash->{show_transplanting_date} = $c->config->{show_transplanting_date};
+    $c->stash->{transplanting_date} = $trial->get_transplanting_date();
+    warn "Transplanting Date: ".$c->stash->{transplanting_date};
     $c->stash->{harvest_date} = $trial->get_harvest_date();
 
     $c->stash->{plot_width} = $trial->get_plot_width();
@@ -144,7 +149,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
     if ($design_type eq "genotyping_plate") {
-        $c->stash->{plate_id} = $c->stash->{trial_id};
+        my $plate_id = $c->stash->{trial_id};
+        $c->stash->{plate_id} = $plate_id;
         $c->stash->{raw_data_link} = $trial->get_raw_data_link;
         $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
@@ -153,9 +159,18 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_vendor_submission_id} = $trial->get_genotyping_vendor_submission_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
 
+        my $sample_data_search = CXGN::Stock::TissueSample::Search->new({
+            bcs_schema=>$schema,
+            plate_db_id_list => [$plate_id],
+        });
+
+        my $data = $sample_data_search->get_sample_data();
+        $c->stash->{number_of_samples} = $data->{number_of_samples};
+        $c->stash->{number_of_samples_with_data} = $data->{number_of_samples_with_data};
+
         my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
         my $genotyping_project_plate_relationship = $schema->resultset("Project::ProjectRelationship")->find ({
-            subject_project_id => $c->stash->{trial_id},
+            subject_project_id => $plate_id,
             type_id => $genotyping_project_relationship_cvterm->cvterm_id()
         });
         if ($genotyping_project_plate_relationship) {
@@ -187,6 +202,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
     elsif (($design_type eq "genotype_data_project") || ($design_type eq "pcr_genotype_data_project")){
+        my $project_id = $c->stash->{trial_id};
         if ($design_type eq "pcr_genotype_data_project") {
             $c->stash->{genotype_data_type} = 'SSR'
         } else {
@@ -195,7 +211,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
         my $plate_info = CXGN::Genotype::GenotypingProject->new({
             bcs_schema => $schema,
-            project_id => $c->stash->{trial_id}
+            project_id => $project_id
         });
         my ($data, $tc) = $plate_info->get_plate_info();
         my $has_plate;
@@ -203,6 +219,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $has_plate = 'none';
         }
         $c->stash->{has_plate} = $has_plate;
+        my @genotyping_project_list = ($project_id);
+        my $protocol_info = CXGN::Genotype::Protocol::list($schema, undef, undef, undef, undef, undef, \@genotyping_project_list);
+        if ($protocol_info) {
+            $c->stash->{marker_names} = $protocol_info->[0]->{marker_names} || [];
+        }
 
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }

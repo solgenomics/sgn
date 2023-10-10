@@ -307,17 +307,16 @@ sub geno_corr_input_files {
 sub corr_input_files {
     my ($self, $c) = @_;
 
+     $c->stash->{correlation_script} = "R/solGS/correlation.r";
     if ($c->stash->{correlation_type} =~ /pheno/) 
     {
     $self->pheno_corr_input_files($c);
-    $c->stash->{corre_input_files}  = $c->stash->{pheno_corr_input_files};
-    $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
+    $c->stash->{corre_input_files}  = $c->stash->{pheno_corr_input_files}; 
     } 
     elsif ($c->stash->{correlation_type} =~ /genetic/) 
     {
     $self->geno_corr_input_files($c);
     $c->stash->{corre_input_files}  = $c->stash->{geno_corr_input_files};
-    $c->stash->{correlation_script} = "R/solGS/genetic_correlation.r";
     }
 
 }
