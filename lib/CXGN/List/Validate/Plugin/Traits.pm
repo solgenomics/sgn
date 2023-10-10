@@ -13,6 +13,7 @@ sub validate {
     my $schema = shift;
     my $list = shift;
     my $validator = shift;
+    my $context = SGN::Context->new;
     my @missing;
     my @wrong_ids;
 
@@ -26,7 +27,10 @@ sub validate {
 
         my @parts = split (/\|/ , $term);
         my ($db_name, $accession) = split ":", pop @parts;
-        my $trait_name = $term;
+        my $trait_name = join '|', @parts;
+        if(!$context->get_conf('list_trait_require_id')) {
+            $trait_name = $term;
+        }
 
         $accession =~ s/\s+$//;
         $accession =~ s/^\s+//;
@@ -37,10 +41,7 @@ sub validate {
 
         print STDERR $db_name."\n";
         print STDERR $trait_name."\n";
-        if ($db_name eq '' || $db_name eq $trait_name) {
-          my $context = SGN::Context->new;
-          #my $cv_name = $context->get_conf('trait_ontology_cv_name');
-          #my $cvterm_name = $context->get_conf('trait_ontology_cvterm_name');
+        if (!$context->get_conf('list_trait_require_id') && ($db_name eq '' || $db_name eq $trait_name)) {
           $db_name = $context->get_conf('trait_ontology_db_name');
         }
 
@@ -54,7 +55,7 @@ sub validate {
                 'dbxref.db_id' => $db->db_id(),
             };
 
-            if ($accession eq '') {
+            if (!$context->get_conf('list_trait_require_id') && $accession eq '') {
                 $query->{'me.name'} = $trait_name;
             } else {
                 $query->{'dbxref.accession'} = $accession;
