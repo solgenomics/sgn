@@ -31,8 +31,8 @@ sub search {
     my $observation_level = $params->{observationLevel}->[0] || 'all'; # need to be changed in v2
     my $season_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
     my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
-    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
-    my $trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
+    my $brapi_study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    my $brapi_trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
     my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
@@ -42,11 +42,11 @@ sub search {
     # observationUnitLevelOrder
     # observationUnitLevelCode
     my @trial_ids;
-    if ($study_ids_arrayref){ 
-        push @trial_ids, @$study_ids_arrayref;
+    if ($brapi_study_ids_arrayref){
+        push @trial_ids, @$brapi_study_ids_arrayref;
     }
-    if ($trial_ids_arrayref){ 
-        push @trial_ids, @$trial_ids_arrayref;
+    if ($brapi_trial_ids_arrayref){
+        push @trial_ids, @$brapi_trial_ids_arrayref;
     }
     my $trial_ids = \@trial_ids;
 
@@ -62,8 +62,8 @@ sub search {
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$observation_level,
-            trial_list=>$study_ids_arrayref,
-            folder_list=>$trial_ids_arrayref,
+            trial_list=>$brapi_study_ids_arrayref,
+            folder_list=>$brapi_trial_ids_arrayref,
             include_timestamp=>1,
             year_list=>$season_arrayref,
             location_list=>$location_ids_arrayref,
