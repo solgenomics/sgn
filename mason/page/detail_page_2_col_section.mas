@@ -270,6 +270,9 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'stock_trials_section'){
                                 <& /stock/trials.mas, stock_id => $stock_id &>
 % } #End stock_trials_section
+% if ($info_section_id eq 'stock_upload_files'){
+                                <& /stock/accession_files.mas, stock_id => $stock_id &>
+% } #End stock_upload_files
 % if ($info_section_id eq 'stock_traits_section'){
                                 <& /stock/traits.mas, stock_id => $stock_id &>
 % } #End stock_traits_section
