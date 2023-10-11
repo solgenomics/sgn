@@ -151,14 +151,13 @@ $dataset_contents => ''
             <div class="col-md-3">
                 <div class="input-group">
                     <span class="input-group-addon">
-                        <input type="radio" aria-label="mean" id="mean" value="mean" name="dataset_metric" checked="true">
-                    </span>
-                    <label for="mean" class="form-control" aria-label="mean">Mean</label>                     
-                    <span class="input-group-addon">
-                        <input type="radio" aria-label="median" id="median" value="median" name="dataset_metric">
+                        <input type="radio" aria-label="median" id="median" value="median" name="dataset_metric" checked="true">
                     </span>
                     <label for="median" class="form-control" aria-label="median">Median</label>
-                    
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="mean" id="mean" value="mean" name="dataset_metric" >
+                    </span>
+                    <label for="mean" class="form-control" aria-label="mean">Mean</label>                                                             
                 </div><!-- /input-group -->
             </div><!-- /.col-lg-6 -->
         </div>
@@ -173,12 +172,12 @@ $dataset_contents => ''
             <div class="input-group-btn col-md-11 col-md-offset-1">
                 <span>
                     <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
+                </span>                
+                <span>
+                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
                 </span>
                 <span>
                         <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
-                </span>
-                <span>
-                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
                 </span>
                 <!--
                 <span>

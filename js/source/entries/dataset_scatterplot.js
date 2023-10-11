@@ -154,7 +154,6 @@ export function init(datasetId, datasetName) {
 
             return this.median(medianMap);
         } // OK - tested
-
 		
 		addEventListeners() {
 		    let LocalThis = this;
@@ -282,7 +281,10 @@ export function init(datasetId, datasetName) {
 				console.log(this.metricSelector);
 				console.log(deviation);
 				console.log(metric);
-				
+
+				let filter = LocalThis.stdDevMultiplier ;
+                let rightCutoff = metric + deviation * filter;
+                let leftCutoff = Math.max(metric - deviation * filter, 0);				
 
 			    this.outliers = [];
 
@@ -374,7 +376,6 @@ export function init(datasetId, datasetName) {
 
 
 			    // Add dots
-
 			    var tooltip = d3.select("#trait_graph")
 			        .append("div")
                         .attr("id", "tooltip")
@@ -412,10 +413,6 @@ export function init(datasetId, datasetName) {
 						.style("fill-opacity", (d) => { return (LocalThis.traitVals[d] <= leftCutoff || LocalThis.traitVals[d] >= rightCutoff ? 0.2 : 0.8) })
 						.style("stroke-opacity", (d) => { return (LocalThis.traitVals[d] <= leftCutoff || LocalThis.traitVals[d] >= rightCutoff ? 0.4 : 0.8) })
 		    	}
-
-		    	let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
-                let rightCutoff = metric + deviation * filter;
-                let leftCutoff = metric - deviation * filter;
 
 			    svg.append('g')
 			        .selectAll("dot")
