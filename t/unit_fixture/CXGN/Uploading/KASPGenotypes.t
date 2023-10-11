@@ -134,6 +134,41 @@ my $genotypes_search_1 = CXGN::Genotype::Search->new({
 my ($total_count_1, $data_1) = $genotypes_search_1->get_genotype_info();
 is($total_count_1, 5);
 
+#test KASP data download from project page
+
+my $kasp_project_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_project_id=$genotyping_project_id_1");
+my $kasp_project_message = $kasp_project_response->decoded_content;
+
+my $kasp_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","new_accession_1","T,T","1.36",".58"
+"S01_0001","new_accession_2","T,T","1.25",".49"
+"S01_0001","new_accession_3","T,G","1.57","1.38"
+"S01_0001","new_accession_4","T,G","1.24","1.56"
+"S01_0001","new_accession_5","./.",".65",".58"
+"S01_0002","new_accession_1","A,A","1.43",".59"
+"S01_0002","new_accession_2","A,G","1.25","1.43"
+"S01_0002","new_accession_3","A,G","1.22","1.41"
+"S01_0002","new_accession_4","A,G","1.11","1.27"
+"S01_0002","new_accession_5","A,A","1.65",".62"
+"S02_0001","new_accession_1","T,T","1.75",".75"
+"S02_0001","new_accession_2","T,T","1.21",".61"
+"S02_0001","new_accession_3","T,T","1.17",".46"
+"S02_0001","new_accession_4","T,C","1.59","1.46"
+"S02_0001","new_accession_5","T,C","1.26","1.31"
+"S02_0002","new_accession_1","A,A","1.75",".32"
+"S02_0002","new_accession_2","A,A","1.38",".59"
+"S02_0002","new_accession_3","A,C","1.36","1.47"
+"S02_0002","new_accession_4","A,A","1.75",".74"
+"S02_0002","new_accession_5","A,C","1.32","1.46"
+"S03_0001","new_accession_1","C,C","1.76",".38"
+"S03_0001","new_accession_2","C,C","1.47",".24"
+"S03_0001","new_accession_3","C,T","1.86","1.48"
+"S03_0001","new_accession_4","C,T","1.23","1.49"
+"S03_0001","new_accession_5","C,T","1.11","1.23"
+';
+
+is($kasp_project_message, $kasp_data);
+
 #test upload kasp data using facility names
 #store facility sample Names
 my $plate_file = $f->config->{basepath} . "/t/data/genotype_trial_upload/plate_with_identifier_upload.xls";
