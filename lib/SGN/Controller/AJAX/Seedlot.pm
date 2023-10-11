@@ -892,11 +892,11 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
     my $c = shift;
     my $t = $c->stash->{transaction_object};
     my $factor = $t->factor;
-    my $action;
+    my $transaction_type;
     if ($factor == 1) {
-        $action = 'add';
+        $transaction_type = 'added to this seedlot';
     } elsif ($factor == -1) {
-        $action = 'remove';
+        $transaction_type = 'removed from this seedlot';
     }
 
     $c->stash->{rest} = {
@@ -908,7 +908,7 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
         operator=>$t->operator,
         timestamp=>$t->timestamp,
         factor=>$t->factor,
-        action=>$action
+        transaction_type=>$transaction_type
     };
 }
 
