@@ -115,7 +115,7 @@ sub validate {
 
     my $accession;
     
-    if ($trait_name =~ /(.*)\|.*$/) {
+    if ($trait_name =~ /(.*)\|(.*$)/) {
         $trait_name = $1;
         $accession = $2;
     }
@@ -210,7 +210,7 @@ sub store {
       my $trait_name = $trait_props->{'trait_name'};
       my $accession;
       
-      if ($trait_name =~ /(.*)\|.*$/) {
+      if ($trait_name =~ /(.*)\|(.*$)/) {
 	  $trait_name = $1;
 	  $accession = $2;
       }
