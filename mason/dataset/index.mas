@@ -13,121 +13,14 @@ $dataset_contents => ''
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>
-  // .slider {
-  //   -webkit-appearance: none;
-  //   width: 100%;
-  //   height: 20px;
-  //   background: #d3d3d3;
-  //   outline: none;
-  //   opacity: 0.8;
-  //   border-radius: 5px;
-  //   -webkit-transition: .2s;
-  //   transition: opacity .2s;
-  // }
-
-  // .slider:hover {
-  //   opacity: 1;
-  // }
-
-  // .slider::-webkit-slider-thumb {
-  //   -webkit-appearance: none;
-  //   appearance: none;
-  //   width: 25px;
-  //   height: 25px;
-  //   background: #04AA6D;
-  //   cursor: pointer;
-  // }
-
-  // .slider::-moz-range-thumb {
-  //   width: 25px;
-  //   height: 25px;
-  //   background: darkslategrey;
-  //   cursor: pointer;
-  // }
-
     .top-row {
         # display: flex;
         # justify-content: center;
         margin-top: 20px;    
     }
 
-    input[type="range"] { 
-        margin: auto;
-        -webkit-appearance: none;
-        position: relative;
-        overflow: hidden;
-        height: 40px;
-        width: 200px;
-        cursor: pointer;
-        border-radius: 0; /* iOS */
-    }
-
     ::-webkit-slider-runnable-track {
         background: #f7756c;
-    }
-
-/*
- * 1. Set to 0 width and remove border for a slider without a thumb
- * 2. Shadow is negative the full width of the input and has a spread 
- *    of the width of the input.
- */
-    ::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 20px; /* 1 */
-        height: 40px;
-        background: #fff;
-        box-shadow: -200px 0 0 200px #00ba38; /* 2 */
-        border: 2px solid #999; /* 1 */
-    }
-
-    ::-moz-range-track {
-        height: 40px;
-        background: #f7756c;
-    }
-
-    ::-moz-range-thumb {
-        background: #fff;
-        height: 40px;
-        width: 20px;
-        border: 3px solid #999;
-        border-radius: 0 !important;
-        box-shadow: -200px 0 0 200px #00ba38;
-        box-sizing: border-box;
-    }
-
-    ::-ms-fill-lower { 
-        background: #00ba38;
-    }
-
-    ::-ms-fill-upper { 
-        background: #f7756c;
-    }
-
-    ::-ms-thumb { 
-        background: #fff;
-        border: 2px solid #999;
-        height: 40px;
-        width: 20px;
-        box-sizing: border-box;
-    }
-
-    ::-ms-ticks-after { 
-        display: none; 
-    }
-
-    ::-ms-ticks-before { 
-        display: none; 
-    }
-
-    ::-ms-track { 
-        background: #ddd;
-        color: transparent;
-        height: 40px;
-        border: none;
-    }
-
-    ::-ms-tooltip { 
-        display: none;
     }
 
     #pagefooter {
@@ -136,24 +29,6 @@ $dataset_contents => ''
 
     #trait_selection {
         font-size: 15px;
-    }
-
-    # #trait_selections {
-    #   float: left;
-    #   max-width: 400px;
-    #   height: 100px;
-    #   font-size: 15px;
-    # }
-
-    # #store_outliers {
-    #   float: right;
-    #   padding: 5px;
-    # }
-
-    #dataset_slider {
-        margin: 0 auto;
-        padding: 10px;
-        width: 200px;
     }
 
     #trait_graph {
@@ -181,10 +56,7 @@ $dataset_contents => ''
         margin-left: 4px;
     } 
 
-
-
 </style>
-
 
 <head>
   <meta charset="UTF-8">
@@ -219,20 +91,78 @@ $dataset_contents => ''
 
     <div class="row">
         <div class="top-row col-md-12">
-
             <div id="trait_selections" class="col-md-6">
-            <label for="trait_selection">Select a Trait: </label>
-            <select id="trait_selection" name="trait_selection">
-                <option value="default">Select Trait</option>
-            </select>
-            </div>
-
-            <div id="dataset_slider" class="col-md-3">
-            <input type="range" min="1" max="12" value="6" class="slider form-range" id="outliersRange">
-            </div>
-
+                <label for="trait_selection">Select a Trait: </label>
+                <select id="trait_selection" class="form-control" name="trait_selection">
+                    <option value="default">Select Trait</option>
+                </select>
+            </div>            
 
         </div>
+        <div class="col-md-12 well" style="margin-top: 10px;">
+                        
+            <div class="col-md-9">
+                <div id="outliers_range">
+                    <div id="custom-handle" class="ui-slider-handle"></div>
+                </div>
+            </div>
+            <script>
+                $(function() {
+                    $("#outliers_range").slider({
+                        orientation: "horizontal",
+                        range: "min",
+                        max: 10,
+                        min: 0,                        
+                        value:5,
+                        step: 0.5,
+                    // min: 0,
+                    // max: 500,
+                    // step: 50,
+                    // slide: function( event, ui ) {
+                    //     $( "#amount" ).val( "$" + ui.value );
+                    // }
+                    });
+                    var handle = $( "#custom-handle" );
+                    $("#outliers_range").slider({
+                        create: function() {
+                            handle.text($(this).slider("option", "max"));
+                        },
+                        slide: function( event, ui ) {
+                            handle.text(ui.value);
+                        }
+                    });
+                });
+            </script>
+            <style>                      
+                #outliers_range .ui-slider-range { background: #5cb85c; }
+                #outliers_range .ui-slider-handle { border-color: #d9534f; }                
+                #outliers_range { background: #d9534f; margin-top: 0.7em;}       
+                #custom-handle {
+                    width: 3em;
+                    height: 1.6em;
+                    top: 50%;
+                    margin-top: -.8em;
+                    text-align: center;
+                    line-height: 1.6em;
+                }           
+            </style>
+
+
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="mean" id="mean" value="mean" name="dataset_metric" checked="true">
+                    </span>
+                    <label for="mean" class="form-control" aria-label="mean">Mean</label>                     
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="median" id="median" value="median" name="dataset_metric">
+                    </span>
+                    <label for="median" class="form-control" aria-label="median">Median</label>
+                    
+                </div><!-- /input-group -->
+            </div><!-- /.col-lg-6 -->
+        </div>
+    
     </div>
 
     <div class="row">
