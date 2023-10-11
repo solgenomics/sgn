@@ -1,0 +1,81 @@
+<%args>
+$user_role
+$timestamp => localtime()
+</%args>
+
+<div class="modal fade" id="discard_seedlots_using_list_dialog" name="discard_seedlots_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="discardSeedlotsUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="discardSeedlotsUsingListDialog">Mark Seedlots as DISCARDED Using List</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="discard_seedlots_using_list_form" name="discard_seedlots_using_list_form">
+                        <div class="form-group" id="seedlot_list_section" >
+                                <label class="col-sm-3 control-label">Select a List:</label>
+                                <div class="col-sm-9" id="select_seedlot_list" name="select_seedlot_list"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Breeding Program: </label>
+                                <div class="col-sm-9" >
+                                    <div id="seedlot_breeding_program_div"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="discard_seedlot_description" placeholder="Please provide description">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" id="close_discard_seedlots_dialog" name="close_discard_seedlots_dialog" class="btn btn-default" >Close</button>
+                    <button id="submit_descard_seedlots_using_list" type="button" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="discard_seedlot_saved_dialog_message" name="discard_seedlot_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="discardSeedlotSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="discardSeedlotSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The seedlots were marked as DISCARDED.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_discard_seedlot_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery("#discard_seedlot_link").click( function() {
+        jQuery('#discard_seedlots_using_list_dialog').modal('show');
+    });
+
+    var list = new CXGN.List();
+    jQuery("#catalog_info_section").show();
+    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", 'seedlots', 'Please select a list','', undefined);
+    get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id', 'empty': 1 });
+
+
+});
+
+</script>
