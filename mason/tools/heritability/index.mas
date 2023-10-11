@@ -49,13 +49,6 @@
         </div>
       </center>
     
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="pca_output"></div>
-      </center>
-
 
     <br>
 
@@ -97,6 +90,8 @@
   <br>
   <center>
     <div id="heritability_output"></div>
+    <br>
+    <button class="btn btn-primary" id="download-button">Download CSV</button>
   </center>
   <div id="Overview_output"></div>
   <div id="Coverage_output"></div>
@@ -111,6 +106,7 @@
 
 
 <script>
+
 
 
 jQuery(document).ready(function() {
@@ -200,35 +196,104 @@ jQuery(document).ready(function() {
     };
   });
 
-
   jQuery('#runH2').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+      alert("Please select a dataset.")
       $('#heritability_output').empty();
     } else {
       $('#heritability_output').empty();
+
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
         var trait_id = $('#pheno_select').val();
+
         $.ajax({
           url: '/ajax/heritability/generate_results',
           data: {'dataset_id': dataset_id, 'trait_id': trait_id},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
+
           timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error) {
               alert(response.error);
             }
-            var fig1_response = response.h2Table;
-            var fig2_response = response.figure3;
-      //alert("Response ID: "+temp_response);
-          //alert("Response ID: "+fig1_response);
 
-            $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
-            $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
+            var fig1_response = response.h2Table;
+
+            $(document).ready(function(){
+                $.getJSON(response.h2Table, function(data){
+                    var parsedData = JSON.parse(data);
+                    var traitValue = '';
+                    var varG = '';
+                    var varE = '';
+                    var varRes = '';
+                    var herit = ''; 
+
+                    var table = '<table>';
+                    table += '<thead><tr><th>Trait</th><th>Vg</th><th>Ve</th><th>Vres</th><th>Heritability</th></tr></thead>';
+                    table += '<tbody>';
+
+                    for (var i = 0; i < parsedData.length; i++) {
+                      traitValue = parsedData[i].trait;
+                      varG = parsedData[i].Vg;
+                      varE = parsedData[i].Ve;
+                      varRes = parsedData[i].Vres;
+                      herit = parsedData[i].Hert;
+
+                      // Create a row for each data point
+                      table += '<tr>';
+                      table += '<td>' + traitValue + '</td>';
+                      table += '<td>' + varG + '</td>';
+                      table += '<td>' + varE + '</td>';
+                      table += '<td>' + varRes + '</td>';
+                      table += '<td>' + herit + '</td>';
+                      table += '</tr>';
+                  }
+                    $('#heritability_output').append(table);
+                
+                $('#download-button').click(function() {
+                var csvContent = "data:text/csv;charset=utf-8,";
+
+                // Add table headers to CSV content
+                csvContent += "Trait,Vg,Ve,Vres,Heritability\n";
+
+                // Add table data to CSV content
+                for (var i = 0; i < parsedData.length; i++) {
+                    var row = parsedData[i];
+                    csvContent += row.trait + "," + row.Vg + "," + row.Ve + "," + row.Vres + "," + row.Hert + "\n";
+                }
+
+                // Create a data URI for the CSV content
+                var encodedUri = encodeURI(csvContent);
+
+                // Create a download link
+                var link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "heritability_data.csv");
+                link.innerHTML = "Download CSV";
+
+                // Trigger the click event to download the file
+                link.click();
+                });
+
+
+
+                }).fail(function(){
+                    console.log("An error has occurred.");
+                });
+
+               
+                
+            });
+
+            var fig2_response = response.figure3;
+
+
+            // $('#heritability_output').append('<table id="' + $('#stage') + '" class="table" style="width:100%;text-align:left">');
+            // $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
           },
           error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");
@@ -256,10 +321,6 @@ function get_dataset_id() {
     }
   }
 });
-
-
-
-
 
 
 
@@ -340,6 +401,25 @@ h1 {
 #sgn_blast_graph {
   overflow:hidden;
 }
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
 
 #myCanvas {
 /*  border-style: solid;*/

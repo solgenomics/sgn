@@ -109,79 +109,79 @@ names <- colnames(pheno)
 cbPalette <- c("blue","red","orange","green","yellow")
 
 
-if (length(traits)>9){
-  data <- data.frame(
-    name = c(study_trait),
-    value = pheno[,study_trait]
-  )
-  bplt<- ggplot(data, aes(x=name, y=value)) +
-    geom_boxplot(fill=cbPalette[1], alpha=0.4) +
-    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
-    geom_jitter(color="black", size=0.4, alpha=0.9) +
-    theme_ipsum() +
-    theme(
-      legend.position="none",
-      plot.title = element_text(size=11)
-    ) +
-    ggtitle("") +
-    xlab("")
-  hstg<- ggplot(data, aes(value, fill = cut(value, 100))) +
-    geom_histogram(show.legend = FALSE) +
-    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
-    theme_minimal() +
-    labs(x = names[i], y = "") +
-    ggtitle("")
+# if (length(traits)>9){
+#   data <- data.frame(
+#     name = c(study_trait),
+#     value = pheno[,study_trait]
+#   )
+#   bplt<- ggplot(data, aes(x=name, y=value)) +
+#     geom_boxplot(fill=cbPalette[1], alpha=0.4) +
+#     scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+#     geom_jitter(color="black", size=0.4, alpha=0.9) +
+#     theme_ipsum() +
+#     theme(
+#       legend.position="none",
+#       plot.title = element_text(size=11)
+#     ) +
+#     ggtitle("") +
+#     xlab("")
+#   hstg<- ggplot(data, aes(value, fill = cut(value, 100))) +
+#     geom_histogram(show.legend = FALSE) +
+#     scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+#     theme_minimal() +
+#     labs(x = names[i], y = "") +
+#     ggtitle("")
   
-  myPlots<- list(bplt,hstg)
-  ml1<-marrangeGrob(grobs= myPlots, nrow = 1, ncol=2, pdf(file=NULL))
-  ggsave(figure3_file_name, ml1, width=8, height = 3, dpi=80,limitsize=FALSE, units = "in", pdf(NULL))
+#   myPlots<- list(bplt,hstg)
+#   ml1<-marrangeGrob(grobs= myPlots, nrow = 1, ncol=2, pdf(file=NULL))
+#   ggsave(figure3_file_name, ml1, width=8, height = 3, dpi=80,limitsize=FALSE, units = "in", pdf(NULL))
   
-}else{
-  z=1
-  s=1
-  pl = list()
-  hl = list()
-  for (i in 40:ncol(pheno)){
-    data1 = c()
-    data1 <- pheno[,i]
-    data <- data.frame(
-      name=c( names[i]),
-      value=c( data1 )
-    )
-    print(cbPalette[z])
+# }else{
+#   z=1
+#   s=1
+#   pl = list()
+#   hl = list()
+#   for (i in 40:ncol(pheno)){
+#     data1 = c()
+#     data1 <- pheno[,i]
+#     data <- data.frame(
+#       name=c( names[i]),
+#       value=c( data1 )
+#     )
+#     print(cbPalette[z])
     
-    pl[[s]]<- ggplot(data, aes(x=name, y=value)) +
-      geom_boxplot(fill=cbPalette[z], alpha=0.4) +
-      scale_fill_viridis(discrete = TRUE, alpha=0.6) +
-      geom_jitter(color="black", size=0.4, alpha=0.9) +
-      theme_ipsum() +
-      theme(
-        legend.position="none",
-        plot.title = element_text(size=11)
-      ) +
-      ggtitle("") +
-      xlab("")
-    hl[[s]]<- ggplot(data, aes(value, fill = cut(value, 100))) +
-      geom_histogram(show.legend = FALSE) +
-      scale_fill_viridis(discrete = TRUE, alpha=0.6) +
-      theme_minimal() +
-      labs(x = names[i], y = "") +
-      ggtitle("")
+#     pl[[s]]<- ggplot(data, aes(x=name, y=value)) +
+#       geom_boxplot(fill=cbPalette[z], alpha=0.4) +
+#       scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+#       geom_jitter(color="black", size=0.4, alpha=0.9) +
+#       theme_ipsum() +
+#       theme(
+#         legend.position="none",
+#         plot.title = element_text(size=11)
+#       ) +
+#       ggtitle("") +
+#       xlab("")
+#     hl[[s]]<- ggplot(data, aes(value, fill = cut(value, 100))) +
+#       geom_histogram(show.legend = FALSE) +
+#       scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+#       theme_minimal() +
+#       labs(x = names[i], y = "") +
+#       ggtitle("")
     
-    z=z+1
-    if (z>5) {
-      z=1
-    }
-    s=s+1
-  }
-  int <- length(traits)
-  cat("The int is: ", int,"\n")
-  ml<-marrangeGrob(grobs=c(pl,hl), nrow = int, ncol=2, pdf(file=NULL))
-  if (int<8){
-    int=8
-  }
-  ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80,limitsize=FALSE, units = "in", pdf(NULL))
-}
+#     z=z+1
+#     if (z>5) {
+#       z=1
+#     }
+#     s=s+1
+#   }
+#   int <- length(traits)
+#   cat("The int is: ", int,"\n")
+#   ml<-marrangeGrob(grobs=c(pl,hl), nrow = int, ncol=2, pdf(file=NULL))
+#   if (int<8){
+#     int=8
+#   }
+#   ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80,limitsize=FALSE, units = "in", pdf(NULL))
+# }
 
 #Calculating components of variance and heritability
 her = rep(NA,(ncol(pheno)-39))
@@ -240,79 +240,77 @@ tryCatch({ for (i in 40:(ncol(pheno))) {
   if (szreps > 1){
     if (szloc == 1){
       if (szyr == 1){
-        model <- lmer(get(outcome)~(1|germplasmName)+(1|replicate)+ (1|blockNumber),
+        model <- lmer(get(outcome)~(1|germplasmName)+replicate,
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
         gvar = variance [1,"vcov"]
-        envar = variance [2,"vcov"]
-        resvar = variance [4, "vcov"]
+        envar = 0
+        resvar = variance [2, "vcov"]
       }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|studyYear) + (1|germplasmName:studyYear) + (1|blockNumber),
+        model <- lmer(get(outcome) ~ (1|germplasmName) + replicate + studyYear,
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
-        gvar = variance [2,"vcov"]
-        envar = variance [3, "vcov"]
-        resvar = variance [6, "vcov"]
+        gvar = variance [1,"vcov"]
+        envar = 0
+        resvar = variance [2, "vcov"]
       }
     }else if (szloc > 1) {
       if (szyr == 1){
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId) + blockNumber,
+        model <- lmer(get(outcome) ~ (1|germplasmName) + replicate + (1|locationDbId),
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
-        gvar = variance [2,"vcov"]
-        envar = variance [3, "vcov"]
-        resvar = variance [5, "vcov"]
+        gvar = variance [1,"vcov"]
+        envar = variance [2, "vcov"]
+        resvar = variance [3, "vcov"]
       }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId)+
-                        (1|studyYear) + (1|germplasmName:studyYear) + blockNumber,
+        model <- lmer(get(outcome) ~ (1|germplasmName) + replicate + (1|locationDbId) + studyYear,
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
-        gvar = variance [3,"vcov"]
-        envar = variance [4, "vcov"]
-        resvar = variance [7, "vcov"]
+        gvar = variance [1,"vcov"]
+        envar = variance [2, "vcov"]
+        resvar = variance [3, "vcov"]
       }
     }
   }else if (szreps == 1){
     if (szloc ==1){
       if (szyr == 1){
-        model <- lmer(get(outcome)~(1|germplasmName)+(1|blockNumber),
+        model <- lmer(get(outcome)~(1|germplasmName) + blockNumber,
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
         gvar = variance [1,"vcov"]
-        envar = variance [2,"vcov"]
-        resvar = variance [3, "vcov"]
+        envar = 0
+        resvar = variance [2, "vcov"]
       }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|germplasmName:studyYear) + (1|blockNumber),
+        model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + blockNumber,
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
-        gvar = variance [2,"vcov"]
-        envar = variance [3, "vcov"]
-        resvar = variance [5, "vcov"]
+        gvar = variance [1,"vcov"]
+        envar = 0
+        resvar = variance [2, "vcov"]
       }
     }else if (szloc > 1){
       if (szyr ==1){
-        model <- lmer(get(outcome)~(1|germplasmName)+(1|locationDbId) + (1|germplasmName:locationDbId) + blockNumber,
+        model <- lmer(get(outcome)~(1|germplasmName)+ (1|locationDbId) +  blockNumber,
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
-        gvar = variance [2,"vcov"]
-        envar = variance [3, "vcov"]
-        resvar = variance [4, "vcov"]
+        gvar = variance [1,"vcov"]
+        envar = variance [2, "vcov"]
+        resvar = variance [3, "vcov"]
       }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) +
-                        (1|germplasmName:locationDbId)+(1|germplasmName:studyYear)+ blockNumber,
+        model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + (1|locationDbId) + blockNumber,
                       na.action = na.exclude,
                       data=pheno)
         variance = as.data.frame(VarCorr(model))
-        gvar = variance [3,"vcov"]
-        envar = variance [4, "vcov"]
-        resvar = variance [6, "vcov"]
+        gvar = variance [1,"vcov"]
+        envar = variance [2, "vcov"]
+        resvar = variance [3, "vcov"]
       }
     }
   }
@@ -322,7 +320,7 @@ tryCatch({ for (i in 40:(ncol(pheno))) {
   H2nw = format(round(H2, 4), nsmall = 4)
   her[numb] = round(as.numeric(H2nw), digits =3)
   Vg[numb] = round(as.numeric(gvar), digits = 3)
-  Ve[numb] = round(as.numeric(envar), digits = 3)
+  Ve[numb] = round(as.numeric(envar), digits = 2)
   Vres[numb] = round(as.numeric(resvar), digits = 3)
   resp_var[numb] = colnames(pheno)[i]
   
@@ -352,7 +350,7 @@ if (numb == 1){
     H2nw = format(round(H2, 4), nsmall = 4)
     her[numb] = round(as.numeric(H2nw), digits =3)
     Vg[numb] = round(as.numeric(gvar), digits = 3)
-    Ve[numb] = round(as.numeric(envar), digits = 3)
+    Ve[numb] = round(as.numeric(envar), digits = 2)
     Vres[numb] = round(as.numeric(resvar), digits = 3)
     resp_var[numb] = colnames(pheno)[i]
     
@@ -379,15 +377,19 @@ tryCatch({
     )
   Heritability = na.omit(Heritability)
 
-  print(Heritability)
+  # pdf(NULL)
+  # library(gridExtra)
+  # png(h2File, height=(25*numb), width=800)
+  # par(mar=c(4,4,2,2))
+  # p<-tableGrob(Heritability)
+  # grid.arrange(p)
+  # dev.off()
+h2_json <- jsonlite::toJSON(Heritability)
+jsonlite::write_json(h2_json, h2File)
+write.table(Heritability, paste0(h2File,".table"), row.names=FALSE, col.names=FALSE)
+# print(h2File)
 
-  pdf(NULL)
-  library(gridExtra)
-  png(h2File, height=(25*numb), width=800)
-  par(mar=c(4,4,2,2))
-  p<-tableGrob(Heritability)
-  grid.arrange(p)
-  dev.off()
+
 }, error = function(e) {
   an.error.occured <<- TRUE
   errorMessages <<- c(errorMessages, as.character(e))

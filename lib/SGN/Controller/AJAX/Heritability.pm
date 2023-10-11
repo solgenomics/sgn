@@ -139,7 +139,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
     
-    my $h2File = $tempfile . "_" . "h2File.png";
+    my $h2File = $tempfile . "_" . "h2File.json";
     my $figure3file = $tempfile . "_" . "figure3.png";
     my $figure4file = $tempfile . "_" . "figure4.png";
     my $errorFile = $tempfile . "_" . "error.txt";
