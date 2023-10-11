@@ -51,6 +51,10 @@ $mech->get_ok('http://localhost:3010/tools/gcpc', 'load gcpc input page');
 
 $mech->get_ok('http://localhost:3010/ajax/gcpc/factors?dataset_id='.$dataset_id, 'get factors for dataset');
 
+
+# TODO : remove
+sleep(120);
+
 my $sp_data = JSON::Any->decode($mech->content());
 
 my $trait_id = $sp_data->{options}->[0]->[0];
