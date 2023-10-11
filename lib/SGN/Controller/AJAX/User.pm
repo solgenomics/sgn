@@ -60,7 +60,8 @@ sub logout :Path('/ajax/user/logout') Args(0) {
 sub new_account :Path('/ajax/user/new') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     print STDERR "Adding new account...\n";
     if ($c->config->{is_mirror}) {
