@@ -153,6 +153,7 @@ sub get_training_pop_gebv_file {
 
     my $pop_id   = $c->stash->{training_pop_id};
     my $trait_id = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
     my $trait_abbr = $c->stash->{trait_abbr};
@@ -174,7 +175,7 @@ sub get_selection_pop_gebv_file {
     my $selection_pop_id = $c->stash->{selection_pop_id};
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $trait_id         = $c->stash->{trait_id};
-
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $gebv_file;
 
     if ( $selection_pop_id && $trait_id && $training_pop_id ) {
@@ -182,7 +183,7 @@ sub get_selection_pop_gebv_file {
         # my $identifier = "${training_pop_id}_${selection_pop_id}";
         $c->controller('solGS::Files')
           ->rrblup_selection_gebvs_file( $c, $training_pop_id,
-            $selection_pop_id, $trait_id );
+            $selection_pop_id, $trait_id, $protocol_id);
         $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
     }
 
@@ -199,8 +200,7 @@ sub boxplot_id {
     my $protocol_id      = $c->stash->{genotyping_protocol_id};
 
     my $multi_traits = $c->stash->{training_traits_ids};
-    if ( scalar(@$multi_traits) > 1 ) {
-
+    if ($multi_traits && scalar(@$multi_traits) > 1 ) {
         $trait_id = crc( join( '', @$multi_traits ) );
     }
 
@@ -262,7 +262,9 @@ sub boxplot_input_files {
     my ( $self, $c ) = @_;
 
     my @files_list;
-
+   if (!$c->stash->{training_traits_ids}) {
+    $c->stash->{training_traits_ids} = [$c->stash->{trait_id}];
+   }
     foreach my $trait_id ( uniq( @{ $c->stash->{training_traits_ids} } ) ) {
         $c->stash->{trait_id} = $trait_id;
         $self->get_training_pop_gebv_file($c);
