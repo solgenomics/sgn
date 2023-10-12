@@ -165,9 +165,6 @@ jQuery(document).ready(function() {
     });
   });
 
-
-  // jakby to zrobic ???
-
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
@@ -200,9 +197,7 @@ jQuery(document).ready(function() {
               }
              }
             };
-            //alert("embedding"+ JSON.stringify(v));
             vegaEmbed("#trait_histogram_plot", v);
-            //alert("done");
           },
         error: function(e) { alert('error!'); }
       });
@@ -275,7 +270,7 @@ jQuery(document).ready(function() {
             }
             var fig1_response = response.h2Table;
             var fig2_response = response.figure3;
-      //alert("Response ID: "+temp_response);
+          //alert("Response ID: "+temp_response);
           //alert("Response ID: "+fig1_response);
 
             $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
@@ -308,15 +303,7 @@ function get_dataset_id() {
   }
 });
 
-
-
-
-
-
-
-
 </script>
-
 
 <!-- STYLE -->
 <style>
@@ -373,7 +360,6 @@ h1 {
 #sequence {
   min-height: 80px;
   max-height: 300px;
-/*  min-width: 700px;*/
   max-width: 98%;
 }
 
@@ -393,10 +379,6 @@ h1 {
 }
 
 #myCanvas {
-/*  border-style: solid;*/
-/*  border-width: 1px;*/
-/*  border-color: #ddd;*/
-/*  border-width:0px 1px 1px 1px;*/
   height:450px;
   width:1020px;
   overflow:scroll;

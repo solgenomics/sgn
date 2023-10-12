@@ -113,10 +113,6 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
     my $exclude_outliers = $c->req->param('dataset_trait_outliers');
-    print STDERR "****************************************************************************\n";
-    print STDERR "The dataset is $dataset_id\n";
-    print STDERR $dataset_id;
-    print STDERR $trait_id;
     $c->tempfiles_subdir("heritability_files");
     my $heritability_tmp_output = $c->config->{cluster_shared_tempdir}."/heritability_files";
     mkdir $heritability_tmp_output if ! -d $heritability_tmp_output;
@@ -150,11 +146,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
 
 
     $trait_id =~ tr/ /./;
-
-    print STDERR "trait_id first reg ex: ", $trait_id;
     $trait_id =~ tr/\//./;
-
-    print STDERR "trait_id second reg ex: ", $trait_id;
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
@@ -184,10 +176,6 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
-    # my $newpath = $c -> {basepath} . "/home/production/cxgn/sgn/documents/tempfiles/heritability_files";
-    # copy($h2File,$newpath) or die "Copy failed: $!";
-    # copy($figure3file,$newpath) or die "Copy failed: $!";
-    # copy($figure4file,$newpath) or die "Copy failed: $!";
    
     my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
     copy($h2File, $figure_path);
@@ -213,9 +201,6 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         open my $fh, '<', $errorFile or die "Can't open error file $!";
         $errors = do { local $/; <$fh> };
     }
-
-
-    #print STDERR $h2File_response;
         
     $c->stash->{rest} = {
         h2Table => $h2File_response,
@@ -223,8 +208,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         figure4 => $figure4_response,
         dummy_response => $dataset_id,
         error => $errors,
-        h2CsvTable => $h2CsvFile_response
-        # dummy_response2 => $trait_id,
+        h2CsvTable => $h2CsvFile_response     
     };
 }
 

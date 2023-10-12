@@ -517,7 +517,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
     }
 
-    # print STDERR "***************************************Dataset id data $dataset_id ******************* \n";
     my $outliers;
     if (defined $dataset_id) {
         my $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -526,13 +525,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $outliers = $dataset->outliers();
     }
 
-    # print STDERR "***************************************Trait list id $trait_list_id ******************************* \n";
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
     my @trait_list = map { $_->[1] } @$trait_data;
-
-    # print STDERR "***************************************Trait list data @trait_list ******************* \n";
 
     my $tf = CXGN::List::Transform->new();
 
@@ -555,13 +551,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     my $trait_t = $t->can_transform("traits", "trait_ids");
     my $trait_id_data = $t->transform($schema, $trait_t, \@trait_list);
-
-    # print STDERR "***************************************Trait id data $trait_id_data ******************* \n";
-    # print STDERR "***************************************Trait id data @$data_transform ******************* \n";
-    # print STDERR "***************************************Trait array from JS @trait_ids ******************* \n";
-    # print STDERR "***************************************Outliers array from database @$outliers ******************* \n";
-    # print STDERR "***************************************Trait array from JS" . split(',', $trait_ids) . "******************* \n";
-    # print STDERR "***************************************Trait array from JS with \@ @$trait_ids ******************* \n";
 
     my $output = "";
 

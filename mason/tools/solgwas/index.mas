@@ -112,10 +112,6 @@
 
 </&>
 
-
-
-
-
 <script>
 
 jQuery(document).ready(function() {
@@ -341,8 +337,8 @@ jQuery(document).ready(function() {
             else {
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
-  	    //alert("Response ID: "+temp_response);
-      	    //alert("Response ID: "+fig3_response);
+  	          //alert("Response ID: "+temp_response);
+      	      //alert("Response ID: "+fig3_response);
 
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
@@ -435,7 +431,6 @@ h1 {
 #sequence {
   min-height: 80px;
   max-height: 300px;
-/*  min-width: 700px;*/
   max-width: 98%;
 }
 
@@ -455,10 +450,6 @@ h1 {
 }
 
 #myCanvas {
-/*  border-style: solid;*/
-/*  border-width: 1px;*/
-/*  border-color: #ddd;*/
-/*  border-width:0px 1px 1px 1px;*/
   height:450px;
   width:1020px;
   overflow:scroll;

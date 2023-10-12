@@ -201,9 +201,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $figure2basename = basename($figure2file);
     my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
 
-    # #TODO: remove sleep
-    # sleep(60);
-
     $c->stash->{rest} = {
         AMMITable => $AMMIFile_response,
         figure1 => $figure1_response,

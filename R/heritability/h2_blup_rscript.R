@@ -380,8 +380,6 @@ tryCatch({
     )
   Heritability = na.omit(Heritability)
 
-  #TODO : add here write to csv file for test case heriability table ?? / would be fine ?
-
   write.csv(Heritability, file = h2CsvFile)
   print(Heritability)
 

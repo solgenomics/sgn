@@ -435,10 +435,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         print $filehandle_out $line;
     }
     close $filehandle;
-    close $filehandle_out;
-
-
-    print STDERR "file path geno_filepath2: " . $geno_filepath2 . "\n";
+    close $filehandle_out;    
 
 #
 # # Hardcoded number of markers to be selected - make this selectable by user?
