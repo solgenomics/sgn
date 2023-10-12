@@ -79,8 +79,8 @@ ok($rdata_full_set->{h2Table}, "h2Table returned");
 ok($rdata_full_set->{h2CsvTable}, "h2CsvTable returned");
 
 my $test_included_h2_file = csv(in => "static/".$rdata_full_set->{h2CsvTable});
-is(@$test_included_h2_file[1]->[1], 'dry.matter.content.percentage', "check value of row name in a table");
-is(@$test_included_h2_file[1]->[5], '0.163', "check value of Heritability fresh.root.weight in a table");
+is(@$test_included_h2_file[2]->[1], 'fresh.root.weight', "check value of row name in a table");
+is(@$test_included_h2_file[2]->[5], '0.356', "check value of Heritability fresh.root.weight in a table");
 
 # run test for dataset with outliers but with false outliers parameter
 my $outliers_excluded_dataset_id = 1;
@@ -103,8 +103,8 @@ ok( -e "static/".$rdata_excluded_set->{h2CsvTable}, "csv table file created");
 
 # check if values are changed for set with outliers excluded
 my $test_excluded_h2_file = csv(in => "static/".$rdata_excluded_set->{h2CsvTable});
-is(@$test_excluded_h2_file[1]->[1], 'dry.matter.content.percentage', "check value of row name in a table");
-is(@$test_excluded_h2_file[1]->[5], '0.085', "check value of Heritability fresh.root.weight in a table");
+is(@$test_excluded_h2_file[2]->[1], 'fresh.root.weight', "check value of row name in a table");
+is(@$test_excluded_h2_file[2]->[5], '0.317', "check value of Heritability fresh.root.weight in a table");
 
 
 # check content of csv file
