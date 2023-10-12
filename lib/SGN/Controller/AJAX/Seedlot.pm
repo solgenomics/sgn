@@ -1584,6 +1584,20 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
+
+sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $seedlot_list_id = $c->req->param("seedlot_list_id");
+    my $program_id = $c->req->param("program_id");
+    my $discard_reason = $c->req->param("discard_reason");
+
+
+}
+
+
+
 1;
 
 no Moose;

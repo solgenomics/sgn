@@ -3,39 +3,40 @@ $user_role
 $timestamp => localtime()
 </%args>
 
-<div class="modal fade" id="discard_seedlots_using_list_dialog" name="discard_seedlots_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="discardSeedlotsUsingListDialog">
+<div class="modal fade" id="discard_seedlots_using_list_dialog" name="discard_seedlots_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="discardSeedlotsDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="discardSeedlotsUsingListDialog">Mark Seedlots as DISCARDED Using List</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="discardSeedlotsDialog">Mark Seedlots as Discarded </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <form class="form-horizontal" role="form" method="post" id="discard_seedlots_using_list_form" name="discard_seedlots_using_list_form">
+                    <form class="form-horizontal" role="form" method="post" id="discard_seedlots_form" name="discard_seedlots_form">
                         <div class="form-group" id="seedlot_list_section" >
-                                <label class="col-sm-3 control-label">Select a List:</label>
-                                <div class="col-sm-9" id="select_seedlot_list" name="select_seedlot_list"></div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Breeding Program: </label>
-                                <div class="col-sm-9" >
-                                    <div id="seedlot_breeding_program_div"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Description: </label>
-                                <div class="col-sm-9" >
-                                    <input class="form-control" id="discard_seedlot_description" placeholder="Please provide description">
-                                </div>
+                            <label class="col-sm-4 control-label">List of Seedlots:</label>
+                            <div class="col-sm-8" id="select_seedlot_list" name="select_seedlot_list"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Breeding Program: </label>
+                            <div class="col-sm-8" >
+                                <div id="discard_seedlot_breeding_program_div"></div>
                             </div>
                         </div>
-                    </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Reason for Discarding: </label>
+                            <div class="col-sm-8" >
+                                <textarea class="form-control" id="reason_for_discarding" name="reason_for_discarding" placeholder="Required"></textarea>
+
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="reset" id="close_discard_seedlots_dialog" name="close_discard_seedlots_dialog" class="btn btn-default" >Close</button>
-                    <button id="submit_descard_seedlots_using_list" type="button" class="btn btn-primary">Submit</button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="discard_seedlots_submit" id="discard_seedlots_submit">Submit</button>
+            </div>
         </div>
     </div>
 </div>
@@ -71,9 +72,57 @@ jQuery(document).ready(function(){
     });
 
     var list = new CXGN.List();
-    jQuery("#catalog_info_section").show();
-    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", 'seedlots', 'Please select a list','', undefined);
-    get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id', 'empty': 1 });
+    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'Please select a list of seedlots to discard','', undefined);
+    get_select_box('breeding_programs', 'discard_seedlot_breeding_program_div', { 'name' : 'discard_seedlot_breeding_program_id', 'id' : 'discard_seedlot_breeding_program_id', 'empty': 1 });
+
+    jQuery('#discard_seedlots_submit').click(function(){
+
+        var seedlot_list_id = jQuery('#select_seedlot_list_list_select').val();
+        var program_id = jQuery('#discard_seedlot_breeding_program_id').val();
+        var discard_reason = jQuery('#reason_for_discarding').val();
+
+        if (seedlot_list_id === '') {
+            alert("Please select a list");
+            return;
+        }
+
+        if (program_id === '') {
+            alert("Please select a breeding program");
+            return;
+        }
+
+        if (discard_reason === '') {
+            alert("Please provide reason for discarding these seedlots");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot/discard',
+            dataType: "json",
+            data : {
+                'seedlot_list_id' : seedlot_list_id,
+                'program_id': program_id,
+                'discard_reason': discard_reason,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#discard_seedlots_using_list_dialog').modal('hide');
+                    jQuery('#discard_seedlot_saved_dialog_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred discarding seedlots');
+            }
+        });
+    });
 
 
 });
