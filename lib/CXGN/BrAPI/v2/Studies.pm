@@ -340,12 +340,13 @@ sub store {
 				return { error => $references->{'error'} };
 			}
 		}
-
-
 	}
 
 	my $data_out;
 	my $total_count=0;
+	# This is servicing a POST request, make sure pagination returns all created objects.
+	$page_size = scalar(@study_dbids);
+	$page = 0;
 	if (scalar(@study_dbids)>0){
 		my $dbh = $c->dbc->dbh();
 		my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
