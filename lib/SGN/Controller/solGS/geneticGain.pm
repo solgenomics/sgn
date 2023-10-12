@@ -29,7 +29,13 @@ use List::MoreUtils qw /uniq/;
 use String::CRC;
 use URI::FromHash 'uri';
 
-BEGIN { extends 'Catalyst::Controller' }
+BEGIN { extends 'Catalyst::Controller::REST' }
+
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON' },
+);
 
 sub get_training_pop_gebvs : Path('/solgs/get/gebvs/training/population/')
   Args(0) {
@@ -43,7 +49,7 @@ sub get_training_pop_gebvs : Path('/solgs/get/gebvs/training/population/')
     $c->controller('solGS::genotypingProtocol')
       ->stash_protocol_id( $c, $protocol_id );
 
-    my $ret->{gebv_exists} = undef;
+    $c->stash->{rest}{gebv_exists} = undef;
 
     $self->get_training_pop_gebv_file($c);
     my $gebv_file = $c->stash->{training_gebv_file};
@@ -53,14 +59,9 @@ sub get_training_pop_gebvs : Path('/solgs/get/gebvs/training/population/')
         $self->get_gebv_arrayref($c);
         my $gebv_arrayref = $c->stash->{gebv_arrayref};
 
-        $ret->{gebv_exists}   = 1;
-        $ret->{gebv_arrayref} = $gebv_arrayref;
+        $c->stash->{rest}{gebv_exists}   = 1;
+        $c->stash->{rest}{gebv_arrayref} = $gebv_arrayref;
     }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 
@@ -77,7 +78,7 @@ sub get_selection_pop_gebvs : Path('/solgs/get/gebvs/selection/population/')
     $c->controller('solGS::genotypingProtocol')
       ->stash_protocol_id( $c, $protocol_id );
 
-    my $ret->{gebv_exists} = undef;
+    $c->stash->{rest}{gebv_exists} = undef;
 
     $self->get_selection_pop_gebv_file($c);
     my $gebv_file = $c->stash->{selection_gebv_file};
@@ -87,14 +88,9 @@ sub get_selection_pop_gebvs : Path('/solgs/get/gebvs/selection/population/')
         $self->get_gebv_arrayref($c);
         my $gebv_arrayref = $c->stash->{gebv_arrayref};
 
-        $ret->{gebv_exists}   = 1;
-        $ret->{gebv_arrayref} = $gebv_arrayref;
+        $c->stash->{rest}{gebv_exists}   = 1;
+        $c->stash->{rest}{gebv_arrayref} = $gebv_arrayref;
     }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 
@@ -104,7 +100,7 @@ sub genetic_gain_boxplot : Path('/solgs/genetic/gain/boxplot/') Args(0) {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    my $ret->{boxplot} = undef;
+    $c->stash->{rest}{boxplot} = undef;
 
     my $result = $self->check_genetic_gain_output($c);
 
@@ -116,18 +112,14 @@ sub genetic_gain_boxplot : Path('/solgs/genetic/gain/boxplot/') Args(0) {
     if ($result) {
         $self->boxplot_download_files($c);
 
-        $ret->{boxplot}      = $c->stash->{download_boxplot};
-        $ret->{boxplot_data} = $c->stash->{download_data};
-        $ret->{Error}        = undef;
+        $c->stash->{rest}{boxplot}      = $c->stash->{download_boxplot};
+        $c->stash->{rest}{boxplot_data} = $c->stash->{download_data};
+        $c->stash->{rest}{Error}        = undef;
     }
     else {
-        $ret->{Error} = 'Error occured plotting the boxplot(s).';
+        $c->stash->{rest}{Error} = 'Error occured plotting the boxplot(s).';
     }
-
-    $ret = to_json($ret);
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
+    
 }
 
 sub check_genetic_gain_output {
