@@ -31,15 +31,14 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
     
     $c->tempfiles_subdir("stability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
@@ -131,9 +130,9 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     
-
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     #my $temppath = $stability_tmp_output . "/" . $tempfile;
     my $temppath =  $tempfile;
