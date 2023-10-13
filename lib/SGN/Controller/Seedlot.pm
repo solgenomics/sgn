@@ -83,6 +83,16 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         my $p = $people_schema->resultset("SpPerson")->find({sp_person_id=>$_});
         $owners_string .= ' <a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
     }
+
+    my $current_count = $sl->get_current_count_property();
+    if ($current_count eq 'DISCARDED') {
+        $current_count = '<span style="color:red">'.$current_count.'</span>';
+    }
+    my $current_weight = $sl->get_current_weight_property();
+    if ($current_weight eq 'DISCARDED') {
+        $current_weight = '<span style="color:red">'.$current_weight.'</span>';
+    }
+
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{organization_name} = $sl->organization_name();
@@ -91,8 +101,8 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{content_html} = $accessions_html ? $accessions_html : $crosses_html;
     $c->stash->{content_accession_name} = $content_accession_names[0];
     $c->stash->{content_cross_name} = $content_cross_names[0];
-    $c->stash->{current_count} = $sl->get_current_count_property();
-    $c->stash->{current_weight} = $sl->get_current_weight_property();
+    $c->stash->{current_count} = $current_count;
+    $c->stash->{current_weight} = $current_weight;
     $c->stash->{quality} = $sl->quality();
     $c->stash->{description} = $sl->description();
     $c->stash->{owners_string} = $owners_string;

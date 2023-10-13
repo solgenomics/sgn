@@ -1614,7 +1614,6 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$seedlot_list_id });
     my $seedlots = $list->elements();
     my @seedlots_to_discard = @$seedlots;
-    print STDERR "SEEDLOTS TO DISCARD =".Dumper(\@seedlots_to_discard)."\n";
 
     my $seedlot_validator = CXGN::List::Validate->new();
     my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots_to_discard)->{'missing'}};
@@ -1625,15 +1624,22 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     }
 
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type')->cvterm_id();
+    my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", 'stock_property')->cvterm_id();
+    my $current_weight_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", 'stock_property')->cvterm_id();
 
     foreach my $seedlot_name (@seedlots_to_discard) {
         my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot_name, type_id => $seedlot_type_id });
         my $seedlot_id = $seedlot_rs->stock_id();
-        print STDERR "STOCK ID =".Dumper($seedlot_id);
 
-        my $seedlot_obj = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
-        $seedlot_obj->set_current_count_property('DISCARDED');
-        $seedlot_obj->set_current_weight_property('DISCARDED');
+        my $current_count_rs = $seedlot_rs->stockprops({type_id=>$current_count_type_id});
+        if ($current_count_rs->count == 1){
+            $current_count_rs->first->update({value=>'DISCARDED'});
+        }
+
+        my $current_weight_rs = $seedlot_rs->stockprops({type_id=>$current_weight_type_id});
+        if ($current_weight_rs->count == 1){
+            $current_weight_rs->first->update({value=>"DISCARDED"});
+        }
 
         my $seedlot_to_discard = CXGN::Stock::Seedlot::Discard->new({
             bcs_schema => $schema,
