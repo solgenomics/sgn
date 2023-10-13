@@ -15,7 +15,7 @@ solGS.geneticGain = {
   ggPlotDivPrefix: "#gg_plot",
   ggMsgDiv: "#gg_message",
   ggPopsDiv: "#gg_pops_select_div",
-  ggPopsSelectMenuId: "#gg_select_pops",
+  ggPopsSelectMenuId: "#gg_pops_select",
 
   gebvsComparison: function () {
     var gebvParams = this.getGeneticGainArgs();
