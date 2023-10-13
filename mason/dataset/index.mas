@@ -190,7 +190,7 @@ $dataset_contents => ''
                 </span>
                 -->
                 <span>
-                    <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without Outliers  </button>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
                 </span>
             </div>
         </div>
