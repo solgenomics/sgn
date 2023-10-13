@@ -83,6 +83,7 @@ local	organism_sequencing_metadata
 local	sp_person_id				00052
 local	time
 local	visible_to_role				00052
+local	list_additional_info				00179
 nd_experiment_property	cross_name				00052
 nd_experiment_property	cross_type				00052
 nd_experiment_property	genotyping_project_name				00052

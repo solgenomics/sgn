@@ -5,6 +5,8 @@ use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::TimeUtils;
+use SGN::Model::Cvterm;
+use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -67,6 +69,7 @@ sub search {
 		id => \@list_ids
 	});
 	my $reference_result = $references->search();
+	my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
 
 	foreach (@$lists){
 		my $name = $_->[1];
@@ -103,10 +106,11 @@ sub search {
 		if(!$match_found) {
 			next;
 		}
+		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $id, $additional_info_cvterm_id);
 
 		if ($counter >= $start_index && $counter <= $end_index) {
 			push @data , {
-				additionalInfo      => {},
+				additionalInfo      => $additional_info_json,
 				dateCreated         => CXGN::TimeUtils::db_time_to_iso_utc($create_date),
 				dateModified        => CXGN::TimeUtils::db_time_to_iso_utc($modified_date),
 				listDbId            => qq|$id|,
@@ -128,6 +132,37 @@ sub search {
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Lists result constructed');
+}
+sub _fetch_additional_info_cvterm_id{
+	my $bcs_schema = shift;
+
+	my $dbh = $bcs_schema->storage()->dbh();
+	my $type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'list_additional_info', 'list_properties')->cvterm_id();
+
+	return $type_id;
+}
+
+sub _fetch_additional_info {
+	my $bcs_schema = shift;
+	my $list_id = shift;
+	my $cvterm_id = shift;
+
+	my $dbh = $bcs_schema->storage()->dbh();
+
+	my $sql = "SELECT value FROM sgn_people.listprop WHERE list_id = ? AND type_id = ?";
+	my $sth = $dbh->prepare($sql);
+	$sth->execute($list_id, $cvterm_id);
+	my ($additional_info_value) = $sth->fetchrow_array();
+
+	# Convert JSON String ($additional_info_value) to JSON object ($additional_info_json)
+	my $additional_info_json;
+	if ($additional_info_value) {
+		$additional_info_json = JSON::XS::decode_json($additional_info_value);
+	}
+	else{
+		$additional_info_json = {};
+	}
+	return $additional_info_json;
 }
 
 sub convert_to_brapi_type {
@@ -182,7 +217,7 @@ sub detail {
 
 	 	my $rs = $people_schema->resultset("SpPerson")->search( { %query });
 		my $owner_name;
-		
+
 		while (my $p = $rs->next()) {
 			$owner_name = $p->first_name() . " " . $p->last_name();
 		}
@@ -204,9 +239,10 @@ sub detail {
 				push @references, $_;
 			}
 		}
-
+		my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
+		my $additional_info_json = _fetch_additional_info( $self->bcs_schema, $list_id, $additional_info_cvterm_id );
 		%result = (
-			additionalInfo      => {},
+			additionalInfo      => $additional_info_json,
 			dateCreated         => $list->{create_date},
 			dateModified        => undef,
 			listDbId            => qq|$list_id|,
@@ -233,11 +269,9 @@ sub store {
 	my $self = shift;
 	my $data = shift;
 	my $user_id = shift;
-
 	if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
-
 	my $schema = $self->bcs_schema;
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $page_size = $self->page_size;
@@ -245,14 +279,14 @@ sub store {
     my $page = $self->page;
     my $counter = 0;
 	my @new_lists_ids;
-
+	my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
 	foreach my $params (@$data){
-		my $additional_info = $params->{additionalInfo} || undef; #not supported
 		my $date_created = $params->{dateCreated} || undef; #not supported
 		my $date_modified = $params->{dateModified} || undef; #not supported
 		my $owner_name = $params->{listOwnerName} || undef; #not supported
 		my $list_size = $params->{listSize} || undef; #not supported, counted from data
 		my $list_source = $params->{listSource} || undef;  #not supported, db name
+		my $additional_info_hash_ref = $params->{additionalInfo} || undef;
 		my $externalReferences = $params->{externalReferences} || undef;
 		my $list_name = $params->{listName} || undef;
 		my $list_type = $params->{listType} || undef;
@@ -266,7 +300,6 @@ sub store {
 		if ($check_list_id->{list_id}){
         	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('List name %s already exist in the database!',$list_name), 409);
 		}
-
 	    #check entries
 		if (!$list_type || !$data) {
         	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide list type and data!'), 400);
@@ -285,12 +318,10 @@ sub store {
 	    my $validated = $lv->validate($schema, $list_type, $data);
 	    my $missing = scalar(@{$validated->{missing}});
 	    if ($missing > 0){
-		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
+		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));
 	    }
-
 		#create list
     	my $new_list_id = CXGN::List::create_list($dbh, $list_name, $list_description, $owner_id);
-
 	    my $list = CXGN::List->new( { dbh=>$dbh, list_id => $new_list_id });
 
     	#add list type
@@ -318,6 +349,16 @@ sub store {
 			});
 			my $reference_result = $references->store();
 		}
+		# Store additional Info
+		if( $additional_info_hash_ref ) {
+			my $dbh = $self->bcs_schema->storage()->dbh();
+			my $sql = "INSERT INTO sgn_people.listprop (list_id, type_id, value ) VALUES ( ?, ?, ?)";
+			my $sth = $dbh->prepare($sql);
+
+			my $additional_info_json_str = to_json( $additional_info_hash_ref );
+			$sth->execute($new_list_id, $additional_info_cvterm_id, $additional_info_json_str);
+		}
+
 	    $counter++;
 		push @new_lists_ids, $new_list_id;
 
@@ -347,12 +388,12 @@ sub update {
     my $page = $self->page;
     my $counter = 1;
 
-	my $additional_info = $params->{additionalInfo} || undef; #not supported
 	my $date_created = $params->{dateCreated} || undef; #not supported
 	my $date_modified = $params->{dateModified} || undef; #not supported
 	my $owner_name = $params->{listOwnerName} || undef; #not supported
 	my $list_size = $params->{listSize} || undef; #not supported, counted from data
 	my $list_source = $params->{listSource} || undef;  #not supported, db name
+	my $additional_info_hash_ref = $params->{additionalInfo} || undef;
 	my $externalReferences = $params->{externalReferences} || undef;
 	my $list_id = $params->{listDbId} || undef;
 	my $list_name = $params->{listName} || undef;
@@ -360,7 +401,6 @@ sub update {
 	my $list_description = $params->{listDescription} || undef;
 	my $owner_id = $params->{listOwnerPersonDbId} || undef;
 	my $data = $params->{data} || undef;
-
     #Retrieve list
     my $list = CXGN::List->new( { dbh=>$dbh, list_id => $list_id });
 
@@ -395,7 +435,7 @@ sub update {
 	    my $validated = $lv->validate($schema, $list_type, $data);
 	    my $missing = scalar(@{$validated->{missing}});
 	    if ($missing > 0){
-		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
+		    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));
 	    }
 	    my $response = $list->add_bulk($data);
 	    if ($response->{error}) {
@@ -414,11 +454,24 @@ sub update {
 		});
 		my $reference_result = $references->store();
 	}
+	# Update 'additional Info'
+	if( $additional_info_hash_ref ) {
+		my $dbh = $self->bcs_schema->storage()->dbh();
+		my $sql = "DELETE FROM sgn_people.listprop WHERE list_id = ?";
+		my $sth = $dbh->prepare($sql);
+		$sth->execute($list_id);
+
+		$sql = "INSERT INTO sgn_people.listprop (list_id, type_id, value ) VALUES ( ?, ?, ?)";
+		$sth = $dbh->prepare($sql);
+		my $additional_info_cvterm_id = _fetch_additional_info_cvterm_id($self->bcs_schema);
+		my $additional_info_json_str = to_json( $additional_info_hash_ref );
+		$sth->execute($list_id, $additional_info_cvterm_id, $additional_info_json_str);
+	}
 
   	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(1, $pagination, \@data_files, $status, $counter . ' Lists stored');
+	return $self->detail($list_id);
 
 }
 
@@ -454,7 +507,7 @@ sub store_items {
     my $validated = $lv->validate($schema, $list->{type}, $data);
     my $missing = scalar(@{$validated->{missing}});
     if ($missing > 0){
-	    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));	    	
+	    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Data must have valid items existing in the database!'));
     }
     my $response = $list->add_bulk($data);
     if ($response->{error}) {
@@ -464,7 +517,8 @@ sub store_items {
   	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(1, $pagination, \@data_files, $status,'Lists stored');
+  	return $self->detail($list_id);
+
 
 }
 1;
