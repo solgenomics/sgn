@@ -3,17 +3,17 @@
 
 =head1 NAME
 
-AddDiscardedStockPropertyCvterm
+AddDiscardedMetadataCvterm
 
 =head1 SYNOPSIS
 
-mx-run AddDiscardedStockPropertyCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddDiscardedMetadataCvterm [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds discarded stock_property cvterm
+This patch adds discarded_metadata stock_property cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddDiscardedStockPropertyCvterm;
+package AddDiscardedMetadataCvterm;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'discarded' stock_property cvterm
+This patch adds the 'discarded_metadata' stock_property cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -61,7 +61,7 @@ sub patch {
     print STDERR "INSERTING CV TERMS...\n";
 
     $schema->resultset("Cv::Cvterm")->create_with({
-        name => 'discarded',
+        name => 'discarded_metadata',
         cv => 'stock_property'
     });
 

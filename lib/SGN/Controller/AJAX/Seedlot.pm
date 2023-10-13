@@ -17,6 +17,8 @@ use CXGN::Login;
 use JSON;
 use CXGN::BreederSearch;
 use CXGN::Onto;
+use CXGN::List;
+use CXGN::List::Validate;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -1592,6 +1594,35 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     my $seedlot_list_id = $c->req->param("seedlot_list_id");
     my $program_id = $c->req->param("program_id");
     my $discard_reason = $c->req->param("discard_reason");
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to discard seedlot" };
+        return;
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to discard seedlot. Please contact us." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+
+    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $seedlots = $list->elements();
+    my @seedlots_to_discard = @$seedlots;
+
+    my $seedlot_validator = CXGN::List::Validate->new();
+    my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots_to_discard)->{'missing'}};
+
+    if (scalar(@seedlots_missing) > 0){
+        $c->stash->{rest} = { error => "The following seedlots are not in the database : ".join(',',@seedlots_missing) };
+        return;
+    }
+
+
+
+
+
 
 
 }
