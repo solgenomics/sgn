@@ -46,7 +46,7 @@ $datasets
     <label for="sort" class="control-label">Dataset</label>
     <div>
       <select id="datasetSelect" class="form-control">
-        <option value="" disabled selected>Select a Dataset</option>
+        <option value="" disabled selected>Select a Dataset</option>    
 % foreach my $dataset (@{$datasets}) {
       <option value="<% @{$dataset}[0] %>"><% @{$dataset}[1] %><% (defined @{$dataset}[2])&&@{$dataset}[2]!="undefined"?" - ".@{$dataset}[2]:"" %></option>
 % }
@@ -94,6 +94,7 @@ $datasets
   $("#createBtn").click(function(){
     var ds = $("#datasetSelect option:selected").val();
     var ou = $("#obsunitSelect option:selected").val();
+    var variable = $("#boxplotVariableSelect option:selected").text();
     if(ds=="") { alert("Choose a dataset!"); return; }
     boxplotter.loadDatasetObsUnits(ds,ou,auth_token);
     $("#downloadBxpltBtn").show();
@@ -110,6 +111,12 @@ $datasets
       source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
     }
     source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+
+    var variableName= $("#boxplotVariableSelect option:selected").text();
+    var textElement = '<text x="50%" y="20" text-anchor="middle" font-size="18" fill="black">' + variableName + '</text></svg>';
+    
+    var index = source.lastIndexOf('</svg>');
+    source = source.slice(0, index) + textElement + source.slice(index);
     var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
     this.href = url;
   });

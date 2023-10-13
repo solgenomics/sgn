@@ -41,9 +41,10 @@ export function init(main_div){
   var boxplot = BrAPIBoxPlotter(bp.find(".boxplotter-result").get(0));
   
   
-  function loadDatasetObsUnits(ds,ou,auth_token){
+  function loadDatasetObsUnits(ds,ou,auth_token, variable){
     var d = {
-      'dataset':ds    
+      'dataset':ds,
+      'variable': variable   
     };
     console.log(d);
     bp.find(".boxplotter-variable-select-div, .boxplotter-group-list, .boxplotter-result").hide();
