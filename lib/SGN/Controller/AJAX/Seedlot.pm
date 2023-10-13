@@ -19,6 +19,7 @@ use CXGN::BreederSearch;
 use CXGN::Onto;
 use CXGN::List;
 use CXGN::List::Validate;
+use CXGN::Stock::Seedlot::Discard;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -1591,39 +1592,67 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh();
     my $seedlot_list_id = $c->req->param("seedlot_list_id");
     my $program_id = $c->req->param("program_id");
     my $discard_reason = $c->req->param("discard_reason");
 
+    my $time = DateTime->now();
+    my $discard_date = $time->ymd();
+
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to discard seedlot" };
+        $c->stash->{rest} = { error_string => "You must be logged in to discard seedlot" };
         return;
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to discard seedlot. Please contact us." };
+        $c->stash->{rest} = { error_string => "You do not have the correct role to discard seedlot. Please contact us." };
         return;
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $user_name = $c->user()->get_object()->get_username();
 
-    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$seedlot_list_id });
     my $seedlots = $list->elements();
     my @seedlots_to_discard = @$seedlots;
+    print STDERR "SEEDLOTS TO DISCARD =".Dumper(\@seedlots_to_discard)."\n";
 
     my $seedlot_validator = CXGN::List::Validate->new();
     my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots_to_discard)->{'missing'}};
 
     if (scalar(@seedlots_missing) > 0){
-        $c->stash->{rest} = { error => "The following seedlots are not in the database : ".join(',',@seedlots_missing) };
+        $c->stash->{rest} = { error_string => "The following seedlots are not in the database : ".join(',',@seedlots_missing) };
         return;
     }
 
+    my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type')->cvterm_id();
 
+    foreach my $seedlot_name (@seedlots_to_discard) {
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot_name, type_id => $seedlot_type_id });
+        my $seedlot_id = $seedlot_rs->stock_id();
+        print STDERR "STOCK ID =".Dumper($seedlot_id);
 
+        my $seedlot_obj = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+        $seedlot_obj->set_current_count_property('DISCARDED');
+        $seedlot_obj->set_current_weight_property('DISCARDED');
 
+        my $seedlot_to_discard = CXGN::Stock::Seedlot::Discard->new({
+            bcs_schema => $schema,
+            parent_id => $seedlot_id,
+        });
 
+        $seedlot_to_discard->person_id($user_id);
+        $seedlot_to_discard->discard_date($discard_date);
+        $seedlot_to_discard->reason($discard_reason);
 
+        $seedlot_to_discard->store();
+
+        if (!$seedlot_to_discard->store()){
+            $c->stash->{rest} = {error_string => "Error discarding seedlot",};
+            return;
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
 
 }
 

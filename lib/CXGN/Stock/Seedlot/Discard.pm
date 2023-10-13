@@ -24,7 +24,7 @@ use Moose;
 extends 'CXGN::JSONProp';
 
 has 'person_id' => (isa => 'Int', is => 'rw');
-has 'timestamp' => (isa => 'Str', is => 'rw');
+has 'discard_date' => (isa => 'Str', is => 'rw');
 has 'reason' => (isa => 'Str', is => 'rw');
 
 
@@ -37,9 +37,12 @@ sub BUILD {
     $self->prop_primary_key('stockprop_id');
     $self->prop_type('discarded_metadata');
     $self->cv_name('stock_property');
-    $self->allowed_fields([ qw | person_id timestamp reason | ]);
+    $self->allowed_fields([ qw | person_id discard_date reason | ]);
     $self->parent_table('stock');
     $self->parent_primary_key('stock_id');
 
     $self->load();
 }
+
+
+1;
