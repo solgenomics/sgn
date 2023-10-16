@@ -495,6 +495,10 @@ $message = $response->decoded_content;
 #print STDERR Dumper $message;
 is($message, $dosage_matrix_string);
 
+#testing genotype data download from project page
+my $project_response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?genotyping_project_id=$project_id&download_format=VCF&format=accession_ids&forbid_cache=1");
+my $project_message = $project_response->decoded_content;
+is($project_message, $dosage_matrix_string);
 
 #Testing genotype search with marker names filter from marker set list object
 my $marker_names_filtered = ["S1_21594", "S1_21597", "S1_75465"];

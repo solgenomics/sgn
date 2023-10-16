@@ -260,7 +260,7 @@ $discard_info => undef
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Transaction Amount (number seeds): </label>
+                    <label class="col-sm-3 control-label">Transaction Amount (number of seeds): </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_transaction_amount" placeholder="Amount OR Weight Required">
                     </div>
@@ -287,7 +287,8 @@ $discard_info => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-primary" >OK</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-primary" >Submit</button>
       </div>
     </div>
   </div>
@@ -307,6 +308,7 @@ $discard_info => undef
         </div>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button id="edit_seedlot_transaction_button" type="button" class="btn btn-primary" >Save</button>
       </div>
     </div>
@@ -412,10 +414,33 @@ $discard_info => undef
         </div>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button id="edit_seedlot_details_button" type="button" class="btn btn-primary" >Save</button>
       </div>
     </div>
   </div>
+</div>
+
+<div class="modal fade" id="transaction_saved_dialog_message" name="transaction_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="transactionSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transactionSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The transaction was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_transaction_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -605,8 +630,8 @@ $discard_info => undef
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
-                        alert("The seedlot transaction has been created.");
                         jQuery('#add_seedlot_transaction_dialog').modal('hide');
+                        jQuery('#transaction_saved_dialog_message').modal('show');
                         seedlot_transactions_table.ajax.reload();
                     }
                     if (response.error) {
@@ -676,7 +701,8 @@ $discard_info => undef
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
-                        alert('Transaction updated!');
+                        jQuery('#edit_seedlot_transaction_dialog').modal('hide');
+                        jQuery('#transaction_saved_dialog_message').modal('show');
                         seedlot_transactions_table.ajax.reload();
                     }
                     if (response.error) {
@@ -754,6 +780,10 @@ $discard_info => undef
         }
     });
 
+    jQuery('#dismiss_transaction_saved_dialog').click(function(){
+        location.reload();
+    });
+
 });
 
 function editSeedlotTransaction(transaction_id){
@@ -765,7 +795,7 @@ function editSeedlotTransaction(transaction_id){
         success: function(response) {
             jQuery('#working_modal').modal('hide');
             if (response.success == 1) {
-                html = '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Transaction ID: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_id" value="'+response.transaction_id+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Operator: </label><div class="col-sm-9" ><input type="text" id="edit_seedlot_transaction_operator" class="form-control" value="'+response.operator+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Amount (Number seeds): </label><div class="col-sm-9" ><input type="number" class="form-control" id="edit_seedlot_transaction_amount" value="'+response.amount+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_weight" value="'+response.weight_gram+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_timestamp" value="'+response.timestamp+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Description: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_description" value="'+response.description+'" /></div></div></form>';
+                html = '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Transaction ID: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_id" value="'+response.transaction_id+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Operator: </label><div class="col-sm-9" ><input type="text" id="edit_seedlot_transaction_operator" class="form-control" value="'+response.operator+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Type: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_type" value="'+response.transaction_type+'" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Amount (Number of seeds): </label><div class="col-sm-9" ><input type="number" class="form-control" id="edit_seedlot_transaction_amount" value="'+response.amount+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_weight" value="'+response.weight_gram+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_timestamp" value="'+response.timestamp+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Description: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_description" value="'+response.description+'" /></div></div></form>';
                 jQuery('#edit_seedlot_transaction_div').html(html);
                 jQuery('#edit_seedlot_transaction_dialog').modal('show');
             }

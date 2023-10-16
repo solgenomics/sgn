@@ -428,6 +428,15 @@ sub observationunits_update {
         my $level_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
         my $raw_additional_info = $params->{additionalInfo} || undef;
         my $is_a_control = $raw_additional_info->{control} ? $raw_additional_info->{control} : undef;
+
+        my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
+        my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+
+        # BrAPI entryType overrides additionalinfo.control
+        if ($entry_type) {
+            $is_a_control = uc($entry_type) eq 'CHECK' ? 1 : 0;
+        }
+
         my $range_number = $raw_additional_info->{range} ? $raw_additional_info->{range} : undef;
         my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","range");
         my %additional_info;
@@ -633,7 +642,14 @@ sub observationunits_store {
         my $plot_parent_id = $params->{additionalInfo}->{observationUnitParent} ? $params->{additionalInfo}->{observationUnitParent} : undef;
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
         my $accession_name = $params->{germplasmName} ? $params->{germplasmName} : undef;
+        my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
         my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+
+        # BrAPI entryType overrides additionalinfo.control
+        if ($entry_type) {
+            $is_a_control = uc($entry_type) eq 'CHECK' ? 1 : 0;
+        }
+
         my $range_number = $params->{additionalInfo}->{range}  ? $params->{additionalInfo}->{range}  : undef;
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
@@ -858,21 +874,7 @@ sub _refresh_matviews {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
 
     # Refresh materialized view so data can be retrieved
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
-    # Wait until materialized view is reset. Wait 5 minutes total, then throw an error
-    my $refreshing = 1;
-    my $refresh_time = 0;
-    while ($refreshing && $refresh_time < $timeout) {
-        my $refresh_status = $bs->matviews_status();
-        if (!$refresh->{connection}->alive) {
-            $refreshing = 0;
-        } elsif ($refresh_time >= $timeout) {
-            return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, "Refreshing materialized views is taking too long to return a response", 500)};
-        } else {
-            sleep 1;
-            $refresh_time += 1;
-        }
-    }
+    $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath}, 0);
 }
 
 sub _order {

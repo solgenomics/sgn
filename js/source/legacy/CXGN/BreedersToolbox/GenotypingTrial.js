@@ -470,7 +470,7 @@ jQuery(document).ready(function ($) {
                 return;
             }
             if (response.success) {
-                var success_string = "<h4>Go to new <a href='/breeders_toolbox/protocol/"+response.nd_protocol_id+"'>protocol detail page</a></h4>";
+                var success_string = "<h4>Go to your <a href='/breeders/trial/"+response.project_id+"'>genotyping project page</a></h4>";
                 console.log(success_string);
                 jQuery('#upload_genotype_submit_complete').html(success_string);
                 Workflow.complete('#upload_genotype_submit');

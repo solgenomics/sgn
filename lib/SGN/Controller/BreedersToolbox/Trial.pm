@@ -31,7 +31,7 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $trial_id = shift;
 
     $c->stash->{trial_id} = $trial_id;
-    print STDERR "TRIAL ID = $trial_id\n";
+#    print STDERR "TRIAL ID = $trial_id\n";
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{schema} = $schema;
@@ -209,20 +209,71 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $c->stash->{genotype_data_type} = 'SNP'
         }
 
-        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        my $project_info = CXGN::Genotype::GenotypingProject->new({
             bcs_schema => $schema,
             project_id => $project_id
         });
-        my ($data, $tc) = $plate_info->get_plate_info();
+        my ($data, $tc) = $project_info->get_plate_info();
         my $has_plate;
         if (!$data) {
             $has_plate = 'none';
         }
         $c->stash->{has_plate} = $has_plate;
-        my @genotyping_project_list = ($project_id);
-        my $protocol_info = CXGN::Genotype::Protocol::list($schema, undef, undef, undef, undef, undef, \@genotyping_project_list);
-        if ($protocol_info) {
-            $c->stash->{marker_names} = $protocol_info->[0]->{marker_names} || [];
+
+        my $associated_protocol  = $project_info->get_associated_protocol();
+
+        if ( defined $associated_protocol && scalar(@$associated_protocol)>0) {
+            my $protocol_id = $associated_protocol->[0]->[0];
+            my $protocol_info = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $protocol_id
+            });
+
+            my $marker_names = $protocol_info->{marker_names};
+            my $assay_type = $protocol_info->{assay_type};
+            $c->stash->{marker_names} = $marker_names;
+            $c->stash->{assay_type} = $assay_type;
+
+            my $marker_info_keys = $protocol_info->marker_info_keys;
+            my @marker_info_headers = ();
+            if (defined $marker_info_keys) {
+                foreach my $info_key (@$marker_info_keys) {
+                    if ($info_key eq 'name') {
+                        push @marker_info_headers, 'Marker Name';
+                    } elsif (($info_key eq 'intertek_name') || ($info_key eq 'facility_name')) {
+                        push @marker_info_headers, 'Facility Marker Name';
+                    } elsif ($info_key eq 'chrom') {
+                        push @marker_info_headers, 'Chromosome';
+                    } elsif ($info_key eq 'pos') {
+                        push @marker_info_headers, 'Position';
+                    } elsif ($info_key eq 'alt') {
+                        if ($assay_type eq 'KASP') {
+                            push @marker_info_headers, 'Y-allele';
+                        } else {
+                            push @marker_info_headers, 'Alternate';
+                        }
+                    } elsif ($info_key eq 'ref') {
+                        if ($assay_type eq 'KASP') {
+                            push @marker_info_headers, 'X-allele';
+                        } else {
+                            push @marker_info_headers, 'Reference';
+                        }
+                    } elsif ($info_key eq 'qual') {
+                        push @marker_info_headers, 'Quality';
+                    } elsif ($info_key eq 'filter') {
+                        push @marker_info_headers, 'Filter';
+                    } elsif ($info_key eq 'info') {
+                        push @marker_info_headers, 'Info';
+                    } elsif ($info_key eq 'format') {
+                        push @marker_info_headers, 'Format';
+                    } elsif ($info_key eq 'sequence') {
+                        push @marker_info_headers, 'Sequence';
+                    }
+                }
+            } else {
+                @marker_info_headers = ('Marker Name','Chromosome','Position','Alternate','Reference','Quality','Filter','Info','Format');
+            }
+            $c->stash->{marker_info_headers} = \@marker_info_headers;
         }
 
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
@@ -322,8 +373,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
-    print STDERR "WHAT =".Dumper($what)."\n";
-    print STDERR Dumper $c->req->params();
+#    print STDERR "WHAT =".Dumper($what)."\n";
+#    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -435,7 +486,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
+#    print STDERR "TEMPFILE : $tempfile\n";
 
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
@@ -474,7 +525,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR Dumper $c->req->params();
+#    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -510,7 +561,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
+#    print STDERR "TEMPFILE : $tempfile\n";
 
     my $trial_download_args = {
         bcs_schema => $schema,
