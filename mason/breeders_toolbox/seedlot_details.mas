@@ -15,6 +15,7 @@ $box_name=>undef
 $quality => undef
 $owners_string => undef
 $maintenance_enabled => undef
+$discard_info => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -30,6 +31,9 @@ $maintenance_enabled => undef
 <&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='edit_seedlot_details_link' >Edit Seedlot Details</a>]" &>
 
 <table class="table table-bordered table-hover">
+% if ($discard_info) {
+    <tr><td><b>Discard Info</b></td><td><% $discard_info %></td></tr>
+% }
 <tr><td><b>Breeding Program</b></td><td><div id="seedlot_breeding_program_div">[LOADING...]</div></td></tr>
 <tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
 <tr><td><b>Seedlot Description</b></td><td><% $description %></td></tr>

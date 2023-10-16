@@ -9,6 +9,8 @@ use CXGN::Stock::Seedlot;
 use CXGN::Onto;
 use Data::Dumper;
 use JSON::XS;
+use CXGN::Stock::Seedlot::Discard;
+use CXGN::People::Person;
 
 sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $self = shift;
@@ -52,6 +54,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $dbh = $c->dbc->dbh;
 
     my $sl = CXGN::Stock::Seedlot->new(
         schema => $schema,
@@ -84,13 +87,35 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         $owners_string .= ' <a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
     }
 
+    my $page_current_count;
+    my $page_current_weight;
     my $current_count = $sl->get_current_count_property();
     if ($current_count eq 'DISCARDED') {
-        $current_count = '<span style="color:red">'.$current_count.'</span>';
+        $page_current_count = '<span style="color:red">'.$current_count.'</span>';
+    } else {
+        $page_current_count = $current_count;
     }
+
     my $current_weight = $sl->get_current_weight_property();
     if ($current_weight eq 'DISCARDED') {
-        $current_weight = '<span style="color:red">'.$current_weight.'</span>';
+        $page_current_weight = '<span style="color:red">'.$current_weight.'</span>';
+    } else {
+        $page_current_weight = $current_weight;
+    }
+
+    my $page_discard_info;
+    if (($current_count eq 'DISCARDED') || ($current_weight eq 'DISCARDED')) {
+        my $discard_obj = CXGN::Stock::Seedlot::Discard->new({ bcs_schema => $schema, parent_id => $seedlot_id});
+        my $discard_info = $discard_obj->get_discard_details();
+        my $person_id = $discard_info->[0];
+        my $person= CXGN::People::Person->new($dbh, $person_id);
+        my $person_name=$person->get_first_name()." ".$person->get_last_name();
+        my $operator_info = "Discarded by". ":"."".$person_name;
+        my $date_info = "Discarded Date". ":"."".$discard_info->[1];
+        my $reason_info = "Reason". ":"."".$discard_info->[2];
+        my @all_info = ($operator_info, $date_info, $reason_info);
+        my $all_info_string = join("<br>", @all_info);
+        $page_discard_info = '<span style="color:red">'.$all_info_string.'</span>';
     }
 
     $c->stash->{seedlot_id} = $seedlot_id;
@@ -101,12 +126,13 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{content_html} = $accessions_html ? $accessions_html : $crosses_html;
     $c->stash->{content_accession_name} = $content_accession_names[0];
     $c->stash->{content_cross_name} = $content_cross_names[0];
-    $c->stash->{current_count} = $current_count;
-    $c->stash->{current_weight} = $current_weight;
+    $c->stash->{current_count} = $page_current_count;
+    $c->stash->{current_weight} = $page_current_weight;
     $c->stash->{quality} = $sl->quality();
     $c->stash->{description} = $sl->description();
     $c->stash->{owners_string} = $owners_string;
     $c->stash->{timestamp} = localtime();
+    $c->stash->{discard_info} = $page_discard_info;
     $c->stash->{maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }

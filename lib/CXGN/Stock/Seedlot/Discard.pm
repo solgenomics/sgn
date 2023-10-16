@@ -45,4 +45,26 @@ sub BUILD {
 }
 
 
+sub get_discard_details {
+    my $self = shift;
+    my $args = shift;
+    my $schema = $self->bcs_schema();
+    my $seedlot_id = $self->parent_id();
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+    my $key_ref = $self->allowed_fields();
+    my @fields = @$key_ref;
+    my @discard_details;
+    my $discard_details_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $seedlot_id, type_id => $type_id});
+    my $details_json = $discard_details_rs->value();
+    my $detail_hash = JSON::Any->jsonToObj($details_json);
+    foreach my $field (@fields){
+        push @discard_details, $detail_hash->{$field};
+    }
+
+    return \@discard_details;
+}
+
+
+
 1;
