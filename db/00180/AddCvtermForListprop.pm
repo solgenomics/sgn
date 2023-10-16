@@ -52,12 +52,14 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+    my $coderef = sub {
+        my $list_prop_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+            name => 'list_additional_info',
+            cv   => 'list_properties',
+            db   => 'local'
+        });
 
-    my $list_prop_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
-        name => 'list_additional_info',
-        cv   => 'list_properties',
-        db   => 'local'
-    });
+    };
 
     try {
         $schema->txn_do($coderef);
