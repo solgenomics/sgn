@@ -56,8 +56,6 @@ export function init(datasetId, datasetName) {
                 type: 'POST',
                 url: '/ajax/dataset/retrieve_outliers/' + LocalThis.datasetId,
                 success: function(response) {
-                    console.log("response from ajax stored outliers:");
-                    console.log(response.outliers);
                     LocalThis.storedOutliersIds = response.outliers !== null ? response.outliers : [];
                 },
                 error: function(response) {
@@ -161,9 +159,7 @@ export function init(datasetId, datasetName) {
 		    // Handle Slider Events
 		    var sliderSelector = $("#outliers_range");			
 			sliderSelector.on("slidechange", (event, ui) => {
-				console.log("trigger slider change");
 				LocalThis.stdDevMultiplier = ui.value;
-				console.log(ui.value);
                 LocalThis.outliers = [];
                 LocalThis.outlierCutoffs = new Set();
                 d3.select("svg").remove();
@@ -175,7 +171,7 @@ export function init(datasetId, datasetName) {
 			Array.prototype.forEach.call(metricSelectors, (metricRadio) => {
 				metricRadio.addEventListener("change", (event) => {
 					
-                    console.log(document.querySelector('input[name="dataset_metric"]:checked').value);
+
                     LocalThis.metricValue  = document.querySelector('input[name="dataset_metric"]:checked').value;
                     d3.select("svg").remove();
                     LocalThis.render();
@@ -272,11 +268,6 @@ export function init(datasetId, datasetName) {
 				const [mean, stdDev] = this.standardDeviation(this.traitVals);
 				const [median, mad]= [this.median(this.traitVals), this.mad(this.traitVals)];		
 				const [metric, deviation, metricString, deviationString] = LocalThis.metricValue === "mean" ? [mean, stdDev, "Mean", "Std Dev"] : [median, mad, "Median", "MAD"];
-
-				console.log(LocalThis.metricValue);
-				console.log(this.metricSelector);
-				console.log(deviation);
-				console.log(metric);
 
 				let filter = LocalThis.stdDevMultiplier ;
                 let rightCutoff = metric + deviation * filter;
@@ -532,7 +523,6 @@ export function init(datasetId, datasetName) {
 
                	legend.append("text")
                    .text(() => {
-                    //    let filter = LocalThis.stdDevMultiplier;
                        let leftCutoff = metric - deviation * LocalThis.stdDevMultiplier;
                        return "L. Cutoff: " + leftCutoff.toFixed(2);
                    })
@@ -542,7 +532,6 @@ export function init(datasetId, datasetName) {
 
                	legend.append("text")
                    .text(() => {
-                    //    let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
                        let rightCutoff = metric + deviation * LocalThis.stdDevMultiplier;
                        return "R. Cutoff: " + rightCutoff.toFixed(2);
                    })
