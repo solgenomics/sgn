@@ -190,7 +190,7 @@ export function init(datasetId, datasetName) {
                 LocalThis.setData();
                 LocalThis.outliers = [];
                 LocalThis.outlierCutoffs = new Set();
-				sliderSelector.slider("option", "value", sliderSelector.slider("option", "max"));
+				sliderSelector.slider("option", "value", 3);
 				LocalThis.stdDevMultiplier = sliderSelector.slider("value");
 			    if (!this.firstRefresh) {
 					d3.select("svg").remove();
@@ -269,13 +269,9 @@ export function init(datasetId, datasetName) {
 
 				const LocalThis = this;
 
-				// check what is my metric ?? and depend on metric ut correct values 
-			    // metric part 
 				const [mean, stdDev] = this.standardDeviation(this.traitVals);
 				const [median, mad]= [this.median(this.traitVals), this.mad(this.traitVals)];		
 				const [metric, deviation, metricString, deviationString] = LocalThis.metricValue === "mean" ? [mean, stdDev, "Mean", "Std Dev"] : [median, mad, "Median", "MAD"];
-								
-				//TODO: remove
 
 				console.log(LocalThis.metricValue);
 				console.log(this.metricSelector);
@@ -345,9 +341,6 @@ export function init(datasetId, datasetName) {
 			    var x = d3.scaleLinear()
 			        .domain([0, this.phenoIds.length])
 			        .range([ 0, width]);
-//                svg.append("g")
-//			        .style("font", "16px arial")
-//			        .attr("transform", "translate(0," + height + ")")
 
 			    // Add Y axis
 			    var y = d3.scaleLinear()
@@ -356,14 +349,9 @@ export function init(datasetId, datasetName) {
                 svg.append("g")
                     .call(d3.axisLeft(y).tickSize(-width*1).ticks(10))
                      .style("font", "16px arial")
-//                    .select(".domain").remove()
 
                 // Customization
                 svg.selectAll(".tick line").attr("stroke", "white")
-
-//			    svg.append("g")
-//			        .style("font", "16px arial")
-//			        .call(d3.axisLeft(y))
 
 			    svg.append("text")
 			        .attr("transform", "rotate(-90)")
