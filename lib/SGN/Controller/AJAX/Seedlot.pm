@@ -1594,8 +1594,10 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh();
     my $seedlot_list_id = $c->req->param("seedlot_list_id");
+    my $seedlot_name = $c->req->param("seedlot_name");
     my $program_id = $c->req->param("program_id");
     my $discard_reason = $c->req->param("discard_reason");
+    my @seedlots_to_discard;
 
     my $time = DateTime->now();
     my $discard_date = $time->ymd();
@@ -1611,16 +1613,20 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$seedlot_list_id });
-    my $seedlots = $list->elements();
-    my @seedlots_to_discard = @$seedlots;
+    if (defined $seedlot_list_id) {
+        my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$seedlot_list_id });
+        my $seedlots = $list->elements();
+        @seedlots_to_discard = @$seedlots;
 
-    my $seedlot_validator = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots_to_discard)->{'missing'}};
+        my $seedlot_validator = CXGN::List::Validate->new();
+        my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots_to_discard)->{'missing'}};
 
-    if (scalar(@seedlots_missing) > 0){
-        $c->stash->{rest} = { error_string => "The following seedlots are not in the database : ".join(',',@seedlots_missing) };
-        return;
+        if (scalar(@seedlots_missing) > 0){
+            $c->stash->{rest} = { error_string => "The following seedlots are not in the database : ".join(',',@seedlots_missing) };
+            return;
+        }
+    } elsif (defined $seedlot_name) {
+        @seedlots_to_discard = ($seedlot_name);
     }
 
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type')->cvterm_id();

@@ -124,6 +124,10 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery("#dismiss_discard_seedlot_saved_dialog").click( function() {
+        jQuery('#discard_seedlot_saved_dialog_message').modal('hide');
+        location.reload();
+    });
 
 });
 

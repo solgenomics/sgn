@@ -70,6 +70,17 @@ $discard_info => undef
 
 </&>
 
+<&| /page/info_section.mas, title=>"Mark this seedlot as discarded",  collapsible => 1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_details_page_link">Mark this Seedlot as Discarded</button>
+            </div>
+        </div>
+    </div>
+</&>
+<& /breeders_toolbox/discard_single_seedlot.mas, seedlot_id => $seedlot_id, uniquename => $uniquename &>
+
 % if ( $maintenance_enabled ) {
     <& /page/page_title.mas, title => 'Maintenance Events' &>
 
