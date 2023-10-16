@@ -26,9 +26,16 @@ $discard_info => undef
 }
 </style>
 
+% my $edit_seedlot_link;
+% my $new_transaction_link;
+% if (!$discard_info) {
+%    $edit_seedlot_link = "[<a id='edit_seedlot_details_link' >Edit Seedlot Details</a>]";
+%    $new_transaction_link = "[<a id='add_seedlot_transaction_button' >Add New Transaction</a>]";
+% }
+
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
 
-<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='edit_seedlot_details_link' >Edit Seedlot Details</a>]" &>
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=> $edit_seedlot_link &>
 
 <table class="table table-bordered table-hover">
 % if ($discard_info) {
@@ -54,7 +61,7 @@ $discard_info => undef
 <h3>Transactions</h3>
 </center>
 
-<&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='add_seedlot_transaction_button' >Add New Transaction</a>]" &>
+<&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>$new_transaction_link &>
 
 <div style="overflow:scroll">
     <table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
