@@ -1701,6 +1701,42 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
 }
 
 
+sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh();
+    my $seedlot_id = $c->req->param("seedlot_id");
+    print STDERR "SEEDLOT ID =".Dumper($seedlot_id)."\n";
+    my $time = DateTime->now();
+    my $discard_date = $time->ymd();
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error_string => "You must be logged in to undo discading this seedlot" };
+        return;
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error_string => "You do not have the correct role to undo discarding this seedlot. Please contact us." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $discarded_metadata_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'discarded_metadata', 'stock_property')->cvterm_id();
+    my $discarded_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $seedlot_id, type_id => $discarded_metadata_type_id});
+
+    if (defined $discarded_rs->stockprop_id) {
+        $discarded_rs->delete();
+    }
+
+    my $restored_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id);
+    $restored_seedlot->set_current_count_property();
+    $restored_seedlot->set_current_weight_property();
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
 
 1;
 

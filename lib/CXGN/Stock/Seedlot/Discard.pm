@@ -20,6 +20,8 @@ Titima Tantikanjana <tt15@cornell.edu>
 
 
 use Moose;
+use Data::Dumper;
+
 
 extends 'CXGN::JSONProp';
 
@@ -56,10 +58,13 @@ sub get_discard_details {
     my @fields = @$key_ref;
     my @discard_details;
     my $discard_details_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $seedlot_id, type_id => $type_id});
-    my $details_json = $discard_details_rs->value();
-    my $detail_hash = JSON::Any->jsonToObj($details_json);
-    foreach my $field (@fields){
-        push @discard_details, $detail_hash->{$field};
+    if ($discard_details_rs) {
+        my $details_json = $discard_details_rs->value();
+        my $detail_hash = JSON::Any->jsonToObj($details_json);
+        foreach my $field (@fields){
+            push @discard_details, $detail_hash->{$field};
+        }
+        print STDERR "DISCARDED DETAILS =".Dumper(\@discard_details)."\n";
     }
 
     return \@discard_details;

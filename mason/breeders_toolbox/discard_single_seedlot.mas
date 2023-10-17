@@ -58,6 +58,28 @@ $uniquename
     </div>
 </div>
 
+<div class="modal fade" id="undo_dialog_message" name="undo_dialog_message" tabindex="-1" role="dialog" aria-labelledby="undoDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="undoDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        This seedlot was restored.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_undo_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 jQuery(document).ready(function(){
@@ -114,6 +136,40 @@ jQuery(document).ready(function(){
         location.reload();
     });
 
+    jQuery('#undo_discarding_seedlot_link').click(function() {
+        var seedlot_id = "<% $seedlot_id %>";
+        var confirmation = confirm("Are you sure you want to undo marking this seedlot as DISCARDED ?");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/seedlot/undo_discard',
+                dataType: "json",
+                data : {
+                    'seedlot_id' : seedlot_id,
+                },
+                beforeSend: function(response){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        jQuery('#undo_dialog_message').modal("show");
+                    }
+                    if (response.error_string) {
+                        alert(response.error_string);
+                    }
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred processing your request');
+                }
+            });
+        }
+    });
+
+    jQuery("#dismiss_undo_dialog").click( function() {
+        jQuery('#undo_dialog_message').modal('hide');
+        location.reload();
+    });
 
 
 });
