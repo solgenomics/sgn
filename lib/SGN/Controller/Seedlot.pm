@@ -104,6 +104,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     }
 
     my $page_discard_info;
+    my $status;
     if (($current_count eq 'DISCARDED') || ($current_weight eq 'DISCARDED')) {
         my $discard_obj = CXGN::Stock::Seedlot::Discard->new({ bcs_schema => $schema, parent_id => $seedlot_id});
         my $discard_info = $discard_obj->get_discard_details();
@@ -116,6 +117,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         my @all_info = ($operator_info, $date_info, $reason_info);
         my $all_info_string = join("<br>", @all_info);
         $page_discard_info = '<span style="color:red">'.$all_info_string.'</span>';
+        $status = 'discarded';
     }
 
     $c->stash->{seedlot_id} = $seedlot_id;
@@ -133,6 +135,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{owners_string} = $owners_string;
     $c->stash->{timestamp} = localtime();
     $c->stash->{discard_info} = $page_discard_info;
+    $c->stash->{status} = $status;    
     $c->stash->{maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }

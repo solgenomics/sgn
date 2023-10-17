@@ -16,6 +16,7 @@ $quality => undef
 $owners_string => undef
 $maintenance_enabled => undef
 $discard_info => undef
+$status => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -467,6 +468,7 @@ $discard_info => undef
        source: '/ajax/stock/cross_autocomplete',
     });
 
+    var status = "<% $status %>";
     var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( {
         'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
         columns: [
@@ -478,7 +480,11 @@ $discard_info => undef
             { title: "Transaction Weight (g)", "data": "weight" },
             { title: "Operator", "data": "operator" },
             { title: "Transaction Description", "data": "description" },
-            { title: "Options", "data": "null", "render" : function ( data, type, row ) { return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>"; } },
+            { title: "Options", "data": "null", "render" : function ( data, type, row ) {
+                if (status !== 'discarded') {
+                    return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>";
+                } else {return "";}
+            }},
         ],
     });
 
