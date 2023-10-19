@@ -78,9 +78,9 @@ $user_role => undef
         <div class="panel panel-default">
             <div class="panel-body">
 % if ($discard_info) {
-    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="undo_discarding_seedlot_link">Undo Discarding this Seedlot</button>
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="undo_discarding_seedlot_link">Undo Discarding this Seedlot</button>
 % } else {
-    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_details_page_link">Mark this Seedlot as DISCARDED</button>
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_details_page_link">Mark this Seedlot as DISCARDED</button>
 % }
             </div>
         </div>
@@ -91,6 +91,7 @@ $user_role => undef
 </&>
 
 <& /breeders_toolbox/discard_single_seedlot.mas, seedlot_id => $seedlot_id, uniquename => $uniquename &>
+<& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
 
 % if ( $maintenance_enabled ) {
     <& /page/page_title.mas, title => 'Maintenance Events' &>

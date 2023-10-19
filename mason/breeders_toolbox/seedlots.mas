@@ -173,7 +173,7 @@ $user_role => undef
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_link">Mark Seedlots as Discarded</button>
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_link">Mark Seedlots as Discarded</button>
             </div>
         </div>
     </div>
@@ -193,7 +193,7 @@ $user_role => undef
 <& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
 <& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_seedlots.mas, user_role => $user_role &>
-
+<& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
 
 <script>
 jQuery(document).ready(function(){
