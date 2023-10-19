@@ -773,7 +773,7 @@ sub init_genotype_iterator {
     }
 
     #For genotyping_data_project
-    if ($genotype_data_project_list && scalar($genotype_data_project_list)>0) {
+    if ($genotype_data_project_list && scalar(@$genotype_data_project_list)>0) {
         my $sql = join ("," , @$genotype_data_project_list);
         push @where_clause, "project.project_id in ($sql)";
     }
