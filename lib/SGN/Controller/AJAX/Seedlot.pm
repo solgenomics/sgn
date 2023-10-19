@@ -1627,7 +1627,6 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     my $dbh = $c->dbc->dbh();
     my $seedlot_list_id = $c->req->param("seedlot_list_id");
     my $seedlot_name = $c->req->param("seedlot_name");
-    my $program_id = $c->req->param("program_id");
     my $discard_reason = $c->req->param("discard_reason");
     my @seedlots_to_discard;
 

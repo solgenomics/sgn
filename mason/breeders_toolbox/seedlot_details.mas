@@ -17,6 +17,7 @@ $owners_string => undef
 $maintenance_enabled => undef
 $discard_info => undef
 $status => undef
+$user_role => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -71,19 +72,24 @@ $status => undef
 
 </&>
 
-<&| /page/info_section.mas, title=>"Mark this seedlot as discarded",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Mark this seedlot as DISCARDED",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
 % if ($discard_info) {
     <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="undo_discarding_seedlot_link">Undo Discarding this Seedlot</button>
 % } else {
-    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_details_page_link">Mark this Seedlot as Discarded</button>
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_details_page_link">Mark this Seedlot as DISCARDED</button>
 % }
             </div>
         </div>
     </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to mark this seedlot as DISCARDED.
+% }
 </&>
+
 <& /breeders_toolbox/discard_single_seedlot.mas, seedlot_id => $seedlot_id, uniquename => $uniquename &>
 
 % if ( $maintenance_enabled ) {
@@ -481,9 +487,9 @@ $status => undef
             { title: "Operator", "data": "operator" },
             { title: "Transaction Description", "data": "description" },
             { title: "Options", "data": "null", "render" : function ( data, type, row ) {
-                if (status !== 'discarded') {
-                    return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>";
-                } else {return "";}
+                if (status == 'discarded') {
+                    return "";
+                } else {return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>";}
             }},
         ],
     });

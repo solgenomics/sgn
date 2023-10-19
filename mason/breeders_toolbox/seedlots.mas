@@ -168,7 +168,8 @@ $user_role => undef
 </div>
 </&>
 
-<&| /page/info_section.mas, title=>"Mark seedlots as discarded using a list",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Mark seedlots as DISCARDED using a list",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -176,7 +177,11 @@ $user_role => undef
             </div>
         </div>
     </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to mark seedlots as DISCARDED using lists.
+% }
 </&>
+
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>

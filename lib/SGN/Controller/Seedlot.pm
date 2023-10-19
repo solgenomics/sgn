@@ -55,6 +55,10 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $dbh = $c->dbc->dbh;
+    my $user_role;
+    if ($c->user() && $c->user()->check_roles("curator")) {
+	    $user_role = "curator";
+    }
 
     my $sl = CXGN::Stock::Seedlot->new(
         schema => $schema,
@@ -135,7 +139,8 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{owners_string} = $owners_string;
     $c->stash->{timestamp} = localtime();
     $c->stash->{discard_info} = $page_discard_info;
-    $c->stash->{status} = $status;    
+    $c->stash->{status} = $status;
+    $c->stash->{user_role} = $user_role;
     $c->stash->{maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }
