@@ -700,10 +700,8 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
     # Build Accession Info
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my @standard_props = qw | species_name population_name organization_name synonym | ;
 
-    my @all_stock_props = (@standard_props, @editable_stock_props);
-    my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@all_stock_props);
+    my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
 
     # Create and Return XLS and XLSX  file
     if ( $file_format eq ".xlsx" ) {
@@ -793,7 +791,7 @@ sub build_accession_properties_info {
     my $editable_stock_props = shift;
 
     # Setup Stock Props
-    my @stock_props = ("organization", "synonym", "PUI");
+    my @stock_props = ("organization", "stock_synonym", "PUI");
     foreach my $esp (@$editable_stock_props) {
         if ( !grep(/^$esp$/, @stock_props) ) {
             push(@stock_props, $esp)
