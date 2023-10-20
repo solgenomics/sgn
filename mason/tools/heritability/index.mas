@@ -15,9 +15,9 @@
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
-<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
 
 <& /page/page_title.mas, title=>"Heritability" &>
 
@@ -41,6 +41,10 @@
         <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
       <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
       <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+      <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
+      <br>
+      <input type="checkbox" id="dataset_trait_outliers" />
+      <label>Exclude dataset outliers &nbsp; </label>          
       <br>
       <br>
       <br>
@@ -105,11 +109,6 @@
   <div id="Basic_output"></div>
 
 </&>
-
-
-
-
-
 <script>
 
 
@@ -126,35 +125,45 @@ jQuery(document).ready(function() {
     $('#trait_histogram_plot').html('');
     $('#heritability_output').empty();
   });
+  
   jQuery('#selectDataset').click(function() {
-    var dataset_id = get_dataset_id();
+    var dataset_id = get_dataset_id();    
+    if (!dataset_id) {
+      return;
+    }
+    var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;  
+    document.getElementById("loading-spinner").style.visibility = 'visible'; 
     $.ajax({
-      url: '/ajax/heritability/shared_phenotypes',
-      data: {'dataset_id': dataset_id},
+      url: '/ajax/heritability/shared_phenotypes',      
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+        },
       success: function(response) {
         if (response.error) {
-          $('#dataset_select').val('ERROR');
+          $('#dataset_select').val('ERROR');            
+          document.getElementById("loading-spinner").style.visibility = 'hidden';  
         }
-        else {
-	    // alert(response.options);
-	    	    // alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
-
-
-	}
+        else {	        
+	        var option_html = '<option selected="selected" value=""> </option>';
+	        for (var i = 0; i < response.options.length; i++) {
+	          option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+	        }
+	        $('#pheno_select').attr("disabled",false).html(option_html);
+          jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden';
+	      }
 
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable, ponto 1");
+        alert("An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ");
+        document.getElementById("preview_trait_histogram_btn").disabled = false;
+        document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
     });
   });
-
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
@@ -188,31 +197,68 @@ jQuery(document).ready(function() {
               }
              }
             };
-
-   //alert("embedding"+ JSON.stringify(v));
             vegaEmbed("#trait_histogram_plot", v);
-            //alert("done");
           },
-
-
         error: function(e) { alert('error!'); }
       });
     };
   });
 
+  jQuery('#dataset_trait_outliers').on('click', function() {
+    var dataset_id = get_dataset_id();
+    if (!dataset_id) {
+      return;
+    }  
+    var  dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;  
+    document.getElementById("loading-spinner").style.visibility = 'visible';    
+    $.ajax({
+      url: '/ajax/heritability/shared_phenotypes',
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+      },            
+      success: function(response) {
+        if (response.error) {
+          $('#dataset_select').val('ERROR');          
+          alert("An error occurred, the is some problem with data");          
+          document.getElementById("loading-spinner").style.visibility = 'hidden';
+        }
+        else {	        
+          jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden'; 
+	      }
+      },
+      error: function(response) {
+        alert("An error occurred, the service may temporarily be unavailable");
+        document.getElementById("preview_trait_histogram_btn").disabled = false; 
+        document.getElementById("loading-spinner").style.visibility = 'hidden';
+      }
+    });
+
+  });
+
 
   jQuery('#runH2').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
-      $('#heritability_output').empty();
+      alert("Please select a dataset and trait.");
+      $('#heritability_output').empty();      
     } else {
       $('#heritability_output').empty();
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
+        console.log("dataset_id", dataset_id);
         var trait_id = $('#pheno_select').val();
+        console.log("trait_id", trait_id);
+        var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
         $.ajax({
           url: '/ajax/heritability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          data: {
+            'dataset_id': dataset_id, 
+            'trait_id': trait_id,
+            'dataset_trait_outliers': dataset_trait_outliers,            
+            },
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
@@ -224,7 +270,7 @@ jQuery(document).ready(function() {
             }
             var fig1_response = response.h2Table;
             var fig2_response = response.figure3;
-      //alert("Response ID: "+temp_response);
+          //alert("Response ID: "+temp_response);
           //alert("Response ID: "+fig1_response);
 
             $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
@@ -257,15 +303,7 @@ function get_dataset_id() {
   }
 });
 
-
-
-
-
-
-
-
 </script>
-
 
 <!-- STYLE -->
 <style>
@@ -322,7 +360,6 @@ h1 {
 #sequence {
   min-height: 80px;
   max-height: 300px;
-/*  min-width: 700px;*/
   max-width: 98%;
 }
 
@@ -342,10 +379,6 @@ h1 {
 }
 
 #myCanvas {
-/*  border-style: solid;*/
-/*  border-width: 1px;*/
-/*  border-color: #ddd;*/
-/*  border-width:0px 1px 1px 1px;*/
   height:450px;
   width:1020px;
   overflow:scroll;
