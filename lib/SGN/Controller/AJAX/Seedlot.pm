@@ -1709,7 +1709,6 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh();
     my $seedlot_id = $c->req->param("seedlot_id");
-    print STDERR "SEEDLOT ID =".Dumper($seedlot_id)."\n";
     my $time = DateTime->now();
     my $discard_date = $time->ymd();
 
