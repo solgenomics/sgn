@@ -1709,8 +1709,6 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh();
     my $seedlot_id = $c->req->param("seedlot_id");
-    my $time = DateTime->now();
-    my $discard_date = $time->ymd();
 
     if (!$c->user()){
         $c->stash->{rest} = { error_string => "You must be logged in to undo discading this seedlot" };
