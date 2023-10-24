@@ -15,13 +15,10 @@ solGS.geneticGain = {
   ggPlotDivPrefix: "#gg_plot",
   ggMsgDiv: "#gg_message",
   ggPopsDiv: "#gg_pops_select_div",
-  ggPopsSelectMenuId: "#gg_select_pops",
+  ggPopsSelectMenuId: "#gg_pops_select",
 
   gebvsComparison: function () {
     var gebvParams = this.getGeneticGainArgs();
-
-    var trainingGEBVs = "";
-    var selectionGEBVs = "";
 
     var missing;
     if (!gebvParams.training_pop_id) {
@@ -43,7 +40,6 @@ solGS.geneticGain = {
         .show();
     } else {
       this.plotGeneticGainBoxplot(gebvParams);
-      //getTrainingPopulationGEBVs(gebvParams);
     }
   },
 
@@ -52,7 +48,7 @@ solGS.geneticGain = {
  
     var trainingPopId = jQuery(`${canvas} #training_pop_id`).val();
     var trainingPopName = jQuery(`${canvas} #training_pop_name`).val();
-    var selectionPopId = jQuery("#gg_selected_pop_id").val();
+    var selectionPopId = jQuery("#gg_selected_pop_id").val() || jQuery("#selection_pop_id").val();
     var trainingTraitsIds = jQuery(canvas).find("#training_traits_ids").val();
     var traitId = jQuery("#trait_id").val();
     var protocolId = jQuery("#genotyping_protocol_id").val();
@@ -95,7 +91,7 @@ solGS.geneticGain = {
           jQuery(`${canvas} .multi-spinner-container`).hide();
           jQuery(ggMsgDiv).empty();
 
-          solGS.showMessage(ggMsgDiv, response.Error);
+          solGS.showMessage(ggMsgDiv, res.Error);
 
           if (
             document.URL.match(

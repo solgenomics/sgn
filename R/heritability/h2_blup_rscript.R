@@ -24,7 +24,8 @@ study_trait <- args[2]
 figure3_file_name <- args[3]
 figure4_file_name <- args[4]
 h2File <- args[5]
-errorFile <- args[6]
+h2CsvFile <- args[6]
+errorFile <- args[7]
 errorMessages <- c()
 
 cat("study trait is ", study_trait,"\n")
@@ -379,6 +380,7 @@ tryCatch({
     )
   Heritability = na.omit(Heritability)
 
+  write.csv(Heritability, file = h2CsvFile)
   print(Heritability)
 
   pdf(NULL)
