@@ -151,10 +151,10 @@ $user_role => undef
 <br />
 <br />
 <br />
-
-<table id="available_seedlots_table" class="table table-hover table-striped table-bordered">
-</table>
-
+<div style="overflow:scroll">
+    <table id="available_seedlots_table" class="table table-hover table-striped table-bordered">
+    </table>
+</div>
 
 <hr>
 
