@@ -188,7 +188,7 @@ jQuery(document).ready(function(){
 
     //run the query only when the search button is clicked
     jQuery('#submit_seedlot_search').click( function() {
-        if (seedlots_table) { seedlots_table.destroy(); }
+        if (seedlots_table) { seedlots_table.destroy() };
         seedlots_table = jQuery('#available_seedlots_table').DataTable({
             'searching' : false,
             'ordering'  : false,
@@ -208,6 +208,7 @@ jQuery(document).ready(function(){
                 { title: "Box", "data": "box" },
                 { title: "Quality", "data": "seedlot_quality" },
                 { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
+                { title: "", "data": "seedlot_stock_uniquename"}
             ],
             'ajax': { 'url': '/ajax/breeders/seedlots',
                 'data': function(d) {
@@ -225,31 +226,27 @@ jQuery(document).ready(function(){
                     d.only_good_quality = jQuery('#search_seedlot_form_only_good_quality_checkbox').is(":checked") ? 1 : 0;
                 }
             },
-
-            "fnInitComplete": function(oSettings, json) {
-                if (!isLoggedIn()) {
-                    jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h4>Please login to use lists!</h4></div>");
-                } else {
-                    var html = "";
-                    for (var i=0; i<json.data.length; i++ ) {
-                        html += json.data[i].seedlot_stock_uniquename+"\n";
-                    }
-                    jQuery("#available_seedlots_to_list").html(html);
-                    addToListMenu("available_seedlots_add_to_list", "available_seedlots_to_list", {
-                        selectText: true,
-                        listType: 'seedlots',
-                        listName: 'seedlots'
-                    });
-                }
-            }
         });
 
         seedlots_table.draw();
+        seedlots_table.column(11).visible(false);
+
     });
 
-    //jQuery('#submit_seedlot_search').click( function() {
-    //    seedlots_table.search("available_seedlots_table").draw();
-    //});
+
+    jQuery('#available_seedlots_table').on( 'draw.dt', function () {
+        var seedlot_names = seedlots_table.column(11).data();
+        var names = "";
+
+        for (var i = 0; i < seedlot_names.length; i++) {
+            names += seedlot_names[i]+'\n';
+        }
+
+        jQuery('#available_seedlots_to_list').html(names);
+        addToListMenu('available_seedlots_add_to_list', 'available_seedlots_to_list', {
+            listType: 'seedlots'
+        });
+    });
 
     jQuery('#search_seedlot_form').keypress( function( e ) {
         var code = e.keyCode || e.which;
@@ -257,7 +254,6 @@ jQuery(document).ready(function(){
             jQuery('#submit_seedlot_search').click();
         }
     });
-
 });
 
 function removeSeedlot(seedlot_stock_id){
