@@ -46,8 +46,12 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div id="seedlot_to_seedlot_section" style="display:none">
-                                    <h3>You want to transfer seed from existing seedlots to other existing seedlots</h3>
+                                <div id="seedlots_to_seedlots_section" style="display:none">
+                                    <br/>
+                                    <hr class ="solid">
+                                    <center>
+                                        <h4>You want to transfer seed from existing seedlots to other existing seedlots</h4>
+                                    </center>
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
@@ -76,7 +80,11 @@
                                     </div>
                                 </div>
                                 <div id="seedlots_to_new_seedlots_section" style="display:none">
-                                    <h3>You want to transfer seed from existing seedlots to new seedlots</h3>
+                                    <br/>
+                                    <hr class ="solid">
+                                    <center>
+                                        <h4>You want to transfer seed from existing seedlots to new seedlots</h4>
+                                    </center>
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
@@ -105,7 +113,11 @@
                                     </div>
                                 </div>
                                 <div id="seedlots_to_plots_section" style="display:none">
-                                    <h3>You want to use seed from existing seedlots for plots</h3>
+                                    <br/>
+                                    <hr class ="solid">
+                                    <center>
+                                        <h4>You want to use seed from existing seedlots for plots</h4>
+                                    </center>
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
@@ -134,7 +146,7 @@
                                     </div>
                                 </div>
                             </form>
-                            <div id="submit_button_section" style="display:none">
+                            <div id="submit_transactions_button_section" style="display:none">
                                 <center>
                                     <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_transactions_submit" id="upload_transactions_submit">Upload File</button>
                                 </center>
@@ -252,6 +264,12 @@
     </div>
 </div>
 
+<style>
+
+hr.solid { border-top: 1px solid #bbb; }
+
+</style>
+
 <script>
 
 jQuery(document).ready(function(){
@@ -260,6 +278,83 @@ jQuery(document).ready(function(){
         jQuery('#upload_transactions_dialog').modal("show");
     });
 
+    jQuery("#transaction_type_option").change(function(){
+        if (jQuery(this).val() == ""){
+            jQuery("#seedlots_to_seedlots_section").hide();
+            jQuery("#seedlots_to_new_seedlots_section").hide();
+            jQuery("#seedlots_to_plots").hide();
+            jQuery("#submit_transactions_button_section").hide();
+        }
+        if (jQuery(this).val() == "seedlots_to_seedlots"){
+            jQuery("#seedlots_to_seedlots_section").show();
+            jQuery("#seedlots_to_new_seedlots_section").hide();
+            jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#submit_transactions_button_section").show();
+        }
+        if(jQuery(this).val() == "seedlots_to_new_seedlots"){
+            jQuery("#seedlots_to_seedlots_section").hide();
+            jQuery("#seedlots_to_new_seedlots_section").show();
+            jQuery("#seedlots_to_plots").hide();
+            jQuery("#submit_transactons_button_section").show();
+        }
+        if (jQuery(this).val() == "seedlots_to_plots" ){
+            jQuery("#seedlots_to_seedlots_section").hide();
+            jQuery("#seedlots_to_new_seedlots_section").hide();
+            jQuery("#seedlots_to_plots_section").show();
+            jQuery("#submit_transactions_button_section").show();
+        }
+    });
+
+    jQuery("#upload_transactions_submit").click(function() {
+        upload_transactions_file();
+    });
+
+    $('#upload_transactions_form').iframePostForm({
+        json: true,
+        post: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_transactions_error_display tbody").html('');
+                jQuery("#upload_transactions_error_display tbody").append(response.error_string);
+                jQuery("#upload_transactions_error_display").modal("show");
+
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                Workflow.focus("#transactions_upload_workflow", -1); //Go to success page
+                Workflow.check_complete("#transactions_upload_workflow");
+            }
+        }
+    });
+
+
 });
+
+function upload_transactions_file() {
+
+    var uploadSeedlotsToSeedlots = $("#seedlots_to_seedlots_file").val();
+    if (uploadSeedlotsToSeedlots === ''){
+        var uploadSeedlotsToNewSeedlots = $("#seedlots_to_new_seedlots_file").val();
+        if (uploadSeedlotsToNewSeedlots === ''){
+            var uploadSeedlotsToPlots = $("#seedlots_to_plots_file").val();
+            if (uploadFileXlsSimplifiedParents === ''){
+                alert("Please select a file");
+                return;
+            }
+        }
+    }
+
+    jQuery('#upload_transactions_form').attr("action", "/ajax/cross/upload_crosses_file");
+
+    jQuery("#upload_transactions_form").submit();
+}
+
 
 </script>
