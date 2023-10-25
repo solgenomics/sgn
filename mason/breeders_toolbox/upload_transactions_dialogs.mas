@@ -1,0 +1,265 @@
+<%args>
+
+</%args>
+
+
+<div class="modal fade" id="upload_transactions_dialog" name="upload_transactions_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransactionsDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransactionsDialog">Upload Transactions</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "transactions_upload_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Seedlot Transactions" &>
+                            <ul>
+                                <li></li>
+                                <li></li>
+                                <li></li>
+                                <li></li>
+                                <li></li>
+                            </ul>
+
+                            <br/><br/>
+                            <center>
+                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Upload Seedlot Transactions" &>
+                            <& /page/page_title.mas, title=>"Select transaction type and upload your file" &>
+
+                            <br/>
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transactions_form" name="upload_transactions_form">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Transaction Type: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="transaction_type_option">
+                                            <option value="">Select a transaction type that you want to upload</option>
+                                            <option value="seedlots_to_seedlots">From existing seedlots to other existing seedlots</option>
+                                            <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
+                                            <option value="seedlots_to_plots">From existing seedlots to plots</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="seedlot_to_seedlot_section" style="display:none">
+                                    <h3>You want to transfer seed from existing seedlots to other existing seedlots</h3>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="seedlots_to_seedlots_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="seedlots_to_seedlots_file" id="seedlots_to_seedlots_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="seedlots_to_new_seedlots_section" style="display:none">
+                                    <h3>You want to transfer seed from existing seedlots to new seedlots</h3>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="seedlots_to_new_seedlots_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="seedlots_to_new_seedlots_file" id="seedlots_to_new_seedlots_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="seedlots_to_plots_section" style="display:none">
+                                    <h3>You want to use seed from existing seedlots for plots</h3>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="seedlots_to_plots_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="seedlots_to_plots_file" id="seedlots_to_plots_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <div id="submit_button_section" style="display:none">
+                                <center>
+                                    <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_transactions_submit" id="upload_transactions_submit">Upload File</button>
+                                </center>
+                            </div>
+
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your transactions are now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                The transactions file was uploaded successfully
+                            </p>
+                            <br/>
+                            <center>
+                            <button  class="btn btn-primary" name="upload_transactions_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </center>
+                        </&>
+
+                    </&><!-- End of workflow -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button name="upload_transactions_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_transactions_error_display" name="upload_transactions_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTransactionsErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransactionsErrorDialog">Upload Transactions File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlots_to_seedlots_info_dialog" name="seedlots_to_seedlots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlotsToSeedlotsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlotsToSeedlotsInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br>
+                    <b>Header:</b>
+                    <br>
+                    To upload transactions, please provide required information. The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover" id = "seedlots_to_seedlots_header" style="display:none">
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>to_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-bordered table-hover" id = "seedlots_to_new_seedlots_header" style="display:none">
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>to_new_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="table table-bordered table-hover" id = "seedlots_to_plots_header" style="display:none">
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>plot_name</td>
+                                <td>amount</td>
+                                <td>weight</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <style>
+                        ul.a {text-indent};
+                        ul.b {text-indent};
+                    </style>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li><b>from_seedlot_name</b> (must exist in the database)</li>
+                        <li><b>to_seedlot_name</b> (must exist in the database)</li>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("[name='transactions_upload_link']").click(function() {
+        jQuery('#upload_transactions_dialog').modal("show");
+    });
+
+});
+
+</script>
