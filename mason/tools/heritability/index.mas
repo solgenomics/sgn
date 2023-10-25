@@ -75,6 +75,25 @@
 
 
 
+<&| /page/info_section.mas, title=>"Instructions", collapsible=>1, collapsed=>1, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+
+
+
+  <center>
+    <div id="sgn_blast_graph" style="display:none">
+        <div id="myCanvas">
+          Your browser does not support the HTML5 canvas
+        </div>
+    </div>
+  </center>
+  <br>
+  <h5><b>Dataset:</b></h5>
+  <h5>1. Dataset must have: Trail(s) and traits. Include accession, plots, locations, years are optional.</h5>
+  <h5>2. The model will adapt to your dataset. For instance, if the dataset has more than one location, then the model will take the interaction among locations and accessions.</h5>
+  <h5>3. Traits with more tha 60% of missing data are removed from the analysis.</h5>
+
+</&>
+
 
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
