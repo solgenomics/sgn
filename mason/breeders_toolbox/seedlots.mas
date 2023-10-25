@@ -38,7 +38,7 @@ $user_role => undef
                 <ul>
                 <li>Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
                 <li>Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
-		<li>The inventory app is currently not available but you can continue using it if it is installed on your tablet device.
+                <li>The inventory app is currently not available but you can continue using it if it is installed on your tablet device.
                 <!-- li>3) Use the "Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Inventory Android Application you can create your own CSV file and upload that.</li --><!-- the app is currently not available - re-instate when it is available again -->
                 <!-- li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li -->
                 It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
@@ -168,6 +168,21 @@ $user_role => undef
 </div>
 </&>
 
+<&| /page/info_section.mas, title=>"Mark seedlots as DISCARDED using a list",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_link">Mark Seedlots as Discarded</button>
+            </div>
+        </div>
+    </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to mark seedlots as DISCARDED using lists.
+% }
+</&>
+
+
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
@@ -177,12 +192,14 @@ $user_role => undef
 <& /breeders_toolbox/cross/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
 <& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
 <& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
+<& /breeders_toolbox/discard_seedlots.mas, user_role => $user_role &>
+<& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
 
 <script>
 jQuery(document).ready(function(){
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({
        source: '/ajax/stock/seedlot_name_autocomplete',
-});
+    });
 
 
     var seedlots_table;

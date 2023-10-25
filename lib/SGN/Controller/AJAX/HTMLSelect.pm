@@ -480,7 +480,7 @@ sub get_label_data_source_types_select : Path('/ajax/html/select/label_data_sour
     my @types = (
         ["any", "Any Data Type..."],
         ["field_trials", "Field Trials"],
-        ["genotyping_plates", "Genotyping Plates"], 
+        ["genotyping_plates", "Genotyping Plates"],
         ["crossing_experiments", "Crossing Experiments"],
         ["lists", "Lists"],
         ["public_lists", "Public Lists"]
@@ -720,6 +720,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
 #    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
 #    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
 #    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
+    my $exclude_discarded = $c->req->param('exclude_discarded') ? $c->req->param('exclude_discarded') : '';
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
@@ -757,7 +758,13 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $data_related = $c->req->param("data-related") || "";
     my @stocks;
     foreach my $r (@seedlots) {
-        push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+        if ($exclude_discarded == 1) {
+            if ($r->{count} ne 'DISCARDED') {
+                push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+            }
+        } else {
+            push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+        }
     }
     @stocks = sort { $a->[1] cmp $b->[1] } @stocks;
 
