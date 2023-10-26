@@ -159,10 +159,6 @@
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                                 The transactions file was uploaded successfully
                             </p>
-                            <br/>
-                            <center>
-                            <button  class="btn btn-primary" name="upload_transactions_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
-                            </center>
                         </&>
 
                     </&><!-- End of workflow -->
@@ -295,7 +291,7 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_seedlots_section").hide();
             jQuery("#seedlots_to_new_seedlots_section").show();
             jQuery("#seedlots_to_plots").hide();
-            jQuery("#submit_transactons_button_section").show();
+            jQuery("#submit_transactions_button_section").show();
         }
         if (jQuery(this).val() == "seedlots_to_plots" ){
             jQuery("#seedlots_to_seedlots_section").hide();
@@ -309,7 +305,7 @@ jQuery(document).ready(function(){
         upload_transactions_file();
     });
 
-    $('#upload_transactions_form').iframePostForm({
+    jQuery('#upload_transactions_form').iframePostForm({
         json: true,
         post: function() {
             jQuery("#working_modal").modal("show");
@@ -339,19 +335,19 @@ jQuery(document).ready(function(){
 
 function upload_transactions_file() {
 
-    var uploadSeedlotsToSeedlots = $("#seedlots_to_seedlots_file").val();
+    var uploadSeedlotsToSeedlots = jQuery("#seedlots_to_seedlots_file").val();
     if (uploadSeedlotsToSeedlots === ''){
-        var uploadSeedlotsToNewSeedlots = $("#seedlots_to_new_seedlots_file").val();
+        var uploadSeedlotsToNewSeedlots = jQuery("#seedlots_to_new_seedlots_file").val();
         if (uploadSeedlotsToNewSeedlots === ''){
-            var uploadSeedlotsToPlots = $("#seedlots_to_plots_file").val();
-            if (uploadFileXlsSimplifiedParents === ''){
+            var uploadSeedlotsToPlots = jQuery("#seedlots_to_plots_file").val();
+            if (uploadSeedlotsToPlots === ''){
                 alert("Please select a file");
                 return;
             }
         }
     }
 
-    jQuery('#upload_transactions_form').attr("action", "/ajax/cross/upload_crosses_file");
+    jQuery('#upload_transactions_form').attr("action", "/ajax/breeders/upload_transactions");
 
     jQuery("#upload_transactions_form").submit();
 }
