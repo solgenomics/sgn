@@ -187,6 +187,7 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my %parsed_data;
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -212,7 +213,10 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my %transactions;
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
+    my @transactions;
     for my $row ( 1 .. $row_max ) {
         my $from_seedlot_name;
         my $to_seedlot_name;
@@ -250,15 +254,33 @@ sub _parse_with_plugin {
             next;
         }
 
-        $transactions{$from_seedlot_name}{$to_seedlot_name}{'amount'} = $amount;
-        $transactions{$from_seedlot_name}{$to_seedlot_name}{'weight'} = $weight;
-        $transactions{$from_seedlot_name}{$to_seedlot_name}{'description'} = $transaction_description;
-        $transactions{$from_seedlot_name}{$to_seedlot_name}{'operator'} = $operator_name;
+        my $from_seedlot_rs = $schema->resultset("Stock::Stock")->find({
+            'uniquename' => $from_seedlot_name,
+            'type_id' => $seedlot_cvterm_id,
+        });
+        my $from_seedlot_id = $from_seedlot_rs->stock_id();
 
+        my $to_seedlot_rs = $schema->resultset("Stock::Stock")->find({
+            'uniquename' => $to_seedlot_name,
+            'type_id' => $seedlot_cvterm_id,
+        });
+        my $to_seedlot_id = $from_seedlot_rs->stock_id();
+
+        push @transactions, {
+            from_seedlot_name => $from_seedlot_name,
+            from_seedlot_id => $from_seedlot_id,
+            to_seedlot_name => $to_seedlot_name,
+            to_seedlot_id => $to_seedlot_id,
+            amount => $amount,
+            weight => $weight,
+            transaction_description => $transaction_description,
+            operator => $operator_name
+        }
     }
     #print STDERR Dumper \%parsed_seedlots;
+    $parsed_data{transactions} = \@transactions;
 
-    $self->_set_parsed_data(\%transactions);
+    $self->_set_parsed_data(\%parsed_data);
     return 1;
 }
 

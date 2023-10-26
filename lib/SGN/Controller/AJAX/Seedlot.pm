@@ -1822,7 +1822,6 @@ sub upload_transactions_POST : Args(0) {
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
-    print STDERR "TRANSACTION DATA =".Dumper($parsed_data)."\n";
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -1839,6 +1838,33 @@ sub upload_transactions_POST : Args(0) {
         $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
+
+    if ($parsed_data) {
+        my $transactions = $parsed_data->{transactions};
+        my @all_transactions = @$transactions;
+        foreach my $transaction_info (@all_transactions) {
+            print STDERR "EACH TRANSACTION INFO =".Dumper($transaction_info)."\n";
+            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+            $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+            $transaction->to_stock([$transaction_info->{to_seedlot_id}, $transaction_info->{to_seedlot_name}]);
+            $transaction->amount($transaction_info->{amount});
+            $transaction->weight_gram($transaction_info->{weight});
+            $transaction->timestamp($timestamp);
+            $transaction->description($transaction_info->{transaction_description});
+            $transaction->operator($transaction_info->{operator});
+            my $transaction_id = $transaction->store();
+
+            my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+            $current_from_seedlot->set_current_count_property();
+            $current_from_seedlot->set_current_weight_property();
+
+            my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
+            $current_to_seedlot->set_current_count_property();
+            $current_to_seedlot->set_current_weight_property();
+
+        }
+    }
+
 
     eval {
 
@@ -1865,15 +1891,8 @@ sub upload_transactions_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = { success => 1, added_seedlot => \@added_stocks  };
+    $c->stash->{rest} = { success => 1};
 }
-
-
-
-
-
-
-
 
 
 1;
