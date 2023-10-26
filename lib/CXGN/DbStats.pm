@@ -153,6 +153,11 @@ sub germplasm_count_with_genotypes {
 }
 
 
+sub phenotype_count_per_trial {
+    my $self = shift;
+    
+    my $q = "select project.project_id, project.name, cvterm.name, count(cvterm_id) from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) join cvterm on(cvalue_id=cvterm_id) group by project.project_id, project.name, cvterm.name";
 
+}
 
 1;
