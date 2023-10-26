@@ -1740,6 +1740,142 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
 }
 
 
+sub upload_transactions : Path('/ajax/breeders/upload_transactions') : ActionClass('REST') { }
+
+sub upload_transactions_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $upload_seedlots_to_seedlots = $c->req->upload('seedlots_to_seedlots_file');
+    my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
+    my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
+    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots){
+        $c->stash->{rest} = {error=>'You must upload a transaction file!'};
+        $c->detach();
+    }
+    print STDERR "SEEDLOTS TO SEEDLOTS =".Dumper($upload_seedlots_to_seedlots)."\n";
+    my $upload;
+    my $parser_type;
+    if ($upload_seedlots_to_seedlots){
+        $upload = $upload_seedlots_to_seedlots;
+        $parser_type = 'SeedlotsToSeedlots';
+    }
+    if ($upload_seedlots_to_new_seedlots){
+        $upload = $upload_seedlots_to_new_seedlots;
+        $parser_type = 'SeedlotsToNewSeedlots';
+    }
+    if ($upload_seedlots_to_plots){
+        $upload = $upload_seedlots_to_plots;
+        $parser_type = 'SeedlotsToPlots';
+    }
+
+    my $subdirectory = "seedlot_transaction_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin($parser_type);
+    my $parsed_data = $parser->parse();
+    print STDERR "TRANSACTION DATA =".Dumper($parsed_data)."\n";
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    eval {
+
+
+
+    };
+
+    my @added_stocks;
+
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload transactions. ($@).\n";
+        $c->detach();
+    }
+
+    foreach my $stock_id (@added_stocks) {
+        $phenome_schema->resultset("StockOwner")->find_or_create({
+            stock_id     => $stock_id,
+            sp_person_id =>  $user_id,
+        });
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = { success => 1, added_seedlot => \@added_stocks  };
+}
+
+
+
+
+
+
+
+
+
 1;
 
 no Moose;
