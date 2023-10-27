@@ -48,7 +48,7 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     
 #    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
 
-    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -alt_marker_ids -nofull_cluster_output -max_distance 0.25 -in $filename $ref_option -output $filename.out";
+    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -alt_marker_ids -nofull_cluster_output -max_distance 0.5 -in $filename $ref_option -output $filename.out -graphics GD -histogram_filename $filename.out_distances_histogram.png -histogram_path /home/production/cxgn/gtsimsrch/src/histogram.pl";
     print STDERR "running command $cmd...\n";
     system($cmd);
 
