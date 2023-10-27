@@ -241,6 +241,8 @@ $facilities => ();
                                                 <option value="root">Root</option>
                                                 <option value="stem">Stem</option>
                                                 <option value="seed">Seed</option>
+                                                <option value="fruit">Fruit</option>
+                                                <option value="tuber">Tuber</option>
                                             </select>
                                         </div>
                                     </div>
@@ -390,7 +392,7 @@ $facilities => ();
                     <li>row (the row position of the sample in the plate e.g. A)</li>
                     <li>column (the column position of the sample in the plate e.g. 10)</li>
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
-                    <li>tissue_type (must be either leaf, root, stem or seed)</li>
+                    <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
                     </ul>
 
                     <b>Optional fields:</b>
@@ -463,7 +465,7 @@ $facilities => ();
                     <li>well_01A (the position of the sample in the plate in this format 01A)</li>
                     <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
                     <li>dna_person (the name of the person who plated the individual sample. can be any name.)</li>
-                    <li>tissue_type (must be either leaf, root, or stem)</li>
+                    <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
                     </ul>
 
                     <b>Optional fields:</b>
