@@ -465,7 +465,7 @@ $facilities => ();
                     <li>well_01A (the position of the sample in the plate in this format 01A)</li>
                     <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
                     <li>dna_person (the name of the person who plated the individual sample. can be any name.)</li>
-                    <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
+                    <li>tissue_type (must be either leaf, root, or stem)</li>
                     </ul>
 
                     <b>Optional fields:</b>
