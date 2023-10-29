@@ -22,7 +22,7 @@
 <& /page/page_title.mas, title=>"Heritability" &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/heritability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
 
 
@@ -92,9 +92,12 @@
   </center>
   <br>
   <h5><b>Dataset:</b></h5>
-  <h5>1. Dataset must have: Trail(s) and traits. Include accession, plots, locations, years are optional.</h5>
+  <h5>1. The dataset must contain trails and numerical traits. Inclusion of accession, plots, locations, and years is optional.</h5>
   <h5>2. The model will adapt to your dataset. For instance, if the dataset has more than one location, then the model will take the interaction among locations and accessions.</h5>
   <h5>3. Traits with more than 60% of missing data are removed from the analysis.</h5>
+  <h5>4. Outliers can be removed by accessing the <a href="/search/datasets" target="_blank"> Datasets tab </a>. </h5>
+  <h5>5. Selecting the 'Exclude dataset outliers', heritability is calculated using filtered data.</h5>
+
 
 </&>
 
