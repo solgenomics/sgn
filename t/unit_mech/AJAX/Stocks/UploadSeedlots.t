@@ -8,6 +8,7 @@ use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use CXGN::List;
+use CXGN::Stock::Seedlot;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -17,6 +18,7 @@ local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
+my $phenome_schema = $f->phenome_schema;
 
 my $mech = Test::WWW::Mechanize->new;
 
@@ -131,6 +133,37 @@ is($third_row->{'current_count'}, '5');
 is($third_row->{'box_name'}, 'b1');
 is($third_row->{'quality'}, '');
 
+#test discarding seedlot
+my $seedlot_test1_rs = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test1' });
+my $seedlot_test1_id = $seedlot_test1_rs->stock_id();
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/seedlot/discard', [ 'seedlot_name' => 'seedlot_test1', 'discard_reason' => 'test' ]);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $seedlot = CXGN::Stock::Seedlot->new(
+    schema => $schema,
+    phenome_schema => $phenome_schema,
+    seedlot_id => $seedlot_test1_id
+);
+
+my $current_count = $seedlot->get_current_count_property();
+is($current_count, 'DISCARDED');
+
+#test undo discarding seedlot
+$mech->post_ok('http://localhost:3010/ajax/breeders/seedlot/undo_discard', [ 'seedlot_id' => $seedlot_test1_id ]);
+my $undo_response = decode_json $mech->content;
+is($undo_response->{'success'}, '1');
+
+my $undo_seedlot = CXGN::Stock::Seedlot->new(
+    schema => $schema,
+    phenome_schema => $phenome_schema,
+    seedlot_id => $seedlot_test1_id
+);
+
+my $undo_current_count = $undo_seedlot->get_current_count_property();
+is($undo_current_count, '10');
+
 #delete seedlot list
 my $delete = CXGN::List::delete_list($f->dbh(), $seedlot_list_id);
 
@@ -140,7 +173,7 @@ END{
     #Remove seedlots
 
     print STDERR "REMOVING SEEDLOTS... ";
-    
+
     my $dbh = $f->dbh();
     my $seedlot_ids = join ("," , @$added_seedlot);
     my $seedlot_ids2 = join ("," , @$added_seedlot2);
@@ -162,7 +195,7 @@ END{
 	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
 	#$rel_row->delete();
     }
-    
+
 
     $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession4_001' });
 
@@ -171,12 +204,12 @@ END{
 	#	$rel_row->delete();
 	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
     }
-    
+
     $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession3_001' });
 
     $rel_rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $row->stock_id, type_id => $cvterm_id });
     foreach my $rel_row ($rel_rs->all()) {
-	
+
 	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
 	#	    $rel_row->delete();
     }

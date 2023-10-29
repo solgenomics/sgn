@@ -116,7 +116,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $dataset_id = $c->req->param('dataset_id');
     my $method = $c->req->param('method_id');
     my $trait_id = $c->req->param('trait_id');
-    
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
     print STDERR "DATASET_ID: $dataset_id\n";
     print STDERR "TRAIT ID: $trait_id\n";
     print STDERR "Method: ".Dumper($method);
@@ -138,7 +138,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     #my $temppath = $stability_tmp_output . "/" . $tempfile;
     my $temppath =  $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
@@ -200,7 +200,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     
     my $figure2basename = basename($figure2file);
     my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
-        
+
     $c->stash->{rest} = {
         AMMITable => $AMMIFile_response,
         figure1 => $figure1_response,

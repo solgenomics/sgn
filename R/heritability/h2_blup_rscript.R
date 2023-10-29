@@ -12,7 +12,9 @@ pheno <- read.table(args[1], sep = "\t", header = TRUE)
 
 study_trait <- args[2]
 h2File <- args[3]
-errorFile <- args[4]
+h2CsvFile <- args[4]
+errorFile <- args[5]
+
 errorMessages <- c()
 
 study_trait <- gsub("\\."," ",study_trait)
@@ -176,10 +178,11 @@ tryCatch({
                           )
   
   Heritability = na.omit(Heritability)
+
   h2_json <- jsonlite::toJSON(Heritability)
   jsonlite::write_json(h2_json, h2File)
-  write.table(Heritability, paste0(h2File,".table"), row.names=FALSE, col.names=FALSE)
-  # print(h2File)
+  write.csv(Heritability, file = h2CsvFile)
+
 }, error = function(e) {
   an.error.occured <<- TRUE
   errorMessages <<- c(errorMessages, as.character(e))

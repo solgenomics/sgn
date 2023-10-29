@@ -31,6 +31,8 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
@@ -46,7 +48,7 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
     print STDERR "***** temppath = $temppath\n";
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
     print STDERR Dumper(@trait_info);
@@ -111,10 +113,12 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
 
-
     print STDERR "The dataset is $dataset_id\n";
     print STDERR $dataset_id;
     print STDERR $trait_id;
+
+
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
 
     $c->tempfiles_subdir("heritability_files");
     my $heritability_tmp_output = $c->config->{cluster_shared_tempdir}."/heritability_files";
@@ -136,12 +140,14 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     #my $temppath = $heritability_tmp_output . "/" . $tempfile;
     my $temppath = $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
     
+
     my $h2File = $tempfile . "_" . "h2File.json";
+    my $h2CsvFile = $tempfile . "_" . "h2CsvFile.csv";
     my $errorFile = $tempfile . "_" . "error.txt";
 
 
@@ -167,6 +173,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
             $pheno_filepath,
             $trait_id,
             $h2File,
+            $h2CsvFile,
             $errorFile
     );
     $cmd->alive;
@@ -176,24 +183,26 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
    
     my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
     copy($h2File, $figure_path);
+    copy($h2CsvFile, $figure_path);
+
 
     my $h2Filebasename = basename($h2File);
     my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
+
+    my $h2CsvFilebasename = basename($h2CsvFile);
+    my $h2CsvFile_response = "/documents/tempfiles/heritability_files/" . $h2CsvFilebasename;
 
     my $errors;
     if ( -e $errorFile ) {
         open my $fh, '<', $errorFile or die "Can't open error file $!";
         $errors = do { local $/; <$fh> };
     }
-
-
-    #print STDERR $h2File_response;
         
     $c->stash->{rest} = {
         h2Table => $h2File_response,
         dummy_response => $dataset_id,
-        error => $errors
-        # dummy_response2 => $trait_id,
+        error => $errors,
+        h2CsvTable => $h2CsvFile_response     
     };
 }
 

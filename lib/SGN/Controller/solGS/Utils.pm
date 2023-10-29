@@ -7,6 +7,7 @@ use File::Slurp qw /write_file read_file edit_file/;
 use JSON;
 use List::MoreUtils qw(first_index);
 
+
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
 
@@ -343,14 +344,6 @@ sub stash_json_args {
         $c->stash->{combo_pops_id} = $c->stash->{training_pop_id};
     }
 
-}
-
-
-sub generic_message {
-    my ($self, $c, $msg) = @_;
-
-    $c->stash->{message} = $msg;
-    $c->stash->{template} = "/generic_message.mas";
 }
 
 sub require_login {

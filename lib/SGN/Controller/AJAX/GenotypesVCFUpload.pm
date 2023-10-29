@@ -29,6 +29,7 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
 use JSON;
 
@@ -85,8 +86,8 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
-    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
-    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+#    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
 
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
     my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
@@ -100,6 +101,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
     my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
     my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
+    my $assay_type = $c->req->param('assay_type_select');
     my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
     my $add_accessions;
     if ($add_new_accessions){
@@ -117,6 +119,35 @@ sub upload_genotype_verify_POST : Args(0) {
         $accept_warnings = 1;
     }
 
+    if (defined $project_id && defined $protocol_id) {
+        my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $project_id
+        });
+        my $associated_protocol  = $protocol_info->get_associated_protocol();
+        my @info;
+        if ((defined $associated_protocol) && (scalar(@$associated_protocol)>1)) {
+            $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+            $c->detach();
+        } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
+            my $stored_protocol_id = $associated_protocol->[0]->[0];
+            if ($stored_protocol_id != $protocol_id) {
+                $c->stash->{rest} = { error => "The selected genotyping project is already associated with different protocol. Each project should be associated with only one protocol" };
+                $c->detach();
+            }
+        }
+    } elsif ((defined $project_id) && (defined $protocol_name)) {
+        my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+            bcs_schema => $schema,
+            project_id => $project_id
+        });
+        my $associated_protocol  = $protocol_info->get_associated_protocol();
+        if ((defined $associated_protocol) && (scalar(@$associated_protocol) > 0)) {
+            $c->stash->{rest} = { error => "The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol" };
+            $c->detach();
+        }
+    }
+
     #archive uploaded file
     my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
     my $upload_tassel_hdf5 = $c->req->upload('upload_genotype_tassel_hdf5_file_input');
@@ -124,6 +155,13 @@ sub upload_genotype_verify_POST : Args(0) {
     my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
     my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
     my $upload_ssr_data = $c->req->upload('upload_genotype_ssr_file_input');
+    my $upload_kasp_genotypes = $c->req->upload('upload_genotype_data_kasp_file_input');
+    my $upload_kasp_marker_info = $c->req->upload('upload_genotype_kasp_marker_info_file_input');
+    if (defined $upload_kasp_genotypes) {
+        if (!defined $assay_type) {
+            $assay_type = 'KASP';
+        }
+    }
 
     if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
         $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
@@ -265,7 +303,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $parser_plugin = 'transposedVCF';
     }
 
-    my $archived_intertek_marker_info_file;
+    my $archived_marker_info_file;
     if ($upload_intertek_genotypes) {
         $upload_original_name = $upload_intertek_genotypes->filename();
         $upload_tempfile = $upload_intertek_genotypes->tempname;
@@ -288,9 +326,9 @@ sub upload_genotype_verify_POST : Args(0) {
             user_id => $user_id,
             user_role => $user_role
         });
-        $archived_intertek_marker_info_file = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_intertek_marker_info_file);
-        if (!$archived_intertek_marker_info_file) {
+        $archived_marker_info_file = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_marker_info_file);
+        if (!$archived_marker_info_file) {
             push @error_status, "Could not save file $upload_inteterk_marker_info_original_name in archive.";
             return (\@success_status, \@error_status);
         } else {
@@ -304,6 +342,35 @@ sub upload_genotype_verify_POST : Args(0) {
         $upload_tempfile = $upload_ssr_data->tempname;
         $subdirectory = "ssr_data_upload";
         $parser_plugin = 'SSRExcel';
+    }
+
+    if ($upload_kasp_genotypes) {
+        $upload_original_name = $upload_kasp_genotypes->filename();
+        $upload_tempfile = $upload_kasp_genotypes->tempname;
+        $subdirectory = "genotype_kasp_upload";
+        $parser_plugin = 'KASP';
+
+        my $upload_kasp_marker_info_original_name = $upload_kasp_marker_info->filename();
+        my $upload_kasp_marker_info_tempfile = $upload_kasp_marker_info->tempname();
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_kasp_marker_info_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_kasp_marker_info_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        $archived_marker_info_file = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_marker_info_file);
+        if (!$archived_marker_info_file) {
+            push @error_status, "Could not save file $upload_kasp_marker_info_original_name in archive.";
+            return (\@success_status, \@error_status);
+        } else {
+            push @success_status, "File $upload_kasp_marker_info_original_name saved in archive.";
+        }
+        unlink $upload_kasp_marker_info_tempfile;
     }
 
     my $uploader = CXGN::UploadFile->new({
@@ -358,7 +425,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
-        filename_intertek_marker_info => $archived_intertek_marker_info_file,
+        filename_marker_info => $archived_marker_info_file,
         observation_unit_type_name => $obs_type,
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
@@ -369,6 +436,19 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
     my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
+
+    my $vcf_genotyping_type =  'vcf_snp_genotyping';#for now only SNP type are uploaded from VCF using the web interface
+    my $genotyping_type;
+    my $genotype_data_type;
+
+    if ($vcf_genotyping_type =~ /vcf_phg_genotyping/) {
+    $genotyping_type = 'phg genotyping';
+    $genotype_data_type = 'PHG';
+
+} else {
+    $genotyping_type = 'snp genotyping';
+    $genotype_data_type = 'SNP';
+}
 
     my $store_args = {
         bcs_schema=>$schema,
@@ -391,7 +471,10 @@ sub upload_genotype_verify_POST : Args(0) {
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
         archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-        temp_file_sql_copy=>$temp_file_sql_copy
+        temp_file_sql_copy=>$temp_file_sql_copy,
+        vcf_genotyping_type => $vcf_genotyping_type,
+        genotyping_type => $genotyping_type,
+        genotyping_data_type=> $genotype_data_type,
     };
 
     my $return;
@@ -420,6 +503,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
         $protocol->{'reference_genome_name'} = $reference_genome_name;
         $protocol->{'species_name'} = $organism_species;
+        $protocol->{'assay_type'} = $assay_type;
         my $store_genotypes;
         my ($observation_unit_names, $genotype_info) = $parser->next();
         if (scalar(keys %$genotype_info) > 0) {
@@ -461,18 +545,34 @@ sub upload_genotype_verify_POST : Args(0) {
                 });
                 my $stored_markers = $stored_protocol->markers();
 
-                while (my ($marker_name, $marker_obj) = each %$stored_markers) {
-                    while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-                        if ($new_marker_data_1->{$marker_name}) {
-                            my $protocol_data_obj = $new_marker_data_1->{$marker_name};
-                            while (my ($key, $value) = each %$marker_obj) {
-                                if ($value ne $protocol_data_obj->{$key}) {
-                                    push @protocol_match_errors, "Marker $marker_name in the previously loaded protocol has $value for $key, but in your file now shows ".$protocol_data_obj->{$key};
+                my @all_stored_markers = keys %$stored_markers;
+                my %compare_marker_names = map {$_ => 1} @all_stored_markers;
+                my @mismatch_marker_names;
+                while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+                    while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
+                        if (exists($compare_marker_names{$marker_name})) {
+                            while (my ($key, $value) = each %$new_marker_details) {
+                                if ($value ne ($stored_markers->{$marker_name}->{$key})) {
+                                    push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
                                 }
                             }
+                        } else {
+                            push @mismatch_marker_names, $marker_name;
                         }
                     }
                 }
+
+                if (scalar(@mismatch_marker_names) > 0){
+                    my $marker_name_error;
+                    $marker_name_error .= "<br>";
+                    foreach my $error ( sort @mismatch_marker_names) {
+                        $marker_name_error .= $error."<br>";
+                    }
+
+                    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
+                    $c->detach();
+                }
+
 
                 if (scalar(@protocol_match_errors) > 0){
                     my $protocol_warning;
@@ -507,7 +607,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $return = $store_genotypes->store_genotypeprop_table();
     }
     #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
-    elsif ($parser_plugin eq 'IntertekCSV') {
+    elsif (($parser_plugin eq 'IntertekCSV') || ($parser_plugin eq 'KASP')) {
         if (defined $protocol_id) {
             $parser->{nd_protocol_id} = $protocol_id;
         }
@@ -532,8 +632,11 @@ sub upload_genotype_verify_POST : Args(0) {
         my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
         my $genotype_info = $parsed_data->{genotypes_info};
         my $protocol_info = $parsed_data->{protocol_info};
+        my $marker_info_keys = $parsed_data->{marker_info_keys};
         $protocol_info->{'reference_genome_name'} = $reference_genome_name;
         $protocol_info->{'species_name'} = $organism_species;
+        $protocol_info->{'marker_info_keys'} = $marker_info_keys;
+        $protocol_info->{'assay_type'} = $assay_type;
 
         $store_args->{protocol_info} = $protocol_info;
         $store_args->{genotype_info} = $genotype_info;

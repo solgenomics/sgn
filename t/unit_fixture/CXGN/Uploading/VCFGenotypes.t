@@ -190,9 +190,7 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-#print STDERR Dumper $message_hash;
-is($message_hash->{success}, 1);
-is($project_id, $message_hash->{project_id});
+is($message_hash->{'error'}, 'The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol');
 
 #adding genotype data using same project to same protocol
 $ua = LWP::UserAgent->new;
@@ -215,7 +213,6 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-#print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 is($project_id, $message_hash->{project_id});
 is($protocol_id, $message_hash->{nd_protocol_id});
@@ -247,7 +244,7 @@ my $stock_id = $schema->resultset("Stock::Stock")->find({uniquename => 'SRLI1_90
 $mech->get_ok('http://localhost:3010/stock/'.$stock_id.'/datatables/genotype_data');
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
-is(scalar(@{$response->{data}}), 4);
+is(scalar(@{$response->{data}}), 3);
 
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";
@@ -498,6 +495,10 @@ $message = $response->decoded_content;
 #print STDERR Dumper $message;
 is($message, $dosage_matrix_string);
 
+#testing genotype data download from project page
+my $project_response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?genotyping_project_id=$project_id&download_format=VCF&format=accession_ids&forbid_cache=1");
+my $project_message = $project_response->decoded_content;
+is($project_message, $dosage_matrix_string);
 
 #Testing genotype search with marker names filter from marker set list object
 my $marker_names_filtered = ["S1_21594", "S1_21597", "S1_75465"];
