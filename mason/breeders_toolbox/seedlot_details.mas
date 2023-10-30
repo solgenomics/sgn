@@ -15,6 +15,9 @@ $box_name=>undef
 $quality => undef
 $owners_string => undef
 $maintenance_enabled => undef
+$discard_info => undef
+$status => undef
+$user_role => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -25,11 +28,21 @@ $maintenance_enabled => undef
 }
 </style>
 
+% my $edit_seedlot_link;
+% my $new_transaction_link;
+% if (!$discard_info) {
+%    $edit_seedlot_link = "[<a id='edit_seedlot_details_link' >Edit Seedlot Details</a>]";
+%    $new_transaction_link = "[<a id='add_seedlot_transaction_button' >Add New Transaction</a>]";
+% }
+
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
 
-<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='edit_seedlot_details_link' >Edit Seedlot Details</a>]" &>
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=> $edit_seedlot_link &>
 
 <table class="table table-bordered table-hover">
+% if ($discard_info) {
+    <tr><td><b>Discard Info</b></td><td><% $discard_info %></td></tr>
+% }
 <tr><td><b>Breeding Program</b></td><td><div id="seedlot_breeding_program_div">[LOADING...]</div></td></tr>
 <tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
 <tr><td><b>Seedlot Description</b></td><td><% $description %></td></tr>
@@ -50,7 +63,7 @@ $maintenance_enabled => undef
 <h3>Transactions</h3>
 </center>
 
-<&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='add_seedlot_transaction_button' >Add New Transaction</a>]" &>
+<&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>$new_transaction_link &>
 
 <div style="overflow:scroll">
     <table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
@@ -58,6 +71,27 @@ $maintenance_enabled => undef
 </div>
 
 </&>
+
+<&| /page/info_section.mas, title=>"Mark this seedlot as DISCARDED",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+% if ($discard_info) {
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="undo_discarding_seedlot_link">Undo Discarding this Seedlot</button>
+% } else {
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_details_page_link">Mark this Seedlot as DISCARDED</button>
+% }
+            </div>
+        </div>
+    </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to mark this seedlot as DISCARDED.
+% }
+</&>
+
+<& /breeders_toolbox/discard_single_seedlot.mas, seedlot_id => $seedlot_id, uniquename => $uniquename &>
+<& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
 
 % if ( $maintenance_enabled ) {
     <& /page/page_title.mas, title => 'Maintenance Events' &>
@@ -425,8 +459,8 @@ $maintenance_enabled => undef
   jQuery(document).ready(function () {
 
     jQuery('#add_seedlot_transaction_button').click( function() {
-        get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
-        get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
+        get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1' });
+        get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1' });
         get_select_box('breeding_programs', 'transaction_new_seedlot_breeding_program_div', { 'name' : 'transaction_new_seedlot_breeding_program_id', 'id' : 'transaction_new_seedlot_breeding_program_id' });
         jQuery('#add_seedlot_transaction_dialog').modal('show')
     });
@@ -441,6 +475,7 @@ $maintenance_enabled => undef
        source: '/ajax/stock/cross_autocomplete',
     });
 
+    var status = "<% $status %>";
     var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( {
         'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
         columns: [
@@ -452,7 +487,11 @@ $maintenance_enabled => undef
             { title: "Transaction Weight (g)", "data": "weight" },
             { title: "Operator", "data": "operator" },
             { title: "Transaction Description", "data": "description" },
-            { title: "Options", "data": "null", "render" : function ( data, type, row ) { return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>"; } },
+            { title: "Options", "data": "null", "render" : function ( data, type, row ) {
+                if (status == 'discarded') {
+                    return "";
+                } else {return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>";}
+            }},
         ],
     });
 
