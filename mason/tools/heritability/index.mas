@@ -287,76 +287,70 @@ jQuery(document).ready(function() {
           timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
-            if (response.error) {
+            
+			if (response.error) {
               alert(response.error);
-            }
+            }          
 
-            $(document).ready(function(){
-                $.getJSON(response.h2Table, function(data){
-                    var parsedData = JSON.parse(data);
-                    var traitValue = '';
-                    var varG = '';
-                    var varE = '';
-                    var varRes = '';
-                    var herit = ''; 
+			$.getJSON(response.h2Table, function(data){
+				var parsedData = JSON.parse(data);
+				var traitValue = '';
+				var varG = '';
+				var varE = '';
+				var varRes = '';
+				var herit = ''; 
 
-                    var table = '<table>';
-                    table += '<thead><tr><th>Trait</th><th>Vg</th><th>Ve</th><th>Vres</th><th>Heritability</th></tr></thead>';
-                    table += '<tbody>';
+				var table = '<table>';
+				table += '<thead><tr><th>Trait</th><th>Vg</th><th>Ve</th><th>Vres</th><th>Heritability</th></tr></thead>';
+				table += '<tbody>';
 
-                    for (var i = 0; i < parsedData.length; i++) {
-                      traitValue = parsedData[i].trait;
-                      varG = parsedData[i].Vg;
-                      varE = parsedData[i].Ve;
-                      varRes = parsedData[i].Vres;
-                      herit = parsedData[i].Hert;
+				for (var i = 0; i < parsedData.length; i++) {
+					traitValue = parsedData[i].trait;
+					varG = parsedData[i].Vg;
+					varE = parsedData[i].Ve;
+					varRes = parsedData[i].Vres;
+					herit = parsedData[i].Hert;
 
-                      // Create a row for each data point
-                      table += '<tr>';
-                      table += '<td>' + traitValue + '</td>';
-                      table += '<td>' + varG + '</td>';
-                      table += '<td>' + varE + '</td>';
-                      table += '<td>' + varRes + '</td>';
-                      table += '<td>' + herit + '</td>';
-                      table += '</tr>';
-                  }
-                    $('#heritability_output').append(table);
+					// Create a row for each data point
+					table += '<tr>';
+					table += '<td>' + traitValue + '</td>';
+					table += '<td>' + varG + '</td>';
+					table += '<td>' + varE + '</td>';
+					table += '<td>' + varRes + '</td>';
+					table += '<td>' + herit + '</td>';
+					table += '</tr>';
+				}
+				$('#heritability_output').append(table);
                 
                 $('#download-button').click(function() {
-                var csvContent = "data:text/csv;charset=utf-8,";
+					var csvContent = "data:text/csv;charset=utf-8,";
 
-                // Add table headers to CSV content
-                csvContent += "Trait,Vg,Ve,Vres,Heritability\n";
+					// Add table headers to CSV content
+					csvContent += "Trait,Vg,Ve,Vres,Heritability\n";
 
-                // Add table data to CSV content
-                for (var i = 0; i < parsedData.length; i++) {
-                    var row = parsedData[i];
-                    csvContent += row.trait + "," + row.Vg + "," + row.Ve + "," + row.Vres + "," + row.Hert + "\n";
-                }
+					// Add table data to CSV content
+					for (var i = 0; i < parsedData.length; i++) {
+						var row = parsedData[i];
+						csvContent += row.trait + "," + row.Vg + "," + row.Ve + "," + row.Vres + "," + row.Hert + "\n";
+					}
 
-                // Create a data URI for the CSV content
-                var encodedUri = encodeURI(csvContent);
+					// Create a data URI for the CSV content
+					var encodedUri = encodeURI(csvContent);
 
-                // Create a download link
-                var link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "heritability_data.csv");
-                link.innerHTML = "Download CSV";
+					// Create a download link
+					var link = document.createElement("a");
+					link.setAttribute("href", encodedUri);
+					link.setAttribute("download", "heritability_data.csv");
+					link.innerHTML = "Download CSV";
 
-                // Trigger the click event to download the file
-                link.click();
+					// Trigger the click event to download the file
+					link.click();
                 });
 
-
-
-                }).fail(function(){
-                    console.log("An error has occurred.");
-                });
-
-               
-                
-            });
-          },
+			}).fail(function(){
+				console.log("An error has occurred.");
+				});                                           
+		  },
           error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");
             alert(err.Message);
