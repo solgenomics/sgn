@@ -7,6 +7,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use CXGN::Stock::Seedlot;
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -107,6 +108,7 @@ sub _validate_with_plugin {
     }
 
     my %seen_seedlot_names;
+    my @from_seedlot_to_seedlot_pair;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $from_seedlot_name;
@@ -163,6 +165,11 @@ sub _validate_with_plugin {
         if (!defined($operator_name) || $operator_name eq '') {
             push @error_messages, "Cell C$row_name: operator_name missing";
         }
+
+        push @from_seedlot_to_seedlot_pair, {
+            from_seedlot_name => $from_seedlot_name,
+            to_seedlot_name => $to_seedlot_name
+        }
     }
 
     my @seedlots = keys %seen_seedlot_names;
@@ -171,6 +178,47 @@ sub _validate_with_plugin {
 
     if (scalar(@seedlots_missing) > 0) {
         push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+    }
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    foreach my $each_pair(@from_seedlot_to_seedlot_pair){
+        my $from_content_id;
+        my $to_content_id;
+        my $from_seedlot_name = $each_pair->{from_seedlot_name};
+        my $from_seedlot_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $from_seedlot_name,'type_id' => $seedlot_cvterm_id});
+        if ($from_seedlot_rs) {
+            my $from_seedlot_id = $from_seedlot_rs->stock_id();
+            my $from_seedlot_obj = CXGN::Stock::Seedlot->new(schema => $schema,seedlot_id => $from_seedlot_id);
+            my $accessions = $from_seedlot_obj->accession();
+            my $crosses = $from_seedlot_obj->cross();
+
+            if ($accessions) {
+                $from_content_id = $accessions->[0];
+            }
+            if ($crosses) {
+                $from_content_id = $crosses->[0];
+            }
+        }
+
+        my $to_seedlot_name = $each_pair->{to_seedlot_name};
+        my $to_seedlot_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $to_seedlot_name,'type_id' => $seedlot_cvterm_id});
+        if ($to_seedlot_rs) {
+            my $to_seedlot_id = $to_seedlot_rs->stock_id();
+            my $to_seedlot_obj = CXGN::Stock::Seedlot->new(schema => $schema,seedlot_id => $to_seedlot_id);
+            my $accessions = $to_seedlot_obj->accession();
+            my $crosses = $to_seedlot_obj->cross();
+
+            if ($accessions) {
+                $to_content_id = $accessions->[0];
+            }
+            if ($crosses) {
+                $to_content_id = $crosses->[0];
+            }
+        }
+
+        if ($from_content_id ne $to_content_id) {
+            push @error_messages, "Error: from seedlot $from_seedlot_name and to seedlot $to_seedlot_name have different content.";
+        }
     }
 
     if (scalar(@error_messages) >= 1) {
