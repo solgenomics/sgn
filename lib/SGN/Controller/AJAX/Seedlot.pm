@@ -1780,7 +1780,6 @@ sub upload_transactions_POST : Args(0) {
         $c->stash->{rest} = {error=>'You must upload a transaction file!'};
         $c->detach();
     }
-    print STDERR "SEEDLOTS TO SEEDLOTS =".Dumper($upload_seedlots_to_seedlots)."\n";
     my $upload;
     my $parser_type;
     if ($upload_seedlots_to_seedlots){
@@ -1839,7 +1838,7 @@ sub upload_transactions_POST : Args(0) {
         $c->detach();
     }
 
-    if ($parsed_data) {
+    if (defined $parsed_data && ($parser_type eq 'SeedlotsToSeedlots')) {
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
         foreach my $transaction_info (@all_transactions) {
@@ -1863,8 +1862,9 @@ sub upload_transactions_POST : Args(0) {
             $current_to_seedlot->set_current_weight_property();
 
         }
-    }
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlots')) {
 
+    }
 
     eval {
 
