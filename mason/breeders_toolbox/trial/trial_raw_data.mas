@@ -3,3 +3,48 @@
 $trial_id
 </%args>
 
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &>
+
+<h3>Select Trait</h3>
+
+<div id="trait_selector_for_raw_data">:-)</div>
+
+
+<script>
+
+    jQuery(window).ready( function() {
+
+        jQuery('#trial_raw_data_onswitch').click( function() {
+
+	    alert("GETTING SELECT BOX...");
+
+	    create_trait_menu_for_trial(<% $trial_id %>)
+	    .then( (result) => build_menu(result))
+	    .then( (final) =>  {
+	        alert(JSON.stringify(final));
+		});
+
+
+
+	    alert("DONE!");
+	});
+    });
+
+
+    function create_trait_menu_for_trial(trial_id) {
+        return jQuery.ajax( {
+            'url': "/brapi/v2/search/variables",
+	    'data': { 'studyDbIds': [ trial_id ] },
+	    'method' : 'POST'
+	});
+     }
+
+    function build_menu(response) {
+        
+	    
+	    
+    }    
+
+
+
+</script>
