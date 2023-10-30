@@ -307,11 +307,7 @@ $(document).ready(function($) {
     });
 
     $('#design_label_button').click(function() {
-        $("#d3-draw-area").prependTo("#save_and_download");
-    });
-
-    $('#design_label_button').click(function() {
-        $("#d3-draw-area").prependTo("#save_and_download");
+        $("#d3-draw-area").prependTo("#save-labels-display");
         $(".workflow-complete").click(function() {
             var title = $(this).children().text();
             //console.log("workflow element with title "+title+" was just clicked\n");
@@ -319,7 +315,7 @@ $(document).ready(function($) {
             if (title == "Design Your Label") {
                 $("#d3-draw-area").prependTo("#d3-draw-div");
             } else if (title == "More Options, Save, And Download") {
-                $("#d3-draw-area").prependTo("#save_and_download");
+                $("#d3-draw-area").prependTo("#save-labels-display");
             }
 
         });
@@ -327,7 +323,7 @@ $(document).ready(function($) {
             var title = $(this).children().text();
             //console.log("workflow element with title "+title+" was just clicked\n");
             if (title == "More Options, Save, And Download") {
-                $("#d3-draw-area").prependTo("#save_and_download");
+                $("#d3-draw-area").prependTo("#save-labels-display");
             }
 
         });
