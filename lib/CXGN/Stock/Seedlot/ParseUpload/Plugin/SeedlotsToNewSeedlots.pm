@@ -1,4 +1,4 @@
-package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotsToSeedlots;
+package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotsToNewSeedlots;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -55,86 +55,112 @@ sub _validate_with_plugin {
     }
 
     my $from_seedlot_name_head;
-    my $to_seedlot_name_head;
     my $amount_head;
     my $weight_head;
     my $operator_name_head;
     my $transaction_description_head;
+    my $to_new_seedlot_name_head;
+    my $new_seedlot_description_head;
+    my $new_seedlot_box_name_head;
+
 
     if ($worksheet->get_cell(0,0)) {
         $from_seedlot_name_head  = $worksheet->get_cell(0,0)->value();
         $from_seedlot_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
-        $to_seedlot_name_head  = $worksheet->get_cell(0,1)->value();
-        $to_seedlot_name_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,2)) {
-        $amount_head  = $worksheet->get_cell(0,2)->value();
+        $amount_head  = $worksheet->get_cell(0,1)->value();
         $amount_head =~ s/^\s+|\s+$//g;
     }
-    if ($worksheet->get_cell(0,3)) {
-        $weight_head  = $worksheet->get_cell(0,3)->value();
+    if ($worksheet->get_cell(0,2)) {
+        $weight_head  = $worksheet->get_cell(0,2)->value();
         $weight_head =~ s/^\s+|\s+$//g;
     }
-    if ($worksheet->get_cell(0,4)) {
-        $transaction_description_head  = $worksheet->get_cell(0,4)->value();
+    if ($worksheet->get_cell(0,3)) {
+        $transaction_description_head  = $worksheet->get_cell(0,3)->value();
         $transaction_description_head =~ s/^\s+|\s+$//g;
     }
-    if ($worksheet->get_cell(0,5)) {
-        $operator_name_head  = $worksheet->get_cell(0,5)->value();
+    if ($worksheet->get_cell(0,4)) {
+        $operator_name_head  = $worksheet->get_cell(0,4)->value();
         $operator_name_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,5)) {
+        $to_new_seedlot_name_head  = $worksheet->get_cell(0,5)->value();
+        $to_new_seedlot_name_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,6)) {
+        $new_seedlot_description_head  = $worksheet->get_cell(0,6)->value();
+        $new_seedlot_description_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,7)) {
+        $new_seedlot_box_name_head  = $worksheet->get_cell(0,7)->value();
+        $new_seedlot_box_name_head =~ s/^\s+|\s+$//g;
     }
 
 
     if (!$from_seedlot_name_head || $from_seedlot_name_head ne 'from_seedlot_name' ) {
         push @error_messages, "Cell A1: from_seedlot_name is missing from the header";
     }
-    if (!$to_seedlot_name_head || $to_seedlot_name_head ne 'to_seedlot_name') {
-        push @error_messages, "Cell B1: to_seedlot_name is missing from the header";
-    }
     if (!$amount_head || $amount_head ne 'amount') {
-        push @error_messages, "Cell C1: amount is missing from the header";
+        push @error_messages, "Cell B1: amount is missing from the header";
     }
     if (!$weight_head || $weight_head ne 'weight(g)') {
-        push @error_messages, "Cell D1: weight(g) is missing from the header";
+        push @error_messages, "Cell C1: weight(g) is missing from the header";
     }
     if (!$transaction_description_head || $transaction_description_head ne 'transaction_description') {
-        push @error_messages, "Cell E1: transaction_description is missing from the header";
+        push @error_messages, "Cell D1: transaction_description is missing from the header";
     }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
-        push @error_messages, "Cell F1: operator_name is missing from the header";
+        push @error_messages, "Cell E1: operator_name is missing from the header";
+    }
+    if (!$to_new_seedlot_name_head || $to_new_seedlot_name_head ne 'to_new_seedlot_name') {
+        push @error_messages, "Cell F1: to_new_seedlot_name is missing from the header";
+    }
+    if (!$new_seedlot_description_head || $new_seedlot_description_head ne 'new_seedlot_description') {
+        push @error_messages, "Cell G1: new_seedlot_description is missing from the header";
+    }
+    if (!$new_seedlot_box_name_head || $new_seedlot_box_name_head ne 'new_seedlot_box_name') {
+        push @error_messages, "Cell H1: new_seedlot_box_name is missing from the header";
     }
 
+
     my %seen_seedlot_names;
+    my %seen_new_seedlot_names;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $from_seedlot_name;
-        my $to_seedlot_name;
         my $amount = 'NA';
         my $weight = 'NA';
         my $transaction_description;
         my $operator_name;
+        my $to_new_seedlot_name;
+        my $new_seedlot_description;
+        my $new_seedlot_box_name;
 
         if ($worksheet->get_cell($row,0)) {
             $from_seedlot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $to_seedlot_name = $worksheet->get_cell($row,1)->value();
+            $amount =  $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $amount =  $worksheet->get_cell($row,2)->value();
+            $weight =  $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $weight =  $worksheet->get_cell($row,3)->value();
+            $transaction_description =  $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
-            $transaction_description =  $worksheet->get_cell($row,4)->value();
+            $operator_name = $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $operator_name = $worksheet->get_cell($row,5)->value();
+            $to_new_seedlot_name = $worksheet->get_cell($row,5)->value();
         }
-
+        if ($worksheet->get_cell($row,6)) {
+            $new_seedlot_description = $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $new_seedlot_box_name = $worksheet->get_cell($row,7)->value();
+        }
 
         if (!$from_seedlot_name || $from_seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: from_seedlot_name missing.";
@@ -143,34 +169,51 @@ sub _validate_with_plugin {
             $seen_seedlot_names{$from_seedlot_name}++;
         }
 
-        if (!$to_seedlot_name || $to_seedlot_name eq '') {
-            push @error_messages, "Cell B:$row_name: to_seedlot_name missing.";
-        } else {
-            $to_seedlot_name =~ s/^\s+|\s+$//g;
-            $seen_seedlot_names{$to_seedlot_name}++;
+        if (!defined($amount) || $amount eq '') {
+            push @error_messages, "Cell B$row_name: amount missing";
         }
 
-        if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell D$row_name: amount missing";
-        }
         if (!defined($weight) || $weight eq '') {
-            push @error_messages, "Cell E$row_name: weight(g) missing";
+            push @error_messages, "Cell C$row_name: weight(g) missing";
         }
         if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
         }
 
         if (!defined($operator_name) || $operator_name eq '') {
-            push @error_messages, "Cell C$row_name: operator_name missing";
+            push @error_messages, "Cell D$row_name: operator_name missing";
+        }
+
+        if (!$to_new_seedlot_name || $to_new_seedlot_name eq '') {
+            push @error_messages, "Cell E:$row_name: to_new_seedlot_name missing.";
+        } else {
+            $to_new_seedlot_name =~ s/^\s+|\s+$//g;
+            $seen_new_seedlot_names{$to_new_seedlot_name}++;
+        }
+
+        if (!defined($new_seedlot_description) || $new_seedlot_description eq '') {
+            push @error_messages, "Cell F$row_name: new_seedlot_description missing";
+        }
+
+        if (!defined($new_seedlot_box_name) || $new_seedlot_box_name eq '') {
+            push @error_messages, "Cell G$row_name: new_seedlot_box_name missing";
         }
     }
 
-    my @seedlots = keys %seen_seedlot_names;
-    my $seedlot_validator = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots)->{'missing'}};
-
+    my @existing_seedlots = keys %seen_seedlot_names;
+    my $existing_seedlot_validator = CXGN::List::Validate->new();
+    my @seedlots_missing = @{$existing_seedlot_validator->validate($schema,'seedlots',\@existing_seedlots)->{'missing'}};
     if (scalar(@seedlots_missing) > 0) {
         push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+    }
+
+    my @new_seedlots = keys %seen_new_seedlot_names;
+    my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@new_seedlots }
+    });
+    while (my $seedlot_r=$seedlot_rs->next){
+        push @error_messages, "Seedlot name already exists in database: ".$r->uniquename;
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -217,6 +260,7 @@ sub _parse_with_plugin {
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
 
     my @transactions;
+    my @new_seedlots;
     for my $row ( 1 .. $row_max ) {
         my $from_seedlot_name;
         my $to_seedlot_name;
@@ -230,24 +274,31 @@ sub _parse_with_plugin {
             $from_seedlot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
-            $to_seedlot_name = $worksheet->get_cell($row,1)->value();
-            $to_seedlot_name =~ s/^\s+|\s+$//g;
-        }
-        if ($worksheet->get_cell($row,2)) {
-            $amount =  $worksheet->get_cell($row,2)->value();
+            $amount =  $worksheet->get_cell($row,1)->value();
             $amount =~ s/^\s+|\s+$//g;
         }
-        if ($worksheet->get_cell($row,3)) {
-            $weight =  $worksheet->get_cell($row,3)->value();
+        if ($worksheet->get_cell($row,2)) {
+            $weight =  $worksheet->get_cell($row,2)->value();
             $weight =~ s/^\s+|\s+$//g;
         }
-        if ($worksheet->get_cell($row,4)) {
-            $transaction_description =  $worksheet->get_cell($row,4)->value();
+        if ($worksheet->get_cell($row,3)) {
+            $transaction_description =  $worksheet->get_cell($row,3)->value();
         }
-        if ($worksheet->get_cell($row,5)) {
-            $operator_name =  $worksheet->get_cell($row,5)->value();
+        if ($worksheet->get_cell($row,4)) {
+            $operator_name =  $worksheet->get_cell($row,4)->value();
             $operator_name =~ s/^\s+|\s+$//g;
         }
+        if ($worksheet->get_cell($row,5)) {
+            $to_new_seedlot_name = $worksheet->get_cell($row,5)->value();
+            $to_new_seedlot_name =~ s/^\s+|\s+$//g;
+        }
+        if ($worksheet->get_cell($row,6)) {
+            $new_seedlot_description = $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $new_seedlot_box_name = $worksheet->get_cell($row,7)->value();
+        }
+
 
         #skip blank lines
         if (!$to_seedlot_name && !$from_seedlot_name) {
@@ -260,25 +311,27 @@ sub _parse_with_plugin {
         });
         my $from_seedlot_id = $from_seedlot_rs->stock_id();
 
-        my $to_seedlot_rs = $schema->resultset("Stock::Stock")->find({
-            'uniquename' => $to_seedlot_name,
-            'type_id' => $seedlot_cvterm_id,
-        });
-        my $to_seedlot_id = $to_seedlot_rs->stock_id();
 
         push @transactions, {
             from_seedlot_name => $from_seedlot_name,
             from_seedlot_id => $from_seedlot_id,
-            to_seedlot_name => $to_seedlot_name,
-            to_seedlot_id => $to_seedlot_id,
+            to_new_seedlot_name => $to_new_seedlot_name,
             amount => $amount,
             weight => $weight,
             transaction_description => $transaction_description,
             operator => $operator_name
         }
+
+        push @new_seedlots, {
+            to_new_seedlot_name => $to_new_seedlot_name,
+            new_seedlot_description => $new_seedlot_description,
+            new_seedlot_box_name => $new_seedlot_box_name,
+            from_seedlot_id => $from_seedlot_id
+        }
     }
     #print STDERR Dumper \%parsed_seedlots;
     $parsed_data{transactions} = \@transactions;
+    $parsed_data{new_seedlot_info} = \@new_seedlots;
 
     $self->_set_parsed_data(\%parsed_data);
     return 1;
