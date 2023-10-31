@@ -234,7 +234,7 @@ export function init() {
             hiddenElement.click();    
         }
 
-        get_plot_order(type, order, include_borders) {
+        get_plot_order(type, order, start, include_borders) {
             let k = type === 'planting' ? 'planting_order_layout' : 'harvesting_order_layout';
             this.meta_data[k] = order;
             this.traverse_map(this.plot_arr.filter(plot => include_borders || plot.type !== "border"), k);

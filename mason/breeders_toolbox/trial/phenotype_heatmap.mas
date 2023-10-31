@@ -868,6 +868,7 @@ jQuery(document).ready( function() {
     jQuery("#plot_download_button").click(() => {
         let type = jQuery("#plot_download_type").val();
         let order = jQuery("#plot_download_order").val();
+        let start = jQuery("#plot_download_start").val();
         let include_borders = jQuery("#plot_download_borders").is(":checked");
         if ( !type || type === '' ) {
             alert("Please select a type");
@@ -877,7 +878,11 @@ jQuery(document).ready( function() {
             alert("Please select a plot layout");
             return;
         }
-        FieldMap.get_plot_order(type, order, include_borders)
+        if ( !start || start === '' ) {
+            alert("Please select a starting plot");
+            return;
+        }
+        FieldMap.get_plot_order(type, order, start, include_borders)
     });
 
     jQuery("#invert_row_checkmark").change(function() {
