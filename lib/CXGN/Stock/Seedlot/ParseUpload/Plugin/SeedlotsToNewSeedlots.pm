@@ -123,7 +123,6 @@ sub _validate_with_plugin {
         push @error_messages, "Cell H1: new_seedlot_box_name is missing from the header";
     }
 
-
     my %seen_seedlot_names;
     my %seen_new_seedlot_names;
     for my $row ( 1 .. $row_max ) {
@@ -319,19 +318,12 @@ sub _parse_with_plugin {
             amount => $amount,
             weight => $weight,
             transaction_description => $transaction_description,
-            operator => $operator_name
-        }
-
-        push @new_seedlots, {
-            to_new_seedlot_name => $to_new_seedlot_name,
-            new_seedlot_description => $new_seedlot_description,
-            new_seedlot_box_name => $new_seedlot_box_name,
-            from_seedlot_id => $from_seedlot_id
+            operator => $operator_name,
+            new_seedlot_info => [$to_new_seedlot_name, $new_seedlot_description, $new_seedlot_box_name]
         }
     }
     #print STDERR Dumper \%parsed_seedlots;
     $parsed_data{transactions} = \@transactions;
-    $parsed_data{new_seedlot_info} = \@new_seedlots;
 
     $self->_set_parsed_data(\%parsed_data);
     return 1;

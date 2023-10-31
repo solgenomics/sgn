@@ -1842,7 +1842,7 @@ sub upload_transactions_POST : Args(0) {
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
         foreach my $transaction_info (@all_transactions) {
-            print STDERR "EACH TRANSACTION INFO =".Dumper($transaction_info)."\n";
+            print STDERR "EACH SEEDLOT TO SEEDLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
             $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
             $transaction->to_stock([$transaction_info->{to_seedlot_id}, $transaction_info->{to_seedlot_name}]);
@@ -1862,9 +1862,75 @@ sub upload_transactions_POST : Args(0) {
             $current_to_seedlot->set_current_weight_property();
 
         }
-    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlots')) {
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToPlots')) {
+        my $transactions = $parsed_data->{transactions};
+        my @all_transactions = @$transactions;
+        foreach my $transaction_info (@all_transactions) {
+            print STDERR "EACH SEEDLOT TO PLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
+            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+            $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+            $transaction->to_stock([$transaction_info->{to_plot_id}, $transaction_info->{to_plot_name}]);
+            $transaction->amount($transaction_info->{amount});
+            $transaction->weight_gram($transaction_info->{weight});
+            $transaction->timestamp($timestamp);
+            $transaction->description($transaction_info->{transaction_description});
+            $transaction->operator($transaction_info->{operator});
+            my $transaction_id = $transaction->store();
 
+            my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+            $current_from_seedlot->set_current_count_property();
+            $current_from_seedlot->set_current_weight_property();
+        }
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlots')) {
+        my $transactions = $parsed_data->{transactions};
+        my @all_transactions = @$transactions;
+        foreach my $transaction_info (@all_transactions) {
+            print STDERR "EACH SEEDLOT TO NEW SEEDLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
+            my $from_seedlot_id = $transaction_info->{from_seedlot_id};
+            my $from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_seedlot_id);
+	        my $seedlot_quality = $from_seedlot->quality();
+            my $accession_id = $from_seedlot->accession_stock_id();
+            my $cross_id = $from_seedlot->cross_stock_id();
+            my $organization = $from_seedlot->organization_name();
+            my $population_name = $from_seedlot->population_name();
+            my $breeding_program_id = $from_seedlot->breeding_program_id();
+            my $location_code = $from_seedlot->location_code();
+
+            my $new_seedlot_info = $transaction_info->{new_seedlot_info};
+            my $new_seedlot_name = $new_seedlot_info->[0];
+            my $new_seedlot_description = $new_seedlot_info->[1];
+            my $new_seedlot_box_name = $new_seedlot_info->[2];
+
+            my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
+            $new_seedlot->uniquename($new_seedlot_name);
+            $new_seedlot->location_code($location_code);
+            $new_seedlot->box_name($new_seedlot_box_name);
+            $new_seedlot->description($new_seedlot_description);
+            $new_seedlot->accession_stock_id($accession_id);
+            $new_seedlot->cross_stock_id($cross_id);
+            $new_seedlot->organization_name($organization);
+            $new_seedlot->population_name($population_name);
+            $new_seedlot->breeding_program_id($breeding_program_id);
+            my $return = $new_seedlot->store();
+            my $new_seedlot_id = $return->{seedlot_id};
+
+
+            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+            $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+            $transaction->to_stock([$new_seedlot_id, $new_seedlot_name]);
+            $transaction->amount($transaction_info->{amount});
+            $transaction->weight_gram($transaction_info->{weight});
+            $transaction->timestamp($timestamp);
+            $transaction->description($transaction_info->{transaction_description});
+            $transaction->operator($transaction_info->{operator});
+            my $transaction_id = $transaction->store();
+
+            my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+            $current_from_seedlot->set_current_count_property();
+            $current_from_seedlot->set_current_weight_property();
+        }
     }
+
 
     eval {
 
