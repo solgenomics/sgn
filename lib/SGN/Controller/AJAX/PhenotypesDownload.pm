@@ -57,7 +57,8 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
         return;
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
     #print STDERR Dumper \@trial_ids;
     my $format = $c->req->param('format') || "ExcelBasic";
@@ -72,7 +73,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
     #print STDERR Dumper $predefined_columns;
 
     foreach (@trial_ids){
-        my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
+        my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), trial_id => $_ });
         if ($data_level eq 'plants') {
             if (!$trial->has_plant_entries()) {
                 $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };

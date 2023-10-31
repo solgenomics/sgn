@@ -53,12 +53,13 @@ sub create_fieldbook_from_trial : Path('/ajax/fieldbook/create') : ActionClass('
 
 sub create_fieldbook_from_trial_POST : Args(0) {
   my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
   my $trial_id = $c->req->param('trial_id');
   my $data_level = $c->req->param('data_level') || 'plots';
   my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
-  my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-  my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+  my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
+  my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
   chomp($trial_id);
   if (!$c->user()) {
@@ -219,7 +220,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   }
   print STDERR Dumper($file_destination);
   open(my $FILE, "> :encoding(UTF-8)", $file_destination) or die $!;
-  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
   print $FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
   my $order = 0;
 
@@ -279,7 +280,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   $md5->addfile($F);
   close($F);
 
-  my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+  my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
 
   my $md_row = $metadata_schema->resultset("MdMetadata")->create({
 								  create_person_id => $user_id,

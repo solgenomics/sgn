@@ -105,7 +105,8 @@ sub do_fuzzy_search {
     my $organism_list = shift;
     print STDERR "DoFuzzySearch 1".localtime()."\n";
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
     my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
     my $max_distance = 0.2;
@@ -171,7 +172,8 @@ sub do_exact_search {
     my $c = shift;
     my $accession_list = shift;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     my @found_accessions;
     my @fuzzy_accessions;
@@ -231,7 +233,7 @@ sub verify_accessions_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $upload = $c->req->upload('new_accessions_upload_file');
     my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_accessions') ? 0 : 1;
 
@@ -331,7 +333,8 @@ sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionCl
 
 sub verify_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $accession_list_id = $c->req->param('accession_list_id');
     my $fuzzy_option_hash = decode_json( encode("utf8", $c->req->param('fuzzy_option_data')));
     my $names_to_add = _parse_list_from_json($c, $c->req->param('names_to_add'));
@@ -380,7 +383,7 @@ sub add_accession_list_POST : Args(0) {
     my $full_info = $c->req->param('full_info') ? _parse_list_from_json($c, $c->req->param('full_info')) : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? _parse_list_from_json($c, $c->req->param('allowed_organisms')) : [];
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
@@ -485,9 +488,10 @@ sub add_accession_list_POST : Args(0) {
 sub possible_seedlots : Path('/ajax/accessions/possible_seedlots') : ActionClass('REST') { }
 sub possible_seedlots_POST : Args(0) {
   my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $people_schema = $c->dbic_schema('CXGN::People::Schema');
-  my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+  my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $sp_person_id);
+  my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
   my $names = $c->req->body_data->{'names'};
   my $type = $c->req->body_data->{'type'};
@@ -518,7 +522,8 @@ sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : Acti
 
 sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $fuzzy_json = $c->req->param('fuzzy_response');
     my $fuzzy_response = decode_json(encode("utf8", $fuzzy_json));
     #print STDERR Dumper $fuzzy_response;
@@ -557,7 +562,8 @@ sub populations_GET : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
     my $populations = $ac->get_all_populations();
 
@@ -571,7 +577,8 @@ sub population_members_GET : Args(1) {
     my $c = shift;
     my $stock_id = shift;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
     my $members = $ac->get_population_members($stock_id);
 

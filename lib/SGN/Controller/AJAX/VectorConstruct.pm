@@ -41,7 +41,8 @@ sub sync_cass_constructs_POST {
     my $self = shift;
     my $c = shift;
     my $status = '';
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $construct_names = decode_json($c->req->param("data"));
     my %construct_hash = %$construct_names;
@@ -93,7 +94,6 @@ sub create_vector_construct_POST {
     my $self = shift;
     my $c = shift;
     my $status = '';
-    my $schema = $c->dbic_schema("Bio::Chado::Schema",'sgn_chado');
     my $vector_list;
     my $organism_list;
     my $user_id = $c->user ? $c->user->get_object()->get_sp_person_id():undef;
@@ -104,6 +104,7 @@ sub create_vector_construct_POST {
         return;
     }
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema",'sgn_chado', $user_id);
     my $dbh = $schema->storage()->dbh();
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
@@ -276,7 +277,7 @@ sub verify_vectors_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $upload = $c->req->upload('new_vectors_upload_file');
     my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_vectors') ? 0 : 1;
 
@@ -376,7 +377,8 @@ sub verify_vectors_fuzzy_options : Path('/ajax/vector_list/fuzzy_options') : Act
 
 sub verify_vectors_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $vector_list_id = $c->req->param('vector_list_id');
     my $fuzzy_option_hash = decode_json( encode("utf8", $c->req->param('fuzzy_option_data')));
     my $names_to_add = _parse_list_from_json($c, $c->req->param('names_to_add'));

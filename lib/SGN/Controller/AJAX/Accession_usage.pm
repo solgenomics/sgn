@@ -19,7 +19,8 @@ sub accession_usage_trials: Path('/ajax/accession_usage_trials') :Args(0){
     my $self = shift;
     my $c = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
@@ -50,7 +51,8 @@ sub accession_usage_female: Path('/ajax/accession_usage_female') :Args(0){
 
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $cross_obj = CXGN::Cross->new({schema => $schema, parent_type => 'female_parent'});
     my $data = $cross_obj->get_parents_and_numbers_of_progenies();
@@ -71,7 +73,8 @@ sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
 
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $cross_obj = CXGN::Cross->new({schema => $schema, parent_type => 'male_parent'});
     my $data = $cross_obj->get_parents_and_numbers_of_progenies();
@@ -92,7 +95,8 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
     my $self = shift;
     my $c = shift;
     my $params = $c->req->params() || {};
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
 
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();

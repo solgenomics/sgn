@@ -30,7 +30,8 @@ __PACKAGE__->config(
 sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};
@@ -101,7 +102,8 @@ sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation')
 sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};
@@ -133,7 +135,8 @@ sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list
 sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_download') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};
@@ -195,7 +198,8 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
 sub identifier_generation_history : Path('/ajax/breeders/identifier_generation_history') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};

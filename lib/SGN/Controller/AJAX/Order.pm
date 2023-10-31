@@ -39,8 +39,7 @@ sub submit_order : Path('/ajax/order/submit') : ActionClass('REST'){ }
 sub submit_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
     my $dbh = $c->dbc->dbh();
     my $list_id = $c->req->param('list_id');
     my $time = DateTime->now();
@@ -57,6 +56,9 @@ sub submit_order_POST : Args(0) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_name = $c->user()->get_object()->get_username();
     my $user_role = $c->user->get_object->get_user_type();
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
     my $items = $list->elements();
@@ -197,7 +199,7 @@ sub submit_order_POST : Args(0) {
 
                 push @all_order_rows, (@all_new_rows);
 
-                my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+                my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
                 my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","additionalInfo","requestDate"';
                 my $template_file_name = $order_location.'_orders';
                 my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -331,8 +333,6 @@ END_HEREDOC
 sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
@@ -346,6 +346,9 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     if ($c->user){
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $all_orders_ref = $orders->get_orders_from_person_id();
@@ -383,8 +386,6 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
 sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
@@ -398,6 +399,9 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     if ($c->user){
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $all_orders_ref = $orders->get_orders_from_person_id();
@@ -438,8 +442,6 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
 sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
@@ -453,6 +455,9 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     if ($c->user){
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
@@ -495,8 +500,6 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
 sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
@@ -510,6 +513,9 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     if ($c->user) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
@@ -552,8 +558,6 @@ sub update_order : Path('/ajax/order/update') : ActionClass('REST'){ }
 sub update_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $order_id = $c->req->param('order_id');
     my $new_status = $c->req->param('new_status');
@@ -570,6 +574,9 @@ sub update_order_POST : Args(0) {
     if ($c->user) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
+
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
     if ($new_status eq 're-opened') {
         my $re_open_by_person= CXGN::People::Person->new($dbh, $user_id);
@@ -647,8 +654,6 @@ sub single_step_submission : Path('/ajax/order/single_step_submission') : Action
 sub single_step_submission_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh();
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
@@ -666,6 +671,9 @@ sub single_step_submission_POST : Args(0) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_name = $c->user()->get_object()->get_username();
     my $user_role = $c->user->get_object->get_user_type();
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $catalog_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
     my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
