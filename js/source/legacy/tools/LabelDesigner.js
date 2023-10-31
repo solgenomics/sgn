@@ -700,7 +700,7 @@ function updateFields(data_type, source_id, data_level){
                 reps = response.reps;
                 num_units = response.num_units;
                 addPlotFilter(reps);
-                addSortOrders(add_fields);
+                addSortOrders(add_fields, data_type, data_level);
                 createAdders(add_fields);
                 initializeCustomModal(add_fields);
                 showLoadOption();
@@ -1295,10 +1295,27 @@ function addPlotFilter(reps) {
 
 }
 
-function addSortOrders(add_fields) {
+function addSortOrders(add_fields, data_type, data_level) {
+
+    // Set type-specific sorting options
+    let data_type_fields = [];
+    // Sort by trial layout for plot-level labels...
+    if ( data_type === 'Field Trials' && data_level === 'plots' ) {
+        data_type_fields = ['Trial Layout: Plot Order']
+    }
+
     //load options
     d3.selectAll("#sort_order_1, #sort_order_2, #sort_order_3").selectAll("option").remove();
-    d3.selectAll("#sort_order_1, #sort_order_2, #sort_order_3").selectAll("option")
+    d3.selectAll("#sort_order_1").selectAll("option")
+        .data(["Select a field", ...data_type_fields, ...Object.keys(add_fields).sort()])
+        .enter().append("option")
+        .text(function(d) {
+            return d
+        })
+        .attr("value", function(d) {
+            return d
+        });
+    d3.selectAll("#sort_order_2, #sort_order_3").selectAll("option")
         .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
@@ -1311,9 +1328,15 @@ function addSortOrders(add_fields) {
         const sel = jQuery("#sort_order_1").val();
         if ( sel === 'Select a field' ) {
             jQuery("#sort_order_2_container, #sort_order_3_container").hide();
+            jQuery("#sort_order_layout_order_container, #sort_order_layout_start_container").hide();
+        }
+        else if ( sel === 'Trial Layout: Plot Order' ) {
+            jQuery("#sort_order_2_container, #sort_order_3_container").hide();
+            jQuery("#sort_order_layout_order_container, #sort_order_layout_start_container").show();
         }
         else {
             jQuery("#sort_order_2_container").show();
+            jQuery("#sort_order_layout_order_container, #sort_order_layout_start_container").hide();
         }
     });
     jQuery("#sort_order_2").off("change").on("change", () => {

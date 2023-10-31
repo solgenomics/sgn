@@ -9,6 +9,8 @@
         <label>Sort Labels By:</label>
         <select class="form-control" id="sort_order_1" name="sort_by" style="max-width: 300px"></select>
     </div>
+
+    <!-- Additional Sort Options -->
     <div id="sort_order_2_container" style="display: none">
         <label>...Then by:<span style="font-size: 60%; margin-left: 15px; padding: 5px; border-radius: 5px; background-color: #ccc;">Optional</span></label>
         <select class="form-control" id="sort_order_2" name="sort_by" style="max-width: 300px"></select>
@@ -16,6 +18,26 @@
     <div id="sort_order_3_container" style="display: none">
         <label>...Then by:<span style="font-size: 60%; margin-left: 15px; padding: 5px; border-radius: 5px; background-color: #ccc;">Optional</span></label>
         <select class="form-control" id="sort_order_3" name="sort_by" style="max-width: 300px"></select>
+    </div>
+
+    <!-- Trial Layout Sort Options -->
+    <div id="sort_order_layout_order_container" style="display: none">
+        <label>...Plot Order:</label>
+        <select class="form-control" id="sort_order_layout_order" name="sort_by" style="max-width: 300px">
+            <option value="by_col_serpentine">By Column: Serpentine</option>
+            <option value="by_col_zigzag">By Column: Zigzag</option>
+            <option value="by_row_serpentine">By Row: Serpentine</option>
+            <option value="by_row_zigzag">By Row: Zigzag</option>
+        </select>
+    </div>
+    <div id="sort_order_layout_start_container" style="display: none">
+        <label>...Starting Plot:</label>
+        <select class="form-control" id="sort_order_layout_start" name="sort_by" style="max-width: 300px">
+            <option value="bottom_left">Bottom Left</option>
+            <option value="top_left">Top Left</option>
+            <option value="top_right">Top Right</option>
+            <option value="bottom_right">Bottom Right</option>
+        </select>
     </div>
 </div>
 <div style="margin-top: 40px; margin-bottom: 40px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px 40px">
