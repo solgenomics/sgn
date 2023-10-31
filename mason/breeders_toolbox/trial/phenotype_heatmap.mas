@@ -47,7 +47,6 @@ $data_level => 'plot'
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
-        margin: 10px;
         transition: all 1s ease-in-out;
     }
 
@@ -158,29 +157,6 @@ $data_level => 'plot'
 <br><br>
 <div id="container_fm">
     <div style="margin-top: 2%; position: relative">
-        <div style="display: flex; flex-wrap: wrap; gap: 25px" class="form-inline">
-            <div class="form-inline">
-                <label>Download Plot Order</label>
-                <select class="form-control form-inline" name="plot_download_type" id="plot_download_type">
-                    <option value="">--Select Type--</option>
-                    <option value="planting">Planting Order</option>
-                    <option value="harvest">Harvest Order</option>
-                </select>
-            </div>
-            <select class="form-control" name="plot_download_order" id="plot_download_order">
-                <option value="">--Select Plot Layout--</option>
-                <option value="by_col_serpentine">By Column: Serpentine</option>
-                <option value="by_col_zigzag">By Column: Zigzag</option>
-                <option value="by_row_serpentine">By Row: Serpentine</option>
-                <option value="by_row_zigzag">By Row: Zigzag</option>
-            </select>
-            <div clas="form-inline">
-                <label for="plot_download_borders">Include Borders</label>
-                <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
-            </div>
-            <button class="btn btn-primary" id="plot_download_button">Download</button>
-        </div>
-        <br />
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
                 <label>Plot Layout</label>
@@ -226,6 +202,43 @@ $data_level => 'plot'
     </div>
     <div id="fieldmap_wrapper">
         <div id="fieldmap_chart"></div>
+    </div>
+    <div style="margin-top: 40px" class="well well-sm">
+        <h3 style="margin: 0 0 10px 0">Download Plot Order</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
+            <div>
+                <label>Download Type</label>
+                <select class="form-control" name="plot_download_type" id="plot_download_type">
+                    <option value="">--Select Type--</option>
+                    <option value="planting">Planting Order</option>
+                    <option value="harvest">Harvest Order</option>
+                </select>
+            </div>
+            <div>
+                <label>Plot Order:</label>
+                <select class="form-control" name="plot_download_order" id="plot_download_order" style="max-width: 300px">
+                    <option value="">--Select Plot Order--</option>
+                    <option value="by_col_serpentine">By Column: Serpentine</option>
+                    <option value="by_col_zigzag">By Column: Zigzag</option>
+                    <option value="by_row_serpentine">By Row: Serpentine</option>
+                    <option value="by_row_zigzag">By Row: Zigzag</option>
+                </select>
+            </div>
+            <div>
+                <label>Starting Plot:</label>
+                <select class="form-control" id="plot_download_start" name="plot_download_start" style="max-width: 300px">
+                    <option value="bottom_left">Bottom Left</option>
+                    <option value="top_left">Top Left</option>
+                    <option value="top_right">Top Right</option>
+                    <option value="bottom_right">Bottom Right</option>
+                </select>
+            </div>
+            <div>
+                <label for="plot_download_borders">Include Borders</label>
+                <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
+            </div>
+            <button class="btn btn-primary" id="plot_download_button">Download</button>
+        </div>
     </div>
 </div>
 
