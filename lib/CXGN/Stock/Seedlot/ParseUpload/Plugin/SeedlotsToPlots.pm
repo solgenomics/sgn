@@ -7,6 +7,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use CXGN::Stock::Seedlot;
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -108,6 +109,7 @@ sub _validate_with_plugin {
 
     my %seen_seedlot_names;
     my %seen_plot_names;
+    my @seedlot_plot_pairs;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $from_seedlot_name;
@@ -164,6 +166,8 @@ sub _validate_with_plugin {
         if (!defined($operator_name) || $operator_name eq '') {
             push @error_messages, "Cell C$row_name: operator_name missing";
         }
+
+        push @seedlot_plot, [$from_seedlot_name, $to_plot_name];
     }
 
     my @seedlots = keys %seen_seedlot_names;
@@ -179,6 +183,11 @@ sub _validate_with_plugin {
 
     if (scalar(@plots_missing) > 0) {
         push @error_messages, "The following plots are not in the database: ".join(',',@plots_missing);
+    }
+
+    my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@seedlot_plot_pairs);
+    if (exists($pairs_error->{error})){
+        push @error_messages, $return->{error};
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -286,7 +295,7 @@ sub _parse_with_plugin {
             operator => $operator_name
         }
     }
-    
+
     $parsed_data{transactions} = \@transactions;
 
     $self->_set_parsed_data(\%parsed_data);
