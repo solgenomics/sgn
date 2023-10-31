@@ -71,6 +71,13 @@ missingData <- apply(phenoData, 2, function(x) sum(is.na(x)))
 md = data.frame(missingData)
 rangeTraits <- which(colnames(phenoData) %in% allTraitNames)
 
+# Calculating the number of replicates per accession
+replicateData <- data.frame(replicates = tapply(phenoData$replicate, phenoData$germplasmName, function(x){
+  return(max(unique(x)))
+}))
+replicateData <- tibble::rownames_to_column(replicateData, "germplasmName")
+
+
 
 #Removing non numeric data
 for( traits in rangeTraits){
@@ -83,21 +90,6 @@ for( traits in rangeTraits){
 #Range after filtering
 rangeTraits <- which(names(phenoData)%in%allTraitNames)
 
-#Number of replicates
-limitRep <- max(unique(phenoData$replicate))
-
-#Calculating missing data
-missingData <- data.frame(missingData = tapply(phenoData[,31], phenoData$germplasmName, function(x){
-  return(length(which(is.na(x))))
-}))
-missingData <- tibble::rownames_to_column(missingData, "germplasmName")
-missingData$limitRep <- limitRep - missingData$missingData
-missingData <- missingData[missingData$limitRep > 1,]
-
-#Filtering to have data with at least 2 replications
-phenoData <- phenoData[phenoData$germplasmName %in% missingData$germplasmName,]
-
-
 nTraits <- length(rangeTraits)
 # Preparing variance vectors
 her = c()
@@ -107,7 +99,21 @@ resp_var = c()
 
 library(lmerTest)
 for (i in rangeTraits) {
-  outcome = colnames(phenoData)[i]    
+  outcome = colnames(phenoData)[i]   
+
+  #Calculating missing data per trait
+  missingData <- data.frame(missingData = tapply(phenoData[,outcome], phenoData$germplasmName, function(x){
+    return(length(which(is.na(x))))
+  }))
+
+  missingData <- tibble::rownames_to_column(missingData, "germplasmName")
+  missingReplicates <- dplyr::left_join(missingData, replicateData, by = "germplasmName")
+  missingReplicates$limitRep <- missingReplicates$replicates - missingReplicates$missingData
+  missingReplicates <- missingReplicates[missingReplicates$limitRep > 1,]
+
+  # Filtering the dataset
+  phenoData <- phenoData[phenoData$germplasmName %in% missingReplicates$germplasmName,]
+   
   
   print(paste0('outcome ', outcome))
   
