@@ -149,7 +149,7 @@ sub _validate_with_plugin {
         if (!$to_plot_name || $to_plot_name eq '') {
             push @error_messages, "Cell B:$row_name: to_plot_name missing.";
         } else {
-            $to_seedlot_name =~ s/^\s+|\s+$//g;
+            $to_plot_name =~ s/^\s+|\s+$//g;
             $seen_plot_names{$to_plot_name}++;
         }
 
@@ -167,7 +167,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell C$row_name: operator_name missing";
         }
 
-        push @seedlot_plot, [$from_seedlot_name, $to_plot_name];
+        push @seedlot_plot_pairs, [$from_seedlot_name, $to_plot_name];
     }
 
     my @seedlots = keys %seen_seedlot_names;
@@ -177,9 +177,9 @@ sub _validate_with_plugin {
         push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
     }
 
-    my @plots = keys %seen_plots_names;
+    my @plots = keys %seen_plot_names;
     my $plots_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plots_validator->validate($schema,'plots',\@seedlots)->{'missing'}};
+    my @plots_missing = @{$plots_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
     if (scalar(@plots_missing) > 0) {
         push @error_messages, "The following plots are not in the database: ".join(',',@plots_missing);
@@ -187,7 +187,7 @@ sub _validate_with_plugin {
 
     my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@seedlot_plot_pairs);
     if (exists($pairs_error->{error})){
-        push @error_messages, $return->{error};
+        push @error_messages, $pairs_error->{error};
     }
 
     if (scalar(@error_messages) >= 1) {
