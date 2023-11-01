@@ -119,8 +119,7 @@ solGS.heatmap = {
       coefDom = [rmin, 0];
       coefRange = [nve, "white"];
     }
-    var d3 = global.d3v4;
-    console.log(`version d3: ${d3.version}`)
+    
     var corZscale = d3.scaleLinear().domain(coefDom).range(coefRange);
     var xAxisScale = d3.scaleBand()
 		.range([0, width])	
@@ -141,11 +140,9 @@ solGS.heatmap = {
       .attr("height", totalH)
       .attr("width", totalW);
      
-
    var  corrplot = svg.append("g")
     .attr("id", heatmapPlotDivId)
     .attr("transform", "translate(0, 0)");
-  
 
     corrplot
       .append("g")
