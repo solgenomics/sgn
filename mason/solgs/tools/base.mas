@@ -11,11 +11,10 @@
     </script>
 
 <style>
-
     .axis path, .axis line {
-      fill: none;
-      stroke: #000;
-      shape-rendering: crispEdges;
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
     }
-    </style>
+</style>
     
