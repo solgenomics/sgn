@@ -54,8 +54,7 @@ $collapsed = 1;
 
 </%perl>
 
-
-
+<& /util/import_javascript.mas, classes => ["solGS.pca"] &>
 
 % if ($url =~ /pca\/analysis/) {
 
@@ -65,7 +64,6 @@ $collapsed = 1;
 
 %}
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.pca"] &>
 <&| /page/info_section.mas,
   collapsible => 1,
   collapsed   => $collapsed,

@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/pca/plot.mas - pca analysis plot template
+/solgs/tools/pca/plot.mas - pca analysis plot template
 
 =AUTHOR
 
@@ -36,19 +36,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.pca", "save-svg-as-png.saveSvgAsPng"] &>
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-
-<!-- entries => ["saveSvgAsPng"]  -->
-<style>
-
-.axis path, .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-</style>
+<& /solgs/tools/base.mas &>
 
 <div id="pca_canvas">
 
