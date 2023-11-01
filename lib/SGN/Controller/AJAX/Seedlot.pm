@@ -1776,6 +1776,14 @@ sub upload_transactions_POST : Args(0) {
     my $upload_seedlots_to_seedlots = $c->req->upload('seedlots_to_seedlots_file');
     my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
     my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
+
+    my $new_seedlot_breeding_program_id = $c->req->param("new_seedlot_breeding_program_id");
+    my $new_seedlot_location = $c->req->param("new_seedlot_location");
+    my $new_seedlot_organization = $c->req->param("new_seedlot_organization_name");
+    print STDERR "NEW BREEDING PROGRAM ID =".Dumper($new_seedlot_breeding_program_id)."\n";
+    print STDERR "NEW LOCATION =".Dumper($new_seedlot_location)."\n";
+    print STDERR "NEW ORGANIZATION =".Dumper($new_seedlot_organization)."\n";
+
     if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots){
         $c->stash->{rest} = {error=>'You must upload a transaction file!'};
         $c->detach();
@@ -1882,6 +1890,7 @@ sub upload_transactions_POST : Args(0) {
             $current_from_seedlot->set_current_weight_property();
         }
     } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlots')) {
+        my @added_seedlots;
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
         foreach my $transaction_info (@all_transactions) {
@@ -1891,10 +1900,6 @@ sub upload_transactions_POST : Args(0) {
 	        my $seedlot_quality = $from_seedlot->quality();
             my $accession_id = $from_seedlot->accession_stock_id();
             my $cross_id = $from_seedlot->cross_stock_id();
-            my $organization = $from_seedlot->organization_name();
-            my $population_name = $from_seedlot->population_name();
-            my $breeding_program_id = $from_seedlot->breeding_program_id();
-            my $location_code = $from_seedlot->location_code();
 
             my $new_seedlot_info = $transaction_info->{new_seedlot_info};
             my $new_seedlot_name = $new_seedlot_info->[0];
@@ -1903,17 +1908,16 @@ sub upload_transactions_POST : Args(0) {
 
             my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
             $new_seedlot->uniquename($new_seedlot_name);
-            $new_seedlot->location_code($location_code);
+            $new_seedlot->location_code($new_seedlot_location);
             $new_seedlot->box_name($new_seedlot_box_name);
             $new_seedlot->description($new_seedlot_description);
             $new_seedlot->accession_stock_id($accession_id);
             $new_seedlot->cross_stock_id($cross_id);
-            $new_seedlot->organization_name($organization);
-            $new_seedlot->population_name($population_name);
-            $new_seedlot->breeding_program_id($breeding_program_id);
+            $new_seedlot->organization_name($new_seedlot_organization);
+            $new_seedlot->breeding_program_id($new_seedlot_breeding_program_id);
             my $return = $new_seedlot->store();
             my $new_seedlot_id = $return->{seedlot_id};
-
+            push @added_seedlots, $new_seedlot_id;
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
             $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
@@ -1923,12 +1927,25 @@ sub upload_transactions_POST : Args(0) {
             $transaction->timestamp($timestamp);
             $transaction->description($transaction_info->{transaction_description});
             $transaction->operator($transaction_info->{operator});
+
             my $transaction_id = $transaction->store();
 
             my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
             $current_from_seedlot->set_current_count_property();
             $current_from_seedlot->set_current_weight_property();
+
+            my $to_new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $new_seedlot_id);
+            $to_new_seedlot->set_current_count_property();
+            $to_new_seedlot->set_current_weight_property();
+
         }
+
+        foreach my $seedlot_id (@added_seedlots) {
+            $phenome_schema->resultset("StockOwner")->find_or_create({
+                stock_id     => $seedlot_id,
+                sp_person_id =>  $user_id,
+            });
+        }        
     }
 
 
@@ -1938,19 +1955,11 @@ sub upload_transactions_POST : Args(0) {
 
     };
 
-    my @added_stocks;
 
     if ($@) {
         $c->stash->{rest} = { error => $@ };
         print STDERR "An error condition occurred, was not able to upload transactions. ($@).\n";
         $c->detach();
-    }
-
-    foreach my $stock_id (@added_stocks) {
-        $phenome_schema->resultset("StockOwner")->find_or_create({
-            stock_id     => $stock_id,
-            sp_person_id =>  $user_id,
-        });
     }
 
     my $dbh = $c->dbc->dbh();
