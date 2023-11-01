@@ -243,7 +243,7 @@ solGS.histogram =  {
     	var yLabel = histo.y_label || 'Frequency';
         var xAxisOrigin = 3 * pad.left;
         var yAxisOrigin = height + pad.top;
-        xNudge = 5;
+        var xNudge = 5;
 
     	var svg = d3.select(canvas)
                 .append("svg")
