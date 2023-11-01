@@ -83,8 +83,26 @@
                                     <br/>
                                     <hr class ="solid">
                                     <center>
-                                        <h4>You want to transfer seed from existing seedlots to new seedlots</h4>
+                                        <h4>Please provide basic information about the <b>new seedlots</b> and upload your file</h4>
                                     </center>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Breeding Program: </label>
+                                            <div class="col-sm-8" >
+                                                <div id="new_seedlot_breeding_program_div"></div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Location of seedlot storage: </label>
+                                            <div class="col-sm-8" >
+                                                <input class="form-control" name="new_seedlot_location" id="new_seedlot_location" placeholder="Required">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Organization Name: </label>
+                                            <div class="col-sm-8" >
+                                                <input class="form-control" name="new_seedlot_organization_name" id="new_seedlot_organization_name" placeholder="Optional">
+                                            </div>
+                                        </div>
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
@@ -272,6 +290,12 @@ jQuery(document).ready(function(){
 
     jQuery("[name='transactions_upload_link']").click(function() {
         jQuery('#upload_transactions_dialog').modal("show");
+        get_select_box('breeding_programs', 'new_seedlot_breeding_program_div', { 'name' : 'new_seedlot_breeding_program_id', 'id' : 'new_seedlot_breeding_program_id' });
+
+    });
+
+    jQuery("#new_seedlot_location").autocomplete({
+       source: '/ajax/stock/geolocation_autocomplete',
     });
 
     jQuery("#transaction_type_option").change(function(){
@@ -344,6 +368,19 @@ function upload_transactions_file() {
                 alert("Please select a file");
                 return;
             }
+        }
+    }
+
+    if (uploadSeedlotsToNewSeedlots) {
+        var breeding_program = jQuery("#new_seedlot_breeding_program_id").val();
+        var location = jQuery("#new_seedlot_location").val();
+        if (breeding_program === '') {
+            alert("Please choose a breeding program for new seedlots");
+            return;
+        }
+        if (location === '') {
+            alert("Please give a location for new seedlots");
+            return;
         }
     }
 

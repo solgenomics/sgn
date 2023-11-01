@@ -212,7 +212,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@new_seedlots }
     });
     while (my $seedlot_r=$seedlot_rs->next){
-        push @error_messages, "Seedlot name already exists in database: ".$r->uniquename;
+        push @error_messages, "Seedlot name already exists in database: ".$seedlot_r->uniquename;
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -262,11 +262,13 @@ sub _parse_with_plugin {
     my @new_seedlots;
     for my $row ( 1 .. $row_max ) {
         my $from_seedlot_name;
-        my $to_seedlot_name;
         my $amount = 'NA';
         my $weight = 'NA';
         my $transaction_description;
         my $operator_name;
+        my $to_new_seedlot_name;
+        my $new_seedlot_description;
+        my $new_seedlot_box_name;
 
         if ($worksheet->get_cell($row,0)) {
             $from_seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -300,7 +302,7 @@ sub _parse_with_plugin {
 
 
         #skip blank lines
-        if (!$to_seedlot_name && !$from_seedlot_name) {
+        if (!$to_new_seedlot_name && !$from_seedlot_name) {
             next;
         }
 
