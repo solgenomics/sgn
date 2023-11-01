@@ -581,7 +581,6 @@ solGS.pca = {
       }
     });
 
-    console.log(`trials: ${trials}`)
     var height = 400;
     var width = 400;
     var pad = {
@@ -628,15 +627,14 @@ solGS.pca = {
       .domain([0, pc2Limits])
       .range([0, height / 2]);
 
-    // var pc1Axis = d3.svg.axis().scale(pc1AxisLabel).tickSize(3).orient("bottom");
     var pc1Axis = d3.axisBottom(pc1AxisLabel).tickSize(3);
 
     var pc2AxisLabel = d3.scaleLinear()
       .domain([-1 * pc2Limits, pc2Limits])
       .range([height, 0]);
 
-    // var pc2Axis = d3.svg.axis().scale(pc2AxisLabel).tickSize(3).orient("left");
-    var pc2Axis = d3.axisLeft(pc2AxisLabel).tickSize(3);
+
+      var pc2Axis = d3.axisLeft(pc2AxisLabel).tickSize(3);
 
     var pc1AxisMid = 0.5 * height + pad.top;
     var pc2AxisMid = 0.5 * width + pad.left;
@@ -740,15 +738,12 @@ solGS.pca = {
       .attr("fill", "none");
 
     var grpColor = d3.scaleOrdinal(d3.schemeCategory10);
-    console.log(`grpcolor: ${grpColor(1)}`)
-    pcaPlot
-      .append("g")
+    pcaPlot.append("g")
       .selectAll("circle")
       .data(pc12)
       .enter()
       .append("circle")
       .style("fill", function (d) {
-        console.log(`color: ${d[0].trial}`)
         return grpColor(trials.indexOf(d[0].trial));
       })
       .attr("r", 3)
@@ -836,7 +831,6 @@ solGS.pca = {
         } else {
           groupName = trialsNames[id];
         }
-        console.log(`legendvalues: ${cnt} -- ${id} -- ${groupName}`)
         legendValues.push([cnt, id, groupName]);
         cnt++;
       });
