@@ -258,9 +258,9 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: date must be YYYY-MM-DD format";
         }
 
-        #tissue_type must not be blank and must be either leaf, root, or step
-        if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem' && $tissue_type ne 'fruit' && $tissue_type ne 'seed')) {
-            push @error_messages, "Cell F$row_name: column tissue type and must be either stem, leaf, seed, fruit, or root";
+        #tissue_type must not be blank and must be either leaf, root, stem, fruit, seed, tuber
+        if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem' && $tissue_type ne 'fruit' && $tissue_type ne 'seed' && $tissue_type ne 'tuber')) {
+            push @error_messages, "Cell F$row_name: column tissue type and must be either leaf, root, stem, seed, fruit or tuber";
         }
 
     }
