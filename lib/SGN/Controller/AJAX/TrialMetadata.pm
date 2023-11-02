@@ -4949,7 +4949,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
             schema => $schema,
             trial_id => $trial_id,
             data_level => 'plots',
-            selected_columns => {"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,"row_number"=>1,"col_number"=>1},
+            selected_columns => {"location_name"=>1,"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,"row_number"=>1,"col_number"=>1,"accession_name"=>1,"seedlot_name"=>1},
         });
         my $output = $trial_layout_download->get_layout_output()->{output};
         my @outer_array = @{$output};
@@ -5050,6 +5050,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     # Start the traversal
     my @ordered_plots;
     my $o_count = 0;
+    my $p_order = 1;
 
     # Start the outerloop...
     for ( my $o = $outerloop_start; $outerloop_delta > 0 ? $o <= $outerloop_end : $o >= $outerloop_end; $o=$o+$outerloop_delta ) {
@@ -5072,7 +5073,9 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
             # Find the matching plot and add it to the ordered plots
             my ($p) = grep { $_->{$outerloop_key} == $o && $_->{$innerloop_key} == $i } @plot_details;
             if ( defined($p) ) {
+                $p->{order} = $p_order;
                 push(@ordered_plots, $p);
+                $p_order++;
             }
 
         }
