@@ -4941,7 +4941,48 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     # Get the sorted plots
     my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start);
 
-    $c->stash->{rest} = $results;
+    # Return error message, if set
+    if ( !defined $results->{plots} ) {
+        $results->{error} = "An unknown error occurred";
+    }
+    if ( defined $results->{error} ) {
+        $c->stash->{rest} = { error => $results->{error} };
+        return;
+    }
+
+    # Generate CSV file
+    my $filename;
+    my @data;
+    if ( $type eq 'planting' || $type eq 'harvest' ) {
+        $filename = $type . "_order.csv";
+        my $col = $type . "_order";
+
+        # Add CSV headers
+        my @headers = ($col, "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number");
+        push(@data, \@headers);
+
+        # Add plot rows
+        my $plots = $results->{plots};
+        foreach (@$plots) {
+            my @d = (
+                $_->{order},
+                "\"$_->{location_name}\"",
+                $_->{trial_name},
+                $_->{plot_number},
+                $_->{plot_name},
+                $_->{accession_name},
+                $_->{seedlot_name},
+                $_->{row_number},
+                $_->{col_number}
+            );
+            push(@data, \@d);
+        }
+    }
+
+    # Return the generated file
+    $c->res->content_type('text/csv');
+    $c->res->headers->push_header("Content-disposition', 'attachment; filename=\"$filename\"");
+    $c->res->body( join("\n", map { $_ = join(",", @{$_}) } @data) );
     return;
 }
 

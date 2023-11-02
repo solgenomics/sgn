@@ -415,6 +415,7 @@ sub get_sorted_plots {
                 push(@ordered_plots, $p);
                 $p_order++;
             }
+            # TODO: Add option to include empty plots (not plot defined for row/col position)
 
         }
 
