@@ -791,6 +791,39 @@ sub verify_seedlot_seedlot_compatibility {
 }
 
 
+=head2 Class method: get_content_id()
+
+=cut
+
+sub get_content_id {
+    my $class = shift;
+    my $schema = shift;
+    my $seedlot_id = shift;
+    my $accession_stock_id;
+    my $cross_stock_id;
+    my @return_content_id = ();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+
+    my $seedlot_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id, type_id => $collection_of_cvterm_id});
+    my $content_id = $seedlot_content->subject_id();
+
+    my $check_content_type = $schema->resultset("Stock::Stock")->find({'stock_id' => $content_id});
+    my $type_id = $check_content_type->type_id();
+    if ($type_id eq $accession_cvterm_id) {
+        $accession_stock_id = $content_id;
+    } elsif ($type_id eq $cross_cvterm_id) {
+        $cross_stock_id = $content_id;
+    }
+    @return_content_id = ($accession_stock_id, $cross_stock_id);
+
+    return \@return_content_id;
+}
+
+
 sub BUILDARGS {
     my $orig = shift;
     my %args = @_;
