@@ -725,6 +725,72 @@ sub verify_seedlot_accessions_crosses {
     return \%return;
 }
 
+
+=head2 Class method: verify_seedlot_seedlot_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, [[$seedlot_name_1, $seedlot_name_2]]);
+ Desc:         Class method that verifies if a given list of pairs of seedlot_names have the same content.
+ Ret:          success or error
+ Args:         $schema, $seedlot_name_1, $seedlot_name_2
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_seedlot_seedlot_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift;
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    foreach (@pairs){
+        my $seedlot_name_1 = $_->[0];
+        my $seedlot_name_2 = $_->[1];
+
+        my $seedlot_rs_1 = $schema->resultset("Stock::Stock")->find({'uniquename' => $seedlot_name_1,'type_id' => $seedlot_cvterm_id});
+        my $seedlot_id_1 = $seedlot_rs_1->stock_id();
+        my $seedlot_1_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id_1, type_id => $collection_of_cvterm_id});
+        my $content_1_id = $seedlot_1_content->subject_id();
+
+        my $seedlot_rs_2 = $schema->resultset("Stock::Stock")->find({'uniquename' => $seedlot_name_2,'type_id' => $seedlot_cvterm_id});
+        my $seedlot_id_2 = $seedlot_rs_2->stock_id();
+        my $seedlot_2_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id_2, type_id => $collection_of_cvterm_id});
+        my $content_2_id = $seedlot_2_content->subject_id();
+
+        if ($content_1_id ne $content_2_id){
+            $error .= "The seedlots: $seedlot_name_1 and $seedlot_name_2 have different contents.";
+        }
+
+    }
+
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
 sub BUILDARGS {
     my $orig = shift;
     my %args = @_;
