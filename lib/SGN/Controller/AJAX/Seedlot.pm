@@ -1780,9 +1780,6 @@ sub upload_transactions_POST : Args(0) {
     my $new_seedlot_breeding_program_id = $c->req->param("new_seedlot_breeding_program_id");
     my $new_seedlot_location = $c->req->param("new_seedlot_location");
     my $new_seedlot_organization = $c->req->param("new_seedlot_organization_name");
-    print STDERR "NEW BREEDING PROGRAM ID =".Dumper($new_seedlot_breeding_program_id)."\n";
-    print STDERR "NEW LOCATION =".Dumper($new_seedlot_location)."\n";
-    print STDERR "NEW ORGANIZATION =".Dumper($new_seedlot_organization)."\n";
 
     if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots){
         $c->stash->{rest} = {error=>'You must upload a transaction file!'};
@@ -1901,6 +1898,7 @@ sub upload_transactions_POST : Args(0) {
             my $content_info = $new_seedlot_info->[1];
             my $new_seedlot_description = $new_seedlot_info->[2];
             my $new_seedlot_box_name = $new_seedlot_info->[3];
+            my $new_seedlot_quality = $new_seedlot_info->[4];
 
             my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
             $new_seedlot->uniquename($new_seedlot_name);
@@ -1911,6 +1909,7 @@ sub upload_transactions_POST : Args(0) {
             $new_seedlot->cross_stock_id($content_info->[1]);
             $new_seedlot->organization_name($new_seedlot_organization);
             $new_seedlot->breeding_program_id($new_seedlot_breeding_program_id);
+            $new_seedlot->quality($new_seedlot_quality);
             my $return = $new_seedlot->store();
             my $new_seedlot_id = $return->{seedlot_id};
             push @added_seedlots, $new_seedlot_id;

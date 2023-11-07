@@ -62,6 +62,7 @@ sub _validate_with_plugin {
     my $to_new_seedlot_name_head;
     my $new_seedlot_description_head;
     my $new_seedlot_box_name_head;
+    my $new_seedlot_quality_head
 
 
     if ($worksheet->get_cell(0,0)) {
@@ -96,6 +97,10 @@ sub _validate_with_plugin {
         $new_seedlot_box_name_head  = $worksheet->get_cell(0,7)->value();
         $new_seedlot_box_name_head =~ s/^\s+|\s+$//g;
     }
+    if ($worksheet->get_cell(0,8)) {
+        $new_seedlot_quality_head  = $worksheet->get_cell(0,8)->value();
+        $new_seedlot_quality_head =~ s/^\s+|\s+$//g;
+    }
 
 
     if (!$from_seedlot_name_head || $from_seedlot_name_head ne 'from_seedlot_name' ) {
@@ -121,6 +126,9 @@ sub _validate_with_plugin {
     }
     if (!$new_seedlot_box_name_head || $new_seedlot_box_name_head ne 'new_seedlot_box_name') {
         push @error_messages, "Cell H1: new_seedlot_box_name is missing from the header";
+    }
+    if (!$new_seedlot_quality_head || $new_seedlot_quality_head ne 'new_seedlot_quality') {
+        push @error_messages, "Cell I1: new_seedlot_quality is missing from the header";
     }
 
     my %seen_seedlot_names;
@@ -269,6 +277,7 @@ sub _parse_with_plugin {
         my $to_new_seedlot_name;
         my $new_seedlot_description;
         my $new_seedlot_box_name;
+        my $new_seedlot_quality;
 
         if ($worksheet->get_cell($row,0)) {
             $from_seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -299,7 +308,9 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,7)) {
             $new_seedlot_box_name = $worksheet->get_cell($row,7)->value();
         }
-
+        if ($worksheet->get_cell($row,8)) {
+            $new_seedlot_quality = $worksheet->get_cell($row,8)->value();
+        }
 
         #skip blank lines
         if (!$to_new_seedlot_name && !$from_seedlot_name) {
@@ -321,7 +332,7 @@ sub _parse_with_plugin {
             weight => $weight,
             transaction_description => $transaction_description,
             operator => $operator_name,
-            new_seedlot_info => [$to_new_seedlot_name, $content_id, $new_seedlot_description, $new_seedlot_box_name]
+            new_seedlot_info => [$to_new_seedlot_name, $content_id, $new_seedlot_description, $new_seedlot_box_name, $new_seedlot_quality]
         }
     }
     #print STDERR Dumper \%parsed_seedlots;
