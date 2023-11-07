@@ -4919,6 +4919,10 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     my $type = $c->req->param('type') || 'planting';
     my $order = $c->req->param('order') || 'by_row_zigzag';
     my $start = $c->req->param('start') || 'bottom_left';
+    my $top_border = $c->req->param('top_border') || 'false';
+    my $right_border = $c->req->param('right_border') || 'false';
+    my $bottom_border = $c->req->param('bottom_border') || 'false';
+    my $left_border = $c->req->param('left_border') || 'false';
 
     # Check parameters
     if ( scalar(@trial_ids) eq 0 ) {
@@ -4929,17 +4933,23 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         $c->stash->{rest} = { error => "Unrecognized type!" };
         return;
     }
-    if ( $order ne 'by_col_serpentine'&& $order ne 'by_col_zigzag' && $order ne 'by_row_serpentine'&& $order ne 'by_row_zigzag' ) {
+    if ( ( $order !~ /by_col/ && $order !~ /by_row/ ) || ( $order !~ /serpentine/ && $order !~ /zigzag/ ) ) {
         $c->stash->{rest} = { error => "Unrecognized order!" };
         return;
     }
-    if ( $start ne 'bottom_left' && $start ne 'top_left' && $start ne 'top_right' && $start ne 'bottom_right' ) {
+    if ( ( $start !~ /bottom/ && $start !~ /top/ ) || ( $start !~ /left/ && $start !~ /right/ ) ) {
         $c->stash->{rest} = { error => "Unrecognized start!" };
         return;
     }
+    my %borders = (
+        top => $top_border eq 'true' || 0,
+        right => $right_border eq 'true' || 0,
+        bottom => $bottom_border eq 'true' || 0,
+        left => $left_border eq 'true' || 0
+    );
 
     # Get the sorted plots
-    my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start);
+    my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start, \%borders);
 
     # Return error message, if set
     if ( !defined $results->{plots} ) {
@@ -4958,24 +4968,42 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         my $col = $type . "_order";
 
         # Add CSV headers
-        my @headers = ($col, "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number");
+        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number");
         push(@data, \@headers);
 
         # Add plot rows
         my $plots = $results->{plots};
         foreach (@$plots) {
-            my @d = (
-                $_->{order},
-                "\"$_->{location_name}\"",
-                $_->{trial_name},
-                $_->{plot_number},
-                $_->{plot_name},
-                $_->{accession_name},
-                $_->{seedlot_name},
-                $_->{row_number},
-                $_->{col_number}
-            );
-            push(@data, \@d);
+            if ( $_->{type} eq 'plot' ) {
+                my @d = (
+                    $_->{order},
+                    $_->{type},
+                    "\"$_->{location_name}\"",
+                    $_->{trial_name},
+                    $_->{plot_number},
+                    $_->{plot_name},
+                    $_->{accession_name},
+                    $_->{seedlot_name},
+                    $_->{row_number},
+                    $_->{col_number}
+                );
+                push(@data, \@d);
+            }
+            else {
+                my @d = (
+                    $_->{order},
+                    $_->{type},
+                    "", # location
+                    "", # trial
+                    "", # plot number
+                    "", # plot name
+                    "", # accession
+                    "", # seedlot
+                    $_->{row_number},
+                    $_->{col_number}
+                );
+                push(@data, \@d);
+            }
         }
     }
 

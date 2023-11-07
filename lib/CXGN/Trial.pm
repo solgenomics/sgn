@@ -262,10 +262,13 @@ sub get_all_phenotype_metadata {
  Usage: CXGN::Trial->get_sorted_plots($schema, $trials, $order, $start)
  Desc:  Get an array of plot metadata (plot_id, plot_name, row_number, col_number, etc)
         for plots in the trial.  Sort the plots by the provided traversal parameters.
+ Requirements: The Trial(s) MUST have row/col positions for every plot AND there must not
+        be any overlapping plots (more than one plot with the same row/col position).
  Ret:   An array of sorted plot metadata
  Args:  trials = an arrayref of trial ids to include
         order = the order to travers the plots ('by_col_serpentine', 'by_col_zigzag', 'by_row_serpentine', 'by_row_zigzag')
         start = the corner of the trial layout to start the traversal ('bottom_left', 'top_left', 'top_right', 'bottom_right')
+        borders = a hashref with keys top, right, bottom, left.  If the value is 1, then include that side as a border
  Side Effects:
  Example:
 
@@ -277,9 +280,9 @@ sub get_sorted_plots {
     my $trials = shift;
     my $order = shift;
     my $start = shift;
+    my $borders = shift;
 
     # Parse each trial
-    # Get the min and max row and col
     my @plot_details;
     my ($min_row, $max_row, $min_col, $max_col, %seen_row_cols);
     foreach my $trial_id (@$trials) {
@@ -292,6 +295,10 @@ sub get_sorted_plots {
             selected_columns => {"location_name"=>1,"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,"row_number"=>1,"col_number"=>1,"accession_name"=>1,"seedlot_name"=>1},
         });
         my $output = $trial_layout_download->get_layout_output()->{output};
+
+        # Convert plot layout array into hash and add each plot to the plot_details array (of hashes)
+        # Check for plot row/col requirements
+        # Set the overall min/max row/col positions
         my @outer_array = @{$output};
         my ($inner_array, @keys);
         for my $i (0 .. $#outer_array) {
@@ -337,31 +344,38 @@ sub get_sorted_plots {
         }
     }
 
-    # Set starting position
+    # Set starting position:
+    #   right = col from max to min
+    #   left = col from min to max
+    #   top = row from max to min
+    #   bottom = row from min to max
+    # Add a row/col on either side for the borders
     my ($start_row, $end_row, $delta_row);
     my ($start_col, $end_col, $delta_col);
     if ( $start =~ /right/ ) {
-        $start_col = $max_col;
-        $end_col = $min_col;
+        $start_col = $max_col + 1;
+        $end_col = $min_col - 1;
         $delta_col = -1;
     }
     else {
-        $start_col = $min_col;
-        $end_col = $max_col;
+        $start_col = $min_col - 1;
+        $end_col = $max_col + 1;
         $delta_col = 1;
     }
     if ( $start =~ /top/ ) {
-        $start_row = $max_row;
-        $end_row = $min_row;
+        $start_row = $max_row + 1;
+        $end_row = $min_row - 1;
         $delta_row = -1;
     }
     else {
-        $start_row = $min_row;
-        $end_row = $max_row;
+        $start_row = $min_row - 1;
+        $end_row = $max_row + 1;
         $delta_row = 1;
     }
 
-    # Set traversal order
+    # Set traversal order:
+    #   by_col = first by column (outer loop) then by row (inner loop)
+    #   by_row = first by row (outer loop) then by col (inner loop)
     my ($outerloop_key, $outerloop_start, $outerloop_end, $outerloop_delta);
     my ($innerloop_key, $innerloop_start, $innerloop_end, $innerloop_delta);
     if ( $order =~ /by_col/ ) {
@@ -392,11 +406,12 @@ sub get_sorted_plots {
 
     # Start the outerloop...
     for ( my $o = $outerloop_start; $outerloop_delta > 0 ? $o <= $outerloop_end : $o >= $outerloop_end; $o=$o+$outerloop_delta ) {
+        my $starting_p_order = $p_order;
+
+        # Invert the order of every other innerloop when serpentine
         my $i_start = $innerloop_start;
         my $i_end = $innerloop_end;
         my $i_delta = $innerloop_delta;
-
-        # Invert the order of every other innerloop when serpentine
         if ( $order =~ /serpentine/ ) {
             if ( $o_count % 2 ) {
                 $i_start = $innerloop_end;
@@ -408,18 +423,154 @@ sub get_sorted_plots {
         # Start the innerloop...
         for ( my $i = $i_start; $i_delta > 0 ? $i <= $i_end : $i >= $i_end; $i=$i+$i_delta ) {
 
-            # Find the matching plot and add it to the ordered plots
-            my ($p) = grep { $_->{$outerloop_key} == $o && $_->{$innerloop_key} == $i } @plot_details;
-            if ( defined($p) ) {
-                $p->{order} = $p_order;
-                push(@ordered_plots, $p);
-                $p_order++;
+            #
+            # ADD BORDERS
+            #
+
+            # Determine border type based on current position
+            my $obt_start = $outerloop_key eq 'row_number' ? ($outerloop_delta > 0 ? 'bottom' : 'top') : ($outerloop_delta > 0 ? 'left' : 'right');
+            my $obt_end = $outerloop_key eq 'row_number' ? ($outerloop_delta > 0 ? 'top' : 'bottom') : ($outerloop_delta > 0 ? 'right' : 'left');
+            my $ibt_start = $innerloop_key eq 'col_number' ? ($innerloop_delta > 0 ? 'left' : 'right') : ($innerloop_delta > 0 ? 'bottom' : 'top');
+            my $ibt_end = $innerloop_key eq 'col_number' ? ($innerloop_delta > 0 ? 'right' : 'left') : ($innerloop_delta > 0 ? 'top' : 'bottom');
+
+            # Add corner 1
+            if ( $o == $outerloop_start && $i == $innerloop_start ) {
+                if ( $borders->{$obt_start} && $borders->{$ibt_start} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $obt_start . "_" . $ibt_start,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
             }
-            # TODO: Add option to include empty plots (not plot defined for row/col position)
+
+            # Add corner 2
+            elsif ( $o == $outerloop_end && $i == $innerloop_start ) {
+                if ( $borders->{$obt_end} && $borders->{$ibt_start} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $obt_end . "_" . $ibt_start,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
+            }
+
+            # Add corner 3
+            elsif ( $o == $outerloop_end && $i == $innerloop_end ) {
+                if ( $borders->{$obt_end} && $borders->{$ibt_end} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $obt_end . "_" . $ibt_end,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
+            }
+
+            # Add corner 4
+            elsif ( $o == $outerloop_start && $i == $innerloop_end ) {
+                if ( $borders->{$obt_start} && $borders->{$ibt_end} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $obt_start . "_" . $ibt_end,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
+            }
+
+            # Add outer start border
+            elsif ( $o == $outerloop_start ) {
+                if ( $borders->{$obt_start} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $obt_start,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
+            }
+
+            # Add outer end border
+            elsif ( $o == $outerloop_end ) {
+                if ( $borders->{$obt_end} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $obt_end,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
+            }
+
+            # Add inner start border
+            elsif ( $i == $innerloop_start ) {
+                if ( $borders->{$ibt_start} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $ibt_start,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
+            }
+
+            # Add inner end border
+            elsif ( $i == $innerloop_end ) {
+                if ( $borders->{$ibt_end} ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'border',
+                        border => $ibt_end,
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
+            }
+
+
+            #
+            # ADD PLOTS
+            #
+            else {
+
+                # Find the plot with the matching row / col position
+                my ($p) = grep { $_->{$outerloop_key} == $o && $_->{$innerloop_key} == $i } @plot_details;
+
+                # Add the plot, if it's found
+                if ( defined($p) ) {
+                    $p->{order} = $p_order;
+                    $p->{type} = 'plot';
+                    push(@ordered_plots, $p);
+                    $p_order++;
+                }
+
+                # TODO: add a gap item when there is no plot, if requested
+
+            }
 
         }
 
-        $o_count++;
+        if ( $p_order > $starting_p_order ) {
+            $o_count++;
+        }
     }
 
     return { plots => \@ordered_plots };
