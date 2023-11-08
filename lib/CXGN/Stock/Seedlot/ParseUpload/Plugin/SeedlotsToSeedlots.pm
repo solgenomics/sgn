@@ -79,14 +79,13 @@ sub _validate_with_plugin {
         $weight_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
-        $transaction_description_head  = $worksheet->get_cell(0,4)->value();
-        $transaction_description_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,5)) {
-        $operator_name_head  = $worksheet->get_cell(0,5)->value();
+        $operator_name_head  = $worksheet->get_cell(0,4)->value();
         $operator_name_head =~ s/^\s+|\s+$//g;
     }
-
+    if ($worksheet->get_cell(0,5)) {
+        $transaction_description_head  = $worksheet->get_cell(0,5)->value();
+        $transaction_description_head =~ s/^\s+|\s+$//g;
+    }
 
     if (!$from_seedlot_name_head || $from_seedlot_name_head ne 'from_seedlot_name' ) {
         push @error_messages, "Cell A1: from_seedlot_name is missing from the header";
@@ -100,11 +99,11 @@ sub _validate_with_plugin {
     if (!$weight_head || $weight_head ne 'weight(g)') {
         push @error_messages, "Cell D1: weight(g) is missing from the header";
     }
-    if (!$transaction_description_head || $transaction_description_head ne 'transaction_description') {
-        push @error_messages, "Cell E1: transaction_description is missing from the header";
-    }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
-        push @error_messages, "Cell F1: operator_name is missing from the header";
+        push @error_messages, "Cell E1: operator_name is missing from the header";
+    }
+    if (!$transaction_description_head || $transaction_description_head ne 'transaction_description') {
+        push @error_messages, "Cell F1: transaction_description is missing from the header";
     }
 
     my %seen_seedlot_names;
@@ -115,8 +114,8 @@ sub _validate_with_plugin {
         my $to_seedlot_name;
         my $amount = 'NA';
         my $weight = 'NA';
-        my $transaction_description;
         my $operator_name;
+        my $transaction_description;
 
         if ($worksheet->get_cell($row,0)) {
             $from_seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -131,12 +130,11 @@ sub _validate_with_plugin {
             $weight =  $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
-            $transaction_description =  $worksheet->get_cell($row,4)->value();
+            $operator_name = $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $operator_name = $worksheet->get_cell($row,5)->value();
+            $transaction_description =  $worksheet->get_cell($row,5)->value();
         }
-
 
         if (!$from_seedlot_name || $from_seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: from_seedlot_name missing.";
@@ -231,8 +229,8 @@ sub _parse_with_plugin {
         my $to_seedlot_name;
         my $amount = 'NA';
         my $weight = 'NA';
-        my $transaction_description;
         my $operator_name;
+        my $transaction_description;
 
         if ($worksheet->get_cell($row,0)) {
             $from_seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -251,11 +249,11 @@ sub _parse_with_plugin {
             $weight =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
-            $transaction_description =  $worksheet->get_cell($row,4)->value();
+            $operator_name =  $worksheet->get_cell($row,4)->value();
+            $operator_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
-            $operator_name =  $worksheet->get_cell($row,5)->value();
-            $operator_name =~ s/^\s+|\s+$//g;
+            $transaction_description =  $worksheet->get_cell($row,5)->value();
         }
 
         #skip blank lines

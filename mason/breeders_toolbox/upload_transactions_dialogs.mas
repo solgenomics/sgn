@@ -12,27 +12,22 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-
                     <&| /util/workflow.mas, id=> "transactions_upload_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Seedlot Transactions" &>
+                            <& /page/page_title.mas, title=>"Upload Seedlot Transactions" &>
+                            <center>You can upload 3 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
                             <ul>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
-                                <li></li>
+                                <li>Transferring seeds from existing seedlot to another existing seedlot.</li>
+                                <li>Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.</li>
+                                <li>Transferring seeds from existing seedlot to a previously stored plot</li>
                             </ul>
-
                             <br/><br/>
                             <center>
                                 <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
-
                         <&| /util/workflow.mas:step, title=> "Upload Seedlot Transactions" &>
-                            <& /page/page_title.mas, title=>"Select transaction type and upload your file" &>
-
+                            <& /page/page_title.mas, title=>"Select a transaction type and upload your file" &>
                             <br/>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transactions_form" name="upload_transactions_form">
                                 <div class="form-group">
@@ -169,7 +164,6 @@
                                     <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_transactions_submit" id="upload_transactions_submit">Upload File</button>
                                 </center>
                             </div>
-
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your transactions are now in the database" &>
@@ -178,9 +172,7 @@
                                 The transactions file was uploaded successfully
                             </p>
                         </&>
-
                     </&><!-- End of workflow -->
-
                 </div>
             </div>
             <div class="modal-footer">
@@ -226,7 +218,6 @@
                     <br>
                     The first row (header) must contain the following:
                     <br />
-
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
@@ -240,25 +231,21 @@
                             </tr>
                         </tbody>
                     </table>
-
                     <b>Required fields:</b>
                     <ul>
-                    <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
-                    <li><b>to_seedlot_name:</b> Must exist in the database. Seeds were added to this seedlot.</li>
-                    <li>
-                    <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
-                    <br/><b>AND/OR</b><br/>
-                    <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
-                    </li>
-                    <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
-
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li><b>to_seedlot_name:</b> Must exist in the database. Seeds were added to this seedlot.</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                     </ul>
-
                     <b>Optional fields:</b>
                     <ul>
-                      <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
                     </ul>
-
                 </div>
             </div>
             <div class="modal-footer">
@@ -283,7 +270,6 @@
                     <br>
                     The first row (header) must contain the following:
                     <br />
-
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
@@ -300,27 +286,24 @@
                             </tr>
                         </tbody>
                     </table>
-
                     <b>Required fields:</b>
                     <ul>
-                    <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
-                    <li>
-                    <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
-                    <br/><b>AND/OR</b><br/>
-                    <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
-                    </li>
-                    <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
-                    <li><b>to_new_seedlot_name:</b> Must NOT exist in the database. New seedlot will be created using amount/weight of seeeds from existing seedlot.</li>
-                    <li><b>new_seedlot_box_name:</b> Box name that this new seedlot is stored. Can be any name.</li>
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                        <li><b>to_new_seedlot_name:</b> Must NOT exist in the database. New seedlot will be created using amount/weight of seeeds from existing seedlot.</li>
+                        <li><b>new_seedlot_box_name:</b> Box name that this new seedlot is stored. Can be any name.</li>
                     </ul>
-
                     <b>Optional fields:</b>
                     <ul>
-                      <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
-                      <li><b>new_seedlot_description:</b> Information about this new seedlot.</li>
-                      <li><b>new_seedlot_quality:</b> Status or condition of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                        <li><b>new_seedlot_description:</b> Information about this new seedlot.</li>
+                        <li><b>new_seedlot_quality:</b> Status or condition of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
                     </ul>
-
                 </div>
             </div>
             <div class="modal-footer">
@@ -329,6 +312,60 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="seedlots_to_plots_info_dialog" name="seedlots_to_plots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlotsToPlotsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlotsToPlotsInfoDialog">Upload Template Information For Existing Seedlot to Plot Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>to_plot_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>operator_name</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li><b>to_plot_name:</b> Must exist in the database. Seeds were used for this plot. You can also record seedlot used for each plot during uploading existing trial on the Manage Trials page</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlots_to_plots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <style>
 
