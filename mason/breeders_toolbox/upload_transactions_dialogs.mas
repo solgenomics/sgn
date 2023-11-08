@@ -45,7 +45,7 @@
                                     <br/>
                                     <hr class ="solid">
                                     <center>
-                                        <h4>You want to transfer seed from existing seedlots to other existing seedlots</h4>
+                                        <h4>You want to transfer seeds from existing seedlots to other existing seedlots</h4>
                                     </center>
                                     <div class="well well-sm">
                                         <div class="row">
@@ -129,7 +129,7 @@
                                     <br/>
                                     <hr class ="solid">
                                     <center>
-                                        <h4>You want to use seed from existing seedlots for plots</h4>
+                                        <h4>You want to use seeds from existing seedlots for plots</h4>
                                     </center>
                                     <div class="well well-sm">
                                         <div class="row">
@@ -451,10 +451,9 @@ jQuery(document).ready(function(){
         jQuery("#seedlots_to_new_seedlots_info_dialog").modal("show");
     });
 
-
-
-
-
+    jQuery("#seedlots_to_plots_format").click(function() {
+        jQuery("#seedlots_to_plots_info_dialog").modal("show");
+    });
 
 });
 
