@@ -133,6 +133,44 @@ is($third_row->{'current_count'}, '5');
 is($third_row->{'box_name'}, 'b1');
 is($third_row->{'quality'}, '');
 
+#test uploading transactions
+#from existing seedlots to new seedlots
+my $seedlot_test2_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test2' })->stock_id();
+my $seedlot_test2_before = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_id);
+is($seedlot_test2_before->current_count, 99, "check current count before transferring");
+
+my $file = $f->config->{basepath}."/t/data/stock/seedlots_to_new_seedlots.xls";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/upload_transactions',
+        Content_Type => 'form-data',
+        Content => [
+            seedlots_to_new_seedlots_file => [ $file, 'seedlot_upload', Content_Type => 'application/vnd.ms-excel'],
+            "new_seedlot_breeding_program_id"=>$breeding_program_id,
+            "new_seedlot_location"=>'test_location',
+            "new_seedlot_organization_name"=>"testorg1",
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+is_deeply($message_hash, { 'success' => 1 });
+
+my $seedlot_test2_after = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_id);
+is($seedlot_test2_after->current_count, 49, "check current count after transferring");
+
+#check new seedlots
+my $seedlot_test2_1_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test2_1' })->stock_id();
+my $seedlot_test2_1 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_1_id);
+is($seedlot_test2_1->current_count, 30, "check current count for new seedlot");
+
+my $seedlot_test2_2_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test2_2' })->stock_id();
+my $seedlot_test2_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
+is($seedlot_test2_2->current_count, 20, "check current count for new seedlot");
+
+
 #test discarding seedlot
 my $seedlot_test1_rs = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test1' });
 my $seedlot_test1_id = $seedlot_test1_rs->stock_id();
