@@ -269,6 +269,7 @@ sub get_all_phenotype_metadata {
         order = the order to travers the plots ('by_col_serpentine', 'by_col_zigzag', 'by_row_serpentine', 'by_row_zigzag')
         start = the corner of the trial layout to start the traversal ('bottom_left', 'top_left', 'top_right', 'bottom_right')
         borders = a hashref with keys top, right, bottom, left.  If the value is 1, then include that side as a border
+        gaps = when set to 1, include missing plots / gaps as items in the order
  Side Effects:
  Example:
 
@@ -281,6 +282,7 @@ sub get_sorted_plots {
     my $order = shift;
     my $start = shift;
     my $borders = shift;
+    my $gaps = shift;
 
     # Parse each trial
     my @plot_details;
@@ -562,7 +564,16 @@ sub get_sorted_plots {
                     $p_order++;
                 }
 
-                # TODO: add a gap item when there is no plot, if requested
+                # Add a gap item when there is no plot, if requested
+                elsif ( $gaps ) {
+                    push(@ordered_plots, {
+                        order => $p_order,
+                        type => 'gap',
+                        $outerloop_key => $o,
+                        $innerloop_key => $i
+                    });
+                    $p_order++;
+                }
 
             }
 

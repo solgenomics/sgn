@@ -4923,6 +4923,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     my $right_border = $c->req->param('right_border') || 'false';
     my $bottom_border = $c->req->param('bottom_border') || 'false';
     my $left_border = $c->req->param('left_border') || 'false';
+    my $gaps = $c->req->param('gaps') || 'false';
 
     # Check parameters
     if ( scalar(@trial_ids) eq 0 ) {
@@ -4949,7 +4950,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     );
 
     # Get the sorted plots
-    my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start, \%borders);
+    my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start, \%borders, $gaps eq 'true' || 0);
 
     # Return error message, if set
     if ( !defined $results->{plots} ) {

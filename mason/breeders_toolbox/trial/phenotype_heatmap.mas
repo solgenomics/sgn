@@ -233,9 +233,15 @@ $data_level => 'plot'
                     <option value="bottom_right">Bottom Right</option>
                 </select>
             </div>
-            <div>
-                <label for="plot_download_borders">Include Borders</label>
-                <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
+            <div style="display: flex; flex-direction: column; justify-content: end; text-align: right">
+                <div>
+                    <label for="plot_download_borders">Include Borders</label>
+                    <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
+                </div>
+                <div>
+                    <label for="plot_download_gaps">Include Gaps</label>
+                    <input type="checkbox" id="plot_download_gaps" name="plot_download_gaps" value="no">
+                </div>
             </div>
             <button class="btn btn-primary" id="plot_download_button">Download</button>
         </div>
@@ -870,6 +876,7 @@ jQuery(document).ready( function() {
         let order = jQuery("#plot_download_order").val();
         let start = jQuery("#plot_download_start").val();
         let include_borders = jQuery("#plot_download_borders").is(":checked");
+        let include_gaps = jQuery("#plot_download_gaps").is(":checked");
         if ( !type || type === '' ) {
             alert("Please select a type");
             return;
@@ -882,7 +889,7 @@ jQuery(document).ready( function() {
             alert("Please select a starting plot");
             return;
         }
-        FieldMap.get_plot_order(type, order, start, include_borders)
+        FieldMap.get_plot_order(type, order, start, include_borders, include_gaps);
     });
 
     jQuery("#invert_row_checkmark").change(function() {

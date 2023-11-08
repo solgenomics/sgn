@@ -148,16 +148,17 @@ export function init() {
             }
         }
 
-        get_plot_order(type, order, start, include_borders) {
+        get_plot_order(type, order, start, include_borders, include_gaps) {
             let q = new URLSearchParams({
-                'trial_ids': [this.trial_id, ...Object.keys(this.linked_trials).map((e) => x[e].id)].join(','),
+                'trial_ids': [this.trial_id, ...Object.keys(this.linked_trials).map((e) => this.linked_trials[e].id)].join(','),
                 'type': type,
                 'order': order,
                 'start': start,
-                'top_border': include_borders && !!this.meta_data.top_border_selection,
-                'right_border': include_borders && !!this.meta_data.right_border_selection,
-                'bottom_border': include_borders && !!this.meta_data.bottom_border_selection,
-                'left_border': include_borders && !!this.meta_data.left_border_selection
+                'top_border': !!include_borders && !!this.meta_data.top_border_selection,
+                'right_border': !!include_borders && !!this.meta_data.right_border_selection,
+                'bottom_border': !!include_borders && !!this.meta_data.bottom_border_selection,
+                'left_border': !!include_borders && !!this.meta_data.left_border_selection,
+                'gaps': !!include_gaps
             }).toString();
             window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
         }
