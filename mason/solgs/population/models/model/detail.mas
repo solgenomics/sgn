@@ -34,7 +34,7 @@ $analysis_type => ''
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.histogram", "solGS.genotypingProtocol", "statistics/simple_statistics"] &>
+<& /util/import_javascript.mas, classes => ["solGS.genotypingProtocol", "statistics/simple_statistics"] &>
 
 
 <& /page/page_title.mas,
