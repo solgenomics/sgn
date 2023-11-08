@@ -62,7 +62,7 @@ sub _validate_with_plugin {
     my $to_new_seedlot_name_head;
     my $new_seedlot_box_name_head;
     my $new_seedlot_description_head;
-    my $new_seedlot_quality_head
+    my $new_seedlot_quality_head;
 
 
     if ($worksheet->get_cell(0,0)) {
