@@ -2,6 +2,7 @@
 $trial_id
 $stockref => undef
 $data_level => 'plot'
+$has_col_and_row_numbers => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
@@ -203,6 +204,7 @@ $data_level => 'plot'
     <div id="fieldmap_wrapper">
         <div id="fieldmap_chart"></div>
     </div>
+% if ( $has_col_and_row_numbers ) {
     <div style="margin-top: 40px" class="well well-sm">
         <h3 style="margin: 0 0 10px 0">Download Plot Order</h3>
         <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
@@ -247,6 +249,7 @@ $data_level => 'plot'
         </div>
     </div>
 </div>
+% }
 
 
 <div id="trait_heatmap" >loading...</div>

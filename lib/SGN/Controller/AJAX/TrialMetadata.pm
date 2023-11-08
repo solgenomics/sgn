@@ -4953,7 +4953,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start, \%borders, $gaps eq 'true' || 0);
 
     # Return error message, if set
-    if ( !defined $results->{plots} ) {
+    if ( !defined $results->{error} && !defined $results->{plots} ) {
         $results->{error} = "An unknown error occurred";
     }
     if ( defined $results->{error} ) {

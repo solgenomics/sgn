@@ -259,7 +259,7 @@ sub get_all_phenotype_metadata {
 
 =head2 function get_sorted_plots()
 
- Usage: CXGN::Trial->get_sorted_plots($schema, $trials, $order, $start)
+ Usage: CXGN::Trial->get_sorted_plots($schema, $trials, $order, $start, $gaps)
  Desc:  Get an array of plot metadata (plot_id, plot_name, row_number, col_number, etc)
         for plots in the trial.  Sort the plots by the provided traversal parameters.
  Requirements: The Trial(s) MUST have row/col positions for every plot AND there must not
