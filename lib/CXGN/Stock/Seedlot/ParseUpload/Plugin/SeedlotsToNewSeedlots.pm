@@ -78,12 +78,12 @@ sub _validate_with_plugin {
         $weight_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
-        $transaction_description_head  = $worksheet->get_cell(0,3)->value();
-        $transaction_description_head =~ s/^\s+|\s+$//g;
+        $operator_name_head  = $worksheet->get_cell(0,3)->value();
+        $operator_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
-        $operator_name_head  = $worksheet->get_cell(0,4)->value();
-        $operator_name_head =~ s/^\s+|\s+$//g;
+        $transaction_description_head  = $worksheet->get_cell(0,4)->value();
+        $transaction_description_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $to_new_seedlot_name_head  = $worksheet->get_cell(0,5)->value();
@@ -112,11 +112,11 @@ sub _validate_with_plugin {
     if (!$weight_head || $weight_head ne 'weight(g)') {
         push @error_messages, "Cell C1: weight(g) is missing from the header";
     }
-    if (!$transaction_description_head || $transaction_description_head ne 'transaction_description') {
-        push @error_messages, "Cell D1: transaction_description is missing from the header";
-    }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
-        push @error_messages, "Cell E1: operator_name is missing from the header";
+        push @error_messages, "Cell D1: operator_name is missing from the header";
+    }
+    if (!$transaction_description_head || $transaction_description_head ne 'transaction_description') {
+        push @error_messages, "Cell E1: transaction_description is missing from the header";
     }
     if (!$to_new_seedlot_name_head || $to_new_seedlot_name_head ne 'to_new_seedlot_name') {
         push @error_messages, "Cell F1: to_new_seedlot_name is missing from the header";
@@ -138,11 +138,11 @@ sub _validate_with_plugin {
         my $from_seedlot_name;
         my $amount = 'NA';
         my $weight = 'NA';
-        my $transaction_description;
         my $operator_name;
+        my $transaction_description;
         my $to_new_seedlot_name;
-        my $new_seedlot_description;
         my $new_seedlot_box_name;
+        my $new_seedlot_description;
 
         if ($worksheet->get_cell($row,0)) {
             $from_seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -154,7 +154,7 @@ sub _validate_with_plugin {
             $weight =  $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $operator_name = $worksheet->get_cell($row,4)->value();
+            $operator_name = $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,5)) {
             $to_new_seedlot_name = $worksheet->get_cell($row,5)->value();
