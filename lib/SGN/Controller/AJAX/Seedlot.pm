@@ -1761,7 +1761,7 @@ sub upload_transactions_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
-    } else{
+    } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
             $c->detach();
@@ -1846,110 +1846,107 @@ sub upload_transactions_POST : Args(0) {
     if (defined $parsed_data && ($parser_type eq 'SeedlotsToSeedlots')) {
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
-        foreach my $transaction_info (@all_transactions) {
+        eval {
+            foreach my $transaction_info (@all_transactions) {
 #            print STDERR "EACH SEEDLOT TO SEEDLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
-            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-            $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
-            $transaction->to_stock([$transaction_info->{to_seedlot_id}, $transaction_info->{to_seedlot_name}]);
-            $transaction->amount($transaction_info->{amount});
-            $transaction->weight_gram($transaction_info->{weight});
-            $transaction->timestamp($timestamp);
-            $transaction->description($transaction_info->{transaction_description});
-            $transaction->operator($transaction_info->{operator});
-            my $transaction_id = $transaction->store();
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                $transaction->to_stock([$transaction_info->{to_seedlot_id}, $transaction_info->{to_seedlot_name}]);
+                $transaction->amount($transaction_info->{amount});
+                $transaction->weight_gram($transaction_info->{weight});
+                $transaction->timestamp($timestamp);
+                $transaction->description($transaction_info->{transaction_description});
+                $transaction->operator($transaction_info->{operator});
+                my $transaction_id = $transaction->store();
 
-            my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
-            $current_from_seedlot->set_current_count_property();
-            $current_from_seedlot->set_current_weight_property();
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                $current_from_seedlot->set_current_count_property();
+                $current_from_seedlot->set_current_weight_property();
 
-            my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
-            $current_to_seedlot->set_current_count_property();
-            $current_to_seedlot->set_current_weight_property();
-
-        }
+                my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
+                $current_to_seedlot->set_current_count_property();
+                $current_to_seedlot->set_current_weight_property();
+            }
+        };
     } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToPlots')) {
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
-        foreach my $transaction_info (@all_transactions) {
-#            print STDERR "EACH SEEDLOT TO PLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
-            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-            $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
-            $transaction->to_stock([$transaction_info->{to_plot_id}, $transaction_info->{to_plot_name}]);
-            $transaction->amount($transaction_info->{amount});
-            $transaction->weight_gram($transaction_info->{weight});
-            $transaction->timestamp($timestamp);
-            $transaction->description($transaction_info->{transaction_description});
-            $transaction->operator($transaction_info->{operator});
-            my $transaction_id = $transaction->store();
 
-            my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
-            $current_from_seedlot->set_current_count_property();
-            $current_from_seedlot->set_current_weight_property();
-        }
+        eval {
+            foreach my $transaction_info (@all_transactions) {
+#                print STDERR "EACH SEEDLOT TO PLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                $transaction->to_stock([$transaction_info->{to_plot_id}, $transaction_info->{to_plot_name}]);
+                $transaction->amount($transaction_info->{amount});
+                $transaction->weight_gram($transaction_info->{weight});
+                $transaction->timestamp($timestamp);
+                $transaction->description($transaction_info->{transaction_description});
+                $transaction->operator($transaction_info->{operator});
+                my $transaction_id = $transaction->store();
+
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                $current_from_seedlot->set_current_count_property();
+                $current_from_seedlot->set_current_weight_property();
+            }
+        };
     } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlots')) {
         my @added_seedlots;
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
-        foreach my $transaction_info (@all_transactions) {
-#            print STDERR "EACH SEEDLOT TO NEW SEEDLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
-            my $from_seedlot_id = $transaction_info->{from_seedlot_id};
-            my $new_seedlot_info = $transaction_info->{new_seedlot_info};
-            my $new_seedlot_name = $new_seedlot_info->[0];
-            my $content_info = $new_seedlot_info->[1];
-            my $new_seedlot_description = $new_seedlot_info->[2];
-            my $new_seedlot_box_name = $new_seedlot_info->[3];
-            my $new_seedlot_quality = $new_seedlot_info->[4];
+        eval {
+            foreach my $transaction_info (@all_transactions) {
+#                print STDERR "EACH SEEDLOT TO NEW SEEDLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
+                my $from_seedlot_id = $transaction_info->{from_seedlot_id};
+                my $new_seedlot_info = $transaction_info->{new_seedlot_info};
+                my $new_seedlot_name = $new_seedlot_info->[0];
+                my $content_info = $new_seedlot_info->[1];
+                my $new_seedlot_description = $new_seedlot_info->[2];
+                my $new_seedlot_box_name = $new_seedlot_info->[3];
+                my $new_seedlot_quality = $new_seedlot_info->[4];
 
-            my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
-            $new_seedlot->uniquename($new_seedlot_name);
-            $new_seedlot->location_code($new_seedlot_location);
-            $new_seedlot->box_name($new_seedlot_box_name);
-            $new_seedlot->description($new_seedlot_description);
-            $new_seedlot->accession_stock_id($content_info->[0]);
-            $new_seedlot->cross_stock_id($content_info->[1]);
-            $new_seedlot->organization_name($new_seedlot_organization);
-            $new_seedlot->breeding_program_id($new_seedlot_breeding_program_id);
-            $new_seedlot->quality($new_seedlot_quality);
-            my $return = $new_seedlot->store();
-            my $new_seedlot_id = $return->{seedlot_id};
-            push @added_seedlots, $new_seedlot_id;
+                my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
+                $new_seedlot->uniquename($new_seedlot_name);
+                $new_seedlot->location_code($new_seedlot_location);
+                $new_seedlot->box_name($new_seedlot_box_name);
+                $new_seedlot->description($new_seedlot_description);
+                $new_seedlot->accession_stock_id($content_info->[0]);
+                $new_seedlot->cross_stock_id($content_info->[1]);
+                $new_seedlot->organization_name($new_seedlot_organization);
+                $new_seedlot->breeding_program_id($new_seedlot_breeding_program_id);
+                $new_seedlot->quality($new_seedlot_quality);
+                my $return = $new_seedlot->store();
+                my $new_seedlot_id = $return->{seedlot_id};
+                push @added_seedlots, $new_seedlot_id;
 
-            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-            $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
-            $transaction->to_stock([$new_seedlot_id, $new_seedlot_name]);
-            $transaction->amount($transaction_info->{amount});
-            $transaction->weight_gram($transaction_info->{weight});
-            $transaction->timestamp($timestamp);
-            $transaction->description($transaction_info->{transaction_description});
-            $transaction->operator($transaction_info->{operator});
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                $transaction->to_stock([$new_seedlot_id, $new_seedlot_name]);
+                $transaction->amount($transaction_info->{amount});
+                $transaction->weight_gram($transaction_info->{weight});
+                $transaction->timestamp($timestamp);
+                $transaction->description($transaction_info->{transaction_description});
+                $transaction->operator($transaction_info->{operator});
 
-            my $transaction_id = $transaction->store();
+                my $transaction_id = $transaction->store();
 
-            my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
-            $current_from_seedlot->set_current_count_property();
-            $current_from_seedlot->set_current_weight_property();
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                $current_from_seedlot->set_current_count_property();
+                $current_from_seedlot->set_current_weight_property();
 
-            my $to_new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $new_seedlot_id);
-            $to_new_seedlot->set_current_count_property();
-            $to_new_seedlot->set_current_weight_property();
+                my $to_new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $new_seedlot_id);
+                $to_new_seedlot->set_current_count_property();
+                $to_new_seedlot->set_current_weight_property();
+            }
 
-        }
-
-        foreach my $seedlot_id (@added_seedlots) {
-            $phenome_schema->resultset("StockOwner")->find_or_create({
-                stock_id     => $seedlot_id,
-                sp_person_id =>  $user_id,
-            });
-        }
+            foreach my $seedlot_id (@added_seedlots) {
+                $phenome_schema->resultset("StockOwner")->find_or_create({
+                    stock_id     => $seedlot_id,
+                    sp_person_id =>  $user_id,
+                });
+            }
+        };
     }
-
-
-    eval {
-
-
-
-    };
-
 
     if ($@) {
         $c->stash->{rest} = { error => $@ };
