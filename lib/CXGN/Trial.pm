@@ -279,10 +279,10 @@ sub get_sorted_plots {
     my $class = shift;
     my $schema = shift;
     my $trials = shift;
-    my $order = shift;
-    my $start = shift;
-    my $borders = shift;
-    my $gaps = shift;
+    my $order = shift || 'by_row_serpentine';
+    my $start = shift || 'bottom_left';
+    my $borders = shift || { top => 0, right => 0, bottom => 0, left => 0 };
+    my $gaps = shift || 0;
 
     # Parse each trial
     my @plot_details;

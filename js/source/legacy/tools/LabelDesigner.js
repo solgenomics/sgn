@@ -1300,7 +1300,7 @@ function addSortOrders(add_fields, data_type, data_level) {
     // Set type-specific sorting options
     let data_type_fields = [];
     // Sort by trial layout for plot-level labels...
-    if ( data_type === 'Field Trials' && data_level === 'plots' ) {
+    if ( (data_type === 'Field Trials' || data_type === 'Lists') && data_level === 'plots' ) {
         data_type_fields = ['Trial Layout: Plot Order']
     }
 
@@ -1438,6 +1438,8 @@ function retrievePageParams() {
         sort_order_1: document.getElementById("sort_order_1").value,
         sort_order_2: document.getElementById("sort_order_2").value,
         sort_order_3: document.getElementById("sort_order_3").value,
+        sort_order_layout_order: document.getElementById("sort_order_layout_order").value,
+        sort_order_layout_start: document.getElementById("sort_order_layout_start").value,
         copies_per_plot: document.getElementById("copies_per_plot").value,
         labels_to_download: document.getElementById("label_designer_labels_to_download").value,
         start_number: document.getElementById("label_designer_start_number").value,
