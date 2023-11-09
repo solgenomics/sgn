@@ -59,12 +59,31 @@ sub patch {
 --do your SQL here
 --
 
+CREATE TABLE sgn_people.sp_stage_gate_definition (
+    sp_stage_gate_definition_id serial primary key,
+    name varchar(20),
+    description text,
+    breeding_program_id bigint reference public.project
+);
+GRANT select,insert,update,delete ON sgn_people.sp_stage_gate_definition TO web_usr;
+GRANT USAGE ON sgn_people.sp_stage_gate_definition_sp_stage_gate_definition_id_seq TO web_usr;
+
 CREATE TABLE sgn_people.sp_stage_gate (
   sp_stage_gate_id serial primary key,
-  name varchar(100),
+  sp_stage_gate_definition_id bigint refernences sp_stage_gate_definition,
+  name varchar(100) unique,
   description text,
-  breeding_program_id bigint references public.project
+  season varchar(100),
+  year varchar(4),
 );
+
+CREATE TABLE sgn_people.sp_stage_gate_trial (
+  sp_stage_gate_trial_id primary key,
+  sp_stage_gate_id bigint references sp_stage_gate,
+  project_id biging reference public.project
+);
+
+
 
 GRANT select,insert,update,delete ON sgn_people.sp_stage_gate TO web_usr;
 GRANT USAGE ON sgn_people.sp_stage_gate_sp_stage_gate_id_seq TO web_usr;
@@ -89,6 +108,7 @@ CREATE TABLE sgn_people.sp_person_team (
 GRANT select,insert,update,delete ON sgn_people.sp_person_team TO web_usr;
 GRANT USAGE ON sgn_people.sp_person_team_sp_person_team_id_seq TO web_usr;
 
+INSERT INTO cvterm (name, cv_id) values ('stage_gate_selection_info', SELECT cv_id from cv where name='stock_property');
 
 EOSQL
 
