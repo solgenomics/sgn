@@ -112,7 +112,8 @@ sub pcr_protocol_genotype_data_download : Path('/protocol_genotype_data/pcr_down
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
     my $contents = read_file($file_destination);

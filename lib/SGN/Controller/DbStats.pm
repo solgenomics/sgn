@@ -10,7 +10,8 @@ sub dbstats :Path('/breeders/dbstats') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
     #print STDERR Dumper $breeding_programs;

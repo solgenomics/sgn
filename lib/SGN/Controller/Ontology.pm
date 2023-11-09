@@ -45,7 +45,8 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
 
     my @composable_cvs = split ",", $c->config->{composable_cvs};
     my $dbh = $c->dbc->dbh();
-    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id) } );
     my %html_hash;
     foreach my $name (@composable_cvs) {
         $name =~ s/^\s+|\s+$//g; # remove whitespace

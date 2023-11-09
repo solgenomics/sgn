@@ -200,7 +200,9 @@ sub _parse_list_from_json {
 sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $sgn_session_id = $c->req->param("sgn_session_id");
 
     my $user = $c->user();
@@ -519,13 +521,14 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     my $unique_transform = $tf->can_transform("accession_synonyms", "accession_names");
 
-    my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, \@accession_list);
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $unique_transform, \@accession_list);
 
     # get array ref out of hash ref so Transform/Plugins can use it
     my %unique_hash = %$unique_list;
     my $unique_accessions = $unique_hash{transform};
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $t = CXGN::List::Transform->new();
 
     my $acc_t = $t->can_transform("accessions", "accession_ids");
@@ -674,7 +677,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 sub download_accession_properties_action : Path('/breeders/download_accession_properties_action') {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $dbh = $schema->storage->dbh;
 
     # Get request params
@@ -854,7 +858,8 @@ sub build_accession_properties_info {
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $dbh = $schema->storage->dbh;
 
     my $input_format = $c->req->param("input_format") || 'list_id';
@@ -971,7 +976,8 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlot_maintenance_events_action') {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     # Get request params
     my $seedlot_list_id = $c->req->param("seedlot_maintenance_events_list_list_select");
@@ -1046,8 +1052,9 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $format = $c->req->param("format") || "list_id";
     my $download_format = $c->req->param("download_format") || 'VCF';
     my $chromosome_numbers = $c->req->param("chromosome_number") ? [$c->req->param("chromosome_number")] : [];
@@ -1160,8 +1167,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 sub download_grm_action : Path('/breeders/download_grm_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $download_format = $c->req->param("download_format") || 'matrix';
     my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
     my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
@@ -1236,8 +1244,9 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 sub download_gwas_action : Path('/breeders/download_gwas_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
     my $download_format = $c->req->param("download_format") ? $c->req->param("download_format") : 'results_tsv';
     my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
@@ -1338,8 +1347,9 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $t = CXGN::List::Transform->new();
 
 
@@ -1464,7 +1474,8 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     my $c = shift;
     my $trial_id = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
 
     #my $layout = $t->get_layout()->get_design();
@@ -1607,7 +1618,8 @@ sub wellsort {
 sub download_protocol_marker_info : Path('/breeders/download_protocol_marker_info') {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $protocol_id = $c->req->param("protocol_id");
 
     my $dir = $c->tempfiles_subdir('download');
@@ -1646,8 +1658,9 @@ sub download_protocol_marker_info : Path('/breeders/download_protocol_marker_inf
 sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping_data_csv') {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $protocol_id = $c->req->param("protocol_id");
 
     my $dir = $c->tempfiles_subdir('download');

@@ -188,6 +188,7 @@ sub redirect_if_only_one_possible : Private {
 sub execute_predefined_searches: Private {
     my ( $self, $c ) = @_;
 
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
     # execute all the searches and stash the results
     for my $search_name ( sort keys %searches ) {
 	print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";
@@ -197,7 +198,7 @@ sub execute_predefined_searches: Private {
              $c->dbc->dbh,
              %$search,
              term => $c->stash->{term},
-	     schema => $c->dbic_schema("Bio::Chado::Schema"),
+	     schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
            );
          $c->stash->{results}{$search_name} = {
              result => $searchresults,

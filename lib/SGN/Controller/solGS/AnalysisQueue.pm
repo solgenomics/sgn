@@ -139,8 +139,9 @@ sub check_analyses_names {
 
     my $db_match;
 
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
     if ($new_name) {
-        my $schema = $c->dbic_schema("Bio::Chado::Schema");
+        my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
         $db_match =
           $schema->resultset("Project::Project")->find( { name => $new_name } );
     }

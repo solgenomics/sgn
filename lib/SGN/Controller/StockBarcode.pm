@@ -98,7 +98,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $cass_print_format = $c->req->param("select_print_format");
     my $label_text_4;
     my $type_id;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
     my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
@@ -1004,7 +1005,8 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
   my $left_margin_mm = 70;
   my $bottom_margin_mm = 12;
   my $right_margin_mm = 20;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
   my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
   my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
   # convert mm into pixels
@@ -1197,7 +1199,8 @@ sub download_trial_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(
   my $bottom_margin_mm = 12;
   my $right_margin_mm = 10;
   my $barcode_type = "trial";
-  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
  # convert mm into pixels
   #
@@ -1354,7 +1357,8 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     #chack for write permissions in $archive_path !
     my $upload_success = $upload->copy_to($archive_path . "/" . $basename); #returns false for failure, true for success
     if (!$upload_success) { die "Could not upload!\n $upload_success" ; }
-    my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id) });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
 
@@ -1381,7 +1385,8 @@ sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
 
     my @contents = read_file($filename);
 
-    my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id) });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
     $sb->parse(\@contents, $identifier_prefix, $db_name);

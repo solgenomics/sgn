@@ -13,7 +13,8 @@ use JSON::XS;
 sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
@@ -49,9 +50,10 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $self = shift;
     my $c = shift;
     my $seedlot_id = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
 
     my $sl = CXGN::Stock::Seedlot->new(
         schema => $schema,
@@ -121,7 +123,8 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
 sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $onto = CXGN::Onto->new({ schema => $schema });
 
     # Make sure the user is logged in
