@@ -1,0 +1,64 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+
+on:
+  # Runs on pushes/marge targeting the default branch
+  push:
+    branches: ["master"]
+    paths:
+      - 'docs/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write 
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying
+  build_and_deploy_static_pages_for_manual:          
+    runs-on: ubuntu-latest    
+    container: 
+      image: bienkowskid/fedora40-r-bookdown
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Save directory for checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Create gitbook         
+        working-directory: ./docs/r_markdown_docs
+        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::gitbook")'        
+      - name: Create manual pdf         
+        working-directory: ./docs/r_markdown_docs
+        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book")'        
+      - name: Commit and push documentation        
+        run: |          
+          date > generated.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add docs/*.*
+          git commit -m "generated"
+          git push
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # Upload docs only
+          path: './docs'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+  
