@@ -1196,7 +1196,7 @@ jQuery(document).ready( function() {
     for (let i = FieldMap.meta_data.min_col; i <= FieldMap.meta_data.max_col; i++) {
         cols_csv_header.push(i);
     }
-    let csv = '\n';
+    let csv = '';
     csv += ['Rows/Columns',cols_csv_header];
     csv += "\n";
     // if (FieldMap.meta_data.top_border_selection) {
@@ -1207,12 +1207,10 @@ jQuery(document).ready( function() {
     let col = "positionCoordinateX";
     let temp_plot_arr = [...FieldMap.plot_arr];
     for (let plot of temp_plot_arr.filter(plot => plot.type != "border")) {
-        if (!coord_matrix[plot.observationUnitPosition[row] - 1]) {
-            coord_matrix[plot.observationUnitPosition[row] - 1] = [];
-            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
-        } else {
-            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
+        if (!coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row]) {
+            coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row] = [];
         }
+        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = plot.germplasmName;
     }
     if (!FieldMap.meta_data.invert_row_checkmark) {
         coord_matrix.reverse();
