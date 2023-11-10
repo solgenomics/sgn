@@ -172,7 +172,7 @@ sub _validate_with_plugin {
     my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots)->{'missing'}};
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+        push @error_messages, "The following seedlots are not in the database or are marked as DISCARDED: ".join(',',@seedlots_missing);
     }
 
     my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs);

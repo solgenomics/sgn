@@ -202,7 +202,7 @@ sub _validate_with_plugin {
     my $existing_seedlot_validator = CXGN::List::Validate->new();
     my @seedlots_missing = @{$existing_seedlot_validator->validate($schema,'seedlots',\@existing_seedlots)->{'missing'}};
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+        push @error_messages, "The following seedlots are not in the database or are marked as DISCARDED: ".join(',',@seedlots_missing);
     }
 
     my @new_seedlots = keys %seen_new_seedlot_names;
