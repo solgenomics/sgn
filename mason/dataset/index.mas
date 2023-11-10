@@ -1,0 +1,225 @@
+
+<%args>
+$dataset_id 
+$dataset_name => ''
+$dataset_description => ''
+$dataset_contents => ''
+
+</%args>
+
+<& /page/page_title.mas, title => "Dataset $dataset_name" &>
+<& /util/import_javascript.mas, entries => ['dataset_scatterplot'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
+<& /util/import_javascript.mas, entries => ['dataset'] &>
+<& /util/import_css.mas, paths => ['wizard.css'] &>
+
+<style>
+    .top-row {
+        # display: flex;
+        # justify-content: center;
+        margin-top: 20px;    
+    }
+
+    ::-webkit-slider-runnable-track {
+        background: #f7756c;
+    }
+
+    #pagefooter {
+        min-height: 150px !important;
+    }
+
+    #trait_selection {
+        font-size: 15px;
+    }
+
+    #trait_graph {
+        width: 65%;
+        font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;    
+    }
+
+    table, th, td {
+        padding: 15px;
+    }
+
+    .sd-line-top {
+        stroke-dasharray: 5,5;
+    }
+
+    .sd-line-bottom {
+        stroke-dasharray: 5,5;
+    }
+
+    .mean-line {
+        stroke-dasharray: 5,5;
+    }
+
+    .btn-dataset {
+        margin-left: 4px;
+    } 
+
+</style>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dataset Details</title>
+</head>
+
+<%perl>
+ my $wizard_link = '<a href=\'/breeders/search?dataset_id=' . $dataset_id . '\'>' . $dataset_name . '</a>';
+</%perl>
+
+<body>
+    <div id="wizard" class="row">
+        <div class="wizard-datasets">
+            <table id="dataset_results"; border="1">
+                    <tr><td>Name<td><% $dataset_name %>
+                    <tr><td>Description<td><% $dataset_description %>
+                    <tr><td>Contents<td><% $dataset_contents %>
+%                   if ($c->user()) {
+                        <tr><td>Edit<td>
+                        <span class="input-group-btn">
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-public">Make Public</button></span>
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-private">Make Private</button></span>
+                        <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" id="wizard-dataset-delete">Delete</button></span>
+                        </span>
+%                   }
+                    <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="top-row col-md-12">
+            <div id="trait_selections" class="col-md-6">
+                <label for="trait_selection">Select a Trait: </label>
+                <select id="trait_selection" class="form-control" name="trait_selection">
+                    <option value="default">Select Trait</option>
+                </select>
+            </div>            
+
+        </div>
+        <div class="col-md-12 well" style="margin-top: 10px;">
+                        
+            <div class="col-md-9">
+                <div id="outliers_range">
+                    <div id="custom-handle" class="ui-slider-handle"></div>
+                </div>
+            </div>
+            <script>
+                $(function() {
+                    $("#outliers_range").slider({
+                        orientation: "horizontal",
+                        range: "min",
+                        max: 10,
+                        min: 0,                        
+                        value: 3,
+                        step: 0.5,
+                    });
+                    var handle = $( "#custom-handle" );
+                    $("#outliers_range").slider({
+                        create: function(event, ui) {
+                            console.log("create slider jquery");
+                            handle.text(ui.value);
+                        },
+                        slide: function(event, ui) {
+                            console.log("slide slider jquery");
+                            console.log("slide slider jquery value", ui.value);
+                            handle.text(ui.value);
+                        }
+                    });
+                });
+            </script>
+            <style>                      
+                #outliers_range .ui-slider-range { background: #5cb85c; }
+                #outliers_range .ui-slider-handle { border-color: #d9534f; }                
+                #outliers_range { background: #d9534f; margin-top: 0.7em;}       
+                #custom-handle {
+                    width: 3em;
+                    height: 1.6em;
+                    top: 50%;
+                    margin-top: -.8em;
+                    text-align: center;
+                    line-height: 1.6em;
+                }           
+            </style>
+
+
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="median" id="median" value="median" name="dataset_metric" checked="true">
+                    </span>
+                    <label for="median" class="form-control" aria-label="median">Median</label>
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="mean" id="mean" value="mean" name="dataset_metric" >
+                    </span>
+                    <label for="mean" class="form-control" aria-label="mean">Mean</label>                                                             
+                </div>
+            </div>
+        </div>
+    
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="trait_graph"></div>
+        </div>
+        <div class="col-md-12">
+            <div class="input-group-btn col-md-11 col-md-offset-1">
+                <span>
+                    <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
+                </span>                
+                <span>
+                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
+                </span>
+                <span>
+                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
+                </span>
+                <span>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+
+    jQuery(document).ready( function() {
+        
+        console.log('dataset id', '<% $dataset_id %>');
+        var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
+        DataSet.render();
+
+        jQuery('#info_table').click(function() {
+            $.ajax({
+                url: '/ajax/dataset/by_user/<% $dataset_id %>',
+                success: function(response) {
+                    alert(response.options);
+                },
+                error: function(response) {
+                    alert("An error occurred");
+                }  
+            });
+        })        
+
+        jQuery('#outliers_phenotype_download').click(function() {            
+
+            var speed = 'MaterializedViewTable';
+            var format = '.csv';
+            var level = 'all';
+            var timestamp = 0;
+
+            var url = document.location.origin+
+                `/breeders/download_action?trait_ids_list=${DataSet.traitsIds}`+
+                `&format=${format}`+            
+                `&phenotype_datalevel=${level}`+
+                `&timestamp_included=${timestamp}`+
+                `&dataset_id=<% $dataset_id %>`
+
+            window.open(url,'_blank');
+        })
+    });
+
+    </script>
+</body>

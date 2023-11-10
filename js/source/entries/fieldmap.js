@@ -2,6 +2,9 @@ import '../legacy/d3/d3Min.js';
 import '../legacy/jquery.js';
 import '../legacy/brapi/BrAPI.js';
 
+// Colors to use when labelling multiple trials
+const trial_colors = ['#2f4f4f', '#ff8c00', '#ffff00', '#00ff00', '#9400d3', '#00ffff', '#1e90ff', '#ff1493', '#ffdab9', '#228b22'];
+const trial_colors_text = ['#ffffff', '#000000', '#000000', '#000000', '#ffffff', '#000000', '#ffffff', '#ffffff', '#000000', '#ffffff'];
 
 export function init() {
     class FieldMap {
@@ -16,10 +19,28 @@ export function init() {
             this.heatmap_selection = String;
             this.heatmap_object = Object;
             this.display_borders = true;
+            this.linked_trials = {};
         }
 
         set_id(trial_id) {
             this.trial_id = trial_id;
+        }
+
+        set_linked_trials(trials = []) {
+            this.linked_trials = {};
+            trials.forEach((t, i) => {
+                const index = i % trial_colors.length;
+                this.linked_trials[t.trial_name] = {
+                    id: t.trial_id,
+                    name: t.trial_name,
+                    bg: trial_colors[index],
+                    fg: trial_colors_text[index]
+                };
+            });
+        }
+
+        get_linked_trials() {
+            return this.linked_trials;
         }
 
         format_brapi_post_object() {
@@ -213,12 +234,10 @@ export function init() {
             hiddenElement.click();    
         }
 
-        get_harvesting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'harvesting_order_layout');
-        }
-
-        get_planting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'planting_order_layout');
+        get_plot_order(type, order, include_borders) {
+            let k = type === 'planting' ? 'planting_order_layout' : 'harvesting_order_layout';
+            this.meta_data[k] = order;
+            this.traverse_map(this.plot_arr.filter(plot => include_borders || plot.type !== "border"), k);
         }
 
         set_meta_data() {
@@ -283,8 +302,18 @@ export function init() {
         }
 
         get_plot_format(type, x, y) {
-            return { 
-                type: type, observationUnitName: this.trial_id + ' ' + type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
+            // Use the first plot from the trial to get trial-level metadata to give to a border plot
+            // NOTE: this will break if plots from multiple trials are loaded
+            let p = this.plot_arr[0];
+            return {
+                type: type,
+                observationUnitName: this.trial_id + ' ' + type,
+                observationUnitPosition: {
+                    positionCoordinateX: x,
+                    positionCoordinateY: y
+                },
+                locationName: p.locationName,
+                studyName: p.studyName
             }
         }
 
@@ -599,7 +628,7 @@ export function init() {
                 }
                 else {
                     html += jQuery("#include_linked_trials_checkmark").is(":checked") ?
-                        `<strong>Trial Name:</strong> ${plot.studyName}<br />` :
+                        `<strong>Trial Name:</strong> <span style='padding: 1px 2px; border-radius: 4px; color: ${local_this.linked_trials[plot.studyName].fg}; background-color: ${local_this.linked_trials[plot.studyName].bg}'>${plot.studyName}</span><br />` :
                         "";
                     html += `<strong>Plot Name:</strong> ${plot.observationUnitName}<br />`;
                     if ( plot.type == "data" ) {
@@ -745,6 +774,18 @@ export function init() {
                     window.open('/stock/'+d.observationUnitDbId+'/view');        
                 }
             });
+
+            // Add a colored band to the bottom of the plot box to indicate different trials
+            if ( jQuery("#include_linked_trials_checkmark").is(":checked") ) {
+                plots.enter().append("rect")
+                    .attr("x", (d) => { return plot_x_coord(d) * 50 + 4 })
+                    .attr("y", (d) => { return plot_y_coord(d) * 50 + 54 + y_offset })
+                    .attr("rx", 2)
+                    .attr("width", 40)
+                    .attr("height", 6)
+                    .style("fill", (d) => { return local_this.linked_trials[d.studyName].bg })
+                    .style("opacity", (d) => { return is_plot_overlapping(d) ? '0' : '100' })
+            }
 
             plots.append("text");
             plots.enter().append("text")

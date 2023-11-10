@@ -31,7 +31,7 @@ $dialog_name => undef
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_format">
                         <option value="csv">CSV</option>
-						<option value="xls">Excel (xls)</option>
+						<option value="xlsx">Excel (xlsx)</option>
                     </select>
                 </div>
 	        </div>

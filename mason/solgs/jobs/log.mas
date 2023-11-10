@@ -1,0 +1,31 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/jobs/log.mas - displays status of submitted analyses jobs
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.analysisStatus","jquery.dataTables"] &>
+
+
+<div id="analysis_log_div" style="display:none">
+  <table class="table" id="analysis_list" style="text-align: left;">
+    <thead>
+      <tr>
+    	<th>Analysis name</th>
+        <th>Analysis type</th>
+        <th>Submitted on</th>
+    	<th>Status</th>
+    	<th>Result page</th>
+      </tr>
+    </thead>
+  </table>
+</div>

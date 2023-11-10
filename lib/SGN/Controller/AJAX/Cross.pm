@@ -12,6 +12,7 @@ Add a new cross or upload a file containing crosses to add
 
 Jeremy Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
+Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
@@ -84,6 +85,8 @@ sub upload_cross_file_POST : Args(0) {
     my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
     my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
     my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
+    my $crosses_simplified_parents_upload = $c->req->upload('xls_crosses_simplified_parents_file');
+
     my $upload;
     my $upload_type;
     if ($crosses_plots_upload) {
@@ -98,6 +101,11 @@ sub upload_cross_file_POST : Args(0) {
     if ($crosses_simple_upload) {
         $upload = $crosses_simple_upload;
         $upload_type = 'CrossesSimpleExcel';
+    }
+
+    if ($crosses_simplified_parents_upload) {
+        $upload = $crosses_simplified_parents_upload;
+        $upload_type = 'CrossesSimplifiedParentInfoExcel';
     }
 
     my $parser;

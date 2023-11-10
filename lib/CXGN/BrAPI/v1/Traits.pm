@@ -13,6 +13,7 @@ extends 'CXGN::BrAPI::v1::Common';
 sub list {
 	my $self = shift;
     my $inputs = shift;
+	my $c = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -63,6 +64,7 @@ sub list {
 sub detail {
 	my $self = shift;
 	my $cvterm_id = shift;
+	my $c = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;

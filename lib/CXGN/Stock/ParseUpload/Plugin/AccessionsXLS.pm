@@ -2,6 +2,7 @@ package CXGN::Stock::ParseUpload::Plugin::AccessionsXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -15,7 +16,18 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $editable_stockprops = $self->get_editable_stock_props();
-    my $parser = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my @error_messages;
     my %errors;
     my %missing_accessions;
@@ -45,7 +57,8 @@ sub _validate_with_plugin {
         return;
     }
 
-    #get column headers
+    # get column headers
+    #
     my $accession_name_head;
     my $species_name_head;
     my $population_name_head;
@@ -54,18 +67,23 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $accession_name_head  = $worksheet->get_cell(0,0)->value();
+        $accession_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
         $species_name_head  = $worksheet->get_cell(0,1)->value();
+        $species_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $population_name_head  = $worksheet->get_cell(0,2)->value();
+        $population_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $organization_name_head  = $worksheet->get_cell(0,3)->value();
+        $organization_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $synonyms_head  = $worksheet->get_cell(0,4)->value();
+        $synonyms_head =~ s/^\s+|\s+$//g;
     }
     push @$editable_stockprops, ('location_code(s)','ploidy_level(s)','genome_structure(s)','variety(s)','donor(s)','donor_institute(s)','donor_PUI(s)','country_of_origin(s)','state(s)','institute_code(s)','institute_name(s)','biological_status_of_accession_code(s)','notes(s)','accession_number(s)','PUI(s)','seed_source(s)','type_of_germplasm_storage_code(s)','acquisition_date(s)','transgenic','introgression_parent','introgression_backcross_parent','introgression_map_version','introgression_chromosome','introgression_start_position_bp','introgression_end_position_bp');
     my %allowed_stockprops_head = map { $_ => 1 } @$editable_stockprops;
@@ -96,6 +114,7 @@ sub _validate_with_plugin {
     }
 
     my %seen_accession_names;
+    my %accession_name_counts;
     my %seen_species_names;
     my %seen_synonyms;
     for my $row ( 1 .. $row_max ) {
@@ -119,6 +138,7 @@ sub _validate_with_plugin {
         else {
             $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}=$row_name;
+	    $accession_name_counts{$accession_name}++;
         }
 
         if (!$species_name || $species_name eq '' ) {
@@ -139,6 +159,13 @@ sub _validate_with_plugin {
         $errors{'missing_species'} = \@species_missing;
     }
 
+    foreach my $k (keys %accession_name_counts) {
+	if ($accession_name_counts{$k} > 1) {
+	    push @error_messages, "Accession $k occures $accession_name_counts{$k} times in the file. Accession names must be unique. Please remove duplicated accession names.";
+	}
+    }
+
+
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
@@ -156,7 +183,18 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $do_fuzzy_search = $self->get_do_fuzzy_search();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parsed_entries;
@@ -280,12 +318,15 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,1)) {
             $species_name = $worksheet->get_cell($row,1)->value();
+            $species_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $population_name = $worksheet->get_cell($row,2)->value();
+            $population_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $organization_name = $worksheet->get_cell($row,3)->value();
+            $organization_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
             @synonyms = split ',', $worksheet->get_cell($row,4)->value();
@@ -362,6 +403,7 @@ sub _parse_with_plugin {
     #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
+    s/^\s+|\s+$//g for @synonyms_list;
 
     if ($do_fuzzy_search) {
         my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
@@ -412,7 +454,7 @@ sub _parse_with_plugin {
         fuzzy_organisms => $fuzzy_organisms,
         absent_organisms => $absent_organisms
     );
-    print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";             
+    print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";
 
     $self->_set_parsed_data(\%return_data);
     return 1;

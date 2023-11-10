@@ -149,10 +149,10 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
 
      if (!$c->user()) {
-	
-	my $url = '/' . $c->req->path;	
+
+	my $url = '/' . $c->req->path;
 	$c->res->redirect("/user/login?goto_url=$url");
-	
+
     } else {
 	$time = time();
 
@@ -248,6 +248,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
 	my $editable_stockprops = $c->get_conf('editable_stock_props');
 	$editable_stockprops .= ",PUI,organization";
+    my $editable_vectorprops = $c->get_conf('editable_vector_props');
 
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
@@ -284,7 +285,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		has_descendants => $c->stash->{has_descendants},
 		trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
 		editable_stock_props   => $editable_stockprops,
-
+		editable_vector_props   => $editable_vectorprops,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
@@ -304,7 +305,7 @@ Path Params:
     name = stock unique name
 
 Search for stock(s) matching the organism query and the stock unique name.
-If 1 match is found, display the stock detail page.  Display an error for 
+If 1 match is found, display the stock detail page.  Display an error for
 0 matches and a list of matches when multiple stocks are found.
 
 =cut
@@ -315,14 +316,14 @@ sub view_by_organism_name : Path('/stock/view_by_organism') Args(2) {
 }
 
 
-=head2 view_by_name 
+=head2 view_by_name
 
 Public Path: /stock/view_by_name/$name
 Path Params:
     name = stock unique name
 
 Search for stock(s) matching the stock unique name.
-If 1 match is found, display the stock detail page.  Display an error for 
+If 1 match is found, display the stock detail page.  Display an error for
 0 matches and a list of matches when multiple stocks are found.
 
 =cut
@@ -384,7 +385,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	return;
     }
 
-    
+
     my $stock_row = $c->stash->{stock_row};
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
@@ -395,10 +396,10 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	my $referer = $c->req->referer;
 	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
 	    .  "<a href=\"$referer\">[ Go back ]</a></p>";
-	   
+
 	$c->stash->{message} = $message;
 	$c->stash->{template} = "/generic_message.mas";
-	
+
     } else {
 	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -448,7 +449,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	    $c->res->body($file_handle);
 	}
     }
-    
+
 }
 
 sub chr_sort {
@@ -500,7 +501,7 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
 sub search_stock : Private {
     my ( $self, $c, $organism_query, $stock_query ) = @_;
     my $rs = $self->schema->resultset('Stock::Stock');
-    
+
     my $matches;
     my $count = 0;
 
@@ -524,9 +525,9 @@ sub search_stock : Private {
     # Search by name
     elsif ( defined($stock_query) ) {
         $matches = $rs->search({
-                'UPPER(uniquename)' => uc($stock_query), 
+                'UPPER(uniquename)' => uc($stock_query),
                 is_obsolete => 'false'
-            }, 
+            },
             {join => 'organism'}
         );
         $count = $matches->count;
@@ -538,7 +539,7 @@ sub search_stock : Private {
         $c->stash->{template} = "generic_message.mas";
         $c->stash->{message} = "<strong>No Matching Stock Found</strong> ($stock_query $organism_query)<br />You can view and search for stocks from the <a href='/search/stocks'>Stock Search Page</a>";
     }
-    
+
     # MULTIPLE MATCHES FOUND
     elsif ( $count > 1 ) {
         my $list = "<ul>";

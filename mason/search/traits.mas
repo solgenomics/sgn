@@ -52,6 +52,7 @@
                     <thead>
                       <tr>
                         <th>Select</th>
+                        <th>Copy Name|ID</th>
                         <th>Trait ID</th>
                         <th>Trait Name</th>
                         <th>Definition</th>
@@ -139,7 +140,7 @@ jQuery(document).ready(function () {
             selectedontologies.push(jQuery(ob).val());
         });
 
-        trait_table = jQuery('#trait_search_results').DataTable( {
+        trait_table = jQuery('#trait_search_results').DataTable({
             'destroy': true,
             'searching' : false,
             'ordering'  : false,
@@ -152,7 +153,8 @@ jQuery(document).ready(function () {
                 'targets':   0
             } ],
             'select': {
-                'style':    'multi'
+                'style':    'multi',
+                'selector': 'td:not(:nth-child(2))',
             },
             'ajax': {
                 'url': '/ajax/search/traits',
@@ -181,7 +183,7 @@ jQuery(document).ready(function () {
      //console.log(selected_rows.data());
 
      var name_links = selected_rows.data().map(function(row){
-         return [row[5], row[6]];
+         return [row[6], row[7]];
          trait_table.rows().deselect();
      });
 
@@ -212,4 +214,33 @@ function parseArgs() {
     }
 }
 
+/**
+ * Copy the specifed trait information to the user's clipboard
+ * - name = trait name
+ * - accession = trait accession term
+ * - id = trait cvterm id
+ */
+async function copy(name, accession, id) {
+    try {
+        await navigator.clipboard.writeText([name, accession].join('|'));
+        jQuery(".btn-" + id).removeClass("btn-info").addClass("btn-success").html("<span class='glyphicon glyphicon-ok'></span>");
+    }
+    catch (err) {
+        jQuery(".btn-" + id).removeClass("btn-info").addClass("btn-danger").html("<span class='glyphicon glyphicon-remove'></span>");
+    }
+    finally {
+        setTimeout(() => {
+            jQuery(".btn-" + id).removeClass("btn-success btn-danger").addClass("btn-info").html("<span class='glyphicon glyphicon-copy'></span>");
+        }, 2500)
+    }
+    return false;
+}
+
 </script>
+
+
+<style type="text/css">
+    #trait_search_results td:nth-child(2) {
+        vertical-align: middle;
+    }
+</style>

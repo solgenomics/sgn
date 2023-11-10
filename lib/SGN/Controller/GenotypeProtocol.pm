@@ -39,7 +39,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	my $protocol = CXGN::Genotype::Protocol->new({
 	    bcs_schema => $self->schema,
 	    nd_protocol_id => $protocol_id
-						     });
+	});
 
     my $display_observation_unit_type;
     my $observation_unit_type = $protocol->sample_observation_unit_type_name;
@@ -47,6 +47,47 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
         $display_observation_unit_type = 'tissue sample or accession';
     } else {
         $display_observation_unit_type = $observation_unit_type;
+    }
+
+    my $marker_info_keys = $protocol->marker_info_keys;
+    my $assay_type = $protocol->assay_type;
+    my @marker_info_headers = ();
+    if (defined $marker_info_keys) {
+        foreach my $info_key (@$marker_info_keys) {
+            if ($info_key eq 'name') {
+                push @marker_info_headers, 'Marker Name';
+            } elsif (($info_key eq 'intertek_name') || ($info_key eq 'facility_name')) {
+                push @marker_info_headers, 'Facility Marker Name';
+            } elsif ($info_key eq 'chrom') {
+                push @marker_info_headers, 'Chromosome';
+            } elsif ($info_key eq 'pos') {
+                push @marker_info_headers, 'Position';
+            } elsif ($info_key eq 'alt') {
+                if ($assay_type eq 'KASP') {
+                    push @marker_info_headers, 'Y-allele';
+                } else {
+                    push @marker_info_headers, 'Alternate';
+                }
+            } elsif ($info_key eq 'ref') {
+                if ($assay_type eq 'KASP') {
+                    push @marker_info_headers, 'X-allele';
+                } else {
+                    push @marker_info_headers, 'Reference';
+                }
+            } elsif ($info_key eq 'qual') {
+                push @marker_info_headers, 'Quality';
+            } elsif ($info_key eq 'filter') {
+                push @marker_info_headers, 'Filter';
+            } elsif ($info_key eq 'info') {
+                push @marker_info_headers, 'Info';
+            } elsif ($info_key eq 'format') {
+                push @marker_info_headers, 'Format';
+            } elsif ($info_key eq 'sequence') {
+                push @marker_info_headers, 'Sequence';
+            }
+        }
+    } else {
+        @marker_info_headers = ('Marker Name','Chromosome','Position','Alternate','Reference','Quality','Filter','Info','Format');
     }
 
 	$c->stash->{protocol_id} = $protocol_id;
@@ -60,7 +101,9 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	$c->stash->{create_date} = $protocol->create_date;
 	$c->stash->{sample_observation_unit_type_name} = $display_observation_unit_type;
     $c->stash->{marker_type} = $protocol->marker_type;
-	$c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
+    $c->stash->{marker_info_headers} = \@marker_info_headers;
+    $c->stash->{assay_type} = $protocol->assay_type;
+    $c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
     }
 }
 

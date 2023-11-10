@@ -24,7 +24,7 @@ $pop_type
 
 <div class="row">
   <div class="form-group col-sm-3"
-       id="cluster_select_a_population_div"
+       id="cluster_pops_select_div"
        style="margin-right:25px">
   </div>
 
@@ -32,14 +32,14 @@ $pop_type
 
 </div>
 
-<div id="cluster_selected_population_div" style="display:none">
+<div id="cluster_selected_pop_div" style="display:none">
     <input type="hidden" id="model_id" value="<% $pop_id %>" />
     <input type="hidden" id="model_name" value="<% $pop_name %>" />
     <input type="hidden" id="population_id" value="<% $pop_id %>" />
-    <input type="hidden" id="default_cluster_selected_population_name" value="<% $pop_name %>"/>
-    <input type="hidden" id="default_cluster_selected_population_id" value="<% $pop_id %>"/>
-    <input type="hidden" id="default_cluster_selected_population_type" value="<% $pop_type %>"/>
-    <input type="hidden" id="cluster_selected_population_name" value="" />
-    <input type="hidden" id="cluster_selected_population_id" value="" />
-    <input type="hidden" id="cluster_selected_population_type" value="" />
+    <input type="hidden" id="cluster_default_selected_pop_name" value="<% $pop_name %>"/>
+    <input type="hidden" id="cluster_default_selected_pop_id" value="<% $pop_id %>"/>
+    <input type="hidden" id="cluster_default_selected_pop_type" value="<% $pop_type %>"/>
+    <input type="hidden" id="cluster_selected_pop_name" value="" />
+    <input type="hidden" id="cluster_selected_pop_id" value="" />
+    <input type="hidden" id="cluster_selected_pop_type" value="" />
  </div>

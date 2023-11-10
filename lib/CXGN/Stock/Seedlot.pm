@@ -67,6 +67,7 @@ my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
     $offset,
     $limit,
     $seedlot_name,
+    $description,
     $breeding_program,
     $location,
     $minimum_count,
@@ -318,6 +319,7 @@ sub list_seedlots {
     my $offset = shift;
     my $limit = shift;
     my $seedlot_name = shift;
+    my $description = shift;
     my $breeding_program = shift;
     my $location = shift;
     my $minimum_count = shift;
@@ -359,7 +361,7 @@ sub list_seedlots {
         $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
     }
     if ($breeding_program) {
-	print STDERR "Addint breeding_program $breeding_program to query...\n";
+	print STDERR "Adding breeding_program $breeding_program to query...\n";
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
     if ($location) {
@@ -367,7 +369,7 @@ sub list_seedlots {
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
     if ($contents_accession && scalar(@$contents_accession)>0) {
-	print STDERR "Adding $contents_accession ...\n";
+	print STDERR "Adding contents accession: $contents_accession ...\n";
         $search_criteria{'subject.type_id'} = $accession_type_id;
         if ($exact_match_uniquenames){
             $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
@@ -378,6 +380,7 @@ sub list_seedlots {
         }
     }
     if ($accession_id && ref($accession_id) && scalar(@$accession_id)>0) {
+        print STDERR "Accession ID is ";
         print Dumper $accession_id;
         $search_criteria{'subject.type_id'} = $accession_type_id;
         $search_criteria{'subject.stock_id'} = { -in => $accession_id };
@@ -1530,6 +1533,42 @@ sub remove_event {
 
     $m->delete();
 }
+
+
+=head2 get_seedlot_species()
+
+ Usage:         $seedlot->get_seedlot_species($id)
+ Desc:          retrieve species of seedlot content
+ Ret:
+
+=cut
+
+sub get_seedlot_species {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $seedlot_id = $self->seedlot_id();
+
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT organism.species FROM stock_relationship
+    JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ?
+    JOIN organism ON (stock.organism_id = organism.organism_id)
+    WHERE stock_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($collection_of_type_id, $seedlot_id);
+
+    my @data = ();
+    while(my($species) = $h->fetchrow_array()){
+        push @data, [$species];
+    }
+
+    my $species_info = $data[0][0];
+
+    return $species_info
+}
+
+
 
 1;
 

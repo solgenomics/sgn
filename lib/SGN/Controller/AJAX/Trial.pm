@@ -83,6 +83,11 @@ sub generate_experimental_design_POST : Args(0) {
     my $design_layout_view_html;
     my $design_info_view_html;
     my $design_map_view;
+
+    my $plot_numbering_scheme = $c->req->param('plot_numbering_scheme') || 'block_based';
+    print STDERR "Setting plot_numbering_scheme to $plot_numbering_scheme\n";
+    $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
+    
     if ($c->req->param('stock_list')) {
 	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -110,6 +115,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
     my $start_number =  $c->req->param('start_number');
+    my $plot_numbering_scheme = $c->req->param('plot_numbering_scheme');
     my $increment =  $c->req->param('increment') ? $c->req->param('increment') : 1;
     my $trial_location = $c->req->param('trial_location');
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
@@ -128,7 +134,7 @@ sub generate_experimental_design_POST : Args(0) {
 
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
-        return;
+        
     }
 
     if ($design_type eq 'Westcott'){
@@ -291,7 +297,8 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_backend($c->config->{backend});
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
-
+	$trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
+	
         my $design_created = 0;
         if ($use_same_layout) {
             $design_created = 1;
@@ -604,6 +611,7 @@ sub save_experimental_design_POST : Args(0) {
             design => $trial_location_design,
             program => $breeding_program,
             trial_year => $c->req->param('year'),
+            planting_date => $c->req->param('planting_date'),
             trial_description => $c->req->param('project_description'),
             trial_location => $trial_location,
             trial_name => $trial_name,
@@ -905,6 +913,7 @@ sub upload_trial_file_POST : Args(0) {
     my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
     my $trial_stock_type = $c->req->param('trial_upload_trial_stock_type');
+    my $ignore_warnings = $c->req->param('upload_trial_ignore_warnings');
 
     my $upload = $c->req->upload('trial_uploaded_file');
     my $parser;
@@ -997,11 +1006,11 @@ sub upload_trial_file_POST : Args(0) {
         return;
     }
 
-    my $return_warnings;
     if ($parser->has_parse_warnings()) {
-        my $warnings = $parser->get_parse_warnings();
-        foreach my $warning_string (@{$warnings->{'warning_messages'}}){
-            $return_warnings=$return_warnings.$warning_string."<br>";
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            $c->stash->{rest} = {warnings => $warnings->{'warning_messages'}};
+            return;
         }
     }
 
@@ -1081,7 +1090,7 @@ sub upload_trial_file_POST : Args(0) {
     #print STDERR "Check 5: ".localtime()."\n";
     if ($save->{'error'}) {
         print STDERR "Error saving trial: ".$save->{'error'};
-        $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
+        $c->stash->{rest} = {error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
 
@@ -1089,7 +1098,7 @@ sub upload_trial_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'all_but_genoview', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {warnings => $return_warnings, success => "1", trial_id => $save->{'trial_id'}};
+        $c->stash->{rest} = {success => "1", trial_id => $save->{'trial_id'}};
         return;
     }
 

@@ -13,6 +13,10 @@ jQuery(document).ready(function($) {
         refreshGenotypingTrialJsTree(1);
     });
 
+    jQuery("[name='refresh_genotyping_project_jstree_html']").click( function() {
+        refreshGenotypingProjectJsTree(1);
+    });
+
 });
 
 function refreshTrailJsTree(refreshpage){
@@ -70,6 +74,25 @@ function refreshGenotypingTrialJsTree(refreshpage){
         error: function(response) {
             jQuery("#working_modal").modal("hide");
             alert('An error occurred refreshing genotype trial jstree html');
+        }
+    });
+}
+
+function refreshGenotypingProjectJsTree(refreshpage){
+    jQuery.ajax({
+        url: '/ajax/breeders/get_trials_with_folders?type=genotyping_project',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (refreshpage == 1){
+                location.reload();
+            }
+        },
+        error: function(response) {
+            jQuery("#working_modal").modal("hide");
+            alert('An error occurred refreshing genotype project jstree html');
         }
     });
 }

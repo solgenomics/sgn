@@ -14,13 +14,10 @@ library(rjson)
 library(data.table)
 library(phenoAnalysis)
 library(dplyr)
-#library(rbenchmark)
 library(methods)
 library(na.tools)
 
 allArgs <- commandArgs()
-
-
 outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
                     what = "character")
 
@@ -45,10 +42,7 @@ phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
                                    ))
 
 metaData <- scan(metadataFile, what="character")
-
-message('pheno file ', phenoDataFile)
-print(phenoData[1:3, ])
-print(metaData)
+cat("Dim phenoData ", dim(phenoData),"\n")
 
 allTraitNames <- c()
 nonTraitNames <- c()
@@ -63,128 +57,90 @@ if (length(refererQtl) != 0) {
 } else {
   allNames <- names(phenoData)
   nonTraitNames <- metaData
-
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
 }
 
+print("Trait names:")
 print(allTraitNames)
 
-colnames(phenoData)
+# print("colnames:")
+# colnames(phenoData)
 
 #Calculating missing data
 missingData <- apply(phenoData, 2, function(x) sum(is.na(x)))
 md = data.frame(missingData)
+rangeTraits <- which(colnames(phenoData) %in% allTraitNames)
+
+# Calculating the number of replicates per accession
+replicateData <- data.frame(replicates = tapply(phenoData$replicate, phenoData$germplasmName, function(x){
+  return(max(unique(x)))
+}))
+replicateData <- tibble::rownames_to_column(replicateData, "germplasmName")
 
 
-#Removing traits with more than 60% of missing data
-z=0
-for (i in 40:ncol(phenoData)){
-  if (md[i,1]/nrow(phenoData)>0.6){
-    phenoData[[i-z]] <- NULL
-    z = z+1
-  }
-}
 
 #Removing non numeric data
-z=0
-for (i in 40:ncol(phenoData)){
-  test = is.numeric(phenoData[,i])
-  print(paste0('test', test))
-  if (test == 'FALSE'){
-    phenoData[,i] <- NULL
+for( traits in rangeTraits){
+  if(is.numeric(phenoData[,traits]) == 'FALSE'){
+    phenoData <- phenoData[,-traits]
+    allTraitNames <- allTraitNames[-which(allTraitNames == colnames(phenoData)[traits])]
   }
 }
 
-#Removing non variance data
-z=0
-i=ncol(phenoData)
-j=1
-traits <- ncol(phenoData)-39
-while (i > 39){
-  test2 <- var(na.replace(phenoData[,i], na.mean))
-  if (test2 == 0){
-    cat("removing trait ",allNames[i],"\n")
-    phenoData[,i]<-NULL
-  }
-  z=z+1
-  i=i-1
-  cat(i,"\n")
-  if (i < 40){
-    if (j < traits ){
-      print("changing i")
-      i = ncol(phenoData)
-      j=j+1
-    }
-  }
-}
+#Range after filtering
+rangeTraits <- which(names(phenoData)%in%allTraitNames)
 
-her = rep(NA,(ncol(phenoData)-39))
-Vg = rep(NA,(ncol(phenoData)-39))
-Ve = rep(NA,(ncol(phenoData)-39))
-Vres = rep(NA, (ncol(phenoData)-39))
-resp_var = rep(NA,(ncol(phenoData)-39))
+nTraits <- length(rangeTraits)
+# Preparing variance vectors
+her = c()
+Vg = c()
+Vres = c()
+resp_var = c()
 
-
-#Counting number of locations to create model
-reps <- unique(phenoData$replicate)
-szreps <- length(reps)
-
-
-numb = 1
 library(lmerTest)
-print('phenodata before modeling')
-print(phenoData[1:3, ])
-for (i in 40:(ncol(phenoData))) {
-    outcome = colnames(phenoData)[i]    
+for (i in rangeTraits) {
+  outcome = colnames(phenoData)[i]   
 
-    print(paste0('outcome ', outcome))
-    if (szreps == 1){
-      model <- lmer(get(outcome)~(1|germplasmName)+(1|blockNumber),
-        na.action = na.exclude,
-        data=phenoData)
-    }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|blockNumber),
-        na.action = na.exclude,
-        data=phenoData)
-    }
- 
-    #model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
-    
-    
-    # variance = as.data.frame(VarCorr(model))
-    variance = VarCorr(model)
-    gvar = variance [[1]][1]
-    envar = variance [[2]][1]
-    resvar = attr(variance,"sc")^2
-    
-    H2 = gvar/ (gvar + (envar) + (resvar))
-    #H2 = gvar/(gvar + (envar))
-    H2nw = format(round(H2, 4), nsmall = 4)
-    her[numb] = round(as.numeric(H2nw), digits =3)
-    Vg[numb] = round(as.numeric(gvar), digits = 3)
-    Ve[numb] = round(as.numeric(envar), digits = 3)
-    Vres[numb] = round(as.numeric(resvar), digits = 3)
-    resp_var[numb] = colnames(phenoData)[i]
-    
-    numb = numb + 1
-    
-    # }
-    # else {
-    #   resp_var[numb] = colnames(phenoData)[i]
-    #     i = i+1 
-    # }
+  #Calculating missing data per trait
+  missingData <- data.frame(missingData = tapply(phenoData[,outcome], phenoData$germplasmName, function(x){
+    return(length(which(is.na(x))))
+  }))
+
+  missingData <- tibble::rownames_to_column(missingData, "germplasmName")
+  missingReplicates <- dplyr::left_join(missingData, replicateData, by = "germplasmName")
+  missingReplicates$limitRep <- missingReplicates$replicates - missingReplicates$missingData
+  missingReplicates <- missingReplicates[missingReplicates$limitRep > 1,]
+
+  # Filtering the dataset
+  phenoData <- phenoData[phenoData$germplasmName %in% missingReplicates$germplasmName,]
+   
+  
+  print(paste0('outcome ', outcome))
+  
+  model <- lmer(get(outcome)~ (1|germplasmName) + replicate,
+                na.action = na.exclude,
+                data=phenoData)
+  
+  
+  # variance = as.data.frame(VarCorr(model))
+  variance = data.frame(VarCorr(model))
+  
+  H2 = variance$vcov[1]/ (variance$vcov[1] + variance$vcov[2])
+  her = append(her, round(as.numeric(H2), digits =3))
+  Vg = append(Vg, round(as.numeric(variance$vcov[1]), digits = 3))
+  Vres = append(Vres, round(as.numeric(variance$vcov[2]), digits = 3))
+  resp_var = append(resp_var, colnames(phenoData)[i])
+
 }
 
 #Prepare information to export data
-Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
+Heritability = data.frame(resp_var,Vg, Vres, her)
 print(Heritability)
-#library(tidyverse)
 Heritability = Heritability %>% 
   dplyr::rename(
     trait = resp_var,
     Hert = her,
     Vg = Vg,
-    Ve = Ve,
     Vres = Vres
   )
 print(Heritability)

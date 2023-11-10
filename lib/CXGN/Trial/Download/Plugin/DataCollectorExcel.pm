@@ -37,6 +37,8 @@ $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 
 use Moose::Role;
 use utf8;
+use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 
 sub verify {
     my $self = shift;
@@ -62,7 +64,17 @@ sub download {
     my %design = %{$trial_layout->get_design()};
     my @plot_names = @{$trial_layout->get_plot_names};
 
-    my $workbook = Spreadsheet::WriteExcel->new($self->filename());
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
+    my $workbook;
+
+    if ($extension eq '.xlsx') {
+        $workbook = Excel::Writer::XLSX->new($self->filename());
+    }
+    else {
+        $workbook = Spreadsheet::WriteExcel->new($self->filename());
+    }
+
     my $ws1 = $workbook->add_worksheet("Minimal");
     my $ws2 = $workbook->add_worksheet("Installation");
     my $ws3 = $workbook->add_worksheet("Material List");

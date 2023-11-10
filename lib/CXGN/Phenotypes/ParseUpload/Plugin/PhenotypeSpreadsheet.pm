@@ -18,6 +18,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheet;
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
@@ -38,7 +39,18 @@ sub validate {
     my $delimiter = ',';
     my $header;
     my @header_row;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my %parse_result;
@@ -63,10 +75,12 @@ sub validate {
     my $name_head;
     if ($worksheet->get_cell(6,0)) {
       $name_head  = $worksheet->get_cell(6,0)->value();
+      $name_head =~ s/^\s+|\s+$//g;
     }
     my $design_type;
     if ($worksheet->get_cell(3,3)) {
       $design_type  = $worksheet->get_cell(3,3)->value();
+      $design_type =~ s/^\s+|\s+$//g;
     }
     if (!$design_type ) {
         $parse_result{'error'} = "No design type in header. Make sure you are using the correct spreadsheet format. It may help to recreate your spreadsheet from the website.";
@@ -223,7 +237,18 @@ sub parse {
     my @plots;
     my @traits;
     my %data;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 

@@ -65,8 +65,8 @@ my $breeding_programs_select = simple_selectbox_html(
               <div class="input-group">
                 <span class="input-group-btn" width="20%">
                   <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
-                    <option title="contains" value="contains" selected="selected">contains</option>
-                    <option title="starts with" value="starts_with">starts with</option>
+                    <option title="starts_with" value="starts_with" selected="selected">starts with</option>
+                    <option title="contains" value="contains">contains</option>
                     <option title="ends with" value="ends_with">ends with</option>
                     <option title="exactly" value="exactly">exactly</option>
                   </select>
@@ -88,7 +88,7 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1, id=>'advanced_search_panel' &>
 
     <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
 
@@ -101,16 +101,7 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Stock Owner: </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="person" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
     </div>
-    <br/>
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
@@ -278,7 +269,6 @@ my $breeding_programs_select = simple_selectbox_html(
                     <th>Stock Type</th>
                     <th>Organism</th>
                     <th>Synonyms</th>
-                    <th>Submitters</th>
                     <th>Organization</th>
                 </tr>
                 </thead>
@@ -312,6 +302,40 @@ my $breeding_programs_select = simple_selectbox_html(
 var stock_table;
 
 jQuery(document).ready(function () {
+
+    window.addEventListener('load', () => {
+      // Reset the advanced search form parameters on load.
+      // Very similar to later functionality but that one is for advanced search and on load trigger only.
+      var input_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('input');
+      for (let input_elem of input_list) {
+        input_elem.value = '';
+      }
+
+      var select_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('select');
+      for (let select_elem of select_list) {
+        select_elem.selectedIndex = 0;
+      }
+
+      var type_select = document.getElementById('stock_type_select');
+      type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
+    });
+
+
+    const textFields = document.querySelectorAll('input[type="text"]');
+    // Loop through the text fields and set their values to an empty string
+      textFields.forEach(textField => {
+        textField.value = '';
+     });
+
+     // Get all the dropdown select elements in the form
+     // Reset all but 'stock_type_select' dropdown to zero value
+     // Leave 'stock_type_select' with the default "selected" value from the mason file.
+     const selectFields = document.querySelectorAll('select');
+     selectFields.forEach(selectField => {
+        if (selectField.id != 'stock_type_select') {
+          selectField.selectedIndex = 0;
+        }
+     });
 
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'
@@ -404,7 +428,7 @@ jQuery(document).ready(function () {
             stockprop_extra_columns_view[selected_property] = 1;
             stockprop_extra_columns_view_array.push(selected_property);
 
-            var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Stock Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
+            var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Stock Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th>';
             for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                 table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
             }
@@ -416,7 +440,6 @@ jQuery(document).ready(function () {
     });
 
     parseArgs(editable_stockprops_search);
-    _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
       var name_links = stock_table.column(0).data();

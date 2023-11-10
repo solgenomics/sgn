@@ -470,7 +470,7 @@ jQuery(document).ready(function ($) {
                 return;
             }
             if (response.success) {
-                var success_string = "<h4>Go to new <a href='/breeders_toolbox/protocol/"+response.nd_protocol_id+"'>protocol detail page</a></h4>";
+                var success_string = "<h4>Go to your <a href='/breeders/trial/"+response.project_id+"'>genotyping project page</a></h4>";
                 console.log(success_string);
                 jQuery('#upload_genotype_submit_complete').html(success_string);
                 Workflow.complete('#upload_genotype_submit');
@@ -500,6 +500,10 @@ function edit_genotyping_trial_details(){
     var default_bp = document.getElementById("edit_genotyping_trial_breeding_program").getAttribute("value");
     get_select_box('breeding_programs', 'edit_genotyping_trial_breeding_program', { 'default' : default_bp });
     jQuery('#edit_trial_breeding_program').data("originalValue", default_bp);
+
+    var default_facility = document.getElementById("edit_genotyping_facility").getAttribute("value");
+    get_select_box('genotyping_facilities', 'edit_genotyping_facility', { 'default' : default_facility });
+    jQuery('#edit_genotyping_facility').data("originalValue", default_facility);
 
     jQuery('#edit_genotyping_trial_details_cancel_button').click(function(){
         reset_dialog_body('genotyping_trial_details_edit_body', edit_details_body_html);

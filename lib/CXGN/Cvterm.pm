@@ -31,57 +31,107 @@ use base qw / CXGN::DB::Object / ;
 
 use Try::Tiny;
 
+=head2 accessor schema
+
+=cut
+
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1
 );
 
+=head2 accessor cvterm
+  
+   Returns: Cv::Cvterm DBIx::Class object
+
+=cut
+
 has 'cvterm' => (
     isa => 'Bio::Chado::Schema::Result::Cv::Cvterm',
     is => 'rw',
 );
+
+=head2 accessor cvterm_id
+
+=cut
 
 has 'cvterm_id' => (
     isa => 'Int',
     is => 'rw',
 );
 
+=head2 accessor cv
+
+=cut
+
 has 'cv' => (
     isa => 'Bio::Chado::Schema::Result::Cv::Cv',
     is => 'rw',
 );
+
+=head2 accessor cv_id
+
+=cut
 
 has 'cv_id' => (
     isa => 'Int',
     is => 'rw',
 );
 
+=head2 accessor dbxref
+
+=cut
+
 has 'dbxref' => (
     isa => 'Bio::Chado::Schema::Result::General::Dbxref',
     is => 'rw',
 );
+
+=head2 accessor db
+
+=cut
 
 has 'db' => (
     isa => 'Bio::Chado::Schema::Result::General::Db',
     is => 'rw',
 );
 
+=head2 accessor name
+
+=cut
+
 has 'name' => (
     isa => 'Str',
     is => 'rw',
 );
+
+=head2 accessor definition
+
+=cut
 
 has 'definition' => (
     isa => 'Str',
     is => 'rw',
 );
 
+=head2 accessor is_obsolete
+
+=cut
+
+
 has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
     default => 0,
 );
+
+
+=head2 accessor accession
+
+   refers to dbxref.accession column
+
+=cut
 
 has 'accession' => (
     isa => 'Maybe[Str]',

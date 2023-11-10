@@ -671,12 +671,13 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
     }
     $c->stash->{rest} = { invalid_lists => \@invalid_lists };
 }
+
 #
 # Validate a temp list of names for a specified data type
 # - Validate the temp list
 # - Return lists of missing and existing items
 #
-# PATH: GET /list/validate/temp
+# PATH: POST /list/validate/temp
 #
 # BODY:
 #   type: the name of a supported list type (accessions, trials, seedlots, etc...)
@@ -687,8 +688,8 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 #   missing: array list item names not in the database
 #   existing: array list item names found in the database
 #
-
-sub temp_validate :Path('/list/validate/temp') Args(0) {
+sub temp_validate : Path('/list/validate/temp') ActionClass('REST') {};
+sub temp_validate_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $type = $c->req->param("type");
@@ -1312,10 +1313,11 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
                 content_id => $seedlot->[2],
                 content_name => $seedlot->[3],
                 content_type => $seedlot->[4],
-                box_name => $seedlot->[5],
-                current_count => $seedlot->[6],
-                current_weight => $seedlot->[7],
-                quality => $seedlot->[8],
+                description => $seedlot->[5],
+                box_name => $seedlot->[6],
+                current_count => $seedlot->[7],
+                current_weight => $seedlot->[8],
+                quality => $seedlot->[9],
             }
         }
     }
@@ -1344,9 +1346,9 @@ sub download_list_details : Path('/list/download_details') {
         my @details = @$result;
         foreach my $seedlot_ref (@details) {
             my @seedlot = @$seedlot_ref;
-            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\n";
+            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\t$seedlot[9]\n";
         }
-        $header = "Seedlot_Name\tContent_Name\tContent_type\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
+        $header = "Seedlot_Name\tContent_Name\tContent_type\tDescription\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
     }
 
     my $dl_token = $c->req->param("list_download_token") || "no_token";

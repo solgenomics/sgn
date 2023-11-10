@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/genetic_gain/genetic_gain.mas - template for multiple traits genetic gain viz.
+/solgs/tools/genetic_gain/genetic_gain.mas - template for multiple traits genetic gain viz.
 
 =AUTHOR
 
@@ -70,7 +70,7 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 % }
 
 
-<& /solgs/spinner.mas &>
+<& /solgs/spinner/spinner.mas &>
 
   <div id="gg_message"  class="message"></div>
   <div id="gg_plot"></div>

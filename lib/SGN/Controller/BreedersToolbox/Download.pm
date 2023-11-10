@@ -20,8 +20,9 @@ use File::Temp 'tempfile';
 use File::Basename;
 use File::Copy;
 use URI::FromHash 'uri';
+use CXGN::List;
 use CXGN::List::Transform;
-use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use CXGN::Trial::Download;
 use POSIX qw(strftime);
 use Sort::Maker;
@@ -34,13 +35,12 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Phenotypes::MetaDataMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Login;
-use CXGN::Stock::StockLookup;
 use CXGN::Genotype::DownloadFactory;
 use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
 use CXGN::Accession;
 use CXGN::Stock::Seedlot::Maintenance;
-use Spreadsheet::WriteExcel;
+use CXGN::Dataset;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -184,7 +184,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    #print STDERR Dumper $list_json;
+#    print STDERR "LIST JSON: ". Dumper $list_json;
     my $json = new JSON;
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
@@ -218,7 +218,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $has_header = defined($c->req->param('has_header')) ? $c->req->param('has_header') : 1;
     my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
-    my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
+    my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xlsx";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
@@ -237,23 +237,50 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
 
     my @trait_list;
-    if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
+    if ($trait_list && $trait_list ne 'null') {
+	print STDERR "trait_list: ".Dumper $trait_list."\n";
+	@trait_list = @{_parse_list_from_json($trait_list)};
+    }
     my @trait_component_list;
-    if ($trait_component_list && $trait_component_list ne 'null') { print STDERR "trait_component_list: ".Dumper $trait_component_list."\n"; @trait_component_list = @{_parse_list_from_json($trait_component_list)}; }
+    if ($trait_component_list && $trait_component_list ne 'null') {
+	print STDERR "trait_component_list: ".Dumper $trait_component_list."\n";
+	@trait_component_list = @{_parse_list_from_json($trait_component_list)};
+    }
     my @trait_contains_list;
-    if ($trait_contains && $trait_contains ne 'null') { print STDERR "trait_contains: ".Dumper $trait_contains."\n"; @trait_contains_list = @{_parse_list_from_json($trait_contains)}; }
+    if ($trait_contains && $trait_contains ne 'null') {
+	print STDERR "trait_contains: ".Dumper $trait_contains."\n";
+	@trait_contains_list = @{_parse_list_from_json($trait_contains)};
+    }
     my @year_list;
-    if ($year_list && $year_list ne 'null') { print STDERR "year list: ".Dumper $year_list."\n"; @year_list = @{_parse_list_from_json($year_list)}; }
+    if ($year_list && $year_list ne 'null') {
+	print STDERR "year list: ".Dumper $year_list."\n";
+	@year_list = @{_parse_list_from_json($year_list)};
+    }
     my @location_list;
-    if ($location_list && $location_list ne 'null') { print STDERR "location list: ".Dumper $location_list."\n"; @location_list = @{_parse_list_from_json($location_list)}; }
+    if ($location_list && $location_list ne 'null') {
+	print STDERR "location list: ".Dumper $location_list."\n";
+	@location_list = @{_parse_list_from_json($location_list)};
+    }
     my @trial_list;
-    if ($trial_list && $trial_list ne 'null') { print STDERR "trial list: ".Dumper $trial_list."\n"; @trial_list = @{_parse_list_from_json($trial_list)}; }
+    if ($trial_list && $trial_list ne 'null') {
+	print STDERR "trial list: ".Dumper $trial_list."\n";
+	@trial_list = @{_parse_list_from_json($trial_list)};
+    }
     my @accession_list;
-    if ($accession_list && $accession_list ne 'null') { print STDERR "accession list: ".Dumper $accession_list."\n";@accession_list = @{_parse_list_from_json($accession_list)}; }
+    if ($accession_list && $accession_list ne 'null') {
+	print STDERR "accession list: ".Dumper $accession_list."\n";
+	@accession_list = @{_parse_list_from_json($accession_list)};
+    }
     my @plot_list;
-    if ($plot_list && $plot_list ne 'null') { print STDERR "plot list: ".Dumper $plot_list."\n"; @plot_list = @{_parse_list_from_json($plot_list)}; }
+    if ($plot_list && $plot_list ne 'null') {
+	print STDERR "plot list: ".Dumper $plot_list."\n";
+	@plot_list = @{_parse_list_from_json($plot_list)};
+    }
     my @plant_list;
-    if ($plant_list && $plant_list ne 'null') { print STDERR "plant list: ".Dumper $plant_list."\n"; @plant_list = @{_parse_list_from_json($plant_list)}; }
+    if ($plant_list && $plant_list ne 'null') {
+	print STDERR "plant list: ".Dumper $plant_list."\n";
+	@plant_list = @{_parse_list_from_json($plant_list)};
+    }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
     my @trait_list_int;
@@ -337,7 +364,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
 
     my $plugin = "";
-    if ($format eq "xls") {
+    if ($format eq "xlsx") {
         $plugin = $entry_numbers_option ? "TrialPhenotypeExcelEntryNumbers" : "TrialPhenotypeExcel";
     }
     if ($format eq "csv") {
@@ -443,7 +470,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 #}
 
 
-#used from manage download page for downloading phenotypes.
+#used from manage download page for downloading phenotypes and from dataset with outliers to download phenotypes table
 sub download_action : Path('/breeders/download_action') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -466,23 +493,37 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     }
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
+
+    # parameters for outliers download
+    my @trait_ids     = split(',', $c->req->param("trait_ids_list"));
+    my $dataset_id   = $c->req->param("dataset_id");
+
     my $dl_cookie = "download".$dl_token;
     print STDERR "Token is: $dl_token\n";
 
     my $accession_data;
     if ($accession_list_id) {
-	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+	    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     }
 
     my $trial_data;
     if ($trial_list_id) {
-	$trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+	    $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
     }
 
     my $trait_data;
     if ($trait_list_id) {
-	$trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+	    $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
     }
+
+    my $outliers;
+    if (defined $dataset_id) {
+        my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+        my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+        my $dataset = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => int($dataset_id), exclude_dataset_outliers => 1);
+        $outliers = $dataset->outliers();
+    }
+
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
@@ -510,8 +551,11 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trait_t = $t->can_transform("traits", "trait_ids");
     my $trait_id_data = $t->transform($schema, $trait_t, \@trait_list);
 
-    my $result;
     my $output = "";
+
+    # if we work with dataset then @trait_ids we have directly from http request but we need reference/pointer to it
+    # if we work with lists than we need to use result of transform method from class Transform - reference type to list
+    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform},
 
     my @data;
     if ($datalevel eq 'metadata'){
@@ -519,7 +563,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		bcs_schema=>$schema,
     		search_type=>'MetaData',
     		data_level=>$datalevel,
-    		trial_list=>$trial_id_data->{transform},,
+    		trial_list=>$trial_id_data->{transform},
     	);
     	@data = $metadata_search->get_metadata_matrix();
     }
@@ -527,11 +571,12 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     		bcs_schema=>$schema,
     		search_type=>'MaterializedViewTable',
-    		trait_list=>$trait_id_data->{transform},
+            trait_list=>$trait_list_ref,
     		trial_list=>$trial_id_data->{transform},
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+            dataset_exluded_outliers=>$outliers,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
@@ -596,7 +641,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             close CSV;
 
         } else {
-            my $ss = Spreadsheet::WriteExcel->new($tempfile);
+            my $ss = Excel::Writer::XLSX->new($tempfile);
             my $ws = $ss->add_worksheet();
 
             for (my $line =0; $line< @data; $line++) {
@@ -608,15 +653,15 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             #$ws->write(0, 0, "$program_name, $location ($year)");
             $ss ->close();
 
-            $format = ".xls";
+            $format = ".xlsx";
         }
 
         #Using tempfile and new filename,send file to client
         my $file_name = $time_stamp . "$what" . "$format";
         $c->res->content_type('Application/'.$format);
         $c->res->cookies->{$dl_cookie} = {
-          value => $dl_token,
-          expires => '+1m',
+            value => $dl_token,
+            expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
@@ -652,7 +697,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
     # Get request params
     my $accession_list_id = $c->req->param("accession_properties_accession_list_list_select");
-    my $file_format = $c->req->param("file_format") || ".xls";
+    my $file_format = $c->req->param("file_format") || ".xlsx";
     my $dl_token = $c->req->param("accession_properties_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     if ( !$accession_list_id ) {
@@ -674,15 +719,16 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
     # Build Accession Info
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+
     my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
 
-    # Create and Return XLS file
-    if ( $file_format eq ".xls" ) {
-        my $file_path = $tempfile . ".xls";
+    # Create and Return XLS and XLSX  file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
         my $file_name = basename($file_path);
 
         # Write to the xls file
-        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $workbook = Excel::Writer::XLSX->new($file_path);
         my $worksheet = $workbook->add_worksheet();
         for ( my $i = 0; $i <= $#$rows; $i++ ) {
             $worksheet->write_row($i, 0, $rows->[$i]);
@@ -690,7 +736,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         $workbook->close();
 
         # Return the xls file
-        $c->res->content_type('Application/xls');
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $c->res->cookies->{$dl_cookie} = {
             value => $dl_token,
             expires => '+1m',
@@ -764,7 +810,7 @@ sub build_accession_properties_info {
     my $editable_stock_props = shift;
 
     # Setup Stock Props
-    my @stock_props = ("organization", "synonym", "PUI");
+    my @stock_props = ("organization", "stock_synonym", "PUI");
     foreach my $esp (@$editable_stock_props) {
         if ( !grep(/^$esp$/, @stock_props) ) {
             push(@stock_props, $esp)
@@ -828,14 +874,18 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh = $schema->storage->dbh;
+
     my $input_format = $c->req->param("input_format") || 'list_id';
     my @accession_ids = [];
+    my $source_description;         # used as a comment in the helium output file
     if ($input_format eq 'accession_ids') {       #use accession ids supplied directly
-      my $id_string = $c->req->param("ids");
-      @accession_ids = split(',',$id_string);
+        my $id_string = $c->req->param("ids");
+        @accession_ids = split(',',$id_string);
+        $source_description = "Pedigrees of provided Accession IDs: $id_string";
     }
     elsif ($input_format eq 'list_id') {        #get accession names from list and tranform them to ids
-        my$accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+        my $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
         my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
         my @accession_list = map { $_->[1] } @$accession_data;
 
@@ -843,40 +893,70 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
         my $acc_t = $t->can_transform("accessions", "accession_ids");
         my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
         @accession_ids = @{$accession_id_hash->{transform}};
+
+        my $list = CXGN::List->new({ dbh => $dbh, list_id => $accession_list_id });
+        my $list_name = $list->name();
+        $source_description = "Pedigrees of Accessions in List: $list_name";
     }
 
-    my $ped_format = $c->req->param("ped_format");
+    my $ped_format = $c->req->param("ped_format") || "parents_only";
+    my $ped_include = $c->req->param("ped_include") || "ancestors";
+    my $file_format = $c->req->param("file_format") || ".txt";
     my $dl_token = $c->req->param("pedigree_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
-    print STDERR "Token is: $dl_token\n";
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
-
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+    my $filename;
 
-    print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
-    my $pedigrees_found = 0;
+    # Get the pedigrees
     my $stock = CXGN::Stock->new ( schema => $schema);
-    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format);
+    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format, $ped_include);
 
-    foreach my $row (@$pedigree_rows) {
-        print $FILE $row;
-        $pedigrees_found++;
+    # HELIUM FORMAT
+    if ( $file_format eq ".helium" ) {
+        print $FILE "# $source_description\n";
+        print $FILE "# Pedigree Format: $ped_format\n";
+        print $FILE "# Include: " . join(' and ', split(/_/, $ped_include))  . "\n";
+        if (scalar(@$pedigree_rows) == 0) {
+            print $FILE "# No pedigrees found for the provided source\n";
+        }
+
+        print $FILE "# heliumInput = PEDIGREE\n";
+        print $FILE "LineName\tFemaleParent\tMaleParent\n";
+        foreach my $row (@$pedigree_rows) {
+            my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+            my $string = join ("\t", $progeny, $female_parent ? $female_parent : '', $male_parent ? $male_parent : '');
+            print $FILE "$string\n";
+        }
+
+        close $FILE;
+        $filename = "pedigree.helium";
     }
 
-    unless ($pedigrees_found > 0) {
-        print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
-    }
-    close $FILE;
+    # GENERAL TEXT FORMAT
+    else {
+        print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
+        my $pedigrees_found = 0;
+        foreach my $row (@$pedigree_rows) {
+            print $FILE $row;
+            $pedigrees_found++;
+        }
 
-    my $filename = "pedigree.txt";
+        unless ($pedigrees_found > 0) {
+            print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
+        }
+        close $FILE;
+
+        $filename = "pedigree.txt";
+    }
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
       value => $dl_token,
       expires => '+1m',
     };
-
+    $c->res->header("Filename", $filename);
     $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
 
 
@@ -886,7 +966,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $output = "";
     open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
     while (<$F>) {
-	$output .= $_;
+        $output .= $_;
     }
     close($F);
 
@@ -914,7 +994,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
 
     # Get request params
     my $seedlot_list_id = $c->req->param("seedlot_maintenance_events_list_list_select");
-    my $file_format = $c->req->param("file_format") || ".xls";
+    my $file_format = $c->req->param("file_format") || ".xlsx";
     my $dl_token = $c->req->param("seedlot_maintenance_events_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     if ( !$seedlot_list_id ) {
@@ -934,13 +1014,13 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_seedlot_maintenance_events_XXXXX", UNLINK => 0);
 
-    # Create and Return XLS file
-    if ( $file_format eq ".xls" ) {
-        my $file_path = $tempfile . ".xls";
+    # Create and Return XLSX file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
         my $file_name = basename($file_path);
 
         # Get Excel worksheet
-        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $workbook = Excel::Writer::XLSX->new($file_path);
         my $worksheet = $workbook->add_worksheet();
 
         # Write header
@@ -964,7 +1044,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
         $workbook->close();
 
         # Return the xls file
-        $c->res->content_type('Application/xls');
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $c->res->cookies->{$dl_cookie} = {
           value => $dl_token,
           expires => '+1m',
@@ -996,7 +1076,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
-
+    my $genotyping_project_id = $c->req->param("genotyping_project_id");
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
 
     $trial_id_string = $c->req->param("trial_ids");
@@ -1008,11 +1088,12 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         $id_string = $c->req->param("ids");
         @accession_ids = split(',',$id_string);
         $protocol_id = $c->req->param("protocol_id");
-        if (!$protocol_id){
+        if ((!defined $protocol_id) && (!defined $genotyping_project_id)){
             my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
             $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
         }
     }
+
     elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
         my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
         $protocol_id = $c->req->param("genotyping_protocol_select");
@@ -1054,6 +1135,16 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         }
     }
 
+    my @protocol_list;
+    if (defined $protocol_id) {
+        push @protocol_list, $protocol_id;
+    }
+
+    my @genotyping_project_list;
+    if (defined $genotyping_project_id) {
+        push @genotyping_project_list, $genotyping_project_id;
+    }
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
@@ -1063,7 +1154,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             accession_list=>\@accession_ids,
             #tissue_sample_list=>$tissue_sample_list,
             trial_list=>\@trial_ids,
-            protocol_id_list=>[$protocol_id],
+            protocol_id_list=>\@protocol_list,
             chromosome_list=>$chromosome_numbers,
             start_position=>$start_position,
             end_position=>$end_position,
@@ -1072,7 +1163,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             marker_name_list=>\@marker_name_list,
             return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
             #markerprofile_id_list=>$markerprofile_id_list,
-            #genotype_data_project_list=>$genotype_data_project_list,
+            genotype_data_project_list=>\@genotyping_project_list,
             #limit=>$limit,
             #offset=>$offset
         }
@@ -1411,7 +1502,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$trial_id."_XXXXX");
 
-    my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
+    my $file_path = $c->config->{basepath}."/".$tempfile.".xlsx";
     move($tempfile, $file_path);
 
     my $td = CXGN::Trial::Download->new( {
@@ -1504,7 +1595,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     # prepare file for download
     #
     my $file_name = basename($file_path);
-    $c->res->content_type('Application/xls');
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
 
@@ -1542,6 +1633,100 @@ sub wellsort {
 	return $col_a <=> $col_b;
     }
 }
+
+sub download_protocol_marker_info : Path('/breeders/download_protocol_marker_info') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $protocol_id = $c->req->param("protocol_id");
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = $protocol_id . "_" . "marker_info" . "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".csv";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $marker_info_download = CXGN::Genotype::DownloadFactory->instantiate(
+        'MarkerInfo',
+        {
+            bcs_schema=>$schema,
+            protocol_id_list=>[$protocol_id],
+            filename => $tempfile,
+        }
+    );
+
+    my $download = $marker_info_download->download();
+
+    my $format = 'csv';
+    my $download_file_name = 'BreedbaseMarkerInfo'.$format;
+
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
+
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
+
+}
+
+
+sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping_data_csv') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $protocol_id = $c->req->param("protocol_id");
+    my $genotyping_project_id = $c->req->param("genotyping_project_id");
+
+    my @protocol_list;
+    if (defined $protocol_id) {
+        push @protocol_list, $protocol_id;
+    }
+
+    my @genotyping_project_list;
+    if (defined $genotyping_project_id) {
+        push @genotyping_project_list, $genotyping_project_id;
+    }
+
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = $protocol_id . "_" . "KASP_data" . "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".csv";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $kasp_genotyping_data_download = CXGN::Genotype::DownloadFactory->instantiate(
+        'KASPdata',
+        {
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            protocol_id_list=>\@protocol_list,
+            genotype_data_project_list=>\@genotyping_project_list,
+            filename => $tempfile,
+        }
+    );
+
+    my $download = $kasp_genotyping_data_download->download();
+
+    my $format = 'csv';
+    my $download_file_name = 'BreedbaseKASPdata'.$format;
+
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
+
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
+
+}
+
+
 
 #=pod
 1;

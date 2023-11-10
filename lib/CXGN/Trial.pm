@@ -32,6 +32,7 @@ use Time::Seconds;
 use CXGN::Calendar;
 use JSON;
 use File::Basename qw | basename dirname|;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 =head1 NAME
 
@@ -179,7 +180,18 @@ sub get_all_locations {
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address],
+        my @reference_locations = ($s->nd_geolocation_id());
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $schema,
+            table_name => 'nd_geolocation',
+            table_id_key => 'nd_geolocation_id',
+            id => \@reference_locations
+        });
+        my $external_references_search = $references->search();
+        my $external_references = $external_references_search->{$s->nd_geolocation_id()} || [];
+
+
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address, $external_references],
     }
 
     return \@locations;

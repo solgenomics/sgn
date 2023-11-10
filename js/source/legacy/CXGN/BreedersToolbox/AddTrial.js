@@ -53,11 +53,13 @@ jQuery(document).ready(function ($) {
         var breeding_program = $("#select_breeding_program").val();
         var location = $("#add_project_location").val().toString().trim(); // remove whitespace
         var trial_year = $("#add_project_year").val();
+        var planting_date = $("#add_project_planting_date").val();
         var description = $("#add_project_description").val();
         var design_type = $("#select_design_method").val();
         var stock_type = $("#select_stock_type").val();
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
+	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
         plants_per_plot = $("#add_plant_entries").val();
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
@@ -72,6 +74,9 @@ jQuery(document).ready(function ($) {
         }
         else if (trial_year === '') {
             alert("Please select a trial year");
+        }
+        else if (planting_date === '') {
+            alert("Please select a trial planting date");
         }
         else if (plot_width < 0 ){
             alert("Please check the plot width");
@@ -482,21 +487,25 @@ jQuery(document).ready(function ($) {
 
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
+
     function generate_experimental_design() {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
+        var planting_date = $('#add_project_planting_date').val();
+        // date formatting here from js to breedbase format
+        if (planting_date) {
+            planting_date = new Date(planting_date).toLocaleDateString("en-CA");
+        }
         var desc = $('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
-        //console.log("Trial location is "+trial_location);
         var trial_stock_type = jQuery('#select_stock_type').val();
         var block_number = $('#block_number').val();
-        //alert(block_number);
         var row_number= $('#row_number').val();
         var row_number_per_block=$('#row_number_per_block').val();
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
-       // alert(row_number);
+	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
 
         var stock_list_id;
         var control_stock_list_id;
@@ -635,6 +644,8 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
+	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
+	
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -647,6 +658,7 @@ jQuery(document).ready(function ($) {
                 'project_name': name,
                 'project_description': desc,
                 'year': year,
+                'planting date' : planting_date,
                 'trial_location': trial_location,
                 'trial_stock_type': trial_stock_type,
                 'stock_list': stock_list,
@@ -686,7 +698,8 @@ jQuery(document).ready(function ($) {
                 'field_size': field_size,
                 'plot_width': plot_width,
                 'plot_length': plot_length,
-                'use_same_layout' : use_same_layout
+                'use_same_layout' : use_same_layout,
+		'plot_numbering_scheme' : plot_numbering_scheme
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -912,6 +925,7 @@ jQuery(document).ready(function ($) {
         jQuery("#container_field_map_view").css("display", "none");
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
+        var planting_date = $('#add_project_planting_date').val();
         var desc = $('textarea#add_project_description').val();
         if (name == '') {
             alert('Trial name required');
@@ -921,7 +935,10 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
-
+        if(planting_date === '' || desc === '') {
+            alert('Planting date and description are required.');
+            return;
+        }
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
             generate_experimental_design();
         } else if (cross_list_verified == 1 && stock_list_verified == 0 && family_name_list_verified == 0){
@@ -1992,7 +2009,7 @@ jQuery(document).ready(function ($) {
                   'inherits_plot_treatments' : inherits_plot_treatments,
                 },
                 success: function(response) {
-                    console.log(response);
+                    //console.log(response);
                   if (response.error) {
                     alert(response.error);
                   }
@@ -2011,6 +2028,11 @@ jQuery(document).ready(function ($) {
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
         var year = jQuery('#add_project_year').val();
+        var planting_date = jQuery('#add_project_planting_date').val();
+        // date formatting here from js to breedbase format
+        if (planting_date) {
+            planting_date = new Date(planting_date).toLocaleDateString("en-CA");
+        }
         var desc = jQuery('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
@@ -2043,8 +2065,6 @@ jQuery(document).ready(function ($) {
             }
             //console.log(greenhouse_num_plants);
         }
-
-        //alert(design_type);
 
         var rep_count = jQuery('#rep_count').val();
         var block_size = jQuery('#block_size').val();
@@ -2080,6 +2100,8 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
+	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,
@@ -2093,6 +2115,7 @@ jQuery(document).ready(function ($) {
                 'project_description': desc,
                 //'trial_name': trial_name,
                 'year': year,
+                'planting_date' : planting_date,
                 'trial_type': trial_type,
                 'trial_location': trial_location,
                 'trial_stock_type': trial_stock_type,
@@ -2104,6 +2127,7 @@ jQuery(document).ready(function ($) {
                 'block_size': block_size,
                 'max_block_size': max_block_size,
                 'plot_prefix': plot_prefix,
+                'plot_numbering_scheme' : plot_numbering_scheme,
                 'start_number': start_number,
                 'increment': increment,
                 'design_json': design_json,
@@ -2132,7 +2156,6 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    //alert('Trial design saved');
                     refreshTrailJsTree(0);
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
@@ -2267,12 +2290,15 @@ jQuery(document).ready(function ($) {
             html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
             var design_hash = JSON.parse(design_array[i]);
             //console.log(design_hash);
-            for (var key in design_hash){
+            var keys = Object.keys(design_hash);
+            keys.sort();
+            keys.forEach(function(key){
                 if (key != 'treatments'){
                     var plot_obj = design_hash[key];
+                    //console.log(plot_obj);
                     html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"'  data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-subplot_names='"+JSON.stringify(plot_obj.subplots_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
                 }
-            }
+            });
             html += "</tbody></table>";
         }
         html += "<br/><br/>";
@@ -2294,6 +2320,7 @@ jQuery(document).ready(function ($) {
 
     jQuery('#new_trial_add_treatments_submit').click(function(){
         var new_treatment_year = jQuery('#new_treatment_year').val();
+        var new_treament_planting_date = jQuery('#new_treatment_planting_date').val();
         var new_treatment_description = jQuery('#new_treatment_description').val();
         var new_treatment_date = jQuery('#new_treatment_date').val();
         var new_treatment_type = jQuery('#new_treatment_type').val();
@@ -2327,6 +2354,7 @@ jQuery(document).ready(function ($) {
                     trial[trial_treatment]["new_treatment_type"] = new_treatment_type;
                     trial[trial_treatment]["new_treatment_date"] = new_treatment_date;
                     trial[trial_treatment]["new_treatment_year"] = new_treatment_year;
+                    trial[trial_treatment]["new_treatment_planting_date"] = new_treatment_planting_date;
                     trial[trial_treatment]["new_treatment_description"] = new_treatment_description;
 
                     trial_treatments[trial_index] = trial;

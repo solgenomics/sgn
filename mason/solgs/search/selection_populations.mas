@@ -1,0 +1,81 @@
+<%doc>
+
+displays selection populations one can apply the model on.  If predicted output exists for a
+selection population, a link to the output is displayed.
+
+</%doc>
+
+<%args>
+
+$result => ''
+$selection_prediction_download
+$training_pop_analyzed_traits
+$training_pop_id
+$training_pop_name
+$selection_pop_id
+$selection_pop_name => ''
+$list_of_prediction_pops => ''
+$selection_pop_analyzed_traits => ''
+
+</%args>
+
+<%perl>
+
+my $title;
+
+if ($c->req->path =~ /solgs\/traits\/all\/population/) {
+    $title = 'Predict GEBVs of a selection population using the models';
+  } else {
+ $title = 'Predict GEBVs of a selection population using the model';
+}
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.Dataset", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
+    title       => $title,
+&>
+
+  <div  id="selection_pops_div">
+    <div id="search_div" class="form-inline">
+    <input  type="text"
+	    class="form-control"
+	    placeholder="search for a selection population"
+	    size="30" id="population_search_entry"/>
+
+    <button type="submit"
+	    class="btn btn-success"
+	    id="search_selection_pop">
+      <span class="glyphicon glyphicon-search"></span>
+    </button>
+    <div  id="form-feedback-search-trials" style="color:red"> </div>
+  </div>
+
+
+  <div id="selection_pops_message"  class="message"></div>
+  <& /solgs/spinner/spinner.mas &>
+  
+  <div id="selection_pops_result" style="padding: 20px 0px 20px 0px;display:none;">
+    <table class="table" id="selection_pops_table" style="text-align:left;">
+      <thead>
+	<tr>
+	  <th>Selection population</th>
+	  <th>Description</th>
+	  <th>Year</th>
+    <th>More details</th>
+	  <th>View GEBVs</th>
+	</tr>
+      </thead>
+  </table>
+  </div>
+
+  <& /solgs/search/list_type_selection_population.mas &>
+
+</&>
+</div>

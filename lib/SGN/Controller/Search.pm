@@ -2,6 +2,7 @@ package SGN::Controller::Search;
 use Moose;
 use URI::FromHash 'uri';
 use namespace::autoclean;
+use Data::Dumper;
 
 use CXGN::Search::CannedForms;
 use CXGN::Page::Toolbar::SGN;
@@ -131,10 +132,7 @@ Display a search index page.
 sub search_index : Path('/search/index.pl') Path('/search') Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash(
-        content  => $c->view('Toolbar')->index_page('search'),
-     );
-    $c->forward('View::Mason');
+    $c->stash->{template} = '/search/advanced_search.mas';
 }
 
 sub family_search : Path('/search/family') Args(0) {

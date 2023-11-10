@@ -2,6 +2,7 @@ package CXGN::Pedigree::ParseUpload::Plugin::CrossesExcelFormat;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -15,7 +16,18 @@ sub _validate_with_plugin {
     my @error_messages;
     my %errors;
     my %supported_cross_types;
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
 
@@ -49,7 +61,7 @@ sub _validate_with_plugin {
     }
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 3 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
+    if (($col_max - $col_min)  < 6 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
         push @error_messages, "Spreadsheet is missing header or contains no row";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -58,7 +70,7 @@ sub _validate_with_plugin {
 
     #get column headers
     my $cross_name_header;
-    my $cross_combination_head;
+    my $cross_combination_header;
     my $cross_type_header;
     my $female_parent_header;
     my $male_parent_header;
@@ -67,28 +79,38 @@ sub _validate_with_plugin {
 
     if ($worksheet->get_cell(0,0)) {
         $cross_name_header  = $worksheet->get_cell(0,0)->value();
+        $cross_name_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
-        $cross_combination_head  = $worksheet->get_cell(0,1)->value();
+        $cross_combination_header  = $worksheet->get_cell(0,1)->value();
+        $cross_combination_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
         $cross_type_header  = $worksheet->get_cell(0,2)->value();
+        $cross_type_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $female_parent_header  = $worksheet->get_cell(0,3)->value();
+        $female_parent_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,4)) {
         $male_parent_header  = $worksheet->get_cell(0,4)->value();
+        $male_parent_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $female_plot_plant_header  = $worksheet->get_cell(0,5)->value();
+        $female_plot_plant_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,6)) {
         $male_plot_plant_header  = $worksheet->get_cell(0,6)->value();
+        $male_plot_plant_header =~ s/^\s+|\s+$//g;
     }
 
     if (!$cross_name_header || $cross_name_header ne 'cross_unique_id' ) {
         push @error_messages, "Cell A1: cross_unique_id is missing from the header";
+    }
+    if (!$cross_combination_header || $cross_combination_header ne 'cross_combination' ) {
+        push @error_messages, "Cell B1: cross_combination is missing from the header";
     }
     if (!$cross_type_header || $cross_type_header ne 'cross_type') {
         push @error_messages, "Cell C1: cross_type is missing from the header";
@@ -115,8 +137,8 @@ sub _validate_with_plugin {
     for my $column (7 .. $col_max){
         if ($worksheet->get_cell(0, $column)) {
             my $header_string = $worksheet->get_cell(0,$column)->value();
-
-            if (!$valid_additional_info{$header_string}){
+            $header_string =~ s/^\s+|\s+$//g;
+            if (($header_string) && (!$valid_additional_info{$header_string})){
                 push @error_messages, "Invalid info type: $header_string";
             }
         }
@@ -143,10 +165,12 @@ sub _validate_with_plugin {
 
         if ($worksheet->get_cell($row,1)) {
             $cross_combination =  $worksheet->get_cell($row,1)->value();
+            $cross_combination =~ s/^\s+|\s+$//g;
         }
 
         if ($worksheet->get_cell($row,2)) {
             $cross_type = $worksheet->get_cell($row,2)->value();
+            $cross_type =~ s/^\s+|\s+$//g;
         }
 
         if ($worksheet->get_cell($row,3)) {
@@ -297,7 +321,18 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parser   = Spreadsheet::ParseExcel->new();
+
+    # Match a dot, extension .xls / .xlsx
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
+    my $parser;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    else {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+
     my $excel_obj;
     my $worksheet;
     my @pedigrees;
@@ -335,10 +370,12 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,1)) {
             $cross_combination =  $worksheet->get_cell($row,1)->value();
+            $cross_combination =~ s/^\s+|\s+$//g;
         }
 
         if ($worksheet->get_cell($row,2)) {
             $cross_type = $worksheet->get_cell($row,2)->value();
+            $cross_type =~ s/^\s+|\s+$//g;
         }
 
         if ($worksheet->get_cell($row,3)) {

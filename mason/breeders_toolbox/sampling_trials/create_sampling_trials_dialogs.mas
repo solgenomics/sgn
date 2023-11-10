@@ -122,7 +122,7 @@ $sampling_facilities => ();
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select Samples Layout XLS File: </label>
+                                                            <label class="col-sm-6 control-label">Select Samples Layout XLSX (or XLS) File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="sampling_trial_layout_upload" id="sampling_trial_layout_upload" encoding="multipart/form-data" />
                                                             </div>
@@ -177,6 +177,7 @@ $sampling_facilities => ();
                                                 <option value="stem">Stem</option>
                                                 <option value="seed">Seed</option>
                                                 <option value="fruit">Fruit</option>
+                                                <option value="tuber">Tuber</option>
                                             </select>
                                         </div>
                                     </div>
@@ -267,10 +268,8 @@ $sampling_facilities => ();
                 <div class="container-fluid">
                     <b>This is for uploading a pre-existing sampling trial layout.</b>
                     <br/>
-                    <b>File must be Excel file (.xls)</b>
+                    <b>File must be Excel file (.xls or .xlsx)</b>
                     <br />
-                    (.xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -302,7 +301,7 @@ $sampling_facilities => ();
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
                     <li>sample_number (the sample number for the sample. Must be unique within this sampling trial)</li>
                     <li>replicate (the replicate number for the sample)</li>
-                    <li>tissue_type (must be either leaf, root, or stem, or seed, or fruit)</li>
+                    <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
                     </ul>
 
                     <b>Optional fields:</b>

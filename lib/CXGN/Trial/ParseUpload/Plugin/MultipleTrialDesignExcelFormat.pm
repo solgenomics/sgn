@@ -2,6 +2,7 @@ package CXGN::Trial::ParseUpload::Plugin::MultipleTrialDesignExcelFormat;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -22,7 +23,18 @@ sub _validate_with_plugin {
   my %warnings;
   my @warning_messages;
   my %missing_accessions;
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
 
@@ -472,10 +484,24 @@ sub _validate_with_plugin {
 
   ## LOCATIONS OVERALL VALIDATION
   my @locations = keys %seen_locations;
-  my @locations_missing = @{$validator->validate($schema,'locations',\@locations)->{'missing'}};
-  if (scalar(@locations_missing) > 0) {
-      # $errors{'missing_locations'} = \@locations_missing;
-      push @error_messages, "Location(s) <b>".join(',',@locations_missing)."</b> are not in the database.";
+  my $locations_hashref = $validator->validate($schema,'locations',\@locations);
+
+  # Find valid location codes
+  my @codes = @{$locations_hashref->{'codes'}};
+  my %location_code_map;
+  foreach my $code (@codes) {
+    my $location_code = $code->[0];
+    my $found_location_name = $code->[1];
+    $location_code_map{$location_code} = $found_location_name;
+    push @warning_messages, "File Location '$location_code' matches the code for the location named '$found_location_name' and will be substituted if you ignore warnings.";
+  }
+  $self->_set_location_code_map(\%location_code_map);
+
+  # Check the missing locations, ignoring matched codes
+  my @locations_missing = @{$locations_hashref->{'missing'}};
+  my @locations_missing_no_codes = grep { !exists $location_code_map{$_} } @locations_missing;
+  if (scalar(@locations_missing_no_codes) > 0) {
+      push @error_messages, "Location(s) <b>".join(',',@locations_missing_no_codes)."</b> are not in the database.";
   }
 
   ## DESIGN TYPES OVERALL VALIDATION
@@ -532,7 +558,7 @@ sub _validate_with_plugin {
 
       push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
 
-      @accessions = grep !/$matched_synonym/, @accessions;
+      @accessions = grep !/\Q$matched_synonym/, @accessions;
       push @accessions, $found_acc_name_from_synonym;
   }
 
@@ -582,11 +608,6 @@ sub _validate_with_plugin {
       push @error_messages, "Cell M".$seen_plot_names{$r->uniquename}.": plot name <b>".$r->uniquename."</b> already exists.";
   }
 
-  if (scalar(@warning_messages) >= 1) {
-      $warnings{'warning_messages'} = \@warning_messages;
-      $self->_set_parse_warnings(\%warnings);
-  }
-
   ## PLOT POSITION OVERALL VALIDATION
   foreach my $tk (keys %seen_plot_keys) {
       foreach my $pk (keys %{$seen_plot_keys{$tk}} ) {
@@ -594,9 +615,14 @@ sub _validate_with_plugin {
           my $count = scalar(@{$plots});
           if ( $count > 1 ) {
               my @pos = split('-', $pk);
-              push @error_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " trial=" . $tk . " plots=" . join(',', @$plots);
+              push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " trial=" . $tk . " plots=" . join(',', @$plots);
           }
       }
+  }
+
+  if (scalar(@warning_messages) >= 1) {
+      $warnings{'warning_messages'} = \@warning_messages;
+      $self->_set_parse_warnings(\%warnings);
   }
 
   #store any errors found in the parsed file to parse_errors accessor
@@ -616,7 +642,18 @@ sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
-  my $parser   = Spreadsheet::ParseExcel->new();
+
+  # Match a dot, extension .xls / .xlsx
+  my ($extension) = $filename =~ /(\.[^.]+)$/;
+  my $parser;
+
+  if ($extension eq '.xlsx') {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  else {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+
   my $excel_obj;
   my $worksheet;
 
@@ -715,8 +752,18 @@ sub _parse_with_plugin {
         %single_design = ();
         $all_designs{$trial_name} = \%final_single_design;
       }
+
+      # Get location and replace codes with names
+      my $location = $worksheet->get_cell($row,2)->value();
+      if ( $self->_has_location_code_map() ) {
+        my $location_code_map = $self->_get_location_code_map();
+        if ( exists $location_code_map->{$location} ) {
+          $location = $location_code_map->{$location};
+        }
+      }
+
       $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
-      $single_design{'location'} = $worksheet->get_cell($row,2)->value();
+      $single_design{'location'} = $location;
       $single_design{'year'} = $worksheet->get_cell($row,3)->value();
       $single_design{'design_type'} = $worksheet->get_cell($row,4)->value();
       $single_design{'description'} = $worksheet->get_cell($row,5)->value();

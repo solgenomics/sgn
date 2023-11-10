@@ -347,6 +347,68 @@ sub get_cv_names_from_db_name {
     return @cv_names;
 
 }
+
+=head2 get_vcf_genotyping_cvterm_id
+
+ Usage: my $cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($schema, {'protocol_id' => $protocol_id});
+ Desc: A vcf genotyping file, associated with a genotyping protocol, used to load to the db could be SNP or PHG data. This method queries for the id of the cvterm describing the genotype data type of the vcf file for a genotyping protocol using a protocol id or genotype id. Querying using the genotype id is useful when interested on a single accession genotype data from a genotyping protocol.
+ Ret: the cvterm id for the vcf (snp or phg) genotyping cvterm
+Args: bcs schema object, and a hashref of either {'protocol_id' => $protocol_id} or {'genotype_id' => $genotype_id}
+ Side Effects:
+ Example:
+
+=cut
+sub get_vcf_genotyping_cvterm_id {
+    my $self = shift;
+    my $schema = shift;
+    my $search_param = shift;
+    my $protocol_id = $search_param->{protocol_id};
+    my $genotype_id = $search_param->{genotype_id};
+
+    my $query;
+    my $id;
+ 
+    if ($protocol_id) {
+        $query = "SELECT genotypeprop.type_id 
+                FROM stock  
+                JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) 
+                JOIN nd_experiment USING (nd_experiment_id) 
+                JOIN nd_experiment_protocol USING (nd_experiment_id) 
+                JOIN nd_experiment_project USING(nd_experiment_id) 
+                JOIN nd_experiment_genotype USING (nd_experiment_id) 
+                JOIN nd_protocol USING (nd_protocol_id) 
+                LEFT JOIN nd_protocolprop ON (nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id) 
+                JOIN genotype USING (genotype_id) 
+                LEFT JOIN genotypeprop USING (genotype_id) 
+                LEFT JOIN cvterm ON genotypeprop.type_id = cvterm.cvterm_id
+                WHERE nd_protocol.nd_protocol_id = ?  
+                AND cvterm.name ~ 'vcf_\\w+_genotyping'
+                LIMIT 1";
+
+        $id = $protocol_id;
+
+    } elsif ($genotype_id) {
+        $query = "SELECT  genotypeprop.type_id 
+                FROM genotypeprop
+                LEFT JOIN cvterm ON genotypeprop.type_id = cvterm.cvterm_id 
+                WHERE genotype_id = ? 
+                AND cvterm.name ~ 'vcf_\\w+_genotyping'
+                LIMIT 1";
+
+        $id = $genotype_id;
+    } else {
+        die "\nSearch for vcf genotyping cvterm id requires either protocol id or genotype id.";
+    }
+
+    my $h = $schema->storage->dbh()->prepare($query);
+    $h->execute($id);
+
+    my $vcf_genotype_type_id = $h->fetchrow_array();
+    
+    return $vcf_genotype_type_id;
+
+}
+
     
 
 1;

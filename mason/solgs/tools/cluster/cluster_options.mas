@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/cluster/cluster_options.mas - cluster analysis options template
+/solgs/tools/cluster/cluster_options.mas - cluster analysis options template
 
 
 =AUTHOR
@@ -42,7 +42,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 	 class="form-group col-sm-1">
       <input class="form-control"
 	     type="text"
-	     placeholder="K No.?"
+	     placeholder=3
 	     id="k_number_input"/>
     </div>
 

@@ -43,7 +43,8 @@ has 'dbname' => (
                values of the source type.
 
                queryref: same structure as dataref, but instead of storing ids it stores a
-               1 if user to retrieve an intersection of matches, or 0 for the default union
+               1 if user to retrieve an intersection of matches, or 0 for the default union,
+               or a fractional number (between 0 and 1) to filter a miniumum match percentage
 
  Side Effects: none
  Example:   retrieving all the trials from location 'test_location' (location_id = 23) and year '2014' in the fixture db:
@@ -96,14 +97,15 @@ sub metadata_query {
   my $dataref = shift;
   my $queryref = shift;
   my $h;
-  print STDERR "criteria_list=" . Dumper($criteria_list);
-  print STDERR "dataref=" . Dumper($dataref);
-  print STDERR "queryref=" . Dumper($queryref);
+  # print STDERR "criteria_list=" . Dumper($criteria_list);
+  # print STDERR "dataref=" . Dumper($dataref);
+  # print STDERR "queryref=" . Dumper($queryref);
 
   my $target_table = $criteria_list->[-1];
-  print STDERR "target_table=". $target_table . "\n";
+  # print STDERR "target_table=". $target_table . "\n";
   my $target = $target_table;
   $target =~ s/s$//;
+  # print STDERR "target=$target\n";
 
   my $select = "SELECT ".$target."_id, ".$target."_name ";
   my $group = "GROUP BY ".$target."_id, ".$target."_name ";
@@ -118,6 +120,8 @@ sub metadata_query {
 	  my @queries;
 	  foreach my $category (@$criteria_list) {
 
+      # print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
+
       if ($dataref->{$criteria_list->[-1]}->{$category}) {
         my $query;
 		    my @categories = ($target_table, $category);
@@ -125,30 +129,33 @@ sub metadata_query {
 	      my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
         my $criterion = $category;
         $criterion =~ s/s$//;
-        my $intersect = $queryref->{$criteria_list->[-1]}->{$category};
+        my $match = $queryref->{$criteria_list->[-1]}->{$category};
+        if ( !$match ) {
+          $match = 0;
+        }
 
-        if ($intersect) {
-          my @parts;
-          my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});
-          foreach my $id (@ids) {
-            my $where = "WHERE ". $criterion. "_id IN (". $id .") ";
-            my $statement = $select . $from . $where . $group;
-            push @parts, $statement;
-          }
-          $query = join (" INTERSECT ", @parts);
-          push @queries, $query;
-        }
-        else {
-          my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
-          $query = $select . $from . $where . $group;
-          push @queries, $query;
-        }
+        # print STDERR "... Match: $match\n";
+
+        my $total = scalar(split(',', $dataref->{$criteria_list->[-1]}->{$category}));
+        my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
+        my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
+        $query = $inner_select . $from . $where . $group;
+
+        my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
+        $outer_query .= "FROM ($query) AS i ";
+        $outer_query .= "WHERE i.match >= " . $match;
+
+        my $outest_query = "SELECT j." . $target . "_id, j." . $target . "_name ";
+        $outest_query .= "FROM ($outer_query) AS j ";
+
+        # print STDERR "... Query: $outest_query\n";
+        push @queries, $outest_query;
       }
     }
     $full_query = join (" INTERSECT ", @queries);
   }
   $full_query .= " ORDER BY 2";
-  print STDERR "QUERY: $full_query\n";
+  # print STDERR "FULL QUERY: $full_query\n";
   $h = $self->dbh->prepare($full_query);
   $h->execute();
 
@@ -333,6 +340,12 @@ sub refresh_matviews {
     my $materialized_view = shift || 'fullview'; #Can be 'fullview' or 'stockprop'
     my $refresh_type = shift || 'concurrent';
     my $basepath = shift;
+    my $async = shift;
+
+    if (!defined($async)) {
+        $async = 1;
+    }
+
     my $refresh_finished = 0;
     my $async_refresh;
 
@@ -347,14 +360,22 @@ sub refresh_matviews {
     }
     else {
         try {
+            my $refresh_command = "perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view";
+            $async_refresh = CXGN::Tools::Run->new();
             if ($refresh_type eq 'concurrent') {
-                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
-                $async_refresh = CXGN::Tools::Run->new();
-                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
+                print STDERR "Using CXGN::Tools::Run to ".($async ? "asynchronously" : "synchronously")." run $refresh_command -c\n";
+                if ($async) {
+                    $async_refresh->run_async($refresh_command." -c");
+                } else {
+                    $async_refresh->run($refresh_command." -c");
+                }
             } else {
-                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
-                $async_refresh = CXGN::Tools::Run->new();
-                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view");
+                print STDERR "Using CXGN::Tools::Run to ".($async ? "asynchronously" : "synchronously")." run $refresh_command\n";
+                if ($async) {
+                    $async_refresh->run_async($refresh_command);
+                } else {
+                    $async_refresh->run($refresh_command);
+                }
             }
 
             for (my $i = 1; $i < 10; $i++) {
@@ -367,9 +388,9 @@ sub refresh_matviews {
             }
 
             if ($refresh_finished) {
-                return { message => $materialized_view.' update completed!' };
+                return { message => $materialized_view . ' update completed!', connection => $async_refresh };
             } else {
-                return { message => $materialized_view.' update initiated.' };
+                return { message => $materialized_view.' update initiated.', connection => $async_refresh  };
             }
         } catch {
             print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
