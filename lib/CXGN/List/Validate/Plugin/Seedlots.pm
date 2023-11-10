@@ -16,7 +16,7 @@ sub validate {
     my $list = shift;
 
     my %all_names;
-    my @discarded_seedlots;
+    my %all_discarded;
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $discarded_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'discarded_metadata', 'stock_property')->cvterm_id();
@@ -30,7 +30,7 @@ sub validate {
     my %result;
     while (my ($uniquename, $synonym, $discarded) = $h->fetchrow_array()) {
         if (defined $discarded) {
-            push @discarded_seedlots, $uniquename;
+            $all_discarded{$uniquename}++;
         } else {
             $all_names{$uniquename}++;
             if (defined $synonym) {
@@ -41,13 +41,17 @@ sub validate {
 
     #print STDERR Dumper \%all_names;
     my @missing;
+    my @discarded;
     foreach my $item (@$list) {
         if (!exists($all_names{$item})) {
             push @missing, $item;
         }
+        if (exists($all_discarded{$item})) {
+            push @discarded, $item;
+        }
     }
 
-    return { missing => \@missing, discarded => \@discarded_seedlots };
+    return { missing => \@missing, discarded => \@discarded };
 }
 
 1;

@@ -1653,7 +1653,7 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
         my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots_to_discard)->{'missing'}};
 
         if (scalar(@seedlots_missing) > 0){
-            $c->stash->{rest} = { error_string => "The following seedlots are not in the database : ".join(',',@seedlots_missing) };
+            $c->stash->{rest} = { error_string => "The following seedlots are not in the database or are marked as discarded : ".join(',',@seedlots_missing) };
             return;
         }
     } elsif (defined $seedlot_name) {

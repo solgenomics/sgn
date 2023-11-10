@@ -169,10 +169,24 @@ sub _validate_with_plugin {
 
     my @seedlots = keys %seen_seedlot_names;
     my $seedlot_validator = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots)->{'missing'}};
+    my $validation = $seedlot_validator->validate($schema,'seedlots',\@seedlots);
+    my @all_seedlots_missing = @{$validation->{missing}};
+    my @seedlots_discarded = @{$validation->{discarded}};
+    my @seedlots_missing;
+    foreach my $seedlot (@all_seedlots_missing) {
+        if ($seedlot ~~ @seedlots_discarded) {
+            next;
+        } else {
+            push @seedlots_missing, $seedlot;
+        }
+    }
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database or are marked as DISCARDED: ".join(',',@seedlots_missing);
+        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+    }
+
+    if (scalar(@seedlots_discarded) > 0) {
+        push @error_messages, "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded);
     }
 
     my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs);
