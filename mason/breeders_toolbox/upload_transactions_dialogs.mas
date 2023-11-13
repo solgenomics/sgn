@@ -458,6 +458,11 @@ jQuery(document).ready(function(){
     jQuery("[name='upload_transactions_dismiss_button']").click(function() {
         jQuery('#upload_transactions_dialog').modal('hide');
         jQuery('#transaction_type_option').val('');
+        jQuery('#seedlots_to_seedlots_file').val('');
+        jQuery('#seedlots_to_plots_file').val('');
+        jQuery('#seedlots_to_new_seedlots_file').val('');
+        jQuery('#new_seedlot_location').val('');
+        jQuery('#new_seedlot_organization_name').val('');
         location.reload();
     });
 
