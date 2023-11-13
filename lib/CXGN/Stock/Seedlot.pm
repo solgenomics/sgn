@@ -791,6 +791,68 @@ sub verify_seedlot_seedlot_compatibility {
 }
 
 
+=head2 Class method: verify_all_seedlots_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_all_seedlots_compatibility($schema, [$new_seedlot_name, \%seedlot_names]);
+ Desc:         Class method that verifies if a new seedlot name is associated with only one content.
+ Ret:          success or error
+ Args:         $schema, \@new_seedlot_and_associated_seedlots
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_all_seedlots_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $new_seedlot_and_associated_seedlots = shift;
+    my $error = '';
+    my %return;
+
+    if (!$new_seedlot_and_associated_seedlots){
+        $error .= "No seedlot names passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $new_seedlot_name = $new_seedlot_and_associated_seedlots->[0];
+    my $associated_seedlots = $new_seedlot_and_associated_seedlots->[1];
+    my @seedlot_names = keys %{$associated_seedlots};
+
+    if (scalar(@seedlot_names)<1){
+        $error .= "No associated seedlot!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my %seen_content;
+    foreach my $each_seedlot(@seedlot_names){
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $each_seedlot,'type_id' => $seedlot_cvterm_id});
+        my $seedlot_id = $seedlot_rs->stock_id();
+        my $seedlot_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id, type_id => $collection_of_cvterm_id});
+        my $content_id = $seedlot_content->subject_id();
+        $seen_content{$content_id}++;
+    }
+
+    my $content_count = keys %seen_content;
+    if ($content_count > 1) {
+        $error = "You assigned more than one content to this new seedlot name: $new_seedlot_name "
+    }
+
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
 =head2 Class method: get_content_id()
 
 =cut

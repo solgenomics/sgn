@@ -133,6 +133,7 @@ sub _validate_with_plugin {
 
     my %seen_seedlot_names;
     my %seen_new_seedlot_names;
+    my %check_new_seedlot_content;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $from_seedlot_name;
@@ -192,9 +193,12 @@ sub _validate_with_plugin {
             $seen_new_seedlot_names{$to_new_seedlot_name}++;
         }
 
-
         if (!defined($new_seedlot_box_name) || $new_seedlot_box_name eq '') {
             push @error_messages, "Cell G$row_name: new_seedlot_box_name missing";
+        }
+
+        if (defined $from_seedlot_name && defined $to_new_seedlot_name) {
+            $check_new_seedlot_content{$to_new_seedlot_name}{$from_seedlot_name}++;
         }
     }
 
@@ -225,8 +229,21 @@ sub _validate_with_plugin {
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@new_seedlots }
     });
+
     while (my $seedlot_r=$seedlot_rs->next){
-        push @error_messages, "Seedlot name already exists in database: ".$seedlot_r->uniquename;
+        push @error_messages, "New seedlot name already exists in database: ".$seedlot_r->uniquename;
+    }
+
+    foreach my $new_sl (keys %check_new_seedlot_content){
+        my @check_info = ();
+        my $stored_seedlots = $check_new_seedlot_content{$new_sl};
+        my $number_of_associated_seedlots = keys %{$stored_seedlots};
+        if ($number_of_associated_seedlots > 1) {
+            my $content_error = CXGN::Stock::Seedlot->verify_all_seedlots_compatibility($schema, [$new_sl, $check_new_seedlot_content{$new_sl}]);
+            if (exists($content_error->{error})){
+                push @error_messages, $content_error->{error};
+            }
+        }
     }
 
     if (scalar(@error_messages) >= 1) {
