@@ -1526,14 +1526,14 @@ jQuery(document).ready(function ($) {
             $("#FieldMap_westcott").hide();
         }
         else if (design_method == "MAD") {
-            if (stock_type == "accession") {
+           if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
                 $("#show_list_of_family_name_section").hide();
-                $("#show_list_of_checks_section").show();
+                $("#show_list_of_checks_section").hide();
                 $("#show_list_of_cross_checks_section").hide();
                 $("#show_list_of_family_name_checks_section").hide();
-                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
                 $("#crbd_show_list_of_cross_checks_section").hide();
                 $("#crbd_show_list_of_family_name_checks_section").hide();
                 $("#show_list_of_unrep_accession").hide();
@@ -1547,10 +1547,10 @@ jQuery(document).ready(function ($) {
                 $("#show_list_of_cross_section").show();
                 $("#show_list_of_family_name_section").hide();
                 $("#show_list_of_checks_section").hide();
-                $("#show_list_of_cross_checks_section").show();
+                $("#show_list_of_cross_checks_section").hide();
                 $("#show_list_of_family_name_checks_section").hide();
                 $("#crbd_show_list_of_checks_section").hide();
-                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
                 $("#crbd_show_list_of_family_name_checks_section").hide();
                 $("#show_list_of_unrep_accession").hide();
                 $("#show_list_of_rep_accession").hide();
@@ -1564,10 +1564,10 @@ jQuery(document).ready(function ($) {
                 $("#show_list_of_family_name_section").show();
                 $("#show_list_of_checks_section").hide();
                 $("#show_list_of_cross_checks_section").hide();
-                $("#show_list_of_family_name_checks_section").show();
+                $("#show_list_of_family_name_checks_section").hide();
                 $("#crbd_show_list_of_checks_section").hide();
                 $("#crbd_show_list_of_cross_checks_section").hide();
-                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
                 $("#show_list_of_unrep_accession").hide();
                 $("#show_list_of_rep_accession").hide();
                 $("#show_list_of_unrep_cross").hide();
@@ -1575,7 +1575,8 @@ jQuery(document).ready(function ($) {
                 $("#show_list_of_unrep_family_name").hide();
                 $("#show_list_of_rep_family_name").hide();
             }
-            $("#FieldMap").hide();
+            $("#field_map_row_aug").hide();
+            $("#FieldMap").show();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
             $("#show_no_of_row_in_design").hide();
@@ -1584,25 +1585,16 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_block_sequence").hide();
             $("#show_no_of_sub_block_sequence").hide();
             $("#rep_count_section").hide();
-            $("#row_number_section").show();
-            $("#block_number_section").hide();
+            $("#block_number_section").show();
             $("#block_size_section").hide();
-            $("#row_number_per_block_section").show();
-            $("#col_number_per_block_section").show();
-            $("#col_number_section").show();
             $("#max_block_size_section").hide();
-            $("#row_number_per_block_section").show();
-            $("#other_parameter_section").show();
+            $("#row_number_section").show();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").show();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
             $("#design_info").show();
-
-            $("#show_other_parameter_options").click(function () {
-                if ($('#show_other_parameter_options').is(':checked')) {
-                    $("#other_parameter_options").show();
-                }
-                else {
-                    $("#other_parameter_options").hide();
-                }
-            });
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();

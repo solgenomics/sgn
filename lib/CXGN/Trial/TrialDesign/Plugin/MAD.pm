@@ -4,13 +4,14 @@ package CXGN::Trial::TrialDesign::Plugin::MAD;
 use Moose::Role;
 
 sub create_design {
-      my $self = shift;
-    my %madiii_design;
+    my $self = shift;
+    my %madii_design;
 
     my $rbase = R::YapRI::Base->new();
 
     my @stock_list;
     my @control_list;
+    my $control_list;
     my $maximum_block_size;
     my $number_of_blocks;
 
@@ -35,6 +36,7 @@ sub create_design {
     my @col_numbers;
     my @block_row_numbers;
     my @block_col_numbers;
+    my $plot_layout_format;
 
 
   if ($self->has_stock_list()) {
@@ -43,74 +45,42 @@ sub create_design {
     die "No stock list specified\n";
   }
 
-  if ($self->has_control_list()) {
-    @control_list = @{$self->get_control_list()};
-    %control_names_lookup = map { $_ => 1 } @control_list;
+  if ($self->has_control_list_crbd()) {
+    @control_list = @{$self->get_control_list_crbd()};
+    $control_list = '"'.join('","',@{$self->get_control_list_crbd()}).'"';
+    %control_names_lookup = map { $_ => 1 } @{$self->get_control_list_crbd()};
     $self->_check_controls_and_accessions_lists;
   } else {
-    die "No list of control stocks specified.  Required for augmented design.\n";
+    die "The list of checks is missing.\n";
+    }
+
+
+  if ($self->has_number_of_blocks()) {
+      $number_of_blocks = $self->get_number_of_blocks();
+    } else {
+      die "Number of blocks not specified\n";
   }
 
-
-    if ($self->has_number_of_rows()) {
-    $number_of_rows = $self->get_number_of_rows();
+  if ($self->has_number_of_rows()) {
+      $number_of_rows = $self->get_number_of_rows();
     } else {
-    die "Number of rows not specified\n";
-    }
+      die "Number of rows not specified\n";
+  }
 
-    if ($self->has_block_row_numbers()) {
-    $number_of_rows_per_block = $self->get_block_row_numbers();
+  if ($self->has_number_of_cols()) {
+      $number_of_cols = $self->get_number_of_cols();
     } else {
-    die "Number of block row not specified\n";
-    }
+      die "Number of columns not specified\n";
+  }
 
-    if ($self->has_block_col_numbers()) {
-    $number_of_cols_per_block = $self->get_block_col_numbers();
-    } else {
-    die "Number of block col not specified\n";
-    }
+  if ($self->has_plot_layout_format()) {
+    $plot_layout_format = $self->get_plot_layout_format();
+  }
 
-    if ($self->has_number_of_cols()) {
-    $number_of_cols = $self->get_number_of_cols();
-    } else {
-    die "Number of blocks not specified\n";
-    }
+  
+  my $plot_start = $self->get_plot_start_number();
 
-    #system("R --slave --args $tempfile $tempfile_out < R/MADII_layout_function.R");
-#     system("R --slave < R/MADII_layout_function.R");
-
-
-#    if ($self->has_maximum_row_number()) {
-#    $maximum_row_number = $self->get_maximum_row_number();
-#    if ($maximum_block_size <= scalar(@control_list)) {
-#      die "Maximum block size must be greater the number of control stocks for augmented design\n";
-#    }
-#    if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
-#      die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
-#    }
-#    $number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
-#
-#  } else {
-#    die "No block size specified\n";
-#  }
-
-
-#  if ($self->has_maximum_block_size()) {
-#    $maximum_block_size = $self->get_maximum_block_size();
-#    if ($maximum_block_size <= scalar(@control_list)) {
-#      die "Maximum block size must be greater the number of control stocks for augmented design\n";
-#    }
-#    if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
-#      die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
-#    }
-#    $number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
-#  } else {
-#    die "No block size specified\n";
-#  }
-
-#=comment
-
-  print "@stock_list\n";
+  print "The number of treatments: ". scalar(@stock_list)."\nThe number of checks: ".scalar(@control_list)."\nThe number of blocks: ".$number_of_blocks."\nThe plot layout is: ".$plot_layout_format."\n";
 
 
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
@@ -135,88 +105,86 @@ sub create_design {
   $stock_data_matrix->send_rbase($rbase, 'r_block');
   $control_stock_data_matrix->send_rbase($rbase, 'r_block');
 
- #$r_block->add_command('library(agricolae)');
-
-  $r_block->add_command('library(MAD)');
+  $r_block->add_command('library(FielDHub)');
 
   $r_block->add_command('trt <- as.array(stock_data_matrix[1,])');
   $r_block->add_command('control_trt <- as.array(control_stock_data_matrix[1,])');
 
-#  $r_block->add_command('acc<-c(seq(1,330,1))');
-#  $r_block<-add_command('chk<-c(seq(1,4,1))');
-
-#  $r_block->add_command('trt <- acc');
-#  $r_block->add_command('control_trt <- chk');
-#  $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
-
-# $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
-
- # if ($self->has_randomization_seed()){
- #   $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
- #   $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
- # }
- # else {
- #   $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
- # }
-
- #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
-
+  $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
   $r_block->add_command('number_of_rows <- '.$number_of_rows);
   $r_block->add_command('number_of_cols <- '.$number_of_cols);
-  $r_block->add_command('number_of_rows_per_block <- '.$number_of_rows_per_block);
-  $r_block->add_command('number_of_cols_per_block <- '.$number_of_cols_per_block);
+  $r_block->add_command('plot_start <- '.$plot_start);
 
-  $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,nFieldRow=number_of_rows,nFieldCols=number_of_cols,nRowsPerBlk=number_of_rows_per_block, nColsPerBlk=number_of_cols_per_block)');
+  # Converting name to FielDHub package format
+  if ($plot_layout_format eq "serpentine") {
+    $r_block->add_command('plot_layout <-"serpentine"');
+  } else {
+    $r_block->add_command('plot_layout <- "cartesian"');
+  }
 
-
- # $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=9, num.cols=NULL, num.sec.chk=3)');
-
-  #$r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=9, num.cols=NULL, num.sec.chk=3)');
-
-# $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
-
-# $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
-
-  $r_block->add_command('augmented<-test.ma[[2]]'); #added for agricolae 1.1-8 changes in output
-  $r_block->add_command('augmented<-as.matrix(augmented)');
-
-#  $r_block<-add_command('colnames(augmented)[2]<-"plots"');
-#  $r_block<-add_command('colnames(augmented)[3]<-"trt"');
-#  $r_block<-add_command('colnames(augmented)[7]<-"block"');
-
+  $r_block->add_command('treatment_list <- data.frame(list(ENTRY = 1:length(append(control_trt, trt)), NAME = c(control_trt, trt)))');
+  $r_block->add_command('design.mad<-RCBD_augmented(lines = length(trt),
+                                                    checks = length(control_trt),
+                                                    b = number_of_blocks,
+                                                    plotNumber = plot_start, 
+                                                    l = 1,
+                                                    planter = plot_layout,
+                                                    nrows = number_of_rows,
+                                                    ncols = number_of_cols,
+                                                    data = treatment_list)');
+  $r_block->add_command('augmented<-design.mad$fieldBook[design.mad$fieldBook$PLOT != 0,]');
+  $r_block->add_command('augmented <- as.matrix(augmented)');
 
    my @commands = $r_block->read_commands();
    print STDERR join "\n", @commands;
    print STDERR "\n";
 
-
   $r_block->run_block();
-
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','augmented');
 
-  @plot_numbers = $result_matrix->get_column("Plot");
-  @row_numbers = $result_matrix->get_column("Row");
-  @col_numbers = $result_matrix->get_column("Col");
-  @block_row_numbers=$result_matrix->get_column("Row.Blk");
-  @block_col_numbers=$result_matrix->get_column("Col.Blk");
-  @block_numbers = $result_matrix->get_column("Blk");
-  @stock_names = $result_matrix->get_column("Entry");
-  @check_names=$result_matrix->get_column("Check");
+  @plot_numbers = $result_matrix->get_column("PLOT");
+  @row_numbers = $result_matrix->get_column("ROW");
+  @col_numbers = $result_matrix->get_column("COLUMN");
+  # @block_row_numbers=$result_matrix->get_column("Row.Blk");
+  # @block_col_numbers=$result_matrix->get_column("Col.Blk");
+  @block_numbers = $result_matrix->get_column("BLOCK");
+  @stock_names = $result_matrix->get_column("TREATMENT");
+  @check_names=$result_matrix->get_column("CHECKS");
 
-my $max = max( @block_numbers );
-#Row.Blk Col.Blk
+  # @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $number_of_blocks)};
 
+  # if ($plot_layout_format eq "serpentine") {
+  #   my @serpentine_plot_numbers = ();
+  #   my @plot_numbers_to_be_reversed = ();
 
-
-  @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max)};
+  #   for my $index (0 .. $#plot_numbers) {
+  #       if ($col_numbers[$index] %2 == 0) {
+  #           # save plot numbers from even numbered columns for reversal
+  #           push @plot_numbers_to_be_reversed, $plot_numbers[$index];
+  #       } else {
+  #           # use plot numbers from odd numbered as is
+  #           if ($row_numbers[$index] == 1) {
+  #               # if in first row of new odd column, push last even column reversal
+  #               @serpentine_plot_numbers = (@serpentine_plot_numbers, reverse @plot_numbers_to_be_reversed);
+  #               @plot_numbers_to_be_reversed = ();
+  #               push @serpentine_plot_numbers, $plot_numbers[$index];
+  #           } else {
+  #               push @serpentine_plot_numbers, $plot_numbers[$index];
+  #           }
+  #       }
+  #   }
+  #   @serpentine_plot_numbers = (@serpentine_plot_numbers, reverse @plot_numbers_to_be_reversed);
+  #   @plot_numbers = @serpentine_plot_numbers;
+  # }
 
   my %seedlot_hash;
   if($self->get_seedlot_hash){
       %seedlot_hash = %{$self->get_seedlot_hash};
   }
-  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
-    my %plot_info;
 
+  for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
+
+    my %plot_info;
     $plot_info{'row_number'} =$row_numbers[$i];
     $plot_info{'col_number'} =$col_numbers[$i];
     $plot_info{'check_name'} =$check_names[$i];
@@ -226,22 +194,19 @@ my $max = max( @block_numbers );
         $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     }
     $plot_info{'block_number'} = $block_numbers[$i];
-    $plot_info{'block_row_number'}=$block_row_numbers[$i];
-    $plot_info{'block_col_number'}=$block_col_numbers[$i];
-    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
-    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
-    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
+    # $plot_info{'rep_number'} = $block_numbers[$i];
+    # $plot_info{'block_row_number'}=$block_row_numbers[$i];
+    # $plot_info{'block_col_number'}=$block_col_numbers[$i];
+    $plot_info{'plot_name'} = $plot_numbers[$i];
+    $plot_info{'plot_number'} = $plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
-    $madiii_design{$converted_plot_numbers[$i]} = \%plot_info;
+    $madii_design{$plot_numbers[$i]} = \%plot_info;
   }
 
-  %madiii_design = %{$self->_build_plot_names(\%madiii_design)};
+  %madii_design = %{$self->_build_plot_names(\%madii_design)};
 
-#  return \%augmented_design;
-
- #call R code and create design data structure
-
- return \%madiii_design;
+ return \%madii_design;
 
 #=cut
 
