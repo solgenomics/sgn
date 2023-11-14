@@ -149,18 +149,49 @@ export function init() {
         }
 
         get_plot_order(type, order, start, include_borders, include_gaps) {
-            let q = new URLSearchParams({
-                'trial_ids': [this.trial_id, ...Object.keys(this.linked_trials).map((e) => this.linked_trials[e].id)].join(','),
-                'type': type,
-                'order': order,
-                'start': start,
-                'top_border': !!include_borders && !!this.meta_data.top_border_selection,
-                'right_border': !!include_borders && !!this.meta_data.right_border_selection,
-                'bottom_border': !!include_borders && !!this.meta_data.bottom_border_selection,
-                'left_border': !!include_borders && !!this.meta_data.left_border_selection,
-                'gaps': !!include_gaps
-            }).toString();
-            window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
+            (async () => {
+                jQuery('#working_modal').modal("show");
+                let q = new URLSearchParams({
+                    'trial_ids': [this.trial_id, ...Object.keys(this.linked_trials).map((e) => this.linked_trials[e].id)].join(','),
+                    'type': type,
+                    'order': order,
+                    'start': start,
+                    'top_border': !!include_borders && !!this.meta_data.top_border_selection,
+                    'right_border': !!include_borders && !!this.meta_data.right_border_selection,
+                    'bottom_border': !!include_borders && !!this.meta_data.bottom_border_selection,
+                    'left_border': !!include_borders && !!this.meta_data.left_border_selection,
+                    'gaps': !!include_gaps
+                }).toString();
+
+                try {
+                    const resp = await fetch(`/ajax/breeders/trial_plot_order?${q}`);
+                    const blob = await resp.blob();
+                    jQuery('#working_modal').modal("hide");
+
+                    // Parse JSON response and display error message, if provided
+                    if ( blob && blob.type === "application/json" ) {
+                        var reader = new FileReader();
+                        reader.onload = (e) => {
+                            const json = JSON.parse(e.target.result);
+                            alert(`ERROR: Could not download layout [${json.error || 'unknown error'}]`)
+                        };
+                        reader.readAsText(blob);
+                    }
+
+                    // Download blob as file
+                    else if ( blob && blob.type === 'text/csv' ) {
+                        var fileName = resp.headers["fileName"] || "layout.csv";
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = fileName;
+                        link.click();
+                    }
+                }
+                catch (err) {
+                    jQuery('#working_modal').modal("hide");
+                    alert(`ERROR: Could not download layout [${err}]`);
+                }
+            })();
         }
 
         set_meta_data() {
