@@ -1,0 +1,198 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+
+<div class="modal fade" id="upload_cip_cross_file_dialog" name="upload_cip_cross_file_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCipCrossFileDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCipCrossFileDialog">Upload CIP-Cross File </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'CIP-Cross Upload Information' &>
+                        <p>
+                            <a id="upload_cip_cross_file_spreadsheet_format_info">CIP-Cross Upload Information</a>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_cip_cross_form" name="upload_cip_cross_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Crossing Experiment: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" name="cip_cross_experiment_name" id="cip_cross_experiment_name" disabled value="<% $trial_name %>">
+                                <input name="cip_cross_experiment_id" id="cip_cross_experiment_id" type="hidden" value="<% $trial_id %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File (.xlsx): </label>
+                            <div class="col-sm-8">
+                                <input type="file" name="cip_cross_file" id="cip_cross_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_cip_cross_file_submit" id="upload_cip_cross_file_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_cip_cross_error_display" name="upload_cip_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCipCrossErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCipCrossErrorDialog">Upload CIP-Cross File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cip_cross_saved_dialog_message" name="cip_cross_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="cipCrossSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cipCrossSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The crossing data from CIP-Cross file were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_cip_cross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cip_cross_spreadsheet_info_dialog" name="cip_cross_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="cipCrossFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cipCrossFileInfoDialog">CIP-Cross Upload Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Cross Unique ID:</b> You can let database automatically generate cross unique IDs for you or you can set up your own cross unique IDs in the database before uploading Intercross file. For the auto-generated cross unique ID, cross unique ID is a combination of crossing experiment name and incremental suffix number.
+                    <br><br>
+                    <b>Intercross file is an CSV file (.csv).</b> Crosses in an intercross file must be in the same crossing experiment.
+                    <br><br>
+                    <b>Header:</b>
+                    <br>
+                    Please do not modify header of the Intercross file. The first row (header) must contain the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>crossDbId</td>
+                                <td>femaleObsUnitDbId</td>
+                                <td>maleObsUnitDbId</td>
+                                <td>timestamp</td>
+                                <td>person</td>
+                                <td>experiment</td>
+                                <td>type</td>
+                                <td>fruits</td>
+                                <td>flowers</td>
+                                <td>seeds</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Field Info:</b>
+                    <ul>
+                        <li>crossDbId (called transaction ID in the database. Transaction ID is a unique identifier for each activity)</li>
+                        <li>femaleObsUnitDbId (must exist as uniquename in the database, can be accession, plot or plant stock type.)</li>
+                        <li>maleObsUnitDbId (must exist as uniquename in the database, can be accession, plot or plant stock type.)</li>
+                        <li>person (operator name, the operator does not need to have database user account)</li>
+                        <li>experiment (called crossing experiment in the database. The crossing experiment must exist in the database.)</li>
+                        <li>type (cross type, Intercross supports biparental, self, open and polycross cross types)</li>
+                        <li>fruits (Number of Fruits)</li>
+                        <li>flowers (Number of Flowers)</li>
+                        <li>seeds (Number of Seeds)</li>
+                    </ul>
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_cip_cross_file_link').click(function(){
+        jQuery('#upload_cip_cross_file_dialog').modal("show");
+    });
+
+    jQuery('#upload_cip_cross_file_spreadsheet_format_info').click(function(){
+        jQuery("#cip_cross_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_cip_cross_file_submit").click(function(){
+        var uploadFile = jQuery("#cip_cross_file").val();
+
+        jQuery('#upload_cip_cross_form').attr("action", "/ajax/cross/upload_cip_cross_file");
+
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_cip_cross_form").submit();
+        jQuery("#upload_cip_cross_file_dialog").modal("hide");
+    });
+
+    jQuery('#upload_cip_cross_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_cip_cross_error_display tbody").html('');
+                jQuery("#upload_cip_cross_error_display tbody").append(response.error_string);
+                jQuery("#upload_cip_cross_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#cip_cross_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_cip_cross_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>
