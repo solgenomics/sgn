@@ -414,6 +414,35 @@ sub verify_vectors_fuzzy_options_POST : Args(0) {
 }
 
 
+sub get_new_vector_uniquename : Path('/ajax/get_new_vector_uniquename') : ActionClass('REST') { }
+
+sub get_new_vector_uniquename_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+
+    my $stocks = $schema->resultset("Stock::Stock")->search({
+        type_id => $stock_type_id,
+    });
+    
+    my $id;
+    my $max=0;
+    while (my $r = $stocks->next()) {
+        $id = $r->uniquename;
+        if ($id =~ m/T[0-9]+/){
+            $id =~ s/T//;
+            if($max < $id){
+                $max = $id;
+            }
+        } 
+    }
+    $max += 1;
+ 
+    $c->stash->{rest} = [ "T". $max];
+}
+
+
 sub _parse_list_from_json {
     my $c = shift;
     my $list_json = shift;
