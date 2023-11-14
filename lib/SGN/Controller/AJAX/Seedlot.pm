@@ -524,6 +524,11 @@ sub upload_seedlots_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to upload seedlots. Please contact us." };
+        $c->detach();
+    }
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $breeding_program_id = $c->req->param("upload_seedlot_breeding_program_id");
@@ -767,6 +772,11 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to upload seedlot inventory. Please contact us." };
+        $c->detach();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -1040,6 +1050,12 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
         $c->detach();
     }
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to add seedlot transaction. Please contact us." };
+        $c->detach();
+    }
+
     my $operator = $c->user->get_object->get_username;
     my $user_id = $c->user->get_object->get_sp_person_id;
 
@@ -1769,6 +1785,11 @@ sub upload_transactions_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to upload transactions. Please contact us." };
+        $c->detach();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
