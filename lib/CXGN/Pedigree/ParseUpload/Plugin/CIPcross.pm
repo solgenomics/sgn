@@ -57,6 +57,22 @@ sub _validate_with_plugin {
     my $inventory_id_head;
     my $female_accession_number_head;
     my $male_accession_number_head;
+    my $number_of_flowers_head;
+    my $crossing_date_head;
+    my $cross_user_head;
+    my $number_of_fruits_head;
+    my $fruit_harvest_date_head;
+    my $fruit_size_head;
+    my $harvest_user_head;
+    my $fruit_maceration_date_head;
+    my $maceration_user_head;
+    my $seed_with_spot_markers_head;
+    my $seed_without_spot_markers_head;
+    my $total_number_of_seeds_head;
+    my $seed_stock_head;
+    my $seed_count_date_head;
+    my $seed_count_user_head;
+
 
     if ($worksheet->get_cell(0,0)) {
         $inventory_id_head  = $worksheet->get_cell(0,0)->value();
@@ -71,6 +87,67 @@ sub _validate_with_plugin {
         $male_accession_number_head =~ s/^\s+|\s+$//g;
     }
 
+    if ($worksheet->get_cell(0,13)) {
+        $number_of_flowers_head  = $worksheet->get_cell(0,13)->value();
+        $number_of_flowers_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,14)) {
+        $crossing_date_head  = $worksheet->get_cell(0,14)->value();
+        $crossing_date_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,15)) {
+        $cross_user_head  = $worksheet->get_cell(0,15)->value();
+        $cross_user_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,16)) {
+        $number_of_fruits_head  = $worksheet->get_cell(0,16)->value();
+        $number_of_fruits_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,17)) {
+        $fruit_harvest_date_head  = $worksheet->get_cell(0,17)->value();
+        $fruit_harvest_date_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,18)) {
+        $fruit_size_head  = $worksheet->get_cell(0,18)->value();
+        $fruit_size_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,19)) {
+        $harvest_user_head  = $worksheet->get_cell(0,19)->value();
+        $harvest_user_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,20)) {
+        $fruit_maceration_date_head  = $worksheet->get_cell(0,20)->value();
+        $fruit_maceration_date_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,21)) {
+        $maceration_user_head  = $worksheet->get_cell(0,21)->value();
+        $maceration_user_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,39)) {
+        $seed_with_spot_markers_head  = $worksheet->get_cell(0,39)->value();
+        $seed_with_spot_markers_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,40)) {
+        $seed_without_spot_markers_head  = $worksheet->get_cell(0,40)->value();
+        $seed_without_spot_markers_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,41)) {
+        $total_number_of_seeds_head  = $worksheet->get_cell(0,41)->value();
+        $total_number_of_seeds_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,42)) {
+        $seed_stock_head  = $worksheet->get_cell(0,42)->value();
+        $seed_stock_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,43)) {
+        $seed_count_date_head  = $worksheet->get_cell(0,43)->value();
+        $seed_count_date_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,44)) {
+        $seed_count_user_head  = $worksheet->get_cell(0,44)->value();
+        $seed_count_user_head =~ s/^\s+|\s+$//g;
+    }
+
     if (!$inventory_id_head || $inventory_id_head ne 'Inventory ID' ) {
         push @error_messages, "Cell A1: Inventory ID is missing from the header";
     }
@@ -80,6 +157,52 @@ sub _validate_with_plugin {
     if (!$male_accession_number_head || $male_accession_number_head ne 'Male Accession Number') {
         push @error_messages, "Cell K1: Male Accession Number is missing from the header";
     }
+    if (!$number_of_flowers_head || $number_of_flowers_head ne 'Number of Flowers' ) {
+        push @error_messages, "Cell N1: Number of Flowers is missing from the header";
+    }
+    if (!$crossing_date_head || $crossing_date_head ne 'Crossing Date' ) {
+        push @error_messages, "Cell O1: Crossing Date is missing from the header";
+    }
+    if (!$cross_user_head || $cross_user_head ne 'Cross User' ) {
+        push @error_messages, "Cell P1: Cross User is missing from the header";
+    }
+    if (!$number_of_fruits_head || $number_of_fruits_head ne 'Number of Fruits' ) {
+        push @error_messages, "Cell Q1: Number of Fruits is missing from the header";
+    }
+    if (!$fruit_harvest_date_head || $fruit_harvest_date_head ne 'Fruit Harvest Date' ) {
+        push @error_messages, "Cell R1: Fruit Harvest Date is missing from the header";
+    }
+    if (!$fruit_size_head || $fruit_size_head ne 'Fruit Size' ) {
+        push @error_messages, "Cell S1: Fruit Size is missing from the header";
+    }
+    if (!$harvest_user_head || $harvest_user_head ne 'Harvest User' ) {
+        push @error_messages, "Cell T1: Harvest User is missing from the header";
+    }
+    if (!$fruit_maceration_date_head || $fruit_maceration_date_head ne 'Fruit Maceration Date' ) {
+        push @error_messages, "Cell U1: Fruit Maceration Date is missing from the header";
+    }
+    if (!$maceration_user_head || $maceration_user_head ne 'Maceration User' ) {
+        push @error_messages, "Cell V1: Maceration User is missing from the header";
+    }
+    if (!$seed_with_spot_markers_head || $seed_with_spot_markers_head ne 'Seed with Spot Markers' ) {
+        push @error_messages, "Cell AN1: Seed with Spot Markers is missing from the header";
+    }
+    if (!$seed_without_spot_markers_head || $seed_without_spot_markers_head ne 'Seed without Spot Markers' ) {
+        push @error_messages, "Cell AO1: Seed without Spot Markers is missing from the header";
+    }
+    if (!$total_number_of_seeds_head || $total_number_of_seeds_head ne 'Total Number of Seeds' ) {
+        push @error_messages, "Cell AP1: Total Number of Seeds is missing from the header";
+    }
+    if (!$seed_stock_head || $seed_stock_head ne 'Seed Stock' ) {
+        push @error_messages, "Cell AQ1: Seed Stock is missing from the header";
+    }
+    if (!$seed_count_date_head || $seed_count_date_head ne 'Seed Count Date' ) {
+        push @error_messages, "Cell AR1: Seed Count Date is missing from the header";
+    }
+    if (!$seed_count_user_head || $seed_count_user_head ne 'Seed Count User' ) {
+        push @error_messages, "Cell AS1: Seed Count User is missing from the header";
+    }
+
 
     my %seen_inventory_ids;
     my %seen_accession_names;
@@ -174,6 +297,7 @@ sub _parse_with_plugin {
     my $excel_obj;
     my $worksheet;
     my @pedigrees;
+    my %cross_info;
     my %parsed_result;
 
     $excel_obj = $parser->parse($filename);
@@ -189,6 +313,22 @@ sub _parse_with_plugin {
         my $inventory_id;
         my $female_accession_number;
         my $male_accession_number;
+        my $number_of_flowers;
+        my $crossing_date;
+        my $cross_user;
+        my $number_of_fruits;
+        my $fruit_harvest_date;
+        my $fruit_size;
+        my $harvest_user;
+        my $fruit_maceration_date;
+        my $maceration_user;
+        my $seed_with_spot_markers;
+        my $seed_without_spot_markers;
+        my $total_number_of_seeds;
+        my $seed_stock;
+        my $seed_count_date;
+        my $seed_count_user;
+
 
         if ($worksheet->get_cell($row,0)) {
             $inventory_id = $worksheet->get_cell($row,0)->value();
@@ -201,6 +341,81 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,10)) {
             $male_accession_number = $worksheet->get_cell($row,10)->value();
             $male_accession_number =~ s/^\s+|\s+$//g;
+        }
+        if ($worksheet->get_cell($row,13)) {
+            $number_of_flowers  = $worksheet->get_cell($row,13)->value();
+            $number_of_flowers =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'number_of_flowers'} = $number_of_flowers;
+        }
+        if ($worksheet->get_cell($row,14)) {
+            $crossing_date  = $worksheet->get_cell($row,14)->value();
+            $crossing_date =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'crossing_date'} = $crossing_date;
+        }
+        if ($worksheet->get_cell($row,15)) {
+            $cross_user  = $worksheet->get_cell($row,15)->value();
+            $cross_user =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'cross_user'} = $cross_user;
+        }
+        if ($worksheet->get_cell($row,16)) {
+            $number_of_fruits  = $worksheet->get_cell($row,16)->value();
+            $number_of_fruits =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'number_of_fruits'} = $number_of_fruits;
+        }
+        if ($worksheet->get_cell($row,17)) {
+            $fruit_harvest_date  = $worksheet->get_cell($row,17)->value();
+            $fruit_harvest_date =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'fruit_harvest_date'} = $fruit_harvest_date;
+        }
+        if ($worksheet->get_cell($row,18)) {
+            $fruit_size  = $worksheet->get_cell($row,18)->value();
+            $fruit_size =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'fruit_size'} = $fruit_size;
+        }
+        if ($worksheet->get_cell($row,19)) {
+            $harvest_user  = $worksheet->get_cell($row,19)->value();
+            $harvest_user =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'harvest_user'} = $harvest_user;
+        }
+        if ($worksheet->get_cell($row,20)) {
+            $fruit_maceration_date  = $worksheet->get_cell($row,20)->value();
+            $fruit_maceration_date =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'fruit_maceration_date'} = $fruit_maceration_date;
+        }
+        if ($worksheet->get_cell($row,21)) {
+            $maceration_user  = $worksheet->get_cell($row,21)->value();
+            $maceration_user =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'maceration_user'} = $maceration_user;
+        }
+        if ($worksheet->get_cell($row,39)) {
+            $seed_with_spot_markers  = $worksheet->get_cell($row,39)->value();
+            $seed_with_spot_markers =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'seed_with_spot_markers'} = $seed_with_spot_markers;
+        }
+        if ($worksheet->get_cell($row,40)) {
+            $seed_without_spot_markers  = $worksheet->get_cell($row,40)->value();
+            $seed_without_spot_markers =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'seed_without_spot_markers'} = $seed_without_spot_markers;
+        }
+        if ($worksheet->get_cell($row,41)) {
+            $total_number_of_seeds  = $worksheet->get_cell($row,41)->value();
+            $total_number_of_seeds =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'total_number_of_seeds'} = $total_number_of_seeds;
+        }
+        if ($worksheet->get_cell($row,42)) {
+            $seed_stock  = $worksheet->get_cell($row,42)->value();
+            $seed_stock =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'seed_stock'} = $seed_stock;
+        }
+        if ($worksheet->get_cell($row,43)) {
+            $seed_count_date  = $worksheet->get_cell($row,43)->value();
+            $seed_count_date =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'seed_count_date'} = $seed_count_date;
+        }
+        if ($worksheet->get_cell($row,44)) {
+            $seed_count_user  = $worksheet->get_cell($row,44)->value();
+            $seed_count_user =~ s/^\s+|\s+$//g;
+            $cross_info{$inventory_id}{'seed_count_user'} = $seed_count_user;
         }
 
         my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$inventory_id, cross_type=>'biparental');
@@ -218,6 +433,7 @@ sub _parse_with_plugin {
     }
 
     $parsed_result{'crosses'} = \@pedigrees;
+    $parsed_result{'cross_info'} = \%cross_info
 
     $self->_set_parsed_data(\%parsed_result);
 
