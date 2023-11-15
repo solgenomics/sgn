@@ -524,8 +524,8 @@ sub upload_seedlots_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to upload seedlots. Please contact us." };
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlots'};
         $c->detach();
     }
 
@@ -774,8 +774,8 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to upload seedlot inventory. Please contact us." };
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot inventory'};
         $c->detach();
     }
 
@@ -1052,7 +1052,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     }
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to add seedlot transaction. Please contact us." };
+        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transaction' };
         $c->detach();
     }
 
@@ -1787,8 +1787,8 @@ sub upload_transactions_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to upload transactions. Please contact us." };
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot transactions'};
         $c->detach();
     }
 
