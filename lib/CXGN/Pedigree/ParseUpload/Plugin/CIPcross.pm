@@ -55,6 +55,10 @@ sub _validate_with_plugin {
     }
 
     my $inventory_id_head;
+    my $crop_module_id_head;
+    my $type_of_breeding_head;
+    my $template_file_id_head;
+    my $crossing_plan_id_head;
     my $female_order_head;
     my $female_accession_number_head;
     my $female_code_breeder_head;
@@ -72,6 +76,18 @@ sub _validate_with_plugin {
     my $harvest_user_head;
     my $fruit_maceration_date_head;
     my $maceration_user_head;
+    my $population_head;
+    my $type_of_pollination_head;
+    my $genetic_designs_head;
+    my $crossing_location_head;
+    my $plan_number_head;
+    my $plan_name_head;
+    my $cip_region_crossing_head;
+    my $country_crossing_head;
+    my $adm_1_crossing_head;
+    my $adm_2_crossing_head;
+    my $adm_3_crossing_head;
+    my $adm_4_crossing_head;
     my $seed_with_spot_markers_head;
     my $seed_without_spot_markers_head;
     my $total_number_of_seeds_head;
@@ -83,6 +99,22 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell(0,0)) {
         $inventory_id_head  = $worksheet->get_cell(0,0)->value();
         $inventory_id_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,1)) {
+        $crop_module_id_head  = $worksheet->get_cell(0,1)->value();
+        $crop_module_id_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,2)) {
+        $type_of_breeding_head  = $worksheet->get_cell(0,2)->value();
+        $type_of_breeding_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,3)) {
+        $template_file_id_head  = $worksheet->get_cell(0,3)->value();
+        $template_file_id_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,4)) {
+        $crossing_plan_id_head  = $worksheet->get_cell(0,4)->value();
+        $crossing_plan_id_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,5)) {
         $female_order_head  = $worksheet->get_cell(0,5)->value();
@@ -152,6 +184,54 @@ sub _validate_with_plugin {
         $maceration_user_head  = $worksheet->get_cell(0,21)->value();
         $maceration_user_head =~ s/^\s+|\s+$//g;
     }
+    if ($worksheet->get_cell(0,22)) {
+        $population_head  = $worksheet->get_cell(0,22)->value();
+        $population_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,23)) {
+        $type_of_pollination_head  = $worksheet->get_cell(0,23)->value();
+        $type_of_pollination_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,24)) {
+        $genetic_designs_head  = $worksheet->get_cell(0,24)->value();
+        $genetic_designs_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,25)) {
+        $crossing_location_head  = $worksheet->get_cell(0,25)->value();
+        $crossing_location_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,26)) {
+        $plan_number_head  = $worksheet->get_cell(0,26)->value();
+        $plan_number_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,27)) {
+        $plan_name_head  = $worksheet->get_cell(0,27)->value();
+        $plan_name_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,28)) {
+        $cip_region_crossing_head  = $worksheet->get_cell(0,28)->value();
+        $cip_region_crossing_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,29)) {
+        $country_crossing_head  = $worksheet->get_cell(0,29)->value();
+        $country_crossing_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,30)) {
+        $adm_1_crossing_head  = $worksheet->get_cell(0,30)->value();
+        $adm_1_crossing_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,31)) {
+        $adm_2_crossing_head  = $worksheet->get_cell(0,31)->value();
+        $adm_2_crossing_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,32)) {
+        $adm_3_crossing_head  = $worksheet->get_cell(0,32)->value();
+        $adm_3_crossing_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,33)) {
+        $adm_4_crossing_head  = $worksheet->get_cell(0,33)->value();
+        $adm_4_crossing_head =~ s/^\s+|\s+$//g;
+    }
     if ($worksheet->get_cell(0,39)) {
         $seed_with_spot_markers_head  = $worksheet->get_cell(0,39)->value();
         $seed_with_spot_markers_head =~ s/^\s+|\s+$//g;
@@ -179,6 +259,18 @@ sub _validate_with_plugin {
 
     if (!$inventory_id_head || $inventory_id_head ne 'Inventory ID' ) {
         push @error_messages, "Cell A1: Inventory ID is missing from the header";
+    }
+    if (!$crop_module_id_head || $crop_module_id_head ne 'Crop Module ID' ) {
+        push @error_messages, "Cell B1: Crop Module ID is missing from the header";
+    }
+    if (!$type_of_breeding_head || $type_of_breeding_head ne 'Type of Breeding' ) {
+        push @error_messages, "Cell C1: Type of Breeding is missing from the header";
+    }
+    if (!$template_file_id_head || $template_file_id_head ne 'Template File ID' ) {
+        push @error_messages, "Cell D1: Template File ID is missing from the header";
+    }
+    if (!$crossing_plan_id_head || $crossing_plan_id_head ne 'Crossing Plan ID' ) {
+        push @error_messages, "Cell E1: Crossing Plan ID is missing from the header";
     }
     if (!$female_order_head || $female_order_head ne 'Female Order' ) {
         push @error_messages, "Cell F1: Female Order is missing from the header";
@@ -230,6 +322,42 @@ sub _validate_with_plugin {
     }
     if (!$maceration_user_head || $maceration_user_head ne 'Maceration User' ) {
         push @error_messages, "Cell V1: Maceration User is missing from the header";
+    }
+    if (!$population_head || $population_head ne 'Population' ) {
+        push @error_messages, "Cell W1: Population is missing from the header";
+    }
+    if (!$type_of_pollination_head || $type_of_pollination_head ne 'Type of Pollination' ) {
+        push @error_messages, "Cell X1: Type of Pollination is missing from the header";
+    }
+    if (!$genetic_designs_head || $genetic_designs_head ne 'Genetic Designs' ) {
+        push @error_messages, "Cell Y1: Genetic Designs is missing from the header";
+    }
+    if (!$crossing_location_head || $crossing_location_head ne 'Crossing Location' ) {
+        push @error_messages, "Cell Z1: Crossing Location is missing from the header";
+    }
+    if (!$plan_number_head || $plan_number_head ne 'Plan Number' ) {
+        push @error_messages, "Cell AA1: Plan Number is missing from the header";
+    }
+    if (!$plan_name_head || $plan_name_head ne 'Plan Name' ) {
+        push @error_messages, "Cell AB1: Plan Name is missing from the header";
+    }
+    if (!$cip_region_crossing_head || $cip_region_crossing_head ne 'CIP Region Crossing' ) {
+        push @error_messages, "Cell AC1: CIP Region Crossing is missing from the header";
+    }
+    if (!$country_crossing_head || $country_crossing_head ne 'Country Crossing' ) {
+        push @error_messages, "Cell AD1: Country Crossing is missing from the header";
+    }
+    if (!$adm_1_crossing_head || $adm_1_crossing_head ne 'Adm 1 Crossing' ) {
+        push @error_messages, "Cell AE1: Adm 1 Crossing is missing from the header";
+    }
+    if (!$adm_2_crossing_head || $adm_2_crossing_head ne 'Adm 2 Crossing' ) {
+        push @error_messages, "Cell AF1: Adm 2 Crossing is missing from the header";
+    }
+    if (!$adm_3_crossing_head || $adm_3_crossing_head ne 'Adm 3 Crossing' ) {
+        push @error_messages, "Cell AG1: Adm 3 Crossing is missing from the header";
+    }
+    if (!$adm_4_crossing_head || $adm_4_crossing_head ne 'Adm 4 Crossing' ) {
+        push @error_messages, "Cell AH1: Adm 4 Crossing is missing from the header";
     }
     if (!$seed_with_spot_markers_head || $seed_with_spot_markers_head ne 'Seed with Spot Markers' ) {
         push @error_messages, "Cell AN1: Seed with Spot Markers is missing from the header";
@@ -347,6 +475,7 @@ sub _parse_with_plugin {
     my %male_info;
     my @pedigrees;
     my %cross_info;
+    my %project_info;
     my %parsed_result;
 
     $excel_obj = $parser->parse($filename);
@@ -360,6 +489,10 @@ sub _parse_with_plugin {
 
     for my $row ( 1 .. $row_max ) {
         my $inventory_id;
+        my $crop_module_id;
+        my $type_of_breeding;
+        my $template_file_id;
+        my $crossing_plan_id;
         my $female_order;
         my $female_accession_number;
         my $female_code_breeder;
@@ -377,6 +510,18 @@ sub _parse_with_plugin {
         my $harvest_user;
         my $fruit_maceration_date;
         my $maceration_user;
+        my $population;
+        my $type_of_pollination;
+        my $genetic_designs;
+        my $crossing_location;
+        my $plan_number;
+        my $plan_name;
+        my $cip_region_crossing;
+        my $country_crossing;
+        my $adm_1_crossing;
+        my $adm_2_crossing;
+        my $adm_3_crossing;
+        my $adm_4_crossing;
         my $seed_with_spot_markers;
         my $seed_without_spot_markers;
         my $total_number_of_seeds;
@@ -388,6 +533,26 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,0)) {
             $inventory_id = $worksheet->get_cell($row,0)->value();
             $inventory_id =~ s/^\s+|\s+$//g;
+        }
+        if ($worksheet->get_cell($row,1)) {
+            $crop_module_id = $worksheet->get_cell($row,1)->value();
+            $crop_module_id =~ s/^\s+|\s+$//g;
+            $project_info{'crop_module_id'}{$crop_module_id}++;
+        }
+        if ($worksheet->get_cell($row,2)) {
+            $type_of_breeding = $worksheet->get_cell($row,2)->value();
+            $type_of_breeding =~ s/^\s+|\s+$//g;
+            $project_info{'$type_of_breeding'}{$type_of_breeding}++;
+        }
+        if ($worksheet->get_cell($row,3)) {
+            $template_file_id = $worksheet->get_cell($row,3)->value();
+            $template_file_id =~ s/^\s+|\s+$//g;
+            $project_info{'template_file_id'}{$template_file_id}++;
+        }
+        if ($worksheet->get_cell($row,4)) {
+            $crossing_plan_id = $worksheet->get_cell($row,4)->value();
+            $crossing_plan_id =~ s/^\s+|\s+$//g;
+            $project_info{'crossing_plan_id'}{$crossing_plan_id}++;
         }
         if ($worksheet->get_cell($row,5)) {
             $female_order = $worksheet->get_cell($row,5)->value();
@@ -472,6 +637,66 @@ sub _parse_with_plugin {
             $maceration_user =~ s/^\s+|\s+$//g;
             $cross_info{$inventory_id}{'maceration_user'} = $maceration_user;
         }
+        if ($worksheet->get_cell($row,22)) {
+            $population = $worksheet->get_cell($row,22)->value();
+            $population =~ s/^\s+|\s+$//g;
+            $project_info{'population'}{$population}++;
+        }
+        if ($worksheet->get_cell($row,23)) {
+            $type_of_pollination = $worksheet->get_cell($row,23)->value();
+            $type_of_pollination =~ s/^\s+|\s+$//g;
+            $project_info{'type_of_pollination'}{$type_of_pollination}++;
+        }
+        if ($worksheet->get_cell($row,24)) {
+            $genetic_designs = $worksheet->get_cell($row,24)->value();
+            $genetic_designs =~ s/^\s+|\s+$//g;
+            $project_info{'genetic_designs'}{$genetic_designs}++;
+        }
+        if ($worksheet->get_cell($row,25)) {
+            $crossing_location = $worksheet->get_cell($row,25)->value();
+            $crossing_location =~ s/^\s+|\s+$//g;
+            $project_info{'crossing_location'}{$crossing_location}++;
+        }
+        if ($worksheet->get_cell($row,26)) {
+            $plan_number = $worksheet->get_cell($row,26)->value();
+            $plan_number =~ s/^\s+|\s+$//g;
+            $project_info{'plan_number'}{$plan_number}++;
+        }
+        if ($worksheet->get_cell($row,27)) {
+            $plan_name = $worksheet->get_cell($row,27)->value();
+            $plan_name =~ s/^\s+|\s+$//g;
+            $project_info{'plan_name'}{$plan_name}++;
+        }
+        if ($worksheet->get_cell($row,28)) {
+            $cip_region_crossing = $worksheet->get_cell($row,28)->value();
+            $cip_region_crossing =~ s/^\s+|\s+$//g;
+            $project_info{'cip_region_crossing'}{$cip_region_crossing}++;
+        }
+        if ($worksheet->get_cell($row,29)) {
+            $country_crossing = $worksheet->get_cell($row,29)->value();
+            $country_crossing =~ s/^\s+|\s+$//g;
+            $project_info{'country_crossing'}{$country_crossing}++;
+        }
+        if ($worksheet->get_cell($row,30)) {
+            $adm_1_crossing = $worksheet->get_cell($row,30)->value();
+            $adm_1_crossing =~ s/^\s+|\s+$//g;
+            $project_info{'adm_1_crossing'}{$adm_1_crossing}++;
+        }
+        if ($worksheet->get_cell($row,31)) {
+            $adm_2_crossing = $worksheet->get_cell($row,31)->value();
+            $adm_2_crossing =~ s/^\s+|\s+$//g;
+            $project_info{'adm_2_crossing'}{$adm_2_crossing}++;
+        }
+        if ($worksheet->get_cell($row,32)) {
+            $adm_3_crossing = $worksheet->get_cell($row,32)->value();
+            $adm_3_crossing =~ s/^\s+|\s+$//g;
+            $project_info{'adm_3_crossing'}{$adm_3_crossing}++;
+        }
+        if ($worksheet->get_cell($row,33)) {
+            $adm_4_crossing = $worksheet->get_cell($row,33)->value();
+            $adm_4_crossing =~ s/^\s+|\s+$//g;
+            $project_info{'adm_4_crossing'}{$adm_4_crossing}++;
+        }
         if ($worksheet->get_cell($row,39)) {
             $seed_with_spot_markers  = $worksheet->get_cell($row,39)->value();
             $seed_with_spot_markers =~ s/^\s+|\s+$//g;
@@ -517,6 +742,7 @@ sub _parse_with_plugin {
 
     }
 
+    $parsed_result{'project_info'} = \%project_info;
     $parsed_result{'female_info'} = \%female_info;
     $parsed_result{'male_info'} = \%male_info;
     $parsed_result{'crosses'} = \@pedigrees;
