@@ -55,8 +55,14 @@ sub _validate_with_plugin {
     }
 
     my $inventory_id_head;
+    my $female_order_head;
     my $female_accession_number_head;
+    my $female_code_breeder_head;
+    my $female_attributes_head;
+    my $male_order_head;
     my $male_accession_number_head;
+    my $male_code_breeder_head;
+    my $male_attributes_head;
     my $number_of_flowers_head;
     my $crossing_date_head;
     my $cross_user_head;
@@ -78,15 +84,38 @@ sub _validate_with_plugin {
         $inventory_id_head  = $worksheet->get_cell(0,0)->value();
         $inventory_id_head =~ s/^\s+|\s+$//g;
     }
+    if ($worksheet->get_cell(0,5)) {
+        $female_order_head  = $worksheet->get_cell(0,5)->value();
+        $female_order_head =~ s/^\s+|\s+$//g;
+    }
     if ($worksheet->get_cell(0,6)) {
         $female_accession_number_head  = $worksheet->get_cell(0,6)->value();
         $female_accession_number_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,7)) {
+        $female_code_breeder_head  = $worksheet->get_cell(0,7)->value();
+        $female_code_breeder_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,8)) {
+        $female_attributes_head  = $worksheet->get_cell(0,8)->value();
+        $female_attributes_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,9)) {
+        $male_order_head  = $worksheet->get_cell(0,9)->value();
+        $male_order_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,10)) {
         $male_accession_number_head  = $worksheet->get_cell(0,10)->value();
         $male_accession_number_head =~ s/^\s+|\s+$//g;
     }
-
+    if ($worksheet->get_cell(0,11)) {
+        $male_code_breeder_head  = $worksheet->get_cell(0,11)->value();
+        $male_code_breeder_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,12)) {
+        $male_attributes_head  = $worksheet->get_cell(0,12)->value();
+        $male_attributes_head =~ s/^\s+|\s+$//g;
+    }
     if ($worksheet->get_cell(0,13)) {
         $number_of_flowers_head  = $worksheet->get_cell(0,13)->value();
         $number_of_flowers_head =~ s/^\s+|\s+$//g;
@@ -151,11 +180,29 @@ sub _validate_with_plugin {
     if (!$inventory_id_head || $inventory_id_head ne 'Inventory ID' ) {
         push @error_messages, "Cell A1: Inventory ID is missing from the header";
     }
+    if (!$female_order_head || $female_order_head ne 'Female Order' ) {
+        push @error_messages, "Cell F1: Female Order is missing from the header";
+    }
     if (!$female_accession_number_head || $female_accession_number_head ne 'Female Accession Number') {
         push @error_messages, "Cell G1: Female Accession Number is missing from the header";
     }
+    if (!$female_code_breeder_head || $female_code_breeder_head ne 'Female Code Breeder' ) {
+        push @error_messages, "Cell H1: Female Code Breeder is missing from the header";
+    }
+    if (!$female_attributes_head || $female_attributes_head ne 'Female Attributes' ) {
+        push @error_messages, "Cell I1: Female Attributes is missing from the header";
+    }
+    if (!$male_order_head || $male_order_head ne 'Male Order' ) {
+        push @error_messages, "Cell J1: Male Order is missing from the header";
+    }
     if (!$male_accession_number_head || $male_accession_number_head ne 'Male Accession Number') {
         push @error_messages, "Cell K1: Male Accession Number is missing from the header";
+    }
+    if (!$male_code_breeder_head || $male_code_breeder_head ne 'Male Code Breeder' ) {
+        push @error_messages, "Cell L1: Male Code Breeder is missing from the header";
+    }
+    if (!$male_attributes_head || $male_attributed_head ne 'Male Attributes' ) {
+        push @error_messages, "Cell M1: Male Attributes is missing from the header";
     }
     if (!$number_of_flowers_head || $number_of_flowers_head ne 'Number of Flowers' ) {
         push @error_messages, "Cell N1: Number of Flowers is missing from the header";
@@ -296,6 +343,8 @@ sub _parse_with_plugin {
 
     my $excel_obj;
     my $worksheet;
+    my %female_info;
+    my %male_info;
     my @pedigrees;
     my %cross_info;
     my %parsed_result;
@@ -311,8 +360,14 @@ sub _parse_with_plugin {
 
     for my $row ( 1 .. $row_max ) {
         my $inventory_id;
+        my $female_order;
         my $female_accession_number;
+        my $female_code_breeder;
+        my $female_attributes;
+        my $male_order;
         my $male_accession_number;
+        my $male_code_breeder;
+        my $male_attributes;
         my $number_of_flowers;
         my $crossing_date;
         my $cross_user;
@@ -334,13 +389,43 @@ sub _parse_with_plugin {
             $inventory_id = $worksheet->get_cell($row,0)->value();
             $inventory_id =~ s/^\s+|\s+$//g;
         }
+        if ($worksheet->get_cell($row,5)) {
+            $female_order = $worksheet->get_cell($row,5)->value();
+            $female_order =~ s/^\s+|\s+$//g;
+        }
         if ($worksheet->get_cell($row,6)) {
             $female_accession_number =  $worksheet->get_cell($row,6)->value();
             $female_accession_number =~ s/^\s+|\s+$//g;
+            $female_info{$female_accession_number}{'female_order'}{$female_order}++;
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $female_code_breeder = $worksheet->get_cell($row,7)->value();
+            $female_code_breeder =~ s/^\s+|\s+$//g;
+            $female_info{$female_accession_number}{'female_code_breeder'}{$female_code_breeder}++;
+        }
+        if ($worksheet->get_cell($row,8)) {
+            $female_attributes = $worksheet->get_cell($row,8)->value();
+            $female_attributes =~ s/^\s+|\s+$//g;
+            $female_info{$female_accession_number}{'female_attributes'}{$female_attributes}++;
+        }
+        if ($worksheet->get_cell($row,9)) {
+            $male_order = $worksheet->get_cell($row,9)->value();
+            $male_order =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,10)) {
             $male_accession_number = $worksheet->get_cell($row,10)->value();
             $male_accession_number =~ s/^\s+|\s+$//g;
+            $male_info{$male_accession_number}{'male_order'}{$male_order}++;
+        }
+        if ($worksheet->get_cell($row,11)) {
+            $male_code_breeder = $worksheet->get_cell($row,11)->value();
+            $male_code_breeder =~ s/^\s+|\s+$//g;
+            $male_info{$male_accession_number}{'male_code_breeder'}{$male_code_breeder}++;
+        }
+        if ($worksheet->get_cell($row,12)) {
+            $male_attributes = $worksheet->get_cell($row,12)->value();
+            $male_attributes =~ s/^\s+|\s+$//g;
+            $male_info{$male_accession_number}{'male_attributes'}{$male_attributes}++;
         }
         if ($worksheet->get_cell($row,13)) {
             $number_of_flowers  = $worksheet->get_cell($row,13)->value();
@@ -432,6 +517,8 @@ sub _parse_with_plugin {
 
     }
 
+    $parsed_result{'female_info'} = \%female_info;
+    $parsed_result{'male_info'} = \%male_info;
     $parsed_result{'crosses'} = \@pedigrees;
     $parsed_result{'cross_info'} = \%cross_info
 
