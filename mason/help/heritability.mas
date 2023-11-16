@@ -1,0 +1,9 @@
+<& /page/page_title.mas, title => "Heritability Help" &>
+
+<h4>Input options</h4>
+
+<p>Heritability is a tool that utilizes a dataset to run an R script in the backend. The dataset should include trials and traits. To begin the analysis, users must first select the dataset they wish to analyze. Traits can be filtered using the 'outliers' tool. The R package 'lmerTest' will adapt to your dataset. For instance, if the dataset includes different years and locations, those factors will be considered as interactions with genotypes.</p>
+
+<h4>Results</h4>
+
+<p>Results are summarized in a downloadable table in CSV format.</p>

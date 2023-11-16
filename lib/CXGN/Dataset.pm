@@ -279,10 +279,54 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
+=head2 outliers()
+
+=cut
+
+has 'outliers' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'rw',
+    predicate => 'has_outliers',
+    default => sub { [] },
+);
+
+=head2 outlier_cutoff()
+
+=cut
+
+has 'outlier_cutoffs' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'rw',
+    predicate => 'has_outlier_cutoffs',
+    default => sub { [] },
+);
+
+=head2 exclude_dataset_outliers()
+
+=cut
+
+has 'exclude_dataset_outliers' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
+=head2 include_phenotype_primary_key()
+
+=cut
+
+has 'include_phenotype_primary_key' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
 sub BUILD {
     my $self = shift;
+    my $args = shift;
+
 
     my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
     $self->breeder_search($bs);
@@ -302,17 +346,18 @@ sub BUILD {
         $self->trials($dataset->{categories}->{trials});
         $self->traits($dataset->{categories}->{traits});
         $self->years($dataset->{categories}->{years});
-        $self->locations($dataset->{categories}->{locations});
         $self->breeding_programs($dataset->{categories}->{breeding_programs});
         $self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
+        $self->locations($dataset->{categories}->{locations});
         $self->trial_designs($dataset->{categories}->{trial_designs});
         $self->trial_types($dataset->{categories}->{trial_types});
         $self->category_order($dataset->{category_order});
         $self->is_live($dataset->{is_live});
-        $self->is_public($dataset->{is_public});
+        $self->is_public($dataset->{is_public}); 
+        if ($args->{outliers}) { $self->outliers($args->{outliers})} else { $self->outliers($dataset->{outliers}); }
+        if ($args->{outlier_cutoffs}) { $self->outlier_cutoffs } else {($dataset->{outlier_cutoffs}); };
     }
     else { print STDERR "Creating empty dataset object\n"; }
-
 }
 
 
@@ -462,15 +507,13 @@ sub exists_dataset_name {
 sub to_hashref {
     my $self = shift;
 
-    my $dataref = $self->get_dataset_data();
-
-    my $json = JSON::Any->encode($dataref);
+    my $dataset = $self->get_dataset_data();
 
     my $data = {
         name => $self->name(),
         description => $self->description(),
         sp_person_id => $self->sp_person_id(),
-        dataset => $json,
+        dataset => $dataset,
     };
 
     return $data;
@@ -485,25 +528,30 @@ sub store {
 
     #print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {
-	#print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
-	$self->sp_dataset_id($row->sp_dataset_id());
-	return $row->sp_dataset_id();
+        #print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
+        my $row = $self->people_schema()->resultset("SpDataset")->create({
+            name => $self->name(),
+            description => $self->description(),
+            sp_person_id => $self->sp_person_id(),
+            dataset => JSON::Any->encode($self->get_dataset_data()),
+        });
+        $self->sp_dataset_id($row->sp_dataset_id());
+        return $row->sp_dataset_id();
     }
     else {
-	#print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
-	if ($row) {
-	    $row->name($self->name());
-	    $row->description($self->description());
-	    $row->dataset(JSON::Any->encode($self->to_hashref()));
-	    $row->sp_person_id($self->sp_person_id());
-	    $row->update();
-	    return $row->sp_dataset_id();
-	}
-	else {
-	    print STDERR "Weird... has ".$self->sp_dataset_id()." but no data in db\n";
-	}
+        #print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
+        my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+        if ($row) {
+            $row->name($self->name());
+            $row->description($self->description());
+            $row->dataset(JSON::Any->encode($self->to_hashref()->{dataset}));
+            $row->sp_person_id($self->sp_person_id());
+            $row->update();
+            return $row->sp_dataset_id();
+	    }
+        else {
+            print STDERR "Weird... has ".$self->sp_dataset_id()." but no data in db\n";
+        }
     }
 }
 
@@ -522,6 +570,8 @@ sub get_dataset_data {
     $dataref->{categories}->{trial_types} = $self->trial_types() if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{categories}->{locations} = $self->locations() if $self->locations && scalar(@{$self->locations})>0;
     $dataref->{category_order} = $self->category_order();
+    $dataref->{outliers} = $self->outliers() if $self->outliers;
+    $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
     return $dataref;
 }
 
@@ -574,10 +624,15 @@ sub retrieve_genotypes {
     # print STDERR "CXGN::Dataset retrieve_genotypes\n";
 
     my $accessions = $self->retrieve_accessions();
+
+    #print STDERR "ACCESSIONS: ".Dumper($accessions);
+
     my @accession_ids;
     foreach (@$accessions) {
         push @accession_ids, $_->[0];
     }
+
+    #print STDERR "ACCESSION IDS: ".Dumper(\@accession_ids);
 
     my $trials = $self->retrieve_trials();
     my @trial_ids;
@@ -641,6 +696,8 @@ sub retrieve_phenotypes {
         push @trait_ids, $_->[0];
     }
 
+    my $dataset_exluded_outliers = $self->exclude_dataset_outliers() ? $self->outliers() : undef;
+
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         search_type=>'MaterializedViewTable',
         bcs_schema=>$self->schema(),
@@ -648,7 +705,9 @@ sub retrieve_phenotypes {
         trait_list=>\@trait_ids,
         trial_list=>\@trial_ids,
         accession_list=>\@accession_ids,
-        exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
+        exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+        include_phenotype_primary_key=>$self->include_phenotype_primary_key,
+        dataset_exluded_outliers=>$dataset_exluded_outliers
     );
     my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
@@ -662,18 +721,6 @@ retrieves phenotypes as a hashref representation
 
 sub retrieve_phenotypes_ref {
     my $self = shift;
-
-    my $plots = $self->retrieve_plots();
-    my @plot_ids;
-    foreach (@$plots) {
-        push @plot_ids, $_->[0];
-    }
-
-    my $plants = $self->retrieve_plants();
-    my @plant_ids;
-    foreach (@$plants) {
-        push @plant_ids, $_->[0];
-    }
 
     my $accessions = $self->retrieve_accessions();
     my @accession_ids;
@@ -700,8 +747,6 @@ sub retrieve_phenotypes_ref {
             data_level=>$self->data_level(),
             trait_list=>\@trait_ids,
             trial_list=>\@trial_ids,
-            plot_list=>\@plot_ids,
-            plant_list=>\@plant_ids,
             accession_list=>\@accession_ids,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
         }
@@ -727,6 +772,7 @@ sub retrieve_high_dimensional_phenotypes {
     if (!$nd_protocol_id) {
         die "Must provide the protocol id!\n";
     }
+
     if (!$high_dimensional_phenotype_type) {
         die "Must provide the high dimensional phenotype type!\n";
     }
@@ -759,6 +805,7 @@ sub retrieve_high_dimensional_phenotypes {
         plot_list=>\@plot_ids,
         plant_list=>\@plant_ids,
     });
+
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata, $identifier_names);
@@ -1127,7 +1174,6 @@ sub retrieve_trial_types {
     }
     return \@trial_types;
 }
-
 
 sub get_dataset_definition  {
     my $self = shift;

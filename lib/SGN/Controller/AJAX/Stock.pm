@@ -2212,6 +2212,135 @@ sub get_accessions_missing_pedigree_GET {
 }
 
 
+sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_additional_file') Args(0) {
+
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $upload = $c->req->upload('accession_upload_additional_file');
+    my $subdirectory = "accession_additional_file_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $md5checksum = $md5->hexdigest();
+
+    my $stock = CXGN::Stock->new({schema=>$schema,stock_id=>$stock_id});
+    my $result = $stock->associate_uploaded_file($user_id, $archived_filename_with_path, $md5checksum, $stock_id );
+    if ($result->{error}){
+        $c->stash->{rest} = {error=>$result->{error}};
+        $c->detach();
+    }
+    
+    $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
+}
+
+sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart('get_uploaded_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to see uploaded additional files!'};
+        $c->detach();
+    }
+
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+    my @file_array;
+    my %file_info;
+
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype 
+    FROM phenome.stock_file
+    JOIN metadata.md_files using(file_id) 
+    LEFT JOIN metadata.md_metadata as m using(metadata_id)
+    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) 
+    WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
+
+    my $h = $c->dbc->dbh()->prepare($q);
+    $h->execute($stock_id);
+
+    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
+        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
+    }
+    foreach (keys %file_info){
+        push @file_array, $file_info{$_};
+    }
+    print STDERR "files: " . Dumper \@file_array;
+
+    $c->stash->{rest} = {success=>1, files=>\@file_array};
+    return;
+}
+
+sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPart('obsolete_uploaded_additional_file') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $file_id = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    if (!$c->user) {
+	    $c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
+	    $c->detach();
+    }
+
+    my $user_id = $c->user->get_object()->get_sp_person_id();
+
+    my @roles = $c->user->roles();
+    my $result = $c->stash->{trial}->obsolete_uploaded_file($file_id, $stock_id, $user_id, $roles[0]);
+
+    if (exists($result->{errors})) {
+	    $c->stash->{rest} = { error => $result->{errors} };
+    }
+    else {
+	    $c->stash->{rest} = { success => 1 };
+    }
+
+}
+
 =head2 accession_or_seedlot_or_population_or_vector_construct_autocomplete
 
  Usage:
@@ -2245,8 +2374,5 @@ sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Arg
 
     $c->stash->{rest} = \@response_list;
 }
-
-
-
 
 1;

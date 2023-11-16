@@ -139,6 +139,12 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Planting Date: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_project_planting_date" name="add_project_planting_date" title="planting_date" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Width (m): </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_project_plot_width" name="add_project_plot_width" type="text" />
@@ -996,6 +1002,17 @@ jQuery(document).ready(function(){
             jQuery('#randomization_div').hide();
         }
     });
-
-})
+    
+    var planting_date_element = jQuery("#add_project_planting_date");
+    jQuery('input[title="planting_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            planting_date_element.val(start.format('MM/DD/YYYY'));
+        }
+    );
+});
 </script>

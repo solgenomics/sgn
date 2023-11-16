@@ -292,7 +292,7 @@ var drag_behaviour = d3.behavior.drag().on(
 $(document).ready(function($) {
 
     initializeDrawArea();
-    $('#source_select').focus();
+    $('#source_type_select').focus();
 
     //Add link to docs
     // jQuery('#pagetitle_h3').append('&nbsp;<a id="label_designer_docs_link" href="http://solgenomics.github.io/sgn/03_managing_breeding_data/03_12.html"><span class="glyphicon glyphicon-info-sign"></span></a>');
@@ -405,7 +405,9 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    if (response.list_type == 'plots') {
+                    if ( response.list_type === 'trials' ) {
+                        html += '<option value="plots">Plot Details</option>';
+                    } else if (response.list_type == 'plots') {
                         html = html + '<option value="plots">Plot Details</option>';
                     } else if (response.list_type == 'subplots') {
                         html = html + '<option value="subplots">Subplot Details</option>';
@@ -548,7 +550,9 @@ $(document).ready(function($) {
             document.getElementById("number_of_columns").value,
             document.getElementById("number_of_rows").value,
             document.getElementById("plot_filter").value,
-            document.getElementById("sort_order").value,
+            document.getElementById("sort_order_1").value,
+            document.getElementById("sort_order_2").value,
+            document.getElementById("sort_order_3").value,
             document.getElementById("copies_per_plot").value
         );
     });
@@ -670,7 +674,7 @@ function updateFields(data_type, source_id, data_level){
 
     //console.log("running update fields");
     if (data_type.match(/List/)) {
-        jQuery('#sort_order').val('list_order');
+        jQuery('#sort_order_1').val('list_order');
     }
 
     jQuery.ajax({
@@ -695,7 +699,6 @@ function updateFields(data_type, source_id, data_level){
                 getDataSourceSelect();
             } else {
                 add_fields = response.fields;
-                add_fields["Select a field"] = {};
 
                 // if reps, add reps as options for filtering
                 reps = response.reps;
@@ -941,14 +944,26 @@ function doSnap(state, selection) {
 }
 
 function getDataSourceSelect() {
+    get_select_box('label_data_source_types', 'data_source_type', {
+        name: 'source_type_select',
+        id: 'source_type_select',
+        default: 'Select a type of data source for the labels',
+        live_search: 0
+    });
+    updateDataSourceSelect();
+    jQuery(document).off("change").on("change", "#source_type_select", updateDataSourceSelect);
+}
+
+function updateDataSourceSelect() {
     get_select_box('label_data_sources', 'data_source',
         {
             name: 'source_select',
             id: 'source_select',
-            default: 'Select a list, crossing exp, trial, or GT plate',
+            default: 'Select a data source for the labels',
             live_search: 1,
-            // workflow_trigger: 1,
-        });
+            type: jQuery("#source_type_select option:selected").val()
+        }
+    );
 }
 
 function switchPageDependentOptions(page) {
@@ -1203,7 +1218,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
     }
 }
 
-function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, plot_filter, sort_order, copies_per_plot) {
+function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, plot_filter, sort_order_1, sort_order_2, sort_order_3, copies_per_plot) {
     // save options in javascript object and in html elements
     var page = d3.select("#page_format").node().value;
     var label = d3.select("#label_format").node().value;
@@ -1214,7 +1229,9 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     page_formats[page].label_sizes[label].number_of_columns = number_of_columns;
     page_formats[page].label_sizes[label].number_of_rows = number_of_rows;
     page_formats[page].label_sizes[label].plot_filter = plot_filter;
-    page_formats[page].label_sizes[label].sort_order = sort_order;
+    page_formats[page].label_sizes[label].sort_order_1 = sort_order_1;
+    page_formats[page].label_sizes[label].sort_order_2 = sort_order_2;
+    page_formats[page].label_sizes[label].sort_order_3 = sort_order_3;
     page_formats[page].label_sizes[label].copies_per_plot = copies_per_plot;
     document.getElementById("top_margin").value = top_margin;
     document.getElementById("left_margin").value = left_margin;
@@ -1223,7 +1240,9 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
     document.getElementById("plot_filter").value = plot_filter || 'all';
-    document.getElementById("sort_order").value = sort_order;
+    document.getElementById("sort_order_1").value = sort_order_1;
+    document.getElementById("sort_order_2").value = sort_order_2;
+    document.getElementById("sort_order_3").value = sort_order_3;
     document.getElementById("copies_per_plot").value = copies_per_plot;
 }
 
@@ -1247,7 +1266,7 @@ function createAdders(add_fields) {
     //load field options
     d3.select("#d3-add-field-input").selectAll("option").remove();
     d3.select("#d3-add-field-input").selectAll("option")
-        .data(Object.keys(add_fields).sort())
+        .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
             return d
@@ -1282,9 +1301,9 @@ function addPlotFilter(reps) {
 
 function addSortOrders(add_fields) {
     //load options
-    d3.select("#sort_order").selectAll("option").remove();
-    d3.select("#sort_order").selectAll("option")
-        .data(Object.keys(add_fields).sort())
+    d3.selectAll("#sort_order_1, #sort_order_2, #sort_order_3").selectAll("option").remove();
+    d3.selectAll("#sort_order_1, #sort_order_2, #sort_order_3").selectAll("option")
+        .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
             return d
@@ -1292,6 +1311,24 @@ function addSortOrders(add_fields) {
         .attr("value", function(d) {
             return d
         });
+    jQuery("#sort_order_1").off("change").on("change", () => {
+        const sel = jQuery("#sort_order_1").val();
+        if ( sel === 'Select a field' ) {
+            jQuery("#sort_order_2_container, #sort_order_3_container").hide();
+        }
+        else {
+            jQuery("#sort_order_2_container").show();
+        }
+    });
+    jQuery("#sort_order_2").off("change").on("change", () => {
+        const sel = jQuery("#sort_order_2").val();
+        if ( sel === 'Select a field' ) {
+            jQuery("#sort_order_3_container").hide();
+        }
+        else {
+            jQuery("#sort_order_3_container").show();
+        }
+    });
 }
 
 function checkIfVisible(element) {
@@ -1379,7 +1416,9 @@ function retrievePageParams() {
         number_of_columns: label_sizes[label].number_of_columns,
         number_of_rows: label_sizes[label].number_of_rows,
         plot_filter: document.getElementById("plot_filter").value,
-        sort_order: document.getElementById("sort_order").value,
+        sort_order_1: document.getElementById("sort_order_1").value,
+        sort_order_2: document.getElementById("sort_order_2").value,
+        sort_order_3: document.getElementById("sort_order_3").value,
         copies_per_plot: document.getElementById("copies_per_plot").value,
         labels_to_download: document.getElementById("label_designer_labels_to_download").value,
         start_number: document.getElementById("label_designer_start_number").value,
@@ -1398,7 +1437,7 @@ function initializeCustomModal(add_fields) {
     //load field options
     d3.select("#d3-custom-add-field-input").selectAll("option").remove();
     d3.select("#d3-custom-add-field-input").selectAll("option")
-        .data(Object.keys(add_fields).sort())
+        .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
             return d
@@ -1560,7 +1599,9 @@ function loadDesign (list_id) {
         params['number_of_columns'],
         params['number_of_rows'],
         params['plot_filter'],
-        params['sort_order'],
+        params['sort_order_1'],
+        params['sort_order_2'],
+        params['sort_order_3'],
         params['copies_per_plot']
     );
 

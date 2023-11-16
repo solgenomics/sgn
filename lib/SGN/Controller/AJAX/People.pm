@@ -54,7 +54,7 @@ sub autocomplete_GET :Args(1) {
     $person =~ s/(^\s+|\s+)$//g;
     $person =~ s/\s+/ /g;
     my $q = "SELECT sp_person_id, first_name, last_name FROM sgn_people.sp_person
-             WHERE lower(first_name) like ? OR lower(last_name) like ?
+             WHERE lower(first_name) like ? OR lower(last_name) like ? and censor =0 and disable IS NULL
              LIMIT 20";
 
     my $sth = $c->dbc->dbh->prepare($q);
@@ -130,7 +130,7 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
     }
     
     my $rs2 = $schema->resultset("SpPerson")->search(
-	{ },
+	{ censor => 0, disabled => undef },
 	{ join => 'sp_person_roles',
 	  '+select' => ['sp_person_roles.sp_role_id', 'sp_person_roles.sp_person_role_id' ],
 	  '+as'     => ['sp_role_id', 'sp_person_role_id' ],

@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 52;
+use Test::More;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -46,6 +46,8 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('add_project_year', 'id', "find trial year select list")->click();
 	sleep(1);
 	$t->find_element_ok('//select[@id="add_project_year"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year")->click();
+
+	$t->find_element_ok('add_project_planting_date', 'id', "Set '31/01/2015' as value for planting_date")->send_keys("31/01/2015");
 
 	$t->find_element_ok('add_project_plot_width', 'id', "find trial plot width input")->send_keys("10");
 	$t->find_element_ok('add_project_plot_length', 'id', "find trial plot length input")->send_keys("10");

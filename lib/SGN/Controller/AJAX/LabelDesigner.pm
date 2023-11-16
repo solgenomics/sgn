@@ -18,6 +18,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Cross;
 use SGN::Model::Cvterm;
+use Sort::Naturally;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -409,7 +410,16 @@ __PACKAGE__->config(
        my $col_num = $design_params->{'start_col'} || 1;
        my $row_num = $design_params->{'start_row'} || 1;
        my $key_number = 0;
-       my $sort_order = $design_params->{'sort_order'};
+       my $sort_order_1 = $design_params->{'sort_order_1'};
+       my $sort_order_2 = $design_params->{'sort_order_2'};
+       my $sort_order_3 = $design_params->{'sort_order_3'};
+
+       my @sorted_keys = sort { 
+            ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) || 
+            ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
+            ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) || 
+            ncmp($a, $b)
+       }  keys %design;
 
        my $qrcode = Imager::QRCode->new(
            margin        => 0,
@@ -431,7 +441,7 @@ __PACKAGE__->config(
            $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
 
            # loop through design hash, sorting via specified field or default
-           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or versioncmp($a, $b) } keys %design) {
+           foreach my $key (@sorted_keys) {
                if ($start_number && ($key_number < $start_number)){
                    $key_number++;
                    next;
@@ -547,7 +557,7 @@ __PACKAGE__->config(
            }
            $zpl_obj->end_sequence();
            my $zpl_template = $zpl_obj->render();
-           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
+           foreach my $key ( @sorted_keys ) {
 
                if ($start_number && ($key_number < $start_number)){
                    $key_number++;
@@ -607,6 +617,19 @@ sub convert_stock_list {
     return \@ids;
 }
 
+sub convert_project_list {
+    my $c = shift;
+    my $schema = shift;
+    my $list_id = shift;
+    my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $list_id);
+    my @list_items = map { $_->[1] } @$list_data;
+    my $t = CXGN::List::Transform->new();
+    my $proj_t = $t->can_transform("projects", "project_ids");
+    my $id_hash = $t->transform($schema, $proj_t, \@list_items);
+    my @ids = @{$id_hash->{transform}};
+    return \@ids;
+}
+
 sub get_trial_from_stock_list {
     my $c = shift;
     my $schema = shift;
@@ -629,9 +652,9 @@ sub get_trial_from_stock_list {
         $trials{$id} = 1;
     }
     my $num_trials = scalar keys %trials;
+    my @all_trial_ids = keys %trials;
     #print STDERR "Number of linked trials is $num_trials\n";
-    my $trial_id = $trial_rs->first->project_id();
-    return $trial_id, $num_trials;
+    return \@all_trial_ids, $num_trials;
 }
 
 sub filter_by_list_items {
@@ -658,7 +681,7 @@ sub filter_by_list_items {
 sub get_trial_design {
     my $c = shift;
     my $schema = shift;
-    my $trial_id = shift;
+    my $trial_ids = shift;
     my $type = shift;
     my %selected_columns = (
         plate => {genotyping_project_name=>1,genotyping_facility=>1,trial_name=>1,acquisition_date=>1,exported_tissue_sample_name=>1,tissue_sample_name=>1,well_A01=>1,row_number=>1,col_number=>1,source_observation_unit_name=>1,accession_name=>1,accession_id=>1,pedigree=>1,dna_person=>1,notes=>1,tissue_type=>1,extraction=>1,concentration=>1,volume=>1,is_blank=>1,year=>1,location_name=>1},
@@ -668,60 +691,64 @@ sub get_trial_design {
         field_trial_tissue_samples => {tissue_sample_name=>1,tissue_sample_id=>1,plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,tissue_sample_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1}
     );
     my %unique_identifier = (
-        plots => 'plot_id',
-        plants => 'plant_id',
-        subplots => 'subplot_id',
-        field_trial_tissue_samples => 'tissue_sample_id',
+        plate => 'tissue_sample_name',
+        plots => 'plot_name',
+        plants => 'plant_name',
+        subplots => 'subplot_name',
+        field_trial_tissue_samples => 'tissue_sample_name',
     );
 
-    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
-    my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
+    my %mapped_design;
+    foreach my $trial_id (@$trial_ids) {
+        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+        my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
 
-    my $treatments = $trial->get_treatments();
-    my @treatment_ids = map { $_->[0] } @{$treatments};
-    # print STDERR "treatment ids are @treatment_ids\n";
-    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-        schema => $schema,
-        trial_id => $trial_id,
-        data_level => $type,
-        treatment_project_ids => \@treatment_ids,
-        selected_columns => $selected_columns{$type},
-        selected_trait_ids => [],
-        use_synonyms => 'false',
-        include_measured => 'true'
-    });
-    my $layout = $trial_layout_download->get_layout_output();
+        my $treatments = $trial->get_treatments();
+        my @treatment_ids = map { $_->[0] } @{$treatments};
+        # print STDERR "treatment ids are @treatment_ids\n";
+        my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+            schema => $schema,
+            trial_id => $trial_id,
+            data_level => $type,
+            treatment_project_ids => \@treatment_ids,
+            selected_columns => $selected_columns{$type},
+            selected_trait_ids => [],
+            use_synonyms => 'false',
+            include_measured => 'true'
+        });
+        my $layout = $trial_layout_download->get_layout_output();
 
-    # map array of arrays into hash
-    my @outer_array = @{$layout->{'output'}};
-    my ($inner_array, @keys, %mapped_design);
-    for my $i (0 .. $#outer_array) {
-        $inner_array = $outer_array[$i];
-    # foreach my $inner_array (@{$outer_array}) {
-        if (scalar @keys > 0) {
-            my %detail_hash;
-            @detail_hash{@keys} = @{$outer_array[$i]};
+        # map array of arrays into hash
+        my @outer_array = @{$layout->{'output'}};
+        my ($inner_array, @keys);
+        for my $i (0 .. $#outer_array) {
+            $inner_array = $outer_array[$i];
+        # foreach my $inner_array (@{$outer_array}) {
+            if (scalar @keys > 0) {
+                my %detail_hash;
+                @detail_hash{@keys} = @{$outer_array[$i]};
 
-            my @applied_treatments;
-            foreach my $key (keys %detail_hash) {
-                if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
-                    my $treatment = $key;
-                    $treatment =~ s/ManagementFactor://;
-                    $treatment =~ s/$trial_name//;
-                    $treatment =~ s/^_//;
-                    push @applied_treatments, $treatment;
-                    delete($detail_hash{$key});
+                my @applied_treatments;
+                foreach my $key (keys %detail_hash) {
+                    if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
+                        my $treatment = $key;
+                        $treatment =~ s/ManagementFactor://;
+                        $treatment =~ s/$trial_name//;
+                        $treatment =~ s/^_//;
+                        push @applied_treatments, $treatment;
+                        delete($detail_hash{$key});
+                    }
+                    elsif ( $key =~ /ManagementFactor/ ) {
+                        delete($detail_hash{$key});
+                    }
                 }
-                elsif ( $key =~ /ManagementFactor/ ) {
-                    delete($detail_hash{$key});
-                }
+                $detail_hash{'management_factor'} = join(",", @applied_treatments);
+                $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
+
             }
-            $detail_hash{'management_factor'} = join(",", @applied_treatments);
-            $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
-
-        }
-        else {
-            @keys = @{$inner_array};
+            else {
+                @keys = @{$inner_array};
+            }
         }
     }
     return \%mapped_design;
@@ -736,6 +763,7 @@ sub get_data {
     my $include_additional_list_data = shift;
     my $num_trials = 1;
     my $design;
+    my $dbh = $schema->storage->dbh();
 
     # print STDERR "starting to get data,level is $data_level and type is $data_type\n";
     # use data level as well as type to determine and enact correct retrieval
@@ -771,50 +799,66 @@ sub get_data {
         }
     }
     elsif ($data_level eq "plate") {
-        $design = get_trial_design($c, $schema, $id, 'plate');
+        $design = get_trial_design($c, $schema, [$id], 'plate');
     }
     elsif ($data_level eq "plots") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'plots');
+            $design = get_trial_design($c, $schema, [$id], 'plots');
         }
         elsif ($data_type =~ m/List/) {
-            my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'plots');
-            $design = filter_by_list_items($design, $list_ids, 'plot_id');
+            my $list = CXGN::List->new({ dbh => $dbh, list_id => $id });
+            my $list_type = $list->type();
+            if ( $list_type eq "trials" ) {
+                my $trial_ids = convert_project_list($c, $schema, $id);
+                $design = get_trial_design($c, $schema, $trial_ids, 'plots');
+            }
+            elsif ( $list_type eq "plots" ) {
+                my $plot_ids = convert_stock_list($c, $schema, $id);
+                my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+                my @list_items = map { $_->[1] } @$list_data;
+                my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $plot_ids);
+                $design = get_trial_design($c, $schema, $trial_ids, 'plots');
+                $design = filter_by_list_items($design, \@list_items, 'plot_name');
+            }
         }
     }
     elsif ($data_level eq "plants") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'plants');
+            $design = get_trial_design($c, $schema, [$id], 'plants');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'plants');
-            $design = filter_by_list_items($design, $list_ids, 'plant_id');
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
+            my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
+            $design = get_trial_design($c, $schema, $trial_ids, 'plants');
+            $design = filter_by_list_items($design, \@list_items, 'plant_name');
         }
     }
     elsif ($data_level eq "subplots") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'subplots');
+            $design = get_trial_design($c, $schema, [$id], 'subplots');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'subplots');
-            $design = filter_by_list_items($design, $list_ids, 'subplot_id');
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
+            my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
+            $design = get_trial_design($c, $schema, $trial_ids, 'subplots');
+            $design = filter_by_list_items($design, \@list_items, 'subplot_name');
         }
     }
     elsif ($data_level eq "tissue_samples") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'field_trial_tissue_samples');
+            $design = get_trial_design($c, $schema, [$id], 'field_trial_tissue_samples');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'field_trial_tissue_samples');
-            $design = filter_by_list_items($design, $list_ids, 'tissue_sample_id');
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
+            my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
+            $design = get_trial_design($c, $schema, $trial_ids, 'field_trial_tissue_samples');
+            $design = filter_by_list_items($design, \@list_items, 'tissue_sample_name');
         }
     }
     elsif ($data_level eq "crosses") {

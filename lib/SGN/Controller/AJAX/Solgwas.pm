@@ -34,6 +34,8 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
@@ -64,7 +66,7 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
 #    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
 #    my $phenotypes = $ds->retrieve_phenotypes();
@@ -146,6 +148,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     my $kinship_check = $c->req->param('kinship_check');
 	my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
 
+
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
@@ -171,7 +174,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
 #    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
 
-##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
+    ##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
     my $protocols = $ds->retrieve_genotyping_protocols();
     my $protocol_id;
@@ -308,6 +311,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $pc_check = $c->req->param('pc_check');
     my $kinship_check = $c->req->param('kinship_check');
 	my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
 
     print STDERR $dataset_id;
     print STDERR $trait_id;
@@ -332,7 +336,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $temppath = $tempfile;
 
 #    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
 
 ##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
@@ -381,6 +386,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure2file = $tempfile . "_" . $newtrait . "_figure2.png";
     my $figure3file = $tempfile . "_" . $newtrait . "_figure3.png";
     my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
+    my $gwasResultsPhenoCsv = $tempfile . "_" . $newtrait . "_gwasresults_pheno.csv";
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
@@ -429,7 +435,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         print $filehandle_out $line;
     }
     close $filehandle;
-    close $filehandle_out;
+    close $filehandle_out;    
 
 #
 # # Hardcoded number of markers to be selected - make this selectable by user?
@@ -486,6 +492,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $figure4file,
             $pc_check,
             $kinship_check,
+            $gwasResultsPhenoCsv,
     );
 
     $cmd->is_cluster(1);
@@ -494,6 +501,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure_path = "./documents/tempfiles/solgwas_files/";
     copy($figure3file,$figure_path);
     copy($figure4file,$figure_path);
+    copy($gwasResultsPhenoCsv,$figure_path);
 #    my $figure3basename = $figure3file;
 
 #    $figure3basename =~ s/\/export\/prod\/tmp\/solgwas\_files\///;
@@ -501,12 +509,15 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure3file_response = "/documents/tempfiles/solgwas_files/" . $figure3basename;
     my $figure4basename = basename($figure4file);
     my $figure4file_response = "/documents/tempfiles/solgwas_files/" . $figure4basename;
+    my $gwasResultsCsvBasename = basename($gwasResultsPhenoCsv);
+    my $gwasCsv_response = "/documents/tempfiles/solgwas_files/" . $gwasResultsCsvBasename;
 #    $figure4file_response =~ s/\.\/static//;
     $c->stash->{rest} = {
-        figure3 => $figure3file_response,
-        figure4 => $figure4file_response,
-        dummy_response => $dataset_id,
+        figure3         => $figure3file_response,
+        figure4         => $figure4file_response,
+        dummy_response  => $dataset_id,
         dummy_response2 => $trait_id,
+        gwas_csv_response  => $gwasCsv_response,
     };
 }
 

@@ -1322,10 +1322,11 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
                 content_id => $seedlot->[2],
                 content_name => $seedlot->[3],
                 content_type => $seedlot->[4],
-                box_name => $seedlot->[5],
-                current_count => $seedlot->[6],
-                current_weight => $seedlot->[7],
-                quality => $seedlot->[8],
+                description => $seedlot->[5],
+                box_name => $seedlot->[6],
+                current_count => $seedlot->[7],
+                current_weight => $seedlot->[8],
+                quality => $seedlot->[9],
             }
         }
     }
@@ -1355,9 +1356,9 @@ sub download_list_details : Path('/list/download_details') {
         my @details = @$result;
         foreach my $seedlot_ref (@details) {
             my @seedlot = @$seedlot_ref;
-            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\n";
+            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\t$seedlot[9]\n";
         }
-        $header = "Seedlot_Name\tContent_Name\tContent_type\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
+        $header = "Seedlot_Name\tContent_Name\tContent_type\tDescription\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
     }
 
     my $dl_token = $c->req->param("list_download_token") || "no_token";
