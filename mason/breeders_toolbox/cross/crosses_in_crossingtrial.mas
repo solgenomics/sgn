@@ -24,8 +24,10 @@ $trial_id
 
 jQuery(document).ready(function(){
 
+    var crosses_table;
+
     jQuery('#crosses_in_crossingtrial_section_onswitch').click(function(){
-        jQuery('#crosses_in_crossingtrial_table').DataTable({
+        crosses_table = jQuery('#crosses_in_crossingtrial_table').DataTable({
             'destroy': true,
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_and_details_in_trial',
             columns: [
@@ -88,6 +90,31 @@ jQuery(document).ready(function(){
                 }
             }
         });
+
+        var female_ploidy = crosses_table.column(4).data();
+        if (female_ploidy === undefined || female_ploidy.length == 0) {
+            crosses_table.column(4).visible(false);
+        }
+        var male_ploidy = crosses_table.column(6).data();
+        if (male_ploidy === undefined || male_ploidy.length == 0) {
+            crosses_table.column(6).visible(false);
+        }
+        var female_plot = crosses_table.column(7).data();
+        if (female_plot === undefined || female_plot.length == 0) {
+            crosses_table.column(7).visible(false);
+        }
+        var male_plot = crosses_table.column(8).data();
+        if (male_plot === undefined || male_plot.length == 0) {
+            crosses_table.column(8).visible(false);
+        }
+        var female_plant = crosses_table.column(9).data();
+        if (female_plant === undefined || female_plant.length == 0) {
+            crosses_table.column(9).visible(false);
+        }
+        var male_plant = crosses_table.column(10).data();
+        if (male_plant === undefined || male_plant.length == 0) {
+            crosses_table.column(10).visible(false);
+        }
     });
 
 });
