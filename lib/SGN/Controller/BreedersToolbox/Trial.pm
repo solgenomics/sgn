@@ -296,6 +296,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             }
         }
         my $locations_by_program_json = encode_json(\@locations_by_program);
+        my $cip_cross = $c->config->{cip_cross};
+        $c->stash->{cip_cross} = $cip_cross;
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
     }

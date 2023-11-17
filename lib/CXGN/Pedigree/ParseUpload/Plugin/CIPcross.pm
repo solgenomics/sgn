@@ -739,6 +739,9 @@ sub _parse_with_plugin {
             $pedigree->set_male_parent($male_parent);
         }
 
+        my $cross_combination = $female_accession_number.'/'.$male_accession_number;
+        $pedigree->set_cross_combination($cross_combination);
+
         push @pedigrees, $pedigree;
 
     }
