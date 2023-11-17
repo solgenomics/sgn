@@ -293,7 +293,7 @@ sub _validate_with_plugin {
     if (!$male_code_breeder_head || $male_code_breeder_head ne 'Male Code Breeder' ) {
         push @error_messages, "Cell L1: Male Code Breeder is missing from the header";
     }
-    if (!$male_attributes_head || $male_attributed_head ne 'Male Attributes' ) {
+    if (!$male_attributes_head || $male_attributes_head ne 'Male Attributes' ) {
         push @error_messages, "Cell M1: Male Attributes is missing from the header";
     }
     if (!$number_of_flowers_head || $number_of_flowers_head ne 'Number of Flowers' ) {
@@ -391,6 +391,7 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,0)) {
             $inventory_id = $worksheet->get_cell($row,0)->value();
         }
+        print STDERR "INVENTORY ID =".Dumper($inventory_id)."\n";
         if ($worksheet->get_cell($row,6)) {
             $female_accession_number =  $worksheet->get_cell($row,6)->value();
             $female_accession_number =~ s/^\s+|\s+$//g;
@@ -406,9 +407,9 @@ sub _validate_with_plugin {
             $inventory_id =~ s/^\s+|\s+$//g;
         }
 
-        if ($seen_inventory_id{$inventory_id}) {
-            push @error_messages, "Cell A$row_name: duplicate Inventory ID: $inventory_id";
-        }
+#        if ($seen_inventory_ids{$inventory_id}) {
+#            push @error_messages, "Cell A$row_name: duplicate Inventory ID: $inventory_id";
+#        }
 
         if (!$female_accession_number || $female_accession_number eq '') {
             push @error_messages, "Cell G$row_name: Female Accession Number missing";
@@ -434,14 +435,14 @@ sub _validate_with_plugin {
         push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
     }
 
-    my @all_inventory_ids = keys %seen_inventory_ids;
-    my $inventory_rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@all_inventory_ids }
-    });
-    while (my $r=$inventory_rs->next){
-        push @error_messages, "Inventory ID already exists in database: ".$r->uniquename;
-    }
+#    my @all_inventory_ids = keys %seen_inventory_ids;
+#    my $inventory_rs = $schema->resultset("Stock::Stock")->search({
+#        'is_obsolete' => { '!=' => 't' },
+#        'uniquename' => { -in => \@all_inventory_ids }
+#    });
+#    while (my $r=$inventory_rs->next){
+#        push @error_messages, "Inventory ID already exists in database: ".$r->uniquename;
+#    }
 
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
@@ -542,7 +543,7 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,2)) {
             $type_of_breeding = $worksheet->get_cell($row,2)->value();
             $type_of_breeding =~ s/^\s+|\s+$//g;
-            $project_info{'$type_of_breeding'}{$type_of_breeding}++;
+            $project_info{'type_of_breeding'}{$type_of_breeding}++;
         }
         if ($worksheet->get_cell($row,3)) {
             $template_file_id = $worksheet->get_cell($row,3)->value();
@@ -746,7 +747,7 @@ sub _parse_with_plugin {
     $parsed_result{'female_info'} = \%female_info;
     $parsed_result{'male_info'} = \%male_info;
     $parsed_result{'crosses'} = \@pedigrees;
-    $parsed_result{'cross_info'} = \%cross_info
+    $parsed_result{'cross_info'} = \%cross_info;
 
     $self->_set_parsed_data(\%parsed_result);
 

@@ -787,22 +787,23 @@ sub upload_cip_cross_file_POST : Args(0) {
     }
 
     if ($parsed_data){
+        print STDERR "CIP DATA =".Dumper($parsed_data)."\n";
 
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-        $md_row->insert();
-        my $upload_file = CXGN::UploadFile->new();
-        my $md5 = $upload_file->get_md5($archived_filename_with_path);
-        my $md5checksum = $md5->hexdigest();
-        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'cip_cross_upload',
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-        my $file_id = $file_row->file_id();
+#        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+#        $md_row->insert();
+#        my $upload_file = CXGN::UploadFile->new();
+#        my $md5 = $upload_file->get_md5($archived_filename_with_path);
+#        my $md5checksum = $md5->hexdigest();
+#        my $file_row = $metadata_schema->resultset("MdFiles")->create({
+#            basename => basename($archived_filename_with_path),
+#            dirname => dirname($archived_filename_with_path),
+#            filetype => 'cip_cross_upload',
+#            md5checksum => $md5checksum,
+#            metadata_id => $md_row->metadata_id(),
+#        });
+#        my $file_id = $file_row->file_id();
 
-        my %cip_cross_data = %{$parsed_data};
+#        my %cip_cross_data = %{$parsed_data};
 
     }
 
