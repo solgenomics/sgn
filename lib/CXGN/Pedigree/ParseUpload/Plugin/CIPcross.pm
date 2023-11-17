@@ -538,22 +538,22 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,1)) {
             $crop_module_id = $worksheet->get_cell($row,1)->value();
             $crop_module_id =~ s/^\s+|\s+$//g;
-            $project_info{'crop_module_id'}{$crop_module_id}++;
+            $project_info{'Crop Module ID'}{$crop_module_id}++;
         }
         if ($worksheet->get_cell($row,2)) {
             $type_of_breeding = $worksheet->get_cell($row,2)->value();
             $type_of_breeding =~ s/^\s+|\s+$//g;
-            $project_info{'type_of_breeding'}{$type_of_breeding}++;
+            $project_info{'Type of Breeding'}{$type_of_breeding}++;
         }
         if ($worksheet->get_cell($row,3)) {
             $template_file_id = $worksheet->get_cell($row,3)->value();
             $template_file_id =~ s/^\s+|\s+$//g;
-            $project_info{'template_file_id'}{$template_file_id}++;
+            $project_info{'Template File ID'}{$template_file_id}++;
         }
         if ($worksheet->get_cell($row,4)) {
             $crossing_plan_id = $worksheet->get_cell($row,4)->value();
             $crossing_plan_id =~ s/^\s+|\s+$//g;
-            $project_info{'crossing_plan_id'}{$crossing_plan_id}++;
+            $project_info{'Crossing Plan ID'}{$crossing_plan_id}++;
         }
         if ($worksheet->get_cell($row,5)) {
             $female_order = $worksheet->get_cell($row,5)->value();
@@ -562,17 +562,17 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $female_accession_number =  $worksheet->get_cell($row,6)->value();
             $female_accession_number =~ s/^\s+|\s+$//g;
-            $female_info{$female_accession_number}{'female_order'}{$female_order}++;
+            $female_info{$female_accession_number}{'Female Order'}{$female_order}++;
         }
         if ($worksheet->get_cell($row,7)) {
             $female_code_breeder = $worksheet->get_cell($row,7)->value();
             $female_code_breeder =~ s/^\s+|\s+$//g;
-            $female_info{$female_accession_number}{'female_code_breeder'}{$female_code_breeder}++;
+            $female_info{$female_accession_number}{'Female Code Breeder'}{$female_code_breeder}++;
         }
         if ($worksheet->get_cell($row,8)) {
             $female_attributes = $worksheet->get_cell($row,8)->value();
             $female_attributes =~ s/^\s+|\s+$//g;
-            $female_info{$female_accession_number}{'female_attributes'}{$female_attributes}++;
+            $female_info{$female_accession_number}{'Female Attributes'}{$female_attributes}++;
         }
         if ($worksheet->get_cell($row,9)) {
             $male_order = $worksheet->get_cell($row,9)->value();
@@ -581,152 +581,152 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,10)) {
             $male_accession_number = $worksheet->get_cell($row,10)->value();
             $male_accession_number =~ s/^\s+|\s+$//g;
-            $male_info{$male_accession_number}{'male_order'}{$male_order}++;
+            $male_info{$male_accession_number}{'Male Order'}{$male_order}++;
         }
         if ($worksheet->get_cell($row,11)) {
             $male_code_breeder = $worksheet->get_cell($row,11)->value();
             $male_code_breeder =~ s/^\s+|\s+$//g;
-            $male_info{$male_accession_number}{'male_code_breeder'}{$male_code_breeder}++;
+            $male_info{$male_accession_number}{'Male Code Breeder'}{$male_code_breeder}++;
         }
         if ($worksheet->get_cell($row,12)) {
             $male_attributes = $worksheet->get_cell($row,12)->value();
             $male_attributes =~ s/^\s+|\s+$//g;
-            $male_info{$male_accession_number}{'male_attributes'}{$male_attributes}++;
+            $male_info{$male_accession_number}{'Male Attributes'}{$male_attributes}++;
         }
         if ($worksheet->get_cell($row,13)) {
             $number_of_flowers  = $worksheet->get_cell($row,13)->value();
             $number_of_flowers =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'number_of_flowers'} = $number_of_flowers;
+            $cross_info{$inventory_id}{'Number of Flowers'} = $number_of_flowers;
         }
         if ($worksheet->get_cell($row,14)) {
             $crossing_date  = $worksheet->get_cell($row,14)->value();
             $crossing_date =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'crossing_date'} = $crossing_date;
+            $cross_info{$inventory_id}{'Crossing Date'} = $crossing_date;
         }
         if ($worksheet->get_cell($row,15)) {
             $cross_user  = $worksheet->get_cell($row,15)->value();
             $cross_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'cross_user'} = $cross_user;
+            $cross_info{$inventory_id}{'Cross User'} = $cross_user;
         }
         if ($worksheet->get_cell($row,16)) {
             $number_of_fruits  = $worksheet->get_cell($row,16)->value();
             $number_of_fruits =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'number_of_fruits'} = $number_of_fruits;
+            $cross_info{$inventory_id}{'Number of Fruits'} = $number_of_fruits;
         }
         if ($worksheet->get_cell($row,17)) {
             $fruit_harvest_date  = $worksheet->get_cell($row,17)->value();
             $fruit_harvest_date =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'fruit_harvest_date'} = $fruit_harvest_date;
+            $cross_info{$inventory_id}{'Fruit Harvest Date'} = $fruit_harvest_date;
         }
         if ($worksheet->get_cell($row,18)) {
             $fruit_size  = $worksheet->get_cell($row,18)->value();
             $fruit_size =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'fruit_size'} = $fruit_size;
+            $cross_info{$inventory_id}{'Fruit Size'} = $fruit_size;
         }
         if ($worksheet->get_cell($row,19)) {
             $harvest_user  = $worksheet->get_cell($row,19)->value();
             $harvest_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'harvest_user'} = $harvest_user;
+            $cross_info{$inventory_id}{'Harvest User'} = $harvest_user;
         }
         if ($worksheet->get_cell($row,20)) {
             $fruit_maceration_date  = $worksheet->get_cell($row,20)->value();
             $fruit_maceration_date =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'fruit_maceration_date'} = $fruit_maceration_date;
+            $cross_info{$inventory_id}{'Fruit Maceration Date'} = $fruit_maceration_date;
         }
         if ($worksheet->get_cell($row,21)) {
             $maceration_user  = $worksheet->get_cell($row,21)->value();
             $maceration_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'maceration_user'} = $maceration_user;
+            $cross_info{$inventory_id}{'Maceration User'} = $maceration_user;
         }
         if ($worksheet->get_cell($row,22)) {
             $population = $worksheet->get_cell($row,22)->value();
             $population =~ s/^\s+|\s+$//g;
-            $project_info{'population'}{$population}++;
+            $project_info{'Population'}{$population}++;
         }
         if ($worksheet->get_cell($row,23)) {
             $type_of_pollination = $worksheet->get_cell($row,23)->value();
             $type_of_pollination =~ s/^\s+|\s+$//g;
-            $project_info{'type_of_pollination'}{$type_of_pollination}++;
+            $project_info{'Type of Pollination'}{$type_of_pollination}++;
         }
         if ($worksheet->get_cell($row,24)) {
             $genetic_designs = $worksheet->get_cell($row,24)->value();
             $genetic_designs =~ s/^\s+|\s+$//g;
-            $project_info{'genetic_designs'}{$genetic_designs}++;
+            $project_info{'Genetic Designs'}{$genetic_designs}++;
         }
         if ($worksheet->get_cell($row,25)) {
             $crossing_location = $worksheet->get_cell($row,25)->value();
             $crossing_location =~ s/^\s+|\s+$//g;
-            $project_info{'crossing_location'}{$crossing_location}++;
+            $project_info{'Crossing Location'}{$crossing_location}++;
         }
         if ($worksheet->get_cell($row,26)) {
             $plan_number = $worksheet->get_cell($row,26)->value();
             $plan_number =~ s/^\s+|\s+$//g;
-            $project_info{'plan_number'}{$plan_number}++;
+            $project_info{'Plan Number'}{$plan_number}++;
         }
         if ($worksheet->get_cell($row,27)) {
             $plan_name = $worksheet->get_cell($row,27)->value();
             $plan_name =~ s/^\s+|\s+$//g;
-            $project_info{'plan_name'}{$plan_name}++;
+            $project_info{'Plan Name'}{$plan_name}++;
         }
         if ($worksheet->get_cell($row,28)) {
             $cip_region_crossing = $worksheet->get_cell($row,28)->value();
             $cip_region_crossing =~ s/^\s+|\s+$//g;
-            $project_info{'cip_region_crossing'}{$cip_region_crossing}++;
+            $project_info{'CIP Region Crossing'}{$cip_region_crossing}++;
         }
         if ($worksheet->get_cell($row,29)) {
             $country_crossing = $worksheet->get_cell($row,29)->value();
             $country_crossing =~ s/^\s+|\s+$//g;
-            $project_info{'country_crossing'}{$country_crossing}++;
+            $project_info{'Country Crossing'}{$country_crossing}++;
         }
         if ($worksheet->get_cell($row,30)) {
             $adm_1_crossing = $worksheet->get_cell($row,30)->value();
             $adm_1_crossing =~ s/^\s+|\s+$//g;
-            $project_info{'adm_1_crossing'}{$adm_1_crossing}++;
+            $project_info{'Adm 1 Crossing'}{$adm_1_crossing}++;
         }
         if ($worksheet->get_cell($row,31)) {
             $adm_2_crossing = $worksheet->get_cell($row,31)->value();
             $adm_2_crossing =~ s/^\s+|\s+$//g;
-            $project_info{'adm_2_crossing'}{$adm_2_crossing}++;
+            $project_info{'Adm 2 Crossing'}{$adm_2_crossing}++;
         }
         if ($worksheet->get_cell($row,32)) {
             $adm_3_crossing = $worksheet->get_cell($row,32)->value();
             $adm_3_crossing =~ s/^\s+|\s+$//g;
-            $project_info{'adm_3_crossing'}{$adm_3_crossing}++;
+            $project_info{'Adm 3 Crossing'}{$adm_3_crossing}++;
         }
         if ($worksheet->get_cell($row,33)) {
             $adm_4_crossing = $worksheet->get_cell($row,33)->value();
             $adm_4_crossing =~ s/^\s+|\s+$//g;
-            $project_info{'adm_4_crossing'}{$adm_4_crossing}++;
+            $project_info{'Adm 4 Crossing'}{$adm_4_crossing}++;
         }
         if ($worksheet->get_cell($row,39)) {
             $seed_with_spot_markers  = $worksheet->get_cell($row,39)->value();
             $seed_with_spot_markers =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'seed_with_spot_markers'} = $seed_with_spot_markers;
+            $cross_info{$inventory_id}{'Seed with Spot Markers'} = $seed_with_spot_markers;
         }
         if ($worksheet->get_cell($row,40)) {
             $seed_without_spot_markers  = $worksheet->get_cell($row,40)->value();
             $seed_without_spot_markers =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'seed_without_spot_markers'} = $seed_without_spot_markers;
+            $cross_info{$inventory_id}{'Seed without Spot Markers'} = $seed_without_spot_markers;
         }
         if ($worksheet->get_cell($row,41)) {
             $total_number_of_seeds  = $worksheet->get_cell($row,41)->value();
             $total_number_of_seeds =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'total_number_of_seeds'} = $total_number_of_seeds;
+            $cross_info{$inventory_id}{'Total Number of Seeds'} = $total_number_of_seeds;
         }
         if ($worksheet->get_cell($row,42)) {
             $seed_stock  = $worksheet->get_cell($row,42)->value();
             $seed_stock =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'seed_stock'} = $seed_stock;
+            $cross_info{$inventory_id}{'Seed Stock'} = $seed_stock;
         }
         if ($worksheet->get_cell($row,43)) {
             $seed_count_date  = $worksheet->get_cell($row,43)->value();
             $seed_count_date =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'seed_count_date'} = $seed_count_date;
+            $cross_info{$inventory_id}{'Seed Count Date'} = $seed_count_date;
         }
         if ($worksheet->get_cell($row,44)) {
             $seed_count_user  = $worksheet->get_cell($row,44)->value();
             $seed_count_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'seed_count_user'} = $seed_count_user;
+            $cross_info{$inventory_id}{'Seed Count User'} = $seed_count_user;
         }
 
         my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$inventory_id, cross_type=>'biparental');
