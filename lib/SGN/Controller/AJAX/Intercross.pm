@@ -698,7 +698,7 @@ sub upload_cip_cross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $page_crossing_experiment_id = $c->req->param('cip_cross_experiment_id');
+    my $crossing_experiment_id = $c->req->param('cip_cross_experiment_id');
     my $upload = $c->req->upload('cip_cross_file');
     my $parser;
     my $parsed_data;
@@ -787,24 +787,82 @@ sub upload_cip_cross_file_POST : Args(0) {
     }
 
     if ($parsed_data){
-        print STDERR "CIP DATA =".Dumper($parsed_data)."\n";
+#        print STDERR "CIP CROSS DATA =".Dumper($parsed_data->{crosses})."\n";
 
-#        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-#        $md_row->insert();
-#        my $upload_file = CXGN::UploadFile->new();
-#        my $md5 = $upload_file->get_md5($archived_filename_with_path);
-#        my $md5checksum = $md5->hexdigest();
-#        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-#            basename => basename($archived_filename_with_path),
-#            dirname => dirname($archived_filename_with_path),
-#            filetype => 'cip_cross_upload',
-#            md5checksum => $md5checksum,
-#            metadata_id => $md_row->metadata_id(),
-#        });
-#        my $file_id = $file_row->file_id();
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+        $md_row->insert();
+        my $upload_file = CXGN::UploadFile->new();
+        my $md5 = $upload_file->get_md5($archived_filename_with_path);
+        my $md5checksum = $md5->hexdigest();
+        my $file_row = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => 'crosses',
+            md5checksum => $md5checksum,
+            metadata_id => $md_row->metadata_id(),
+        });
+        my $file_id = $file_row->file_id();
 
-#        my %cip_cross_data = %{$parsed_data};
+        my $cross_add = CXGN::Pedigree::AddCrosses->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            metadata_schema => $metadata_schema,
+            dbh => $dbh,
+            crossing_trial_id => $crossing_experiment_id,
+            crosses =>  $parsed_data->{crosses},
+            user_id => $user_id,
+            file_id => $file_id
+        });
 
+        #validate the crosses
+        if (!$cross_add->validate_crosses()){
+            $c->stash->{rest} = {error_string => "Error validating crosses",};
+            return;
+        }
+        if (!$cross_add->add_crosses()){
+            $c->stash->{rest} = {error_string => "Error adding crosses",};
+            return;
+        }
+
+        my $cross_info = $parsed_data->{cross_info};
+        my %cip_cross_info = %{$cross_info};
+#        print STDERR "CIP CROSS ONFO =".Dumper($parsed_data->{cross_info})."\n";
+
+        my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'crossing_metadata_json', 'stock_property');
+
+        my $cross_json_string;
+        my $cross_json_hash_ref = {};
+        my %cross_json_hash;
+        my %all_cross_info;
+        foreach my $cross_name_key (keys %cip_cross_info){
+            %cross_json_hash = ();
+            %all_cross_info = ();
+            %{$cross_json_hash_ref} =();
+            my $valid_cross_name = $schema->resultset("Stock::Stock")->find({uniquename => $cross_name_key});
+            if ($valid_cross_name){
+                my %info_hash = %{$cip_cross_info{$cross_name_key}};
+                print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
+                print STDERR "NEW INFO HASH =".Dumper(\%info_hash)."\n";
+
+                my $previous_stockprop_rs = $valid_cross_name->stockprops({type_id=>$cross_info_cvterm->cvterm_id});
+                if ($previous_stockprop_rs->count == 1){
+                    $cross_json_string = $previous_stockprop_rs->first->value();
+                    $cross_json_hash_ref = decode_json $cross_json_string;
+                    %cross_json_hash = %{$cross_json_hash_ref};
+                    %all_cross_info = (%cross_json_hash, %info_hash);
+                    print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
+                    print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
+                    my $all_cross_info_string = encode_json \%all_cross_info;
+                    $previous_stockprop_rs->first->update({value=>$all_cross_info_string});
+                } elsif ($previous_stockprop_rs->count > 1) {
+                    print STDERR "More than one found!\n";
+                    return;
+                } else {
+                    my $new_cross_info_string = encode_json \%info_hash;
+                    $valid_cross_name->create_stockprops({$cross_info_cvterm->name() => $new_cross_info_string});
+                }
+            }
+        }
     }
 
     $c->stash->{rest} = {success => "1",};

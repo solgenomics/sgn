@@ -435,14 +435,14 @@ sub _validate_with_plugin {
         push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
     }
 
-#    my @all_inventory_ids = keys %seen_inventory_ids;
-#    my $inventory_rs = $schema->resultset("Stock::Stock")->search({
-#        'is_obsolete' => { '!=' => 't' },
-#        'uniquename' => { -in => \@all_inventory_ids }
-#    });
-#    while (my $r=$inventory_rs->next){
-#        push @error_messages, "Inventory ID already exists in database: ".$r->uniquename;
-#    }
+    my @all_inventory_ids = keys %seen_inventory_ids;
+    my $inventory_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@all_inventory_ids }
+    });
+    while (my $r=$inventory_rs->next){
+        push @error_messages, "Inventory ID already exists in database: ".$r->uniquename;
+    }
 
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;

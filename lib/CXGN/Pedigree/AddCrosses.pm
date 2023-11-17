@@ -341,7 +341,7 @@ sub add_crosses {
 
             my $cross_identifier = $crossing_trial_id.'_'.$identifier_female_id.'_'.$identifier_male_id;
             $cross_stock->create_stockprops({$cross_identifier_cvterm->name() => $cross_identifier});
-            print STDERR "CROSS IDENTIFIER =".Dumper($cross_identifier)."\n";
+#            print STDERR "CROSS IDENTIFIER =".Dumper($cross_identifier)."\n";
         }
 
     };
