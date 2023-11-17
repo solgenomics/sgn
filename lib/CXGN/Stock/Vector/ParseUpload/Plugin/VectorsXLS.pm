@@ -1,4 +1,4 @@
-package CXGN::Stock::ParseUpload::Plugin::VectorsXLS;
+package CXGN::Stock::Vector::ParseUpload::Plugin::VectorsXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -16,6 +16,7 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $editable_stockprops = $self->get_editable_stock_props();
+    my $autogenerate_uniquename = $self->get_autogenerate_uniquename();
 
     # Match a dot, extension .xls / .xlsx
     my $extension = $filename =~ /(\.[^.]+)$/;
@@ -106,7 +107,9 @@ sub _validate_with_plugin {
         }
 
         if (!$vector_name || $vector_name eq '' ) {
-            push @error_messages, "Cell A$row_name: vector_name missing.";
+            if (! $autogenerate_uniquename ){
+                push @error_messages, "Cell A$row_name: vector_name missing.";
+            }
         } else {
             $vector_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_vector_names{$vector_name}=$row_name;
@@ -154,6 +157,7 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $do_fuzzy_search = $self->get_do_fuzzy_search();
+    my $autogenerate_uniquename = $self->get_autogenerate_uniquename();
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -181,12 +185,33 @@ sub _parse_with_plugin {
 
     my %seen_vector_names;
     my %seen_species_names;
+    my $vector_max_id;
+
+    if($autogenerate_uniquename > 0){
+        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+
+        my $stocks = $schema->resultset("Stock::Stock")->search({ type_id => $stock_type_id, });
+        
+        my $id;
+        $vector_max_id = 0;
+        while (my $r = $stocks->next()) {
+            $id = $r->uniquename;
+            if ($id =~ m/T[0-9]+/){
+                $id =~ s/T//;
+                if($vector_max_id < $id){
+                    $vector_max_id = $id;
+                }
+            } 
+        }
+    }
+
 
     for my $row ( 1 .. $row_max ) {
         my $vector_name;
         my $species_name;
-
-        if ($worksheet->get_cell($row,0)) {
+        if($autogenerate_uniquename > 0 ){
+            $vector_name = "T" . ($vector_max_id + $row);
+        } elsif ($worksheet->get_cell($row,0)) {
             $vector_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
@@ -238,7 +263,9 @@ sub _parse_with_plugin {
         my $vector_name;
         my $species_name;
 
-        if ($worksheet->get_cell($row,0)) {
+        if($autogenerate_uniquename > 0 ){
+            $vector_name = "T" . ($vector_max_id + $row);
+        } elsif ($worksheet->get_cell($row,0)) {
             $vector_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
@@ -336,6 +363,7 @@ sub _parse_with_plugin {
         }
     }
 
+
     %return_data = (
         parsed_data => \%parsed_entries,
         found_vectors => $found_vectors,
@@ -345,7 +373,6 @@ sub _parse_with_plugin {
         fuzzy_organisms => $fuzzy_organisms,
         absent_organisms => $absent_organisms
     );
-    # print STDERR "\n\nVectorsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";
 
     $self->_set_parsed_data(\%return_data);
     return 1;
