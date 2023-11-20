@@ -59,7 +59,9 @@ if ($url =~ /correlation\/analysis/) {
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.correlation", "save-svg-as-png.saveSvgAsPng"] &>
+<& /solgs/tools/base.mas &>
+
+<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>
 
 % if ($url =~ /correlation\/analysis/) {
 
