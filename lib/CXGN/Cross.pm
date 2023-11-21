@@ -1637,5 +1637,32 @@ sub get_parents_and_numbers_of_progenies {
 }
 
 
+=head2 get_crossing_experiment_additional_info
+
+    Class method.
+    Returns additional info of a crossing experiment.
+    Example: my @additional_info = CXGN::Cross->get_crossing_experiment_additional_info($schema, $trial_id);
+
+=cut
+
+sub get_crossing_experiment_additional_info {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id;
+
+    my $additional_info_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_experiment_additional_info', 'project_property')->cvterm_id();
+
+    my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
+
+    my $additional_info_string;
+    my $crossing_experiment_rs = $crossing_experiment->projectprops({type_id=>$additional_info_cvterm_id});
+    $additional_info_string = $crossing_experiment_rs->first->value();
+    my $info_hash = decode_json $additional_info_string;
+
+    return $info_hash;
+
+}
+
+
 
 1;

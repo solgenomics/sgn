@@ -298,6 +298,18 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $locations_by_program_json = encode_json(\@locations_by_program);
         my $cip_cross = $c->config->{cip_cross};
         $c->stash->{cip_cross} = $cip_cross;
+
+        my @additional_info;
+        my $crossing_experiment = CXGN::Cross->new( {schema => $schema, trial_id => $c->stash->{trial_id} });
+        my $project_additional_info = $crossing_experiment->get_crossing_experiment_additional_info();
+        my $additional_info_keys = $c->config->{crossing_experiment_additional_info};
+        my @keys = split ',',$additional_info_keys;
+        foreach my $info_key (@keys){
+            my $info = $project_additional_info->{$info_key};
+            push @additional_info, [$info_key, $info];
+        }
+
+        $c->stash->{project_additional_info} = \@additional_info;
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
     }

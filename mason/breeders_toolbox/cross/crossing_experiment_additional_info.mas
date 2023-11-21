@@ -1,17 +1,17 @@
 <%args>
-
+$project_additional_info => undef
 </%args>
 
 
 <div class="row">
     <div class="col-sm-12">
         <table class="table table-hover table-bordered" id="crossing_experiment_additional_info_table">
-% my $additional_info = $c->config->{crossing_experiment_additional_info};
-% my @labels = split ',',$additional_info;
-% foreach my $each_label(@labels){
-            <tr>
-                <td><b><%$each_label%></td>
-            </tr>
+% my @all_info = @$project_additional_info;
+% foreach my $info (@all_info) {
+    <tr>
+        <td><b><%$info->[0]%></b></td>
+        <td><%$info->[1]%></td>
+    </tr>
 %}
         </table>
     </div>
