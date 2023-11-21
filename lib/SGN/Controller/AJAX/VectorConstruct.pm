@@ -255,7 +255,7 @@ sub verify_vectors_file_POST : Args(0) {
     my $user_name;
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
-    my $autogenerate_uniquename = 1;
+
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
@@ -280,6 +280,7 @@ sub verify_vectors_file_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $upload = $c->req->upload('new_vectors_upload_file');
     my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_vectors') ? 0 : 1;
+    my $autogenerate_uniquename = !$c->req->param('autogenerate_uniquename') ? 0 : 1;
 
     if ($user_role ne 'curator' && !$do_fuzzy_search) {
         $c->stash->{rest} = {error=>'Only a curator can add vectors without using the fuzzy search!'};
