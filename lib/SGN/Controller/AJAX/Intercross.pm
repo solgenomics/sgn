@@ -841,8 +841,8 @@ sub upload_cip_cross_file_POST : Args(0) {
             my $valid_cross_name = $schema->resultset("Stock::Stock")->find({uniquename => $cross_name_key});
             if ($valid_cross_name){
                 my %info_hash = %{$cip_cross_info{$cross_name_key}};
-                print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
-                print STDERR "NEW INFO HASH =".Dumper(\%info_hash)."\n";
+#                print STDERR "CROSS NAME KEY =".Dumper($cross_name_key)."\n";
+#                print STDERR "NEW INFO HASH =".Dumper(\%info_hash)."\n";
 
                 my $previous_stockprop_rs = $valid_cross_name->stockprops({type_id=>$cross_info_cvterm->cvterm_id});
                 if ($previous_stockprop_rs->count == 1){
@@ -850,8 +850,8 @@ sub upload_cip_cross_file_POST : Args(0) {
                     $cross_json_hash_ref = decode_json $cross_json_string;
                     %cross_json_hash = %{$cross_json_hash_ref};
                     %all_cross_info = (%cross_json_hash, %info_hash);
-                    print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
-                    print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
+#                    print STDERR "PREVIOUS CROSS INFO =".Dumper(\%cross_json_hash);
+#                    print STDERR "ALL CROSS INFO =".Dumper(\%all_cross_info);
                     my $all_cross_info_string = encode_json \%all_cross_info;
                     $previous_stockprop_rs->first->update({value=>$all_cross_info_string});
                 } elsif ($previous_stockprop_rs->count > 1) {
@@ -863,6 +863,19 @@ sub upload_cip_cross_file_POST : Args(0) {
                 }
             }
         }
+
+        my %project_additional_info = %{$parsed_data->{project_info}};
+        my %formatted_info;
+        while (my ($key, $value) =  each(%project_additional_info)) {
+            my $additional_info = (keys %{$value})[0];
+            $formatted_info{$key} = $additional_info;
+        }
+        print STDERR "FORMATTED INFO =".Dumper(\%formatted_info)."\n";
+
+        my $project_additional_info_string = encode_json \%formatted_info;
+        my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
+        my $crossing_experiment_additional_into_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'crossing_experiment_additional_info', 'project_property');
+        $crossing_experiment->create_projectprops({$crossing_experiment_additional_into_cvterm->name() => $project_additional_info_string});
     }
 
     $c->stash->{rest} = {success => "1",};

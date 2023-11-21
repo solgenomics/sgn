@@ -1,0 +1,27 @@
+<%args>
+
+</%args>
+
+
+<div class="row">
+    <div class="col-sm-12">
+        <table class="table table-hover table-bordered" id="crossing_experiment_additional_info_table">
+% my $additional_info = $c->config->{crossing_experiment_additional_info};
+% my @labels = split ',',$additional_info;
+% foreach my $each_label(@labels){
+            <tr>
+                <td><b><%$each_label%></td>
+            </tr>
+%}
+        </table>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+
+});
+
+</script>

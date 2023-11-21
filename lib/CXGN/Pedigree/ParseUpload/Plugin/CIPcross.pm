@@ -653,11 +653,11 @@ sub _parse_with_plugin {
             $genetic_designs =~ s/^\s+|\s+$//g;
             $project_info{'Genetic Designs'}{$genetic_designs}++;
         }
-        if ($worksheet->get_cell($row,25)) {
-            $crossing_location = $worksheet->get_cell($row,25)->value();
-            $crossing_location =~ s/^\s+|\s+$//g;
-            $project_info{'Crossing Location'}{$crossing_location}++;
-        }
+#        if ($worksheet->get_cell($row,25)) {
+#            $crossing_location = $worksheet->get_cell($row,25)->value();
+#            $crossing_location =~ s/^\s+|\s+$//g;
+#            $project_info{'Crossing Location'}{$crossing_location}++;
+#        }
         if ($worksheet->get_cell($row,26)) {
             $plan_number = $worksheet->get_cell($row,26)->value();
             $plan_number =~ s/^\s+|\s+$//g;
