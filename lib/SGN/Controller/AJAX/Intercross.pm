@@ -870,12 +870,18 @@ sub upload_cip_cross_file_POST : Args(0) {
             my $additional_info = (keys %{$value})[0];
             $formatted_info{$key} = $additional_info;
         }
-        print STDERR "FORMATTED INFO =".Dumper(\%formatted_info)."\n";
+#        print STDERR "FORMATTED INFO =".Dumper(\%formatted_info)."\n";
 
         my $project_additional_info_string = encode_json \%formatted_info;
         my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
         my $crossing_experiment_additional_into_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'crossing_experiment_additional_info', 'project_property');
         $crossing_experiment->create_projectprops({$crossing_experiment_additional_into_cvterm->name() => $project_additional_info_string});
+
+        my %parent_info = %{$parsed_data->{parent_info}};
+        my $parent_info_string = encode_json \%parent_info;
+        my $crossing_experiment_rs = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
+        my $parent_into_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'crossing_experiment_parent_info', 'project_property');
+        $crossing_experiment_rs->create_projectprops({$parent_into_cvterm->name() => $parent_info_string});
     }
 
     $c->stash->{rest} = {success => "1",};

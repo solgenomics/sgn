@@ -472,8 +472,7 @@ sub _parse_with_plugin {
 
     my $excel_obj;
     my $worksheet;
-    my %female_info;
-    my %male_info;
+    my %parent_info;
     my @pedigrees;
     my %cross_info;
     my %project_info;
@@ -562,17 +561,17 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $female_accession_number =  $worksheet->get_cell($row,6)->value();
             $female_accession_number =~ s/^\s+|\s+$//g;
-            $female_info{$female_accession_number}{'Female Order'}{$female_order}++;
+            $parent_info{'female'}{'Female Order'}{$female_order}{'Female Accession Name'} = $female_accession_number;
         }
         if ($worksheet->get_cell($row,7)) {
             $female_code_breeder = $worksheet->get_cell($row,7)->value();
             $female_code_breeder =~ s/^\s+|\s+$//g;
-            $female_info{$female_accession_number}{'Female Code Breeder'}{$female_code_breeder}++;
+            $parent_info{'female'}{'Female Order'}{$female_order}{'Female Code Breeder'} = $female_code_breeder;
         }
         if ($worksheet->get_cell($row,8)) {
             $female_attributes = $worksheet->get_cell($row,8)->value();
             $female_attributes =~ s/^\s+|\s+$//g;
-            $female_info{$female_accession_number}{'Female Attributes'}{$female_attributes}++;
+            $parent_info{'female'}{'Female Order'}{$female_order}{'Female Attributes'} = $female_attributes;
         }
         if ($worksheet->get_cell($row,9)) {
             $male_order = $worksheet->get_cell($row,9)->value();
@@ -581,17 +580,17 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,10)) {
             $male_accession_number = $worksheet->get_cell($row,10)->value();
             $male_accession_number =~ s/^\s+|\s+$//g;
-            $male_info{$male_accession_number}{'Male Order'}{$male_order}++;
+            $parent_info{'male'}{'Male Order'}{$male_order}{'Male Accession Name'} = $male_accession_number;
         }
         if ($worksheet->get_cell($row,11)) {
             $male_code_breeder = $worksheet->get_cell($row,11)->value();
             $male_code_breeder =~ s/^\s+|\s+$//g;
-            $male_info{$male_accession_number}{'Male Code Breeder'}{$male_code_breeder}++;
+            $parent_info{'male'}{'Male Order'}{$male_order}{'Male Code Breeder'} = $male_code_breeder;
         }
         if ($worksheet->get_cell($row,12)) {
             $male_attributes = $worksheet->get_cell($row,12)->value();
             $male_attributes =~ s/^\s+|\s+$//g;
-            $male_info{$male_accession_number}{'Male Attributes'}{$male_attributes}++;
+            $parent_info{'male'}{'Male Order'}{$male_order}{'Male Attributes'} = $male_attributes;
         }
         if ($worksheet->get_cell($row,13)) {
             $number_of_flowers  = $worksheet->get_cell($row,13)->value();
@@ -747,8 +746,7 @@ sub _parse_with_plugin {
     }
 
     $parsed_result{'project_info'} = \%project_info;
-    $parsed_result{'female_info'} = \%female_info;
-    $parsed_result{'male_info'} = \%male_info;
+    $parsed_result{'parent_info'} = \%parent_info;
     $parsed_result{'crosses'} = \@pedigrees;
     $parsed_result{'cross_info'} = \%cross_info;
 

@@ -302,11 +302,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my @additional_info;
         my $crossing_experiment = CXGN::Cross->new( {schema => $schema, trial_id => $c->stash->{trial_id} });
         my $project_additional_info = $crossing_experiment->get_crossing_experiment_additional_info();
-        my $additional_info_keys = $c->config->{crossing_experiment_additional_info};
-        my @keys = split ',',$additional_info_keys;
-        foreach my $info_key (@keys){
-            my $info = $project_additional_info->{$info_key};
-            push @additional_info, [$info_key, $info];
+        print STDERR "PROJECT ADDITIONAL INFO =".Dumper($project_additional_info)."\n";
+        if ($project_additional_info) {
+            my $additional_info_keys = $c->config->{crossing_experiment_additional_info};
+            my @keys = split ',',$additional_info_keys;
+            foreach my $info_key (@keys){
+                my $info = $project_additional_info->{$info_key};
+                push @additional_info, [$info_key, $info];
+            }
         }
 
         $c->stash->{project_additional_info} = \@additional_info;
