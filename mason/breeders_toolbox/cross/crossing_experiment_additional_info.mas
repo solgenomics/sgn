@@ -1,5 +1,7 @@
 <%args>
 $project_additional_info => undef
+$project_female_info => undef
+$project_male_info => undef
 </%args>
 
 
@@ -16,6 +18,45 @@ $project_additional_info => undef
         </table>
     </div>
 </div>
+<hr class ="solid">
+<div class="row">
+    <div class="col-sm-12">
+        <table class="table table-hover table-bordered" id="crossing_experiment_female_info_table">
+% my @all_female_info = @$project_female_info;
+% foreach my $each_female_info (@all_female_info) {
+    <tr>
+% foreach my $detail (@$each_female_info) {
+        <td><%$detail%></td>
+% }
+    </tr>
+%}
+        </table>
+    </div>
+</div>
+<hr class ="solid">
+<div class="row">
+    <div class="col-sm-12">
+        <table class="table table-hover table-bordered" id="crossing_experiment_male_info_table">
+% my @all_male_info = @$project_male_info;
+% foreach my $each_male_info (@all_male_info) {
+    <tr>
+% foreach my $male_detail (@$each_male_info) {
+        <td><%$male_detail%></td>
+% }
+    </tr>
+%}
+        </table>
+    </div>
+</div>
+
+
+<style>
+
+hr.solid { border-top: 3px solid #bbb; }
+
+</style>
+
+
 
 <script>
 
