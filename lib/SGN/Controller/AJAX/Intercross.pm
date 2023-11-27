@@ -888,5 +888,40 @@ sub upload_cip_cross_file_POST : Args(0) {
 }
 
 
+sub get_project_female_info :Path('/ajax/cross/project_female_info') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $crossing_experiment_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @project_female_info;
+
+    my $crossing_experiment = CXGN::Cross->new( {schema => $schema, trial_id => $crossing_experiment_id });
+    my $project_parent_info = $crossing_experiment->get_crossing_experiment_parent_info();
+
+    if ($project_parent_info) {
+        my $female_parent_info = $project_parent_info->{'female'};
+        my $female_info_keys = $c->config->{crossing_experiment_female_info};
+        my @female_keys = split ',',$female_info_keys;
+        push @project_female_info, [@female_keys];
+
+        my $female_order_key = shift @female_keys;
+        my $ordered_female_info = $female_parent_info->{$female_order_key};
+        foreach my $order_key (sort keys %{$ordered_female_info}) {
+            my @each_female_details = ();
+            push @each_female_details, $order_key;
+            my $details = $ordered_female_info->{$order_key};
+            foreach my $female_key (@female_keys) {
+                push @each_female_details, $details->{$female_key};
+            }
+            push @project_female_info, [@each_female_details];
+        }
+    }
+
+    $c->stash->{rest} = { data => \@project_female_info;
+
+}
+
+
+
 
 1;
