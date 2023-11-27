@@ -148,7 +148,7 @@ export function init() {
             }
         }
 
-        get_plot_order(type, order, start, include_borders, include_gaps) {
+        get_plot_order(type, order, start, include_borders, include_gaps, additional_properties) {
             (async () => {
                 jQuery('#working_modal').modal("show");
                 let q = new URLSearchParams({
@@ -160,7 +160,8 @@ export function init() {
                     'right_border': !!include_borders && !!this.meta_data.right_border_selection,
                     'bottom_border': !!include_borders && !!this.meta_data.bottom_border_selection,
                     'left_border': !!include_borders && !!this.meta_data.left_border_selection,
-                    'gaps': !!include_gaps
+                    'gaps': !!include_gaps,
+                    ...additional_properties
                 }).toString();
 
                 try {
