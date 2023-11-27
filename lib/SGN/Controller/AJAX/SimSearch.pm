@@ -22,15 +22,16 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
 
     
     my $filename = $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/simsearch/".$c->req->param("filename");
+    my $fileurl = '/simsearch/'.$c->req->param("filename");
     my $format = $c->req->param("format");
 
     print STDERR "FORMAT = $format\n";
     
-    if ($format eq "vcf") {
-	print STDERR "Converting vcf to dosage...\n";
-	system("perl ../gtsimsrch/src/vcf2dosage.pl < $filename > $filename.dosage");
-	$filename = $filename.".dosage";
-    }
+#    if ($format eq "vcf") {
+#	print STDERR "Converting vcf to dosage...\n";
+#	system("perl ../gtsimsrch/src/vcf2dosage.pl < $filename > $filename.dosage");
+#	$filename = $filename.".dosage";
+ #   }
 
     
     
@@ -42,43 +43,44 @@ sub process_file :Path('/ajax/tools/simsearch/process_file') :Args(0) {
     #
     my $ref_option = "";
     if ($reference_file) {
-	$ref_option = " -r $reference_file_path ";
+	$ref_option = " -ref $reference_file_path ";
     }
     
-    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
+#    my $cmd = "../gtsimsrch/src/simsearch -i $filename $ref_option -o $filename.out";
 
+    my $cmd = "../gtsimsrch/src/duplicate_finder.pl -alt_marker_ids -nofull_cluster_output -max_distance 0.5 -in $filename $ref_option -output $filename.out -graphics GD -histogram_filename $filename.out_distances_histogram.png -histogram_path /home/production/cxgn/gtsimsrch/src/histogram.pl";
     print STDERR "running command $cmd...\n";
     system($cmd);
 
 
-    system("perl ../gtsimsrch/src/agmr_cluster.pl < $filename.out > $filename.out.clusters");
-
     my $results;
-    open(my $F , "<", $filename.".out.clusters") || die "Can't open file $filename.out";
+    open(my $F , "<", $filename.".out_clusters") || die "Can't open file $filename.out_clusters";
 
     my @data;
     my @line;
-    my $html = "<table cellspacing=\"20\" cellpadding=\"20\" border=\"1\">";
+
     my $group =1;
-    
+
+    print STDERR "Parsing output file...\n";
     while(<$F>) {
+	print STDERR "Processing group $group...\n";
 	chomp;
 	if (/^#/) { next; }
-	@line = split /\s+/;
-	$html .= '<tr><td>'.$group.'</td><td>'. join('<br />', @line[4..@line-1])."</td></tr>\n";
-	push @data, [ $line[0], $line[1], $line[2], $line[3], join("<br />", @line[4..@line-1]) ];
+	@line = split " ";
+	my @members = @line[9..@line-1];
+		
+	push @data, [ $group, $line[0], $line[3], $line[2], join("<br />", @members) ];
 	$group++;
     }
-    $html.="</table>\n";
     close($F);
+    print STDERR "Done.\n";
     
     # plot the agmr score distribution histogram using the 6th column in $filename.out
     #
     # (use gnuplot or R)
 
-#    $c->stash->{template} = '/tools/simsearch/results.mas';
-
-    $c->stash->{rest} = { data => \@data };
+    $c->stash->{rest} = { data => \@data,
+                          histogram => '/documents/tempfiles/'.$fileurl.".out_distances_histogram.png"   };
     
 }
 

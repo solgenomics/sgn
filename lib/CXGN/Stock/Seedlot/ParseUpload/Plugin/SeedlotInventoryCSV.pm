@@ -116,7 +116,7 @@ sub _validate_with_plugin {
     my @seedlots_missing = @{$seedlots_validator->validate($schema,'seedlots',\@seedlots)->{'missing'}};
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database, so please add them before uploading inventory: ".join(',',@seedlots_missing);
+        push @error_messages, "The following seedlots are not in the database or are marked as discarded: ".join(',',@seedlots_missing);
         $errors{'missing_seedlots'} = \@seedlots_missing;
     }
 
