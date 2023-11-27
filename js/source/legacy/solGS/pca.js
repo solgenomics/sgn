@@ -605,7 +605,9 @@ solGS.pca = {
       .attr("width", totalW)
       .attr("height", totalH);
 
-    var pcaPlot = svg.append("g").attr("id", pcaPlotDivId).attr("transform", "translate(0,0)");
+    var pcaPlot = svg.append("g")
+      .attr("id", pcaPlotDivId)
+      .attr("transform", "translate(0,0)");
 
     var pc1Min = d3.min(pc1);
     var pc1Max = d3.max(pc1);
@@ -613,29 +615,26 @@ solGS.pca = {
     var pc1Limits = d3.max([Math.abs(d3.min(pc1)), d3.max(pc1)]);
     var pc2Limits = d3.max([Math.abs(d3.min(pc2)), d3.max(pc2)]);
 
-    var pc1AxisScale = d3.scale
-      .linear()
+    var pc1AxisScale = d3.scaleLinear()
       .domain([0, pc1Limits])
       .range([0, width / 2]);
 
-    var pc1AxisLabel = d3.scale
-      .linear()
+    var pc1AxisLabel = d3.scaleLinear()
       .domain([-1 * pc1Limits, pc1Limits])
       .range([0, width]);
 
-    var pc2AxisScale = d3.scale
-      .linear()
+    var pc2AxisScale = d3.scaleLinear()
       .domain([0, pc2Limits])
       .range([0, height / 2]);
 
-    var pc1Axis = d3.svg.axis().scale(pc1AxisLabel).tickSize(3).orient("bottom");
+    var pc1Axis = d3.axisBottom(pc1AxisLabel).tickSize(3);
 
-    var pc2AxisLabel = d3.scale
-      .linear()
+    var pc2AxisLabel = d3.scaleLinear()
       .domain([-1 * pc2Limits, pc2Limits])
       .range([height, 0]);
 
-    var pc2Axis = d3.svg.axis().scale(pc2AxisLabel).tickSize(3).orient("left");
+
+      var pc2Axis = d3.axisLeft(pc2AxisLabel).tickSize(3);
 
     var pc1AxisMid = 0.5 * height + pad.top;
     var pc2AxisMid = 0.5 * width + pad.left;
@@ -663,15 +662,14 @@ solGS.pca = {
       },
     ];
 
-    var lineFunction = d3.svg
-      .line()
+    var lineFunction = d3.line()
       .x(function (d) {
         return d.x;
       })
       .y(function (d) {
         return d.y;
-      })
-      .interpolate("linear");
+      });
+      // .interpolate("linear");
 
     var pc1Color = "green";
     var pc2Color = "red";
@@ -739,16 +737,14 @@ solGS.pca = {
       .attr("stroke-width", 1)
       .attr("fill", "none");
 
-    var grpColor = d3.scale.category10();
-
-    pcaPlot
-      .append("g")
+    var grpColor = d3.scaleOrdinal(d3.schemeCategory10);
+    pcaPlot.append("g")
       .selectAll("circle")
       .data(pc12)
       .enter()
       .append("circle")
       .style("fill", function (d) {
-        return grpColor(d[0].trial);
+        return grpColor(trials.indexOf(d[0].trial));
       })
       .attr("r", 3)
       .attr("cx", function (d) {
@@ -782,7 +778,7 @@ solGS.pca = {
         d3.select(this)
           .attr("r", 3)
           .style("fill", function (d) {
-            return grpColor(d[0].trial);
+            return grpColor(trials.indexOf(d[0].trial));
           });
         d3.selectAll("text#dLabel").remove();
       });
@@ -835,7 +831,6 @@ solGS.pca = {
         } else {
           groupName = trialsNames[id];
         }
-
         legendValues.push([cnt, id, groupName]);
         cnt++;
       });
@@ -866,8 +861,8 @@ solGS.pca = {
         .attr("width", recLH)
         .attr("height", recLW)
         .style("stroke", "black")
-        .attr("fill", function (d) {
-          return grpColor(d[1]);
+        .style("fill", function (d) {
+          return grpColor(trials.indexOf(d[1]));
         });
 
       var legendTxt = pcaPlot

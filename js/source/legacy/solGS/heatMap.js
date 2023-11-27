@@ -119,32 +119,20 @@ solGS.heatmap = {
       coefDom = [rmin, 0];
       coefRange = [nve, "white"];
     }
-
-    var corXscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([0, width]);
-    var corYscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([height, 0]);
-    var corZscale = d3.scale.linear().domain(coefDom).range(coefRange);
-
-    var xAxisScale = d3.scale.ordinal().domain(labels).rangeBands([0, width]);
-    var yAxisScale = d3.scale.ordinal().domain(labels).rangeRoundBands([height, 0]);
-
-    // var corZscale = d3.scaleLinear().domain(coefDom).range(coefRange);
-    // var xAxisScale = d3.scaleBand()
-		// .range([0, width])	
-		// .domain(labels)
-		// .padding(0.00);
-
-    // var yAxisScale = d3.scaleBand()
-		// .range([height, 0])
-		// .domain(labels)
-		// .padding(0.00);
     
-    var xAxis = d3.svg.axis()
-    .scale(xAxisScale)
-    .orient("bottom");
+    var corZscale = d3.scaleLinear().domain(coefDom).range(coefRange);
+    var xAxisScale = d3.scaleBand()
+		.range([0, width])	
+		.domain(labels)
+		.padding(0.00);
 
-  var yAxis = d3.svg.axis()
-    .scale(yAxisScale)
-    .orient("left");
+    var yAxisScale = d3.scaleBand()
+		.range([height, 0])
+		.domain(labels)
+		.padding(0.00);
+    
+  var xAxis = d3.axisBottom(xAxisScale);
+  var yAxis  = d3.axisLeft(yAxisScale);
 
     var svg = d3
       .select(heatmapPlotDivId)
@@ -152,11 +140,9 @@ solGS.heatmap = {
       .attr("height", totalH)
       .attr("width", totalW);
      
-
    var  corrplot = svg.append("g")
     .attr("id", heatmapPlotDivId)
     .attr("transform", "translate(0, 0)");
-  
 
     corrplot
       .append("g")
@@ -176,7 +162,7 @@ solGS.heatmap = {
       .attr("transform", "translate(" + pad.left + "," + (pad.top +  height) + ")")
       .call(xAxis)
       .selectAll("text")
-      .attr("x", 10)
+      .attr("x", 30)
       .attr("y", 0)
       .attr("dy", ".1em")
       .attr("transform", "rotate(90)")
@@ -196,8 +182,8 @@ solGS.heatmap = {
       .attr("y", function (d) {
         return pad.top + yAxisScale(labels[d.row]);
       })
-      .attr("width", corXscale.rangeBand())
-      .attr("height", corYscale.rangeBand())
+      .attr("width", xAxisScale.bandwidth())
+      .attr("height", yAxisScale.bandwidth())
       .style("stroke",  function (d) {
         if (d.value == "NA") {
           return "white";
