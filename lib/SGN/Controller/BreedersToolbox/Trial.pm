@@ -312,48 +312,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             }
         }
 
-        my @project_female_info;
-        my @project_male_info;
-        my $project_parent_info = $crossing_experiment->get_crossing_experiment_parent_info();
-        if ($project_parent_info) {
-            my $female_parent_info = $project_parent_info->{'female'};
-            my $female_info_keys = $c->config->{crossing_experiment_female_info};
-            my @female_keys = split ',',$female_info_keys;
-            push @project_female_info, [@female_keys];
-
-            my $female_order_key = shift @female_keys;
-            my $ordered_female_info = $female_parent_info->{$female_order_key};
-            foreach my $order_key (sort keys %{$ordered_female_info}) {
-                my @each_female_details = ();
-                push @each_female_details, $order_key;
-                my $details = $ordered_female_info->{$order_key};
-                foreach my $female_key (@female_keys) {
-                    push @each_female_details, $details->{$female_key};
-                }
-                push @project_female_info, [@each_female_details];
-            }
-
-            my $male_parent_info = $project_parent_info->{'male'};
-            my $male_info_keys = $c->config->{crossing_experiment_male_info};
-            my @male_keys = split ',',$male_info_keys;
-            push @project_male_info, [@male_keys];
-
-            my $male_order_key = shift @male_keys;
-            my $ordered_male_info = $male_parent_info->{$male_order_key};
-            foreach my $male_order_key (sort keys %{$ordered_male_info}) {
-                my @each_male_details = ();
-                push @each_male_details, $male_order_key;
-                my $male_details = $ordered_male_info->{$male_order_key};
-                foreach my $male_key (@male_keys) {
-                    push @each_male_details, $male_details->{$male_key};
-                }
-                push @project_male_info, [@each_male_details];
-            }
-        }
-
-
-        $c->stash->{project_female_info} = \@project_female_info;
-        $c->stash->{project_male_info} = \@project_male_info;
         $c->stash->{project_additional_info} = \@additional_info;
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';

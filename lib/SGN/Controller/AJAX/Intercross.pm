@@ -902,7 +902,6 @@ sub get_project_female_info :Path('/ajax/cross/project_female_info') :Args(1) {
         my $female_parent_info = $project_parent_info->{'female'};
         my $female_info_keys = $c->config->{crossing_experiment_female_info};
         my @female_keys = split ',',$female_info_keys;
-        push @project_female_info, [@female_keys];
 
         my $female_order_key = shift @female_keys;
         my $ordered_female_info = $female_parent_info->{$female_order_key};
@@ -917,11 +916,41 @@ sub get_project_female_info :Path('/ajax/cross/project_female_info') :Args(1) {
         }
     }
 
-    $c->stash->{rest} = { data => \@project_female_info;
+    $c->stash->{rest} = { data => \@project_female_info};
 
 }
 
+sub get_project_male_info :Path('/ajax/cross/project_male_info') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $crossing_experiment_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @project_male_info;
 
+    my $crossing_experiment = CXGN::Cross->new( {schema => $schema, trial_id => $crossing_experiment_id });
+    my $project_parent_info = $crossing_experiment->get_crossing_experiment_parent_info();
+
+    if ($project_parent_info) {
+        my $male_parent_info = $project_parent_info->{'male'};
+        my $male_info_keys = $c->config->{crossing_experiment_male_info};
+        my @male_keys = split ',',$male_info_keys;
+
+        my $male_order_key = shift @male_keys;
+        my $ordered_male_info = $male_parent_info->{$male_order_key};
+        foreach my $order_key (sort keys %{$ordered_male_info}) {
+            my @each_male_details = ();
+            push @each_male_details, $order_key;
+            my $details = $ordered_male_info->{$order_key};
+            foreach my $male_key (@male_keys) {
+                push @each_male_details, $details->{$male_key};
+            }
+            push @project_male_info, [@each_male_details];
+        }
+    }
+
+    $c->stash->{rest} = { data => \@project_male_info};
+
+}
 
 
 1;
