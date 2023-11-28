@@ -4,20 +4,21 @@ $project_additional_info => undef
 </%args>
 
 
-<div class="row">
-    <div class="col-sm-12">
-        <table class="table table-hover table-bordered" id="crossing_experiment_additional_info_table">
+<&| /page/info_section.mas, title => 'General Info', collapsible=>1, collapsed=>1 &>
+    <div class="row">
+        <div class="col-sm-12">
+            <table class="table table-hover table-bordered" id="crossing_experiment_additional_info_table">
 % my @all_info = @$project_additional_info;
 % foreach my $info (@all_info) {
-    <tr>
-        <td><b><%$info->[0]%></b></td>
-        <td><%$info->[1]%></td>
-    </tr>
+                <tr>
+                    <td><b><%$info->[0]%></b></td>
+                    <td><%$info->[1]%></td>
+                </tr>
 %}
-        </table>
+            </table>
+        </div>
     </div>
-</div>
-
+</&>
 <&| /page/info_section.mas, title => 'Female Parent Info', collapsible=>1, collapsed=>1 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
