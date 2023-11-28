@@ -47,7 +47,8 @@ $trial_id
         return jQuery.ajax( {
             'url': "/brapi/v2/search/variables",
 	    'data': { 'studyDbIds': [ trial_id ] },
-	    'method' : 'POST'
+	    'method' : 'POST',
+	    'pageSize': 10000
 	});
      }
 
