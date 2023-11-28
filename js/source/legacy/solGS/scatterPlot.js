@@ -79,31 +79,27 @@ solGS.scatterPlot = {
     var xLimits = d3.max([Math.abs(d3.min(phenoXValues)), d3.max(phenoXValues)]);
     var yLimits = d3.max([Math.abs(d3.min(breedingYValues)), d3.max(breedingYValues)]);
     
-    var xAxisScale = d3.scale.linear()
+    var xAxisScale = d3.scaleLinear()
         .domain([0, xLimits])
         .range([0, width/2]);
     
-    var xAxisLabel = d3.scale.linear()
+    var xAxisLabel = d3.scaleLinear()
         .domain([(-1 * xLimits), xLimits])
         .range([0, width]);
 
-    var yAxisScale = d3.scale.linear()
+    var yAxisScale = d3.scaleLinear()
         .domain([0, yLimits])
         .range([0, (height/2)]);
 
-    var xAxis = d3.svg.axis()
-        .scale(xAxisLabel)
-        .tickSize(3)
-        .orient("bottom");
+    var xAxis = d3.axisBottom(xAxisLabel)
+        .tickSize(3);
           
-    var yAxisLabel = d3.scale.linear()
+    var yAxisLabel = d3.scaleLinear()
         .domain([(-1 * yLimits), yLimits])
         .range([height, 0]);
     
-   var yAxis = d3.svg.axis()
-        .scale(yAxisLabel)
-        .tickSize(3)
-        .orient("left");
+   var yAxis = d3.axisLeft(yAxisLabel)
+        .tickSize(3);
 
     var xAxisMid = 0.5 * (totalH); 
     var yAxisMid = 0.5 * (totalW);
@@ -217,7 +213,7 @@ solGS.scatterPlot = {
     rq     = Math.round(rq*100) / 100;
     rq     = 'R-squared = ' + rq;
 
-    var lsLine = d3.svg.line()
+    var lsLine = d3.line()
         .x(function(d) {
             if (d[0] >= 0) {
                 return  (pad.left + (width/2)) + xAxisScale(d[0]);

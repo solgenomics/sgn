@@ -85,6 +85,7 @@ sub genotyping_protocol_delete_GET : Args(1) {
     ";
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute();
+    
     my %genotype_ids_and_nd_experiment_ids_to_delete;
     while (my ($nd_experiment_id, $genotype_id) = $h->fetchrow_array()) {
         push @{$genotype_ids_and_nd_experiment_ids_to_delete{genotype_ids}}, $genotype_id;
@@ -92,33 +93,40 @@ sub genotyping_protocol_delete_GET : Args(1) {
     }
 
     # Cascade will delete from genotypeprop
-    my $genotype_id_sql = join (",", @{$genotype_ids_and_nd_experiment_ids_to_delete{genotype_ids}});
-    my $del_geno_q = "DELETE from genotype WHERE genotype_id IN ($genotype_id_sql);";
-    my $h_del_geno = $bcs_schema->storage->dbh()->prepare($del_geno_q);
-    $h_del_geno->execute();
+    if ($genotype_ids_and_nd_experiment_ids_to_delete{genotype_ids}->[0]) {
+        my $genotype_id_sql = join (",", @{$genotype_ids_and_nd_experiment_ids_to_delete{genotype_ids}});
+
+        my $del_geno_q = "DELETE from genotype WHERE genotype_id IN ($genotype_id_sql);";
+        my $h_del_geno = $bcs_schema->storage->dbh()->prepare($del_geno_q);
+        $h_del_geno->execute();
+    }
 
     # Cascade will delete from nd_protocolprop
     my $del_geno_prot_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
     my $h_del_geno_prot = $bcs_schema->storage->dbh()->prepare($del_geno_prot_q);
     $h_del_geno_prot->execute($protocol_id);
 
-    # Delete nd_experiment_md_files entries linking genotypes to archived genotyping upload file e.g. original VCF
-    my $nd_experiment_id_sql = join (",", @{$genotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}});
-    my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-    my $h3 = $bcs_schema->storage->dbh()->prepare($q_nd_exp_files_delete);
-    $h3->execute();
+    # Delete nd_experiment_md_files entries linking genotypes to archived genotyping upload file
+    # e.g. original VCF
 
-    # Delete from nd_experiment asynchronously because it takes long
-    my $dir = $c->tempfiles_subdir('/genotype_data_delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = "$basepath/".$c->tempfile( TEMPLATE => 'genotype_data_delete_nd_experiment_ids/fileXXXX');
-    open (my $fh, "> :encoding(UTF-8)", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
+    if ($genotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}->[0]) {
+        my $nd_experiment_id_sql = join (",", @{$genotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}});
+        my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+        my $h3 = $bcs_schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+        $h3->execute();
+        
+
+        # Delete from nd_experiment asynchronously because it takes long
+        my $dir = $c->tempfiles_subdir('/genotype_data_delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = "$basepath/".$c->tempfile( TEMPLATE => 'genotype_data_delete_nd_experiment_ids/fileXXXX');
+        open (my $fh, "> :encoding(UTF-8)", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
         foreach (@{$genotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}) {
             print $fh "$_\n";
         }
-    close($fh);
-    my $async_delete = CXGN::Tools::Run->new();
-    $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
-
+        close($fh);
+        my $async_delete = CXGN::Tools::Run->new();
+        $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+    }
     # Rebuild and refresh the materialized_markerview table
     my $async_refresh = CXGN::Tools::Run->new();
     $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");

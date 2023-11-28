@@ -631,8 +631,8 @@ sub rrblup_selection_gebvs_file {
     my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
 
     my $type = 'selection';
-    $c->stash->{selection_pop_id} = $selection_pop_id;
-    $c->stash->{training_pop_id} = $training_pop_id;
+    $c->stash->{selection_pop_id} = $selection_pop_id if $selection_pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
 
     my $file_id = $self->gebvs_file_id($c, $type);
 
