@@ -391,11 +391,15 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,0)) {
             $inventory_id = $worksheet->get_cell($row,0)->value();
         }
-        print STDERR "INVENTORY ID =".Dumper($inventory_id)."\n";
         if ($worksheet->get_cell($row,6)) {
             $female_accession_number =  $worksheet->get_cell($row,6)->value();
             $female_accession_number =~ s/^\s+|\s+$//g;
         }
+
+        if (!defined $inventory_id && !defined $female_accession_number) {
+            last;
+        }
+
         if ($worksheet->get_cell($row,10)) {
             $male_accession_number = $worksheet->get_cell($row,10)->value();
             $male_accession_number =~ s/^\s+|\s+$//g;
@@ -534,6 +538,11 @@ sub _parse_with_plugin {
             $inventory_id = $worksheet->get_cell($row,0)->value();
             $inventory_id =~ s/^\s+|\s+$//g;
         }
+
+        if (!defined $inventory_id) {
+            last;
+        }
+
         if ($worksheet->get_cell($row,1)) {
             $crop_module_id = $worksheet->get_cell($row,1)->value();
             $crop_module_id =~ s/^\s+|\s+$//g;
