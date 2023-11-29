@@ -9,6 +9,7 @@ use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use CXGN::List;
 use CXGN::Stock::Seedlot;
+use SGN::Model::Cvterm;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -132,6 +133,134 @@ is($third_row->{'content_type'}, 'cross');
 is($third_row->{'current_count'}, '5');
 is($third_row->{'box_name'}, 'b1');
 is($third_row->{'quality'}, '');
+
+#test uploading transactions
+#from existing seedlots to new seedlots
+my $seedlot_test2_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test2' })->stock_id();
+my $seedlot_test2_before = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_id);
+is($seedlot_test2_before->current_count, 99, "check current count before transferring");
+
+my $file_1 = $f->config->{basepath}."/t/data/stock/seedlots_to_new_seedlots.xlsx";
+my $ua_1 = LWP::UserAgent->new;
+my $response_1 = $ua_1->post(
+        'http://localhost:3010/ajax/breeders/upload_transactions',
+        Content_Type => 'form-data',
+        Content => [
+            seedlots_to_new_seedlots_file => [ $file_1, "seedlots_to_new_seedlots.xlsx", Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            "new_seedlot_breeding_program_id"=>$breeding_program_id,
+            "new_seedlot_location"=>'test_location',
+            "new_seedlot_organization_name"=>"testorg1",
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response_1->is_success);
+my $message_1 = $response_1->decoded_content;
+my $message_hash_1 = decode_json $message_1;
+is_deeply($message_hash_1, { 'success' => 1 });
+
+my $seedlot_test2_after = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_id);
+is($seedlot_test2_after->current_count, 49, "check current count after transferring");
+
+#check new seedlots
+my $seedlot_test2_1_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test2_1' })->stock_id();
+my $seedlot_test2_1 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_1_id);
+is($seedlot_test2_1->current_count, 30, "check current count for new seedlot");
+
+my $seedlot_test2_2_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test2_2' })->stock_id();
+my $seedlot_test2_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
+is($seedlot_test2_2->current_count, 20, "check current count for new seedlot");
+
+#from existing seedlots to existing seedlots
+my $file_2 = $f->config->{basepath}."/t/data/stock/seedlots_to_seedlots.xlsx";
+my $ua_2 = LWP::UserAgent->new;
+my $response_2 = $ua_2->post(
+        'http://localhost:3010/ajax/breeders/upload_transactions',
+        Content_Type => 'form-data',
+        Content => [
+            seedlots_to_seedlots_file => [ $file_2, "seedlots_to_seedlots.xlsx", Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response_2->is_success);
+my $message_2 = $response_2->decoded_content;
+my $message_hash_2 = decode_json $message_2;
+is_deeply($message_hash_2, { 'success' => 1 });
+
+my $seedlot_test2_after_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_id);
+is($seedlot_test2_after_2->current_count, 34, "check current count after transferring");
+
+my $seedlot_test2_1_after_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_1_id);
+is($seedlot_test2_1_after_2->current_count, 40, "check current count after adding");
+
+my $seedlot_test2_2_after_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
+is($seedlot_test2_2_after_2->current_count, 25, "check current count after adding");
+
+#add seedlots for plots
+my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
+my $new_seedlot_1 = CXGN::Stock::Seedlot->new(schema => $schema);
+my $test_accession4_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession4'})->stock_id;
+$new_seedlot_1->uniquename("test_seedlot_4");
+$new_seedlot_1->location_code("XYZ-123");
+$new_seedlot_1->accession_stock_id($test_accession4_id);
+$new_seedlot_1->organization_name('bti');
+$new_seedlot_1->breeding_program_id($breeding_program_id);
+my $return_1 = $new_seedlot_1->store();
+my $test_seedlot_4_id = $return_1->{seedlot_id};
+
+my $trans_1 = CXGN::Stock::Seedlot::Transaction->new(schema => $schema,);
+$trans_1->from_stock([$test_accession4_id, 'test_accession4', $accession_type_id]);
+$trans_1->to_stock([$test_seedlot_4_id, 'test_seedlot_4', $seedlot_type_id]);
+$trans_1->amount(50);
+$trans_1->timestamp(localtime);
+$trans_1->description('test');
+$trans_1->operator('janedoe');
+my $trans_id_1 = $trans_1->store();
+
+my $new_seedlot_2 = CXGN::Stock::Seedlot->new(schema => $schema);
+my $test_accession5_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession5'})->stock_id;
+$new_seedlot_2->uniquename("test_seedlot_5");
+$new_seedlot_2->location_code("XYZ-123");
+$new_seedlot_2->accession_stock_id($test_accession5_id);
+$new_seedlot_2->organization_name('bti');
+$new_seedlot_2->breeding_program_id($breeding_program_id);
+my $return_2 = $new_seedlot_2->store();
+my $test_seedlot_5_id = $return_2->{seedlot_id};
+
+my $trans_2 = CXGN::Stock::Seedlot::Transaction->new(schema => $schema,);
+$trans_2->from_stock([$test_accession5_id, 'test_accession5', $accession_type_id]);
+$trans_2->to_stock([$test_seedlot_5_id, 'test_seedlot_5', $seedlot_type_id]);
+$trans_2->amount(40);
+$trans_2->timestamp(localtime);
+$trans_2->description('test');
+$trans_2->operator('janedoe');
+my $trans_id_2 = $trans_2->store();
+
+my $file_3 = $f->config->{basepath}."/t/data/stock/seedlots_to_plots.xlsx";
+my $ua_3 = LWP::UserAgent->new;
+my $response_3 = $ua_3->post(
+        'http://localhost:3010/ajax/breeders/upload_transactions',
+        Content_Type => 'form-data',
+        Content => [
+            seedlots_to_plots_file => [ $file_3, "seedlots_to_plots.xlsx", Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response_3->is_success);
+my $message_3 = $response_3->decoded_content;
+my $message_hash_3 = decode_json $message_3;
+print STDERR "MESSAGE HASH =".Dumper($message_hash_3)."\n";
+is_deeply($message_hash_3, { 'success' => 1 });
+
+my $test_seedlot_4_after = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $test_seedlot_4_id);
+is($test_seedlot_4_after->current_count, 45, "check current count after being transferred to plot");
+
+my $test_seedlot_5_after = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $test_seedlot_5_id);
+is($test_seedlot_5_after->current_count, 35, "check current count after being transferred to plot");
 
 #test discarding seedlot
 my $seedlot_test1_rs = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test1' });

@@ -34,18 +34,11 @@ $training_pop_name
 .axis text {
   font: 10px sans-serif;
 }
-
-.axis line,
-.axis path {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
 </style>
 
+<& /solgs/tools/base.mas &>
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
+<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>
 <&| /page/info_section.mas,
       collapsible => 1,
       collapsed   => 0,
