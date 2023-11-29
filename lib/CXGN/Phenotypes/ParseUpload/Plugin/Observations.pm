@@ -129,6 +129,7 @@ sub parse {
     my %data = ();
     my %seen = ();
     my (@observations, @unit_dbids, @variables, @values, @timestamps);
+
     foreach my $obs (@data){
 
         my $obsunit_db_id = $obs->{'observationUnitDbId'};
@@ -221,14 +222,6 @@ sub parse {
         $parse_result{'error'} = "The following observationVariableDbIds do not exist in the database: @variables_missing";
         #print STDERR "Invalid observationVariableDbIds: @variables_missing\n";
         return \%parse_result;
-    }
-
-    foreach my $value (@values) {
-        if ($value eq '.' || ($value =~ m/[^a-zA-Z0-9,.\-\/\_:;\s]/ && $value ne '.')) {
-            $parse_result{'error'} = "Value $value is not valid. Trait values must be alphanumeric.";
-            print STDERR "Invalid value: $value\n";
-            return \%parse_result;
-        }
     }
 
     foreach my $timestamp (@timestamps) {

@@ -1,0 +1,69 @@
+<%args>
+
+</%args>
+
+
+<div class="modal fade" id="discard_seedlot_usage_info_dialog" name="discard_seedlot_usage_info_dialog" tabindex="-1" role="dialog" aria-labelledby="discardSeedlotUsageInfoDialog">
+    <div class="modal-dialog modal-lg " role="document">
+        <div class="modal-content">
+            <div class="well well-lg">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="modal-header" style="text-align: center">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="discardUsageInfoDialog">Marking Seedlots as DISCARDED and Undo Options</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="container-fluid">
+                                <p> Only users with curator role can mark seedlots as "DISCARDED" or undo discarding seedlots.</p>
+                                <hr class ="solid">
+                                <h4>
+                                    Discarding vs. Deleting Seedlots:
+                                </h4>
+                                <p> Discarding a seedlot is different from deleting a seedlot.
+                                <li>Deleting a seedlot permanently removes that seedlot and all associated transactions from database. Discarding a seedlot inactivates the seedlot, but information related to that seedlot is still kept in the database.</li>
+                                <li>Amount/Weight of discarded seedlot is labeled as "DISCARDED".</li>
+                                <li>Discarding a seedlot can be reversed with UNDO function, but deletion a seedlot cannot be undone.</li>
+                                <li>Discarded seedlots still can be viewed in seedlot details pages and are searchable. However, links for adding new transaction, editing details and transaction are removed.</li>
+                                <li>Discarded seedlots are excluded from dropdown list for adding new transactions.</li>
+                                <hr class ="solid">
+                                <h4>
+                                    How to Mark Seedlot as DISCARDED:
+                                </h4>
+                                <li>Using a List: Several seedlots can be discarded at once by using a list with seedlots list type. The link can be found at the buttom of Manage Seedlots (Available Seedlots) page.</li>
+                                <li>Discarding single seedlot: The link can be found at the buttom of Seedlot Details page.</li>
+                                <hr class ="solid">
+                                <h4>
+                                    UNDO Discarding seedlots:
+                                </h4>
+                                <p>Discarded seedlot can be reversed by using UNDO option at the buttom of Seedlot Details page </p>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="close_discarded_seedlot_usage_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+hr.solid { border-top: 3px solid #bbb; }
+
+</style>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("[name='discard_seedlot_usage_info']").click(function() {
+        jQuery('#discard_seedlot_usage_info_dialog').modal("show");
+    });
+
+});
+
+</script>

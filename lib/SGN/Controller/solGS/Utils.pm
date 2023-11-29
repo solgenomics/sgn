@@ -7,6 +7,7 @@ use File::Slurp qw /write_file read_file edit_file/;
 use JSON;
 use List::MoreUtils qw(first_index);
 
+
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
 
@@ -247,7 +248,7 @@ sub remove_ontology {
 		my $name = $tr->[1];
 		$name= $self->clean_traits($name);
 
-	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
+	my $id_nm = {'id' => $tr->[0], 'name' => $name};
  	push @clean_traits, $id_nm;
     }
 
@@ -265,7 +266,7 @@ sub get_clean_trial_trait_names {
 
     foreach my $tr (@$clean_traits)
     {
-		push @trait_names, $tr->{trait_name};
+		push @trait_names, $tr->{name};
     }
 
     return \@trait_names;
@@ -293,6 +294,7 @@ sub stash_json_args {
     my $json = JSON->new();
     my $args_hash = $json->decode($args_json);
     my $data_set_type = $args_hash->{'data_set_type'};
+    my $data_str = $args_hash->{'data_structure'};
 
     my $protocol_id =  $args_hash->{'genotyping_protocol_id'};
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
@@ -325,7 +327,15 @@ sub stash_json_args {
         }
         else
         {
+            no warnings 'uninitialized';
             $c->stash->{$key} = $val;
+
+            if ($data_str =~ /dataset|list/  && $key =~ /(cluster|kinship|pca|corr)_pop_id/)
+            {
+                my $name = "${data_str }_id";
+                $val =~ s/\w+_//g;
+                $c->stash->{$name } = $val;
+            }
         }
     }
 
@@ -334,15 +344,6 @@ sub stash_json_args {
         $c->stash->{combo_pops_id} = $c->stash->{training_pop_id};
     }
 
-}
-
-
-sub generic_message {
-    my ($self, $c, $msg) = @_;
-
-    $c->stash->{message} = $msg;
-
-    $c->stash->{template} = "/generic_message.mas";
 }
 
 sub require_login {

@@ -61,6 +61,7 @@ open(my $F, "<", $file) || die "Can't open file $file.\n";
 my $header = <$F>;
 
 my @merged_stocks_to_delete = ();
+my @merge_errors = ();
 
 print STDERR "Skipping header line $header\n";
 eval {
@@ -92,7 +93,12 @@ eval {
 	my $merge_stock = CXGN::Stock->new( { schema => $schema, stock_id => $merge_row->stock_id });
 
 	print STDERR "Merging stock $merge_stock_name into $good_stock_name... ";
-	$good_stock->merge($merge_stock->stock_id());
+	my $merge_error = $good_stock->merge($merge_stock->stock_id());
+
+	if ( $merge_error ) {
+		push @merge_errors, "ERROR: Could not merge $merge_stock_name into $good_stock_name [$merge_error]";
+		next();
+	}
 
 	if ($delete_merged_stock) {
 	    push @merged_stocks_to_delete, $merge_stock->stock_id();
@@ -128,5 +134,12 @@ if ($@) {
 else {
     print STDERR "Script is done. Committing... ";
     $dbh->commit();
+
+	if ( scalar(@merge_errors) > 0 ) {
+		print STDERR "WARNING: THE FOLLOWING STOCKS COULD NOT BE MERGED!\n";
+		foreach (@merge_errors) {
+			print STDERR "$_\n";
+		}
+	}
     print STDERR "Done.\n";
 }

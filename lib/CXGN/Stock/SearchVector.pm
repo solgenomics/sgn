@@ -413,7 +413,7 @@ sub search {
     my $using_stockprop_filter;
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
         $using_stockprop_filter = 1;
-        #print STDERR Dumper $self->stockprops_values;
+
         my @stockprop_wheres;
         foreach my $term_name (keys %{$self->stockprops_values}){
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
@@ -475,9 +475,14 @@ sub search {
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
     }
+
     if ( scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
     }
+
+    #skip rest of query if no results
+    my @result;
+    my $records_total = 0;
 
     my $rs = $schema->resultset("Stock::Stock")->search(
     $search_query,
@@ -489,7 +494,7 @@ sub search {
         distinct=>1
     });
 
-    my $records_total = $rs->count();
+    $records_total = $rs->count();
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
     }
@@ -500,7 +505,7 @@ sub search {
         $owners_hash = $stock_lookup->get_owner_hash_lookup();
     }
 
-    my @result;
+    
     my %result_hash;
     my @result_stock_ids;
     while (my $a = $rs->next()) {
@@ -538,7 +543,6 @@ sub search {
             };
         }
     }
-    #print STDERR Dumper \%result_hash;
 
     # Comma separated list of query placeholders for the result stock ids
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
@@ -598,7 +602,7 @@ sub search {
         push @result, $result_hash{$_};
     }
 
-    #print STDERR Dumper \@result;
+
     print STDERR "CXGN::Stock::SearchVector search end\n";
     return (\@result, $records_total);
 }
@@ -625,7 +629,6 @@ sub _refresh_materialized_stockprop {
                 push @additional_terms, $_;
             }
         }
-        print STDERR Dumper \@additional_terms;
 
         my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
         my $h = $schema->storage->dbh()->prepare($q);
@@ -638,7 +641,7 @@ sub _refresh_materialized_stockprop {
         CREATE MATERIALIZED VIEW public.materialized_stockprop AS
         SELECT *
         FROM crosstab(
-        'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, ''RANK'' || stockprop.rank) FROM public.stockprop JOIN public.stock USING(stock_id) JOIN public.cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
+        'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, stockprop.rank) FROM public.stockprop JOIN public.stock USING(stock_id) JOIN public.cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
         'SELECT type_id FROM (VALUES ";
         my @stockprop_ids_sql;
         foreach (@stock_props) {

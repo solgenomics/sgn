@@ -136,7 +136,9 @@ is_deeply($response, {
                                               'value' => '11',
                                               'observationVariableName' => 'dry matter content percentage',
                                               'observationVariableDbId' => '70741',
-                                              'studyDbId' => 137
+                                              'studyDbId' => 137,
+                                              'externalReferences' => undef,
+                                              'additionalInfo' => undef,
                                             },
                                             {
                                               'observationLevel' => 'plot',
@@ -150,7 +152,9 @@ is_deeply($response, {
                                               'value' => '110',
                                               'observationVariableDbId' => '70773',
                                               'observationVariableName' => 'fresh shoot weight measurement in kg',
-                                              'studyDbId' => 137
+                                              'studyDbId' => 137,
+                                              'externalReferences' => undef,
+                                              'additionalInfo' => undef,
                                             }
                                           ]
                       },

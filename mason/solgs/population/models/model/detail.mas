@@ -34,11 +34,8 @@ $analysis_type => ''
 
 </%perl>
 
+<& /util/import_javascript.mas, classes => ["solGS.genotypingProtocol", "statistics/simple_statistics"] &>
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.genotypingProtocol", "statistics/simple_statistics", "save-svg-as-png.saveSvgAsPng"] &>
-
-
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas,
    title => "Genomic selection model for $trait_name ($trait_abbr) in $training_pop_name"

@@ -16,7 +16,6 @@ library(phenoAnalysis)
 library(dplyr)
 library(methods)
 library(na.tools)
-library(lme4)
 
 allArgs <- commandArgs()
 outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
@@ -64,65 +63,85 @@ if (length(refererQtl) != 0) {
 print("Trait names:")
 print(allTraitNames)
 
-print("colnames:")
-colnames(phenoData)
+# print("colnames:")
+# colnames(phenoData)
 
 #Calculating missing data
 missingData <- apply(phenoData, 2, function(x) sum(is.na(x)))
 md = data.frame(missingData)
+rangeTraits <- which(colnames(phenoData) %in% allTraitNames)
 
-nCols <- ncol(phenoData)-1
-nTraits <- nCols-30
+# Calculating the number of replicates per accession
+replicateData <- data.frame(replicates = tapply(phenoData$replicate, phenoData$germplasmName, function(x){
+  return(max(unique(x)))
+}))
+replicateData <- tibble::rownames_to_column(replicateData, "germplasmName")
+
+
 
 #Removing non numeric data
-for (i in 31:nCols){
-  test = is.numeric(phenoData[,i])
-  if (test == 'FALSE'){
-    phenoData[,i] <- NULL
+for( traits in rangeTraits){
+  if(is.numeric(phenoData[,traits]) == 'FALSE'){
+    phenoData <- phenoData[,-traits]
+    allTraitNames <- allTraitNames[-which(allTraitNames == colnames(phenoData)[traits])]
   }
 }
 
+#Range after filtering
+rangeTraits <- which(names(phenoData)%in%allTraitNames)
+
+nTraits <- length(rangeTraits)
 # Preparing variance vectors
-her = rep(NA, nTraits)
-Vg = rep(NA, nTraits)
-Ve = rep(NA, nTraits)
-resp_var = rep(NA, nTraits)
+her = c()
+Vg = c()
+Vres = c()
+resp_var = c()
 
-counter = 1
-cat("Traits: ", colnames(phenoData[31:nCols]),"\n")
-for (i in 31:nCols) {
-    outcome = colnames(phenoData)[i]    
+library(lmerTest)
+for (i in rangeTraits) {
+  outcome = colnames(phenoData)[i]   
 
-    print(paste0('outcome ', outcome))
-    
-    model <- lmer(get(outcome)~ 1 + (1|germplasmName),
-      na.action = na.exclude,
-      data=phenoData)
+  #Calculating missing data per trait
+  missingData <- data.frame(missingData = tapply(phenoData[,outcome], phenoData$germplasmName, function(x){
+    return(length(which(is.na(x))))
+  }))
 
-    
-    # variance = as.data.frame(VarCorr(model))
-    variance = data.frame(VarCorr(model))
-    
-    H2 = variance$vcov[1]/ (variance$vcov[1] + variance$vcov[2])
-    #H2 = gvar/(gvar + (envar))
-    H2nw = format(round(H2, 4), nsmall = 4)
-    her[counter] = round(as.numeric(H2nw), digits =3)
-    Vg[counter] = round(as.numeric(variance$vcov[1]), digits = 3)
-    Ve[counter] = round(as.numeric(variance$vcov[2]), digits = 3)
-    resp_var[counter] = colnames(phenoData)[i]
-    
-    counter = counter + 1
+  missingData <- tibble::rownames_to_column(missingData, "germplasmName")
+  missingReplicates <- dplyr::left_join(missingData, replicateData, by = "germplasmName")
+  missingReplicates$limitRep <- missingReplicates$replicates - missingReplicates$missingData
+  missingReplicates <- missingReplicates[missingReplicates$limitRep > 1,]
+
+  # Filtering the dataset
+  phenoData <- phenoData[phenoData$germplasmName %in% missingReplicates$germplasmName,]
+   
+  
+  print(paste0('outcome ', outcome))
+  
+  model <- lmer(get(outcome)~ (1|germplasmName) + replicate,
+                na.action = na.exclude,
+                data=phenoData)
+  
+  
+  # variance = as.data.frame(VarCorr(model))
+  variance = data.frame(VarCorr(model))
+  
+  H2 = variance$vcov[1]/ (variance$vcov[1] + variance$vcov[2])
+  her = append(her, round(as.numeric(H2), digits =3))
+  Vg = append(Vg, round(as.numeric(variance$vcov[1]), digits = 3))
+  Vres = append(Vres, round(as.numeric(variance$vcov[2]), digits = 3))
+  resp_var = append(resp_var, colnames(phenoData)[i])
+
 }
 
 #Prepare information to export data
-Heritability = data.frame(resp_var,Vg, Ve, her)
+Heritability = data.frame(resp_var,Vg, Vres, her)
 print(Heritability)
 Heritability = Heritability %>% 
   dplyr::rename(
     trait = resp_var,
     Hert = her,
     Vg = Vg,
-    Ve = Ve
+    Vres = Vres
   )
 print(Heritability)
 

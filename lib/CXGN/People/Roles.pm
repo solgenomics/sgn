@@ -82,17 +82,20 @@ sub get_breeding_program_roles {
 	my $ascii_chars = shift;
 	my $dbh = $self->bcs_schema->storage->dbh;
 	my @breeding_program_roles;
-	my $q="SELECT username, sp_person_id, name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id)";
+	my $q="SELECT username, sp_person_id, name, censor FROM sgn_people.sp_person
+	JOIN sgn_people.sp_person_roles using(sp_person_id) 
+	JOIN sgn_people.sp_roles using(sp_role_id) 
+	where  disabled IS NULL and sp_person.censor = 0";
 	my $sth = $dbh->prepare($q);
 	$sth->execute();
-	while (my ($username, $sp_person_id, $sp_role) = $sth->fetchrow_array ) {
+	while (my ($username, $sp_person_id, $sp_role, $censor) = $sth->fetchrow_array ) {
 	    if ($ascii_chars) {
 		$username = unidecode($username);
 	    }
-		push(@breeding_program_roles, [$username, $sp_person_id, $sp_role] );
+		push(@breeding_program_roles, [$username, $sp_person_id, $sp_role, $censor] );
 	}
 
-	#print STDERR Dumper \@breeding_program_roles;
+	print STDERR Dumper \@breeding_program_roles;
 	return \@breeding_program_roles;
 }
 
@@ -111,7 +114,7 @@ sub get_sp_persons {
 	my $self = shift;
 	my $dbh = $self->bcs_schema->storage->dbh;
 	my @sp_persons;
-	my $q="SELECT username, sp_person_id FROM sgn_people.sp_person ORDER BY username ASC;";
+	my $q="SELECT username, sp_person_id FROM sgn_people.sp_person WHERE disabled IS NULL and censor = 0 ORDER BY username ASC;";
 	my $sth = $dbh->prepare($q);
 	$sth->execute();
 	while (my ($username, $sp_person_id) = $sth->fetchrow_array ) {

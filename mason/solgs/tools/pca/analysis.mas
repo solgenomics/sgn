@@ -54,8 +54,8 @@ $collapsed = 1;
 
 </%perl>
 
-
-
+<& /solgs/tools/base.mas &>
+<& /util/import_javascript.mas, classes => ["solGS.pca"] &>
 
 % if ($url =~ /pca\/analysis/) {
 
@@ -81,7 +81,9 @@ $collapsed = 1;
 % if ($url !~ /pca\/analysis/ ) {
   <& pca_options.mas &>
 %} else {
-   <& select_menu.mas &>
+
+  <& /solgs/tools/select_menu.mas,
+  analysis_type => 'pca', &>
 %}
 
   <& plot.mas,

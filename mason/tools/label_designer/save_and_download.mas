@@ -8,6 +8,7 @@
         <center>
         <br>
             <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
+            <p style="font-size: 80%; margin-top: 7px">Edit margins, gaps, # of rows/cols, label sorting, etc</p>
         </center>
     </div></br></br>
     <div class="col-md-4" style="margin-top:40px;">

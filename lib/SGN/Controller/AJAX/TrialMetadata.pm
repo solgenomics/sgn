@@ -5,6 +5,7 @@ use Data::Dumper;
 use Bio::Chado::Schema;
 use CXGN::Trial;
 use CXGN::Trial::TrialLookup;
+use CXGN::Trial::Search;
 use Math::Round::Var;
 use File::Temp 'tempfile';
 use Text::CSV;
@@ -190,18 +191,20 @@ sub trial_phenotypes_fully_uploaded_POST  {
 
 sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
 
-sub trial_details_GET   {
+sub trial_details_GET{
     my $self = shift;
     my $c = shift;
 
     my $trial = $c->stash->{trial};
     my $planting_date = $trial->get_planting_date();
+    my $transplanting_date = $trial->get_transplanting_date();
     my $harvest_date = $trial->get_harvest_date();
     my $get_location_noaa_station_id = $trial->get_location_noaa_station_id();
 
     $c->stash->{rest} = {
         details => {
             planting_date => $planting_date,
+            transplanting_date => $transplanting_date,
             harvest_date => $harvest_date,
             location_noaa_station_id => $get_location_noaa_station_id
         }
@@ -262,25 +265,30 @@ sub trial_details_POST  {
     # set each new detail that is defined
     #print STDERR Dumper $details;
     eval {
-      if ($details->{name}) { $trial->set_name($details->{name}); }
-      if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
-      if ($details->{location}) { $trial->set_location($details->{location}); }
-      if ($details->{year}) { $trial->set_year($details->{year}); }
-      if ($details->{type}) { $trial->set_project_type($details->{type}); }
-      if ($details->{planting_date}) {
+        if ($details->{name}) { $trial->set_name($details->{name}); }
+        if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
+        if ($details->{location}) { $trial->set_location($details->{location}); }
+        if ($details->{year}) { $trial->set_year($details->{year}); }
+        if ($details->{type}) { $trial->set_project_type($details->{type}); }
+        if ($details->{planting_date}) {
         if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
         else { $trial->set_planting_date($details->{planting_date}); }
-      }
-      if ($details->{harvest_date}) {
-        if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
-        else { $trial->set_harvest_date($details->{harvest_date}); }
-      }
-      if ($details->{description}) { $trial->set_description($details->{description}); }
-      if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
-      if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
-      if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
-      if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
-      if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
+    }
+        if ($details->{transplanting_date}) {
+            if ($details->{transplanting_date} eq 'remove') { $trial->remove_transplanting_date($trial->get_transplanting_date()); }
+            else { $trial->set_transplanting_date($details->{transplanting_date}); }
+        }
+        if ($details->{harvest_date}) {
+            if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
+            else { $trial->set_harvest_date($details->{harvest_date}); }
+        }
+
+        if ($details->{description}) { $trial->set_description($details->{description}); }
+        if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
+        if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
+        if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
+        if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
+        if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
     };
 
     if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }
@@ -2810,6 +2818,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
     my $tissue_names = decode_json $c->req->param("tissue_samples_names");
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $use_tissue_numbers = $c->req->param("use_tissue_numbers");
     my $tissues_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $tissues_with_treatments = 1;
@@ -2838,7 +2847,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $user_id)) {
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $use_tissue_numbers, $user_id)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
@@ -2871,6 +2880,7 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
         $c->stash->{rest} = { error => 'No treatment name given!' };
         return;
     }
+
     if (!$treatment_description) {
         $c->stash->{rest} = { error => 'No treatment description given!' };
         return;
@@ -4611,7 +4621,8 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
         overwrite_values=>1,
         ignore_new_values=>0,
         metadata_hash=>\%phenotype_metadata,
-        composable_validation_check_name=>$c->config->{composable_validation_check_name}
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
@@ -4890,6 +4901,65 @@ sub update_trial_design_type_POST : Args(0) {
 
 }
 
+#
+# GET LINKED FIELD TRIALS
+# Get additional field trials that share the same physical field (to display together in the plot layout tool)
+# A linked trial: shares the same year, the same location, and the location type is 'Field'
+# path param: trial id
+# return:
+#   error: error message
+#   trials: list of linked trials
+#       trial_id: id of trial
+#       trial_name: name of trial
+#       ...
+#
+sub get_linked_field_trials : Chained('trial') PathPart('linked_field_trials') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->stash->{trial_id};
+    my $trial_location = $c->stash->{trial}->get_location();
+    my $trial_location_id = $trial_location->[0];
+    my $trial_year = $c->stash->{trial}->get_year();
+
+    # Check Trial Location: ensure that it is a "field" type location
+    my $locations = CXGN::Trial::get_all_locations($schema);
+    foreach my $l (@$locations) {
+        if ( $l->[0] eq $trial_location_id ) {
+            my $location_type = $l->[8];
+            if ( $location_type ne "Field" ) {
+                $c->stash->{rest} = { error => "The location for this trial is a \"$location_type\" location.  In order to group trials together: they must share the same year, the same location, and the location type must be \"Field\"" };
+                return;
+            }
+        }
+    }
+
+    # Get Trials that share the same year and location
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema => $schema,
+        location_id_list => [$trial_location_id],
+        year_list => [$trial_year],
+        field_trials_only => 1
+    });
+    my ($data, $total_count) = $trial_search->search();
+
+    # Parse Results
+    my @rtn;
+    foreach my $t (@$data) {
+        push(@rtn, $t);
+    }
+
+    # No matches found...
+    if ( scalar(@rtn) == 0 ) {
+        $c->stash->{rest} = { error => "No linked Trials found.  In order to group trials together: they must share the same year, the same location, and the location type must be \"Field\"" };
+        return;
+    }
+
+    # Return the matches...
+    $c->stash->{rest} = { trials => \@rtn };
+    return;
+}
+
 
 sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
     my $self = shift;
@@ -5011,7 +5081,7 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @genotyping_plate_ids;
     foreach  my $plate(@$data){
-        my $plate_id = $plate->{trial_id};
+        my $plate_id = $plate->{plate_id};
         push @genotyping_plate_ids, $plate_id;
     }
 

@@ -9,6 +9,7 @@ $species_name
 $create_date
 $sample_observation_unit_type_name
 $marker_type
+$assay_type
 </%args>
 
 <div class="row">
@@ -27,6 +28,12 @@ $marker_type
                 <td><b>Protocol Description </b></td>
                 <td>
                     <% $protocol_description %>
+                </td>
+            </tr>
+
+            <tr><td><b>Assay Type</b></td>
+                <td>
+                    <% $assay_type %>
                 </td>
             </tr>
 

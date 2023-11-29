@@ -377,6 +377,9 @@ sub next_genotype {
 
         for(my $i=1; $i<=@scores; $i++) {
             my $marker_name = $self->ids()->[$i];
+             if ($marker_name eq '.') {
+                $marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
+            } 
             my $chrom = $self->chroms()->[$i];
             my @separated_alts = split ',', $self->alts()->[$i];
             my @format =  split /:/,  $self->format()->[$i];

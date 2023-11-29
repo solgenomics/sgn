@@ -66,35 +66,6 @@
     /*rotation:270deg;*/ /* CSS3 */
 }
 
-
-/* Selectable UI */
-
-
-#select_a_population .ui-selecting {
-    background:#ccccff ;
-}
-#select_a_population .ui-selected {
-    background: #ccccff;
-    color: white;
-}
-
-#select_a_population {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-}
-
-#select_a_population li {
-    margin: 3px;
-    padding: 0.4em;
-    font-size: 1.4em;
-    height: 18px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: #ccccff;
-}
-
 /* dialog UI */
 
 .ui-dialog-titlebar-close {
@@ -102,148 +73,33 @@
 }
 
 
-/* SI, cluster, correlation dropdown */
-.si_dropdown dd,
-.si_dropdown dt,
-.gg_dropdown ul,
-.gg_dropdown dd,
-.gg_dropdown dt,
-.si_dropdown ul,
-.corre_dropdown dd,
-.corre_dropdown dt,
-.corre_dropdown ul,
-.cluster_dropdown dd,
-.cluster_dropdown dt,
-.cluster_dropdown ul {
-    margin:0px;
-    padding:0px;
-}
 
-.si_dropdown dd,
-.gg_dropdown dd,
-.corre_dropdown dd,
-.cluster_dropdown dd {
-    position:relative;
-}
+/* select_menu inputs */
 
-.si_dropdown a, .si_dropdown a:visited,
-.gg_dropdown a, .gg_dropdown a:visited,
-.corre_dropdown a, .corre_dropdown a:visited,
-.cluster_dropdown a, .cluster_dropdown a:visited {
-    color:#816c5b;
-    text-decoration:none;
-    outline:none;
-}
-.si_dropdown a:hover,
-.gg_dropdown a:hover,
-.corre_dropdown a:hover,
-.cluster_dropdown a:hover {
-    color: #5d4617;
-}
-
-.si_dropdown dt a:hover, .si_dropdown dt a:focus,
-.gg_dropdown dt a:hover, .gg_dropdown dt a:focus,
-.corre_dropdown dt a:hover, .corre_dropdown dt a:focus,
-.cluster_dropdown dt a:hover, .cluster_dropdown dt a:focus {
-    color: ##5d4617;
-    border: 1px solid #5d4617;
-}
-
-.si_dropdown dt a,
-.gg_dropdown dt a,
-.corre_dropdown dt a,
-.cluster_dropdown dt a {
-    background:#ccccff url(/static/documents/img/glyphicons_expand.png) no-repeat scroll right center;
-    display:block;
-    padding-right:10px;
-    width:250px;
-}
-.si_dropdown dt a span,
-.gg_dropdown dt a span,
-.corre_dropdown dt a span,
-.cluster_dropdown dt a span {
-    cursor:pointer;
-    display:block;
-    padding:2px;
-}
-
-.si_dropdown dd ul,
-.gg_dropdown dd ul,
-.corre_dropdown dd ul,
-.cluster_dropdown dd ul {
-    background:#ccccff none repeat scroll 0 0;
-    border:1px solid #ccccff;
-    color: #C5C0B0;
-    display:none;
-    left:0px;
-    padding:2px 0px;
-    position:relative;
-    top:2px;
-    width:auto;
-    min-width:250px;
-    list-style:none;
-}
-.si_dropdown span.value,
-.gg_dropdown span.value,
-.corre_dropdown span.value,
-.cluster_dropdown span.value {
-    display:none;
-}
-
-.si_dropdown dd ul li a,
-.gg_dropdown dd ul li a,
-.corre_dropdown dd ul li a,
-.cluster_dropdown dd ul li a, {
-    padding:5px;
-    display:block;
-}
-
-.si_dropdown dd ul li a:hover,
-.gg_dropdown dd ul li a:hover,
-.corre_dropdown dd ul li a:hover,
-.cluster_dropdown dd ul li a:hover {
-    background-color:#efefef;
-}
-
-/* list inputs */
-
-#list_type_selection_pops_list,
-#list_type_training_pops_list,
-#pca_genotypes_list,
-#kinship_genotypes_list,
-#cluster_genotypes_list {
-    display: inline-block;
-    padding-top: 0px;
-    margin-right: 5px;
-}
-
-#list_type_selection_pop_load input,
-#list_type_training_pop_load input,
-#pca_go_btn input,
-#kinship_go_btn input,
-#cluster_go_btn input {
+.go_btn input{
+    height: 29px;
+    line-height:29px;
+    margin: 1px;
+    text-align: center;
     color: #ffffff;
     border: 1px solid #ffffff;
     background: #5cb85c;
 }
 
-#list_type_selection_pop_load input:hover,
-#list_type_training_pop_load input:hover,
-#pca_go_btn input:hover,
-#kinship_go_btn input:hover,
-#cluster_go_btn input:hover {
+.go_btn input:hover {
     background-color: #c6e6c6;
 }
 
 
-.list_upload {
-    height: 35px;
+.select_menu_block {
+    height: 31px;
+    line-height:31px;
+    text-align: center;
     color: #ffffff;
     float: left;
     background: #5cb85c;
     padding-left: 10px;
     padding-right: 10px;
-    padding-top:5px;
 }
 
 .glyphicon-plus:before {

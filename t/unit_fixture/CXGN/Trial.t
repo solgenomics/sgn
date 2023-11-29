@@ -492,6 +492,7 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
     user_name => 'janedoe', #not implemented
     program => 'test',
     trial_year => 2014,
+
     trial_description => 'another test trial...',
     design_type => 'RCBD',
     trial_type => $trial_type_cvterm_id,
@@ -899,12 +900,49 @@ $trial->remove_planting_date('2016/01/01 12:20:10');
 $planting_date = $trial->get_planting_date();
 ok(!$planting_date, "test remove planting_date");
 
+# test transplanting_date accessors
+$trial->set_transplanting_date('2016/01/02 12:21:11');
+my $transplanting_date = $trial->get_transplanting_date();
+#print STDERR Dumper $transplanting_date;
+is($transplanting_date, '2016-January-02 12:21:11', "set transplanting_date test");
+$trial->set_transplanting_date('2016/01/03 12:21:11');
+$transplanting_date = $trial->get_transplanting_date();
+is($transplanting_date, '2016-January-03 12:21:11', "update/set transplanting_date test");
+$trial->remove_transplanting_date('2016/01/03 12:21:11');
+$transplanting_date = $trial->get_transplanting_date();
+ok(!$transplanting_date, "test remove transplanting_date");
+
+#test transplanting_date accessors
+$trial->set_transplanting_date('2017/02/03 12:21:12');
+my $transplanting_date = $trial->get_transplanting_date();
+#print STDERR Dumper $transplanting_date;
+is($transplanting_date, '2017-February-03 12:21:12', "set transplanting_date test");
+$trial->set_transplanting_date('2017/02/04 12:21:13');
+$transplanting_date = $trial->get_transplanting_date();
+is($transplanting_date, '2017-February-04 12:21:13', "update/set transplanting_date test");
+$trial->remove_transplanting_date('2017/02/04 12:21:13');
+$transplanting_date = $trial->get_transplanting_date();
+ok(!$transplanting_date, "test remove transplanting_date");
+
 # test year accessors
 #
 is($trial->get_year(), 2014, "get year test");
 
 $trial->set_year(2013);
 is($trial->get_year(), 2013, "set year test");
+
+# test planting date accessors
+# 
+#$trial-> set_planting_date ('2016/01/02 12:21:12'); 
+#my $planting_date = $trial -> get_planting_date();
+#print STDERR Dumper $planting_date;
+#is($planting_date, '2016-January-02 12:21:12', "set planting_date test");
+#$trial-> set_planting_date('2016/01/04 12:21:12');
+#$planting_date = $trial-> get_planting_date();
+#is($planting_date, '2016-January-04 12:21:12', "update/set planting_date test");
+#$trial-> remove_planting_date ('2016/01/04 12:21:12');
+#$planting_date = $trial-> get_planting_date();
+#ok(!$planting_date, "test remove planting_date");
 
 # test breeding program accessors
 #

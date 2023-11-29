@@ -18,6 +18,16 @@ sub search {
     $page_size = 1000;
 
 	my $status = $self->status;
+
+	# define the request methods for the 'variables' endpoints
+	my @variable_request_methods = ('GET');
+	if ($c->config->{brapi_put_variables}){
+		push @variable_request_methods, "PUT";
+	}
+	if ($c->config->{brapi_post_variables}){
+		push @variable_request_methods, "POST";
+	}
+
 	my @available = (
 		#core
 		[['application/json'],['GET'],'serverinfo',['2.0']],
@@ -72,7 +82,7 @@ sub search {
 		[['application/json'],['GET'], 'ontologies',['2.0']],
 		[['application/json'],['GET'], 'traits',['2.0']],
 		[['application/json'],['GET'], 'traits/{traitDbId}',['2.0']],
-		[['application/json'],['GET'], 'variables',['2.0']],
+		[['application/json'],\@variable_request_methods, 'variables',['2.0']],
 		[['application/json'],['GET'], 'variables/{observationVariableDbId}',['2.0']],
 		[['application/json'],['POST'],'search/variables',['2.0']],
 		[['application/json'],['GET'], 'search/variables/{searchResultsDbId}',['2.0']],

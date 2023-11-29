@@ -56,9 +56,10 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 </%perl>
 
+<& /solgs/tools/base.mas &>
+<& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>
 
 % if ($url =~ /cluster\/analysis/) {
-
 <& /page/page_title.mas,
    title => "Cluster Analysis"
   &>
@@ -93,7 +94,8 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 %} elsif ($url =~ /cluster\/analysis/) {
 
-   <& select_menu.mas &>
+  <& /solgs/tools/select_menu.mas,
+  analysis_type => 'cluster' &>
 
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />

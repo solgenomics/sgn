@@ -224,13 +224,17 @@ sub validate_pedigrees {
             if (!$pedigree->get_male_parent){
                 push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
             }
-            my $male_parent_name = $pedigree->get_male_parent()->get_name();
-            if (!$male_parent_name) {
-                push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
-            }
-            my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
-            if (!$male_parent) {
-                push @{$return{error}}, "Male parent not found for $progeny_name.";
+            else {
+                my $male_parent_name = $pedigree->get_male_parent()->get_name();
+                if (!$male_parent_name) {
+                    push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
+                }
+                else {
+                    my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
+                    if (!$male_parent) {
+                        push @{$return{error}}, "Male parent not found for $progeny_name.";
+                    }
+                }
             }
         }
         if ($cross_type eq 'open'){

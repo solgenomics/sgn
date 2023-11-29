@@ -138,7 +138,8 @@ sub upload_phenotype_store_POST : Args(1) {
         overwrite_values=>$overwrite,
         metadata_hash=>$phenotype_metadata,
         image_zipfile_path=>$image_zip,
-        composable_validation_check_name=>$c->config->{composable_validation_check_name}
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
 
     #upload_phenotype_store function redoes the same verification that upload_phenotype_verify does before actually uploading. maybe this should be commented out.
@@ -420,7 +421,8 @@ sub update_plot_phenotype_POST : Args(0) {
       has_timestamps=> 1,
       overwrite_values=> 1,
       metadata_hash=>\%phenotype_metadata,
-      composable_validation_check_name=>$c->config->{composable_validation_check_name}
+      composable_validation_check_name=>$c->config->{composable_validation_check_name},
+      allow_repeat_measures=>$c->config->{allow_repeat_measures}
   );
 
   my ($verified_warning, $verified_error) = $store_phenotypes->verify();

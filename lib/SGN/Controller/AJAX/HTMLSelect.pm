@@ -471,16 +471,41 @@ sub get_genotyping_trials_select : Path('/ajax/html/select/genotyping_trials') A
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_label_data_source_types_select : Path('/ajax/html/select/label_data_source_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "label_data_source_types_select";
+    my $name = $c->req->param("name") || "label_data_source_types_select";
+    my @types = (
+        ["any", "Any Data Type..."],
+        ["field_trials", "Field Trials"],
+        ["genotyping_plates", "Genotyping Plates"],
+        ["crossing_experiments", "Crossing Experiments"],
+        ["lists", "Lists"],
+        ["public_lists", "Public Lists"]
+    );
+
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@types,
+      params => 0
+    );
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR "Retrieving list items . . .\n";
 
     my $id = $c->req->param("id") || "label_data_sources_select";
     my $name = $c->req->param("name") || "label_data_sources_select";
     my $empty = $c->req->param("empty") || "";
     my $live_search = $c->req->param("live_search") ? 'data-live-search="true"' : '';
     my $default = $c->req->param("default") || 0;
+    my $type = $c->req->param("type");
 
     my $user_id = $c->user()->get_sp_person_id();
 
@@ -507,31 +532,41 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     }
 
     my @choices = [];
-    push @choices, '__Field Trials';
-    @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
-    foreach my $trial (@field_trials) {
-        push @choices, $trial;
+    if ( !defined $type || $type eq 'any' || $type eq 'field_trials' ) {
+        push @choices, '__Field Trials';
+        @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
+        foreach my $trial (@field_trials) {
+            push @choices, $trial;
+        }
     }
-    push @choices, '__Genotyping Plates';
-    @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
-    foreach my $trial (@genotyping_trials) {
-        push @choices, $trial;
+    if ( !defined $type || $type eq 'any' || $type eq 'genotyping_plates' ) {
+        push @choices, '__Genotyping Plates';
+        @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
+        foreach my $trial (@genotyping_trials) {
+            push @choices, $trial;
+        }
     }
-    push @choices, '__Crossing Experiments';
-    @crossing_experiments = sort { $a->[1] cmp $b->[1] } @crossing_experiments;
-    foreach my $crossing_experiment (@crossing_experiments) {
-         push @choices, $crossing_experiment;
+    if ( !defined $type || $type eq 'any' || $type eq 'crossing_experiments' ) {
+        push @choices, '__Crossing Experiments';
+        @crossing_experiments = sort { $a->[1] cmp $b->[1] } @crossing_experiments;
+        foreach my $crossing_experiment (@crossing_experiments) {
+            push @choices, $crossing_experiment;
+        }
     }
-    push @choices, '__Lists';
-    foreach my $item (@$lists) {
-        push @choices, [@$item[0], @$item[1]];
+    if ( !defined $type || $type eq 'any' || $type eq 'lists' ) {
+        push @choices, '__Lists';
+        foreach my $item (@$lists) {
+            push @choices, [@$item[0], @$item[1]];
+        }
     }
-    push @choices, '__Public Lists';
-    foreach my $item (@$public_lists) {
-        push @choices, [@$item[0], @$item[1]];
+    if ( !defined $type || $type eq 'any' || $type eq 'public_lists' ) {
+        push @choices, '__Public Lists';
+        foreach my $item (@$public_lists) {
+            push @choices, [@$item[0], @$item[1]];
+        }
     }
 
-    print STDERR "Choices are:\n".Dumper(@choices);
+    # print STDERR "Choices are:\n".Dumper(@choices);
 
     if ($default) { unshift @choices, [ '', $default ]; }
 
@@ -685,6 +720,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
 #    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
 #    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
 #    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
+    my $exclude_discarded = $c->req->param('exclude_discarded') ? $c->req->param('exclude_discarded') : '';
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
@@ -722,7 +758,13 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $data_related = $c->req->param("data-related") || "";
     my @stocks;
     foreach my $r (@seedlots) {
-        push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+        if ($exclude_discarded == 1) {
+            if ($r->{count} ne 'DISCARDED') {
+                push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+            }
+        } else {
+            push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+        }
     }
     @stocks = sort { $a->[1] cmp $b->[1] } @stocks;
 
@@ -1600,7 +1642,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 
     my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
     foreach my $ds (@datasets) {
-        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td>'.$ds->{name}.'</td><td>';
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td><a href="/dataset/'.$ds->{id}.'">'.$ds->{name}.'</a></td><td>';
 
         $html .= '<table class="table-bordered"><thead><tr>';
         foreach my $cat (@{$ds->{info}->{category_order}}) {

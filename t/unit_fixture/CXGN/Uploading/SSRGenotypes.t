@@ -155,31 +155,59 @@ for my $extension ("xls", "xlsx") {
 	my $stored_data = $store_genotypes->store_identifiers();
 	is($stored_data->{'success'}, '1');
 	is($stored_data->{'nd_protocol_id'}, $ssr_protocol_id);
+	print STDERR "STORED DATA =".Dumper($stored_data)."\n";
 
-	#test retrieving data
-	my @protocol_id_list;
-	push @protocol_id_list, $ssr_protocol_id;
+	#test retrieving data based on protocol
+    my @protocol_id_list = ($ssr_protocol_id);
 
-	my $genotypes_search = CXGN::Genotype::Search->new({
-		bcs_schema=>$schema,
-		people_schema=>$people_schema,
-		protocol_id_list=>\@protocol_id_list,
-	});
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        protocol_id_list=>\@protocol_id_list,
+    });
 	my $result = $genotypes_search->get_pcr_genotype_info();
 	my $protocol_marker_names = $result->{'marker_names'};
-	my $ssr_genotype_data = $result->{'protocol_genotype_data'};
-
+	my $ssr_genotype_data = $result->{'ssr_genotype_data'};
 	my $protocol_marker_names_ref = decode_json $protocol_marker_names;
 	my @marker_name_arrays = sort @$protocol_marker_names_ref;
 
 	is_deeply(\@marker_name_arrays, ['m01','m02','m03','m04']);
 
-	is_deeply($ssr_genotype_data, [
-		[38878,'UG120001','accession',undef,'SSR genotypes for stock (name = UG120001, id = 38878)',1064 + ($extension eq "xlsx" ? 4 : 0) ,'{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "0", "190": "1"}}'],
-		[38879,'UG120002','accession',undef,'SSR genotypes for stock (name = UG120002, id = 38879)',1065 + ($extension eq "xlsx" ? 4 : 0) ,'{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "1", "190": "1"}}'],
-		[38880,'UG120003','accession',undef,'SSR genotypes for stock (name = UG120003, id = 38880)',1066 + ($extension eq "xlsx" ? 4 : 0) ,'{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "1", "190": "1"}}'],
-		[38881,'UG120004','accession',undef,'SSR genotypes for stock (name = UG120004, id = 38881)',1067 + ($extension eq "xlsx" ? 4 : 0) ,'{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "0", "190": "1"}}']
-	]);
+	is($ssr_genotype_data->[0]->[1], 'UG120001');
+	is($ssr_genotype_data->[0]->[6], '{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "0", "190": "1"}}');
+	is($ssr_genotype_data->[1]->[1], 'UG120002');
+	is($ssr_genotype_data->[1]->[6], '{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "1", "190": "1"}}');
+	is($ssr_genotype_data->[2]->[1], 'UG120003');
+	is($ssr_genotype_data->[2]->[6], '{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "1", "190": "1"}}');
+	is($ssr_genotype_data->[3]->[1], 'UG120004');
+	is($ssr_genotype_data->[3]->[6], '{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "0", "190": "1"}}');
+
+    #test retrieving data based on genotyping project
+    my $project_rs = $schema->resultset('Project::Project')->find({name => 'ssr_project'});
+    my $genotyping_project_id = $project_rs->project_id;
+    my @genotyping_project_list = ($genotyping_project_id);
+
+    my $project_data_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        genotype_data_project_list=>\@genotyping_project_list,
+    });
+    my $project_result = $project_data_search->get_pcr_genotype_info();
+    my $project_marker_names = $project_result->{'marker_names'};
+    my $project_ssr_genotype_data = $project_result->{'ssr_genotype_data'};
+    my $project_marker_names_ref = decode_json $project_marker_names;
+    my @project_marker_name_arrays = sort @$project_marker_names_ref;
+
+    is_deeply(\@project_marker_name_arrays, ['m01','m02','m03','m04']);
+
+    is($project_ssr_genotype_data->[0]->[1], 'UG120001');
+    is($project_ssr_genotype_data->[0]->[6], '{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "0", "190": "1"}}');
+    is($project_ssr_genotype_data->[1]->[1], 'UG120002');
+    is($project_ssr_genotype_data->[1]->[6], '{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "1", "190": "1"}}');
+    is($project_ssr_genotype_data->[2]->[1], 'UG120003');
+    is($project_ssr_genotype_data->[2]->[6], '{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "1", "190": "1"}}');
+    is($project_ssr_genotype_data->[3]->[1], 'UG120004');
+    is($project_ssr_genotype_data->[3]->[6], '{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "0", "190": "1"}}');
 
 	#deleting protocol and ssr genotyping data
 	$ua = LWP::UserAgent->new;
