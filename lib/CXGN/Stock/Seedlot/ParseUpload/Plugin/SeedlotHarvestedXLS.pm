@@ -197,15 +197,16 @@ sub _validate_with_plugin {
         $errors{'missing_crosses'} = \@crosses_missing;
     }
 
-    # Not checking if seedlot name already exists because the database will just update the seedlot entries
-    # my @seedlots = keys %seen_seedlot_names;
-    # my $rs = $schema->resultset("Stock::Stock")->search({
-    #     'is_obsolete' => { '!=' => 't' },
-    #     'uniquename' => { -in => \@seedlots }
-    # });
-    # while (my $r=$rs->next){
-    #     push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
-    # }
+    # Check if Seedlot names already exist as other stock names
+    my @seedlots = keys %seen_seedlot_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'uniquename' => { -in => \@seedlots }
+    });
+    while (my $r=$rs->next) {
+        if ( $r->type->name ne 'seedlot' ) {
+            push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": stock name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
+        }
+    }
 
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
