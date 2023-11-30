@@ -38,6 +38,11 @@ jQuery(document).ready(function(){
     jQuery('#related_seedlots_to_accessions_onswitch').one("click", function(){
 
         var seedlots_table = jQuery('#seedlots_of_accession_table').DataTable({
+            'destroy' : true,
+            'ordering'  : false,
+            'processing': true,
+            'serverSide': true,
+            'lengthMenu': [10,20,50,100,1000],
             'ajax': { 'url': '/ajax/breeders/seedlots',
                       'data': function(d) {
 % if ($stock_type eq 'accession'){
@@ -53,6 +58,7 @@ jQuery(document).ready(function(){
                 { title: "Contents", "data": "contents_html" },
                 { title: "Seedlot Location", "data": "location" },
                 { title: "Count", "data": "count" },
+                { title: "Weight(g)", "data": "weight_gram" },
             ],
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
