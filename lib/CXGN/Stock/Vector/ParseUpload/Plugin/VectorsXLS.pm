@@ -19,7 +19,7 @@ sub _validate_with_plugin {
     my $autogenerate_uniquename = $self->get_autogenerate_uniquename();
 
     # Match a dot, extension .xls / .xlsx
-    my $extension = $filename =~ /(\.[^.]+)$/;
+    my ($extension) = $filename =~ /(\.[^.]+)$/;
     my $parser;
 
     if ($extension eq '.xlsx') {
