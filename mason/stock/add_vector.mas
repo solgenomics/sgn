@@ -145,7 +145,7 @@ function handleSubmit() {
 
     const data = {};
     dataForm.forEach((value, key) => (data[key] = value));
-
+    console.log(data);
     jQuery.ajax({
         type: 'POST',
         data: {'data': JSON.stringify([data])},
@@ -157,14 +157,9 @@ function handleSubmit() {
         error: function(response) {
           alert( 'An Error occured while storing vectors.');
         }
-      });
-
-    console.log(data);
-
+    });
 }
 
-
-  
 </script>  
 
 </&>
@@ -180,7 +175,7 @@ function handleSubmit() {
     function jqueryAutoUniqueName() {
         jQuery('#uniqueNameAutoCheck').on('change', function () {
             var checked = jQuery(this).prop('checked');
-            jQuery('#uniqueName').prop('disabled', checked);
+            jQuery('#uniqueName').prop('readonly', checked);
             if(checked){
                 jQuery.get('/ajax/get_new_vector_uniquename',
                     function (value) {
