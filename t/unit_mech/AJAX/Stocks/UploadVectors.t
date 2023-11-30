@@ -35,7 +35,7 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
 
-### Upload file autogenerating uniquename 
+### Upload XLS file autogenerating uniquename 
 
 my $file = $f->config->{basepath}."/t/data/stock/vector_upload_no_uniquename.xls";
 my $ua = LWP::UserAgent->new;
@@ -75,7 +75,7 @@ foreach (@$ids) {
     push @stock_ids,$_->[0];
 }
 
-### Upload file with uniquename 
+### Upload XLS file with uniquename 
 
 my $file = $f->config->{basepath}."/t/data/stock/vector_upload_with_uniquename.xls";
 my $ua = LWP::UserAgent->new;
@@ -109,6 +109,84 @@ is($response->{'success'}, 1);
 my $ids2 = $response->{'added'};
 
 foreach (@$ids2) {
+    push @stock_ids,$_->[0];
+}
+
+
+### Upload XLSX file autogenerating uniquename 
+
+my $file = $f->config->{basepath}."/t/data/stock/vector_upload_no_uniquename.xlsx";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/vectors/verify_vectors_file',
+        Content_Type => 'form-data',
+        Content => [
+            new_vectors_upload_file => [ $file, 'new_vectors_upload_file.xlsx', Content_Type => 'text/html', ],
+            sgn_session_id => $sgn_session_id,
+            fuzzy_check_upload_vectors => 1,
+            autogenerate_uniquename => 1,
+        ]
+    );
+
+
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = JSON::XS->new->decode($message);
+is_deeply($message_hash->{'success'}, 1);
+
+my $verified_vectors = $message_hash->{'full_data'};
+my $data;
+while (my ($key, $value) = each %{$verified_vectors}) {
+    push @$data, $value;
+}
+
+$mech->post_ok('http://localhost:3010/ajax/create_vector_construct', [ 'data'=>$json->encode($data), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
+
+my $response = JSON::XS->new->decode($mech->content);
+print STDERR Dumper $response;
+is($response->{'success'}, 1);
+
+my $ids3 = $response->{'added'};
+my @stock_ids;
+
+foreach (@$ids3) {
+    push @stock_ids,$_->[0];
+}
+
+### Upload XLSX file with uniquename 
+
+my $file = $f->config->{basepath}."/t/data/stock/vector_upload_with_uniquename.xlsx";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/vectors/verify_vectors_file',
+        Content_Type => 'form-data',
+        Content => [
+            new_vectors_upload_file => [ $file, 'new_vectors_upload_file.xlsx', Content_Type => 'text/html', ],
+            sgn_session_id => $sgn_session_id,
+            fuzzy_check_upload_vectors => 1,
+            autogenerate_uniquename => 0,
+        ]
+    );
+
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = JSON::XS->new->decode($message);
+is_deeply($message_hash->{'success'}, 1);
+
+my $verified_vectors = $message_hash->{'full_data'}; print STDERR "\n\nverified:" . Dumper \$verified_vectors;
+my $data;
+while (my ($key, $value) = each %{$verified_vectors}) {
+    push @$data, $value;
+}
+
+$mech->post_ok('http://localhost:3010/ajax/create_vector_construct', [ 'data'=>$json->encode($data), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
+
+my $response = JSON::XS->new->decode($mech->content);
+is($response->{'success'}, 1);
+
+my $ids4 = $response->{'added'};
+
+foreach (@$ids4) {
     push @stock_ids,$_->[0];
 }
 
