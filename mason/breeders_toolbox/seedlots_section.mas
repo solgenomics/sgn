@@ -58,15 +58,17 @@ jQuery(document).ready(function(){
                 { title: "Seedlot Location", "data": "location" },
                 { title: "Count", "data": "count" },
                 { title: "Weight(g)", "data": "weight_gram" },
+                { title: "Box Name", "data": "box" },
+                { title: "Quality", "data": "seedlot_quality" },
                 { title: "", "data": "seedlot_stock_uniquename"}
             ],
         });
 
         seedlots_table.draw();
-        seedlots_table.column(6).visible(false);
+        seedlots_table.column(8).visible(false);
 
         jQuery('#seedlots_of_accession_table').on( 'draw.dt', function () {
-            var seedlot_names = seedlots_table.column(6).data();
+            var seedlot_names = seedlots_table.column(8).data();
             var names = "";
 
             for (var i = 0; i < seedlot_names.length; i++) {
