@@ -15,12 +15,11 @@ $stock_type => undef
 <&| /page/info_section.mas, id=>'related_seedlots_to_accessions', title => 'Seedlots of this '.ucfirst($stock_type), collapsible=>1, collapsed=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' name='add_seedlot_button' >Create New Seedlot</button>" &>
     <div class="well well-sm">
         <div class="panel panel-default">
-            <div class="panel-body">
+            <div class="panel-body" style="overflow:scroll">
                 <table id="seedlots_of_accession_table" class="table table-hover table-striped">
                 </table>
             </div>
         </div>
-
         <br>
         <&| /page/info_section.mas, title => 'Copy Seedlots to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the seedlot names showing in table to a new or exisiting list</i>'&>
             <br/>
@@ -59,24 +58,25 @@ jQuery(document).ready(function(){
                 { title: "Seedlot Location", "data": "location" },
                 { title: "Count", "data": "count" },
                 { title: "Weight(g)", "data": "weight_gram" },
+                { title: "", "data": "seedlot_stock_uniquename"}
             ],
-            "fnInitComplete": function(oSettings, json) {
-                //console.log(json);
-                if (!isLoggedIn()) {
-                    jQuery('#accession_seedlots_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-                } else {
-                    var html = "";
-                    for(var i=0; i<json.data.length; i++){
-                        html += json.data[i].seedlot_stock_uniquename+"\n";
-                    }
-                    jQuery("#accession_seedlot_names").html(html);
-                    addToListMenu("accession_seedlots_to_list_menu", "accession_seedlot_names", {
-                        selectText: true,
-                        listType: 'seedlots',
-                        listName: 'seedlots'
-                    });
-                }
+        });
+
+        seedlots_table.draw();
+        seedlots_table.column(6).visible(false);
+
+        jQuery('#seedlots_of_accession_table').on( 'draw.dt', function () {
+            var seedlot_names = seedlots_table.column(6).data();
+            var names = "";
+
+            for (var i = 0; i < seedlot_names.length; i++) {
+                names += seedlot_names[i]+'\n';
             }
+
+            jQuery('#accession_seedlot_names').html(names);
+            addToListMenu('accession_seedlots_to_list_menu', 'accession_seedlot_names', {
+                listType: 'seedlots'
+            });
         });
     });
 
