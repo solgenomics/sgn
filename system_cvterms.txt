@@ -52,6 +52,8 @@ geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	location_type	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	noaa_station_id	For storing the nearest NOAA Station ID for a location	09/02/2019	nm529	00114
 geolocation_property	region	From BrAPI	03/27/2017	nm529	00076ff
+list_types  crossing_experiments  tt15  00178
+list_types  genotyping_projects  tt15  00178
 list_types	identifier_generation		08/21/2018	nm529	00102
 list_types	genotyping_trials  ##### obsoleted, replaced with genotyping_plates		03/23/2018	nm529	00092
 list_types	tissue_samples		02/15/2018	nm529	00091
@@ -712,6 +714,7 @@ stock_property	crossing_metadata_json		00087
 stock_property	cross_transaction_json	For storing crossing activities, then the summary of these data is stored as crossing_metadata_json	11/30/2020	tt15	00132
 stock_property	current_count	For keeping current count of seedlot	09/06/2017	nm529	00086
 stock_property	current_weight_gram	For keeping current count of seedlot	09/06/2017	nm529	00092
+stock_property  discarded_metadata  For storing metadata of discarded seedlot tt15  00181
 stock_property	dna_person	For indicating dna_person in genotype plate well	2/15/2018	nm529	00091
 stock_property	donor	From BrAPI	03/27/2017	nm529	00076
 stock_property	donor institute	From BrAPI	03/27/2017	nm529	00076
