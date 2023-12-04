@@ -1,5 +1,5 @@
-# SGN Documentation
-[**View the documentation**](http://solgenomics.github.io/sgn/)
+## SGN Documentation
+[View the documentation](http://solgenomics.github.io/sgn/)
 
 ### Syntax and Use
 
@@ -8,23 +8,22 @@ This folder `docs/` can be used to build the site through R package - bookdown. 
 https://bookdown.org/
 https://bookdown.org/yihui/bookdown/
 
-
 The entire page along with the source files in r-markdown format are in the folder 
 `/docs/r_markdown_docs`
 
-# Tools. 
+### Tools. 
 The best way to work with the documentation is to 
-1. install the free R Studio with on your local machine with the sgn repository
-2. set the working directory environment variable to the path from our documentation R command `setwd("{path_on_local_machine}/sgn/docs/r_markdown_docs")` we can check current working directory by `getwd()`
-3. Install R package “bookdown”.
+1. Install the free R Studio with on your local machine with the sgn repository.
+2. Set the working directory environment variable to the path from our documentation R command `setwd("{path_on_local_machine}/sgn/docs/r_markdown_docs")` we can check current working directory by `getwd()`.
+3. Install R package “bookdown”, "rmarkdown" and "pandoc".
 
-#   How to work with documentation
+###   How to work with documentation
 1. **Introduction**
 This section provides an overview of managing R Markdown documentation using Bookdown and outlines the purpose of this technical manual.
-2. **Defining the Document Structure** in `_bookdown.yml`
+2. **Defining the Document Structure** in `_bookdown.yml` file.
 Files: Structure of the document is stored in `_bookdown.yml` file. 
-`Rmd_files` in `_bookdown.yml` is a list of documents used to build a documentation in a given order. If add a new file to documentation - it must be added to the Rmd_files list.
-Setting the Order of Chapters/Sections: Oder of chapters is an order of files in `Rmd_files` list.   
+`Rmd_files` variable in `_bookdown.yml` is a list of documents used to build a documentation in a given order. If we want to add a new file to documentation - it must be added to the Rmd_files list and a new file must be created in `r_markdown_docs` folder with .Rmd extension.
+Setting the Order of Chapters/Sections: Order of chapters is an order of files in `Rmd_files` list.   
 3. **Adding New Chapters/Sections**
 Creating New R Markdown Files: to create a new sectiono or chapter - just create a `<filename>.Rmd` file in `/docs/r_markdown_docs` folder.
 Updating the Rmd Files List: Once you create a file and want to add it to official documentation update `_bookdown.yml` -> `Rmd_files` with new additions.
@@ -44,8 +43,8 @@ Publishing Your Documentation:
    
     * Build and check locally in RStudio
     * Commit changes in `r_markdown_docs` folder and create pull request
-    * Check if the test for building documentation passes.
-    * Merge to master and check gitaction workflow result. 
+    * Check if the GitHub Action test for building documentation passes.
+    * Merge to master and check GitHub Action workflow result. 
 
 
 For markdown Gitbook syntax

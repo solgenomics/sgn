@@ -93,7 +93,7 @@ knitr::include_graphics('assets/images/manage_accessions_add_accessions_saved.pn
 
 ## Add Parentage (Pedigree) Information to Accessions
 
-You can upload pedigree file from your computer to the database by clicking on “Upload Pedigree File”
+Pedigree data can be uploaded from your computer by clicking on “Upload Pedigree File”
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image286.png')
@@ -102,6 +102,12 @@ knitr::include_graphics('assets/images/image286.png')
 ***IMPORTANT!* Please use only tab-delimited text file format (.xls or .xlsx formats are NOT supported).**
 
 You can find detailed information on how to prepare pedigree file by clicking on “File format information”
+
+The currently supported format has four tab separated columns:
+
+progeny name   female parent accession   male parent accession   type
+
+Type can be biparental, self, backcross, sib, polycross, reselected, or open. In the case of the open type, the male parent accession field can remain blank. For all other types, both columns should be filled, even if they contain the same information as another column (such as self). 
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image333.png')

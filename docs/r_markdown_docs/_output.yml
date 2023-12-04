@@ -6,7 +6,7 @@ bookdown::gitbook:
       in_header: hypothesis.html
   config:
     toc:
-      collapse: subsection
+      collapse: section
       before: <li class="toc-logo"><a href="./"><img src="assets/images/Breedbase_HighRes.png"></a></li>
       after: <li><a href="https://bookdown.org/" target="blank">Published with bookdown</a></li>
     
@@ -21,7 +21,7 @@ bookdown::pdf_book:
     after_body:
   keep_tex: yes
   fig_crop: false
-  # latex_engine: xelatex
+  latex_engine: xelatex
   citation_package: natbib
   template: null
   pandoc_args: [--top-level-division=chapter, --wrap=none, "--lua-filter=conditional-content.lua"]
