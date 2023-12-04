@@ -52,7 +52,7 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         people_schema=>$people_schema,
         phenome_schema=>$phenome_schema,
         match_type=>$params->{any_name_matchtype},
-        match_name=>$params->{any_name},
+        match_name=>$params->{any_name}, 
         operator=>$params->{operator},
         stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,

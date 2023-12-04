@@ -29,10 +29,10 @@ my @stock_list = (1..319);
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "Create TrialDesign object");
 $trial_design->set_trial_name("TESTTRIAL");
-ok($trial_design->set_replicated_accession_no($number_of_replicated_accession), "Set replicated accessions for trial design");
-is_deeply($trial_design->get_replicated_accession_no(),$number_of_replicated_accession, "Get replicated accessions for trial design");
-ok($trial_design->set_unreplicated_accession_no($number_of_unreplicated_accession), "Set unreplicated accessions for trial design");
-is_deeply($trial_design->get_unreplicated_accession_no(),$number_of_unreplicated_accession, "Get unreplicated accessions for trial design");
+ok($trial_design->set_replicated_stock_no($number_of_replicated_accession), "Set replicated accessions for trial design");
+is_deeply($trial_design->get_replicated_stock_no(),$number_of_replicated_accession, "Get replicated accessions for trial design");
+ok($trial_design->set_unreplicated_stock_no($number_of_unreplicated_accession), "Set unreplicated accessions for trial design");
+is_deeply($trial_design->get_unreplicated_stock_no(),$number_of_unreplicated_accession, "Get unreplicated accessions for trial design");
 ok($trial_design->set_num_of_replicated_times($num_of_replicated_times), "Set number of replicated times for trial design");
 is_deeply($trial_design->get_num_of_replicated_times(),$num_of_replicated_times, "Get number of replicated times for trial design");
 ok($trial_design->set_sub_block_sequence($sub_block_sequence), "Set sub-block sequence for trial design");
