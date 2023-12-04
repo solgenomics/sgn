@@ -6,7 +6,7 @@ on:
   push:
     branches: ["master"]
     paths:
-      - 'docs/**'
+      - 'docs/r_markdown_docs/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:          
+          token: ${{ secrets.MANUAL_GITACTION }}
       - name: Save directory for checkout
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Create gitbook         
