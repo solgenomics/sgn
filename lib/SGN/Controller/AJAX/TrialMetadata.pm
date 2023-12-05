@@ -4980,7 +4980,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         my $col = $type . "_order";
 
         # Add CSV headers
-        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number");
+        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control");
         push(@data, \@headers);
 
         # Add plot rows
@@ -4997,7 +4997,10 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     $_->{accession_name},
                     $_->{seedlot_name},
                     $_->{row_number},
-                    $_->{col_number}
+                    $_->{col_number},
+                    $_->{rep_number},
+                    $_->{block_number},
+                    $_->{is_a_control}
                 );
                 push(@data, \@d);
             }
@@ -5012,7 +5015,10 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     "", # accession
                     "", # seedlot
                     $_->{row_number},
-                    $_->{col_number}
+                    $_->{col_number},
+                    "", # rep
+                    "", # block
+                    "", # control
                 );
                 push(@data, \@d);
             }
@@ -5023,7 +5029,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         $filename = "harvest_master.csv";
 
         # Add CSV headers
-        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name");
+        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "rep_number", "block_number", "is_a_control");
         push(@data, \@headers);
 
         # Add plot rows
@@ -5041,6 +5047,9 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     $_->{plot_name},
                     $_->{accession_name},
                     $_->{seedlot_name},
+                    $_->{rep_number},
+                    $_->{block_number},
+                    $_->{is_a_control}
                 );
                 push(@data, \@d);
             }
@@ -5056,6 +5065,9 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     "", # plot name
                     "", # accession
                     "", # seedlot
+                    "", # rep
+                    "", # block
+                    "", # control
                 );
                 push(@data, \@d);
             }
