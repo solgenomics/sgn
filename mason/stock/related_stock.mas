@@ -7,15 +7,15 @@ $stock_type => undef
 
 % if ($stock_type eq 'accession' || $stock_type eq 'plant' || $stock_type eq 'plot' || $stock_type eq 'subplot' || $stock_type eq 'tissue_sample'){
 
-    <&| /page/info_section.mas, id=>'related_stocks_in_trial', title => 'Related stocks in trials', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id=>'related_stocks_in_trial', title => 'Related stocks in trial', collapsible=>1, collapsed=>1 &>
         <div class="well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <table id = "trial_related_stock" class="table table-hover table-striped">
                         <thead>
                         <tr>
-                            <th>Name</th>
                             <th>Type</th>
+                            <th>Name</th>
                         </tr>
                         </thead>
                     </table>
@@ -156,6 +156,7 @@ jQuery(document).ready(function(){
 
     jQuery('#related_stocks_in_trial_onswitch').one("click", function(){
         var trial_stock_table = jQuery('#trial_related_stock').DataTable({
+            'order': false,
             'ajax':'/stock/'+ <% $stock_id %> + '/datatables/trial_related_stock',
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);

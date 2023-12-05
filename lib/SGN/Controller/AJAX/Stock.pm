@@ -1924,15 +1924,75 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my $trial_related_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
     my $result = $trial_related_stock->get_trial_related_stock();
     my @stocks;
+    my @accessions;
+    my @crosses;
+    my @family_names;
+    my @plots;
+    my @subplots;
+    my @plants;
+    my @tissue_samples;
+    my @seedlots;
+    my @others;
     foreach my $r (@$result){
-      my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      my $url;
-      if ($cvterm_name eq 'seedlot'){
-          $url = qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>};
-      } else {
-          $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
-      }
-      push @stocks, [$url, $cvterm_name, $stock_name];
+        my ($stock_id, $stock_name, $cvterm_name) = @$r;
+        my $url;
+        if ($cvterm_name eq 'seedlot'){
+            $url = qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>};
+        } elsif ($cvterm_name eq 'cross') {
+            $url = qq{<a href = "/cross/$stock_id">$stock_name</a>};
+        } elsif ($cvterm_name eq 'family_name') {
+            $url = qq{<a href = "/family/$stock_id/">$stock_name</a>};
+        } else {
+            $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
+        }
+
+        if ($cvterm_name eq 'accession') {
+            push @accessions, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'cross') {
+            push @crosses, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'family_name') {
+            push @family_names, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'plot') {
+            push @plots, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'subplot') {
+            push @subplots, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'plant') {
+            push @plants, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'tissue_sample') {
+            push @tissue_samples, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'seedlot') {
+            push @seedlots, [$cvterm_name, $url, $stock_name];
+        } else {
+            push @others, [$cvterm_name, $url, $stock_name];
+        }
+    }
+
+    if (scalar(@accessions) > 0) {
+        push @stocks, @accessions;
+    }
+    if (scalar(@crosses) > 0) {
+        push @stocks, @crosses;
+    }
+    if (scalar(@family_names) > 0) {
+        push @stocks, @family_names;
+    }
+    if (scalar(@plots) > 0) {
+        push @stocks, @plots;
+    }
+    if (scalar(@subplots) > 0) {
+        push @stocks, @subplots;
+    }
+    if (scalar(@plants) > 0) {
+        push @stocks, @plants;
+    }
+    if (scalar(@tissue_samples) > 0) {
+        push @stocks, @tissue_samples;
+    }
+    if (scalar(@seedlots) > 0) {
+        push @stocks, @seedlots;
+    }
+    if (scalar(@others) > 0) {
+        push @stocks, @others;
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -2277,7 +2337,7 @@ sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_a
         $c->stash->{rest} = {error=>$result->{error}};
         $c->detach();
     }
-    
+
     $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
 }
 
@@ -2294,11 +2354,11 @@ sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart
     my @file_array;
     my %file_info;
 
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype 
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
     FROM phenome.stock_file
-    JOIN metadata.md_files using(file_id) 
+    JOIN metadata.md_files using(file_id)
     LEFT JOIN metadata.md_metadata as m using(metadata_id)
-    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) 
+    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
     WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
 
     my $h = $c->dbc->dbh()->prepare($q);
