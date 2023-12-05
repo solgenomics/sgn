@@ -1,3 +1,11 @@
+
+# Breedbase DB_patches
+
+This directory contains dbpatches. Look in the template/ directory for an example.
+
+Each dbpatch is a Perl module, should have a 5 digit number and reside in a directory of that name.
+
+
 # ImageBreed DB_Patches
 
 ## Overview
