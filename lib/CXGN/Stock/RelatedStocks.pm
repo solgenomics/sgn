@@ -175,4 +175,43 @@ sub get_cross_of_progeny {
 }
 
 
+sub get_plot_plant_related_seedlots {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
+
+    my @related_seedlots;
+
+    my $q1 = "SELECT distinct(stock.stock_id), stock.uniquename, cvterm.name FROM stock_relationship
+            INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
+            INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+            WHERE stock_relationship.object_id = ? AND stock_relationship.type_id = ? ";
+
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+
+    $h1->execute($stock_id, $seed_transaction_type_id);
+
+    while(my($stock_id, $stock_name, $stock_type) = $h1->fetchrow_array()){
+      push @related_seedlots, ['source of', $stock_type, $stock_id, $stock_name]
+    }
+
+    my $q2 = "SELECT distinct(stock.stock_id), stock.uniquename, cvterm.name FROM stock_relationship
+            INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
+            INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+            WHERE stock_relationship.subject_id = ? AND stock_relationship.type_id = ? ";
+
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+
+    $h2->execute($stock_id, $seed_transaction_type_id);
+
+    while(my($stock_id, $stock_name, $stock_type) = $h2->fetchrow_array()){
+      push @related_seedlots, ['derived from', $stock_type, $stock_id, $stock_name]
+    }
+
+    return\@related_seedlots;
+
+}
+
+
 1;

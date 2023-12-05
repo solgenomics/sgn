@@ -2086,6 +2086,25 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
 }
 
+
+sub get_plot_plant_related_seedlots:Chained('/stock/get_stock') PathPart('datatables/plot_plant_related_seedlots') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_plot_plant_related_seedlots();
+    my @stocks;
+    foreach my $r (@$result){
+        my ($transaction_type, $stock_type, $stock_id, $stock_name) = @$r;
+      push @stocks, [$transaction_type, $stock_type, qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>}, $stock_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+}
+
+
 sub get_stock_datatables_genotype_data : Chained('/stock/get_stock') :PathPart('datatables/genotype_data') : ActionClass('REST') { }
 
 sub get_stock_datatables_genotype_data_GET  {
