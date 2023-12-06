@@ -1936,9 +1936,8 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     foreach my $r (@$result){
         my ($stock_id, $stock_name, $cvterm_name) = @$r;
         my $url;
-        if ($cvterm_name eq 'seedlot'){
-            $url = qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>};
-        } elsif ($cvterm_name eq 'cross') {
+
+        if ($cvterm_name eq 'cross') {
             $url = qq{<a href = "/cross/$stock_id">$stock_name</a>};
         } elsif ($cvterm_name eq 'family_name') {
             $url = qq{<a href = "/family/$stock_id/">$stock_name</a>};
@@ -1958,12 +1957,6 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
             push @subplots, [$cvterm_name, $url, $stock_name];
         } elsif ($cvterm_name eq 'plant') {
             push @plants, [$cvterm_name, $url, $stock_name];
-        } elsif ($cvterm_name eq 'tissue_sample') {
-            push @tissue_samples, [$cvterm_name, $url, $stock_name];
-        } elsif ($cvterm_name eq 'seedlot') {
-            push @seedlots, [$cvterm_name, $url, $stock_name];
-        } else {
-            push @others, [$cvterm_name, $url, $stock_name];
         }
     }
 
@@ -1984,9 +1977,6 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     }
     if (scalar(@plants) > 0) {
         push @stocks, @plants;
-    }
-    if (scalar(@tissue_samples) > 0) {
-        push @stocks, @tissue_samples;
     }
     if (scalar(@seedlots) > 0) {
         push @stocks, @seedlots;
@@ -2079,7 +2069,7 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -2098,7 +2088,7 @@ sub get_plot_plant_related_seedlots:Chained('/stock/get_stock') PathPart('datata
     my @stocks;
     foreach my $r (@$result){
         my ($transaction_type, $stock_type, $stock_id, $stock_name) = @$r;
-      push @stocks, [$transaction_type, $stock_type, qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>}, $stock_name];
+        push @stocks, [$transaction_type, $stock_type, qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>}, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
