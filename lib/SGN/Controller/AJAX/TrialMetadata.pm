@@ -4901,6 +4901,121 @@ sub update_trial_design_type_POST : Args(0) {
 
 }
 
+
+#
+# GET TRIAL PLOT ORDERS
+# Get the ordered plots of one or more trials based on the requested ordering parameters
+# Arguments:
+#   - trial_ids: array of trial ids
+#   - type: plot order file type ('planting' or 'harvest')
+#   - order: the order to traverse the plots ('by_col_serpentine', 'by_col_zigzag', 'by_row_serpentine', 'by_row_zigzag')
+#   - start: the corner of the trial layout to start the traversal ('bottom_left', 'top_left', 'top_right', 'bottom_right')
+#
+sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my @trial_ids = split(',', $c->req->param('trial_ids') || '');
+    my $type = $c->req->param('type') || 'planting';
+    my $order = $c->req->param('order') || 'by_row_zigzag';
+    my $start = $c->req->param('start') || 'bottom_left';
+    my $top_border = $c->req->param('top_border') || 'false';
+    my $right_border = $c->req->param('right_border') || 'false';
+    my $bottom_border = $c->req->param('bottom_border') || 'false';
+    my $left_border = $c->req->param('left_border') || 'false';
+    my $gaps = $c->req->param('gaps') || 'false';
+
+    # Check parameters
+    if ( scalar(@trial_ids) eq 0 ) {
+        $c->stash->{rest} = { error => "No trial_ids provided!" };
+        return;
+    }
+    if ( $type ne 'planting' && $type ne 'harvest' ) {
+        $c->stash->{rest} = { error => "Unrecognized type!" };
+        return;
+    }
+    if ( ( $order !~ /by_col/ && $order !~ /by_row/ ) || ( $order !~ /serpentine/ && $order !~ /zigzag/ ) ) {
+        $c->stash->{rest} = { error => "Unrecognized order!" };
+        return;
+    }
+    if ( ( $start !~ /bottom/ && $start !~ /top/ ) || ( $start !~ /left/ && $start !~ /right/ ) ) {
+        $c->stash->{rest} = { error => "Unrecognized start!" };
+        return;
+    }
+    my %borders = (
+        top => $top_border eq 'true' || 0,
+        right => $right_border eq 'true' || 0,
+        bottom => $bottom_border eq 'true' || 0,
+        left => $left_border eq 'true' || 0
+    );
+
+    # Get the sorted plots
+    my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start, \%borders, $gaps eq 'true' || 0);
+
+    # Return error message, if set
+    if ( !defined $results->{error} && !defined $results->{plots} ) {
+        $results->{error} = "An unknown error occurred";
+    }
+    if ( defined $results->{error} ) {
+        $c->stash->{rest} = { error => $results->{error} };
+        return;
+    }
+
+    # Generate CSV file
+    my $filename;
+    my @data;
+    if ( $type eq 'planting' || $type eq 'harvest' ) {
+        $filename = $type . "_order.csv";
+        my $col = $type . "_order";
+
+        # Add CSV headers
+        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number");
+        push(@data, \@headers);
+
+        # Add plot rows
+        my $plots = $results->{plots};
+        foreach (@$plots) {
+            if ( $_->{type} eq 'plot' ) {
+                my @d = (
+                    $_->{order},
+                    $_->{type},
+                    "\"$_->{location_name}\"",
+                    $_->{trial_name},
+                    $_->{plot_number},
+                    $_->{plot_name},
+                    $_->{accession_name},
+                    $_->{seedlot_name},
+                    $_->{row_number},
+                    $_->{col_number}
+                );
+                push(@data, \@d);
+            }
+            else {
+                my @d = (
+                    $_->{order},
+                    $_->{type},
+                    "", # location
+                    "", # trial
+                    "", # plot number
+                    "", # plot name
+                    "", # accession
+                    "", # seedlot
+                    $_->{row_number},
+                    $_->{col_number}
+                );
+                push(@data, \@d);
+            }
+        }
+    }
+
+    # Return the generated file
+    $c->res->content_type('text/csv');
+    $c->res->headers->push_header("Content-disposition', 'attachment; filename=\"$filename\"");
+    $c->res->body( join("\n", map { $_ = join(",", @{$_}) } @data) );
+    return;
+}
+
+
 #
 # GET LINKED FIELD TRIALS
 # Get additional field trials that share the same physical field (to display together in the plot layout tool)
