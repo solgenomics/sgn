@@ -840,7 +840,7 @@ sub observationunits_update {
         }
     }
 
-    $self->_refresh_matviews($dbh, $c, 5 * 60);
+    # $self->_refresh_matviews($dbh, $c, 5 * 60);
 
     my @observation_unit_db_ids;
     foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
@@ -1109,7 +1109,7 @@ sub observationunits_store {
     if ($error_resp) { return $error_resp; }
 
     # Refresh materialized view so data can be retrieved. This can take a while
-    $self->_refresh_matviews($dbh, $c, 5 * 60);
+    # $self->_refresh_matviews($dbh, $c, 5 * 60);
 
     # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
     my @observationUnitNames;
