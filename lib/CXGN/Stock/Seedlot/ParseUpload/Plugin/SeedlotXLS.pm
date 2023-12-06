@@ -168,6 +168,11 @@ sub _validate_with_plugin {
             $source = $worksheet->get_cell($row, 8)->value();
             $source =~ s/^\s+|\s+$//g;
         }
+
+        if (!defined $seedlot_name && !defined $accession_name) {
+            last;
+        }
+
         if (!$seedlot_name || $seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: seedlot_name missing.";
         }
@@ -302,7 +307,13 @@ sub _parse_with_plugin {
             $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}++;
         }
+
+        if (!defined $seedlot_name && !defined $accession_name) {
+            last;
+        }
+
     }
+
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
@@ -377,14 +388,13 @@ sub _parse_with_plugin {
             $source = $worksheet->get_cell($row, 8)->value();
         }
 
+        if (!defined $seedlot_name && !defined $accession_name) {
+            last;
+        }
+
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $source =~ s/^\s+|\s+$//g; # also trim
-
-        #skip blank lines
-        if (!$seedlot_name && !$accession_name && !$description) {
-            next;
-        }
 
         my $accession_stock_id;
         if ($acc_synonyms_lookup{$accession_name}){

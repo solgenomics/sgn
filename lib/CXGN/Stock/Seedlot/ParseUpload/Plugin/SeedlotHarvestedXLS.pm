@@ -148,6 +148,10 @@ sub _validate_with_plugin {
             $box_name =  $worksheet->get_cell($row,6)->value();
         }
 
+        if (!defined $seedlot_name && !defined $cross_name) {
+            last;
+        }
+
         if (!$seedlot_name || $seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: seedlot_name missing.";
         }
@@ -262,6 +266,11 @@ sub _parse_with_plugin {
             $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
+
+        if (!defined $seedlot_name && !defined $cross_name) {
+            last;
+        }
+
     }
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -324,9 +333,8 @@ sub _parse_with_plugin {
             $box_name =~ s/^\s+|\s+$//g;
         }
 
-        #skip blank lines
-        if (!$seedlot_name && !$cross_name && !$description) {
-            next;
+        if (!defined $seedlot_name && !defined $cross_name) {
+            last;
         }
 
 
