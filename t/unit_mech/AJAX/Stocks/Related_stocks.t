@@ -29,8 +29,7 @@ $response = decode_json $mech->content;
 is_deeply($response, {'data'=> [
 ['plot', '<a href = "/stock/38857/view">test_trial21</a>', 'test_trial21'],
 ['plot', '<a href = "/stock/38862/view">test_trial26</a>', 'test_trial26'],
-['plot', '<a href = "/stock/38870/view">test_trial214</a>', 'test_trial214'],
-['seedlot', '<a href = "/breeders/seedlot/41303">test_accession4_001</a>','test_accession4_001']
+['plot', '<a href = "/stock/38870/view">test_trial214</a>', 'test_trial214']
 ]}, 'trial_related_stock');
 
 $mech->get_ok("http://localhost:3010/stock/$accession_1_id/datatables/progenies");
