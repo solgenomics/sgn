@@ -62,7 +62,7 @@ $stock_type => undef
     <& /breeders_toolbox/seedlots_section.mas, stock_id=>$stock_id, stock_type=>$stock_type, stock_uniquename=>$stock_uniquename &>
 % }
 
-% if ($stock_type eq 'accession' || $stock_type eq 'plant' || $stock_type eq 'plot' || $stock_type eq 'subplot' || $stock_type eq 'tissue_sample'){
+% if ($stock_type eq 'accession' || $stock_type eq 'plant' || $stock_type eq 'plot' || $stock_type eq 'subplot'){
 
     <&| /page/info_section.mas, id=>'related_stock_tissues', title => 'Related tissue samples', collapsible=>1, collapsed=>1 &>
         <div class="well well-sm">
