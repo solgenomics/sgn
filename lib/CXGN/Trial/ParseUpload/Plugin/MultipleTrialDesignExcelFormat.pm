@@ -94,6 +94,7 @@ sub _validate_with_plugin {
   my $breeding_program;
   my $location;
   my $year;
+  my $transplanting_date;
   my $design_type;
   my $description;
   my $trial_type;
@@ -935,6 +936,7 @@ sub _parse_header {
   my $breeding_program_head;
   my $location_head;
   my $year_head;
+  my $transplanting_date_head;
   my $design_type_head;
   my $description_head;
   my $trial_type_head;
