@@ -148,49 +148,55 @@ sub _validate_with_plugin {
       }
 
       if ($worksheet->get_cell($row,4)) {
-        $design_type = $worksheet->get_cell($row,4)->value();
+        $transplanting_date = $worksheet->get_cell($row,4)->value();
+      } else {
+        $transplanting_date = undef;
+      }
+
+      if ($worksheet->get_cell($row,5)) {
+        $design_type = $worksheet->get_cell($row,5)->value();
       } else {
         $design_type = undef;
       }
 
-      if ($worksheet->get_cell($row,5)) {
-        $description = $worksheet->get_cell($row,5)->value();
+      if ($worksheet->get_cell($row,6)) {
+        $description = $worksheet->get_cell($row,6)->value();
       } else {
         $description = undef;
       }
 
-      if ($worksheet->get_cell($row,6)) {
-        $trial_type = $worksheet->get_cell($row,6)->value();
+      if ($worksheet->get_cell($row,7)) {
+        $trial_type = $worksheet->get_cell($row,7)->value();
       } else {
         $trial_type = undef;
       }
 
-      if ($worksheet->get_cell($row,7)) {
-        $plot_width = $worksheet->get_cell($row,7)->value();
+      if ($worksheet->get_cell($row,8)) {
+        $plot_width = $worksheet->get_cell($row,8)->value();
       } else {
         $plot_width = undef;
       }
 
-      if ($worksheet->get_cell($row,8)) {
-        $plot_length = $worksheet->get_cell($row,8)->value();
+      if ($worksheet->get_cell($row,9)) {
+        $plot_length = $worksheet->get_cell($row,9)->value();
       } else {
         $plot_length = undef;
       }
 
-      if ($worksheet->get_cell($row,9)) {
-        $field_size = $worksheet->get_cell($row,9)->value();
+      if ($worksheet->get_cell($row,10)) {
+        $field_size = $worksheet->get_cell($row,10)->value();
       } else {
         $field_size = undef;
       }
 
-      if ($worksheet->get_cell($row,10)) {
-        $planting_date = $worksheet->get_cell($row,10)->value();
+      if ($worksheet->get_cell($row,11)) {
+        $planting_date = $worksheet->get_cell($row,11)->value();
       } else {
         $planting_date = undef;
       }
 
-      if ($worksheet->get_cell($row,11)) {
-        $harvest_date = $worksheet->get_cell($row,11)->value();
+      if ($worksheet->get_cell($row,12)) {
+        $harvest_date = $worksheet->get_cell($row,12)->value();
       } else {
         $harvest_date = undef;
       }
@@ -212,41 +218,41 @@ sub _validate_with_plugin {
       next;
     }
 
-    if ($worksheet->get_cell($row,12)) {
-      $plot_name = $worksheet->get_cell($row,12)->value();
-    }
     if ($worksheet->get_cell($row,13)) {
-      $accession_name = $worksheet->get_cell($row,13)->value();
+      $plot_name = $worksheet->get_cell($row,13)->value();
     }
     if ($worksheet->get_cell($row,14)) {
-      $plot_number =  $worksheet->get_cell($row,14)->value();
+      $accession_name = $worksheet->get_cell($row,14)->value();
     }
     if ($worksheet->get_cell($row,15)) {
-      $block_number =  $worksheet->get_cell($row,15)->value();
+      $plot_number =  $worksheet->get_cell($row,15)->value();
     }
     if ($worksheet->get_cell($row,16)) {
-      $is_a_control =  $worksheet->get_cell($row,16)->value();
+      $block_number =  $worksheet->get_cell($row,16)->value();
     }
     if ($worksheet->get_cell($row,17)) {
-      $rep_number =  $worksheet->get_cell($row,17)->value();
+      $is_a_control =  $worksheet->get_cell($row,17)->value();
     }
     if ($worksheet->get_cell($row,18)) {
-      $range_number =  $worksheet->get_cell($row,18)->value();
+      $rep_number =  $worksheet->get_cell($row,18)->value();
     }
     if ($worksheet->get_cell($row,19)) {
-	     $row_number = $worksheet->get_cell($row,19)->value();
+      $range_number =  $worksheet->get_cell($row,19)->value();
     }
     if ($worksheet->get_cell($row,20)) {
-	     $col_number = $worksheet->get_cell($row,20)->value();
+	     $row_number = $worksheet->get_cell($row,20)->value();
     }
     if ($worksheet->get_cell($row,21)) {
-      $seedlot_name = $worksheet->get_cell($row,21)->value();
+	     $col_number = $worksheet->get_cell($row,21)->value();
     }
     if ($worksheet->get_cell($row,22)) {
-      $num_seed_per_plot = $worksheet->get_cell($row,22)->value();
+      $seedlot_name = $worksheet->get_cell($row,22)->value();
     }
     if ($worksheet->get_cell($row,23)) {
-      $weight_gram_seed_per_plot = $worksheet->get_cell($row,23)->value();
+      $num_seed_per_plot = $worksheet->get_cell($row,23)->value();
+    }
+    if ($worksheet->get_cell($row,24)) {
+      $weight_gram_seed_per_plot = $worksheet->get_cell($row,24)->value();
     }
 
     if ( $row_number && $col_number ) {
