@@ -323,13 +323,13 @@ sub _validate_with_plugin {
       ## TRANSPLANTING DATE CHECK
       if ($transplanting_date) {
         unless ($calendar_funcs->check_value_format($transplanting_date)) {
-          push @error_messages, "Cell K$row_name: transplanting_date <b>$transplanting_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, "Cell E$row_name: transplanting_date <b>$transplanting_date</b> must be in the format YYYY-MM-DD.";
         }
       }
 
       ## DESIGN TYPE CHECK
       if (!$design_type || $design_type eq '' ) {
-          push @error_messages, "Cell E$row_name: design_type missing.";
+          push @error_messages, "Cell F$row_name: design_type missing.";
       }
       else {
         $design_type =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -338,7 +338,7 @@ sub _validate_with_plugin {
 
       ## DESCRIPTION CHECK
       if (!$description || $description eq '' ) {
-          push @error_messages, "Cell F$row_name: description missing.";
+          push @error_messages, "Cell G$row_name: description missing.";
       }
 
       ## TRIAL TYPE CHECK
@@ -349,30 +349,30 @@ sub _validate_with_plugin {
 
       ## PLOT WIDTH CHECK
       if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell H$row_name: plot_width <b>$plot_width</b> must be a positive number.";
+          push @error_messages, "Cell I$row_name: plot_width <b>$plot_width</b> must be a positive number.";
       }
 
       ## PLOT LENGTH CHECK
       if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell I$row_name: plot_length <b>$plot_length</b> must be a positive number.";
+          push @error_messages, "Cell J$row_name: plot_length <b>$plot_length</b> must be a positive number.";
       }
 
       ## FIELD SIZE CHECK
       if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell J$row_name: field_size <b>$field_size</b> must be a positive number.";
+          push @error_messages, "Cell K$row_name: field_size <b>$field_size</b> must be a positive number.";
       }
 
       ## PLANTING DATE CHECK
       if ($planting_date) {
         unless ($calendar_funcs->check_value_format($planting_date)) {
-          push @error_messages, "Cell K$row_name: planting_date <b>$planting_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, "Cell L$row_name: planting_date <b>$planting_date</b> must be in the format YYYY-MM-DD.";
         }
       }
 
       ## HARVEST DATE CHECK
       if ($harvest_date) {
         unless ($calendar_funcs->check_value_format($harvest_date)) {
-          push @error_messages, "Cell L$row_name: harvest_date <b>$harvest_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, "Cell M$row_name: harvest_date <b>$harvest_date</b> must be in the format YYYY-MM-DD.";
         }
       }
 
@@ -381,25 +381,25 @@ sub _validate_with_plugin {
 
     ## PLOT NAME CHECK
     if (!$plot_name || $plot_name eq '' ) {
-        push @error_messages, "Cell M$row_name: plot name missing.";
+        push @error_messages, "Cell N$row_name: plot name missing.";
     }
     elsif ($plot_name =~ /\s/ ) {
-        push @error_messages, "Cell M$row_name: plot name <b>$plot_name</b> must not contain spaces.";
+        push @error_messages, "Cell N$row_name: plot name <b>$plot_name</b> must not contain spaces.";
     }
     elsif ($plot_name =~ /\// || $plot_name =~ /\\/) {
-        push @warning_messages, "Cell M$row_name: plot name <b>$plot_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+        push @warning_messages, "Cell N$row_name: plot name <b>$plot_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
     }
     else {
         $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         if ($seen_plot_names{$plot_name}) {
-            push @error_messages, "Cell M$row_name: duplicate plot name <b>$plot_name</b> seen before at cell M".$seen_plot_names{$plot_name}.".";
+            push @error_messages, "Cell N$row_name: duplicate plot name <b>$plot_name</b> seen before at cell M".$seen_plot_names{$plot_name}.".";
         }
         $seen_plot_names{$plot_name}=$row_name;
     }
 
     ## ACCESSSION NAME CHECK
     if (!$accession_name || $accession_name eq '') {
-      push @error_messages, "Cell N$row_name: accession name missing";
+      push @error_messages, "Cell O$row_name: accession name missing";
     } else {
       $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_accession_names{$accession_name}++;
@@ -407,40 +407,40 @@ sub _validate_with_plugin {
 
     ## PLOT NUMBER CHECK
     if (!$plot_number || $plot_number eq '') {
-        push @error_messages, "Cell O$row_name: plot number missing";
+        push @error_messages, "Cell P$row_name: plot number missing";
     }
     if (!($plot_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell O$row_name: plot number <b>$plot_number</b> is not a positive integer.";
+        push @error_messages, "Cell P$row_name: plot number <b>$plot_number</b> is not a positive integer.";
     }
     $seen_plot_numbers{$plot_number}++;
 
     ## BLOCK NUMBER CHECK
     if (!$block_number || $block_number eq '') {
-        push @error_messages, "Cell P$row_name: block number missing";
+        push @error_messages, "Cell Q$row_name: block number missing";
     }
     if (!($block_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell P$row_name: block number <b>$block_number</b> is not a positive integer.";
+        push @error_messages, "Cell Q$row_name: block number <b>$block_number</b> is not a positive integer.";
     }
 
     ## IS A CONTROL CHECK
     if ($is_a_control) {
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-          push @error_messages, "Cell Q$row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
+          push @error_messages, "Cell R$row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
       }
     }
 
     ## REP, ROW, RANGE AND COLUMN CHECKS
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
-        push @error_messages, "Cell R$row_name: rep_number <b>$rep_number</b> must be a positive integer.";
+        push @error_messages, "Cell S$row_name: rep_number <b>$rep_number</b> must be a positive integer.";
     }
     if ($range_number && !($range_number =~ /^\d+?$/)){
-        push @error_messages, "Cell S$row_name: range_number <b>$range_number</b> must be a positive integer.";
+        push @error_messages, "Cell T$row_name: range_number <b>$range_number</b> must be a positive integer.";
     }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-        push @error_messages, "Cell T$row_name: row_number <b>$row_number</b> must be a positive integer.";
+        push @error_messages, "Cell U$row_name: row_number <b>$row_number</b> must be a positive integer.";
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-        push @error_messages, "Cell U$row_name: col_number <b>$col_number</b> must be a positive integer.";
+        push @error_messages, "Cell V$row_name: col_number <b>$col_number</b> must be a positive integer.";
     }
 
     ## SEEDLOT CHECKS
@@ -453,7 +453,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell W$row_name: num_seed_per_plot <b>$num_seed_per_plot</b> must be a positive integer.";
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell X$row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
+        push @error_messages, "Cell W$row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
     }
 
     ## TREATMENT CHECKS
