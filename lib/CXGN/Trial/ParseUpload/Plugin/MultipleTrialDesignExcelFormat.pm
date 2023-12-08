@@ -450,10 +450,10 @@ sub _validate_with_plugin {
         push @pairs, [$seedlot_name, $accession_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell W$row_name: num_seed_per_plot <b>$num_seed_per_plot</b> must be a positive integer.";
+        push @error_messages, "Cell X$row_name: num_seed_per_plot <b>$num_seed_per_plot</b> must be a positive integer.";
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell W$row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
+        push @error_messages, "Cell Y$row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
     }
 
     ## TREATMENT CHECKS
