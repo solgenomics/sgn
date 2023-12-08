@@ -962,64 +962,67 @@ sub _parse_header {
     $year_head= $worksheet->get_cell(0,3)->value();
   }
   if ($worksheet->get_cell(0,4)) {
-    $design_type_head= $worksheet->get_cell(0,4)->value();
+    $year_head= $worksheet->get_cell(0,4)->value();
   }
   if ($worksheet->get_cell(0,5)) {
-    $description_head= $worksheet->get_cell(0,5)->value();
+    $design_type_head= $worksheet->get_cell(0,5)->value();
   }
   if ($worksheet->get_cell(0,6)) {
-    $trial_type_head= $worksheet->get_cell(0,6)->value();
+    $description_head= $worksheet->get_cell(0,6)->value();
   }
   if ($worksheet->get_cell(0,7)) {
-    $plot_width_head= $worksheet->get_cell(0,7)->value();
+    $trial_type_head= $worksheet->get_cell(0,7)->value();
   }
   if ($worksheet->get_cell(0,8)) {
-    $plot_length_head= $worksheet->get_cell(0,8)->value();
+    $plot_width_head= $worksheet->get_cell(0,8)->value();
   }
   if ($worksheet->get_cell(0,9)) {
-    $field_size_head= $worksheet->get_cell(0,9)->value();
+    $plot_length_head= $worksheet->get_cell(0,9)->value();
   }
   if ($worksheet->get_cell(0,10)) {
-    $planting_date_head= $worksheet->get_cell(0,10)->value();
+    $field_size_head= $worksheet->get_cell(0,10)->value();
   }
   if ($worksheet->get_cell(0,11)) {
-    $harvest_date_head= $worksheet->get_cell(0,11)->value();
+    $planting_date_head= $worksheet->get_cell(0,11)->value();
   }
   if ($worksheet->get_cell(0,12)) {
-    $plot_name_head  = $worksheet->get_cell(0,12)->value();
+    $harvest_date_head= $worksheet->get_cell(0,12)->value();
   }
   if ($worksheet->get_cell(0,13)) {
-    $accession_name_head  = $worksheet->get_cell(0,13)->value();
+    $plot_name_head  = $worksheet->get_cell(0,13)->value();
   }
   if ($worksheet->get_cell(0,14)) {
-    $plot_number_head  = $worksheet->get_cell(0,14)->value();
+    $accession_name_head  = $worksheet->get_cell(0,14)->value();
   }
   if ($worksheet->get_cell(0,15)) {
-    $block_number_head  = $worksheet->get_cell(0,15)->value();
+    $plot_number_head  = $worksheet->get_cell(0,15)->value();
   }
-  if ($worksheet->get_cell(0,16)) {
-    $is_a_control_head  = $worksheet->get_cell(0,16)->value();
+  if ($worksheet->get_cell(0,15)) {
+    $block_number_head  = $worksheet->get_cell(0,16)->value();
   }
   if ($worksheet->get_cell(0,17)) {
-    $rep_number_head  = $worksheet->get_cell(0,17)->value();
+    $is_a_control_head  = $worksheet->get_cell(0,17)->value();
   }
   if ($worksheet->get_cell(0,18)) {
-    $range_number_head  = $worksheet->get_cell(0,18)->value();
+    $rep_number_head  = $worksheet->get_cell(0,18)->value();
   }
   if ($worksheet->get_cell(0,19)) {
-      $row_number_head  = $worksheet->get_cell(0,19)->value();
+    $range_number_head  = $worksheet->get_cell(0,19)->value();
   }
   if ($worksheet->get_cell(0,20)) {
-      $col_number_head  = $worksheet->get_cell(0,20)->value();
+      $row_number_head  = $worksheet->get_cell(0,20)->value();
   }
   if ($worksheet->get_cell(0,21)) {
-    $seedlot_name_head  = $worksheet->get_cell(0,21)->value();
+      $col_number_head  = $worksheet->get_cell(0,21)->value();
   }
   if ($worksheet->get_cell(0,22)) {
-    $num_seed_per_plot_head = $worksheet->get_cell(0,22)->value();
+    $seedlot_name_head  = $worksheet->get_cell(0,22)->value();
   }
   if ($worksheet->get_cell(0,23)) {
-    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,23)->value();
+    $num_seed_per_plot_head = $worksheet->get_cell(0,23)->value();
+  }
+  if ($worksheet->get_cell(0,24)) {
+    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,24)->value();
   }
 
   my @error_messages;
