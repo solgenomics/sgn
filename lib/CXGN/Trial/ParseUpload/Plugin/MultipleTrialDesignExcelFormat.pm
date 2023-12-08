@@ -319,6 +319,13 @@ sub _validate_with_plugin {
           push @error_messages, "Cell D$row_name: <b>$year</b> is not a valid year, must be a 4 digit positive integer.";
       }
 
+      ## TRANSPLANTING DATE CHECK
+      if ($transplanting_date) {
+        unless ($calendar_funcs->check_value_format($transplanting_date)) {
+          push @error_messages, "Cell K$row_name: transplanting_date <b>$transplanting_date</b> must be in the format YYYY-MM-DD.";
+        }
+      }
+
       ## DESIGN TYPE CHECK
       if (!$design_type || $design_type eq '' ) {
           push @error_messages, "Cell E$row_name: design_type missing.";
@@ -962,7 +969,7 @@ sub _parse_header {
     $year_head= $worksheet->get_cell(0,3)->value();
   }
   if ($worksheet->get_cell(0,4)) {
-    $year_head= $worksheet->get_cell(0,4)->value();
+    $transplanting_date_head= $worksheet->get_cell(0,4)->value();
   }
   if ($worksheet->get_cell(0,5)) {
     $design_type_head= $worksheet->get_cell(0,5)->value();
@@ -1039,65 +1046,68 @@ sub _parse_header {
   if (!$year_head || $year_head ne 'year' ) {
     push @error_messages, "Cell D1: year is missing from the header";
   }
+  if (!$transplanting_date_head || $year_head ne 'year' ) {
+    push @error_messages, "Cell E1: year is missing from the header";
+  }
   if (!$design_type_head || $design_type_head ne 'design_type' ) {
-    push @error_messages, "Cell E1: design_type is missing from the header";
+    push @error_messages, "Cell F1: design_type is missing from the header";
   }
   if (!$description_head || $description_head ne 'description' ) {
-    push @error_messages, "Cell F1: description is missing from the header";
+    push @error_messages, "Cell G1: description is missing from the header";
   }
   if (!$trial_type_head || $trial_type_head ne 'trial_type' ) {
-    push @error_messages, "Cell G1: trial_type is missing from the header";
+    push @error_messages, "Cell H1: trial_type is missing from the header";
   }
   if (!$plot_width_head || $plot_width_head ne 'plot_width' ) {
-    push @error_messages, "Cell H1: plot_width is missing from the header";
+    push @error_messages, "Cell I1: plot_width is missing from the header";
   }
   if (!$plot_length_head || $plot_length_head ne 'plot_length' ) {
-    push @error_messages, "Cell I1: plot_length is missing from the header";
+    push @error_messages, "Cell J1: plot_length is missing from the header";
   }
   if (!$field_size_head || $field_size_head ne 'field_size' ) {
-    push @error_messages, "Cell J1: field_size is missing from the header";
+    push @error_messages, "Cell K1: field_size is missing from the header";
   }
   if (!$planting_date_head || $planting_date_head ne 'planting_date' ) {
-    push @error_messages, "Cell K1: planting_date is missing from the header";
+    push @error_messages, "Cell L1: planting_date is missing from the header";
   }
   if (!$harvest_date_head || $harvest_date_head ne 'harvest_date' ) {
-    push @error_messages, "Cell L1: harvest_date is missing from the header";
+    push @error_messages, "Cell M1: harvest_date is missing from the header";
   }
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
-    push @error_messages, "Cell M1: plot_name is missing from the header";
+    push @error_messages, "Cell N1: plot_name is missing from the header";
   }
   if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-    push @error_messages, "Cell N1: accession_name is missing from the header";
+    push @error_messages, "Cell O1: accession_name is missing from the header";
   }
   if (!$plot_number_head || $plot_number_head ne 'plot_number') {
-    push @error_messages, "Cell O1: plot_number is missing from the header";
+    push @error_messages, "Cell P1: plot_number is missing from the header";
   }
   if (!$block_number_head || $block_number_head ne 'block_number') {
-    push @error_messages, "Cell P1: block_number is missing from the header";
+    push @error_messages, "Cell Q1: block_number is missing from the header";
   }
   if (!$is_a_control_head || $is_a_control_head ne 'is_a_control') {
-    push @error_messages, "Cell Q1: is_a_control is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell R1: is_a_control is missing from the header. (Header is required, but values are optional)";
   }
   if (!$rep_number_head || $rep_number_head ne 'rep_number') {
-    push @error_messages, "Cell R1: rep_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell S1: rep_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$range_number_head || $range_number_head ne 'range_number') {
-    push @error_messages, "Cell S1: range_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell T1: range_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$row_number_head || $row_number_head ne 'row_number') {
-    push @error_messages, "Cell T1: row_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell U1: row_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$col_number_head || $col_number_head ne 'col_number') {
-    push @error_messages, "Cell U1: col_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell V1: col_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name') {
-    push @error_messages, "Cell V1: seedlot_name is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell W1: seedlot_name is missing from the header. (Header is required, but values are optional)";
   }
   if (!$num_seed_per_plot_head || $num_seed_per_plot_head ne 'num_seed_per_plot') {
-    push @error_messages, "Cell W1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell X1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
   if (!$weight_gram_seed_per_plot_head || $weight_gram_seed_per_plot_head ne 'weight_gram_seed_per_plot') {
-    push @error_messages, "Cell X1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell Y1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
 
   return \@error_messages;
