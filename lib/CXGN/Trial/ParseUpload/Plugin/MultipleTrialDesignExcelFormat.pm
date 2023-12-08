@@ -854,6 +854,7 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,22)) {
         $seedlot_name = $worksheet->get_cell($row, 22)->value();
     }
+
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     }
