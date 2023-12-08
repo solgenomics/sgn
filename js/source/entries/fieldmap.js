@@ -148,96 +148,50 @@ export function init() {
             }
         }
 
-        traverse_map(plot_arr, planting_or_harvesting_order_layout) {
-            var local_this = this;
-            let coord_matrix = [];
-            var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
-            var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
-            
-            for (let plot of plot_arr) {
-                if (!coord_matrix[plot.observationUnitPosition[row]]) {
-                    coord_matrix[plot.observationUnitPosition[row]] = [];
-                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
-                } else {
-                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
-                }
-            }
+        get_plot_order(type, order, start, include_borders, include_gaps) {
+            (async () => {
+                jQuery('#working_modal').modal("show");
+                let q = new URLSearchParams({
+                    'trial_ids': [this.trial_id, ...Object.keys(this.linked_trials).map((e) => this.linked_trials[e].id)].join(','),
+                    'type': type,
+                    'order': order,
+                    'start': start,
+                    'top_border': !!include_borders && !!this.meta_data.top_border_selection,
+                    'right_border': !!include_borders && !!this.meta_data.right_border_selection,
+                    'bottom_border': !!include_borders && !!this.meta_data.bottom_border_selection,
+                    'left_border': !!include_borders && !!this.meta_data.left_border_selection,
+                    'gaps': !!include_gaps
+                }).toString();
 
-            coord_matrix = coord_matrix.filter(plot_arr => Array.isArray(plot_arr));
-            if (!document.getElementById("invert_row_checkmark").checked && this.meta_data[planting_or_harvesting_order_layout].includes('row') && planting_or_harvesting_order_layout.includes('planting')) {
-                if ((this.meta_data.top_border_selection && !this.meta_data.bottom_border_selection) || (!this.meta_data.top_border_selection && this.meta_data.bottom_border_selection)) {
-                    if (this.meta_data.top_border_selection) {
-                        var top_borders = coord_matrix.shift();
-                        coord_matrix.push(top_borders);
-                    } else if (this.meta_data.bottom_border_selection) {
-                        var bottom_borders = coord_matrix.pop();
-                        coord_matrix.unshift(bottom_borders);
+                try {
+                    const resp = await fetch(`/ajax/breeders/trial_plot_order?${q}`);
+                    const blob = await resp.blob();
+                    jQuery('#working_modal').modal("hide");
+
+                    // Parse JSON response and display error message, if provided
+                    if ( blob && blob.type === "application/json" ) {
+                        var reader = new FileReader();
+                        reader.onload = (e) => {
+                            const json = JSON.parse(e.target.result);
+                            alert(`ERROR: Could not download layout [${json.error || 'unknown error'}]`)
+                        };
+                        reader.readAsText(blob);
+                    }
+
+                    // Download blob as file
+                    else if ( blob && blob.type === 'text/csv' ) {
+                        var fileName = resp.headers["fileName"] || "layout.csv";
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = fileName;
+                        link.click();
                     }
                 }
-            }
-
-            
-            if (this.meta_data[planting_or_harvesting_order_layout].includes('serpentine')) {
-                for (let i = 0; i < coord_matrix.length; i++) {
-                    if (i % 2 == 1) {
-                        coord_matrix[i].reverse();
-                    }
+                catch (err) {
+                    jQuery('#working_modal').modal("hide");
+                    alert(`ERROR: Could not download layout [${err}]`);
                 }
-            }
-
-            var final_arr = [];
-            for (let plot_arr of coord_matrix) {
-                plot_arr = plot_arr.filter(plot => plot !== undefined);
-                if (!document.getElementById("invert_row_checkmark").checked && local_this.meta_data[planting_or_harvesting_order_layout].includes('col') && planting_or_harvesting_order_layout.includes('planting')) {
-                    if ((local_this.meta_data.top_border_selection && !local_this.meta_data.bottom_border_selection) || (!local_this.meta_data.top_border_selection && local_this.meta_data.bottom_border_selection)) {
-                        if (local_this.meta_data.top_border_selection) {
-                            var top_border_plot = plot_arr.shift();
-                             plot_arr.push(top_border_plot);
-                        } else if (local_this.meta_data.bottom_border_selection) {
-                            var bottom_border_plot = plot_arr.pop();
-                            plot_arr.unshift(bottom_border_plot);
-                        }
-                    }
-                }
-                final_arr.push(...plot_arr);
-            }
-
-            var csv = [
-                planting_or_harvesting_order_layout == "planting_order_layout" ? 'planting_order': "harvesting_order",
-                'location_name',
-                'trial_name',
-                'plot_number',
-                'plot_name',
-                'accession_name',
-                'seedlot_name',
-            ].join(',');
-            csv += "\n";
-            final_arr = final_arr.filter(plot => plot !== undefined);
-            let order_number = 1;
-            final_arr.forEach(function(plot) {
-                csv += [
-                    order_number++,
-                    "\"" + plot.locationName + "\"",
-                    plot.studyName,
-                    plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A",
-                    plot.observationUnitName,
-                    plot.germplasmName,
-                    plot.seedLotName ? plot.seedLotName : ''
-                ].join(',');
-                csv += "\n";
-            });
-    
-            var hiddenElement = document.createElement('a');
-            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-            hiddenElement.target = '_blank';
-            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data[planting_or_harvesting_order_layout]}_${planting_or_harvesting_order_layout}.csv`;
-            hiddenElement.click();    
-        }
-
-        get_plot_order(type, order, include_borders) {
-            let k = type === 'planting' ? 'planting_order_layout' : 'harvesting_order_layout';
-            this.meta_data[k] = order;
-            this.traverse_map(this.plot_arr.filter(plot => include_borders || plot.type !== "border"), k);
+            })();
         }
 
         set_meta_data() {
