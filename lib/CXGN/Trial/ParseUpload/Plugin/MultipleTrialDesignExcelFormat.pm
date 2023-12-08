@@ -788,19 +788,19 @@ sub _parse_with_plugin {
         $single_design{'trial_type'} = $trial_type_id;
       }
       if ($worksheet->get_cell($row,8)) {
-        $single_design{'plot_width'} = $worksheet->get_cell($row,7)->value();
+        $single_design{'plot_width'} = $worksheet->get_cell($row,8)->value();
       }
       if ($worksheet->get_cell($row,9)) {
-        $single_design{'plot_length'} = $worksheet->get_cell($row,8)->value();
+        $single_design{'plot_length'} = $worksheet->get_cell($row,9)->value();
       }
       if ($worksheet->get_cell($row,10)) {
-        $single_design{'field_size'} = $worksheet->get_cell($row,9)->value();
+        $single_design{'field_size'} = $worksheet->get_cell($row,10)->value();
       }
       if ($worksheet->get_cell($row,11)) {
-        $single_design{'planting_date'} = $worksheet->get_cell($row,10)->value();
+        $single_design{'planting_date'} = $worksheet->get_cell($row,11)->value();
       }
       if ($worksheet->get_cell($row,12)) {
-        $single_design{'harvest_date'} = $worksheet->get_cell($row,11)->value();
+        $single_design{'harvest_date'} = $worksheet->get_cell($row,12)->value();
       }
       ## Update trial name
       $trial_name = $current_trial_name;
