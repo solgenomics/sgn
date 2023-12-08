@@ -779,26 +779,27 @@ sub _parse_with_plugin {
       $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
       $single_design{'location'} = $location;
       $single_design{'year'} = $worksheet->get_cell($row,3)->value();
-      $single_design{'design_type'} = $worksheet->get_cell($row,4)->value();
-      $single_design{'description'} = $worksheet->get_cell($row,5)->value();
+      $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
+      $single_design{'design_type'} = $worksheet->get_cell($row,5)->value();
+      $single_design{'description'} = $worksheet->get_cell($row,6)->value();
 
-      if ($worksheet->get_cell($row,6)) { # get and save trial type cvterm_id using trial type name
-        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,6)->value()};
+      if ($worksheet->get_cell($row,7)) { # get and save trial type cvterm_id using trial type name
+        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,7)->value()};
         $single_design{'trial_type'} = $trial_type_id;
       }
-      if ($worksheet->get_cell($row,7)) {
+      if ($worksheet->get_cell($row,8)) {
         $single_design{'plot_width'} = $worksheet->get_cell($row,7)->value();
       }
-      if ($worksheet->get_cell($row,8)) {
+      if ($worksheet->get_cell($row,9)) {
         $single_design{'plot_length'} = $worksheet->get_cell($row,8)->value();
       }
-      if ($worksheet->get_cell($row,9)) {
+      if ($worksheet->get_cell($row,10)) {
         $single_design{'field_size'} = $worksheet->get_cell($row,9)->value();
       }
-      if ($worksheet->get_cell($row,10)) {
+      if ($worksheet->get_cell($row,11)) {
         $single_design{'planting_date'} = $worksheet->get_cell($row,10)->value();
       }
-      if ($worksheet->get_cell($row,11)) {
+      if ($worksheet->get_cell($row,12)) {
         $single_design{'harvest_date'} = $worksheet->get_cell($row,11)->value();
       }
       ## Update trial name
@@ -821,49 +822,49 @@ sub _parse_with_plugin {
       next;
     }
 
-    if ($worksheet->get_cell($row,12)) {
-      $plot_name = $worksheet->get_cell($row,12)->value();
+    if ($worksheet->get_cell($row,13)) {
+      $plot_name = $worksheet->get_cell($row,13)->value();
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,13)) {
-      $accession_name = $worksheet->get_cell($row,13)->value();
+    if ($worksheet->get_cell($row,14)) {
+      $accession_name = $worksheet->get_cell($row,14)->value();
     }
     $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,14)) {
-      $plot_number =  $worksheet->get_cell($row,14)->value();
-    }
     if ($worksheet->get_cell($row,15)) {
-      $block_number =  $worksheet->get_cell($row,15)->value();
+      $plot_number =  $worksheet->get_cell($row,15)->value();
     }
     if ($worksheet->get_cell($row,16)) {
-      $is_a_control =  $worksheet->get_cell($row,16)->value();
+      $block_number =  $worksheet->get_cell($row,16)->value();
     }
     if ($worksheet->get_cell($row,17)) {
-      $rep_number =  $worksheet->get_cell($row,17)->value();
+      $is_a_control =  $worksheet->get_cell($row,17)->value();
     }
     if ($worksheet->get_cell($row,18)) {
-      $range_number =  $worksheet->get_cell($row,18)->value();
+      $rep_number =  $worksheet->get_cell($row,18)->value();
     }
     if ($worksheet->get_cell($row,19)) {
-	     $row_number = $worksheet->get_cell($row, 19)->value();
+      $range_number =  $worksheet->get_cell($row,19)->value();
     }
     if ($worksheet->get_cell($row,20)) {
-	     $col_number = $worksheet->get_cell($row, 20)->value();
+	     $row_number = $worksheet->get_cell($row, 20)->value();
     }
     if ($worksheet->get_cell($row,21)) {
-        $seedlot_name = $worksheet->get_cell($row, 21)->value();
+	     $col_number = $worksheet->get_cell($row, 21)->value();
+    }
+    if ($worksheet->get_cell($row,22)) {
+        $seedlot_name = $worksheet->get_cell($row, 22)->value();
     }
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     }
-    if ($worksheet->get_cell($row,22)) {
-        $num_seed_per_plot = $worksheet->get_cell($row, 22)->value();
-    }
     if ($worksheet->get_cell($row,23)) {
-        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 23)->value();
+        $num_seed_per_plot = $worksheet->get_cell($row, 23)->value();
+    }
+    if ($worksheet->get_cell($row,24)) {
+        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 24)->value();
     }
 
-    my $treatment_col = 24;
+    my $treatment_col = 25;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
