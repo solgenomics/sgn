@@ -39,6 +39,15 @@ sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    $c->stash->{access}->resource("homepage");
+    if ($c->stash->{access}->check_user() eq "read") {
+	print STDERR "READ IS ALLOWED!\n";
+    }
+    else {
+	print sTDERR "NOT SURE WHAT IS ALLOWED!\n";
+    }
+    
+    
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
         my %file_info;
@@ -221,11 +230,13 @@ sub auto : Private {
     $c->stash->{c} = $c;
     weaken $c->stash->{c};
 
+					      
     # gluecode for logins
     #
+    my $sp_person_id; 
     unless( $c->config->{'disable_login'} ) {
         my $dbh = $c->dbc->dbh;
-        if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
+        if ( $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
 
             my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
 
@@ -236,6 +247,10 @@ sub auto : Private {
         }
     }
 
+    # make access object available
+    #
+    $c->stash->{access} = CXGN::Access->new({ people_schema => $c->dbic_schema('CXGN::People::Schema') });
+    
     return 1;
 }
 
