@@ -145,6 +145,7 @@ use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Stock::Search;
 use JSON::Any;
+use CXGN::Stock::Seedlot::Discard;
 
 =head2 Accessor seedlot_id()
 
@@ -1729,6 +1730,54 @@ sub get_seedlot_species {
     return $species_info
 }
 
+=head2 discard()
+
+ Usage:         $seedlot->discard()
+ Desc:          retrieve species of seedlot content
+ Ret:
+
+=cut
+
+sub discard {
+    my $self = shift;
+    my $user_id = shift;
+    my $discard_date = shift;
+    my $discard_reason = shift;
+    
+    my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, "seedlot", 'stock_type')->cvterm_id();
+    my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, "current_count", 'stock_property')->cvterm_id();
+    my $current_weight_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, "current_weight_gram", 'stock_property')->cvterm_id();
+    
+    my $seedlot_rs = $self->schema->resultset("Stock::Stock")->find( { stock_id => $self->seedlot_id(), type_id => $seedlot_type_id });
+    my $seedlot_id = $seedlot_rs->stock_id();
+    
+    my $current_count_rs = $seedlot_rs->stockprops({type_id=>$current_count_type_id});
+    if ($current_count_rs->count == 1){
+	$current_count_rs->first->update({value=>'DISCARDED'});
+    }
+    
+    my $current_weight_rs = $seedlot_rs->stockprops({type_id=>$current_weight_type_id});
+    if ($current_weight_rs->count == 1){
+	$current_weight_rs->first->update({value=>"DISCARDED"});
+    }
+    
+    my $seedlot_to_discard = CXGN::Stock::Seedlot::Discard->new({
+	bcs_schema => $self->schema,
+	parent_id => $seedlot_id,
+								});
+    
+    $seedlot_to_discard->person_id($user_id);
+    $seedlot_to_discard->discard_date($discard_date);
+    $seedlot_to_discard->reason($discard_reason);
+    
+    my $seedlot_id = $seedlot_to_discard->store();
+
+    my $error;
+    if (!$seedlot_id) {
+	$error = "An error occurred during seedlot discard (seedlot id $seedlot_id)\n";
+    }
+    return $error;
+}
 
 
 1;

@@ -1677,45 +1677,60 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     }
 
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type')->cvterm_id();
-    my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", 'stock_property')->cvterm_id();
-    my $current_weight_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", 'stock_property')->cvterm_id();
+    # my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", 'stock_property')->cvterm_id();
+    # my $current_weight_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", 'stock_property')->cvterm_id();
 
-    foreach my $seedlot_name (@seedlots_to_discard) {
-        my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot_name, type_id => $seedlot_type_id });
-        my $seedlot_id = $seedlot_rs->stock_id();
+    # foreach my $seedlot_name (@seedlots_to_discard) {
+    #     my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot_name, type_id => $seedlot_type_id });
+    #     my $seedlot_id = $seedlot_rs->stock_id();
 
-        my $current_count_rs = $seedlot_rs->stockprops({type_id=>$current_count_type_id});
-        if ($current_count_rs->count == 1){
-            $current_count_rs->first->update({value=>'DISCARDED'});
-        }
+    #     my $current_count_rs = $seedlot_rs->stockprops({type_id=>$current_count_type_id});
+    #     if ($current_count_rs->count == 1){
+    #         $current_count_rs->first->update({value=>'DISCARDED'});
+    #     }
 
-        my $current_weight_rs = $seedlot_rs->stockprops({type_id=>$current_weight_type_id});
-        if ($current_weight_rs->count == 1){
-            $current_weight_rs->first->update({value=>"DISCARDED"});
-        }
+    #     my $current_weight_rs = $seedlot_rs->stockprops({type_id=>$current_weight_type_id});
+    #     if ($current_weight_rs->count == 1){
+    #         $current_weight_rs->first->update({value=>"DISCARDED"});
+    #     }
 
-        my $seedlot_to_discard = CXGN::Stock::Seedlot::Discard->new({
-            bcs_schema => $schema,
-            parent_id => $seedlot_id,
-        });
+    #     my $seedlot_to_discard = CXGN::Stock::Seedlot::Discard->new({
+    #         bcs_schema => $schema,
+    #         parent_id => $seedlot_id,
+    #     });
 
-        $seedlot_to_discard->person_id($user_id);
-        $seedlot_to_discard->discard_date($discard_date);
-        $seedlot_to_discard->reason($discard_reason);
+    #     $seedlot_to_discard->person_id($user_id);
+    #     $seedlot_to_discard->discard_date($discard_date);
+    #     $seedlot_to_discard->reason($discard_reason);
 
-        $seedlot_to_discard->store();
+    #     $seedlot_to_discard->store();
 
-        if (!$seedlot_to_discard->store()){
-            $c->stash->{rest} = {error_string => "Error discarding seedlot",};
-            return;
-        }
+    #     if (!$seedlot_to_discard->store()){
+    #         $c->stash->{rest} = {error_string => "Error discarding seedlot",};
+    #         return;
+    #     }
+    # }
+    
+    my $error = ""; 
+    foreach my $sl (@seedlots_to_discard) {
+	my $seedlot_row = $schema->resultset("Stock::Stock")->find( { uniquename => $sl, type_id=> $seedlot_type_id });
+	print STDERR "Discarding Seedlot $sl...\n";
+	my $seedlot = CXGN::Stock::Seedlot->new( schema => $c->dbic_schema("Bio::Chado::Schema"), seedlot_id => $seedlot_row->stock_id()  );
+	$error .= $seedlot->discard($user_id, $discard_date, $discard_reason);
+	print STDERR "ERROR returned = $error\n";
     }
-
+    
+    if ($error) {
+	print STDERR "The following errors occurred when discarding seedlots: $error\n";
+	
+	$c->stash->{rest} = { error_string => "Error discarding seedlot $error" };
+	return;
+    }
+    
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
+    
     $c->stash->{rest} = {success => "1",};
-
 }
 
 
