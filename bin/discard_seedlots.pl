@@ -6,17 +6,15 @@ discard_seedlots.pl - a script to load stock data
 
 =head1 SYNOPSIS
 
-discard_seedlots.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock population name]
+discard_seedlots.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock population name] -r discard_reason -d discard_date
 
 =head1 COMMAND-LINE OPTIONS
 
- -H  host name
- -D  database name
+ -H host name
+ -D database name
  -i infile
- -u username for associating the new stocks 
- -s species name - must be in the database. Can also be read from the input file 
- -p population name - will create a new stock of type 'population' if doesn't exist. 
- -t  Test run . Rolling back at the end.
+ -u username associated with the discard action
+ -t Test run . Rolling back at the end.
 
 =head1 DESCRIPTION
 
@@ -26,16 +24,11 @@ The owners of the stock accession are not stored in stockprop, but in phenome.st
 All other stockproperties can be given as additional columns and will be loaded automatically; 
 if the corresponding stock_property does not exist in the database it will be added.
 
-File format for infile (tab delimited):
-
-accession genus species_name population_name synonyms other_stock_props ...
-
-Multiple synonyms can be specified, separated by the | symbol
+File format for infile: a list of seedlot names, one per line
 
 =head1 AUTHORS
 
-Naama Menda (nm249@cornell.edu) - April 2013
-Lukas Mueller (lam87@cornell.edu) - minor edits, November 2022
+Lukas Mueller (lam87@cornell.edu)
 
 =cut
 
@@ -46,6 +39,7 @@ use Getopt::Std;
 use CXGN::Tools::File::Spreadsheet;
 
 use CXGN::Phenome::Schema;
+use CXGN::Stock::Seedlot;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Carp qw /croak/ ;
@@ -56,16 +50,24 @@ use CXGN::People::Person;
 use Try::Tiny;
 use SGN::Model::Cvterm;
 use Getopt::Long;
+use Time::localtime;
 
-my ( $dbhost, $dbname, $file, $username, $test );
+my ( $dbhost, $dbname, $file, $username, $test, $reason, $date );
 GetOptions(
     'i=s'        => \$file,
     'u=s'        => \$username,
     't'          => \$test,
     'dbname|D=s' => \$dbname,
     'dbhost|H=s' => \$dbhost,
+    'reason|r=s' => \$reason,
+    'date|y=s'   => \$date,
 );
 
+$reason = 'no reason given' if ! $reason;
+my $tm = localtime();
+$date = ($tm->year + 1900)."/".$tm->mon."/".$tm->mday if ! $date;
+
+print STDERR "date is $date, dbname is $dbname\n";
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
@@ -76,10 +78,6 @@ my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] }
 					  );
 my $phenome_schema= CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh } , { on_connect_do => ['set search_path to public,phenome;'] }  );
-
-# new spreadsheet
-#
-my $spreadsheet=CXGN::Tools::File::Spreadsheet->new($file);
 
 
 # parse first the file with the clone names and synonyms. Load into stock,
@@ -113,7 +111,8 @@ my $coderef= sub  {
 	my $row = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot, type_id => $seedlot_type_id });
 
 	if ($row) { 
-	    my $seedlot_obj = CXGN::Stock::Seedlot->new( { schema => $schema, seedlot_id => $row->stock_id() });
+	    my $seedlot_obj = CXGN::Stock::Seedlot->new( schema => $schema, seedlot_id => $row->stock_id() );
+	    $seedlot_obj->discard($sp_person_id, $date, $reason );
 	}
 	else {
 	    print STDERR "Seedlot $seedlot does not exist in the database\n";
