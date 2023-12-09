@@ -65,7 +65,7 @@ GetOptions(
 
 $reason = 'no reason given' if ! $reason;
 my $tm = localtime();
-$date = ($tm->year + 1900)."/".$tm->mon."/".$tm->mday if ! $date;
+$date = ($tm->year + 1900)."-".($tm->mon + 1)."-".$tm->mday if ! $date;
 
 print STDERR "date is $date, dbname is $dbname\n";
 
