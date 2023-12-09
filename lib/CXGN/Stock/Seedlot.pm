@@ -1732,7 +1732,7 @@ sub get_seedlot_species {
 
 =head2 discard()
 
- Usage:         $seedlot->discard()
+ Usage:         $seedlot->discard($sp_person_id, $discard_date, $discard_reason)
  Desc:          retrieve species of seedlot content
  Ret:
 
