@@ -42,7 +42,8 @@ export function init(datasetId, datasetName) {
 			    success: function(response) {
 			        LocalThis.traitsIds = response.traits.map(
 				        trait => trait[0]
-			        );                
+			        );
+			        console.log(LocalThis.traitsIds);
 			    },
 			    error: function(response) {
 			        alert('Error');
@@ -63,6 +64,20 @@ export function init(datasetId, datasetName) {
                 }
             })
         }
+
+		// getRosnersTestOutliers() {
+		// 	const LocalThis = this; 
+		// 	new jQuery.ajax({
+        //         type: 'POST',
+        //         url: '/ajax/dataset//ajax/dataset/rosner_test/' + LocalThis.datasetId,
+        //         success: function(response) {
+        //             LocalThis.storedOutliersIds = response.outliers !== null ? response.outliers : [];
+        //         },
+        //         error: function(response) {
+        //             alert('Error');
+        //         }
+        //     })
+		// }  
 
 		setDropDownTraits() {
 		    const keys = this.observations[0];
@@ -95,12 +110,16 @@ export function init(datasetId, datasetName) {
 		setData() {
 		    if (this.selection != "default") {
 			// Gets a list of pheno ids, filters them so only the ones that have non null values are included and then sorts the ids by their value by looking up their values in traits hash.
+
+			console.log(this.traits);
 			this.phenoIds = Object.keys(this.traits[this.selection])
 			    .filter((phenoId) => !isNaN(parseFloat(this.traits[this.selection][phenoId])))
 			    .sort((a,b) => this.traits[this.selection][a] - this.traits[this.selection][b]);
 
+            console.log(this.phenoIds);
+
 			this.traitVals = this.phenoIds.map((id) => parseFloat(this.traits[this.selection][id]));
-			// console.log(this.traitVals);
+			console.log(this.traitVals);
 			// Debugging check: You should see a list of ids and the corresponding values, logs should be sorted by increasing values.
 			// for (let id of this.phenoIds) {
 			//   console.log(id, this.traits[this.selection][id].value);
@@ -220,7 +239,7 @@ export function init(datasetId, datasetName) {
                 new jQuery.ajax({
                     type: 'POST',
                     url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
-                    data: {outliers: "", outlier_cutoffs: "" },
+                    data: {outliers: "", outlier_cutoffs: "" },					
                     success: function(response) {
                         alert('outliers successfully reseted!');
                         LocalThis.storedOutliersIds = [];						
@@ -252,6 +271,39 @@ export function init(datasetId, datasetName) {
                     }
                })
             }
+
+			let rosnersTestButton = document.getElementById("rosner_test");
+		    rosnersTestButton.onclick = function() {		
+				//console.log("trait_selection:",  document.getElementById("trait_selection").value)        
+			    new jQuery.ajax({
+                    type: 'POST',
+                    url: '/ajax/dataset/rosner_test/' + LocalThis.datasetId,    					               
+					data: {dataset_trait: document.getElementById("trait_selection").value},					
+                    success: function(response) {                    
+						alert('rosners successfully triggerd!');
+                        // LocalThis.storedOutliersIds = [...allOutliers];
+						// d3.select("svg").remove();
+						// LocalThis.render();
+						console.log(response);
+						console.log(response.file[0]);
+						// console.log(response.message);
+						// console.log(response.dataset_id);
+						// console.log(response.data);
+						// console.log(response.dataset_trait);
+						alert(response.message);
+						jQuery('#rosner_table').DataTable({
+							data: response.file,
+							// columns: [{title: "TEST 1"}, {title: "TEST 2"}, {title: "TEST 3"}, {title: "TEST 4"}, {title: "TEST 5"}, {title: "TEST 6"}, {title: "TEST 7"}, {title: "TEST 8"}, {title: "TEST 9"}]
+							// columns: response.file[0]
+							columns: [response.file[0].map(value => ({"title": value}))]
+						});					
+
+                    },
+			        error: function(response) {
+				        alert('Error');
+			        }
+			    })
+		    }
 
 		}
 

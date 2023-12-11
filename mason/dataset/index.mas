@@ -8,8 +8,7 @@ $dataset_contents => ''
 </%args>
 
 <& /page/page_title.mas, title => "Dataset $dataset_name" &>
-<& /util/import_javascript.mas, entries => ['dataset_scatterplot'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
-<& /util/import_javascript.mas, entries => ['dataset'] &>
+<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|jqueryui.js jquery.js d3.d3v4Min jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>
@@ -119,12 +118,12 @@ $dataset_contents => ''
                     var handle = $( "#custom-handle" );
                     $("#outliers_range").slider({
                         create: function(event, ui) {
-                            console.log("create slider jquery");
+                            // console.log("create slider jquery");
                             handle.text(ui.value);
                         },
                         slide: function(event, ui) {
-                            console.log("slide slider jquery");
-                            console.log("slide slider jquery value", ui.value);
+                            // console.log("slide slider jquery");
+                            // console.log("slide slider jquery value", ui.value);
                             handle.text(ui.value);
                         }
                     });
@@ -179,15 +178,23 @@ $dataset_contents => ''
                 <span>
                     <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
                 </span>
+                <span>
+                    <button class="btn btn-sm btn-danger btn-dataset" id="rosner_test">rosners_test</button>
+                </span>
             </div>
         </div>
     </div>
-    
+
+    <div>
+        <table id="rosner_table">
+        </table>
+    </div>
+
     <script>
 
     jQuery(document).ready( function() {
         
-        console.log('dataset id', '<% $dataset_id %>');
+        // console.log('dataset id', '<% $dataset_id %>');
         var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
         DataSet.render();
 
