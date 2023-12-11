@@ -925,7 +925,7 @@ jQuery(document).ready( function() {
             return;
         }
         if ( !order || order === '' ) {
-            alert("Please select a plot layout");
+            alert("Please select a plot order");
             return;
         }
         if ( !start || start === '' ) {
