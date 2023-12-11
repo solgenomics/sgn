@@ -6,7 +6,7 @@ discard_seedlots.pl - a script to load stock data
 
 =head1 SYNOPSIS
 
-discard_seedlots.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock population name] -r discard_reason -d discard_date
+discard_seedlots.pl -H [dbhost] -D [dbname] [-t] -i infile  -r discard_reason -d discard_date
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -18,13 +18,9 @@ discard_seedlots.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock po
 
 =head1 DESCRIPTION
 
-Updated script for loading and adding stock names and synonyms.
-The owners of the stock accession are not stored in stockprop, but in phenome.stock_owner
+Script to update the trial types. 
 
-All other stockproperties can be given as additional columns and will be loaded automatically; 
-if the corresponding stock_property does not exist in the database it will be added.
-
-File format for infile: a list of seedlot names, one per line
+The infile is a tab delimited file with 3 columns: the trial name, the old type, and the new type. All the trials and new types need to be in the database.
 
 =head1 AUTHORS
 
@@ -51,6 +47,7 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use Getopt::Long;
 use Time::localtime;
+use CXGN::Project;
 
 my ( $dbhost, $dbname, $file, $username, $test, $reason, $date );
 GetOptions(
@@ -86,13 +83,23 @@ my $phenome_schema= CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh }
 my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $username); 
 die "Need to have a user pre-loaded in the database! " if !$sp_person_id;
 
-my $stock_rs = $schema->resultset("Stock::Stock");
 
-my $stock_property_cv_id = $schema->resultset("Cv::Cv")->find( { name => 'stock_property' })->cv_id();
+my $trial_type_cv_id = $schema->resultset("Cv::Cv")->find( { name => 'project_type' })->cv_id();
 
-print STDERR "Stock property CV ID = $stock_property_cv_id\n";
+# cache trial type db ids
+#
+print STDERR "Caching projectprop ids... ";
+
+my $rs = $schema->resultset("Cv::Cvterm")->search( { cv_id => $trial_type_cv_id });
+my %ids;
+while (my $row = $rs->next()) {
+    $ids{$row->name} = $row->cvterm_id();
+}
+print STDERR " Done.\n";
 
 open(my $F, "<", $file) || die "Can't open file $file\n";
+
+my $header = <$F>;
 
 # accession genus species population_name synonyms
 #
@@ -104,9 +111,10 @@ my $coderef= sub  {
 
 	my $row = $schema->resultset("Project::Project")->find( { name => $trial_name });
 
-	if ($row) { 
-	    my $project_obj = CXGN::Project->new( { bcs_schema => $schema, project_id => $row->project_id() });
-	    $project_obj->set_project_type($new_type);
+	if ($row) {
+	    print STDERR "Processing trial $trial_name; new type is $new_type\n";
+	    my $project_obj = CXGN::Project->new( { bcs_schema => $schema, trial_id => $row->project_id() });
+	    $project_obj->set_project_type($ids{$new_type}, undef);
 	}
 	else {
 	    print STDERR "Trial $trial_name does not exist in the database\n";
