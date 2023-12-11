@@ -269,7 +269,7 @@ $has_col_and_row_numbers => undef
                     <label>HarvestMaster Row:</label>
                     <select class="form-control" id="hm_row" name="hm_row" style="max-width: 400px">
                         <option value="col_number" selected>Breedbase Column</option>
-                        <option value="row_numver">Breedbase Row</option>
+                        <option value="row_number">Breedbase Row</option>
                     </select>
                 </div>
             </div>
@@ -912,6 +912,15 @@ jQuery(document).ready( function() {
         else {
             jQuery("#plot_download_harvestmaster_options").hide();
         }
+    });
+
+    jQuery("#hm_range").change(() => {
+        let range = jQuery("#hm_range").val();
+        jQuery("#hm_row").val(range === 'row_number' ? 'col_number' : 'row_number');
+    });
+    jQuery("#hm_row").change(() => {
+        let row = jQuery("#hm_row").val();
+        jQuery("#hm_range").val(row === 'row_number' ? 'col_number' : 'row_number');
     });
 
     jQuery("#plot_download_button").click(() => {
