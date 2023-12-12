@@ -373,14 +373,14 @@ export function init() {
             this.meta_data.num_cols = this.meta_data.num_rows;
             this.meta_data.num_rows = tempNumCols;
         
-            d3.select("svg").remove();
+            d3v3.select("svg").remove();
             this.add_borders();
             this.render();
           
         }
 
         clickcancel() {
-            var event = d3.dispatch('click', 'dblclick');
+            var event = d3v3.dispatch('click', 'dblclick');
             function cc(selection) {
                 var down,
                     tolerance = 5,
@@ -390,50 +390,33 @@ export function init() {
                     return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
                 }
                 selection.on('mousedown', function() {
-                    down = d3.mouse(document.body);
+                    down = d3v3.mouse(document.body);
                     last = +new Date();
                 });
                 selection.on('mouseup', function() {
-                    if (dist(down, d3.mouse(document.body)) > tolerance) {
+                    if (dist(down, d3v3.mouse(document.body)) > tolerance) {
                         return;
                     } else {
                         if (wait) {
                             window.clearTimeout(wait);
                             wait = null;
-                            event.dblclick(d3.event);
+                            event.dblclick(d3v3.event);
                         } else {
                             wait = window.setTimeout((function(e) {
                                 return function() {
                                     event.click(e);
                                     wait = null;
                                 };
-                            })(d3.event), 300);
+                            })(d3v3.event), 300);
                         }
                     }
                 });
             };
-            return _rebind(cc, event, 'on');
-
-            // Copies a variable number of methods from source to target.
-            function _rebind(target, source) {
-                var i = 1, n = arguments.length, method;
-                while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
-                return target;
-            };
-
-            // Method is assumed to be a standard D3 getter-setter:
-            // If passed with no arguments, gets the value.
-            // If passed with arguments, sets the value and returns the target.
-            function d3_rebind(target, source, method) {
-                return function() {
-                    var value = method.apply(source, arguments);
-                    return arguments.length ? target : value;
-                };
-            }
+            return d3v3.rebind(cc, event, 'on');
         }
 
         heatmap_plot_click(plot, heatmap_object, trait_name) {
-            if (d3.event && d3.event.detail > 1) {
+            if (d3v3.event && d3v3.event.detail > 1) {
                 return;
             } else if (trait_name in heatmap_object && heatmap_object[trait_name][plot.observationUnitDbId]) {
                 let val, plot_name, pheno_id;
@@ -449,7 +432,7 @@ export function init() {
         }
 
         fieldmap_plot_click(plot) {
-            if (d3.event && d3.event.detail > 1) {
+            if (d3v3.event && d3v3.event.detail > 1) {
                 return;
             } else {
                 function btnClick(n){
@@ -530,7 +513,7 @@ export function init() {
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
                     trait_vals.push(obs_unit.val);
                 }
-                var colorScale = d3.scale.quantile()
+                var colorScale = d3v3.scale.quantile()
                 .domain(trait_vals)
                 .range(colors);
             }
@@ -619,7 +602,7 @@ export function init() {
 
             var handle_mouseover = function(d) {
                 if (d.observationUnitPosition.observationLevel) {
-                    d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
+                    d3v3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                         .style('fill', 'green')
                         .style('cursor', 'pointer')
                         .style("stroke-width", 3)
@@ -632,7 +615,7 @@ export function init() {
             }
 
             var handle_mouseout = function(d) {
-                d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
+                d3v3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                     .style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d))
                     .style('cursor', 'default')
                     .style("stroke-width", 2)
@@ -705,12 +688,12 @@ export function init() {
             var num_rows = this.meta_data.num_rows;
             var isHeatMap = this.heatmap_selected;
 
-            var grid = d3.select("#fieldmap_chart")
+            var grid = d3v3.select("#fieldmap_chart")
                 .append("svg")
                 .attr("width", width * 50 + 20 + "px")
                 .attr("height", height * 50 + 20 + "px")
 
-            var tooltip = d3.select("#fieldmap_chart")
+            var tooltip = d3v3.select("#fieldmap_chart")
                 .append("rect")
                 .attr("id", "tooltip")
                 .attr("class", "tooltip")
@@ -735,11 +718,11 @@ export function init() {
                 .call(cc);
 
             cc.on("click", (el) => { 
-                var plot = d3.select(el.srcElement).data()[0];
+                var plot = d3v3.select(el.srcElement).data()[0];
                 plot_click(plot, heatmap_object, trait_name)
             });
             cc.on("dblclick", (el) => { 
-                var me = d3.select(el.srcElement);
+                var me = d3v3.select(el.srcElement);
                 var d = me.data()[0];
                 if (d.observationUnitDbId) {
                     window.open('/stock/'+d.observationUnitDbId+'/view');        
@@ -832,7 +815,7 @@ export function init() {
 
 
         load() {
-            d3.select("svg").remove();
+            d3v3.select("svg").remove();
             this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
             this.add_borders();
             this.render();
