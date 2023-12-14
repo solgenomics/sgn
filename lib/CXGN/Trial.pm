@@ -266,7 +266,7 @@ sub get_all_phenotype_metadata {
         be any overlapping plots (more than one plot with the same row/col position).
  Ret:   An array of sorted plot metadata
  Args:  trials = an arrayref of trial ids to include
-        order = the order to travers the plots ('by_col_serpentine', 'by_col_zigzag', 'by_row_serpentine', 'by_row_zigzag')
+        order = the order to traverse the plots ('by_col_serpentine', 'by_col_zigzag', 'by_row_serpentine', 'by_row_zigzag')
         start = the corner of the trial layout to start the traversal ('bottom_left', 'top_left', 'top_right', 'bottom_right')
         borders = a hashref with keys top, right, bottom, left.  If the value is 1, then include that side as a border
         gaps = when set to 1, include missing plots / gaps as items in the order
@@ -294,7 +294,11 @@ sub get_sorted_plots {
             schema => $schema,
             trial_id => $trial_id,
             data_level => 'plots',
-            selected_columns => {"location_name"=>1,"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,"row_number"=>1,"col_number"=>1,"accession_name"=>1,"seedlot_name"=>1},
+            selected_columns => {
+                "location_name"=>1,"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,
+                "row_number"=>1,"col_number"=>1,"accession_name"=>1,"seedlot_name"=>1,
+                "rep_number"=>1,"block_number"=>1,"is_a_control"=>1
+            },
         });
         my $output = $trial_layout_download->get_layout_output()->{output};
 
