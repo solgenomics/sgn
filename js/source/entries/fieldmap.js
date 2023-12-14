@@ -400,16 +400,11 @@ export function init() {
                         if (wait) {
                             window.clearTimeout(wait);
                             wait = null;
-                            console.log(`event dblclick`)
-                            event.dblclick(d3.event);
+                            event.call("dblclick", this, d3.event);
                         } else {
                             wait = window.setTimeout((function(e) {
-                                return function() {
-                                    console.log(`event click`)
-                                    console.log(`e: ${e}`)
-                                    console.log(`e: ${JSON.stringify(e)}`)
-
-                                    event.click(e);
+                                return function() {                               
+                                    event.call("click", this, e);
                                     wait = null;
                                 };
                             })(d3.event), 300);
@@ -422,7 +417,8 @@ export function init() {
 
             // Copies a variable number of methods from source to target.
             function _rebind(target, source) {
-                var i = 1, n = arguments.length, method;
+                var i = 1, n = arguments.length, 
+                method;
                 while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
                 return target;
             };
@@ -625,7 +621,6 @@ export function init() {
 
             var handle_mouseover = function(d) {
                 if (d.observationUnitPosition.observationLevel) {
-                    console.log(`handle_mouseover: ${JSON.stringify(d.observationUnitPosition.observationLevel)}`)
                     d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                         .style('fill', 'green')
                         .style('cursor', 'pointer')
@@ -639,8 +634,6 @@ export function init() {
             }
 
             var handle_mouseout = function(d) {
-                console.log(`handle_mouseout: ${JSON.stringify(d.observationUnitDbId)}`)
-
                 d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                     .style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d))
                     .style('cursor', 'default')
@@ -743,10 +736,7 @@ export function init() {
                 .on("mouseout", handle_mouseout)
                 .call(cc);
             
-            console.log(`Calling click: ${trait_name}`)
-
             cc.on("click", (el) => { 
-                console.log(`trait_name on click: ${trait_name}`)
                 var plot = d3.select(el.srcElement).data()[0];
                 plot_click(plot, heatmap_object, trait_name)
             });
