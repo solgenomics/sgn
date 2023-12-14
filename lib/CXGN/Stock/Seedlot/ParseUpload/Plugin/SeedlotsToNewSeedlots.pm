@@ -164,6 +164,10 @@ sub _validate_with_plugin {
             $new_seedlot_box_name = $worksheet->get_cell($row,6)->value();
         }
 
+        if (!defined $from_seedlot_name && !defined $to_new_seedlot_name) {
+            last;
+        }
+
         if (!$from_seedlot_name || $from_seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: from_seedlot_name missing.";
         } else {
@@ -335,9 +339,8 @@ sub _parse_with_plugin {
             $new_seedlot_quality = $worksheet->get_cell($row,8)->value();
         }
 
-        #skip blank lines
-        if (!$to_new_seedlot_name && !$from_seedlot_name) {
-            next;
+        if (!defined $to_new_seedlot_name && !defined $from_seedlot_name) {
+            last;
         }
 
         my $from_seedlot_rs = $schema->resultset("Stock::Stock")->find({

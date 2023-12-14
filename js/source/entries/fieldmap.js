@@ -148,96 +148,20 @@ export function init() {
             }
         }
 
-        traverse_map(plot_arr, planting_or_harvesting_order_layout) {
-            var local_this = this;
-            let coord_matrix = [];
-            var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
-            var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
-            
-            for (let plot of plot_arr) {
-                if (!coord_matrix[plot.observationUnitPosition[row]]) {
-                    coord_matrix[plot.observationUnitPosition[row]] = [];
-                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
-                } else {
-                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
-                }
-            }
-
-            coord_matrix = coord_matrix.filter(plot_arr => Array.isArray(plot_arr));
-            if (!document.getElementById("invert_row_checkmark").checked && this.meta_data[planting_or_harvesting_order_layout].includes('row') && planting_or_harvesting_order_layout.includes('planting')) {
-                if ((this.meta_data.top_border_selection && !this.meta_data.bottom_border_selection) || (!this.meta_data.top_border_selection && this.meta_data.bottom_border_selection)) {
-                    if (this.meta_data.top_border_selection) {
-                        var top_borders = coord_matrix.shift();
-                        coord_matrix.push(top_borders);
-                    } else if (this.meta_data.bottom_border_selection) {
-                        var bottom_borders = coord_matrix.pop();
-                        coord_matrix.unshift(bottom_borders);
-                    }
-                }
-            }
-
-            
-            if (this.meta_data[planting_or_harvesting_order_layout].includes('serpentine')) {
-                for (let i = 0; i < coord_matrix.length; i++) {
-                    if (i % 2 == 1) {
-                        coord_matrix[i].reverse();
-                    }
-                }
-            }
-
-            var final_arr = [];
-            for (let plot_arr of coord_matrix) {
-                plot_arr = plot_arr.filter(plot => plot !== undefined);
-                if (!document.getElementById("invert_row_checkmark").checked && local_this.meta_data[planting_or_harvesting_order_layout].includes('col') && planting_or_harvesting_order_layout.includes('planting')) {
-                    if ((local_this.meta_data.top_border_selection && !local_this.meta_data.bottom_border_selection) || (!local_this.meta_data.top_border_selection && local_this.meta_data.bottom_border_selection)) {
-                        if (local_this.meta_data.top_border_selection) {
-                            var top_border_plot = plot_arr.shift();
-                             plot_arr.push(top_border_plot);
-                        } else if (local_this.meta_data.bottom_border_selection) {
-                            var bottom_border_plot = plot_arr.pop();
-                            plot_arr.unshift(bottom_border_plot);
-                        }
-                    }
-                }
-                final_arr.push(...plot_arr);
-            }
-
-            var csv = [
-                planting_or_harvesting_order_layout == "planting_order_layout" ? 'planting_order': "harvesting_order",
-                'location_name',
-                'trial_name',
-                'plot_number',
-                'plot_name',
-                'accession_name',
-                'seedlot_name',
-            ].join(',');
-            csv += "\n";
-            final_arr = final_arr.filter(plot => plot !== undefined);
-            let order_number = 1;
-            final_arr.forEach(function(plot) {
-                csv += [
-                    order_number++,
-                    "\"" + plot.locationName + "\"",
-                    plot.studyName,
-                    plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A",
-                    plot.observationUnitName,
-                    plot.germplasmName,
-                    plot.seedLotName ? plot.seedLotName : ''
-                ].join(',');
-                csv += "\n";
-            });
-    
-            var hiddenElement = document.createElement('a');
-            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-            hiddenElement.target = '_blank';
-            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data[planting_or_harvesting_order_layout]}_${planting_or_harvesting_order_layout}.csv`;
-            hiddenElement.click();    
-        }
-
-        get_plot_order(type, order, include_borders) {
-            let k = type === 'planting' ? 'planting_order_layout' : 'harvesting_order_layout';
-            this.meta_data[k] = order;
-            this.traverse_map(this.plot_arr.filter(plot => include_borders || plot.type !== "border"), k);
+        get_plot_order(type, order, start, include_borders, include_gaps, additional_properties) {
+            let q = new URLSearchParams({
+                'trial_ids': [this.trial_id, ...Object.keys(this.linked_trials).map((e) => this.linked_trials[e].id)].join(','),
+                'type': type,
+                'order': order,
+                'start': start,
+                'top_border': !!include_borders && !!this.meta_data.top_border_selection,
+                'right_border': !!include_borders && !!this.meta_data.right_border_selection,
+                'bottom_border': !!include_borders && !!this.meta_data.bottom_border_selection,
+                'left_border': !!include_borders && !!this.meta_data.left_border_selection,
+                'gaps': !!include_gaps,
+                ...additional_properties
+            }).toString();
+            window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
         }
 
         set_meta_data() {
@@ -419,14 +343,14 @@ export function init() {
             this.meta_data.num_cols = this.meta_data.num_rows;
             this.meta_data.num_rows = tempNumCols;
         
-            d3.select("svg").remove();
+            d3v3.select("svg").remove();
             this.add_borders();
             this.render();
           
         }
 
         clickcancel() {
-            var event = d3.dispatch('click', 'dblclick');
+            var event = d3v3.dispatch('click', 'dblclick');
             function cc(selection) {
                 var down,
                     tolerance = 5,
@@ -436,33 +360,33 @@ export function init() {
                     return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
                 }
                 selection.on('mousedown', function() {
-                    down = d3.mouse(document.body);
+                    down = d3v3.mouse(document.body);
                     last = +new Date();
                 });
                 selection.on('mouseup', function() {
-                    if (dist(down, d3.mouse(document.body)) > tolerance) {
+                    if (dist(down, d3v3.mouse(document.body)) > tolerance) {
                         return;
                     } else {
                         if (wait) {
                             window.clearTimeout(wait);
                             wait = null;
-                            event.dblclick(d3.event);
+                            event.dblclick(d3v3.event);
                         } else {
                             wait = window.setTimeout((function(e) {
                                 return function() {
                                     event.click(e);
                                     wait = null;
                                 };
-                            })(d3.event), 300);
+                            })(d3v3.event), 300);
                         }
                     }
                 });
             };
-            return d3.rebind(cc, event, 'on');
+            return d3v3.rebind(cc, event, 'on');
         }
 
         heatmap_plot_click(plot, heatmap_object, trait_name) {
-            if (d3.event && d3.event.detail > 1) {
+            if (d3v3.event && d3v3.event.detail > 1) {
                 return;
             } else if (trait_name in heatmap_object && heatmap_object[trait_name][plot.observationUnitDbId]) {
                 let val, plot_name, pheno_id;
@@ -478,7 +402,7 @@ export function init() {
         }
 
         fieldmap_plot_click(plot) {
-            if (d3.event && d3.event.detail > 1) {
+            if (d3v3.event && d3v3.event.detail > 1) {
                 return;
             } else {
                 function btnClick(n){
@@ -559,7 +483,7 @@ export function init() {
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
                     trait_vals.push(obs_unit.val);
                 }
-                var colorScale = d3.scale.quantile()
+                var colorScale = d3v3.scale.quantile()
                 .domain(trait_vals)
                 .range(colors);
             }
@@ -648,7 +572,7 @@ export function init() {
 
             var handle_mouseover = function(d) {
                 if (d.observationUnitPosition.observationLevel) {
-                    d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
+                    d3v3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                         .style('fill', 'green')
                         .style('cursor', 'pointer')
                         .style("stroke-width", 3)
@@ -661,7 +585,7 @@ export function init() {
             }
 
             var handle_mouseout = function(d) {
-                d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
+                d3v3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                     .style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d))
                     .style('cursor', 'default')
                     .style("stroke-width", 2)
@@ -734,12 +658,12 @@ export function init() {
             var num_rows = this.meta_data.num_rows;
             var isHeatMap = this.heatmap_selected;
 
-            var grid = d3.select("#fieldmap_chart")
+            var grid = d3v3.select("#fieldmap_chart")
                 .append("svg")
                 .attr("width", width * 50 + 20 + "px")
                 .attr("height", height * 50 + 20 + "px")
 
-            var tooltip = d3.select("#fieldmap_chart")
+            var tooltip = d3v3.select("#fieldmap_chart")
                 .append("rect")
                 .attr("id", "tooltip")
                 .attr("class", "tooltip")
@@ -764,11 +688,11 @@ export function init() {
                 .call(cc);
 
             cc.on("click", (el) => { 
-                var plot = d3.select(el.srcElement).data()[0];
+                var plot = d3v3.select(el.srcElement).data()[0];
                 plot_click(plot, heatmap_object, trait_name)
             });
             cc.on("dblclick", (el) => { 
-                var me = d3.select(el.srcElement);
+                var me = d3v3.select(el.srcElement);
                 var d = me.data()[0];
                 if (d.observationUnitDbId) {
                     window.open('/stock/'+d.observationUnitDbId+'/view');        
@@ -861,7 +785,7 @@ export function init() {
 
 
         load() {
-            d3.select("svg").remove();
+            d3v3.select("svg").remove();
             this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
             this.add_borders();
             this.render();
