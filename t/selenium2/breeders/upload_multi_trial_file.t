@@ -75,26 +75,26 @@ $t->while_logged_in_as("submitter", sub {
         sleep(5);
 
         $t->find_element_ok("$trail->{name}", "partial_link_text", "check program in tree")->click();
-        my $href_to_trial = $t->find_element_ok("//li[\@role='treeitem']//a[contains(text(),'$trail->{name}')]", 'xpath', 'find created cross and take link href')->get_attribute('href');
+        my $href_to_trial = $t->find_element_ok("//li[\@role='treeitem']//a[contains(text(),'$trail->{name}')]", 'xpath', 'find trail created and take link href')->get_attribute('href');
         sleep(7);
 
         $t->get_ok($href_to_trial);
         sleep(5);
 
         my $table_content = $t->find_element_ok('trial_year', 'id', 'find cell of table with year information')->get_attribute('innerHTML');
-        ok($table_content =~ /$trail->{year}/, "Verify info in the table: $trail->{year}");
+        ok($table_content =~ /$trail->{year}/, "Verify info in the table trial year: $trail->{year}");
 
         $table_content = $t->find_element_ok('trial_name', 'id', 'find cell of table with trial name information')->get_attribute('innerHTML');
-        ok($table_content =~ /$trail->{name}/, "Verify info in the table: $trail->{name}");
+        ok($table_content =~ /$trail->{name}/, "Verify info in the table trial name: $trail->{name}");
 
         $table_content = $t->find_element_ok('planting_date', 'id', 'find cell of table with planting date information')->get_attribute('innerHTML');
-        ok($table_content =~ /$trail->{planting_date}/, "Verify info in the table: $trail->{planting_date}");
+        ok($table_content =~ /$trail->{planting_date}/, "Verify info in the table trail planting date: $trail->{planting_date}");
 
         $table_content = $t->find_element_ok('harvest_date', 'id', 'find cell of table with trial harvest date information')->get_attribute('innerHTML');
-        ok($table_content =~ /$trail->{harvest_date}/, "Verify info in the table: $trail->{harvest_date}");
+        ok($table_content =~ /$trail->{harvest_date}/, "Verify info in the table trail harvest date: $trail->{harvest_date}");
 
         $table_content = $t->find_element_ok('transplanting_date', 'id', 'find cell of table with trial transplanting date information')->get_attribute('innerHTML');
-        ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table: $trail->{transplanting_date}");
+        ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table trail transplanting date: $trail->{transplanting_date}");
 
         $f->clean_up_db();
     }
