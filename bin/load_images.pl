@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-load_bcs_images.pl
+load_images.pl
 
 =head1 SYNOPSYS
 
-load_bcs_images.pl -D [ sandbox | cxgn | trial ] -H hostname -i dirname -r chado table name [script will load image ids into ChadoTableprop ]  
+load_images.pl -D [ sandbox | cxgn | trial ] -H hostname -i dirname -r chado table name [script will load image ids into ChadoTableprop ]  
 
 =head1 DESCRIPTION
 
@@ -64,6 +64,7 @@ The script will generate an error file, named like the filename supplied, with t
 =head1 AUTHOR(S)
 
 Naama Menda (nm249@cornell.edu) October 2010.
+Tweaks and move to sgn/bin: Lukas Mueller (lam87@cornell.edu) December 2023.
 
 =cut
 
