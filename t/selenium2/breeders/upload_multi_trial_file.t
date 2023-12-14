@@ -16,7 +16,10 @@ $t->while_logged_in_as("submitter", sub {
         planting_date      => "[No Planting Date]",
         transplanting_date => "[No Transplanting Date]",
         harvest_date       => "[No Harvest Date]",
-        file_name          => "upload_multi_trail.xlsx"
+        file_name          => "upload_multi_trail.xlsx",
+        plot_width         => "[No Plot Width]",
+        plot_length        => "[No Plot Length]",
+        field_size         => "[No Field Size]"
 
     );
 
@@ -26,7 +29,10 @@ $t->while_logged_in_as("submitter", sub {
         planting_date      => "2017-May-01",
         transplanting_date => "2017-September-10",
         harvest_date       => "2018-February-01",
-        file_name          => "upload_multi_trail_full.xlsx"
+        file_name          => "upload_multi_trail_full.xlsx",
+        plot_width         => "20",
+        plot_length        => "20",
+        field_size         => "100"
     );
 
     for my $trail (\%trail_3_data,  \%trail_6_data) {
@@ -95,6 +101,15 @@ $t->while_logged_in_as("submitter", sub {
 
         $table_content = $t->find_element_ok('transplanting_date', 'id', 'find cell of table with trial transplanting date information')->get_attribute('innerHTML');
         ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table trail transplanting date: $trail->{transplanting_date}");
+
+        $table_content = $t->find_element_ok('plot_width', 'id', 'find cell of table with trial plot width information')->get_attribute('innerHTML');
+        ok($table_content =~ /$trail->{plot_width}/, "Verify info in the table trail plot width: $trail->{plot_width}");
+
+        $table_content = $t->find_element_ok('plot_length', 'id', 'find cell of table with trial plot length information')->get_attribute('innerHTML');
+        ok($table_content =~ /$trail->{plot_length}/, "Verify info in the table trail plot width: $trail->{plot_length}");
+
+        $table_content = $t->find_element_ok('field_size', 'id', 'find cell of table with trial field size information')->get_attribute('innerHTML');
+        ok($table_content =~ /$trail->{field_size}/, "Verify info in the table trail plot width: $trail->{field_size}");
 
         $f->clean_up_db();
     }
