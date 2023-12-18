@@ -22,7 +22,7 @@ use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
-my @oun_columns = ("observationunit_name", "plot_name", "observationUnitName", "plotName");
+my @oun_columns = ("observationunit_name", "plot_name", "subplot_name", "plant_name", "observationUnitName", "plotName", "subplotName", "plantName");
 my %oun_columns_map = map { $_ => 1 } @oun_columns;
 
 sub name {
