@@ -457,7 +457,7 @@ sub _validate_with_plugin {
     }
 
     ## TREATMENT CHECKS
-    my $treatment_col = 24;
+    my $treatment_col = 25;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
@@ -779,9 +779,16 @@ sub _parse_with_plugin {
       $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
       $single_design{'location'} = $location;
       $single_design{'year'} = $worksheet->get_cell($row,3)->value();
-      $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
+      # $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
       $single_design{'design_type'} = $worksheet->get_cell($row,5)->value();
       $single_design{'description'} = $worksheet->get_cell($row,6)->value();
+
+
+      # for a moment transplanting_date is moves as not required but whole design of that features must be redone
+      # including use cases
+      if ($worksheet->get_cell($row,4)) {
+        $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
+      }
 
       if ($worksheet->get_cell($row,7)) { # get and save trial type cvterm_id using trial type name
         my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,7)->value()};
@@ -1050,7 +1057,7 @@ sub _parse_header {
   if (!$year_head || $year_head ne 'year' ) {
     push @error_messages, "Cell D1: year is missing from the header";
   }
-  if (!$transplanting_date_head || $year_head ne 'year' ) {
+  if (!$transplanting_date_head || $transplanting_date_head ne 'transplanting_date' ) {
     push @error_messages, "Cell E1: year is missing from the header";
   }
   if (!$design_type_head || $design_type_head ne 'design_type' ) {
