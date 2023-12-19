@@ -8,7 +8,7 @@ keeps one copy of the samples.
 
 =head1 DESCRIPTION
 
- perl delete_genotypes.pl -i [vcf_input_file] -o [vcf_output_file]
+ perl remove_duplicate_samples_vcf.pl -i [vcf_input_file] -o [vcf_output_file]
 
  requires vcftools. Generates 3 files: a text file with the duplicated samples to remove, 
  a vcf files with the duplicates renamed and a vcf file with out the duplicates.
