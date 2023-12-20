@@ -71,7 +71,7 @@ while (<$V>) {
 my $dupl_samples = join("\n", @dupl_samples);
 my $out_file = $opt_o =~ s/\.vcf//r;
 my $remove_samples_file = "${out_file}_dupl_samples.txt";
-my $removed_vcf = "${out_file}_cleaned.vcf";
+my $removed_vcf = "${out_file}_removed.vcf";
 my $renamed_vcf = "${out_file}_renamed.vcf";
 
 print STDERR "Now writing to $remove_samples_file duplicate samples:\n$dupl_samples";
