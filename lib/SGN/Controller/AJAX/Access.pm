@@ -2,6 +2,8 @@
 package SGN::Controller::AJAX::Access;
 
 use Moose;
+use Data::Dumper;
+use List::Util 'any';
 use CXGN::Access;
 
 
@@ -20,9 +22,8 @@ sub access :Path('/ajax/access/privileges/') :Args(2) {
     my $role = shift;
 
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $access = CXGN::Access->new( { people_schema => $people_schema });
-
-    my @privileges = $access -> check_role($role, $resource);
+    
+    my @privileges = $c->stash->{access} -> check_role($role, $resource);
 
     $c->stash->{rest} = { privileges => \@privileges };
 }
@@ -48,6 +49,35 @@ sub access_by_user :Path('/ajax/access/by_user_id/') :Args(1) {
     $c->stash->{rest} = { privileges => \@privileges };
 }
 
+sub access_table :Path('/ajax/access/table') Args(0) {
+    my $self = shift;
+    my $c = shift;
 
+    if (! (my $user = $c->user())) {
+	$c->stash->{rest} = { error => "You must be logged in to use this resource" };
+	return;
+    }
+
+    my @privileges = $c->stash->{access}->check_user("access_table_ajax", $c->user()->get_object()->get_sp_person_id());
+
+    if (! any { /read/ } @privileges) {
+	$c->response->status(401);
+	$c->stash->{rest} = { error => "You do not have the necessary privileges to access this resource" };
+	return;
+    }
+
+    my @raw_table = $c->stash->{access}->privileges_table();
+
+    print STDERR Dumper(\@raw_table);
+
+    my @table;
+    foreach my $line (@raw_table) {
+	
+	push @table, [ $line->{resource}, $line->{role_name}, $line->{access_level} ];
+    }
+    
+    $c->stash->{rest} = { data => \@table }; 
+}
+	
 
 1;
