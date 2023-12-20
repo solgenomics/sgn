@@ -64,21 +64,7 @@ export function init(datasetId, datasetName) {
                 }
             })
         }
-
-		// getRosnersTestOutliers() {
-		// 	const LocalThis = this; 
-		// 	new jQuery.ajax({
-        //         type: 'POST',
-        //         url: '/ajax/dataset//ajax/dataset/rosner_test/' + LocalThis.datasetId,
-        //         success: function(response) {
-        //             LocalThis.storedOutliersIds = response.outliers !== null ? response.outliers : [];
-        //         },
-        //         error: function(response) {
-        //             alert('Error');
-        //         }
-        //     })
-		// }  
-
+		
 		setDropDownTraits() {
 		    const keys = this.observations[0];
 		    // Construct trait object
@@ -577,28 +563,23 @@ export function init(datasetId, datasetName) {
                         .on("mousemove", mousemove)
                         .on("mouseleave", mouseleave);
 				
-				if (LocalThis.metricValue == "iqr") {
-					metric.forEach((number) => {
-						svg.append("line")
-						.attr("class", "mean-line")
-						.attr("x1", 0)
-						.attr("y1", y(number))
-						.attr("x2", width)
-						.attr("y2", y(number))
-						.attr("fill", "none")
-						.attr("stroke", "black");
-					})
+				let metricArray;
+				if (LocalThis.metricValue != "iqr") {
+					metricArray = [metric];
 				} else {
-					svg.append("line")
-                   .attr("class", "mean-line")
-                   .attr("x1", 0)
-                   .attr("y1", y(metric))
-                   .attr("x2", width)
-                   .attr("y2", y(metric))
-                   .attr("fill", "none")
-                   .attr("stroke", "black");
+					metricArray = metric;
 				}
-                
+
+				metricArray.forEach((number) => {
+					svg.append("line")
+					.attr("class", "mean-line")
+					.attr("x1", 0)
+					.attr("y1", y(number))
+					.attr("x2", width)
+					.attr("y2", y(number))
+					.attr("fill", "none")
+					.attr("stroke", "black");
+				})				                
 
                svg.append("line")
                   .attr("class", "sd-line-top")
@@ -618,10 +599,8 @@ export function init(datasetId, datasetName) {
                   .attr("fill", "none")
                   .attr("stroke", "darkgrey");
 
-
-
 				// legend builder				
-				const legendSize = {
+                const legendSize = {
 					width: 250,
 					height: 135,
 					get posX() {
@@ -692,32 +671,31 @@ export function init(datasetId, datasetName) {
 
 
                	legend.append("text")
-                   .text(metricString + ": " +  (LocalThis.metricValue == "iqr" ? "(" + metric[0].toFixed(1) + ", " + metric[1].toFixed(1) + ")" : metric.toFixed(2)))
-				   .attr('x', legendSize.posX + 20 - dotSize / 2)
-                   .attr('y', legendSize.posY + 85);
+					.text(metricString + ": " +  (LocalThis.metricValue == "iqr" ? "(" + metric[0].toFixed(1) + ", " + metric[1].toFixed(1) + ")" : metric.toFixed(2)))
+				   	.attr('x', legendSize.posX + 20 - dotSize / 2)
+                   	.attr('y', legendSize.posY + 85);
 
                	legend.append("text")
-                   .text(deviationString + ": " + deviation.toFixed(2))
-				   .style("font", "arial")
-                   .attr('x', legendSize.posX + (LocalThis.metricValue == "iqr" ? 165 : 130 ) - dotSize / 2)
-                   .attr('y', legendSize.posY + 85);
+                   	.text(deviationString + ": " + deviation.toFixed(2))
+				   	.style("font", "arial")
+                   	.attr('x', legendSize.posX + (LocalThis.metricValue == "iqr" ? 165 : 130 ) - dotSize / 2)
+                   	.attr('y', legendSize.posY + 85);
 
                	legend.append("text")
                    .text(() => {                    
-                       return "L. Cutoff: " + leftCutoff.toFixed(2);
-                   })
+                        return "L. Cutoff: " + leftCutoff.toFixed(2);
+                    })
 				   .style("font", "arial")
                    .attr('x', legendSize.posX + 20 - dotSize / 2)
                    .attr('y', legendSize.posY + 110);
 
                	legend.append("text")
-                   .text(() => {                    
-                       return "R. Cutoff: " + rightCutoff.toFixed(2);
-                   })
+                   	.text(() => {                    
+                        return "R. Cutoff: " + rightCutoff.toFixed(2);
+                    })
 				   .style("font", "arial")
                    .attr('x', legendSize.posX + 130 - dotSize / 2)
                    .attr('y', legendSize.posY + 110);
-
 		    }
 		}
 	}
