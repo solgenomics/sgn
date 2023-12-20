@@ -43,7 +43,7 @@ export function init(datasetId, datasetName) {
 			        LocalThis.traitsIds = response.traits.map(
 				        trait => trait[0]
 			        );
-			        console.log(LocalThis.traitsIds);
+			        // console.log(LocalThis.traitsIds);
 			    },
 			    error: function(response) {
 			        alert('Error');
@@ -111,15 +111,15 @@ export function init(datasetId, datasetName) {
 		    if (this.selection != "default") {
 			// Gets a list of pheno ids, filters them so only the ones that have non null values are included and then sorts the ids by their value by looking up their values in traits hash.
 
-			console.log(this.traits);
+			// console.log(this.traits);
 			this.phenoIds = Object.keys(this.traits[this.selection])
 			    .filter((phenoId) => !isNaN(parseFloat(this.traits[this.selection][phenoId])))
 			    .sort((a,b) => this.traits[this.selection][a] - this.traits[this.selection][b]);
 
-            console.log(this.phenoIds);
+            // console.log(this.phenoIds);
 
 			this.traitVals = this.phenoIds.map((id) => parseFloat(this.traits[this.selection][id]));
-			console.log(this.traitVals);
+			// console.log(this.traitVals);
 			// Debugging check: You should see a list of ids and the corresponding values, logs should be sorted by increasing values.
 			// for (let id of this.phenoIds) {
 			//   console.log(id, this.traits[this.selection][id].value);
@@ -171,6 +171,25 @@ export function init(datasetId, datasetName) {
 
             return this.median(medianMap);
         } // OK - tested
+
+		
+		quartile(values, factor) {						
+			if (!Array.isArray(values)) return 0;            
+			
+			let sorted = [...values].sort((a, b) => a - b);                                    
+			let index = (sorted.length - 1) * factor;
+			let lowerIndex = Math.floor(index);
+			let upperIndex = Math.ceil(index);
+			let interpolation = index - lowerIndex;
+			return sorted[lowerIndex] * (1 - interpolation) + sorted[upperIndex] * interpolation;                        
+		}			
+		
+
+		iqr(values) {			
+			let q1 = this.quartile(values, 0.25);
+			let q3 = this.quartile(values, 0.75);
+			return q3 - q1;
+		} 
 		
 		addEventListeners() {
 		    let LocalThis = this;
@@ -208,8 +227,9 @@ export function init(datasetId, datasetName) {
 				sliderSelector.slider("option", "value", 3);
 				LocalThis.stdDevMultiplier = sliderSelector.slider("value");
 			    if (!this.firstRefresh) {
-					d3.select("svg").remove();
+					d3.select("svg").remove();					
 			        LocalThis.render();
+					removeRosnserTable();
 			    }				
 		    });
 
@@ -245,6 +265,7 @@ export function init(datasetId, datasetName) {
                         LocalThis.storedOutliersIds = [];						
 						d3.select("svg").remove();
 						LocalThis.render();
+						removeRosnserTable();
                     },
                     error: function(response) {
                         alert('Error');
@@ -265,6 +286,7 @@ export function init(datasetId, datasetName) {
                         LocalThis.storedOutliersIds = filteredNonTrait;					   					    
 						d3.select("svg").remove();
 						LocalThis.render();
+						removeRosnserTable();
                     },
                     error: function(response) {
                        alert('Error');
@@ -273,39 +295,102 @@ export function init(datasetId, datasetName) {
             }
 
 			let rosnersTestButton = document.getElementById("rosner_test");
-		    rosnersTestButton.onclick = function() {		
-				//console.log("trait_selection:",  document.getElementById("trait_selection").value)        
+		    rosnersTestButton.onclick = function() {						
+				if (document.getElementById("trait_selection").value == 'default') return; 
+				// add spinner 
+				document.getElementById("loading-spinner").style.visibility = 'visible'; 
 			    new jQuery.ajax({
                     type: 'POST',
                     url: '/ajax/dataset/rosner_test/' + LocalThis.datasetId,    					               
 					data: {dataset_trait: document.getElementById("trait_selection").value},					
                     success: function(response) {                    
-						alert('rosners successfully triggerd!');
-                        // LocalThis.storedOutliersIds = [...allOutliers];
-						// d3.select("svg").remove();
-						// LocalThis.render();
-						console.log(response);
-						console.log(response.file[0]);
-						// console.log(response.message);
-						// console.log(response.dataset_id);
-						// console.log(response.data);
-						// console.log(response.dataset_trait);
-						alert(response.message);
-						jQuery('#rosner_table').DataTable({
-							data: response.file,
-							// columns: [{title: "TEST 1"}, {title: "TEST 2"}, {title: "TEST 3"}, {title: "TEST 4"}, {title: "TEST 5"}, {title: "TEST 6"}, {title: "TEST 7"}, {title: "TEST 8"}, {title: "TEST 9"}]
-							// columns: response.file[0]
-							columns: [response.file[0].map(value => ({"title": value}))]
-						});					
+						// alert(response.message);
+						createOutlierTable(response.file);						
+						document.getElementById("loading-spinner").style.visibility = 'hidden';  
+                    },
+			        error: function(response) {
+				        alert('Error');
+						document.getElementById("loading-spinner").style.visibility = 'visible'; 
+			        }
+			    })
+		    }
+			
+			function createOutlierTable(file) {
+				// check if exist and remove
+				let data_rows = file.slice(1, file.length);				
+				let column_names = file[0].map(value => ({"title": value}));
+				let outliers = data_rows.filter((elem) => {return elem[7] == 'TRUE'}).map((elem) => elem[4]);
+								
+				removeRosnserTable();
 
+				let table = document.createElement("table");
+				table.setAttribute("id", "rosner_table");
+				table.classList = "display";				
+				document.getElementById("statistic_tests").appendChild(table); 			
+
+				let addRosnerButton = document.createElement("button");
+				if (outliers.length == 0) {
+					addRosnerButton.disabled = true;	
+				}
+				addRosnerButton.setAttribute("id", "rosner_add");
+				addRosnerButton.classList = "btn btn-sm btn-success btn-dataset";				
+				addRosnerButton.textContent = "Add Rosner test outliers";		
+				addRosnerButton.addEventListener('click', function() {
+					addRosnserOutliers(outliers);
+				}); 
+
+				document.getElementById("statistic_tests").appendChild(addRosnerButton); 											
+
+				jQuery('#rosner_table').DataTable({										
+					columns: column_names,					
+					data: data_rows,
+					searching: false, 
+					paging: false, 
+					info: false
+				});			
+
+				return false;
+			}
+
+			function addRosnserOutliers (rosnerOutliers) {				
+				if (rosnerOutliers.length == 0) {
+					return;
+				}
+				// console.log(rosnerOutliers);
+				
+				let allOutliers = new Set(LocalThis.storedOutliersIds.concat(rosnerOutliers));
+			    let stringOutliers = [...allOutliers].join(',');
+			    let stringOutlierCutoffs = [...LocalThis.outlierCutoffs].join(',');
+			    new jQuery.ajax({
+                    type: 'POST',
+                    url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
+                    data: {outliers: stringOutliers, outlier_cutoffs: stringOutlierCutoffs },
+                    success: function(response) {                    
+						alert('outliers successfully stored!');
+                        LocalThis.storedOutliersIds = [...allOutliers];
+						d3.select("svg").remove();
+						LocalThis.render();
                     },
 			        error: function(response) {
 				        alert('Error');
 			        }
 			    })
-		    }
 
+				return false;
+			}
+
+			function removeRosnserTable () {
+				if ($.fn.DataTable.isDataTable("#rosner_table")) {															
+					jQuery('#rosner_table').DataTable().destroy();	
+				} 
+				if (document.getElementById("rosner_table")) {															
+					document.getElementById("rosner_table").remove();
+					document.getElementById("rosner_add").remove();
+				}
+			}
 		}
+
+
 
 		render() {
 		    if (this.firstRefresh) {
@@ -315,15 +400,48 @@ export function init(datasetId, datasetName) {
 			    this.addEventListeners();
 		    } else if (this.selection != "default") {
 
-				const LocalThis = this;
+				const LocalThis = this;								
 
 				const [mean, stdDev] = this.standardDeviation(this.traitVals);
 				const [median, mad]= [this.median(this.traitVals), this.mad(this.traitVals)];		
-				const [metric, deviation, metricString, deviationString] = LocalThis.metricValue === "mean" ? [mean, stdDev, "Mean", "Std Dev"] : [median, mad, "Median", "MAD"];
+				const [quartiles, factor]= [[this.quartile(this.traitVals, 0.25), this.quartile(this.traitVals, 0.75)], this.iqr(this.traitVals)];										
+				
+				let settings;
+				switch(LocalThis.metricValue) {					
+					case "mean": 
+						settings =  [mean, stdDev, "Mean", "Std Dev"];
+						break;
+					case "median":
+						settings =  [median, mad, "Median", "MAD"];
+						break;
+					case "iqr":
+						settings =  [quartiles, factor, "Q1,Q3", "IQR"];
+						break;
+					default:
+						settings =  [median, mad, "Median", "MAD"];
+				}
+				const [metric, deviation, metricString, deviationString] = settings;											
 
 				let filter = LocalThis.stdDevMultiplier ;
-                let rightCutoff = metric + deviation * filter;
-                let leftCutoff = Math.max(metric - deviation * filter, 0);				
+                
+				function rightCutoffCalc () {
+					if (LocalThis.metricValue == "iqr") {
+						return  quartiles[1] + factor * filter;
+					} else {						
+						return metric + deviation * filter;
+					} 
+				}
+
+				function leftCutoffCalc () {
+					if (LocalThis.metricValue == "iqr") {
+						return quartiles[0] - factor * filter;
+					} else {						
+						return Math.max(metric - deviation * filter, 0);
+					} 
+				}
+
+				let rightCutoff = rightCutoffCalc();
+				let leftCutoff = leftCutoffCalc();                			
 
 			    this.outliers = [];
 
@@ -346,13 +464,10 @@ export function init(datasetId, datasetName) {
                     , redColor = "#f7756c"
 					, blueColor = "#337ab7";
 
-                var isOutlier = function(id, value, metric, deviation) {
-				    let filter = (LocalThis.stdDevMultiplier);
-				    let leftCutoff = Math.max(metric - deviation * filter, 0);
-				    let rightCutoff = metric + deviation * filter;			 // here max from scale		
-				    let color = "";
+                var isOutlier = function(id, value, leftCutoff, rightCutoff) {				    
+				    
+					let color = "";
 					let stroke;
-					
 
 				    if (value >= leftCutoff && value <= rightCutoff) {
 				         color = greenColor;						 
@@ -438,9 +553,9 @@ export function init(datasetId, datasetName) {
 			        tooltip
 				        .style("opacity", 0)
 			        d3.select(this)
-						.style("fill", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], metric, deviation)[0]})
+						.style("fill", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], leftCutoff, rightCutoff)[0]})
 						.style("stroke-width", 2) 
-						.style("stroke", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], metric, deviation)[1]})						
+						.style("stroke", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], leftCutoff, rightCutoff)[1]})						
 						.style("fill-opacity", (d) => { return (LocalThis.traitVals[d] <= leftCutoff || LocalThis.traitVals[d] >= rightCutoff ? 0.2 : 0.8) })
 						.style("stroke-opacity", (d) => { return (LocalThis.traitVals[d] <= leftCutoff || LocalThis.traitVals[d] >= rightCutoff ? 0.4 : 0.8) })
 		    	}
@@ -453,16 +568,28 @@ export function init(datasetId, datasetName) {
 			            .attr("cx", function (d) { return x(d); } )
                         .attr("cy", function (d) { return y(LocalThis.traitVals[d]); } )
                         .attr("r", 6)
-                        .style("fill", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], metric, deviation)[0]})
+                        .style("fill", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], leftCutoff, rightCutoff)[0]})
 						.style("stroke-width", 2) 
-						.style("stroke", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], metric, deviation)[1]})						
+						.style("stroke", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], leftCutoff, rightCutoff)[1]})						
                         .style("fill-opacity", (d) => { return (LocalThis.traitVals[d] <= leftCutoff || LocalThis.traitVals[d] >= rightCutoff ? 0.2 : 0.8) })
 						.style("stroke-opacity", (d) => { return (LocalThis.traitVals[d] <= leftCutoff || LocalThis.traitVals[d] >= rightCutoff ? 0.4 : 0.8) })
                         .on("mouseover", mouseover)
                         .on("mousemove", mousemove)
                         .on("mouseleave", mouseleave);
-
-                svg.append("line")
+				
+				if (LocalThis.metricValue == "iqr") {
+					metric.forEach((number) => {
+						svg.append("line")
+						.attr("class", "mean-line")
+						.attr("x1", 0)
+						.attr("y1", y(number))
+						.attr("x2", width)
+						.attr("y2", y(number))
+						.attr("fill", "none")
+						.attr("stroke", "black");
+					})
+				} else {
+					svg.append("line")
                    .attr("class", "mean-line")
                    .attr("x1", 0)
                    .attr("y1", y(metric))
@@ -470,6 +597,8 @@ export function init(datasetId, datasetName) {
                    .attr("y2", y(metric))
                    .attr("fill", "none")
                    .attr("stroke", "black");
+				}
+                
 
                svg.append("line")
                   .attr("class", "sd-line-top")
@@ -563,19 +692,18 @@ export function init(datasetId, datasetName) {
 
 
                	legend.append("text")
-                   .text(metricString + " : " + metric.toFixed(2))
+                   .text(metricString + ": " +  (LocalThis.metricValue == "iqr" ? "(" + metric[0].toFixed(1) + ", " + metric[1].toFixed(1) + ")" : metric.toFixed(2)))
 				   .attr('x', legendSize.posX + 20 - dotSize / 2)
                    .attr('y', legendSize.posY + 85);
 
                	legend.append("text")
-                   .text(deviationString + " : " + deviation.toFixed(2))
+                   .text(deviationString + ": " + deviation.toFixed(2))
 				   .style("font", "arial")
-                   .attr('x', legendSize.posX + 120 - dotSize / 2)
+                   .attr('x', legendSize.posX + (LocalThis.metricValue == "iqr" ? 165 : 130 ) - dotSize / 2)
                    .attr('y', legendSize.posY + 85);
 
                	legend.append("text")
-                   .text(() => {
-                       let leftCutoff = metric - deviation * LocalThis.stdDevMultiplier;
+                   .text(() => {                    
                        return "L. Cutoff: " + leftCutoff.toFixed(2);
                    })
 				   .style("font", "arial")
@@ -583,12 +711,11 @@ export function init(datasetId, datasetName) {
                    .attr('y', legendSize.posY + 110);
 
                	legend.append("text")
-                   .text(() => {
-                       let rightCutoff = metric + deviation * LocalThis.stdDevMultiplier;
+                   .text(() => {                    
                        return "R. Cutoff: " + rightCutoff.toFixed(2);
                    })
 				   .style("font", "arial")
-                   .attr('x', legendSize.posX + 120 - dotSize / 2)
+                   .attr('x', legendSize.posX + 130 - dotSize / 2)
                    .attr('y', legendSize.posY + 110);
 
 		    }

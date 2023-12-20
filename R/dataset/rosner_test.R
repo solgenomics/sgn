@@ -10,36 +10,30 @@ input_file_name <- args[1]
 print(input_file_name)
 output_file_name <- args[2]
 print(output_file_name)
-# trait_name <- args[2]
+trait_name <- args[2]
 
-errorMessages <- c()
-
-# read argument  from command line with datafile
-# input file / otput filename
+# errorMessages <- c()
 
 table <- read.csv(input_file_name)
-# remove all NA rows
 
+##### remove NA #####
 table <- table[rowSums(is.na(table)) != ncol(table), ]
 
-# View(table)
-# View(table2)
-# dim(table)
-# dim(table2)
+outliers_number = 3
 
-test <- rosnerTest(table[, 1])
+##### Make test #####
+test <- rosnerTest(table[, 1], k = outliers_number)
 
-# test$n.outliers
-# test$parameters
+# table[test$all.stats$Obs.Num, 2]
 
-# outliers  <- test$all.stats$Obs.Num[0:test$n.outliers]
-write.csv(file = output_file_name, test$all.stats)
-# write.csv(outliers)
-# write.csv(test$n.outliers)
+##### Default for test k = 3 loop if more outliers then 3 - it should return table with one extra row with first non outlier value  #####
+while (test$n.outliers == outliers_number)  {
+  outliers_number =  outliers_number + 1
+  test <- rosnerTest(table[, 1], k = outliers_number)
+}
 
-# ok jak zwracamy wynik
-# co zwracamy
+# change observation number in data frame to phenotype id
+test$all.stats$Obs.Num <- table[test$all.stats$Obs.Num, 2]
 
-# 1 . tabela
-# czy cos poza tabelą ?
-
+# write csv file without first row
+write.csv(file = output_file_name, test$all.stats, row.names = FALSE) 
