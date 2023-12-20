@@ -112,8 +112,6 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     my $c = shift;
     my $dataset_id = shift;
     my $dataset_trait = $c->req->param('dataset_trait');
-    #
-    # # add k later
 
     print STDERR "dataset_trait: $dataset_trait";
     my $dataset = CXGN::Dataset->new({
@@ -125,7 +123,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     #
     my $phenotypes_data_ref = $dataset->retrieve_phenotypes();
     my @columns = @{$phenotypes_data_ref->[0]};
-    print STDERR "columns: ", join(", ", @columns);
+    # print STDERR "columns: ", join(", ", @columns);
 
     my ($trait_index) = grep { @columns[$_] eq $dataset_trait } (0 ..  scalar @columns -1);
     my ($trait_id_index) = grep { @columns[$_] eq "${dataset_trait}_phenotype_id" } (0 ..  scalar @columns -1);
@@ -133,12 +131,6 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     $c->tempfiles_subdir("rosners_files");
     my ($trait_file_path, $temp_file) = $c->tempfile(TEMPLATE=>"rosners_files/trait_XXXXX", SUFFIX => '.csv');
     my ($stat_file_path, $stat_file) = $c->tempfile(TEMPLATE=>"rosners_files/stat_XXXXX", SUFFIX => '.csv');
-    # my $temp_path = $c->config->{basepath}."/".$temp_file;
-    # print STDERR "***** temp_path = $temp_path\n";
-    print STDERR "***** file_path = $trait_file_path\n";
-    print STDERR "***** temp_file = $temp_file\n";
-    print STDERR "***** stat_file_path = $stat_file_path\n";
-    print STDERR "***** stat_file = $stat_file\n";
 
     my $csv = Text::CSV->new ({ binary => 1});
 
@@ -148,14 +140,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     }
     close $fh;
 
-    # my $trait_file = $temp_file . "_" . "h2File.json";
-    # my $output_stat_file = $temp_file . "_" . "h2CsvFile.csv";
-    # my $errorFile = $temp_file . "_" . "error.txt";
-
-    # run cluster with R 
-
-    # open csv file with results
-
+    # run cluster with R
     my $cmd = CXGN::Tools::Run->new({
         backend => $c->config->{backend},
         submit_host=>$c->config->{cluster_host},
@@ -166,9 +151,6 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         max_cluster_jobs => 1_000_000_000,
     });
 
-    # print STDERR Dumper $pheno_filepath;
-
-    # my $job;
     $cmd->run_cluster(
         "Rscript ",
         $c->config->{basepath} . "/R/dataset/rosner_test.R",
@@ -180,29 +162,6 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     $cmd->wait;
 
     # print STDERR Dumper $stat_file_path;
-
-    # my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
-    # copy($h2File, $figure_path);
-    # copy($h2CsvFile, $figure_path);
-
-
-    # my $h2Filebasename = basename($h2File);
-    # my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
-
-    # my $h2CsvFilebasename = basename($h2CsvFile);
-    # my $h2CsvFile_response = "/documents/tempfiles/heritability_files/" . $h2CsvFilebasename;
-
-    # my $errors;
-    # if ( -e $errorFile ) {
-    #     open my $fh, '<', $errorFile or die "Can't open error file $!";
-    #     $errors = do { local $/; <$fh> };
-    # }
-
-    # open csv file
-
-    # make a json file string from a file / row ? by row / column by column ?
-
-    # my $aoh = csv (in => $stat_file_path, headers => "auto");   # as array of hash
     my $aoa = csv (in => $stat_file_path);   # as array of hash
 
     $c->stash->{rest} = {
@@ -214,16 +173,6 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         phenotype_id_index => $trait_id_index,
         file               => $aoa,
     };
-
-    # $c->stash->{rest} = { message => "Rosners TEST Successfully!" };
-    # / set value / numer - mozna bez uruchamiania przesylania w dwie strony..
-    # get values for trait
-    # print values
-    # run R function for given trait on values()
-    #
-    # get o
-    # return;
-
 }
 
 sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {

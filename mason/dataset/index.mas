@@ -195,6 +195,10 @@ $dataset_contents => ''
             </div>
         </div>
     </div>
+    <div class="row well" style="margin: 5px 10px;">
+      Rosner's test is calculated by the R function rosnerTest{EnvStats} from package EnvStats.<br>
+        <a href="https://cran.r-project.org/web/packages/EnvStats/index.html">https://cran.r-project.org/web/packages/EnvStats/index.html</a>
+    </div>
 
     <div id="statistic_tests">
         <!-- 
