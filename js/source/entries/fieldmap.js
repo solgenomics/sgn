@@ -131,7 +131,7 @@ export function init() {
                     //     plot.type = "data";
                     // }
                     plot_object[plot.observationUnitDbId] = plot;
-                }   
+                }
             }
             this.plot_object = plot_object;
         }
@@ -141,9 +141,9 @@ export function init() {
             for (let observation of observations) {
                 let trait_name = observation.observationVariableName;
                 if (!this.heatmap_object[trait_name]) {
-                    this.heatmap_object[trait_name] = {[observation.observationUnitDbId]: {val: observation.value, plot_name: observation.observationUnitName, id: observation.observationDbId }};
+                    this.heatmap_object[trait_name] = { [observation.observationUnitDbId]: { val: observation.value, plot_name: observation.observationUnitName, id: observation.observationDbId } };
                 } else {
-                    this.heatmap_object[trait_name][observation.observationUnitDbId] = {val: observation.value, plot_name: observation.observationUnitName, id: observation.observationDbId };
+                    this.heatmap_object[trait_name][observation.observationUnitDbId] = { val: observation.value, plot_name: observation.observationUnitName, id: observation.observationDbId };
                 }
             }
         }
@@ -194,7 +194,7 @@ export function init() {
             let last_coord;
             for (let plot of this.plot_arr) {
                 if (last_coord === undefined) {
-                    last_coord = [0,1];
+                    last_coord = [0, 1];
                 }
                 if (plot === undefined) {
                     if (last_coord[0] < this.meta_data.max_col) {
@@ -257,15 +257,15 @@ export function init() {
                 this.meta_data.plot_layout = this.meta_data.plot_layout ? this.meta_data.plot_layout : "serpentine";
 
                 this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
-                this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
+                this.plot_arr.sort(function (a, b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
 
                 var plot_count = 0;
                 var row_count = 0;
-                for (let j = this.meta_data.min_row; j < (this.meta_data.min_row+rows); j++) {
+                for (let j = this.meta_data.min_row; j < (this.meta_data.min_row + rows); j++) {
                     row_count++;
                     var swap_columns = this.meta_data.plot_layout == "serpentine" && j % 2 === 0;
                     var col_count = 0;
-                    for (let i = this.meta_data.min_col; i < (this.meta_data.min_col+cols); i++) {
+                    for (let i = this.meta_data.min_col; i < (this.meta_data.min_col + cols); i++) {
                         col_count++;
                         var row = j;
                         var col = swap_columns ? this.meta_data.max_col - col_count + 1 : i;
@@ -283,7 +283,7 @@ export function init() {
         }
 
         add_corners() {
-            var add_corner = (condition_1, condition_2, x,y) => {
+            var add_corner = (condition_1, condition_2, x, y) => {
                 if (condition_1 && condition_2) {
                     this.plot_arr.push(this.get_plot_format("border", x, y));
                 }
@@ -313,7 +313,7 @@ export function init() {
         }
 
         add_borders() {
-            if ( this.meta_data.display_borders ) {
+            if (this.meta_data.display_borders) {
                 this.add_border("left_border_selection", "col", this.meta_data.min_col - 1);
                 this.add_border("top_border_selection", "row", this.meta_data.min_row - 1);
                 this.add_border("right_border_selection", "col", this.meta_data.max_col + 1);
@@ -342,11 +342,11 @@ export function init() {
             let tempNumCols = this.meta_data.num_cols;
             this.meta_data.num_cols = this.meta_data.num_rows;
             this.meta_data.num_rows = tempNumCols;
-        
+
             d3v3.select("svg").remove();
             this.add_borders();
             this.render();
-          
+
         }
 
         clickcancel() {
@@ -359,11 +359,11 @@ export function init() {
                 function dist(a, b) {
                     return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
                 }
-                selection.on('mousedown', function() {
+                selection.on('mousedown', function () {
                     down = d3v3.mouse(document.body);
                     last = +new Date();
                 });
-                selection.on('mouseup', function() {
+                selection.on('mouseup', function () {
                     if (dist(down, d3v3.mouse(document.body)) > tolerance) {
                         return;
                     } else {
@@ -372,8 +372,8 @@ export function init() {
                             wait = null;
                             event.dblclick(d3v3.event);
                         } else {
-                            wait = window.setTimeout((function(e) {
-                                return function() {
+                            wait = window.setTimeout((function (e) {
+                                return function () {
                                     event.click(e);
                                     wait = null;
                                 };
@@ -391,9 +391,9 @@ export function init() {
             } else if (trait_name in heatmap_object && heatmap_object[trait_name][plot.observationUnitDbId]) {
                 let val, plot_name, pheno_id;
                 val = heatmap_object[trait_name][plot.observationUnitDbId].val;
-                plot_name = heatmap_object[trait_name][plot.observationUnitDbId].plot_name; 
+                plot_name = heatmap_object[trait_name][plot.observationUnitDbId].plot_name;
                 pheno_id = heatmap_object[trait_name][plot.observationUnitDbId].id;
-                jQuery("#suppress_plot_pheno_dialog").modal("show"); 
+                jQuery("#suppress_plot_pheno_dialog").modal("show");
                 jQuery("#myplot_name").html(plot_name);
                 jQuery("#pheno_value").html(val);
                 jQuery("#mytrait_id").html(trait_name);
@@ -405,24 +405,24 @@ export function init() {
             if (d3v3.event && d3v3.event.detail > 1) {
                 return;
             } else {
-                function btnClick(n){
-                    if (n.length == 0){
+                function btnClick(n) {
+                    if (n.length == 0) {
                         jQuery("#hm_view_plot_image_submit").addClass("disabled");
                     } else {
                         jQuery("#hm_view_plot_image_submit").removeClass("disabled");
                     }
-                    return true; 
+                    return true;
                 }
                 if (plot.type == "data") {
                     var image_ids = plot.plotImageDbIds || [];
                     var replace_accession = plot.germplasmName;
                     var replace_plot_id = plot.observationUnitDbId;
-                    var replace_plot_name = plot.observationUnitName;plot
+                    var replace_plot_name = plot.observationUnitName; plot
                     var replace_plot_number = plot.observationUnitPosition.observationLevel.levelCode;
 
                     jQuery('#plot_image_ids').html(image_ids);
                     jQuery('#hm_replace_accessions_link').find('button').trigger('click');
-                    jQuery("#hm_replace_accessions_link").on("click", function(){ btnClick(image_ids); });
+                    jQuery("#hm_replace_accessions_link").on("click", function () { btnClick(image_ids); });
                     jQuery('#hm_edit_plot_information').html('<b>Selected Plot Information: </b>');
                     jQuery('#hm_edit_plot_name').html(replace_plot_name);
                     jQuery('#hm_edit_plot_number').html(replace_plot_number);
@@ -432,24 +432,24 @@ export function init() {
 
                     new jQuery.ajax({
                         type: 'POST',
-                        url: '/ajax/breeders/trial/'+ trial_id +'/retrieve_plot_images',
+                        url: '/ajax/breeders/trial/' + trial_id + '/retrieve_plot_images',
                         dataType: "json",
                         data: {
-                                'image_ids': JSON.stringify(image_ids),
-                                'plot_name': replace_plot_name,
-                                'plot_id': replace_plot_id,
+                            'image_ids': JSON.stringify(image_ids),
+                            'plot_name': replace_plot_name,
+                            'plot_id': replace_plot_id,
                         },
                         success: function (response) {
-                        jQuery('#working_modal').modal("hide");
-                        var images = response.image_html;
-                        if (response.error) {
-                            alert("Error Retrieving Plot Images: "+response.error);
-                        }
-                        else {
-                            jQuery("#show_plot_image_ids").html(images);
+                            jQuery('#working_modal').modal("hide");
+                            var images = response.image_html;
+                            if (response.error) {
+                                alert("Error Retrieving Plot Images: " + response.error);
+                            }
+                            else {
+                                jQuery("#show_plot_image_ids").html(images);
 
-                        // jQuery('#view_plot_image_dialog').modal("show"); 
-                        }
+                                // jQuery('#view_plot_image_dialog').modal("show"); 
+                            }
                         },
                         error: function () {
                             jQuery('#working_modal').modal("hide");
@@ -463,15 +463,15 @@ export function init() {
         addEventListeners() {
             let LocalThis = this;
             let transposeBtn = document.getElementById("transpose_fieldmap");
-            transposeBtn.onclick = function() {
+            transposeBtn.onclick = function () {
                 LocalThis.transpose();
             }
         }
-        
+
         FieldMap() {
             this.addEventListeners();
             var cc = this.clickcancel();
-            const colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"];
+            const colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"];
             var trait_name = this.heatmap_selection;
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected ? this.fieldmap_plot_click : this.heatmap_plot_click;
@@ -484,22 +484,22 @@ export function init() {
                     trait_vals.push(obs_unit.val);
                 }
                 var colorScale = d3v3.scale.quantile()
-                .domain(trait_vals)
-                .range(colors);
+                    .domain(trait_vals)
+                    .range(colors);
             }
 
-            var is_plot_overlapping = function(plot) {
-                if ( plot.observationUnitPosition ) {
+            var is_plot_overlapping = function (plot) {
+                if (plot.observationUnitPosition) {
                     let k = `${plot.observationUnitPosition.positionCoordinateX}-${plot.observationUnitPosition.positionCoordinateY}`;
                     return Object.keys(local_this.meta_data.overlapping_plots).includes(k);
                 }
                 return false;
             }
 
-            var get_fieldmap_plot_color = function(plot) {
+            var get_fieldmap_plot_color = function (plot) {
                 var color;
                 if (plot.observationUnitPosition.observationLevelRelationships) {
-                    if ( is_plot_overlapping(plot) ) {
+                    if (is_plot_overlapping(plot)) {
                         color = "#000";
                     }
                     else if (plot.observationUnitPosition.entryType == "check") {
@@ -507,7 +507,7 @@ export function init() {
                     } else if (plot.observationUnitPosition.observationLevelRelationships[1].levelCode % 2 == 0) {
                         color = "#c7e9b4";
                     } else if (plot.observationUnitName.includes(local_this.trial_id + " filler")) {
-                        color = "lightgrey";    
+                        color = "lightgrey";
                     } else {
                         color = "#41b6c4";
                     }
@@ -516,10 +516,10 @@ export function init() {
                 }
                 return color;
             }
-            
-            var get_heatmap_plot_color = function(plot) {
+
+            var get_heatmap_plot_color = function (plot) {
                 var color;
-                if ( is_plot_overlapping(plot) ) {
+                if (is_plot_overlapping(plot)) {
                     color = "#000";
                 }
                 else if (!plot.observationUnitPosition.observationLevel) {
@@ -529,7 +529,7 @@ export function init() {
                 }
                 return color;
             }
-            var get_stroke_color = function(plot) {
+            var get_stroke_color = function (plot) {
                 var stroke_color;
                 if (plot.observationUnitPosition.observationLevel) {
                     if (plot.observationUnitPosition.observationLevelRelationships[0].levelCode % 2 == 0) {
@@ -543,9 +543,9 @@ export function init() {
                 return stroke_color;
             }
 
-            var get_plot_message = function(plot) {
+            var get_plot_message = function (plot) {
                 let html = '';
-                if ( is_plot_overlapping(plot) ) {
+                if (is_plot_overlapping(plot)) {
                     let k = `${plot.observationUnitPosition.positionCoordinateX}-${plot.observationUnitPosition.positionCoordinateY}`;
                     let plots = local_this.meta_data.overlapping_plots[k];
                     html += `<strong>Overlapping Plots:</strong> ${plots.join(', ')}`;
@@ -555,12 +555,12 @@ export function init() {
                         `<strong>Trial Name:</strong> <span style='padding: 1px 2px; border-radius: 4px; color: ${local_this.linked_trials[plot.studyName].fg}; background-color: ${local_this.linked_trials[plot.studyName].bg}'>${plot.studyName}</span><br />` :
                         "";
                     html += `<strong>Plot Name:</strong> ${plot.observationUnitName}<br />`;
-                    if ( plot.type == "data" ) {
+                    if (plot.type == "data") {
                         html += `<strong>Plot Number:</strong> ${plot.observationUnitPosition.observationLevel.levelCode}<br />
                             <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
                             <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />
                             <strong>Accession Name:</strong> ${plot.germplasmName}`;
-                        if ( local_this.heatmap_selected ) {
+                        if (local_this.heatmap_selected) {
                             let v = heatmap_object[trait_name][plot.observationUnitDbId].val;
                             v = Math.round((parseFloat(v) + Number.EPSILON) * 100) / 100
                             html += `<br /><strong>Trait Value:</strong> ${v}`;
@@ -570,7 +570,7 @@ export function init() {
                 return html;
             }
 
-            var handle_mouseover = function(d) {
+            var handle_mouseover = function (d) {
                 if (d.observationUnitPosition.observationLevel) {
                     d3v3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                         .style('fill', 'green')
@@ -578,13 +578,13 @@ export function init() {
                         .style("stroke-width", 3)
                         .style("stroke", '#000000');
                     tooltip.style('opacity', .9)
-                        .style("left", (window.event.clientX+25) + "px")
+                        .style("left", (window.event.clientX + 25) + "px")
                         .style("top", window.event.clientY + "px")
                         .html(get_plot_message(d));
                 }
             }
 
-            var handle_mouseout = function(d) {
+            var handle_mouseout = function (d) {
                 d3v3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
                     .style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d))
                     .style('cursor', 'default')
@@ -594,57 +594,57 @@ export function init() {
                 plots.exit().remove();
             }
 
-            var plot_x_coord = function(plot) {
+            var plot_x_coord = function (plot) {
                 return plot.observationUnitPosition.positionCoordinateX - min_col + col_increment + 1
             }
 
-            var plot_y_coord = function(plot) {
+            var plot_y_coord = function (plot) {
                 let y = plot.observationUnitPosition.positionCoordinateY - min_row + row_increment;
-                if ( plot.type !== "border" && document.getElementById("invert_row_checkmark").checked !== true ) {
+                if (plot.type !== "border" && document.getElementById("invert_row_checkmark").checked !== true) {
                     y = num_rows - y - 1;
                 }
                 return y;
             }
 
-            var width = this.meta_data.display_borders && this.meta_data.left_border_selection ? 
-                this.meta_data.num_cols + 3 : 
+            var width = this.meta_data.display_borders && this.meta_data.left_border_selection ?
+                this.meta_data.num_cols + 3 :
                 this.meta_data.num_cols + 2;
-            width = this.meta_data.display_borders && this.meta_data.right_border_selection ? 
-                width + 1 : 
+            width = this.meta_data.display_borders && this.meta_data.right_border_selection ?
+                width + 1 :
                 width;
-            var height = this.meta_data.display_borders && this.meta_data.top_border_selection ? 
-                this.meta_data.num_rows + 3 : 
+            var height = this.meta_data.display_borders && this.meta_data.top_border_selection ?
+                this.meta_data.num_rows + 3 :
                 this.meta_data.num_rows + 2;
-            height = this.meta_data.display_borders && this.meta_data.bottom_border_selection ? 
-                height + 1 : 
+            height = this.meta_data.display_borders && this.meta_data.bottom_border_selection ?
+                height + 1 :
                 height;
             var row_increment = this.meta_data.invert_row_checkmark ?
-                1 : 
+                1 :
                 0;
             row_increment = this.meta_data.display_borders && this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ?
-                row_increment + 1 : 
+                row_increment + 1 :
                 row_increment;
-            var y_offset = this.meta_data.display_borders && this.meta_data.top_border_selection && !this.meta_data.invert_row_checkmark ? 
-                50 : 
+            var y_offset = this.meta_data.display_borders && this.meta_data.top_border_selection && !this.meta_data.invert_row_checkmark ?
+                50 :
                 0;
-            var col_increment = this.meta_data.display_borders && this.meta_data.left_border_selection ? 
-                1 : 
+            var col_increment = this.meta_data.display_borders && this.meta_data.left_border_selection ?
+                1 :
                 0;
 
             // Check the fieldmap for any overlapping plots (plots that share the same x/y coordinates)
             this.meta_data.overlapping_plots = {};
             let plot_positions = {};
             this.plot_arr.forEach((plot) => {
-                if ( plot.observationUnitPosition ) {
+                if (plot.observationUnitPosition) {
                     let x = plot.observationUnitPosition.positionCoordinateX;
                     let y = plot.observationUnitPosition.positionCoordinateY;
                     let p = plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : '';
                     let t = plot.studyName;
-                    if ( x && y ) {
+                    if (x && y) {
                         let k = `${x}-${y}`;
-                        if ( !plot_positions.hasOwnProperty(k) ) plot_positions[k] = [];
+                        if (!plot_positions.hasOwnProperty(k)) plot_positions[k] = [];
                         plot_positions[k].push(jQuery("#include_linked_trials_checkmark").is(":checked") ? `${p} (${t})` : p);
-                        if ( plot_positions[k].length > 1 ) {
+                        if (plot_positions[k].length > 1) {
                             this.meta_data.overlapping_plots[k] = plot_positions[k];
                         }
                     }
@@ -687,20 +687,20 @@ export function init() {
                 .on("mouseout", handle_mouseout)
                 .call(cc);
 
-            cc.on("click", (el) => { 
+            cc.on("click", (el) => {
                 var plot = d3v3.select(el.srcElement).data()[0];
                 plot_click(plot, heatmap_object, trait_name)
             });
-            cc.on("dblclick", (el) => { 
+            cc.on("dblclick", (el) => {
                 var me = d3v3.select(el.srcElement);
                 var d = me.data()[0];
                 if (d.observationUnitDbId) {
-                    window.open('/stock/'+d.observationUnitDbId+'/view');        
+                    window.open('/stock/' + d.observationUnitDbId + '/view');
                 }
             });
 
             // Add a colored band to the bottom of the plot box to indicate different trials
-            if ( jQuery("#include_linked_trials_checkmark").is(":checked") ) {
+            if (jQuery("#include_linked_trials_checkmark").is(":checked")) {
                 plots.enter().append("rect")
                     .attr("x", (d) => { return plot_x_coord(d) * 50 + 4 })
                     .attr("y", (d) => { return plot_y_coord(d) * 50 + 54 + y_offset })
@@ -714,21 +714,21 @@ export function init() {
             plots.append("text");
             plots.enter().append("text")
                 .attr("x", (d) => { return plot_x_coord(d) * 50 + 10 })
-                .attr("y", (d) => { return plot_y_coord(d) * 50 + 50 + y_offset})
+                .attr("y", (d) => { return plot_y_coord(d) * 50 + 50 + y_offset })
                 .text((d) => {
-                    if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type == "data" && !is_plot_overlapping(d) ) { 
+                    if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type == "data" && !is_plot_overlapping(d)) {
                         return d.observationUnitPosition.observationLevel.levelCode;
                     }
                 })
                 .on("mouseover", handle_mouseover)
                 .on("mouseout", handle_mouseout);
 
-            var image_icon = function(d) {
-                var image = d.plotImageDbIds || []; 
+            var image_icon = function (d) {
+                var image = d.plotImageDbIds || [];
                 var plot_image;
-                if (image.length > 0){
-                    plot_image = "/static/css/images/plot_images.png"; 
-                }else{
+                if (image.length > 0) {
+                    plot_image = "/static/css/images/plot_images.png";
+                } else {
                     plot_image = "";
                 }
                 return plot_image;
@@ -742,7 +742,7 @@ export function init() {
                 .attr("height", 20)
                 .on("mouseover", handle_mouseover)
                 .on("mouseout", handle_mouseout)
-                                      
+
             plots.exit().remove();
 
             var row_label_arr = [];
@@ -761,22 +761,22 @@ export function init() {
                 row_label_arr.reverse();
             }
 
-            grid.selectAll(".rowLabels") 
+            grid.selectAll(".rowLabels")
                 .data(row_label_arr)
                 .enter().append("text")
                 .attr("x", (row_labels_col * 50 - 25))
-                .attr("y", (label, i) => { 
-                    let y = this.meta_data.invert_row_checkmark ? i+1 : i;
-                    y = this.meta_data.display_borders && this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? y+1 : y;
+                .attr("y", (label, i) => {
+                    let y = this.meta_data.invert_row_checkmark ? i + 1 : i;
+                    y = this.meta_data.display_borders && this.meta_data.top_border_selection && this.meta_data.invert_row_checkmark ? y + 1 : y;
                     return y * 50 + 45 + y_offset;
                 })
                 .text((label) => { return label });
 
-            grid.selectAll(".colLabels") 
+            grid.selectAll(".colLabels")
                 .data(col_label_arr)
                 .enter().append("text")
                 .attr("x", (label, i) => {
-                    let x = label-min_col+col_increment+2;
+                    let x = label - min_col + col_increment + 2;
                     return x * 50 - 30;
                 })
                 .attr("y", (col_labels_row * 50) + 45 + y_offset)
