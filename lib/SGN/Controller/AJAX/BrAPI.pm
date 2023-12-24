@@ -258,7 +258,9 @@ sub _authenticate_user {
 	my $user_type;
 	my $user_pref;
 	my $expired;
-	my $wildcard = 'any';
+    my $wildcard = 'any';
+    my $resource = shift;
+    my $access_level = shift;
 
 	my %server_permission;
 	my $rc = eval{
@@ -274,7 +276,7 @@ sub _authenticate_user {
 	# Check if there is a config for default brapi user. This will be overwritten if a token is passed.
 	# Will still throw error if auth is required
 	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
-		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+		$user_id = $c->user() ? $c->user()->get_object()->sp_person_id : undef; #CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
 		$user_type = $c->config->{brapi_default_user_role};
 		if (! defined $user_id) {
 			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
@@ -285,10 +287,22 @@ sub _authenticate_user {
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
 	# authentication or serverinfo call method request auth, we authenticate.
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
+
+	my $access_granted = 0;
+	if ($resource) {
+	    my @privileges =  $c->stash->{access}->check_user($resource, $user_id);
+	    if (grep { / $access_level / } @privileges) {
+		$access_granted =1;
+	    }	
+	}
+
+	
+
+	
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
         #print STDERR $user_id." : ".$user_type." : ".$expired;
 
-        if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
+        if (!$user_id || $expired || !$user_type || !$access_granted || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
             _standard_response_construction($c, $brapi_package_result, 401);
@@ -5508,7 +5522,7 @@ sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST
 sub pedigree_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, undef, undef, undef, undef, undef, undef, undef, 'read_pedigree', 'read');
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Pedigree');
