@@ -1300,8 +1300,8 @@ function addSortOrders(add_fields, data_type, data_level) {
     // Set type-specific sorting options
     let data_type_fields = [];
     // Sort by trial layout for plot-level labels...
-    if ( (data_type === 'Field Trials' || data_type === 'Lists') && data_level === 'plots' ) {
-        data_type_fields = ['Trial Layout: Plot Order']
+    if ( ['Field Trials', 'Lists', 'Public Lists'].includes(data_type) && data_level === 'plots' ) {
+        data_type_fields = ['Trial Layout: Plot Order'];
     }
 
     //load options

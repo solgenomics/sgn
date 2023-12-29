@@ -1255,7 +1255,9 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         if ($trial_design->{'harvest_date'}){
             $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
         }
-
+        if ($trial_design->{'transplanting_date'}){
+            $trial_info_hash{transplanting_date} = $trial_design->{'transplanting_date'};
+        }
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         my $current_save = $trial_create->save_trial();
 
