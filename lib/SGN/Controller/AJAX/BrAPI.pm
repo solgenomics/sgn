@@ -97,8 +97,8 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 		}
 	}
 
-	my $session_token = $c->req->headers->header("access_token") || $bearer_token;
-
+	my $session_token = $c->req->headers->header("access_token") || $c->req->cookies->{sgn_session_id} ? $c->req->cookies->{"sgn_session_id"}->value() : undef || $bearer_token;
+	print STDERR "SESSION TOKEN : $session_token\n";
 	if (defined $c->request->data){
 		my $data_type = ref $c->request->data;
 		my $current_page = $c->request->data->{"page"} if ($data_type ne 'ARRAY');
@@ -252,16 +252,22 @@ sub _missing_field_response {
 
 sub _authenticate_user {
     my $c = shift;
-	my $force_authenticate = shift;
+    my $force_authenticate = shift;
+    my $resource = shift;
+    my $access_level = shift;
+
     my $status = $c->stash->{status};
 	my $user_id;
 	my $user_type;
 	my $user_pref;
 	my $expired;
     my $wildcard = 'any';
-    my $resource = shift;
-    my $access_level = shift;
+    
+    
+    print STDERR "BrAPI Authenticating User... (resource = $resource, access_level = $access_level\n";
 
+    ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+    	print STDERR "USER: $user_id. TYPE: $user_type EXPIRED: $expired\n";
 	my %server_permission;
 	my $rc = eval{
 		my $server_permission = $c->config->{"brapi_" . $c->request->method};
@@ -288,19 +294,34 @@ sub _authenticate_user {
 	# authentication or serverinfo call method request auth, we authenticate.
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
 
-	my $access_granted = 0;
+	print STDERR "REQUIRING BRAPI LOGIN! user_id = $user_id\n";
+	my $access_granted = 1;
 	if ($resource) {
+
+	    print STDERR "Checking privileges...\n";
 	    my @privileges =  $c->stash->{access}->check_user($resource, $user_id);
-	    if (grep { / $access_level / } @privileges) {
+	    print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
+	    if (grep { /$access_level/ } @privileges) {
 		$access_granted =1;
-	    }	
+	    }
+	    else {
+		$access_granted = 0;
+	    }
+	    print STDERR "Resource: $resource. Grant: $access_granted\n";
 	}
+	
+	print STDERR "No resource provided... going on...\n";
 
 	
+ 
 
+#	my $sp_person = $c->user()->get_object();
+#	my $user_id = $sp_person->get_sp_person_id();
+#	my $user_type = $sp_person->get_user_type();
+#	my $user_pref = $sp_person->get_user_format();
+#	my $expired = 0;
 	
-        ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-        #print STDERR $user_id." : ".$user_type." : ".$expired;
+
 
         if (!$user_id || $expired || !$user_type || !$access_granted || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
@@ -1165,7 +1186,7 @@ sub germplasm_pedigree_POST {
 sub germplasm_pedigree_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, undef, "pedigree", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
@@ -5522,7 +5543,7 @@ sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST
 sub pedigree_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c, undef, undef, undef, undef, undef, undef, undef, 'read_pedigree', 'read');
+	my ($auth) = _authenticate_user($c, undef, 'pedigree', 'read');
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Pedigree');

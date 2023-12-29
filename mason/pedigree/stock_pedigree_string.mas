@@ -34,7 +34,12 @@ function get_pedigree_string(stock_id) {
          alert("an error occurred");
       },
       success: function(response) {
-         jQuery('#pedigree_string').html(response.pedigree_string);
+         if (response.error) {
+	    jQuery('#pedigree_string').html(response.error);
+	 }
+	 else { 
+            jQuery('#pedigree_string').html(response.pedigree_string);
+	 }
       }
     });
 }

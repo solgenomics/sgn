@@ -247,9 +247,24 @@ sub auto : Private {
         }
     }
 
+    # generate common schema objects and db handle
+    #
+    $c->stash->{people_schema} =  $c->dbic_schema('CXGN::People::Schema');
+    $c->stash->{bcs_schema} = $c->dbic_schema('Bio::Chado::Schema');
+    $c->stash->{phenome_schema} = $c->dbic_schema('CXGN::Phenome::Schema');
+    $c->stash->{dbh} = $c->stash->{bcs_schema}->storage->dbh();
+    
     # make access object available
     #
-    $c->stash->{access} = CXGN::Access->new({ people_schema => $c->dbic_schema('CXGN::People::Schema') });
+    $c->stash->{access} = CXGN::Access->new({ people_schema => $c->stash->{people_schema} });
+
+    if ($c->user()) {
+	$c->stash->{user_id} = $sp_person_id;
+    }
+
+
+
+    
     
     return 1;
 }

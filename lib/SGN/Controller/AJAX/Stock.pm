@@ -1315,6 +1315,21 @@ sub remove_stock_parent : Local : ActionClass('REST') { }
 sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     my ($self, $c) = @_;
 
+    print STDERR "Checking privileges...\n";
+
+    my $user_id;
+
+    my @privileges =  $c->stash->{access}->check_user("pedigree", $user_id);
+    print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
+    if (!grep { /delete/ } @privileges) {
+	#
+	# incorrect permissions
+	#
+	$c->stash->{rest} = { error => 'You do not have the necessary privileges to delete pedigree information.' };
+	return;
+    }
+
+    
     my $stock_id = $c->req->param("stock_id");
     my $parent_id = $c->req->param("parent_id");
 
@@ -1774,7 +1789,7 @@ sub get_phenotypes {
     return $subject_phenotypes;
 }
 
-sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0) {
+sub get_pedigree :Chained('/stock/get_stock') PathPart('pedigree') Args(0) {
     my $self = shift;
     my $c = shift;
     my $level = $c->req->param("level");
@@ -1783,16 +1798,42 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         stock_id => $c->stash->{stock}->get_stock_id()
     );
-    my $parents = $stock->get_pedigree_string($level);
+    my $parents = $stock->get_pedigree($level);
     print STDERR "Parents are: ".Dumper($parents)."\n";
 
     $c->stash->{rest} = { pedigree_string => $parents };
 }
 
 
-sub get_pedigree_string_ :Chained('/stock/get_stock') PathPart('pedigreestring') Args(0) {
+sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigreestring') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my $user_id;
+    if ($c->user()) {
+	$user_id = $c->user()->get_object->get_sp_person_id();
+    }
+
+    if (!$user_id) {
+	#
+	# not logged in
+	#
+	$c->stash->{rest} = { error => 'You need to be logged in to view a pedigree string and have the appropriate permissions.' };
+	return;
+    }
+    
+    print STDERR "Checking privileges...\n";
+
+    my @privileges =  $c->stash->{access}->check_user("pedigree", $user_id);
+    print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
+    if (!grep { /read/ } @privileges) {
+	#
+	# incorrect permissions
+	#
+	$c->stash->{rest} = { error => 'You do not have the necessary privileges to view the pedigree information.' };
+	return;
+    }
+
     my $level = $c->req->param("level");
     my $stock_id = $c->stash->{stock}->get_stock_id();
     my $stock_name = $c->stash->{stock}->get_uniquename();
