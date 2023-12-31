@@ -60,9 +60,9 @@ sub patch {
 
 create table sgn_people.sp_resource (sp_resource_id serial primary key, name varchar(100), url text);
 
-create table sgn_people.sp_access_level (sp_access_level_id serial primary key, name varchar(10));
+create table sgn_people.sp_access_level (sp_access_level_id serial primary key, name varchar(20));
 
-create table sgn_people.sp_privilege (sp_privilege_id serial primary key, sp_resource_id bigint references sgn_people.sp_resource, sp_role_id bigint references sgn_people.sp_roles, sp_access_level_id bigint references sgn_people.sp_access_level);
+create table sgn_people.sp_privilege (sp_privilege_id serial primary key, sp_resource_id bigint references sgn_people.sp_resource, sp_role_id bigint references sgn_people.sp_roles, sp_access_level_id bigint references sgn_people.sp_access_level, require_ownership boolean);
 
 --do your SQL here
 --
