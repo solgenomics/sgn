@@ -40,11 +40,11 @@ sub index :Path :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     $c->stash->{access}->resource("homepage");
-    if ($c->stash->{access}->check_user() eq "read") {
+    if ($c->stash->{access}->grant($c->stash->{user_id}), "read") {
 	print STDERR "READ IS ALLOWED!\n";
     }
     else {
-	print sTDERR "NOT SURE WHAT IS ALLOWED!\n";
+	print STDERR "NOT SURE WHAT IS ALLOWED!\n";
     }
     
     
