@@ -553,6 +553,8 @@ project_property	active	From BrAPI	03/27/2017	nm529	00076
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	breeding_program				00051
 project_property	breeding_program_abbreviation	From BrAPI	03/27/2017	nm529	00076
+project_property    crossing_experiment_additional_info  tt15  00183
+project_property    crossing_experiment_parent_info  tt15  00183      
 project_property	data_agreement
 project_property	design
 project_property	drone_run_averaged_precipitation_sum	The averaged-precipitation across the growing season corresponding to a drone run event	09/02/2019	nm529	00130
