@@ -139,15 +139,20 @@ function PedigreeViewer(server,auth,version,urlFunc){
             //make wrapper(pdg)
             var wrap = d3.select(locationSelector);
             var canv = wrap.select("svg.pedigreeViewer");
+            var canvw, canvh;
             if (canv.empty()){
                 canv = wrap.append("svg").classed("pedigreeViewer",true)
                     .attr("width",draw_width)
                     .attr("height",draw_height)
                     .attr("viewbox","0 0 "+draw_width+" "+draw_height);
+                canvw = draw_width;
+                canvh = draw_height;
             }
-            var cbbox = canv.node().getBoundingClientRect();
-            var canvw = cbbox.width, 
-                canvh = cbbox.height;
+            else {
+              var cbbox = canv.node().getBoundingClientRect();
+              canvw = cbbox.width;
+              canvh = cbbox.height;
+            }
             var pdg = canv.select('.pedigreeTree');
             if (pdg.empty()){
               pdg = canv.append('g').classed('pedigreeTree',true);
@@ -174,6 +179,7 @@ function PedigreeViewer(server,auth,version,urlFunc){
             var centeringx = d3.max([0,(500 - (layout.x[1]-layout.x[0]))/2]);
             var centeringy = d3.max([0,(500 - (layout.y[1]-layout.y[0]))/2]);
             var scale = get_fit_scale(canvw,canvh,pdgtree_width,pdgtree_height,padding);
+            scale = scale < 0.5 ? 0.5 : scale;    // Limit the scale so it doesn't zoom out really far for large trees
             var offsetx = (canvw-(pdgtree_width)*scale)/2 + centeringx*scale;
             var offsety = (canvh-(pdgtree_height)*scale)/2 + centeringy*scale;
             
