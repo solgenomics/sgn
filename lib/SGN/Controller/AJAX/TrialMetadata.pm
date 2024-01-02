@@ -3310,6 +3310,25 @@ sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_
         }
     }
 
+    my $project_additional_info_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_experiment_additional_info', 'project_property')->cvterm_id();
+    my $project_parent_info_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_experiment_parent_info', 'project_property')->cvterm_id();
+
+    my $additional_info_prop = $schema->resultset('Project::Projectprop')->find({
+        project_id => $trial_id,
+        type_id => $project_additional_info_cvterm_id
+    });
+    if ($additional_info_prop){
+        $additional_info_prop->delete();
+    }
+
+    my $parent_info_prop = $schema->resultset('Project::Projectprop')->find({
+        project_id => $trial_id,
+        type_id => $project_parent_info_cvterm_id
+    });
+    if ($parent_info_prop){
+        $parent_info_prop->delete();
+    }
+
     $c->stash->{rest} = { success => 1 };
 }
 
