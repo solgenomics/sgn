@@ -52,7 +52,7 @@ $has_col_and_row_numbers
 %    $layout_buttons = '<h3><span class="glyphicon glyphicon-remove-sign text-danger"></span>&nbsp;&nbsp;&nbsp;This experiment does not have spatial layout info!</h3><button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button>';
 % }
 
-<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, has_col_and_row_numbers => $has_col_and_row_numbers, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Analysis Tools</h4>", info_section_subtitle => 'Run analyses', icon_class => "glyphicon glyphicon-signal", info_section_id => "analysis_page_analysis_tools" &>
 

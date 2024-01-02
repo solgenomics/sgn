@@ -162,6 +162,7 @@ has 'field_size' => (isa => 'Num', is => 'rw', predicate => 'has_field_size', re
 has 'plot_width' => (isa => 'Num', is => 'rw', predicate => 'has_plot_width', required => 0);
 has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', required => 0);
 has 'planting_date' => (isa => 'Str', is => 'rw', predicate => 'has_planting_date', required => 0);
+has 'transplanting_date' => (isa => 'Str', is => 'rw', predicate => 'has_transplanting_date', required => 0);
 has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0, default => 'accession');
@@ -397,6 +398,9 @@ sub save_trial {
     }
     if ($self->get_harvest_date()){ # here is local getter
         $t->set_harvest_date($self->get_harvest_date); # here is Project.pm unusual setter with writing to db instead of object
+    }
+    if ($self->get_transplanting_date()){ # here is local getter
+        $t->set_transplanting_date($self->get_transplanting_date); # here is Project.pm unusual setter with writing to db instead of object
     }
 
     #link to the project

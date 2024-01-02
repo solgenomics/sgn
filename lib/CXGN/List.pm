@@ -222,7 +222,7 @@ sub exists_list {
     my $name = shift;
     my $owner = shift;
 
-    my $q = "SELECT list_id, cvterm.name FROM sgn_people.list AS list LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE list.name = ? AND list.owner=?";
+    my $q = "SELECT list_id, cvterm.name FROM sgn_people.list AS list LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE list.name=? AND (list.owner=? OR list.is_public=TRUE)";
     my $h = $dbh->prepare($q);
     $h->execute($name, $owner);
     my ($list_id, $list_type) = $h->fetchrow_array();

@@ -2,6 +2,7 @@
 $trial_id
 $stockref => undef
 $data_level => 'plot'
+$has_col_and_row_numbers => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
@@ -47,7 +48,6 @@ $data_level => 'plot'
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
-        margin: 10px;
         transition: all 1s ease-in-out;
     }
 
@@ -158,29 +158,6 @@ $data_level => 'plot'
 <br><br>
 <div id="container_fm">
     <div style="margin-top: 2%; position: relative">
-        <div style="display: flex; flex-wrap: wrap; gap: 25px" class="form-inline">
-            <div class="form-inline">
-                <label>Download Plot Order</label>
-                <select class="form-control form-inline" name="plot_download_type" id="plot_download_type">
-                    <option value="">--Select Type--</option>
-                    <option value="planting">Planting Order</option>
-                    <option value="harvest">Harvest Order</option>
-                </select>
-            </div>
-            <select class="form-control" name="plot_download_order" id="plot_download_order">
-                <option value="">--Select Plot Layout--</option>
-                <option value="by_col_serpentine">By Column: Serpentine</option>
-                <option value="by_col_zigzag">By Column: Zigzag</option>
-                <option value="by_row_serpentine">By Row: Serpentine</option>
-                <option value="by_row_zigzag">By Row: Zigzag</option>
-            </select>
-            <div clas="form-inline">
-                <label for="plot_download_borders">Include Borders</label>
-                <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
-            </div>
-            <button class="btn btn-primary" id="plot_download_button">Download</button>
-        </div>
-        <br />
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
                 <label>Plot Layout</label>
@@ -227,7 +204,82 @@ $data_level => 'plot'
     <div id="fieldmap_wrapper">
         <div id="fieldmap_chart"></div>
     </div>
+% if ( $has_col_and_row_numbers ) {
+    <div style="margin-top: 40px" class="well well-sm">
+        <h3 style="margin: 0 0 10px 0">Download Plot Order</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
+            <div>
+                <label>Download Type:</label>
+                <select class="form-control" name="plot_download_type" id="plot_download_type">
+                    <option value="">--Select Type--</option>
+                    <option value="planting">Planting Order</option>
+                    <option value="harvest">Harvest Order</option>
+                    <option value="harvestmaster">HarvestMaster</option>
+                </select>
+            </div>
+            <div>
+                <label>Plot Order:</label>
+                <select class="form-control" name="plot_download_order" id="plot_download_order" style="max-width: 300px">
+                    <option value="">--Select Plot Order--</option>
+                    <option value="by_col_serpentine">By Column: Serpentine</option>
+                    <option value="by_col_zigzag">By Column: Zigzag</option>
+                    <option value="by_row_serpentine">By Row: Serpentine</option>
+                    <option value="by_row_zigzag">By Row: Zigzag</option>
+                </select>
+            </div>
+            <div>
+                <label>Starting Plot:</label>
+                <select class="form-control" id="plot_download_start" name="plot_download_start" style="max-width: 300px">
+                    <option value="bottom_left">Bottom Left</option>
+                    <option value="top_left">Top Left</option>
+                    <option value="top_right">Top Right</option>
+                    <option value="bottom_right">Bottom Right</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: end; text-align: right">
+                <div>
+                    <label for="plot_download_borders">Include Borders</label>
+                    <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
+                </div>
+                <div>
+                    <label for="plot_download_gaps">Include Gaps</label>
+                    <input type="checkbox" id="plot_download_gaps" name="plot_download_gaps" value="no">
+                </div>
+            </div>
+        </div>
+        <div id="plot_download_harvestmaster_options" style="display: none; padding: 15px">
+            <p><strong>HarvestMaster Options:</strong></p>
+            <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
+                <div>
+                    <label>HarvestMaster PLTID:</label>
+                    <select class="form-control" id="hm_pltid" name="hm_pltid" style="max-width: 400px">
+                        <option value="plot_id" selected>Plot Database ID</option>
+                        <option value="plot_name">Plot Name</option>
+                        <option value="plot_number">Plot Number</option>
+                    </select>
+                </div>
+                <div>
+                    <label>HarvestMaster Range:</label>
+                    <select class="form-control" id="hm_range" name="hm_range" style="max-width: 400px">
+                        <option value="col_number">Breedbase Column</option>
+                        <option value="row_number" selected>Breedbase Row</option>
+                    </select>
+                </div>
+                <div>
+                    <label>HarvestMaster Row:</label>
+                    <select class="form-control" id="hm_row" name="hm_row" style="max-width: 400px">
+                        <option value="col_number" selected>Breedbase Column</option>
+                        <option value="row_number">Breedbase Row</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 15px 50px; text-align: center">
+            <button class="btn btn-primary" id="plot_download_button">Download</button>
+        </div>
+    </div>
 </div>
+% }
 
 
 <div id="trait_heatmap" >loading...</div>
@@ -852,19 +904,49 @@ jQuery(document).ready( function() {
         FieldMap.load();
     });
 
+    jQuery("#plot_download_type").change(() => {
+        let type = jQuery("#plot_download_type").val();
+        if ( type === 'harvestmaster' ) {
+            jQuery("#plot_download_harvestmaster_options").show();
+        }
+        else {
+            jQuery("#plot_download_harvestmaster_options").hide();
+        }
+    });
+
+    jQuery("#hm_range").change(() => {
+        let range = jQuery("#hm_range").val();
+        jQuery("#hm_row").val(range === 'row_number' ? 'col_number' : 'row_number');
+    });
+    jQuery("#hm_row").change(() => {
+        let row = jQuery("#hm_row").val();
+        jQuery("#hm_range").val(row === 'row_number' ? 'col_number' : 'row_number');
+    });
+
     jQuery("#plot_download_button").click(() => {
         let type = jQuery("#plot_download_type").val();
         let order = jQuery("#plot_download_order").val();
+        let start = jQuery("#plot_download_start").val();
         let include_borders = jQuery("#plot_download_borders").is(":checked");
+        let include_gaps = jQuery("#plot_download_gaps").is(":checked");
         if ( !type || type === '' ) {
             alert("Please select a type");
             return;
         }
         if ( !order || order === '' ) {
-            alert("Please select a plot layout");
+            alert("Please select a plot order");
             return;
         }
-        FieldMap.get_plot_order(type, order, include_borders)
+        if ( !start || start === '' ) {
+            alert("Please select a starting plot");
+            return;
+        }
+        let additional_properties = {
+            hm_pltid: jQuery("#hm_pltid").val(),
+            hm_range: jQuery("#hm_range").val(),
+            hm_row: jQuery("#hm_row").val()
+        }
+        FieldMap.get_plot_order(type, order, start, include_borders, include_gaps, additional_properties);
     });
 
     jQuery("#invert_row_checkmark").change(function() {
