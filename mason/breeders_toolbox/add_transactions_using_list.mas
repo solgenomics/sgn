@@ -1,0 +1,87 @@
+<%args>
+
+</%args>
+
+
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses', 'CXGN.TrialTreeFolders'] &>
+
+<div class="modal fade" id="add_transactions_using_list_dialog" name="add_transactions_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransactionsUsingListDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addTransactions">Add New Transactions Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "add_transactions_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"How to add new transactions using a list?" &>
+
+                            <p>If you would like to remove seeds from seedlots without specifying other seedlot names or plot names, you can use a list of seedlots to add new transactions.</p>
+                            <hr>
+
+                            <center>
+                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <form class="form-horizontal" role="form" name="add_new_transaction_form" id="add_new_transaction_form">
+                            <&| /util/workflow.mas:step, title=> "Add New Transactions" &>
+                                <& /page/page_title.mas, title=>"Enter information about the transactions" &>
+                                    <br/>
+                                    <div class="form-horizontal">
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">List of Seedlots:</label>
+                                            <div class="col-sm-8" >
+                                                <div class="input-group">
+                                                    <select class="form-control" id="seedlot_list_select"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <center>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
+                                </center>
+                            </&>
+                        </form>
+
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your seedlot transactions were stored" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                New seedlot transactions were added successfully
+                            </p>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_new_transactions_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var lo = new CXGN.List();
+    jQuery('#seedlot_list_select').html(lo.listSelect('seedlot_list_select', ['seedlots'], 'Select a list of seedlots', undefined, undefined));
+
+
+    jQuery("#add_transactions_using_list_link").click(function(){
+        jQuery("#add_transactions_using_list_dialog").modal("show");
+    });
+
+});
+
+
+
+</script>
