@@ -76,6 +76,5 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
   </div>
 
   <& /solgs/search/list_type_selection_population.mas &>
-
-</&>
 </div>
+</&>
