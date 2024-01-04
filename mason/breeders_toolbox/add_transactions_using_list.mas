@@ -30,23 +30,37 @@
                         <form class="form-horizontal" role="form" name="add_new_transaction_form" id="add_new_transaction_form">
                             <&| /util/workflow.mas:step, title=> "Add New Transactions" &>
                                 <& /page/page_title.mas, title=>"Enter information about the transactions" &>
-                                    <br/>
-                                    <div class="form-horizontal">
-                                        <div class="form-group">
-                                            <label class="control-label col-sm-4">List of Seedlots:</label>
-                                            <div class="col-sm-8" >
-                                                <div class="input-group">
-                                                    <select class="form-control" id="seedlot_list_select"></select>
-                                                </div>
+                                <br/>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Record Type: </label>
+                                        <div class="col-sm-8">
+                                            <div class="input-group">
+                                                <select class="form-control" id="record_type">
+                                                    <option value="">Select a record type </option>
+                                                    <option value="number_of_seeds">using number of seeds</option>
+                                                    <option value="weight_g">using weight (g)</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-4">List of Seedlots:</label>
+                                        <div class="col-sm-8" >
+                                            <div class="input-group">
+                                                <select class="form-control" id="seedlot_list_select"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id ="transaction_form_div">
+                                    </div>
+                                </div>
                                 <br/>
-                                <br/>
-                                <br/>
-                                <center>
-                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
-                                </center>
+                                <div id="form_footer" style="display:none" >
+                                    <center>
+                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
+                                    </center>
+                                </div>
                             </&>
                         </form>
 
@@ -75,10 +89,58 @@ jQuery(document).ready(function(){
     var lo = new CXGN.List();
     jQuery('#seedlot_list_select').html(lo.listSelect('seedlot_list_select', ['seedlots'], 'Select a list of seedlots', undefined, undefined));
 
-
     jQuery("#add_transactions_using_list_link").click(function(){
         jQuery("#add_transactions_using_list_dialog").modal("show");
     });
+
+    var record_type;
+    jQuery("#record_type").change(function() {
+        record_type = jQuery('#record_type').val();
+    })
+
+    var seedlot_list_id;
+    jQuery("#seedlot_list_select").change(function() {
+        seedlot_list_id = jQuery('#seedlot_list_select').val();
+        if (seedlot_list_id){
+            var seedlot_validation = 1;
+            seedlot_validation = lo.legacy_validate(seedlot_list_id, 'seedlots', true);
+            if (seedlot_validation != 1) {
+                alert("The seedlot list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else if (!record_type) {
+                alert("Please select record type");
+                return;
+            } else if (record_type && seedlot_list_id) {
+                transaction_form();
+            }
+        }
+    })
+
+    function transaction_form () {
+        var seedlot_id = jQuery('#seedlot_list_select').val();
+        var seedlot_list = lo.getList(seedlot_list_id);
+        var record_type = jQuery('#record_type').val();
+
+        if (record_type == 'number_of_seeds') {
+            var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Seedlot Name</th><th>Number of Seeds</th><th>Remove Seeds to</th></tr></thead><tbody>';
+            for (var i=0; i<seedlot_list.length; i++){
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="amount_info" id="amount_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="remove_to" id="remove_to_'+ i +'" value="" placeholder="Required"/></td></tr>';
+            };
+        } else if (record_type == 'weight_g') {
+            var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>Seedlot Name</th><th>Weight (g)</th><th>Remove to</th></tr></thead><tbody>';
+            for (var i=0; i<seedlot_list.length; i++){
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="remove_to" id="remove_to_'+ i +'" value="" placeholder="Required"/></td></tr>';
+            };
+        }
+
+        html = html + '</tbody></table>';
+
+        jQuery('#transaction_form_div').html(html);
+
+        jQuery('#form_footer').show();
+
+    };
+
 
 });
 
