@@ -58,7 +58,7 @@
                                 <br/>
                                 <div id="form_footer" style="display:none" >
                                     <center>
-                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
+                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="new_transaction_submit" id="new_transaction_submit">Submit</button>
                                     </center>
                                 </div>
                             </&>
@@ -122,14 +122,14 @@ jQuery(document).ready(function(){
         var record_type = jQuery('#record_type').val();
 
         if (record_type == 'number_of_seeds') {
-            var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Seedlot Name</th><th>Number of Seeds</th><th>Remove Seeds to</th></tr></thead><tbody>';
+            var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Seedlot Name</th><th>Number of Seeds Taken</th><th>Reason</th></tr></thead><tbody>';
             for (var i=0; i<seedlot_list.length; i++){
-                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="amount_info" id="amount_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="remove_to" id="remove_to_'+ i +'" value="" placeholder="Required"/></td></tr>';
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="amount_info" id="amount_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
             };
         } else if (record_type == 'weight_g') {
-            var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>Seedlot Name</th><th>Weight (g)</th><th>Remove to</th></tr></thead><tbody>';
+            var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>Seedlot Name</th><th>Weight (g) Taken</th><th>Reason</th></tr></thead><tbody>';
             for (var i=0; i<seedlot_list.length; i++){
-                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="remove_to" id="remove_to_'+ i +'" value="" placeholder="Required"/></td></tr>';
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
             };
         }
 
@@ -140,6 +140,9 @@ jQuery(document).ready(function(){
         jQuery('#form_footer').show();
 
     };
+
+
+
 
 
 });
