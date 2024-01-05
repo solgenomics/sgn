@@ -124,7 +124,7 @@ jQuery(document).ready(function(){
         if (record_type == 'number_of_seeds') {
             var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Seedlot Name</th><th>Number of Seeds Taken</th><th>Reason</th></tr></thead><tbody>';
             for (var i=0; i<seedlot_list.length; i++){
-                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="amount_info" id="amount_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="number_of_seeds_info" id="number_of_seeds_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
             };
         } else if (record_type == 'weight_g') {
             var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>Seedlot Name</th><th>Weight (g) Taken</th><th>Reason</th></tr></thead><tbody>';
@@ -140,6 +140,48 @@ jQuery(document).ready(function(){
         jQuery('#form_footer').show();
 
     };
+
+    jQuery('#new_transaction_submit').click(function(e){
+        e.preventDefault();
+        var new_transaction_data = [];
+        var seedlot_id = jQuery('#seedlot_list_select').val();
+        var seedlot_list = lo.getList(seedlot_list_id);
+        var record_type = jQuery('#record_type').val();
+
+        for (var i=0; i<seedlot_list.length; i++) {
+            var seedlot_name = seedlot_list[i];
+            var weight_g = jQuery('#weight_info_'+ i ).val();
+            var number_of_seeds = jQuery('#number_of_seeds_info_'+ i ).val();
+            var transaction_description = jQuery('#transaction_description_'+ i ).val();
+
+            new_transaction_data.push({ 'seedlot_name':seedlot_name, 'weight_g':weight_g, 'number_of_seeds':number_of_seeds, 'transaction_description':transaction_description});
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/add_transactions_using_list',
+            method: 'POST',
+            data: {
+                'new_transaction_data': JSON.stringify(new_transaction_data),
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred storing new transactions.');
+            },
+        });
+    });
+
 
 
 

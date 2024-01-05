@@ -1983,6 +1983,21 @@ sub upload_transactions_POST : Args(0) {
 }
 
 
+sub add_transactions_using_list : Path('/ajax/breeders/add_transactions_using_list') : ActionClass('REST') { }
+
+sub add_transactions_using_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $new_transaction_data = decode_json $c->req->param('new_transaction_data');
+
+    print STDERR "NEW TRANSACTION DATA =".Dumper($new_transaction_data)."\n";
+
+    $c->stash->{rest} = { success => 1};
+
+
+}
+
+
 1;
 
 no Moose;
