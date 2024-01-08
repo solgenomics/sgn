@@ -35,11 +35,11 @@ use SGN::Model::Cvterm;
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_schema',
-		 required => 1,
-		);
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    predicate => 'has_schema',
+    required => 1,
+);
 
 =head2 get/set_pedigrees()
 
@@ -87,6 +87,7 @@ sub add_pedigrees {
             my $female_parent;
             my $male_parent;
             my $cross_type = $pedigree->get_cross_type();
+            my $dbh = $schema->storage->dbh;
 
             if ($pedigree->has_female_parent()) {
                 $female_parent_name = $pedigree->get_female_parent()->get_name();
@@ -129,7 +130,42 @@ sub add_pedigrees {
                     subject_id => $female_parent->[0],
                     value => $cross_type,
                 });
+
+                # add age_pedigee ? with parent ? do we need to check a parent ? probably
+                $dbh->do("
+                    SET search_path = ag_catalog, '\$dbuser', public;
+                    SELECT * FROM ag_catalog.cypher('pedigree_graph',
+                    \$\$ MERGE (:PEDIGREE{ name: '".$pedigree->get_name()."',
+                    stock_id: '".$progeny_accession->[0]."',
+                    type: '.$cross_type.' }) \$\$)
+                    as (v ag_catalog.agtype)
+                ");
+                #
+                # # relacja do tego pedigree
+                # # nadpisujemy tego rodzica... jesli go nie ma ?? a jelsi jest... dobra na razie nadpiszmy
+
+                # parent
+                $dbh->do("
+                    SET search_path = ag_catalog, '\$dbuser', public;
+                    SELECT * FROM ag_catalog.cypher('pedigree_graph',
+                    \$\$ MERGE (:PEDIGREE{ name: '".$female_parent_name."',
+                    stock_id: '".$female_parent->[0]."'
+                    }) \$\$)
+                    as (v ag_catalog.agtype)");
+
+                # relacja
+                $dbh->do("
+                    SET search_path = ag_catalog, '\$dbuser', public;
+                    SELECT * FROM ag_catalog.cypher('pedigree_graph', \$\$
+                        MATCH (child:PEDIGREE {name: '".$pedigree->get_name()."'})
+                        MATCH (parent:PEDIGREE {name: '".$female_parent_name."'})
+                        CREATE (parent)-[:IS_PARENT {relationship_type: 'female_parent'}]->(child)
+                        CREATE (child)-[:IS_CHILD {relationship_type: 'female_parent'}]->(parent)
+                    \$\$) as (v ag_catalog.agtype)");
+
             }
+
+
 
             #create relationship to male parent
             if ($male_parent) {
@@ -148,6 +184,39 @@ sub add_pedigrees {
                     object_id => $progeny_accession->[0],
                     subject_id => $male_parent->[0],
                 });
+
+                # add age_pedigee ? with parent ? do we need to check a parent ? probably
+                $dbh->do("
+                    SET search_path = ag_catalog, '\$dbuser', public;
+                    SELECT * FROM ag_catalog.cypher('pedigree_graph',
+                    \$\$ MERGE (:PEDIGREE{ name: '".$pedigree->get_name()."',
+                    stock_id: '".$progeny_accession->[0]."',
+                    type: '.$cross_type.' }) \$\$)
+                    as (v ag_catalog.agtype)");
+                #
+                # # relacja do tego pedigree
+                # # nadpisujemy tego rodzica... jesli go nie ma ?? a jelsi jest... dobra na razie nadpiszmy
+
+                # parent
+                $dbh->do("
+                    SET search_path = ag_catalog, '\$dbuser', public;
+                    SELECT * FROM ag_catalog.cypher('pedigree_graph',
+                    \$\$ MERGE (:PEDIGREE{ name: '".$male_parent_name."',
+                    stock_id: '".$male_parent->[0]."'
+                    }) \$\$)
+                    as (v ag_catalog.agtype)");
+
+                # relacja
+                $dbh->do("
+                    SET search_path = ag_catalog, '\$dbuser', public;
+                    SELECT * FROM ag_catalog.cypher('pedigree_graph', \$\$
+                        MATCH (child:PEDIGREE {name: '".$pedigree->get_name()."'})
+                        MATCH (parent:PEDIGREE {name: '".$male_parent_name."'})
+                        CREATE (parent)-[:IS_PARENT {relationship_type: 'male_parent'}]->(child)
+                        CREATE (child)-[:IS_CHILD {relationship_type: 'male_parent'}]->(parent)
+                    \$\$) as (v ag_catalog.agtype)");
+
+                # add age_pedigee ? with parent ? do we need to check a parent ? probably
             }
 
             print STDERR "Successfully added pedigree ".$pedigree->get_name()."\n";
@@ -224,17 +293,13 @@ sub validate_pedigrees {
             if (!$pedigree->get_male_parent){
                 push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
             }
-            else {
-                my $male_parent_name = $pedigree->get_male_parent()->get_name();
-                if (!$male_parent_name) {
-                    push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
-                }
-                else {
-                    my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
-                    if (!$male_parent) {
-                        push @{$return{error}}, "Male parent not found for $progeny_name.";
-                    }
-                }
+            my $male_parent_name = $pedigree->get_male_parent()->get_name();
+            if (!$male_parent_name) {
+                push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
+            }
+            my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
+            if (!$male_parent) {
+                push @{$return{error}}, "Male parent not found for $progeny_name.";
             }
         }
         if ($cross_type eq 'open'){
