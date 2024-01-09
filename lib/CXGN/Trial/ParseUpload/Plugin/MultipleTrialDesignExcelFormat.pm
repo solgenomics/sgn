@@ -117,6 +117,7 @@ sub _validate_with_plugin {
     my $plot_number;
     my $block_number;
     my $is_a_control;
+    my $is_a_filler;
     my $rep_number;
     my $range_number;
     my $row_number;
@@ -235,25 +236,28 @@ sub _validate_with_plugin {
       $is_a_control =  $worksheet->get_cell($row,17)->value();
     }
     if ($worksheet->get_cell($row,18)) {
-      $rep_number =  $worksheet->get_cell($row,18)->value();
+      $is_a_filler =  $worksheet->get_cell($row,18)->value();
     }
     if ($worksheet->get_cell($row,19)) {
-      $range_number =  $worksheet->get_cell($row,19)->value();
+      $rep_number =  $worksheet->get_cell($row,19)->value();
     }
     if ($worksheet->get_cell($row,20)) {
-	     $row_number = $worksheet->get_cell($row,20)->value();
+      $range_number =  $worksheet->get_cell($row,20)->value();
     }
     if ($worksheet->get_cell($row,21)) {
-	     $col_number = $worksheet->get_cell($row,21)->value();
+	     $row_number = $worksheet->get_cell($row,21)->value();
     }
     if ($worksheet->get_cell($row,22)) {
-      $seedlot_name = $worksheet->get_cell($row,22)->value();
+	     $col_number = $worksheet->get_cell($row,22)->value();
     }
     if ($worksheet->get_cell($row,23)) {
-      $num_seed_per_plot = $worksheet->get_cell($row,23)->value();
+      $seedlot_name = $worksheet->get_cell($row,23)->value();
     }
     if ($worksheet->get_cell($row,24)) {
-      $weight_gram_seed_per_plot = $worksheet->get_cell($row,24)->value();
+      $num_seed_per_plot = $worksheet->get_cell($row,24)->value();
+    }
+    if ($worksheet->get_cell($row,25)) {
+      $weight_gram_seed_per_plot = $worksheet->get_cell($row,25)->value();
     }
 
     if ( $row_number && $col_number ) {
@@ -426,6 +430,13 @@ sub _validate_with_plugin {
     if ($is_a_control) {
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
           push @error_messages, "Cell R$row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
+      }
+    }
+
+    ## IS A FILLER
+    if ($is_a_filler) {
+      if (!($is_a_filler eq "yes" || $is_a_filler eq "no" || $is_a_filler eq "1" ||$is_a_filler eq "0" || $is_a_filler eq '')) {
+          push @error_messages, "Cell R$row_name: is_a_filler <b>$is_a_filler</b> is not either yes, no 1, 0, or blank.";
       }
     }
 
@@ -737,6 +748,7 @@ sub _parse_with_plugin {
     my $plot_number;
     my $block_number;
     my $is_a_control;
+    my $is_a_filler;
     my $rep_number;
     my $range_number;
     my $row_number;
@@ -847,32 +859,35 @@ sub _parse_with_plugin {
       $is_a_control =  $worksheet->get_cell($row,17)->value();
     }
     if ($worksheet->get_cell($row,18)) {
-      $rep_number =  $worksheet->get_cell($row,18)->value();
+      $is_a_filler =  $worksheet->get_cell($row,18)->value();
     }
     if ($worksheet->get_cell($row,19)) {
-      $range_number =  $worksheet->get_cell($row,19)->value();
+      $rep_number =  $worksheet->get_cell($row,19)->value();
     }
     if ($worksheet->get_cell($row,20)) {
-	     $row_number = $worksheet->get_cell($row, 20)->value();
+      $range_number =  $worksheet->get_cell($row,20)->value();
     }
     if ($worksheet->get_cell($row,21)) {
-	     $col_number = $worksheet->get_cell($row, 21)->value();
+	     $row_number = $worksheet->get_cell($row, 21)->value();
     }
     if ($worksheet->get_cell($row,22)) {
-        $seedlot_name = $worksheet->get_cell($row, 22)->value();
+	     $col_number = $worksheet->get_cell($row, 22)->value();
+    }
+    if ($worksheet->get_cell($row,23)) {
+        $seedlot_name = $worksheet->get_cell($row, 23)->value();
     }
 
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     }
-    if ($worksheet->get_cell($row,23)) {
-        $num_seed_per_plot = $worksheet->get_cell($row, 23)->value();
-    }
     if ($worksheet->get_cell($row,24)) {
-        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 24)->value();
+        $num_seed_per_plot = $worksheet->get_cell($row, 24)->value();
+    }
+    if ($worksheet->get_cell($row,25)) {
+        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 25)->value();
     }
 
-    my $treatment_col = 25;
+    my $treatment_col = 26;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
@@ -899,6 +914,11 @@ sub _parse_with_plugin {
       $design_details{$key}->{is_a_control} = 1;
     } else {
       $design_details{$key}->{is_a_control} = 0;
+    }
+    if ($is_a_filler) {
+      $design_details{$key}->{is_a_filler} = 1;
+    } else {
+      $design_details{$key}->{is_a_filler} = 0;
     }
     if ($rep_number) {
       $design_details{$key}->{rep_number} = $rep_number;
@@ -962,6 +982,7 @@ sub _parse_header {
   my $plot_number_head;
   my $block_number_head;
   my $is_a_control_head;
+  my $is_a_filler_head;
   my $rep_number_head;
   my $range_number_head;
   my $row_number_head;
@@ -1022,25 +1043,28 @@ sub _parse_header {
     $is_a_control_head  = $worksheet->get_cell(0,17)->value();
   }
   if ($worksheet->get_cell(0,18)) {
-    $rep_number_head  = $worksheet->get_cell(0,18)->value();
+    $is_a_filler_head  = $worksheet->get_cell(0,18)->value();
   }
   if ($worksheet->get_cell(0,19)) {
-    $range_number_head  = $worksheet->get_cell(0,19)->value();
+    $rep_number_head  = $worksheet->get_cell(0,19)->value();
   }
   if ($worksheet->get_cell(0,20)) {
-      $row_number_head  = $worksheet->get_cell(0,20)->value();
+    $range_number_head  = $worksheet->get_cell(0,20)->value();
   }
   if ($worksheet->get_cell(0,21)) {
-      $col_number_head  = $worksheet->get_cell(0,21)->value();
+      $row_number_head  = $worksheet->get_cell(0,21)->value();
   }
   if ($worksheet->get_cell(0,22)) {
-    $seedlot_name_head  = $worksheet->get_cell(0,22)->value();
+      $col_number_head  = $worksheet->get_cell(0,22)->value();
   }
   if ($worksheet->get_cell(0,23)) {
-    $num_seed_per_plot_head = $worksheet->get_cell(0,23)->value();
+    $seedlot_name_head  = $worksheet->get_cell(0,23)->value();
   }
   if ($worksheet->get_cell(0,24)) {
-    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,24)->value();
+    $num_seed_per_plot_head = $worksheet->get_cell(0,24)->value();
+  }
+  if ($worksheet->get_cell(0,25)) {
+    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,25)->value();
   }
 
   my @error_messages;
@@ -1099,26 +1123,29 @@ sub _parse_header {
   if (!$is_a_control_head || $is_a_control_head ne 'is_a_control') {
     push @error_messages, "Cell R1: is_a_control is missing from the header. (Header is required, but values are optional)";
   }
+  if (!$is_a_filler_head || $is_a_filler_head ne 'is_a_filler') {
+    push @error_messages, "Cell S1: is_a_filler is missing from the header. (Header is required, but values are optional)";
+  }
   if (!$rep_number_head || $rep_number_head ne 'rep_number') {
-    push @error_messages, "Cell S1: rep_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell T1: rep_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$range_number_head || $range_number_head ne 'range_number') {
-    push @error_messages, "Cell T1: range_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell U1: range_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$row_number_head || $row_number_head ne 'row_number') {
-    push @error_messages, "Cell U1: row_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell V1: row_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$col_number_head || $col_number_head ne 'col_number') {
-    push @error_messages, "Cell V1: col_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell W1: col_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name') {
-    push @error_messages, "Cell W1: seedlot_name is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell X1: seedlot_name is missing from the header. (Header is required, but values are optional)";
   }
   if (!$num_seed_per_plot_head || $num_seed_per_plot_head ne 'num_seed_per_plot') {
-    push @error_messages, "Cell X1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell Y1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
   if (!$weight_gram_seed_per_plot_head || $weight_gram_seed_per_plot_head ne 'weight_gram_seed_per_plot') {
-    push @error_messages, "Cell Y1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell Z1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
 
   return \@error_messages;

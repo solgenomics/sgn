@@ -297,7 +297,7 @@ sub get_sorted_plots {
             selected_columns => {
                 "location_name"=>1,"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,
                 "row_number"=>1,"col_number"=>1,"accession_name"=>1,"seedlot_name"=>1,
-                "rep_number"=>1,"block_number"=>1,"is_a_control"=>1
+                "rep_number"=>1,"block_number"=>1,"is_a_control"=>1, "is_a_filler"=>1
             },
         });
         my $output = $trial_layout_download->get_layout_output()->{output};

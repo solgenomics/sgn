@@ -4933,6 +4933,7 @@ sub get_controls {
  Side Effects:
  Example:
 
+
 =cut
 
 sub get_controls_by_plot {
@@ -4954,6 +4955,91 @@ sub get_controls_by_plot {
 	return \@controls;
 }
 
+
+
+=head2 get_fillers
+
+Usage:        my $fillers = $t->get_fillers();
+Desc:         Returns the accessions that were used as fillers in the design
+Ret:          an arrayref containing
+           { accession_name => filler_name, stock_id => filler_stock_id }
+Args:         none
+Side Effects:
+Example:
+
+
+=cut
+sub get_fillers {
+    my $self = shift;
+    my @fillers;
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+    my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+    my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+    my $filler_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "is a filler", 'stock_property')->cvterm_id();
+
+    my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+        FROM stock as accession
+        JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+        JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
+        JOIN stockprop as filler on (plot.stock_id=filler.stock_id)
+        JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_project using(nd_experiment_id)
+        JOIN project using(project_id)
+        WHERE accession.type_id = $accession_cvterm_id
+        AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
+        AND project.project_id = ?
+        AND filler.type_id = $filler_type_id
+        GROUP BY accession.stock_id
+        ORDER BY accession.stock_id;";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
+        push @fillers, {accession_name=> $uniquename, stock_id=>$stock_id } ;
+    }
+
+    return \@fillers;
+}
+
+
+=head2 get_fillers_by_plot
+
+ Usage:        my $fillers = $t->get_fillers_by_plot(\@plot_ids);
+ Desc:         Returns the accessions that were used as fillers in a trial from a list of trial plot ids. Improves on speed of get_fillers by avoiding a join through nd_experiment_stock
+ Ret:          an arrayref containing
+               { accession_name => filler_name, stock_id => fillers_stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+
+
+=cut
+sub get_fillers_by_plot {
+    my $self = shift;
+    my $plot_ids = shift;
+    my @ids = @$plot_ids;
+    my @fillers;
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my $accession_rs = $self->bcs_schema->resultset('Stock::Stock')->search(
+        { 'me.type_id'=>$accession_type_id, 'subject.stock_id' => { 'in' => \@ids} , 'type.name' => 'is a filler' },
+        { join => { stock_relationship_objects => { subject => { stockprops => 'type' }}}, group_by => 'me.stock_id',},
+  );
+
+    while(my $accession = $accession_rs->next()) {
+        push @fillers, { accession_name => $accession->uniquename, stock_id => $accession->stock_id };
+    }
+
+    return \@fillers;
+}
+
+ 
 =head2 get_treatments
 
  Usage:        $plants = $t->get_treatments();

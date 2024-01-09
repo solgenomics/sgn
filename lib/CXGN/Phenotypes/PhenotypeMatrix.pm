@@ -246,8 +246,18 @@ sub get_phenotype_matrix {
 
         push @info, \@line;
 
+        # print Dumper @$data;
+
         foreach my $obs_unit (@$data){
-            my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
+
+            my $entry_type;
+            my $is_a_filler = $obs_unit -> {obsunit_is_a_filler} ? 'filler' : 'test';
+            if ($is_a_filler eq 'test'){
+                $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
+            }else{
+                $entry_type = $is_a_filler;
+            }
+
             my $synonyms = $obs_unit->{germplasm_synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
             my $available_germplasm_seedlots = $obs_unit->{available_germplasm_seedlots};
@@ -354,7 +364,16 @@ sub get_phenotype_matrix {
 
                 my $synonyms = $d->{synonyms};
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-                my $entry_type = $d->{is_a_control} ? 'check' : 'test';
+
+                my $entry_type;
+                my $is_a_filler = $d->{obsunit_is_a_filler} ? 'filler' : 'test';
+                if ($is_a_filler eq 'test'){
+                    $entry_type = $d->{obsunit_is_a_control} ? 'check' : 'test';
+                }else{
+                    $entry_type = $is_a_filler;
+                }
+
+                # my $entry_type = $d->{is_a_control} ? 'check' : 'test';
 
                 my $trial_name = $d->{trial_name};
                 my $trial_desc = $d->{trial_description};

@@ -28,6 +28,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'block_number',
         'rep_number',
         'is_a_control',
+        'is_a_filler',
         'range_number',
         'row_number',
         'col_number',
@@ -114,6 +115,10 @@ sub validate_design {
                 if ($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) { next; }
                 $seen_plot_numbers{$plot_number}++;
                 push @plot_numbers, $plot_number;
+            }
+            if ($property eq 'is a filler'){
+                my $filler = $design{$stock}->{$property};
+                print "This is a filler ".$filler."\n";
             }
         }
     }

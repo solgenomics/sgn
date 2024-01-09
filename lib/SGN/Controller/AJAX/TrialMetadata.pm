@@ -2072,6 +2072,31 @@ sub controls_by_plot : Chained('trial') PathPart('controls_by_plot') Args(0) {
     $c->stash->{rest} = { accessions => \@data };
 }
 
+sub trial_fillers : Chained('trial') PathPart('fillers') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_fillers();
+
+    $c->stash->{rest} = { accessions => \@data };
+}
+
+sub fillers_by_plot : Chained('trial') PathPart('fillers_by_plot') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @plot_ids = $c->req->param('plot_ids[]');
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_fillers_by_plot(\@plot_ids);
+
+    $c->stash->{rest} = { accessions => \@data };
+}
+
 sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2242,7 +2267,7 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {"plot_name"=>1,"plot_number"=>1,"block_number"=>1,"accession_name"=>1,"is_a_control"=>1,"rep_number"=>1,"row_number"=>1,"col_number"=>1,"plot_geo_json"=>1};
+    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {"plot_name"=>1,"plot_number"=>1,"block_number"=>1,"accession_name"=>1,"is_a_control"=>1,"is_a_filler"=>1,"rep_number"=>1,"row_number"=>1,"col_number"=>1,"plot_geo_json"=>1};
 
     my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
         schema => $schema,
@@ -4980,7 +5005,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         my $col = $type . "_order";
 
         # Add CSV headers
-        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control");
+        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control", "is_a_filler");
         push(@data, \@headers);
 
         # Add plot rows
@@ -5000,7 +5025,8 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     $_->{col_number},
                     $_->{rep_number},
                     $_->{block_number},
-                    $_->{is_a_control}
+                    $_->{is_a_control},
+                    $_->{is_a_filler}
                 );
                 push(@data, \@d);
             }
@@ -5029,7 +5055,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         $filename = "harvest_master.csv";
 
         # Add CSV headers
-        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "rep_number", "block_number", "is_a_control");
+        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "rep_number", "block_number", "is_a_control", "is_a_filler");
         push(@data, \@headers);
 
         # Add plot rows
@@ -5049,7 +5075,8 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     $_->{seedlot_name},
                     $_->{rep_number},
                     $_->{block_number},
-                    $_->{is_a_control}
+                    $_->{is_a_control},
+                    $_->{is_a_filler}
                 );
                 push(@data, \@d);
             }
