@@ -25,9 +25,9 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
 
     my $dataset_info = {
         id => $dataset_id,
-	name => $dataset->name(),
-	description => $dataset->description,
-	info => $info
+	    name => $dataset->name(),
+	    description => $dataset->description,
+	    info => $info
     };
 
     my $lt = CXGN::List::Transform->new();
@@ -43,25 +43,25 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
         'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
     );
     $html .= '<table class="table-bordered"><thead><tr>' . "\n";
-    foreach my $cat (@{$dataset_info->{info}->{category_order}}) {
-        $html .= '<th>' . $cat . '</th>';
+    foreach my $category (@{$dataset_info->{info}->{category_order}}) {
+        $html .= '<th>' . $category . '</th>';
     }
     $html .= '</tr></thead><tbody><tr>' . "\n";
-    foreach my $cat (@{$dataset_info->{info}->{category_order}}) {
-	my $ids = $dataset_info->{info}->{categories}->{$cat};
-	my @items;
-	if (exists($transform_dict{$cat})) {
-                my $transform = $lt->transform($schema, $transform_dict{$cat}, $ids);
-                @items = @{$transform->{transform}};
+    foreach my $category (@{$dataset_info->{info}->{category_order}}) {
+	    my $ids = $dataset_info->{info}->{categories}->{$category};
+	    my @items;
+	    if (exists($transform_dict{$category})) {
+            my $transform = $lt->transform($schema, $transform_dict{$category}, $ids);
+            @items = @{$transform->{transform}};
         } else {
-                if (defined($ids)) {
-                    @items = @$ids;
-		}
+            if (defined($ids)) {
+                @items = @$ids;
+		    }
         }
-	$html .= "<td><div class='well well-sm'>";
+	    $html .= "<td><div class='well well-sm'>";
         $html .= "<select class='form-control' multiple>";
-        foreach (@items) {
-             $html .= "<option value='$_' disabled>$_</option>";
+        foreach my $item (@items) {
+            $html .= "<option value='$item' disabled>$item</option>";
         }
         $html .= "</select>";
         $html .= "</td></div>\n";
