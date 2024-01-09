@@ -7,7 +7,7 @@ $trial_id
 
 <h3>Select Trait</h3>
 
-<div id="trait_selector_for_raw_data">:-)</div><br />
+<div id="trait_selector_for_raw_data">[Loading...]</div><br />
 <button id="raw_data_trait_select_button">Choose trait</button>
 <br />
 <br />
