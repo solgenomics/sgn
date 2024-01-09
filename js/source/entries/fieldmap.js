@@ -544,7 +544,10 @@ export function init() {
                 else if (!plot.observationUnitPosition.observationLevel) {
                     color = "lightgrey";
                 } else {
-                    color = heatmap_object[trait_name][plot.observationUnitDbId] ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val) : "white";
+                    var cs = heatmap_object.hasOwnProperty(trait_name) && heatmap_object[trait_name].hasOwnProperty(plot.observationUnitDbId)
+                        ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val)
+                        : "white";
+                    color = cs ? cs : "lightgrey";
                 }
                 return color;
             }
@@ -580,8 +583,11 @@ export function init() {
                             <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />
                             <strong>Accession Name:</strong> ${plot.germplasmName}`;
                         if ( local_this.heatmap_selected ) {
-                            let v = heatmap_object[trait_name][plot.observationUnitDbId].val;
-                            v = Math.round((parseFloat(v) + Number.EPSILON) * 100) / 100
+                            let v = '<em>NA</em>';
+                            if ( heatmap_object.hasOwnProperty(trait_name) && heatmap_object[trait_name].hasOwnProperty(plot.observationUnitDbId) ) {
+                                v = heatmap_object[trait_name][plot.observationUnitDbId].val;
+                                v = isNaN(v) ? v : Math.round((parseFloat(v) + Number.EPSILON) * 100) / 100;
+                            }
                             html += `<br /><strong>Trait Value:</strong> ${v}`;
                         }
                     }
