@@ -58,11 +58,9 @@ sub access_table :Path('/ajax/access/table') Args(0) {
 	return;
     }
 
-    my @privileges = $c->stash->{access}->check_user("access_table_ajax", $c->user()->get_object()->get_sp_person_id());
-
-    if (! any { /read/ } @privileges) {
-	$c->response->status(401);
-	$c->stash->{rest} = { error => "You do not have the necessary privileges to access this resource" };
+    print STDERR "USER ID: ".$c->stash->{user_id}."\n";
+    if (! $c->stash->{access}->grant($c->stash->{user_id}, "read", "access_table_ajax")) { 
+	$c->stash->{rest} = { error => "You do not have the privileges required to access this page." };
 	return;
     }
 

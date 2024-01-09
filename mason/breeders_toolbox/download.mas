@@ -1,5 +1,6 @@
 <%args>
 $seedlot_maintenance_enabled => 0
+$can_read_pedigrees => 1
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
@@ -345,6 +346,8 @@ $(document).ready(function() {
 
 <!-- start of code for pedigree download -->
 
+% if ($can_read_pedigrees) {
+
 <div class="well well-sm">
 <form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
 <table class="table"  cellpadding="10">
@@ -457,6 +460,13 @@ $(document).ready(function() {
 });
 
 </script>
+
+% } else {
+
+<div class="well well-sm"><h4>Download Pedigrees: You do not have the privileges to view pedigrees</h4></div>
+
+% }
+
 
 <!-- end of code for pedigree download -->
 

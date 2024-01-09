@@ -20,7 +20,6 @@
 <script>
 
   jQuery(document).ready( function() {
-     alert('DataTable!');
      jQuery('#access_table').DataTable( {
         ajax : '/ajax/access/table',
      });

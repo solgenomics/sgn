@@ -13,6 +13,26 @@ role
 
 resource
 
+=head2 Resources
+
+Currently planned resources are:
+
+=item *
+
+pedigrees
+
+=item * 
+
+genotypes
+
+=item *
+
+phenotypes
+
+=item
+
+wizard
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -25,6 +45,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Access;
 
 use Moose;
+use Data::Dumper;
 
 has 'people_schema' => (isa => 'Ref', is => 'rw');
 has 'role' => (isa => 'Str', is => 'rw');
@@ -81,6 +102,24 @@ sub check_user {
     print STDERR "PRIVLEGES FOR $resource and $sp_person_id are ". join(", ", @privileges)."\n";
 
     return @privileges;
+    
+}
+
+sub user_privileges {
+    my $self = shift;
+    my $sp_person_id = shift;
+    my $resource = shift || $self->resource();
+
+    my $q = "SELECT sp_access_level.name, require_ownership FROM sgn_people.sp_privilege join sp_access_level using(sp_access_level_id) join sgn_people.sp_person_roles using(sp_role_id) where sp_resource_id = (SELECT sp_resource_id FROM sgn_people.sp_resource where name=?) and sgn_people.sp_person_roles.sp_person_id = ? ";
+    my $h = $self->people_schema()->storage()->dbh()->prepare($q);
+    $h->execute($resource, $sp_person_id);
+    
+    my %privileges;
+    while (my ($level, $require_ownership) = $h->fetchrow_array()) {
+	$privileges{$level}= $require_ownership;
+    }
+    print STDERR "user_privileges for $resource: ".Dumper(\%privileges);
+    return \%privileges;
     
 }
 

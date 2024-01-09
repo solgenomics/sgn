@@ -53,6 +53,9 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     }
 
     $c->stash->{seedlot_maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
+
+    $c->stash->{can_read_pedigrees} = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "pedigree");
+    
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
@@ -873,6 +876,21 @@ sub build_accession_properties_info {
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $self = shift;
     my $c = shift;
+
+    print STDERR "Download Pedigrees Action\n";
+    if (!$c->stash->{access}->
+	grant($c->stash->{user_id}, "read", "pedigrees")) {
+
+	print STDERR "PERMISSIONS TO DOWNLOAD PEDIGREES NOT GRANTED.\n";
+
+	#$c->throw_client_error( title => "Permissions error", public_message => "You don't have the permissions to read pedigree information", notify => 1);
+
+	$c->res->body("You do not have the permissions to view pedigrees");
+	
+	return;
+
+    }
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $dbh = $schema->storage->dbh;
 

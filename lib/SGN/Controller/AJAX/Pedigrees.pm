@@ -37,13 +37,16 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 	return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    
+    if (! $c->stash->{access}->grant($user_id, "pedigrees", "write")) { 
+    
+#    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
 	return;
     }
 
     my $time = DateTime->now();
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_name = $c->user()->get_object()->get_username();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'pedigree_upload';
@@ -342,6 +345,12 @@ sub get_full_pedigree : Path('/ajax/pedigrees/get_full') : ActionClass('REST') {
 sub get_full_pedigree_GET {
     my $self = shift;
     my $c = shift;
+
+    if (! $c->stash->{access}->
+	grant( $c->stash->{user_id}, "pedigrees", "read")) {
+	return;
+    }
+    
     my $stock_id = $c->req->param('stock_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();

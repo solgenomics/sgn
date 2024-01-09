@@ -1824,7 +1824,7 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigreestring') 
     
     print STDERR "Checking privileges...\n";
 
-    my @privileges =  $c->stash->{access}->check_user("pedigree", $user_id);
+    my @privileges =  $c->stash->{access}->check_user($user_id, "pedigree");
     print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
     if (!grep { /read/ } @privileges) {
 	#

@@ -254,7 +254,7 @@ sub _authenticate_user {
     my $c = shift;
     my $force_authenticate = shift;
     my $resource = shift;
-    my $access_level = shift;
+    my $requested_access_level = shift;
 
     my $status = $c->stash->{status};
 	my $user_id;
@@ -264,7 +264,7 @@ sub _authenticate_user {
     my $wildcard = 'any';
     
     
-    print STDERR "BrAPI Authenticating User... (resource = $resource, access_level = $access_level\n";
+    print STDERR "BrAPI Authenticating User... (resource = $resource, access_level = $requested_access_level\n";
 
     ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
     	print STDERR "USER: $user_id. TYPE: $user_type EXPIRED: $expired\n";
@@ -282,7 +282,9 @@ sub _authenticate_user {
 	# Check if there is a config for default brapi user. This will be overwritten if a token is passed.
 	# Will still throw error if auth is required
 	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
-		$user_id = $c->user() ? $c->user()->get_object()->sp_person_id : undef; #CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+	    #$user_id = $c->user() ? $c->user()->get_object()->sp_person_id : undef; #CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+	    $user_id = $c->stash->{user_id};
+	    
 		$user_type = $c->config->{brapi_default_user_role};
 		if (! defined $user_id) {
 			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
@@ -295,19 +297,12 @@ sub _authenticate_user {
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
 
 	print STDERR "REQUIRING BRAPI LOGIN! user_id = $user_id\n";
-	my $access_granted = 1;
+
 	if ($resource) {
 
 	    print STDERR "Checking privileges...\n";
-	    my @privileges =  $c->stash->{access}->check_user($resource, $user_id);
-	    print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
-	    if (grep { /$access_level/ } @privileges) {
-		$access_granted =1;
-	    }
-	    else {
-		$access_granted = 0;
-	    }
-	    print STDERR "Resource: $resource. Grant: $access_granted\n";
+	    my $privileges =  $c->stash->{access}->user_privileges($user_id, $resource);
+	    $c->stash->{privileges} = $privileges;
 	}
 	
 	print STDERR "No resource provided... going on...\n";
@@ -323,7 +318,7 @@ sub _authenticate_user {
 	
 
 
-        if (!$user_id || $expired || !$user_type || !$access_granted || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
+        if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
             _standard_response_construction($c, $brapi_package_result, 401);
