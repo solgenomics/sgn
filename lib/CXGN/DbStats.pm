@@ -19,9 +19,12 @@ sub trial_types {
 #
 sub trials_by_breeding_program { 
     my $self = shift;
-    my $q = "select project.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) where cvterm.name='breeding_program' and trialcvterm.name in (SELECT cvterm.name FROM cvterm join cv using(cv_id) WHERE cv.name='project_type') group by project.name order by count(*) desc";
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+
+    my $q = "select project.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) where trial.create_date > ? and trial.create_date < ? and cvterm.name='breeding_program' and trialcvterm.name in (SELECT cvterm.name FROM cvterm join cv using(cv_id) WHERE cv.name='project_type') group by project.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
-    $h->execute();
+    $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
 }
 
@@ -29,20 +32,37 @@ sub trials_by_breeding_program {
 #
 sub traits { 
     my $self = shift;
-    my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id)  group by cvterm.name order by count(*) desc";
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+    my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) where create_date > ? and create create_date < ?  group by cvterm.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
-    $h->execute();
+    $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
 }
 
 sub stocks { 
     my $self = shift;
-    my $q = "SELECT cvterm.name, count(*) FROM stock join cvterm on(type_id=cvterm_id) GROUP BY cvterm.name ORDER BY count(*) desc";
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+    
+    my $q = "SELECT cvterm.name, count(*) FROM stock join cvterm on(type_id=cvterm_id)  create_date > ? and create create_date < ? GROUP BY cvterm.name ORDER BY count(*) desc";
     my $h = $self->dbh->prepare($q);
-    $h->execute();
+    $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
 }
 
+sub projects {
+    my $self = shift;
+    my $start_date = shift;
+    my $end_date = shift;
+
+    my $q = "SELECT project.project_id, project.name FROM project join projectprop using(project_id) where project.create_date > ? and project.create_date < ? group by project.project_id, project.name";
+    my $h = $self->dbh->prepare($q);
+
+    $h->execute($start_date, $end_date);
+
+}
+    
 sub basic { 
     my $self = shift;
     my $q = "select count(*) from ";
