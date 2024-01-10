@@ -5,7 +5,7 @@ load_genotyping_plates.pl
 
 =head1 SYNOPSIS
 
-load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -g genotyping_project -l location [-t]
+load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -g genotyping_project -l location [-t] -f format -r genotyping_facility
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -111,7 +111,7 @@ use CXGN::Trial; # add project metadata
 
 use CXGN::Trial::TrialCreate;
 
-my ( $help, $dbhost, $dbname, $infile, $sites, $types, $test, $username, $breeding_program_name, $genotyping_project, $location, $year, $format );
+my ( $help, $dbhost, $dbname, $infile, $sites, $types, $test, $username, $breeding_program_name, $genotyping_project, $location, $year, $format, $genotyping_facility );
 GetOptions(
     'i=s'        => \$infile,
     'b=s'        => \$breeding_program_name,
@@ -120,6 +120,7 @@ GetOptions(
     'g=s'        => \$genotyping_project,
     't'          => \$test,
     'f=s'        => \$format,
+    'k=s'        => \$genotyping_facility,
     'user|u=s'   => \$username,
     'dbname|D=s' => \$dbname,
     'dbhost|H=s' => \$dbhost,
@@ -129,7 +130,7 @@ GetOptions(
 
 
 pod2usage(1) if $help;
-if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost ) {
+if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost || !$genotyping_facility ) {
     pod2usage( { -msg => 'Error. Missing options!'  , -verbose => 1, -exitval => 1 } ) ;
 }
 
@@ -339,7 +340,8 @@ my $coderef= sub  {
 	    genotyping_user_id => $sp_person_id,
 	    genotyping_plate_format => 96,
 	    genotyping_plate_sample_type => 'accession',
-	    genotyping_project_id => $genotyping_project_id
+	    genotyping_project_id => $genotyping_project_id,
+	    genotyping_facility => $genotyping_facility,
 
 							 });
 	try {
