@@ -5,7 +5,9 @@ load_genotyping_plates.pl
 
 =head1 SYNOPSIS
 
-load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -g genotyping_project -l location [-t] -f format
+NOTE: You need to create the genotyping project in the database first. With the -g option, provide the name of genotyping project the plates should be associated with. Metadata such as year and location will be loaded from the genotyping object directly.
+
+load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -g genotyping_project [-t] -f format
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -34,14 +36,6 @@ breeding program name (must be in the database)
 =item -t
 
 Test run . Rolling back at the end.
-
-=item -l 
-
-location
-
-=item -y 
-
-year
 
 =item -g
 
