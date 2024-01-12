@@ -184,7 +184,7 @@
                                                         <div class="form-group">
                                                             <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
                                                             <div class="col-sm-6">
-                                                                <input type="file" name="seedlots_to_unspecified_names_file" id="seedlots_to_seedlots_file" encoding="multipart/form-data" />
+                                                                <input type="file" name="seedlots_to_unspecified_names_file" id="seedlots_to_unspecified_names_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -401,6 +401,53 @@
     </div>
 </div>
 
+<div class="modal fade" id="seedlots_to_unspecified_names_info_dialog" name="seedlots_to_unspecified_names_info_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlotsToUnspecifiedNamesInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlotsToUnspecifiedNamesInfoDialog">Upload Template Information For Existing Seedlot to Unspecified Seedlots/Plots Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>transaction_description</td>
+                                <td>operator_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li><b>to_seedlot_name:</b> Must exist in the database. Seeds were added to this seedlot.</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlots_to_unspecified_names_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 
@@ -501,12 +548,18 @@ jQuery(document).ready(function(){
         jQuery("#seedlots_to_plots_info_dialog").modal("show");
     });
 
+    jQuery("#seedlots_to_unspecified_names_format").click(function() {
+        jQuery("#seedlots_to_unspecified_names_info_dialog").modal("show");
+    });
+
+
     jQuery("[name='upload_transactions_dismiss_button']").click(function() {
         jQuery('#upload_transactions_dialog').modal('hide');
         jQuery('#transaction_type_option').val('');
         jQuery('#seedlots_to_seedlots_file').val('');
         jQuery('#seedlots_to_plots_file').val('');
         jQuery('#seedlots_to_new_seedlots_file').val('');
+        jQuery('#seedlots_to_unspecified_names_file').val('');
         jQuery('#new_seedlot_location').val('');
         jQuery('#new_seedlot_organization_name').val('');
         location.reload();
