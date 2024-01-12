@@ -89,8 +89,6 @@ function draw_barcharts() {
   var start_date = jQuery('#dbstats_start_date').val();
   var end_date   = jQuery('#dbstats_end_date').val();
 
-  alert('Start date: '+start_date+ ' End date: '+end_date);
-
   // remove old graphs if present
   jQuery('#trial_types_div').html("");
   jQuery('#trials_by_breeding_program_div').html("");
