@@ -15,11 +15,12 @@
                     <&| /util/workflow.mas, id=> "transactions_upload_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Upload Seedlot Transactions" &>
-                            <center>You can upload 3 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
+                            <center>You can upload 4 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
                             <ul>
                                 <li>Transferring seeds from existing seedlot to another existing seedlot.</li>
                                 <li>Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.</li>
                                 <li>Transferring seeds from existing seedlot to a previously stored plot</li>
+                                <li>Removing seeds from existing seedlot to unspecified seedlot names or plot names</li>
                             </ul>
                             <br/><br/>
                             <center>
@@ -38,6 +39,7 @@
                                             <option value="seedlots_to_seedlots">From existing seedlots to other existing seedlots</option>
                                             <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
                                             <option value="seedlots_to_plots">From existing seedlots to plots</option>
+                                            <option value="seedlots_to_unspecified_names">From existing seedlots to unpecified seedlots/plots</option>
                                         </select>
                                     </div>
                                 </div>
@@ -150,6 +152,39 @@
                                                             <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_plots_file" id="seedlots_to_plots_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="seedlots_to_unspecified_names_section" style="display:none">
+                                    <br/>
+                                    <hr class ="solid">
+                                    <center>
+                                        <h4>You want to remove seeds from existing seedlots to unspefified seedlots/plots</h4>
+                                    </center>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="seedlots_to_unspecified_names_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="seedlots_to_unspecified_names_file" id="seedlots_to_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -391,25 +426,36 @@ jQuery(document).ready(function(){
         if (jQuery(this).val() == ""){
             jQuery("#seedlots_to_seedlots_section").hide();
             jQuery("#seedlots_to_new_seedlots_section").hide();
-            jQuery("#seedlots_to_plots").hide();
+            jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#seedlots_to_unspecified_names_section").hide();
             jQuery("#submit_transactions_button_section").hide();
         }
         if (jQuery(this).val() == "seedlots_to_seedlots"){
             jQuery("#seedlots_to_seedlots_section").show();
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#seedlots_to_unspecified_names_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if(jQuery(this).val() == "seedlots_to_new_seedlots"){
             jQuery("#seedlots_to_seedlots_section").hide();
             jQuery("#seedlots_to_new_seedlots_section").show();
-            jQuery("#seedlots_to_plots").hide();
+            jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#seedlots_to_unspecified_names_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if (jQuery(this).val() == "seedlots_to_plots" ){
             jQuery("#seedlots_to_seedlots_section").hide();
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").show();
+            jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#submit_transactions_button_section").show();
+        }
+        if (jQuery(this).val() == "seedlots_to_unspecified_names" ){
+            jQuery("#seedlots_to_seedlots_section").hide();
+            jQuery("#seedlots_to_new_seedlots_section").hide();
+            jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#seedlots_to_unspecified_names_section").show();
             jQuery("#submit_transactions_button_section").show();
         }
     });
