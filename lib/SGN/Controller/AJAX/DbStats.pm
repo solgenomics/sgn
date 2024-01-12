@@ -17,10 +17,13 @@ sub trial_types : Path('/ajax/dbstats/trial_types') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
-    my $trial_types = $dbstats->trial_types();
+    my $trial_types = $dbstats->trial_types($start_date, $end_date);
 
     my $total_trials = 0;
     foreach my $t (@$trial_types) { $total_trials += $t->[1]; }
@@ -35,10 +38,14 @@ sub traits_measured :Path('/ajax/dbstats/traits') Args(0)  {
     my $self = shift;
     my $c = shift;
 
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
-    my $traits = $dbstats->traits();
+    my $traits = $dbstats->traits($start_date, $end_date);
+    
     my $total_traits = 0;
     foreach my $t (@$traits) { $total_traits += $t->[1]; }
 
@@ -56,10 +63,13 @@ sub trials_by_breeding_program :Path('/ajax/dbstats/trials_by_breeding_program')
     my $self = shift;   
     my $c = shift;
 
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
-    my $tbbp = $dbstats->trials_by_breeding_program();
+    my $tbbp = $dbstats->trials_by_breeding_program($start_date, $end_date);
 
     my $total_trials = 0;
     foreach my $t (@$tbbp) { $total_trials += $t->[1]; }
@@ -74,10 +84,13 @@ sub stocks : Path('/ajax/dbstats/stocks') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
  
-    my $stocks = $dbstats->stocks();
+    my $stocks = $dbstats->stocks($start_date, $end_date);
 
     my $stock_count = 0;
     foreach my $s (@$stocks) { $stock_count += $s->[1]; }

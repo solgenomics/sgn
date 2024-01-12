@@ -44,9 +44,9 @@ sub recent_activity :Path('/ajax/report/recent_activity') Args(0) {
     my $phenotype_data = $dbs->recent_phenotype_data($start_date, $end_date);
 
     return {
-	trial_data => $trial_data,
+	trial_data => $field_trial_data,
 	accession_data => $accession_data,
-	plot_data => $plot_data,
+	cross_data => $cross_data,
 	phenotype_data => $phenotype_data,
     };
     

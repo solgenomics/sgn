@@ -7,6 +7,21 @@ $breeding_programs
 
 <& /page/page_title.mas, title => 'Database Stats' &>
 
+<&| /page/info_section.mas, title => "Date Range" &>
+
+<table cellpadding="5px"><tr><td>
+Start Date: <input type="text" id="dbstats_start_date" value="1900-01-01" />
+</td><td>
+End Date: <input type="text" id="dbstats_end_date" value="2100-12-31" />
+</td><td>
+
+
+<button id="update_dbstats_by_date">Update</button>
+
+</td>
+</tr></table>
+</&>
+
 <&| /page/info_section.mas, title => "Data categories" &>
 
 <table><tr><td>
@@ -28,8 +43,6 @@ $breeding_programs
 
 </td></tr>
 </table>
-
-
 
 </&>
 
@@ -62,18 +75,42 @@ $breeding_programs
 </&>
 
 <script>
+
+jQuery(document).ready( function() { 
+
+jQuery('#update_dbstats_by_date').click( function() {
+  draw_barcharts();
+  });
+
+
+draw_barcharts();
+
+function draw_barcharts() { 
+  var start_date = jQuery('#dbstats_start_date').val();
+  var end_date   = jQuery('#dbstats_end_date').val();
+
+  alert('Start date: '+start_date+ ' End date: '+end_date);
+
+  // remove old graphs if present
+  jQuery('#trial_types_div').html("");
+  jQuery('#trials_by_breeding_program_div').html("");
+  jQuery('#traits_div').html("");
+  jQuery('#stocks_div').html("");
+
+
   jQuery.ajax({
     url: '/ajax/dbstats/trial_types',
+    data: { 'start_date' : start_date, 'end_date' : end_date },
     error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
     success: function(response)  { 
-  //alert('success' + JSON.stringify(response)); 
-      var types_pie = new d3pie('trial_types_div', response);
-      
+      //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('trial_types_div', response);      
     }
   });
 
   jQuery.ajax({
     url: '/ajax/dbstats/trials_by_breeding_program',
+    data: { 'start_date' : start_date, 'end_date' : end_date },	
     error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
     success: function(response)  { 
       //alert('success' + JSON.stringify(response)); 
@@ -83,6 +120,7 @@ $breeding_programs
 
   jQuery.ajax({
     url: '/ajax/dbstats/traits',
+    data: { 'start_date' : start_date, 'end_date' : end_date },	
     error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
     success: function(response)  { 
       //alert('success' + JSON.stringify(response)); 
@@ -92,12 +130,14 @@ $breeding_programs
   
   jQuery.ajax({
     url: '/ajax/dbstats/stocks',
+    data: { 'start_date' : start_date, 'end_date' : end_date },
     error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
     success: function(response)  { 
       var types_pie = new d3pie('stocks_div', response);
     }
   });
-
+}
+});
 
 
 jQuery.ajax( { 

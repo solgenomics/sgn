@@ -9,9 +9,11 @@ has 'dbh' => (isa => 'Ref', is => 'rw');
 #
 sub trial_types { 
     my $self = shift;
-    my $q = "SELECT cvterm.name, count(*) from projectprop join cvterm on(type_id=cvterm_id) JOIN cv USING (cv_id) WHERE cv_id=(SELECT cv_id FROM cv WHERE name='project_type') GROUP BY cvterm.name ORDER BY count(*) desc";
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+    my $q = "SELECT cvterm.name, count(*) from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm_id) JOIN cv USING (cv_id) WHERE project.create_date > ? and project.create_date < ? and cv_id=(SELECT cv_id FROM cv WHERE name='project_type') GROUP BY cvterm.name ORDER BY count(*) desc";
     my $h = $self->dbh->prepare($q);
-    $h->execute();
+    $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
 }
 
@@ -34,7 +36,7 @@ sub traits {
     my $self = shift;
     my $start_date = shift || '1900-01-01';
     my $end_date = shift || '2100-12-31';
-    my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) where create_date > ? and create create_date < ?  group by cvterm.name order by count(*) desc";
+    my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) where create_date > ? and create_date < ?  group by cvterm.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
@@ -45,7 +47,7 @@ sub stocks {
     my $start_date = shift || '1900-01-01';
     my $end_date = shift || '2100-12-31';
     
-    my $q = "SELECT cvterm.name, count(*) FROM stock join cvterm on(type_id=cvterm_id)  create_date > ? and create create_date < ? GROUP BY cvterm.name ORDER BY count(*) desc";
+    my $q = "SELECT cvterm.name, count(*) FROM stock join cvterm on(type_id=cvterm_id)  WHERE create_date > ? and create_date < ? GROUP BY cvterm.name ORDER BY count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
@@ -90,14 +92,13 @@ sub activity {
 }
 
 
-has 'schema' => ( is => 'rw', required => 1, isa => 'Bio::Chado::Schema' );
 has 'start_date' => ( is => 'rw', isa => 'Str' );
 has 'end_date' => ( is => 'rw', isa => 'Str' );
 
 sub stock_stats {
     my $self = shift;
 
-    my $dbh = $self->schema->storage->dbh();
+    my $dbh = $self->dbh();
     
     my $query = "SELECT distinct(cvterm.name), count(*) FROM stock join cvterm on(type_id=cvterm_id) WHERE create_date > ? and create_date < ? group by cvterm.name";
 
@@ -115,7 +116,7 @@ sub stock_stats {
 sub germplasm_count_with_pedigree {
        my $self = shift;
 
-    my $dbh = $self->schema->storage->dbh();
+    my $dbh = $self->dbh();
     
     my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on(stock_id=object_id) WHERE stock_relationship.type_id=(select cvterm_id FROM cvterm where name='female_parent' or name='male_parent') and cvterm.name='accession' and create_date > ? and create_date < ? group by cvterm.name";
 
@@ -132,7 +133,7 @@ sub germplasm_count_with_pedigree {
 
 sub germplasm_count_with_phenotypes {
     my $self = shift;
-     my $dbh = $self->schema->storage->dbh();
+     my $dbh = $self->dbh();
     
     my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on (stock.stock_id=object_id) join stock as plot on (stock_relationship.subject_id=plot.stock_id) join nd_experiment_stock on(plot.stock_id=nd_experiment_stock.stock_id) join nd_experiment_phenotype on(nd_experiment_stock.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id) WHERE cvterm.name='accession' and stock.create_date > ? and stock.create_date < ? group by cvterm.name";
 
@@ -149,7 +150,7 @@ sub germplasm_count_with_phenotypes {
 
 sub germplasm_count_with_genotypes {
     my $self = shift;
-    my $dbh = $self->schema->storage->dbh();
+    my $dbh = $self->dbh();
 
     # genotypes associated with accessions
     #
