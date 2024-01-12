@@ -1972,6 +1972,28 @@ sub upload_transactions_POST : Args(0) {
                 });
             }
         };
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToUnspecifiedNames')) {
+            my $transactions = $parsed_data->{transactions};
+            my @all_transactions = @$transactions;
+            eval {
+                foreach my $transaction_info (@all_transactions) {
+    #            print STDERR "EACH SEEDLOT TO UNSPECIFY NAME TRANSACTION INFO =".Dumper($transaction_info)."\n";
+                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                    $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                    $transaction->to_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                    $transaction->amount($transaction_info->{amount});
+                    $transaction->weight_gram($transaction_info->{weight});
+                    $transaction->timestamp($timestamp);
+                    $transaction->description($transaction_info->{transaction_description});
+                    $transaction->operator($transaction_info->{operator});
+                    $transaction->factor(-1);
+                    my $transaction_id = $transaction->store();
+
+                    my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                    $current_from_seedlot->set_current_count_property();
+                    $current_from_seedlot->set_current_weight_property();
+                }
+            };
     }
 
     if ($@) {
