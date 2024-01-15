@@ -11,7 +11,14 @@ sub trial_types {
     my $self = shift;
     my $start_date = shift || '1900-01-01';
     my $end_date = shift || '2100-12-31';
-    my $q = "SELECT cvterm.name, count(*) from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm_id) JOIN cv USING (cv_id) WHERE project.create_date > ? and project.create_date < ? and cv_id=(SELECT cv_id FROM cv WHERE name='project_type') GROUP BY cvterm.name ORDER BY count(*) desc";
+    my $include_dateless_items = shift;
+
+    my $datelessq = "";
+    
+    if ($include_dateless_items) {
+	$datelessq = " create_date IS NULL OR ";
+    }
+    my $q = "SELECT cvterm.name, count(*) from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm_id) JOIN cv USING (cv_id) WHERE $datelessq (project.create_date > ? and project.create_date < ?) and cv_id=(SELECT cv_id FROM cv WHERE name='project_type') GROUP BY cvterm.name ORDER BY count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();

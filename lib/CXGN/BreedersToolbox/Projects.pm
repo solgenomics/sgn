@@ -107,19 +107,29 @@ sub get_breeding_program_by_name {
 sub _get_all_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+    my $include_dateless_trials = shift || 0;
+    
     my $dbh = $self->schema->storage->dbh();
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
     my $trials = [];
     my $h;
+
+    my $datelessq;
+    if ($include_dateless_trials) {
+	$datelessq = " create_date IS NULL OR ";
+    }
+    
     if ($breeding_project_id) {
 	# need to convert to dbix class.... good luck!
 	#my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id=? AND (projectprop.type_id IS NULL OR projectprop.type_id != ?))";
-	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id = ?)";
+	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE $datelessq (trial.create_date > ? and trial.create_date < ?) and  (project.project_id = ?)";
 
 	$h = $dbh->prepare($q);
 	#$h->execute($breeding_project_id, $cross_cvterm_id);
-	$h->execute($breeding_project_id);
+	$h->execute($start_date, $end_date, $breeding_project_id);
 
     }
     else {

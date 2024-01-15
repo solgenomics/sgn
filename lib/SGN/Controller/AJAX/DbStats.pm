@@ -19,11 +19,12 @@ sub trial_types : Path('/ajax/dbstats/trial_types') Args(0) {
 
     my $start_date = $c->req->param("start_date");
     my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = shift || 1;
     
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
-    my $trial_types = $dbstats->trial_types($start_date, $end_date);
+    my $trial_types = $dbstats->trial_types($start_date, $end_date, $include_dateless_items);
 
     my $total_trials = 0;
     foreach my $t (@$trial_types) { $total_trials += $t->[1]; }
