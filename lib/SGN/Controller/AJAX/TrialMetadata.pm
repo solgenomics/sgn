@@ -457,8 +457,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
 
+    my @numeric_trait_ids;
+    
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
+	push @numeric_trait_ids, $trait_id;
+	
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -485,6 +489,48 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         push @phenotype_data, \@return_array;
     }
 
+    # get data from the non-numeric trait ids
+    #
+    
+    # prevent sql statement from failing if there are no numeric traits
+    #
+    my $exclude_numeric_trait_ids = "";
+    if (@numeric_trait_ids) {
+	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
+    }
+	
+    my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+        cvterm.cvterm_id,
+        count(phenotype.value)
+	$select_clause_additional	
+        FROM cvterm
+            JOIN phenotype ON (cvterm_id=cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN nd_experiment_stock USING(nd_experiment_id)
+            JOIN stock as plot USING(stock_id)
+            JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
+            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
+            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
+        WHERE project_id=?
+            AND stock_relationship.type_id=?
+            AND plot.type_id=?
+            AND accession.type_id=?
+	     	$exclude_numeric_trait_ids
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        ORDER BY cvterm.name ASC
+        $order_by_additional ";
+
+    my $h = $dbh->prepare($q);
+    
+    $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+
+    while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
+	my @return_array;
+	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
+        push @phenotype_data, \@return_array;
+    }
+    
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
