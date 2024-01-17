@@ -154,6 +154,12 @@ has 'overwrite_values' => (
     default => 0
 );
 
+has 'remove_values' => (
+    isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
 has 'ignore_new_values' => (
     isa => "Bool",
     is => 'rw',
@@ -415,7 +421,7 @@ sub verify {
                 #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
                 #check if the plot_name, trait_name combination already exists in database.
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
+                    $warning_message = $warning_message."<small>$plot_name already has the same value as in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored for the trait $trait_name.</small><hr>";
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
                     $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
@@ -478,6 +484,7 @@ sub store {
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
     my $overwrite_values = $self->overwrite_values;
+    my $remove_values = $self->remove_values;
     my $ignore_new_values = $self->ignore_new_values;
     my $allow_repeat_measures = $self->allow_repeat_measures;
     my $error_message;
@@ -599,7 +606,7 @@ sub store {
                     my $external_references = $value->[6] || undef;
                     my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA' . $upload_date;
 
-                    if (defined($trait_value) && length($trait_value)) {
+                    if (defined($trait_value) && (length($trait_value) || $remove_values)) {
 
                         if ($ignore_new_values) {
                             if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
