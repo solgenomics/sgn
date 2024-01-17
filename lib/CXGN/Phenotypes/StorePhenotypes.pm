@@ -366,7 +366,7 @@ sub verify {
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
             #print STDERR "$plot_name, $trait_name, $trait_value\n";
-            if ($trait_value || (defined($trait_value) && $trait_value eq '0')) {
+            if ( defined($trait_value) ) {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
@@ -417,9 +417,9 @@ sub verify {
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
+                    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
                 }
 
                 #check if the plot_name, trait_name combination already exists in same file.
