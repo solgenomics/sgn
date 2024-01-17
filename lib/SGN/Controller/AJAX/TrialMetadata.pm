@@ -310,6 +310,10 @@ sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
 sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $start_date = shift;
+    my $end_date = shift;
+    my $include_dateless_items = shift;
+    
     #get userinfo from db
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user = $c->user();
@@ -326,7 +330,10 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
         search_type => "Native",
         data_level => $display,
         trait_list=> [$trait],
-        trial_list => [$c->stash->{trial_id}]
+        trial_list => [$c->stash->{trial_id}],
+	start_date => $start_date,
+	end_date => $end_date,
+	include_dateless_items => $include_dateless_items,
     );
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = {
