@@ -158,10 +158,11 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,3)) {
             $female_parent =  $worksheet->get_cell($row,3)->value();
         }
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
+
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
         }
+
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
         }
@@ -339,9 +340,8 @@ sub _parse_with_plugin {
             $female_parent =~ s/^\s+|\s+$//g;
         }
 
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
         }
 
         if ($worksheet->get_cell($row,4)) {
