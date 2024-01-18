@@ -60,6 +60,17 @@ for my $extension ("xls", "xlsx") {
     $response = decode_json $mech->content;
     is($response->{'success'}, '1');
 
+    #create populations for testing bulk and bulk_open cross types
+    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_A', "accessions[]"=> ['UG120001', 'UG120002'] ]);
+    $response = decode_json $mech->content;
+    is($response->{'success'}, "Success! Population test_population_A created");
+    my $population_A_id = $response->{'population_id'};
+
+    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_B', "accessions[]"=> ['UG120003', 'UG120004'] ]);
+    $response = decode_json $mech->content;
+    is($response->{'success'}, "Success! Population test_population_B created");
+    my $population_B_id = $response->{'population_id'};
+
     # test adding cross and info
     my $crossing_trial_rs = $schema->resultset('Project::Project')->find({ name => 'test_crossingtrial' });
     my $crossing_trial_id = $crossing_trial_rs->project_id();
@@ -128,6 +139,7 @@ for my $extension ("xls", "xlsx") {
     is_deeply($message_hash, { 'success' => 1 });
 
     # test uploading crosses with only accession info
+
     my $before_uploading_cross_a = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id })->count();
     my $before_uploading_stocks_a = $schema->resultset("Stock::Stock")->search({})->count();
     my $before_uploading_relationship_a = $schema->resultset("Stock::StockRelationship")->search({})->count();
@@ -156,9 +168,9 @@ for my $extension ("xls", "xlsx") {
     my $after_uploading_stocks_a = $schema->resultset("Stock::Stock")->search({})->count();
     my $after_uploading_relationship_a = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
-    is($after_uploading_cross_a, $before_uploading_cross_a + 2);
-    is($after_uploading_stocks_a, $before_uploading_stocks_a + 2);
-    is($after_uploading_relationship_a, $before_uploading_relationship_a + 4);
+    is($after_uploading_cross_a, $before_uploading_cross_a + 4);
+    is($after_uploading_stocks_a, $before_uploading_stocks_a + 4);
+    is($after_uploading_relationship_a, $before_uploading_relationship_a + 8);
 
     # test uploading crosses with plots
     my $female_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
@@ -808,8 +820,8 @@ for my $extension ("xls", "xlsx") {
     # nd_experiment_stock has 38 more rows after adding plants for testing uploading crosses with plant info
     is($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experiment_stock + 39);
 
-    # stock table has 42 more rows after adding 2 family names and 38 plants, one cross with two new accessions cannot be deleted
-    is($stocks_after_delete_all_crosses, $before_adding_stocks + 43);
+    # stock table has 45 more rows after adding family names populations and plants, one cross with two new accessions cannot be deleted
+    is($stocks_after_delete_all_crosses, $before_adding_stocks + 45);
 
     # remove added crossing trials after test so that they don't affect downstream tests
     my $project_owner_row_1 = $phenome_schema->resultset('ProjectOwner')->find({ project_id => $crossing_trial_rs->project_id() });
