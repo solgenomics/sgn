@@ -365,6 +365,7 @@ sub verify {
 
     my %check_file_stock_trait_duplicates;
 
+    my $same_value_count = 0;
     foreach my $plot_name (@plot_list) {
         foreach my $trait_name (@trait_list) {
             my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
@@ -421,11 +422,20 @@ sub verify {
                 #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
                 #check if the plot_name, trait_name combination already exists in database.
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has the same value as in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored for the trait $trait_name.</small><hr>";
+                    my $prev = $check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id};
+                    if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
+                        $same_value_count++;
+                    }
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                    my $prev = $check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp};
+                    if ( defined($prev) && length($prev) ) {
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                    }
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+                    my $prev = $check_unique_trait_stock{$trait_cvterm_id, $stock_id};
+                    if ( defined($prev) && length($prev) ) {
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+                    }
                 }
 
                 #check if the plot_name, trait_name combination already exists in same file.
@@ -446,6 +456,11 @@ sub verify {
             }
 
         }
+    }
+
+    # combine all warnings about the same values into a summary count
+    if ( $same_value_count > 0 ) {
+        $warning_message = $warning_message."<small>There are $same_value_count values in your file that are the same as values already stored in the database.</small>";
     }
 
     ## Verify metadata
@@ -533,6 +548,7 @@ sub store {
         my $new_count = 0;
         my $skip_count = 0;
         my $overwrite_count = 0;
+        my $remove_count = 0;
         foreach my $plot_name (@plot_list) {
 
             my $stock_id = $data{$plot_name}[0];
@@ -605,6 +621,7 @@ sub store {
                     my $additional_info = $value->[5] || undef;
                     my $external_references = $value->[6] || undef;
                     my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA' . $upload_date;
+                    my $existing_trait_value = $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id};
 
                     if (defined($trait_value) && (length($trait_value) || $remove_values)) {
 
@@ -631,8 +648,13 @@ sub store {
                                     push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
                                 }
                                 $plot_trait_uniquename .= ", overwritten: $upload_date";
-                                $overwrite_count++;
-                            } else {
+                                if ( defined($trait_value) && length($trait_value) ) {
+                                    $overwrite_count++;
+                                }
+                                elsif ( $existing_trait_value ne "" ) {
+                                    $remove_count++;
+                                }
+                            } elsif ( length($trait_value) ) {
                                 $new_count++;
                             }
                             $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
@@ -753,6 +775,9 @@ sub store {
 
                         push @stored_details, \%details;
 		            }
+                    elsif ( !length($trait_value) && !$remove_values && $existing_trait_value ne "" ) {
+                        $skip_count++;
+                    }
                 }
             }
         }
@@ -765,7 +790,8 @@ sub store {
         $success_message = 'All values in your file have been successfully processed!<br><br>';
         $success_message .= "$new_count new values stored<br>";
         $success_message .= "$skip_count previously stored values skipped<br>";
-        $success_message .= "$overwrite_count previously stored values overwritten<br><br>";
+        $success_message .= "$overwrite_count previously stored values overwritten<br>";
+        $success_message .= "$remove_count previously stored values removed<br><br>";
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
         my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
         if (scalar (@$obsoleted_files) > 0){
