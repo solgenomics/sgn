@@ -681,7 +681,7 @@ for my $extension ("xls", "xlsx") {
     my $columns = $contents->[1]->{'cell'};
     my @column_array = @$columns;
     my $number_of_columns = scalar @column_array;
-#    print STDERR "COLUMNS =".Dumper ($columns)."\n";
+    print STDERR "COLUMNS =".Dumper ($columns)."\n";
 
     ok(scalar($number_of_columns) == 22, "check number of columns.");
     is_deeply($contents->[1]->{'cell'}->[1], [
@@ -692,6 +692,8 @@ for my $extension ("xls", "xlsx") {
         'test_backcross3',
         'test_cross_upload1',
         'test_cross_upload2',
+        'test_bulk_cross',
+        'test_bulk_open_cross',
         'test_cross_upload3',
         'test_cross_upload4',
         'test_cross_upload5',
@@ -710,6 +712,8 @@ for my $extension ("xls", "xlsx") {
         'backcross',
         'biparental',
         'self',
+        'bulk',
+        'bulk_open',
         'biparental',
         'self',
         'biparental',
@@ -728,6 +732,8 @@ for my $extension ("xls", "xlsx") {
         'test_add_cross',
         'UG120001',
         'UG120001',
+        'test_population_A',
+        'test_population_A',
         'UG120001',
         'UG120001',
         'TMEB419',
@@ -744,7 +750,7 @@ for my $extension ("xls", "xlsx") {
     my $result = $crosses->get_all_cross_entries();
     my @all_cross_entries = @$result;
     my $first_cross = $all_cross_entries[0];
-    is(scalar @all_cross_entries, 14);
+    is(scalar @all_cross_entries, 16);
     is($first_cross->[1], 'test_add_cross');
     is($first_cross->[2], 'biparental');
     is($first_cross->[4], 'UG120001');
@@ -820,8 +826,8 @@ for my $extension ("xls", "xlsx") {
     # nd_experiment_stock has 38 more rows after adding plants for testing uploading crosses with plant info
     is($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experiment_stock + 39);
 
-    # stock table has 45 more rows after adding family names populations and plants, one cross with two new accessions cannot be deleted
-    is($stocks_after_delete_all_crosses, $before_adding_stocks + 45);
+    # stock table has 43 more rows after adding family names and plants, one cross with two new accessions cannot be deleted
+    is($stocks_after_delete_all_crosses, $before_adding_stocks + 43);
 
     # remove added crossing trials after test so that they don't affect downstream tests
     my $project_owner_row_1 = $phenome_schema->resultset('ProjectOwner')->find({ project_id => $crossing_trial_rs->project_id() });
