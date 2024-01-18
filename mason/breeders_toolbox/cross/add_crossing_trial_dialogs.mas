@@ -135,7 +135,6 @@ jQuery(document).ready(function(){
         jQuery('#crossingtrial_location').val('');
         jQuery('#crosses_add_project_year').val('');
         jQuery('#crosses_add_project_description').val('');
-        location.reload();
     });
 
 
