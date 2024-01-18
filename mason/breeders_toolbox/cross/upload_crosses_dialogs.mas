@@ -19,13 +19,25 @@ $trial_name => undef
 
                     <&| /util/workflow.mas, id=> "crosses_upload_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What are crosses?" &>
+                            <& /page/page_title.mas, title=>"Introduction" &>
                             <ul>
-                                <li>Crosses represent any pollination that occurs.</li>
-                                <li>Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
-                                <li>Depending on the cross type, an individual cross can be defined as between two accessions (e.g. accession A is the female and accession B is the male in a biparental cross), between two populations (e.g. in a bulk_open cross), or between a female population and a male accession (e.g. in a bulk cross).</li>
-                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are only defined as groups of accessions), or between female accession A and unknown male parents</li>
-                                <li>For backcross cross type, cross unique id can be used as one of the parents.</li>
+                                <li>Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_open, bulk_self, or doubled_haploid)</li>
+                                    <ul class="a">
+                                        <li>cross type descriptions:</li>
+                                        <ul class="b">
+                                            <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
+                                            <li><b>self:</b> A self pollinated individual plant.</li>
+                                            <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                            <li><b>backcross:</b> An individual plant pollinated by one of its parents. Cross Unique ID can be used as one of the parents.</li>
+                                            <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
+                                            <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
+                                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
+                                            <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
+                                            <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
+                                            <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+                                        </ul>
+                                    </ul>
+                                </li>
                                 <li>An individual cross can be linked to a female plot or plant, as well as a male plot or plant.</li>
                                 <li>A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.</li>
                                 <li>A cross can produce seed, which goes into a seedlot.</li>
@@ -364,7 +376,7 @@ $trial_name => undef
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, or doubled_haploid)
                             <ul class="a">
                                 <li><b>cross type descriptions:</b></li>
                                 <ul class="b">
@@ -375,8 +387,8 @@ $trial_name => undef
                                     <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                                     <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
                                     <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
-                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
+                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>                                
                                     <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
                                 </ul>
                             </ul>
