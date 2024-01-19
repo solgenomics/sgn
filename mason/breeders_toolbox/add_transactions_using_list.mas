@@ -17,9 +17,13 @@
 
                     <&| /util/workflow.mas, id=> "add_transactions_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"How to add new transactions using a list?" &>
+                            <& /page/page_title.mas, title=>"Seedlot Transactions" &>
 
-                            <p>If you would like to remove seeds from seedlots without specifying other seedlot names or plot names, you can use a list of seedlots to add new transactions.</p>
+                            <p>There are four different types of seedlot transactions: Transferring seeds from an existing seedlot to another existing seedlot, to a new seedlot, to a plot or to unspecified seedlot or plot. </p>
+                            <ul>
+                                <li>You can use upload option for all transaction types</li>
+                                <li>Adding transactions by using a list can be used only for transfering seeds from existing seedlots to unspecified seedlots or plots.</li>
+                            </ul>
                             <hr>
 
                             <center>

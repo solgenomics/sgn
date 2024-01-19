@@ -53,7 +53,7 @@ $user_role => undef
     my $seedlot_subtitle = !!$c->user()
         ? '<div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Create Seedlot(s)&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="add_seedlot_button">Add New Seedlot</a></li><li><a href="#" name="seedlot_bulk_upload">Upload Seedlots</a></li><li><a href="#" name="create_seedlots_trial_button">Create Seedlots from Trial</a></li></ul></div>
         <div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add/Upload Transactions&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="transactions_upload_link">Upload a File</a></li><li><a href="#" id="add_transactions_using_list_link" name="add_transactions_using_list_link">Using a List</a></li><li></ul></div>
-        <button class="btn btn-sm btn-primary" style="margin:3px" name="transactions_upload_link">Upload Transactions</button><button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>' . $maintenance_button
+        <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>' . $maintenance_button
         : "Login to add or upload seedlots";
 </%perl>
 <&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => $seedlot_subtitle &>
