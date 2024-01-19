@@ -5,8 +5,11 @@ $breeding_programs
 
 % use JSON;
 
-<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js', 'd3pie_min.js', 'moment_min', 'daterangepicker', 'd3.graphers.stackedObservationPhenotypeHistogram' ] &>
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js', 'd3pie_min.js', 'moment_min',  'd3.graphers.stackedObservationPhenotypeHistogram' ] &>
 
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+  
 <& /page/page_title.mas, title => 'Database Stats' &>
 
 <&| /page/info_section.mas, title => "Date Range" &>
@@ -41,7 +44,10 @@ jQuery('input[title="dbstats_start_date"]').daterangepicker(
        "singleDatePicker": true,
        "showDropdowns": true,
        "autoUpdateInput": true,
-       "startDate": "1960-01-01",
+"startDate": "1960-01-01",
+       "yearSelect" : true,
+       "minYear": "1960",
+       "maxYear": moment(),
        locale: { 
         format: 'YYYY-MM-DD'
       }
@@ -54,11 +60,14 @@ var dbstats_end_date_element = jQuery("#dbstats_end_date");
 jQuery('input[title="dbstats_end_date"]').daterangepicker(
     {
        "singleDatePicker": true,
-       "showDropdowns": true,
        "autoUpdateInput": true,
+"minYear": "1960",
+"maxYear" : "2030", 
+       "yearSelect" : true,
        locale: { 
-        format: 'YYYY-MM-DD'
-       }
+           format: 'YYYY-MM-DD'
+       },
+       "showDropdowns": true,
     },
 
 );
@@ -251,7 +260,7 @@ function bargraph(data) {
 function trial_table(html, bp_id) {
 
 html += `
-	 <table id="trial_summary_data_`+bp_id+`" class="display">
+<table id="trial_summary_data_`+bp_id+`" class="display">
     <thead>
         <tr>
             <th>Trial name</th>
@@ -269,7 +278,7 @@ html += `
 function trait_table(html, bp_id) {
 
 html = `
-     <div class="well well-sm table-responsive">
+<div class="well well-sm table-responsive">
   <center><h4>Raw Data Statistics</h4></center>
   <br/>
 
@@ -292,7 +301,7 @@ html = `
       <tbody>
       </tbody>
     </table>
-</div>
+  </div>
 </div>
 <div class="well well-sm" id="raw_data_histogram_well_`+bp_id+`">
   <center><h4>Raw Data Histogram</h4></center><hr>
@@ -334,7 +343,7 @@ function trial_queries(bp_id, start_date, end_date, include_dateless_items) {
     });
 }
 
-function trait_queries(bp_id, start_date, end_date) { 
+function trait_queries(bp_id, start_date, end_date, include_dateless_items) { 
     alert('getting trait data...');
     jQuery("#phenotype_summary_data_"+bp_id).DataTable( {
         'ajax': '/ajax/breeders/program/'+ bp_id + '/phenotypes?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
