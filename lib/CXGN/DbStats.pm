@@ -4,6 +4,8 @@ package CXGN::DbStats;
 use Moose;
 
 has 'dbh' => (isa => 'Ref', is => 'rw');
+has 'start_date' => ( is => 'rw', isa => 'Str' );
+has 'end_date' => ( is => 'rw', isa => 'Str' );
 
 # retrieve all trials grouped by trial type
 #
@@ -18,7 +20,7 @@ sub trial_types {
     if ($include_dateless_items) {
 	$datelessq = " create_date IS NULL OR ";
     }
-    my $q = "SELECT cvterm.name, count(*) from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm_id) JOIN cv USING (cv_id) WHERE $datelessq (project.create_date > ? and project.create_date < ?) and cv_id=(SELECT cv_id FROM cv WHERE name='project_type') GROUP BY cvterm.name ORDER BY count(*) desc";
+    my $q = "SELECT cvterm.name, count(*) from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm_id) JOIN cv USING (cv_id) WHERE ( $datelessq (project.create_date > ? and project.create_date < ?) ) and cv_id=(SELECT cv_id FROM cv WHERE name='project_type') GROUP BY cvterm.name ORDER BY count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
@@ -30,8 +32,13 @@ sub trials_by_breeding_program {
     my $self = shift;
     my $start_date = shift || '1900-01-01';
     my $end_date = shift || '2100-12-31';
+    my $include_dateless_items = shift || 1;
 
-    my $q = "select project.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) where trial.create_date > ? and trial.create_date < ? and cvterm.name='breeding_program' and trialcvterm.name in (SELECT cvterm.name FROM cvterm join cv using(cv_id) WHERE cv.name='project_type') group by project.name order by count(*) desc";
+    my $datelessq = "";
+    if ($include_dateless_items) {
+	$datelessq = " create_date IS NULL OR ";
+    }
+    my $q = "select project.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) where ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and cvterm.name='breeding_program' and trialcvterm.name in (SELECT cvterm.name FROM cvterm join cv using(cv_id) WHERE cv.name='project_type') group by project.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
@@ -99,8 +106,6 @@ sub activity {
 }
 
 
-has 'start_date' => ( is => 'rw', isa => 'Str' );
-has 'end_date' => ( is => 'rw', isa => 'Str' );
 
 sub stock_stats {
     my $self = shift;
@@ -118,6 +123,55 @@ sub stock_stats {
     }
 
     return \@data;
+}
+
+
+sub accession_count_by_breeding_program {
+    my $self = shift;
+    my $start_date = shift;
+    my $end_date = shift;
+    my $include_dateless_items = shift;
+    
+    my $dbh = $self->dbh();
+
+    my $datelessq;
+    if ($include_dateless_items) {
+	$datelessq = " accession.create_date IS NULL ";
+    }
+    my $query = "select breeding_program.name, count(*) from project as breeding_program join project_relationship on(breeding_program.project_id=project_relationship.object_project_id) join project as trial on(project_relationship.subject_project_id=trial.project_id) join projectprop on (breeding_program.project_id=projectprop.project_id) join nd_experiment_project on (trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join stock_relationship on (stock.stock_id=stock_relationship.object_id) join stock as accession on (accession.stock_id=stock_relationship.subject_id) where (  ( accession.create_date > '2015-01-01' and accession.create_date < '2022-01-01' ) ) and accession.type_id = (select cvterm_id from cvterm where name='accession') and projectprop.type_id = (select cvterm_id from cvterm where name='breeding_program') group by breeding_program.name order by count(*) desc";
+
+    my $h = $dbh->prepare($query);
+    $h->execute($start_date, $end_date);
+    
+    my @data; 
+    while (my ($bp, $count) = $h-> fetchrow_array()) {
+	push @data, [ $bp, $count ];
+    }
+    return \@data;	
+}
+
+sub plot_count_by_breeding_program {}
+    my $self = shift;
+    my $start_date = shift;
+    my $end_date = shift;
+    my $include_dateless_items = shift;
+    
+    my $dbh = $self->dbh();
+
+    my $datelessq;
+    if ($include_dateless_items) {
+	$datelessq = " stock.create_date IS NULL ";
+    }
+    my $query = "select breeding_program.name, count(*) from project as breeding_program join project_relationship on(breeding_program.project_id=project_relationship.object_project_id) join project as trial on(project_relationship.subject_project_id=trial.project_id) join projectprop on (breeding_program.project_id=projectprop.project_id) join nd_experiment_project on (trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) where (  ( stock.create_date > ? and stock.create_date < ? ) ) and stock.type_id = (select cvterm_id from cvterm where name='plot') and projectprop.type_id = (select cvterm_id from cvterm where name='breeding_program') group by breeding_program.name order by count(*) desc";
+
+    my $h = $dbh->prepare($query);
+    $h->execute($start_date, $end_date);
+    
+    my @data; 
+    while (my ($bp, $count) = $h-> fetchrow_array()) {
+	push @data, [ $bp, $count ];
+    }
+    return \@data;	
 }
 
 sub germplasm_count_with_pedigree {

@@ -142,19 +142,19 @@ has 'phenotype_max_value' => (
 has 'start_date' => (
     isa => 'Str|Undef',
     is => 'rw',
-    default => sub { return '1900-01-01'; },
+    default => '1900-01-01',
     );
 
 has 'end_date' => (
     isa => 'Str|Undef',
     is => 'rw',
-    default => sub { return '2100-12-31'; },
+    default => '2100-12-31',
     );
 
 has 'include_dateless_items' => (
     isa => 'Str|Undef',
     is => 'rw',
-    default => sub { return 1; },
+    default => 1,
     );
 
 has 'limit' => (
@@ -383,6 +383,27 @@ sub search {
             push @where_clause, "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text like '%".lc($_)."%'";
         }
     }
+
+    my $datelessq = "";
+    
+    if ($self->include_dateless_items()) {
+	$datelessq = " phenotype.create_date IS NULL OR ";
+    }
+
+    my ($start_date, $end_date);
+    if ($self->start_date() =~ m/(\d{4}\-\d{2}\-\d{2})/) {
+	$start_date = $1;
+    }
+    
+    if ($self->end_date() =~ m/\d{4}\-\d{2}\-\d{2}/ ) {
+	$end_date = $1;
+    }
+
+    if ($start_date && $end_date) { 
+	push @where_clause, " ( $datelessq ( phenotype.create_date > $start_date and phenotype.create_date < $end_date ) ) ";
+
+    }
+    
     if ($self->phenotype_min_value && !$self->phenotype_max_value) {
         push @where_clause, "phenotype.value::real >= ".$self->phenotype_min_value;
         push @where_clause, "phenotype.value~\'$numeric_regex\'";
