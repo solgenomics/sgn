@@ -150,11 +150,11 @@ sub accession_count_by_breeding_program {
     return \@data;	
 }
 
-sub plot_count_by_breeding_program {}
+sub plot_count_by_breeding_program {
     my $self = shift;
-    my $start_date = shift;
-    my $end_date = shift;
-    my $include_dateless_items = shift;
+    my $start_date = shift || $self->start_date();
+    my $end_date = shift || $self->end_date();
+    my $include_dateless_items = shift || $self->include_dateless_items();
     
     my $dbh = $self->dbh();
 
@@ -165,7 +165,7 @@ sub plot_count_by_breeding_program {}
     my $query = "select breeding_program.name, count(*) from project as breeding_program join project_relationship on(breeding_program.project_id=project_relationship.object_project_id) join project as trial on(project_relationship.subject_project_id=trial.project_id) join projectprop on (breeding_program.project_id=projectprop.project_id) join nd_experiment_project on (trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) where (  ( stock.create_date > ? and stock.create_date < ? ) ) and stock.type_id = (select cvterm_id from cvterm where name='plot') and projectprop.type_id = (select cvterm_id from cvterm where name='breeding_program') group by breeding_program.name order by count(*) desc";
 
     my $h = $dbh->prepare($query);
-    $h->execute($start_date, $end_date);
+    $h->execute($self->start_date, $self->end_date);
     
     my @data; 
     while (my ($bp, $count) = $h-> fetchrow_array()) {
@@ -194,12 +194,16 @@ sub germplasm_count_with_pedigree {
 
 sub germplasm_count_with_phenotypes {
     my $self = shift;
-     my $dbh = $self->dbh();
+    my $dbh = $self->dbh();
+    my $start_date = shift || $self->start_date();
+    my $end_date = shift || $self->end_date();
+    my $include_dateless_items = shift || $self->include_dateless_items();
+
     
     my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on (stock.stock_id=object_id) join stock as plot on (stock_relationship.subject_id=plot.stock_id) join nd_experiment_stock on(plot.stock_id=nd_experiment_stock.stock_id) join nd_experiment_phenotype on(nd_experiment_stock.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id) WHERE cvterm.name='accession' and stock.create_date > ? and stock.create_date < ? group by cvterm.name";
 
     my $h = $dbh->prepare($query);
-    $h->execute($self->start_date, $self->end_date);
+    $h->execute($start_date, $end_date);
 
     my @data;
     while (my ($stock_type, $count) = $h->fetchrow_array()) {
