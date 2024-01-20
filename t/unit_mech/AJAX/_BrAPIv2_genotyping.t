@@ -60,7 +60,7 @@ is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','mess
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/calls', ['callSetDbIds' => ['38878']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/calls/'. $searchId);
 $response = decode_json $mech->content;
@@ -84,7 +84,7 @@ is_deeply($response, {'result' => {'sepUnphased' => undef,'data' => [{'additiona
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/callsets', ['callSetDbIds' => ['38881']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/callsets/'. $searchId);
 $response = decode_json $mech->content;
@@ -122,7 +122,7 @@ is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'messageTyp
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/variantsets', ['variantSetDbIds' => ['143p1']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/variantsets/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;

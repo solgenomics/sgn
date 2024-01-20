@@ -38,15 +38,15 @@ my $sgn_session_id = $response->{access_token};
 
 #Start test adding some vectors data
 my $fuzzy_option_data = {
-    "option_form1" => { "fuzzy_name" => "test_vectorx", "fuzzy_select" => "test_vector1", "fuzzy_option" => "replace" },
-    "option_form2" => { "fuzzy_name" => "test_vectory", "fuzzy_select" => "test_vector1", "fuzzy_option" => "keep" },
-    "option_form3" => { "fuzzy_name" => "test_vectorm", "fuzzy_select" => "test_vector1", "fuzzy_option" => "keep" }
+    "option_form1" => { "fuzzy_name" => "test_vector_x", "fuzzy_select" => "test_vector1", "fuzzy_option" => "replace" },
+    "option_form2" => { "fuzzy_name" => "test_vector_y", "fuzzy_select" => "test_vector1", "fuzzy_option" => "keep" },
+    "option_form3" => { "fuzzy_name" => "test_vector_m", "fuzzy_select" => "test_vector1", "fuzzy_option" => "keep" }
 };
 
 $mech->post_ok('http://localhost:3010/ajax/vector_list/fuzzy_options', [ "vector_list_id"=> '3', "fuzzy_option_data"=>$json->encode($fuzzy_option_data), "names_to_add"=>$json->encode($response->{'absent'}) ]);
 
 my $final_response = decode_json $mech->content;
-is_deeply($final_response, {'names_to_add' => ['test_vectorm','test_vectory'],'success' => '1'}, 'check verify fuzzy options response content');
+is_deeply($final_response, {'names_to_add' => ['test_vector_m','test_vector_y'],'success' => '1'}, 'check verify fuzzy options response content');
 
 $mech->get_ok('http://localhost:3010/organism/verify_name?species_name='.uri_encode("Manihot esculenta") );
 $response = decode_json $mech->content;
@@ -65,14 +65,14 @@ foreach (@{$final_response->{'names_to_add'}}){
 
 $mech->post_ok('http://localhost:3010/ajax/create_vector_construct', [ 'data'=>$json->encode(\@full_info), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+print STDERR "\n\n response: " . Dumper $response;
 
-my $acc1 = 'test_vectorm';
-my $acc2 = 'test_vectory';
+my $acc1 = 'test_vector_m';
+my $acc2 = 'test_vector_y';
 my $check1row = $schema->resultset('Stock::Stock')->find({ uniquename => $acc1 });
 my $check2row = $schema->resultset('Stock::Stock')->find({ uniquename => $acc2 });
 
-is_deeply($response, {'added' => [[$check1row->stock_id(),'test_vectorm'],[ $check2row->stock_id(),'test_vectory']],'success' => '1', 'response' => '' }, "added vectors check");
+is_deeply($response, {'added' => [[$check1row->stock_id(),'test_vector_m'],[ $check2row->stock_id(),'test_vector_y']],'success' => '1', 'response' => '' }, "added vectors check");
 
 
 #Remove added stocks so tests downstream do not fail
@@ -84,7 +84,7 @@ $stock->store();
 my @stock_ids;
 push @stock_ids, $stock_id;
 
-$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_vectorm'})->stock_id();
+$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_vector_m'})->stock_id();
 $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();

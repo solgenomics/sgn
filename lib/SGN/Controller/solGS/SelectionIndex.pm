@@ -35,7 +35,7 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my $traits;
     if ($selection_pop_id)
     {
-	    $c->controller('solGS::solGS')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+	    $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
         $traits = $c->stash->{selection_pop_analyzed_traits};
     }
     else

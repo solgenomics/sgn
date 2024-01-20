@@ -52,6 +52,12 @@ $editable_stock_props_definitions
                                 <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate vectors. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label"> Auto generate uniquename</label><br>
+                            <div class="col-sm-8">
+                                <input type="checkbox" id="autogenerate_uniquename" name="autogenerate_uniquename">
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>

@@ -36,7 +36,8 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'subplots_names', #For splotplot
         'treatments', #For splitplot
         'subplots_plant_names', #For splitplot
-        'additional_info' # For brapi additional info storage
+        'additional_info', # For brapi additional info storage
+        'external_refs' # For brapi external reference storage
 	]);
 
 }
@@ -144,7 +145,7 @@ sub validate_design {
     my $seedlot_validator = CXGN::List::Validate->new();
     my @seedlots_missing = @{$seedlot_validator->validate($chado_schema,'seedlots',\@source_names)->{'missing'}};
     if (scalar(@seedlots_missing) > 0) {
-        $error .=  "The following seedlots are not in the database as uniquenames or synonyms: ".join(',',@seedlots_missing);
+        $error .=  "The following seedlots are not in the database as uniquenames or synonyms or are marked as discarded: ".join(',',@seedlots_missing);
     }
 
     my @source_stock_types = @{$self->get_source_stock_types()};

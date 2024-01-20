@@ -1,7 +1,10 @@
-import '../legacy/d3/d3Min.js';
+import '../legacy/d3/d3v4Min.js';
 import '../legacy/jquery.js';
 import '../legacy/brapi/BrAPI.js';
 
+// Colors to use when labelling multiple trials
+const trial_colors = ['#2f4f4f', '#ff8c00', '#ffff00', '#00ff00', '#9400d3', '#00ffff', '#1e90ff', '#ff1493', '#ffdab9', '#228b22'];
+const trial_colors_text = ['#ffffff', '#000000', '#000000', '#000000', '#ffffff', '#000000', '#ffffff', '#ffffff', '#000000', '#ffffff'];
 
 export function init() {
     class FieldMap {
@@ -16,10 +19,28 @@ export function init() {
             this.heatmap_selection = String;
             this.heatmap_object = Object;
             this.display_borders = true;
+            this.linked_trials = {};
         }
 
         set_id(trial_id) {
             this.trial_id = trial_id;
+        }
+
+        set_linked_trials(trials = []) {
+            this.linked_trials = {};
+            trials.forEach((t, i) => {
+                const index = i % trial_colors.length;
+                this.linked_trials[t.trial_name] = {
+                    id: t.trial_id,
+                    name: t.trial_name,
+                    bg: trial_colors[index],
+                    fg: trial_colors_text[index]
+                };
+            });
+        }
+
+        get_linked_trials() {
+            return this.linked_trials;
         }
 
         format_brapi_post_object() {
@@ -127,96 +148,20 @@ export function init() {
             }
         }
 
-        traverse_map(plot_arr, planting_or_harvesting_order_layout) {
-            var local_this = this;
-            let coord_matrix = [];
-            var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
-            var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
-            
-            for (let plot of plot_arr) {
-                if (!coord_matrix[plot.observationUnitPosition[row]]) {
-                    coord_matrix[plot.observationUnitPosition[row]] = [];
-                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
-                } else {
-                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
-                }
-            }
-
-            coord_matrix = coord_matrix.filter(plot_arr => Array.isArray(plot_arr));
-            if (!document.getElementById("invert_row_checkmark").checked && this.meta_data[planting_or_harvesting_order_layout].includes('row') && planting_or_harvesting_order_layout.includes('planting')) {
-                if ((this.meta_data.top_border_selection && !this.meta_data.bottom_border_selection) || (!this.meta_data.top_border_selection && this.meta_data.bottom_border_selection)) {
-                    if (this.meta_data.top_border_selection) {
-                        var top_borders = coord_matrix.shift();
-                        coord_matrix.push(top_borders);
-                    } else if (this.meta_data.bottom_border_selection) {
-                        var bottom_borders = coord_matrix.pop();
-                        coord_matrix.unshift(bottom_borders);
-                    }
-                }
-            }
-
-            
-            if (this.meta_data[planting_or_harvesting_order_layout].includes('serpentine')) {
-                for (let i = 0; i < coord_matrix.length; i++) {
-                    if (i % 2 == 1) {
-                        coord_matrix[i].reverse();
-                    }
-                }
-            }
-
-            var final_arr = [];
-            for (let plot_arr of coord_matrix) {
-                plot_arr = plot_arr.filter(plot => plot !== undefined);
-                if (!document.getElementById("invert_row_checkmark").checked && local_this.meta_data[planting_or_harvesting_order_layout].includes('col') && planting_or_harvesting_order_layout.includes('planting')) {
-                    if ((local_this.meta_data.top_border_selection && !local_this.meta_data.bottom_border_selection) || (!local_this.meta_data.top_border_selection && local_this.meta_data.bottom_border_selection)) {
-                        if (local_this.meta_data.top_border_selection) {
-                            var top_border_plot = plot_arr.shift();
-                             plot_arr.push(top_border_plot);
-                        } else if (local_this.meta_data.bottom_border_selection) {
-                            var bottom_border_plot = plot_arr.pop();
-                            plot_arr.unshift(bottom_border_plot);
-                        }
-                    }
-                }
-                final_arr.push(...plot_arr);
-            }
-
-            var csv = [
-                planting_or_harvesting_order_layout == "planting_order_layout" ? 'planting_order': "harvesting_order",
-                'location_name',
-                'trial_name',
-                'plot_number',
-                'plot_name',
-                'accession_name',
-                'seedlot_name',
-            ].join(',');
-            csv += "\n";
-            final_arr = final_arr.filter(plot => plot !== undefined);
-            let order_number = 1;
-            final_arr.forEach(function(plot) {
-                csv += [
-                    order_number++,
-                    "\"" + plot.locationName + "\"",
-                    plot.studyName,
-                    plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A",
-                    plot.observationUnitName,
-                    plot.germplasmName,
-                    plot.seedLotName ? plot.seedLotName : ''
-                ].join(',');
-                csv += "\n";
-            });
-    
-            var hiddenElement = document.createElement('a');
-            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-            hiddenElement.target = '_blank';
-            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data[planting_or_harvesting_order_layout]}_${planting_or_harvesting_order_layout}.csv`;
-            hiddenElement.click();    
-        }
-
-        get_plot_order(type, order, include_borders) {
-            let k = type === 'planting' ? 'planting_order_layout' : 'harvesting_order_layout';
-            this.meta_data[k] = order;
-            this.traverse_map(this.plot_arr.filter(plot => include_borders || plot.type !== "border"), k);
+        get_plot_order(type, order, start, include_borders, include_gaps, additional_properties) {
+            let q = new URLSearchParams({
+                'trial_ids': [this.trial_id, ...Object.keys(this.linked_trials).map((e) => this.linked_trials[e].id)].join(','),
+                'type': type,
+                'order': order,
+                'start': start,
+                'top_border': !!include_borders && !!this.meta_data.top_border_selection,
+                'right_border': !!include_borders && !!this.meta_data.right_border_selection,
+                'bottom_border': !!include_borders && !!this.meta_data.bottom_border_selection,
+                'left_border': !!include_borders && !!this.meta_data.left_border_selection,
+                'gaps': !!include_gaps,
+                ...additional_properties
+            }).toString();
+            window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
         }
 
         set_meta_data() {
@@ -425,11 +370,11 @@ export function init() {
                         if (wait) {
                             window.clearTimeout(wait);
                             wait = null;
-                            event.dblclick(d3.event);
+                            event.call("dblclick", this, d3.event);
                         } else {
                             wait = window.setTimeout((function(e) {
-                                return function() {
-                                    event.click(e);
+                                return function() {                               
+                                    event.call("click", this, e);
                                     wait = null;
                                 };
                             })(d3.event), 300);
@@ -437,7 +382,26 @@ export function init() {
                     }
                 });
             };
-            return d3.rebind(cc, event, 'on');
+            // return d3.rebind(cc, event, 'on');
+            return _rebind(cc, event, "on");
+
+            // Copies a variable number of methods from source to target.
+            function _rebind(target, source) {
+                var i = 1, n = arguments.length, 
+                method;
+                while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
+                return target;
+            };
+
+            // Method is assumed to be a standard D3 getter-setter:
+            // If passed with no arguments, gets the value.
+            // If passed with arguments, sets the value and returns the target.
+            function d3_rebind(target, source, method) {
+                return function() {
+                    var value = method.apply(source, arguments);
+                    return arguments.length ? target : value;
+                };
+            }
         }
 
         heatmap_plot_click(plot, heatmap_object, trait_name) {
@@ -538,7 +502,7 @@ export function init() {
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
                     trait_vals.push(obs_unit.val);
                 }
-                var colorScale = d3.scale.quantile()
+                var colorScale = d3.scaleQuantile()
                 .domain(trait_vals)
                 .range(colors);
             }
@@ -607,7 +571,7 @@ export function init() {
                 }
                 else {
                     html += jQuery("#include_linked_trials_checkmark").is(":checked") ?
-                        `<strong>Trial Name:</strong> ${plot.studyName}<br />` :
+                        `<strong>Trial Name:</strong> <span style='padding: 1px 2px; border-radius: 4px; color: ${local_this.linked_trials[plot.studyName].fg}; background-color: ${local_this.linked_trials[plot.studyName].bg}'>${plot.studyName}</span><br />` :
                         "";
                     html += `<strong>Plot Name:</strong> ${plot.observationUnitName}<br />`;
                     if ( plot.type == "data" ) {
@@ -741,7 +705,7 @@ export function init() {
                 .on("mouseover", handle_mouseover)
                 .on("mouseout", handle_mouseout)
                 .call(cc);
-
+            
             cc.on("click", (el) => { 
                 var plot = d3.select(el.srcElement).data()[0];
                 plot_click(plot, heatmap_object, trait_name)
@@ -753,6 +717,18 @@ export function init() {
                     window.open('/stock/'+d.observationUnitDbId+'/view');        
                 }
             });
+
+            // Add a colored band to the bottom of the plot box to indicate different trials
+            if ( jQuery("#include_linked_trials_checkmark").is(":checked") ) {
+                plots.enter().append("rect")
+                    .attr("x", (d) => { return plot_x_coord(d) * 50 + 4 })
+                    .attr("y", (d) => { return plot_y_coord(d) * 50 + 54 + y_offset })
+                    .attr("rx", 2)
+                    .attr("width", 40)
+                    .attr("height", 6)
+                    .style("fill", (d) => { return local_this.linked_trials[d.studyName].bg })
+                    .style("opacity", (d) => { return is_plot_overlapping(d) ? '0' : '100' })
+            }
 
             plots.append("text");
             plots.enter().append("text")

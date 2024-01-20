@@ -13,6 +13,7 @@ extends 'CXGN::BrAPI::v2::Common';
 sub list {
 	my $self = shift;
     my $inputs = shift;
+	my $c = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -36,7 +37,7 @@ sub list {
 	my $offset = $page*$page_size;
 	my $total_count = 0;
 	my @data;
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) LEFT JOIN cvtermsynonym on(cvtermsynonym.cvterm_id=cvterm.cvterm_id) $where_clause group by cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) LEFT JOIN cvtermsynonym on(cvtermsynonym.cvterm_id=cvterm.cvterm_id) $where_clause group by cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	$sth->execute();
@@ -47,15 +48,31 @@ sub list {
             $_ =~ s/\"//g;
         }
 		my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
+
+		my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
+			bcs_schema          => $self->bcs_schema,
+			external_references => [],
+			table_name          => "cvterm",
+			table_id_key        => "cvterm_id",
+			id                  => $cvterm_id
+		});
+		my $external_references_json= $external_references->search()->{$cvterm_id};
+		if($c->config->{'brapi_include_CO_xref'}) {
+			push @{ $external_references_json }, {
+				referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
+				referenceSource => "Crop Ontology"
+			};
+		}
+
 		push @data, {
 			additionalInfo => {},
 			traitDbId => qq|$cvterm_id|,
 			traitName => $cvterm_name,
 			traitDescription => $cvterm_definition,
 			alternativeAbbreviations => undef,
-			attribute => $cvterm_name,
+			attribute => undef,
 			entity => undef,
-			externalReferences => [],
+			externalReferences => $external_references_json,
 			mainAbbreviation => undef,
 			ontologyReference => {
                         documentationLinks => $trait->uri ? $trait->uri : undef,
@@ -63,7 +80,7 @@ sub list {
                         ontologyName => $trait->db ? $trait->db : undef,
                         version => undef,
                     },
-			status => $obsolete = 0 ? "Obsolete" : "Active",
+			status => $obsolete = 0 ? "archived" : "active",
 			synonyms => $synonym,
 			traitClass => undef
 		};
@@ -78,6 +95,7 @@ sub list {
 sub detail {
 	my $self = shift;
 	my $cvterm_id = shift;
+	my $c = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -88,11 +106,28 @@ sub detail {
 		$total_count = 1;
 	}
 	my $trait_id = $trait->cvterm_id;
-	my %result = (	
+
+	my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
+		bcs_schema          => $self->bcs_schema,
+		external_references => [],
+		table_name          => "cvterm",
+		table_id_key        => "cvterm_id",
+		id                  => $cvterm_id
+	});
+	my $external_references_json= $external_references->search()->{$cvterm_id};
+	if($c->config->{'brapi_include_CO_xref'}) {
+		push @{ $external_references_json }, {
+			referenceID => "http://www.cropontology.org/terms/".$trait->db.":".$trait->accession . "/",
+			referenceSource => "Crop Ontology"
+		};
+	}
+
+	my %result = (
+				additionalInfo => {},
 		        alternativeAbbreviations => undef,
-                attribute => $trait->name,
+                attribute => undef,
                 entity => undef,
-                externalReferences => [],
+                externalReferences => $external_references_json,
                 mainAbbreviation => undef,
                 ontologyReference => {
                         documentationLinks => $trait->uri ? $trait->uri : undef,
@@ -100,8 +135,8 @@ sub detail {
                         ontologyName => $trait->db ? $trait->db : undef,
                         version => undef,
                     },
-                status => "Active",
-                synonyms => undef,
+                status => $trait->active ? "active" : "archived",
+                synonyms => $trait->synonyms,
                 traitClass => undef,
                 traitDescription => $trait->definition,
                 traitDbId => qq|$trait_id|,

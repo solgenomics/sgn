@@ -17,6 +17,7 @@ use IPC::Cmd qw/ can_run /;
 
 use Carp;
 use Memoize;
+use Data::Dumper;
 
 use File::Basename;
 use File::Copy;
@@ -74,8 +75,8 @@ sub open {
         # open succeeds if all the files are there
         return $self if $self->files_are_complete;
 
-        #carp "cannot open for reading, not a complete set of files:\n",
-        #    map "  - $_\n", $self->list_files;
+        carp "cannot open for reading, not a complete set of files:\n",
+           map "  - $_\n", $self->list_files;
         return;
     }
 }
@@ -361,7 +362,7 @@ sub files_are_complete {
   #assemble list of necessary extensions
   my @necessary_extensions = (qw/sq hr in/, #base database files
 			      #add seqid indexes if called for
-			      $self->indexed_seqs ? qw/sd si/ : (),
+			      $self->indexed_seqs ? qw/tf to/ : (),
 			     );
 
   #add protein/nucleotide prefix to extensions
@@ -406,8 +407,8 @@ sub _list_files {
   my ($ffbn,$type) = @_;
 
   #file extensions for each type of blast database
-  my %valid_extensions = ( protein     => [qw/.psq .phr .pin .psd .psi .pal .pnd .pni/],
-			   nucleotide  => [qw/.nsq .nhr .nin .nsd .nsi .nal .nnd .nni/],
+  my %valid_extensions = ( protein     => [qw/.psq .phr .pin .pog .pos .pot .ptf .pto .pdb /],
+			   nucleotide  => [qw/.nsq .nhr .nin .nog .nos .not .ntf .nto .ndb /],
 			 );
 
   #file extensions for _this_ database
@@ -438,7 +439,7 @@ sub get_sequence {
         unless $self->files_are_complete;
 
     croak "cannot call get_sequence on a database that has not been indexed for retrieval!"
-        unless $self->indexed_seqs;
+	unless $self->indexed_seqs;
 
     return Bio::BLAST2::Database::Seq->new(
         -bdb => $self,
@@ -477,8 +478,9 @@ sub _read_blastdbcmd_info {
                       )x
                           or die "could not parse output of blastdbcmd (2):\n$blastdbcmd";
 
-
-    my $indexed = (any {/sd$/} @files) && (any {/si$/} @files);
+    print STDERR "FILES = ".Dumper(\@files);
+    
+    my $indexed = (any {/tf$/} @files) && (any {/to$/} @files);
 
     ### set our data
     $self->type( $self->_guess_type )

@@ -22,4 +22,10 @@ sub date_to_iso_timestamp {
     return $date;
 }
 
+sub db_time_to_iso_utc {
+    my $db_time = shift;
+    my $new_time = $db_time =~ s/ /T/r;
+    return $new_time."Z";
+}
+
 1;

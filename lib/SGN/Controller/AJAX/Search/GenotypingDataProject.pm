@@ -53,7 +53,7 @@ sub genotyping_data_project_search_GET : Args(0) {
         my $total_accession_count = 0;
         if ($plate_data) {
             foreach (@$plate_data) {
-                my $trial_id = $_->{trial_id};
+                my $trial_id = $_->{plate_id};
                 my $trial = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
                 my $accession_count = $trial->get_trial_stock_count();
                 $total_accession_count += $accession_count;
@@ -71,7 +71,7 @@ sub genotyping_data_project_search_GET : Args(0) {
         } else {
             $data_type = 'SNP';
         }
-        print STDERR "DESIGN =".Dumper($design)."\n";
+#        print STDERR "DESIGN =".Dumper($design)."\n";
         push @result,
           [
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
@@ -106,19 +106,15 @@ sub genotyping_project_plates_GET : Args(0) {
     });
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @result;
-    foreach (@$data){
-        my $folder_string = '';
-        if ($_->{folder_name}){
-            $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
-        }
+    foreach my $plate(@$data){
         push @result,
         [
-            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
-            $_->{description},
-            $folder_string,
-            $_->{genotyping_plate_format},
-            $_->{genotyping_plate_sample_type},
-            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+            "<a href=\"/breeders_toolbox/trial/$plate->{plate_id}\">$plate->{plate_name}</a>",
+            $plate->{plate_description},
+            $plate->{plate_format},
+            $plate->{sample_type},
+            $plate->{number_of_samples},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$plate->{plate_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
         ];
     }
 
@@ -140,14 +136,8 @@ sub genotyping_project_plate_names_GET : Args(0) {
         project_id => $genotyping_project_id
     });
     my ($data, $total_count) = $plate_info->get_plate_info();
-    my @plates;
-    foreach  my $plate(@$data){
-        my $plate_id = $plate->{trial_id};
-        my $plate_name = $plate->{trial_name};
-        push @plates, {plate_name => $plate_name, plate_id => $plate_id};
-    }
 
-    $c->stash->{rest} = { data => \@plates };
+    $c->stash->{rest} = { data => $data };
 
 }
 
@@ -159,22 +149,25 @@ sub genotyping_project_protocols_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $genotyping_project_id = $c->req->param('genotyping_project_id');
-    my @project_list = ($genotyping_project_id);
-    my $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema, undef, undef, undef, undef, undef ,\@project_list);
-#    print STDERR "PROTOCOL SEARCH RESULT =".Dumper($protocol_search_result)."\n";
-    my @protocol_info;
-    foreach my $protocol (@$protocol_search_result){
-        my $protocol_id = $protocol->{protocol_id};
-        my $protocol_name = $protocol->{protocol_name};
-        push @protocol_info, {
-            protocol_id => $protocol_id,
-            protocol_name => $protocol_name
-        }
 
+    my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $bcs_schema,
+        project_id => $genotyping_project_id
+    });
+    my $associated_protocol  = $protocol_info->get_associated_protocol();
+#    print STDERR "ASSOCIATED PROTOCOL =".Dumper($associated_protocol)."\n";
+    my @info;
+    if ( defined $associated_protocol && scalar(@$associated_protocol)>1) {
+        $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+        return;
+    } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
+        push @info, {
+            protocol_id => $associated_protocol->[0]->[0],
+            protocol_name => $associated_protocol->[0]->[1]
+        }
     }
 
-
-    $c->stash->{rest} = { data => \@protocol_info };
+    $c->stash->{rest} = { data => \@info };
 
 }
 

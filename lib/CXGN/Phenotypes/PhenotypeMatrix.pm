@@ -22,6 +22,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     include_timestamp=>$include_timestamp,
     include_pedigree_parents=>$include_pedigree_parents,
     exclude_phenotype_outlier=>0,
+    dataset_exluded_outliers=>$dataset_exluded_outliers,
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
     phenotype_max_value=>$phenotype_max_value,
@@ -131,10 +132,21 @@ has 'include_timestamp' => (
     default => 0
 );
 
+has 'include_phenotype_primary_key' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool',
     is => 'ro',
     default => 0
+);
+
+has 'dataset_exluded_outliers' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
 );
 
 has 'trait_contains' => (
@@ -184,6 +196,7 @@ sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
+    my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -204,6 +217,7 @@ sub get_phenotype_matrix {
             subplot_list=>$self->subplot_list,
             include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+            dataset_exluded_outliers=>$self->dataset_exluded_outliers,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
@@ -220,8 +234,7 @@ sub get_phenotype_matrix {
     my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
 
     if ($self->search_type eq 'MaterializedViewTable'){
-        ($data, $unique_traits) = $phenotypes_search->search();
-
+        ($data, $unique_traits) = $phenotypes_search->search();        
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -235,6 +248,9 @@ sub get_phenotype_matrix {
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
+            if ($include_phenotype_primary_key) {
+                push @line, $trait.'_phenotype_id';
+            }
         }
         push @line, 'notes';
 
@@ -283,21 +299,38 @@ sub get_phenotype_matrix {
 #            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
             my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
-            foreach (@$observations){
-                my $collect_date = $_->{collect_date};
-                my $timestamp = $_->{timestamp};
+            my %phenotype_ids;
+            my $dataset_exluded_outliers_ref = $self->dataset_exluded_outliers;
+            foreach my $observation (@$observations){
+                my $collect_date = $observation->{collect_date};
+                my $timestamp = $observation->{timestamp};
+
                 if ($include_timestamp && $timestamp) {
-                    $trait_observations{$_->{trait_name}} = "$_->{value},$timestamp";
+                    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
                 }
                 elsif ($include_timestamp && $collect_date) {
-                    $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
+                    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
                 }
                 else {
-                    $trait_observations{$_->{trait_name}} = $_->{value};
+                    $trait_observations{$observation->{trait_name}} = $observation->{value};
+                }
+
+                # dataset outliers will be empty fields if are in @$dataset_exluded_outliers_ref list of pheno_id outliers
+                if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_exluded_outliers_ref) {
+                    $trait_observations{$observation->{trait_name}} = ''; # empty field for outlier NA
+                }
+            }
+
+            if ($include_phenotype_primary_key) {
+                foreach my $observation (@$observations) {
+                    $phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
                 }
             }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
+                if ($include_phenotype_primary_key) {
+                    push @line, $phenotype_ids{$trait};
+                }
             }
             push @line, $obs_unit->{notes};
 
@@ -322,7 +355,7 @@ sub get_phenotype_matrix {
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
-        my %seen_obsunits;
+        my %seen_obsunits;        
 
         foreach my $d (@$data) {
             my $cvterm = $d->{trait_name};

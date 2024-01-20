@@ -21,7 +21,7 @@ $training_pop_id   => undef,
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/anova.css'] &>
 
-<& /util/import_javascript.mas, classes => ["solGS.anova"] &>
+<& /util/import_javascript.mas, classes => ["solGS.anova", "solGS.selectMenu"] &>
 
 
 <&| /page/info_section.mas,
@@ -32,9 +32,10 @@ $training_pop_id   => undef,
 
   <div id="anova_canvas">
 
-    <div id="anova_select_a_trait_div" style="float:left; z-index:10; position:absolute; "></div>
-    <input  style="position:absolute;margin-left:300px;" id="run_anova" class="btn btn-success" type="button" value="Run ANOVA" />
-
+    <div>
+    <div id="anova_select_a_trait_div" style="display:inline-block;"></div>
+    <button style="display:inline-block;" id="run_anova" class="btn btn-success" type="button">Run ANOVA</button>
+  </div>
     <div id="anova_selected_trait_div" style="display:none">
 
       <input type="hidden" id="anova_selected_trait_name" value="" />
