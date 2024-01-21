@@ -27,36 +27,36 @@ End Date: <input type="text" id="dbstats_end_date" title="dbstats_end_date"  />
 
 <h3>Trials</h3>
 <div id="recent_activity_trials_div">
-  <table id="recent_activity_trials">
+  <table id="recent_activity_trials" width="600">
   <thead>
-    <tr><th width="300">Breeding Program</th><th width="200">Trials</th></tr>
+    <tr><th width="200">Breeding Program</th><th width="200">Trials</th></tr>
     </thead>
   </table>
 </div>
 
 <h3>Phenotypes</h3>
 <div id="recent_activity_phenotypes_div">
-  <table id="recent_activity_phenotypes">
+  <table id="recent_activity_phenotypes" width="600">
   <thead>
-    <tr><th width="300">Breeding Program</th><th width="200">Phenotypes</th></tr>
+    <tr><th width="200">Breeding Program</th><th width="200">Phenotypes</th></tr>
     </thead>
   </table>
 </div>
 
 <h3>Accessions</h3>
 <div id="recent_activity_accessions_div">
-  <table id="recent_activity_accessions">
+  <table id="recent_activity_accessions" width="600">
   <thead>
-    <tr><th width="300">Breeding Program</th><th width="200">Accessions</th></tr>
+    <tr><th width="200">Breeding Program</th><th width="200">Accessions</th></tr>
     </thead>
   </table>
 </div>
 
 <h3>Plots</h3>
 <div id="recent_activity_plots_div">
-  <table id="recent_activity_plots">
+  <table id="recent_activity_plots" width="600">
   <thead>
-    <tr><th width="300">Breeding Program</th><th width="200">Plots</th></tr>
+    <tr><th width="200">Breeding Program</th><th width="200">Plots</th></tr>
     </thead>
   </table>
 </div>
@@ -83,19 +83,28 @@ function update_dbstats_tables(start_date, end_date, include_dateless_items) {
 
     jQuery('#recent_activity_trials').dataTable( {
 	ajax : '/ajax/dbstats/trials_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
-	destroy: true
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info:false
 	
     }
     );
 
     jQuery('#recent_activity_phenotypes').dataTable({
 	ajax : '/ajax/dbstats/phenotypes_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
-	destroy: true
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info: false,
     });
 
     jQuery('#recent_activity_accessions').dataTable({
 	ajax : '/ajax/dbstats/accessions_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
-	destroy: true
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info: false
 	
     }
 	
@@ -104,8 +113,10 @@ function update_dbstats_tables(start_date, end_date, include_dateless_items) {
 
     jQuery('#recent_activity_plots').dataTable({
 	ajax : '/ajax/dbstats/plots_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
-	destroy: true
-
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info: false
     }
 	
     );
