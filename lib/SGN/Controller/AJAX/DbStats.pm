@@ -105,7 +105,7 @@ sub trials_by_breeding_program_chart :Path('/ajax/dbstats/trials_by_breeding_pro
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
-    my $tbbp = $dbstats->trials_by_breeding_program($start_date, $end_date, $include_dateless_items);
+    my $tbbp = $dbstats->trial_count_by_breeding_program($start_date, $end_date, $include_dateless_items);
 
     my $total_trials = 0;
     foreach my $t (@$tbbp) { $total_trials += $t->[1]; }
