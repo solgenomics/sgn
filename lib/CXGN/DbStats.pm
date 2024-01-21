@@ -168,7 +168,7 @@ sub stock_stats {
     my $query = "SELECT distinct(cvterm.name), count(*) FROM stock join cvterm on(type_id=cvterm_id) WHERE ( $datelessq ( create_date > ? and create_date < ? )) group by cvterm.name";
 
     my $h = $dbh->prepare($query);
-    $h->execute($self->start_date, $self->end_date);
+    $h->execute($start_date, $end_date);
 
     my @data;
     while (my ($stock_type, $count) = $h->fetchrow_array()) {
@@ -218,7 +218,7 @@ sub plot_count_by_breeding_program {
     my $query = "select breeding_program.name, count(*) from project as breeding_program join project_relationship on(breeding_program.project_id=project_relationship.object_project_id) join project as trial on(project_relationship.subject_project_id=trial.project_id) join projectprop on (breeding_program.project_id=projectprop.project_id) join nd_experiment_project on (trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) where ( $datelessq ( stock.create_date > ? and stock.create_date < ? ) ) and stock.type_id = (select cvterm_id from cvterm where name='plot') and projectprop.type_id = (select cvterm_id from cvterm where name='breeding_program') group by breeding_program.name order by count(*) desc";
 
     my $h = $dbh->prepare($query);
-    $h->execute($self->start_date, $self->end_date);
+    $h->execute($start_date, $end_date);
     
     my @data; 
     while (my ($bp, $count) = $h-> fetchrow_array()) {
@@ -245,7 +245,7 @@ sub germplasm_count_with_pedigree {
     my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on(stock_id=object_id) WHERE stock_relationship.type_id=(select cvterm_id FROM cvterm where name='female_parent' or name='male_parent') and cvterm.name='accession' and ( $datelessq ( create_date > ? and create_date < ? )) group by cvterm.name";
 
     my $h = $dbh->prepare($query);
-    $h->execute($self->start_date, $self->end_date);
+    $h->execute($start_date, $end_date);
 
     my @data;
     while (my ($stock_type, $count) = $h->fetchrow_array()) {
@@ -302,7 +302,7 @@ sub germplasm_count_with_genotypes {
 
     
     my $h = $dbh->prepare($query);
-    $h->execute($self->start_date, $self->end_date);
+    $h->execute($start_date, $end_date);
 
     
     my @data;
