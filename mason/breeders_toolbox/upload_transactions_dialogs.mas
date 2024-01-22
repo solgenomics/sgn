@@ -575,8 +575,11 @@ function upload_transactions_file() {
         if (uploadSeedlotsToNewSeedlots === ''){
             var uploadSeedlotsToPlots = jQuery("#seedlots_to_plots_file").val();
             if (uploadSeedlotsToPlots === ''){
-                alert("Please select a file");
-                return;
+                var uploadSeedlotsToUnspecified = jQuery("#seedlots_to_unspecified_names_file").val();
+                if (uploadSeedlotsToUnspecified === '') {
+                    alert("Please select a file");
+                    return;
+                }
             }
         }
     }

@@ -1802,28 +1802,33 @@ sub upload_transactions_POST : Args(0) {
     my $upload_seedlots_to_seedlots = $c->req->upload('seedlots_to_seedlots_file');
     my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
     my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
+    my $upload_seedlots_to_unspecified_names = $c->req->upload('seedlots_to_unspecified_names_file');
 
     my $new_seedlot_breeding_program_id = $c->req->param("new_seedlot_breeding_program_id");
     my $new_seedlot_location = $c->req->param("new_seedlot_location");
     my $new_seedlot_organization = $c->req->param("new_seedlot_organization_name");
 
-    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots){
+    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots && !$upload_seedlots_to_unspecified_names){
         $c->stash->{rest} = {error=>'You must upload a transaction file!'};
         $c->detach();
     }
     my $upload;
     my $parser_type;
-    if ($upload_seedlots_to_seedlots){
+    if (defined $upload_seedlots_to_seedlots){
         $upload = $upload_seedlots_to_seedlots;
         $parser_type = 'SeedlotsToSeedlots';
     }
-    if ($upload_seedlots_to_new_seedlots){
+    if (defined $upload_seedlots_to_new_seedlots){
         $upload = $upload_seedlots_to_new_seedlots;
         $parser_type = 'SeedlotsToNewSeedlots';
     }
-    if ($upload_seedlots_to_plots){
+    if (defined $upload_seedlots_to_plots){
         $upload = $upload_seedlots_to_plots;
         $parser_type = 'SeedlotsToPlots';
+    }
+    if (defined $upload_seedlots_to_unspecified_names){
+        $upload = $upload_seedlots_to_unspecified_names;
+        $parser_type = 'SeedlotsToUnspecifiedNames';
     }
 
     my $subdirectory = "seedlot_transaction_upload";

@@ -148,7 +148,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell D$row_name: operator_name missing";
         }
 
-        if (!defined($transaction_discription) || $transaction_description eq '') {
+        if (!defined($transaction_description) || $transaction_description eq '') {
             push @error_messages, "Cell E$row_name: transaction description missing";
         }
     }
@@ -231,19 +231,19 @@ sub _parse_with_plugin {
             $from_seedlot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
-            $amount =  $worksheet->get_cell($row,2)->value();
+            $amount =  $worksheet->get_cell($row,1)->value();
             $amount =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
-            $weight =  $worksheet->get_cell($row,3)->value();
+            $weight =  $worksheet->get_cell($row,2)->value();
             $weight =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
-            $operator_name =  $worksheet->get_cell($row,4)->value();
+            $operator_name =  $worksheet->get_cell($row,3)->value();
             $operator_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
-            $transaction_description =  $worksheet->get_cell($row,5)->value();
+            $transaction_description =  $worksheet->get_cell($row,4)->value();
         }
 
         if (!defined $from_seedlot_name && !defined $operator_name) {
