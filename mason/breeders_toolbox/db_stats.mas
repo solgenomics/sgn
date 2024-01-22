@@ -110,6 +110,28 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 </&>
 
+<&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
+
+%  foreach (@$breeding_programs){
+
+    <div class="well">
+
+        <h3>Breeding Program: <% $_->[1] %></h3>
+
+        <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+            <& /breeders_toolbox/program/trials.mas, program_id => $_->[0] &>
+        </&>
+
+        <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0], collapse_phenotypes_section => 0  &>
+        </&>
+
+    </div>
+
+%  }
+
+</&>
+
 <script>
 
 % my $breeding_program_json = encode_json($breeding_programs);
@@ -134,23 +156,23 @@ jQuery(document).ready( function() {
 
    var html = "";
 
-   for(let i=0; i<breeding_programs.length; i++) {
-//      alert('table loop '+i + ' for '+breeding_programs[i][1]);
-      html += "<h3>Breeding Program: "+ breeding_programs[i][1] + "</h3>";
+//    for(let i=0; i<breeding_programs.length; i++) {
+// //      alert('table loop '+i + ' for '+breeding_programs[i][1]);
+//       html += "<h3>Breeding Program: "+ breeding_programs[i][1] + "</h3>";
 
-      html += trial_table(html, breeding_programs[i][0]);
-      html += trait_table(html, breeding_programs[i][0]);
-   }
+//       html += trial_table(html, breeding_programs[i][0]);
+//       html += trait_table(html, breeding_programs[i][0]);
+//    }
 
-   jQuery('#program_stats').html(html);
+//    jQuery('#program_stats').html(html);
 
-//   alert(JSON.stringify(breeding_programs));
+// //   alert(JSON.stringify(breeding_programs));
 
-   for(let n=0; n<breeding_programs.length; n++) { 
-//       alert('ajax loop '+ n + ' for '+breeding_programs[n][1]);
-       trial_queries(breeding_programs[n][0], start_date, end_date, include_dateless_items);
-       trait_queries(breeding_programs[n][0], start_date, end_date, include_dateless_items);
-   }
+//    for(let n=0; n<breeding_programs.length; n++) {
+// //       alert('ajax loop '+ n + ' for '+breeding_programs[n][1]);
+//        trial_queries(breeding_programs[n][0], start_date, end_date, include_dateless_items);
+//        trait_queries(breeding_programs[n][0], start_date, end_date, include_dateless_items);
+//    }
 
 
 });
@@ -159,7 +181,7 @@ function draw_overview_charts(start_date, end_date, include_dateless_items) {
 
      // remove old graphs if present
        jQuery('#trial_types_div').html("");
-       jQuery('#trials_by_breeding_program_div').html("");
+       jQuery('#trials_by_breeding_programs_div').html("");
        jQuery('#traits_div').html("");
        jQuery('#stocks_div').html("");
 
