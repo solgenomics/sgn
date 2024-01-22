@@ -98,17 +98,17 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 </&>
 
-<&| /page/info_section.mas, title => "Activity - past 52 weeks" &>
+%# <&| /page/info_section.mas, title => "Activity - past 52 weeks" &>
 
-  <svg class="bargraph" width="800" height="200"></svg>
+%#   <svg class="bargraph" width="800" height="200"></svg>
     
-</&>
+%# </&>
 
-<&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
+%# <&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
 
-<div id="program_stats">[loading program stats...]</div>
+%# <div id="program_stats">[loading program stats...]</div>
 
-</&>
+%# </&>
 
 <&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
 
@@ -154,7 +154,7 @@ jQuery(document).ready( function() {
 
     //   alert(JSON.stringify(breeding_programs));
 
-   var html = "";
+//   var html = "";
 
 //    for(let i=0; i<breeding_programs.length; i++) {
 // //      alert('table loop '+i + ' for '+breeding_programs[i][1]);
