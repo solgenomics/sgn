@@ -22,7 +22,7 @@
                             <p>There are four different types of seedlot transactions: Transferring seeds from an existing seedlot to another existing seedlot, to a new seedlot, to a plot or to unspecified seedlot or plot. </p>
                             <ul>
                                 <li>You can use upload option for all transaction types</li>
-                                <li>Adding transactions by using a list can be used only for transfering seeds from existing seedlots to unspecified seedlots or plots.</li>
+                                <li><b>Seedlot list option can be used only for transfering seeds from existing seedlots to unspecified seedlots/plots.</b></li>
                             </ul>
                             <hr>
 
