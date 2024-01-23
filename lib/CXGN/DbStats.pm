@@ -16,6 +16,7 @@ sub trial_types {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
     my $datelessq = "";
     
     if ($include_dateless_items == 1) {
@@ -36,6 +37,8 @@ sub trial_count_by_breeding_program {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+
     my $datelessq = "";
     if ($include_dateless_items == 1) {
 	$datelessq = " trial.create_date IS NULL OR ";
@@ -53,6 +56,8 @@ sub phenotype_count_by_breeding_program {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $datelessq = "";
     if ($include_dateless_items == 1) {
 	$datelessq = " trial.create_date IS NULL OR ";
@@ -73,6 +78,8 @@ sub traits {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " create_date IS NULL OR ";
@@ -90,6 +97,8 @@ sub stocks {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " create_date IS NULL OR ";
@@ -108,6 +117,8 @@ sub projects {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " create_date IS NULL OR ";
@@ -151,13 +162,13 @@ sub stock_stats {
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
-    
+
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
 
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " create_date IS NULL OR ";
     }
-
     
     my $dbh = $self->dbh();
     
@@ -183,6 +194,8 @@ sub accession_count_by_breeding_program {
     
     my $dbh = $self->dbh();
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $datelessq;
     if ($include_dateless_items == 1 ) {
 	$datelessq = " accession.create_date IS NULL OR ";
@@ -199,11 +212,39 @@ sub accession_count_by_breeding_program {
     return \@data;	
 }
 
+sub accession_count_by_breeding_program_without_trials {
+    my $self = shift;
+    my $start_date = shift || $self->start_date();
+    my $end_date = shift || $self->end_date();
+    my $include_dateless_items = shift;
+    
+    my $dbh = $self->dbh();
+
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
+    my $datelessq;
+    if ($include_dateless_items == 1 ) {
+	$datelessq = " stock.create_date IS NULL OR ";
+    }
+    my $query = "select distinct(value), count(*) from stock join stockprop using(stock_id) join cvterm on (stockprop.type_id=cvterm.cvterm_id) where cvterm.name = 'organization' and ( $datelessq ( stock.create_date > ? and stock.create_date < ? ))  group by value;";
+
+    my $h = $dbh->prepare($query);
+    $h->execute($start_date, $end_date);
+    
+    my @data; 
+    while (my ($bp, $count) = $h-> fetchrow_array()) {
+	push @data, [ $bp, $count ];
+    }
+    return \@data;	
+}
+
 sub plot_count_by_breeding_program {
     my $self = shift;
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
+
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
     
     my $dbh = $self->dbh();
 
@@ -230,6 +271,8 @@ sub germplasm_count_with_pedigree {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $dbh = $self->dbh();
     
     my $datelessq;
@@ -238,7 +281,7 @@ sub germplasm_count_with_pedigree {
     }
        
        
-    my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on(stock_id=object_id) WHERE stock_relationship.type_id=(select cvterm_id FROM cvterm where name='female_parent' or name='male_parent') and cvterm.name='accession' and ( $datelessq ( create_date > ? and create_date < ? )) group by cvterm.name";
+    my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on(stock_id=object_id) WHERE stock_relationship.type_id in (select cvterm_id FROM cvterm where name='female_parent' or name='male_parent') and cvterm.name='accession' and ( $datelessq ( stock.create_date > ? and stock.create_date < ? )) group by cvterm.name";
 
     my $h = $dbh->prepare($query);
     $h->execute($start_date, $end_date);
@@ -258,6 +301,8 @@ sub germplasm_count_with_phenotypes {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $dbh = $self->dbh();
 
     my $datelessq;
@@ -285,6 +330,8 @@ sub germplasm_count_with_genotypes {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $dbh = $self->dbh();
 
     my $datelessq;
@@ -294,7 +341,7 @@ sub germplasm_count_with_genotypes {
 
     # genotypes associated with accessions
     #
-    my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock on(plot.stock_id=nd_experiment_stock.stock_id) join nd_experiment_genotype on(nd_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) WHERE cvterm.name='accession' and ( $datelessq (stock.create_date > ? and stock.create_date))  < ? group by cvterm.name";
+    my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock on(stock.stock_id=nd_experiment_stock.stock_id) join nd_experiment_genotype on(nd_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) WHERE cvterm.name='accession' and ( $datelessq (stock.create_date > ? and stock.create_date < ?)) group by cvterm.name";
 
     
     my $h = $dbh->prepare($query);
@@ -321,14 +368,16 @@ sub phenotype_count_per_trial {
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+    
     my $dbh = $self->dbh();
     
     my $datelessq;
     if ($include_dateless_items == 1) {
-	$datelessq = " stock.create_date IS NULL OR ";
+	$datelessq = " phenotype.create_date IS NULL OR ";
     }
 
-    my $q = "select project.project_id, project.name, cvterm.name, count(cvterm_id) from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) join cvterm on(cvalue_id=cvterm_id) where ( $datelessq ( create_date > ? and create_date < ? ))  group by project.project_id, project.name, cvterm.name";
+    my $q = "select project.project_id, project.name, cvterm.name, count(cvterm_id) from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) join cvterm on(cvalue_id=cvterm_id) where ( $datelessq ( phenotype.create_date > ? and phenotype.create_date < ? ))  group by project.project_id, project.name, cvterm.name";
 
     my $h = $dbh->prepare($q);
     $h->execute( $start_date, $end_date);
