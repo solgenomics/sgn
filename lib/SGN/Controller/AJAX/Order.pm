@@ -773,8 +773,8 @@ sub download_order_item_file : Path('/ajax/order/download_order_item_file') Args
     }
     my $user_id = $user->get_object()->get_sp_person_id();
 
-#    my $order_id = $c->req->param('order_id');
-#    print STDERR "ORDER ID =".Dumper($order_id)."\n";
+    my $order_id = $c->req->param('order_id');
+    print STDERR "ORDER ID =".Dumper($order_id)."\n";
     my $file_format = "xls";
 
     my $time = DateTime->now();
@@ -786,15 +786,27 @@ sub download_order_item_file : Path('/ajax/order/download_order_item_file') Args
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 #    print STDERR "TEMPFILE : $tempfile\n";
 
-    my $download = CXGN::Trial::Download->new({
-        bcs_schema => $schema,
-        people_schema => $people_schema,
-        dbh => $dbh,
-        filename => $tempfile,
-        format => 'OrderItemFileXLS',
-        user_id => $user_id
-#        trial_id => $order_id
-    });
+    my $download;
+    if (!defined $order_id || $order_id eq '') {
+        $download = CXGN::Trial::Download->new({
+            bcs_schema => $schema,
+            people_schema => $people_schema,
+            dbh => $dbh,
+            filename => $tempfile,
+            format => 'OrderItemFileXLS',
+            user_id => $user_id,
+        });
+    } else {
+        $download = CXGN::Trial::Download->new({
+            bcs_schema => $schema,
+            people_schema => $people_schema,
+            dbh => $dbh,
+            filename => $tempfile,
+            format => 'OrderItemFileXLS',
+            user_id => $user_id,
+            trial_id => $order_id
+        });
+    }
 
     my $error = $download->download();
 

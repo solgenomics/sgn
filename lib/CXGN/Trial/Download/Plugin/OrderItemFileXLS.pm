@@ -47,7 +47,7 @@ sub download {
     my $schema = $self->bcs_schema,
     my $people_schema = $self->people_schema();
     my $dbh = $self->dbh();
-#    my $order_id = $self->trial_id;
+    my $order_id = $self->trial_id;
     my $user_id = $self->user_id;
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
 
@@ -62,10 +62,15 @@ sub download {
     }
 
     my $row_count = 1;
+    my $tracking_info;
+    if (!defined $order_id || $order_id eq '') {
+        my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+        $tracking_info = $order_obj->get_active_item_tracking_info();
+    } else {
+        my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, sp_order_id => $order_id});
+        $tracking_info = $order_obj->get_tracking_info();
+    }
 
-    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
-#    my $tracking_info = $order_obj->get_tracking_info();
-    my $tracking_info = $order_obj->get_active_item_tracking_info();
     my @all_item_info = @$tracking_info;
 
     for my $k (0 .. $#all_item_info) {
