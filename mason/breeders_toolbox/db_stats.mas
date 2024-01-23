@@ -110,27 +110,27 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 %# </&>
 
-<&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
+%# <&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
 
-%  foreach (@$breeding_programs){
+%#  %  foreach (@$breeding_programs){
 
-    <div class="well">
+%#    <div class="well">
 
-        <h3>Breeding Program: <% $_->[1] %></h3>
+%#        <h3>Breeding Program: <% $_->[1] %></h3>
 
-        <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
-            <& /breeders_toolbox/program/trials.mas, program_id => $_->[0] &>
-        </&>
+%#        <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+%#            <& /breeders_toolbox/program/trials.mas, program_id => $_->[0] &>
+%#        </&>
 
-        <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
-            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0], collapse_phenotypes_section => 0  &>
-        </&>
+%#        <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+%#            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0], collapse_phenotypes_section => 0  &>
+%#        </&>
 
-    </div>
+%#    </div>
 
 %  }
 
-</&>
+%#</&>
 
 <script>
 
