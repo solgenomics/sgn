@@ -38,11 +38,7 @@ sub trial_count_by_breeding_program {
 
     my $datelessq = "";
     if ($include_dateless_items == 1) {
-	print STDERR "INLCUDING DATELESS DATA...\n";
 	$datelessq = " trial.create_date IS NULL OR ";
-    }
-    else {
-	print STDERR "NOT inlcuding dataless data...\n";
     }
     my $q = "select project.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) where ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and cvterm.name='breeding_program' and trialcvterm.name in (SELECT cvterm.name FROM cvterm join cv using(cv_id) WHERE cv.name='project_type') group by project.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
