@@ -128,7 +128,7 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 %#    </div>
 
-%  }
+%#  }
 
 %#</&>
 
