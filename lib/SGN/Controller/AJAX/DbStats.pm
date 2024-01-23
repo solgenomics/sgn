@@ -98,6 +98,7 @@ sub trials_by_breeding_program_chart :Path('/ajax/dbstats/trials_by_breeding_pro
     my $self = shift;   
     my $c = shift;
 
+    print STDERR "Trials by breeding program chart...\n";
     my $start_date = $c->req->param("start_date");
     my $end_date = $c->req->param("end_date");
     my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
@@ -112,7 +113,7 @@ sub trials_by_breeding_program_chart :Path('/ajax/dbstats/trials_by_breeding_pro
     
     my %response = $self->format_response( { title => "Trials by Breeding Program", subtitle => "Showing $total_trials Total Trials", data => $tbbp });
  
-    print STDERR Dumper(\%response);
+#    print STDERR Dumper(\%response);
     $c->stash->{rest} = \%response;   
 }
 
@@ -181,7 +182,7 @@ sub trial_types_chart : Path('/ajax/dbstats/trial_types_chart') Args(0) {
     
     my %response = $self->format_response( { title => "Trial Types", subtitle => "Showing $total_trials Total Trials", data => $trial_types });
  
-    print STDERR Dumper(\%response);
+    #print STDERR Dumper(\%response);
     $c->stash->{rest} = \%response;   
 }
 
@@ -267,7 +268,7 @@ sub format_response {
 	      }
 	  }
 	);
-    print STDERR Dumper(\%response);
+    #print STDERR Dumper(\%response);
     my $n = 0;
     foreach my $d (@{$args->{data}}) { 
 	my ($term, $count) = @$d;
