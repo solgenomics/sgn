@@ -167,7 +167,7 @@ my $stock_type_select = simple_selectbox_html(
               <table id="stock_search_results" width="100%" class="table table-hover table-striped">
               <thead>
                 <tr>
-                  <th>Stock Name</th>
+                  <th>Vector Name</th>
                   <th>Stock Type</th>
                   <th>Organism</th>
                   <th>Synonyms</th>
@@ -231,7 +231,7 @@ my $stock_type_select = simple_selectbox_html(
                 stockprop_extra_columns_view[selected_property] = 1;
                 stockprop_extra_columns_view_array.push(selected_property);
 
-                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Stock Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
+                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Vector Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
                 for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                     table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
                 }
@@ -253,7 +253,7 @@ my $stock_type_select = simple_selectbox_html(
                 var index = stockprop_extra_columns_view_array.indexOf(selected_property);
                 stockprop_extra_columns_view_array.splice(index, 1);
 
-                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Stock Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
+                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Vector Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
                 for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                     table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
                 }

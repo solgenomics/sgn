@@ -136,6 +136,10 @@ sub _validate_with_plugin {
             $transaction_description =  $worksheet->get_cell($row,5)->value();
         }
 
+        if (!defined $from_seedlot_name && !defined $to_seedlot_name) {
+            last;
+        }
+
         if (!$from_seedlot_name || $from_seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: from_seedlot_name missing.";
         } else {
@@ -270,9 +274,8 @@ sub _parse_with_plugin {
             $transaction_description =  $worksheet->get_cell($row,5)->value();
         }
 
-        #skip blank lines
-        if (!$to_seedlot_name && !$from_seedlot_name) {
-            next;
+        if (!defined $from_seedlot_name && !defined $to_seedlot_name) {
+            last;
         }
 
         my $from_seedlot_rs = $schema->resultset("Stock::Stock")->find({

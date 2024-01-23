@@ -54,6 +54,7 @@ $trial_owner => undef
 $phenotypes_fully_uploaded => undef
 $user_can_modify => undef
 $latest_trial_activity => undef
+$has_col_and_row_numbers => undef
 
 #Specific to stock detail page
 $type_name => undef
@@ -161,7 +162,7 @@ $analytics_protocol_result_summary => {}
                             <div class="panel-body">
 
 % if ($info_section_id eq 'pheno_heatmap'){
-                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level &>
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
                                 <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
@@ -175,6 +176,12 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 % } #End trial_detail_traits_assayed
+
+% if ($info_section_id eq 'trial_raw_data') {
+   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
+% }
+
+
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
