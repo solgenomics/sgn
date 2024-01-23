@@ -98,11 +98,11 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 </&>
 
-%# <&| /page/info_section.mas, title => "Activity - past 52 weeks" &>
+ <&| /page/info_section.mas, title => "Activity - past 52 weeks" &>
 
-%#   <svg class="bargraph" width="800" height="200"></svg>
+    <svg class="bargraph" width="800" height="200"></svg>
     
-%# </&>
+ </&>
 
 %# <&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
 
