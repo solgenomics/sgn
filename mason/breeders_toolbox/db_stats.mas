@@ -139,16 +139,11 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 jQuery(document).ready( function() { 
 
-    var start_date = jQuery('#dbstats_start_date').val();
-    var end_date   = jQuery('#dbstats_end_date').val();
-    var include_dateless_items = jQuery('#include_dateless_items').val();
+    draw_overview_charts();   
 
     jQuery('#update_dbstats_by_date').click( function() {
-        draw_overview_charts(start_date, end_date, include_dateless_items);
-	//        alert('start_date: '+ jQuery('#dbstats_start_date').val() );
+        draw_overview_charts();
     });
-
-    draw_overview_charts(start_date, end_date, include_dateless_items);
 
     var breeding_programs = JSON.parse('<% $breeding_program_json %>');
 
@@ -177,8 +172,11 @@ jQuery(document).ready( function() {
 
 });
 
-function draw_overview_charts(start_date, end_date, include_dateless_items) { 
-
+function draw_overview_charts() { 
+ var start_date = jQuery('#dbstats_start_date').val();
+    var end_date   = jQuery('#dbstats_end_date').val();
+    var include_dateless_items = jQuery('#include_dateless_items').prop('checked');
+	 alert('Drawing charts with start date of '+start_date+' end date of '+end_date+' and '+include_dateless_items);
      // remove old graphs if present
        jQuery('#trial_types_div').html("");
        jQuery('#trials_by_breeding_programs_div').html("");
