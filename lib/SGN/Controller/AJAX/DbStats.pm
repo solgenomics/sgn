@@ -84,7 +84,7 @@ sub phenotype_count_by_breeding_program :Path('/ajax/dbstats/phenotypes_by_breed
     
     my $data = $dbstats->phenotype_count_by_breeding_program($start_date, $end_date, $include_dateless_items);
 
-    print STDERR "phenotype data: ". Dumper($data);
+    #print STDERR "phenotype data: ". Dumper($data);
     $c->stash->{rest} = { data => $data };
     
 
@@ -148,7 +148,8 @@ sub traits_measured_chart :Path('/ajax/dbstats/traits_chart') Args(0)  {
     
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
-    
+
+    print STDERR "TRAITS CHART: start date : $start_date, end date $end_date, and $include_dateless_items\n";
     my $traits = $dbstats->traits($start_date, $end_date, $include_dateless_items);
     
     my $total_traits = 0;
@@ -156,7 +157,7 @@ sub traits_measured_chart :Path('/ajax/dbstats/traits_chart') Args(0)  {
 
     my %response = $self->format_response( { title => "Traits", subtitle => "Total trait measurements: $total_traits", data => $traits });
  
-    print STDERR Dumper(\%response);
+    #print STDERR Dumper(\%response);
     $c->stash->{rest} = \%response;   
 
 #   my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) 
@@ -170,8 +171,9 @@ sub trial_types_chart : Path('/ajax/dbstats/trial_types_chart') Args(0) {
 
     my $start_date = $c->req->param("start_date");
     my $end_date = $c->req->param("end_date");
-    my $include_dateless_items = shift eq "true" ? 1 : 0;
-    
+    my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
+
+    print STDERR "TRIAL TYPES: start date : $start_date, end date $end_date, and $include_dateless_items\n";
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
@@ -182,7 +184,7 @@ sub trial_types_chart : Path('/ajax/dbstats/trial_types_chart') Args(0) {
     
     my %response = $self->format_response( { title => "Trial Types", subtitle => "Showing $total_trials Total Trials", data => $trial_types });
  
-    #print STDERR Dumper(\%response);
+    print STDERR Dumper(\%response);
     $c->stash->{rest} = \%response;   
 }
 

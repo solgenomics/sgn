@@ -19,7 +19,7 @@ sub trial_types {
     my $datelessq = "";
     
     if ($include_dateless_items == 1) {
-	$datelessq = " create_date IS NULL OR ";
+	$datelessq = " project.create_date IS NULL OR ";
     }
 
     my $q = "SELECT cvterm.name, count(*) from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm_id) JOIN cv USING (cv_id) WHERE ( $datelessq (project.create_date > ? and project.create_date < ?) ) and cv_id=(SELECT cv_id FROM cv WHERE name='project_type') GROUP BY cvterm.name ORDER BY count(*) desc";
