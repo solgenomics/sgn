@@ -41,7 +41,7 @@
                                         <div class="col-sm-8">
                                             <div class="input-group">
                                                 <select class="form-control" id="unit_type">
-                                                    <option value="">Select a record type </option>
+                                                    <option value="">Please select a unit type </option>
                                                     <option value="number_of_seeds">using number of seeds</option>
                                                     <option value="weight_g">using weight (g)</option>
                                                 </select>
@@ -121,8 +121,14 @@ jQuery(document).ready(function(){
     });
 
     var unit_type;
+    var seedlot_list_id;
+
     jQuery("#unit_type").change(function() {
         unit_type = jQuery('#unit_type').val();
+        if (unit_type && seedlot_list_id) {
+            transaction_form(unit_type, seedlot_list_id);
+        }
+
     });
 
     jQuery("[name = 'add_transactions_dismiss_button']").click(function() {
@@ -132,7 +138,6 @@ jQuery(document).ready(function(){
     });
 
 
-    var seedlot_list_id;
     jQuery("#seedlot_list_select").change(function() {
         seedlot_list_id = jQuery('#seedlot_list_select').val();
         if (seedlot_list_id){
@@ -145,15 +150,13 @@ jQuery(document).ready(function(){
                 alert("Please select a unit type");
                 return;
             } else if (unit_type && seedlot_list_id) {
-                transaction_form();
+                transaction_form(unit_type, seedlot_list_id);
             }
         }
     })
 
-    function transaction_form () {
-        var seedlot_id = jQuery('#seedlot_list_select').val();
+    function transaction_form (unit_type, seedlot_id) {
         var seedlot_list = lo.getList(seedlot_list_id);
-        var unit_type = jQuery('#unit_type').val();
 
         if (unit_type == 'number_of_seeds') {
             var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Seedlot Name</th><th>Number of Seeds Taken</th><th>Reason</th></tr></thead><tbody>';
