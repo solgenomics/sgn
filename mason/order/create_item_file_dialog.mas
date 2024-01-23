@@ -50,7 +50,7 @@ $order_id => undef
 
 jQuery(document).ready( function() {
 
-//    var order_id = <% $order_id %>;
+    var order_id = <% $order_id %>;
 
     jQuery("#download_active_item_file_button").click( function() {
         jQuery.ajax({
@@ -79,6 +79,35 @@ jQuery(document).ready( function() {
 
         });
     });
+
+    jQuery("#download_item_file_button").click( function() {
+        jQuery.ajax({
+            url:'/ajax/order/order_tracking_ids',
+            data: {'order_id': order_id },
+            success: function(response){
+                console.log(response);
+                var html = '';
+                html += '<div class="well well-sm"><table class="table table_1 table-hover table-condensed">';
+                html += '<thead><tr><th>order_tracking_name</th><th>order_tracking_id</th><th>item_name</th><th>order_number</th><th>item_number</th><th>required_quantity</th><th>required_stage</th></tr></thead><tbody>';
+
+                for(var i=0; i<response.tracking_info.length; i++){
+                    html += '<tr><td>'+response.tracking_info[i][0]+'</td>';
+                    html += '<td>'+response.tracking_info[i][1]+'</td>';
+                    html += '<td>'+response.tracking_info[i][2]+'</td>';
+                    html += '<td>'+response.tracking_info[i][3]+'</td>';
+                    html += '<td>'+response.tracking_info[i][4]+'</td>';
+                    html += '<td>'+response.tracking_info[i][5]+'</td>';
+                    html += '<td>'+response.tracking_info[i][6]+'</td></tr>';
+                }
+                html = html + '</tbody></table></div>';
+
+                jQuery('#item_tracking_ids_div').html(html);
+                jQuery('#download_item_file_dialog').modal('show');
+            }
+
+        });
+    });
+
 
 
 });

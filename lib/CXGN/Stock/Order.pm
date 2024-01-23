@@ -199,9 +199,9 @@ sub get_tracking_info {
     my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $dbh = $self->dbh();
-    my $order_number = $self->sp_order_id();
+    my $order_id = $self->sp_order_id();
 
-    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_number } );
+    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id } );
     my $item_json = $orderprop_rs->value();
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
@@ -209,6 +209,7 @@ sub get_tracking_info {
     my @all_tracking_info;
     my $item_number = 0;
     foreach my $item (@$all_items) {
+        my $item_number_string;
         my %item_details = %$item;
         my ($name, $value) = %item_details;
         my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $name});
@@ -216,8 +217,9 @@ sub get_tracking_info {
         my $required_quantity = $value->{'Required Quantity'};
         my $required_stage = $value->{'Required Stage'};
         $item_number++;
+        $item_number_string = $order_id.'-'.$item_number;
 
-        push @all_tracking_info, [ "order".$order_number.":".$name, "order".$order_number.":".$item_stock_id,  $order_number, $item_number, $required_quantity, $required_stage,]
+        push @all_tracking_info, [ "order".$order_id.":".$name, "order".$order_id.":".$item_stock_id, $name, $order_id, $item_number_string, $required_quantity, $required_stage,]
     }
 
     return \@all_tracking_info;
@@ -256,7 +258,6 @@ sub get_active_item_tracking_info {
             foreach my $item (@$all_items) {
                 my $item_number_string;
                 my %item_details = %$item;
-                print STDERR "ITEM DETAILS =".Dumper(\%item_details)."\n";
                 my ($name, $value) = %item_details;
                 my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $name});
                 my $item_stock_id = $item_rs->stock_id();
