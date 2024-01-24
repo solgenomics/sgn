@@ -774,7 +774,7 @@ sub download_order_item_file : Path('/ajax/order/download_order_item_file') Args
     my $user_id = $user->get_object()->get_sp_person_id();
 
     my $order_id = $c->req->param('order_id');
-    print STDERR "ORDER ID =".Dumper($order_id)."\n";
+#    print STDERR "ORDER ID =".Dumper($order_id)."\n";
     my $file_format = "xls";
 
     my $time = DateTime->now();
@@ -844,7 +844,7 @@ sub get_active_order_tracking_ids :Path('/ajax/order/active_order_tracking_ids')
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, bcs_schema => $schema});
     my $active_item_tracking_ids = $orders->get_active_item_tracking_info();
-    print STDERR "ACTIVE TRACKING IDS =".Dumper($active_item_tracking_ids)."\n";
+#    print STDERR "ACTIVE TRACKING IDS =".Dumper($active_item_tracking_ids)."\n";
 
     $c->stash->{rest} = {tracking_info => $active_item_tracking_ids};
 
