@@ -22,7 +22,7 @@
                             <p>There are four different types of seedlot transactions: Transferring seeds from an existing seedlot to another existing seedlot, to a new seedlot, to a plot or to unspecified seedlot or plot. </p>
                             <ul>
                                 <li>You can use upload option for all transaction types</li>
-                                <li><b>Seedlot list option can be used only for transfering seeds from existing seedlots to unspecified seedlots/plots.</b></li>
+                                <li><b>Seedlot list option can be used only for transferring seeds from existing seedlots to unspecified seedlots/plots.</b></li>
                             </ul>
                             <hr>
 
@@ -34,6 +34,8 @@
                         <form class="form-horizontal" role="form" name="add_new_transaction_form" id="add_new_transaction_form">
                             <&| /util/workflow.mas:step, title=> "Add New Transactions" &>
                                 <& /page/page_title.mas, title=>"Enter information about the transactions" &>
+                                <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label">Note: This option is for transferring seeds to unspecified seedlots/plots only</label></center>
+                                <br/>
                                 <br/>
                                 <div class="form-horizontal">
                                     <div class="form-group">

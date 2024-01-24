@@ -20,7 +20,7 @@
                                 <li>Transferring seeds from existing seedlot to another existing seedlot.</li>
                                 <li>Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.</li>
                                 <li>Transferring seeds from existing seedlot to a previously stored plot</li>
-                                <li>Removing seeds from existing seedlot to unspecified seedlot names or plot names</li>
+                                <li>Removing seeds from existing seedlot to unspecified seedlot name or plot name</li>
                             </ul>
                             <br/><br/>
                             <center>
