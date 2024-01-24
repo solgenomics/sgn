@@ -206,6 +206,11 @@ has 'stockprop_columns_view' => (
     is => 'rw',
 );
 
+has 'search_vectorprop' => (
+    isa => 'Int|Undef',
+    is => 'rw',
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -256,6 +261,7 @@ sub search {
     my @species_array = $self->species_list ? @{$self->species_list} : ();
     my @crop_name_array = $self->crop_name_list ? @{$self->crop_name_list} : ();
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
+    my $using_stockprop_filter = $self->search_vectorprop || 0;
     my $limit = $self->limit;
     my $offset = $self->offset;
         
@@ -410,9 +416,8 @@ sub search {
     }
 
     my @stockprop_filtered_stock_ids;
-    my $using_stockprop_filter;
+
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
-        $using_stockprop_filter = 1;
 
         my @stockprop_wheres;
         foreach my $term_name (keys %{$self->stockprops_values}){
@@ -483,67 +488,68 @@ sub search {
     #skip rest of query if no results
     my @result;
     my $records_total = 0;
-
-    my $rs = $schema->resultset("Stock::Stock")->search(
-    $search_query,
-    {
-        join => ['type', 'organism', 'stockprops', $stock_join],
-        '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
-        '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
-        order_by  => 'me.name',
-        distinct=>1
-    });
-
-    $records_total = $rs->count();
-    if (defined($limit) && defined($offset)){
-        $rs = $rs->slice($offset, $limit);
-    }
-
-    my $owners_hash;
-    if (!$self->minimal_info){
-        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-        $owners_hash = $stock_lookup->get_owner_hash_lookup();
-    }
-
-    
     my %result_hash;
     my @result_stock_ids;
-    while (my $a = $rs->next()) {
-        my $uniquename  = $a->uniquename;
-        my $stock_id    = $a->stock_id;
-        push @result_stock_ids, $stock_id;
+    
+    if ($using_stockprop_filter == 0 || ($using_stockprop_filter = 1 && scalar(@stockprop_filtered_stock_ids)>0 )){  
 
+        my $rs = $schema->resultset("Stock::Stock")->search(
+        $search_query,
+        {
+            join => ['type', 'organism', 'stockprops', $stock_join],
+            '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
+            '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
+            order_by  => 'me.name',
+            distinct=>1
+        });
+
+        $records_total = $rs->count();
+        if (defined($limit) && defined($offset)){
+            $rs = $rs->slice($offset, $limit);
+        }
+
+        my $owners_hash;
         if (!$self->minimal_info){
-            # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
-            my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
-            my $type_id     = $a->type_id ;
-            my $type        = $a->get_column('cvterm_name');
-            my $organism_id = $a->organism_id;
-            my $species    = $a->get_column('species');
-            my $stock_name  = $a->name;
-            my $common_name = $a->get_column('common_name');
-            my $genus       = $a->get_column('genus');
+            my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+            $owners_hash = $stock_lookup->get_owner_hash_lookup();
+        }
 
-            $result_hash{$stock_id} = {
-                stock_id => $stock_id,
-                uniquename => $uniquename,
-                stock_name => $stock_name,
-                stock_type => $type,
-                stock_type_id => $type_id,
-                species => $species,
-                genus => $genus,
-                common_name => $common_name,
-                organism_id => $organism_id,
-                owners => \@owners,
-            };
-        } else {
-            $result_hash{$stock_id} = {
-                stock_id => $stock_id,
-                uniquename => $uniquename
-            };
+        while (my $a = $rs->next()) {
+            my $uniquename  = $a->uniquename;
+            my $stock_id    = $a->stock_id;
+            push @result_stock_ids, $stock_id;
+
+            if (!$self->minimal_info){
+                # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
+                my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
+                my $type_id     = $a->type_id ;
+                my $type        = $a->get_column('cvterm_name');
+                my $organism_id = $a->organism_id;
+                my $species    = $a->get_column('species');
+                my $stock_name  = $a->name;
+                my $common_name = $a->get_column('common_name');
+                my $genus       = $a->get_column('genus');
+
+                $result_hash{$stock_id} = {
+                    stock_id => $stock_id,
+                    uniquename => $uniquename,
+                    stock_name => $stock_name,
+                    stock_type => $type,
+                    stock_type_id => $type_id,
+                    species => $species,
+                    genus => $genus,
+                    common_name => $common_name,
+                    organism_id => $organism_id,
+                    owners => \@owners,
+                };
+            } else {
+                $result_hash{$stock_id} = {
+                    stock_id => $stock_id,
+                    uniquename => $uniquename
+                };
+            }
         }
     }
-
     # Comma separated list of query placeholders for the result stock ids
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
     
