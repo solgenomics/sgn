@@ -261,7 +261,7 @@ sub search {
     my @species_array = $self->species_list ? @{$self->species_list} : ();
     my @crop_name_array = $self->crop_name_list ? @{$self->crop_name_list} : ();
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
-    my $using_stockprop_filter = $self->search_vectorprop || 0;
+    my $using_vectorprop_filter = $self->search_vectorprop || 0;
     my $limit = $self->limit;
     my $offset = $self->offset;
         
@@ -269,7 +269,7 @@ sub search {
     my $stock_type_id;
 
     unless ($matchtype eq 'exactly') { #trim whitespace from both ends unless exact search was specified
-        $any_name =~ s/^\s+|\s+$//g;
+        if ($any_name) { $any_name =~ s/^\s+|\s+$//g; }
     }
 
     my ($or_conditions, $and_conditions);
@@ -415,7 +415,7 @@ sub search {
         }
     }
 
-    my @stockprop_filtered_stock_ids;
+    my @vectorprop_filtered_stock_ids;
 
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
 
@@ -459,7 +459,7 @@ sub search {
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
-            push @stockprop_filtered_stock_ids, $stock_id;
+            push @vectorprop_filtered_stock_ids, $stock_id;
         }
     }
 
@@ -470,7 +470,7 @@ sub search {
     }
 
     #$schema->storage->debug(1);
-    my $operator = $default_operator ? $default_operator : (scalar(@stockprop_filtered_stock_ids)>0 ? "or" : "and");
+    my $operator = $default_operator ? $default_operator : (scalar(@vectorprop_filtered_stock_ids)>0 ? "or" : "and");
     my $search_query = {
         -$operator => [
             $or_conditions,
@@ -481,8 +481,8 @@ sub search {
         $search_query->{'me.is_obsolete'} = 'f';
     }
 
-    if ( scalar(@stockprop_filtered_stock_ids)>0){
-        $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
+    if ( scalar(@vectorprop_filtered_stock_ids)>0){
+        $search_query->{'me.stock_id'} = {'in'=>\@vectorprop_filtered_stock_ids};
     }
 
     #skip rest of query if no results
@@ -491,7 +491,7 @@ sub search {
     my %result_hash;
     my @result_stock_ids;
     
-    if ($using_stockprop_filter == 0 || ($using_stockprop_filter = 1 && scalar(@stockprop_filtered_stock_ids)>0 )){  
+    if ($using_vectorprop_filter == 0 || ($using_vectorprop_filter = 1 && scalar(@vectorprop_filtered_stock_ids)>0 )){  
 
         my $rs = $schema->resultset("Stock::Stock")->search(
         $search_query,
