@@ -1,7 +1,7 @@
 <%args>
 
 $role => "stock_orderer"
-$check_vendor_role
+$check_vendor_role => undef
 $user_id
 
 </%args>
@@ -163,19 +163,21 @@ $user_id
     </div>
 </div>
 
-<&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <button id="download_active_item_file_button" class="btn btn-primary">Download Item File</button>
-                <!--
-                <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
-                -->
-                <button id="generate_active_item_barcode_button" class="btn btn-primary">Generate Item Barcode</button>
+% if ($check_vendor_role == 1) {
+    <&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <button id="download_active_item_file_button" class="btn btn-primary">Download Item File</button>
+                    <!--
+                    <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
+                    -->
+                    <button id="generate_active_item_barcode_button" class="btn btn-primary">Generate Item Barcode</button>
+                </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
+% }
 
 <& /order/create_item_file_dialog.mas&>
 <& /order/create_ontology_file_dialog.mas &>
