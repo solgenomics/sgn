@@ -54,7 +54,7 @@ sub autocomplete_GET :Args(1) {
     $person =~ s/(^\s+|\s+)$//g;
     $person =~ s/\s+/ /g;
     my $q = "SELECT sp_person_id, first_name, last_name FROM sgn_people.sp_person
-             WHERE lower(first_name) like ? OR lower(last_name) like ? and censor =0 and disable IS NULL
+             WHERE lower(first_name) like ? OR lower(last_name) like ? and censor =0 and disabled IS NULL
              LIMIT 20";
 
     my $sth = $c->dbc->dbh->prepare($q);
