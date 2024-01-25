@@ -550,13 +550,13 @@ export function init() {
             let tempNumCols = this.meta_data.num_cols;
             this.meta_data.num_cols = this.meta_data.num_rows;
             this.meta_data.num_rows = tempNumCols;
-
             d3.select("svg").remove();
             this.add_borders();
             this.render();
         }
 
         clickcancel() {
+
             var event = d3.dispatch("click", "dblclick");
             function cc(selection) {
                 var down,
@@ -566,11 +566,13 @@ export function init() {
                 function dist(a, b) {
                     return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
                 }
+
                 selection.on("mousedown", function () {
                     down = d3.mouse(document.body);
                     last = +new Date();
                 });
                 selection.on("mouseup", function () {
+
                     if (dist(down, d3.mouse(document.body)) > tolerance) {
                         return;
                     } else {
@@ -579,6 +581,7 @@ export function init() {
                             wait = null;
                             event.call("dblclick", this, d3.event);
                         } else {
+
                             wait = window.setTimeout(
                                 (function (e) {
                                     return function () {
@@ -597,6 +600,7 @@ export function init() {
 
             // Copies a variable number of methods from source to target.
             function _rebind(target, source) {
+
                 var i = 1,
                     n = arguments.length,
                     method;
@@ -613,6 +617,7 @@ export function init() {
             // If passed with no arguments, gets the value.
             // If passed with arguments, sets the value and returns the target.
             function d3_rebind(target, source, method) {
+
                 return function () {
                     var value = method.apply(source, arguments);
                     return arguments.length ? target : value;
@@ -741,6 +746,7 @@ export function init() {
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
                     trait_vals.push(obs_unit.val);
                 }
+
                 var colorScale = d3.scaleQuantile().domain(trait_vals).range(colors);
             }
 
@@ -846,8 +852,10 @@ export function init() {
             var handle_mouseover = function (d) {
                 if (d.observationUnitPosition.observationLevel) {
                     d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
+
                         .style("fill", "green")
                         .style("cursor", "pointer")
+
                         .style("stroke-width", 3)
                         .style("stroke", "#000000");
                     tooltip
@@ -857,6 +865,7 @@ export function init() {
                         .html(get_plot_message(d));
                 }
             };
+
 
             var handle_mouseout = function (d) {
                 d3.select(`#fieldmap-plot-${d.observationUnitDbId}`)
@@ -961,11 +970,13 @@ export function init() {
             var num_rows = this.meta_data.num_rows;
             var isHeatMap = this.heatmap_selected;
 
+
             var grid = d3
                 .select("#fieldmap_chart")
                 .append("svg")
                 .attr("width", width * 50 + 20 + "px")
                 .attr("height", height * 50 + 20 + "px");
+
 
             var tooltip = d3
                 .select("#fieldmap_chart")
@@ -1002,6 +1013,7 @@ export function init() {
                 .on("mouseover", handle_mouseover)
                 .on("mouseout", handle_mouseout)
                 .call(cc);
+
 
             cc.on("click", (el) => {
                 var plot = d3.select(el.srcElement).data()[0];
