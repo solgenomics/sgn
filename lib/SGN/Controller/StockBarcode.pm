@@ -1401,7 +1401,7 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
     my ($self, $c) = @_;
 
     my $item_names = $c->req->param("identifier_names");
-    my $order_id = $c->req->param("tracking_order_id");
+    my $order_id = $c->req->param("order_id");
     my $user_id = $c->req->param("user_id");
     my $labels_per_page = $c->req->param("label_rows") || 10;
     my $labels_per_row  = $c->req->param("label_cols") || 1;
@@ -1455,11 +1455,9 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
     my $tracking_info;
 
     if (defined $order_id || $order_id ne '') {
-        print STDERR "CHECK 1".Dumper($order_id)."\n";
-        my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id});
+        my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
         $tracking_info = $order_obj->get_tracking_info();
     } else {
-        print STDERR "CHECK 2".Dumper($order_id)."\n";
         my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, bcs_schema => $schema});
         $tracking_info = $orders->get_active_item_tracking_info();
     }

@@ -26,7 +26,11 @@ $user_id => undef
                             <div class="col-md-1 col-lg-1">
                         </div>
                         <div class="col-md-10 col-lg-10">
-                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?user_id=<%$user_id%>" >
+% if ($order_id) {
+                        <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?order_id=<%$order_id%>" >
+% } else {
+                        <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?user_id=<%$user_id%>" >
+% }
                                 <div class="form-group" form-group-sm id="order_id_section" style="display: none">
                                     <label class="col-sm-4 control-label" for="tracking_order_id">Order ID: </label>
                                     <div class="col-sm-8 ">
