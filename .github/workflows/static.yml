@@ -50,7 +50,7 @@ jobs:
           date > generated.txt
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add docs/*.*
+          git add --force docs/*.*
           git commit -m "generated"
           git push
       - name: Setup Pages
