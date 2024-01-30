@@ -1,0 +1,33 @@
+# Simple workflow for test documentation build through R bookdown
+name: Test built of documentation folder
+
+on:
+  # Runs on pull requests
+  pull_request:    
+    paths:
+      - 'docs/r_markdown_docs/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Single deploy job since we're just testing
+  build_static_pages_for_manual:          
+    runs-on: ubuntu-latest    
+    container: 
+      image: bienkowskid/fedora40-r-bookdown
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Save directory for checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Create gitbook         
+        working-directory: ./docs/r_markdown_docs
+        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::gitbook")'        
+      - name: Create manual pdf         
+        working-directory: ./docs/r_markdown_docs
+        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book")'              
+  

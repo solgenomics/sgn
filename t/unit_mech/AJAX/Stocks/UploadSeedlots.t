@@ -262,6 +262,29 @@ is($test_seedlot_4_after->current_count, 45, "check current count after being tr
 my $test_seedlot_5_after = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $test_seedlot_5_id);
 is($test_seedlot_5_after->current_count, 35, "check current count after being transferred to plot");
 
+#from existing seedlots to unspecified names
+my $file_4 = $f->config->{basepath}."/t/data/stock/seedlots_to_unspecified.xlsx";
+my $ua_4 = LWP::UserAgent->new;
+my $response_4 = $ua_4->post(
+    'http://localhost:3010/ajax/breeders/upload_transactions',
+    Content_Type => 'form-data',
+    Content => [
+        seedlots_to_unspecified_names_file => [ $file_4, "seedlots_to_unspecified.xlsx", Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        "sgn_session_id"=>$sgn_session_id
+    ]
+);
+
+ok($response_4->is_success);
+my $message_4 = $response_4->decoded_content;
+my $message_hash_4 = decode_json $message_4;
+is_deeply($message_hash_4, { 'success' => 1 });
+
+my $seedlot_test2_1_after_removed = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_1_id);
+is($seedlot_test2_1_after_removed->current_count, 38, "check current count after removing seeds");
+
+my $seedlot_test2_2_after_removed = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
+is($seedlot_test2_2_after_removed->current_count, 23, "check current count after removing seeds");
+
 #test discarding seedlot
 my $seedlot_test1_rs = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test1' });
 my $seedlot_test1_id = $seedlot_test1_rs->stock_id();

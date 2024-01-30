@@ -179,6 +179,12 @@ $project_additional_info => undef
                                 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 % } #End trial_detail_traits_assayed
+
+% if ($info_section_id eq 'trial_raw_data') {
+   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
+% }
+
+
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits

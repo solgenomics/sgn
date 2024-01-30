@@ -56,6 +56,7 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         operator=>$params->{operator},
         stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
+        search_vectorprop=>$params->{search_vectorprop},
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
