@@ -99,7 +99,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cv_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -150,7 +150,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cvprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -201,7 +201,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -252,7 +252,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cvterm_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -303,7 +303,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cvterm_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -354,7 +354,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cvtermpath_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -405,7 +405,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cvtermprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -456,7 +456,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.cvtermsynonym_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -507,7 +507,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.db_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -558,7 +558,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -609,7 +609,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.dbxrefprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -660,7 +660,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.genotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -711,7 +711,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -762,7 +762,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_contact_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -813,7 +813,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -864,7 +864,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_genotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -915,7 +915,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_phenotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -966,7 +966,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_project_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1017,7 +1017,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_protocol_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1067,7 +1067,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1118,7 +1118,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_stock_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1169,7 +1169,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_stock_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1220,7 +1220,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experiment_stockprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1271,7 +1271,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_experimentprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1322,7 +1322,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_geolocation_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1373,7 +1373,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_geolocationprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1424,7 +1424,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_protocol_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1475,7 +1475,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_protocol_reagent_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1526,7 +1526,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_protocolprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1577,7 +1577,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_reagent_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1628,7 +1628,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_reagent_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1679,7 +1679,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.nd_reagentprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1730,7 +1730,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.organism_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1781,7 +1781,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.organism_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1832,7 +1832,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.organism_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1883,7 +1883,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.organismpath_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1934,7 +1934,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.organismprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -1985,7 +1985,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.phenotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2036,7 +2036,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.phenotype_cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2087,7 +2087,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.phenotypeprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2138,7 +2138,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.project_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2189,7 +2189,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.project_contact_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2239,7 +2239,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.project_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2290,7 +2290,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.project_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2341,7 +2341,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.projectprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2392,7 +2392,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2443,7 +2443,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.pub_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2494,7 +2494,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.pub_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2545,7 +2545,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.pubabstract_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2596,7 +2596,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.pubauthor_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2647,7 +2647,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.pubprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2698,7 +2698,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2749,7 +2749,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2800,7 +2800,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_cvtermprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2851,7 +2851,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_dbxref_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2902,7 +2902,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_dbxrefprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -2953,7 +2953,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_genotype_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3004,7 +3004,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3055,7 +3055,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_relationship_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3106,7 +3106,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_relationship_cvterm_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3157,7 +3157,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stock_relationship_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3208,7 +3208,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stockcollection_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3259,7 +3259,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stockcollection_stock_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3310,7 +3310,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stockcollectionprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3361,7 +3361,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stockprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3412,7 +3412,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.stockprop_pub_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3463,7 +3463,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.list_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3514,7 +3514,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.list_item_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3565,7 +3565,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_dataset_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3616,7 +3616,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_order_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3667,7 +3667,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_orderprop_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3718,7 +3718,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_person_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3769,7 +3769,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_roles_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3820,7 +3820,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_token_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3871,7 +3871,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_person_roles_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
@@ -3922,7 +3922,7 @@ RETURN NEW;
 ELSIF TG_OP = 'DELETE'
 THEN
 INSERT INTO audit.sp_organization_audit (logged_in_user, operation, before, transactioncode, is_undo)
-VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD));
+VALUES ((SELECT max(sp_person_id) FROM logged_in_user WHERE sp_person_id IS NOT NULL), TG_OP, to_jsonb(OLD), (SELECT NOW()::TEXT || txid_current()), FALSE);
 RETURN OLD;
 END IF;
 END;
