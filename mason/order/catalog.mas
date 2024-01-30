@@ -166,6 +166,9 @@ jQuery(document).ready( function() {
             'autoWidth': false,
             'order': false,
             'search':'applied',
+            'processing': true,
+            'serverSide': true,
+            'lengthMenu': [10,20,50,100,1000],
             'ajax': '/ajax/catalog/items',
             columns: [
                 { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
@@ -192,6 +195,9 @@ jQuery(document).ready( function() {
             'autoWidth': false,
             'order': false,
             'search':'applied',
+            'processing': true,
+            'serverSide': true,
+            'lengthMenu': [10,20,50,100,1000],
             'ajax': '/ajax/catalog/items',
             columns: [
                 { title: "Name", "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },

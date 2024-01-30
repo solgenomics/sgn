@@ -35,6 +35,10 @@ has 'contact_person_id' => ( isa => 'Int', is => 'rw') ;
 
 has 'availability' => ( isa => 'Maybe[Str]', is => 'rw');
 
+has 'limit' => ( isa => 'Int|Undef', is => 'rw');
+
+has 'offset' => ( isa => 'Int|Undef', is => 'rw');
+
 # a general human readable description of the stock
 #has 'description' => ( isa => 'Str', is => 'rw' );
 
@@ -64,9 +68,18 @@ sub get_catalog_items {
     my $type = $self->prop_type();
     my $type_id = $self->_prop_type_id();
     my $key_ref = $self->allowed_fields();
+
     my @fields = @$key_ref;
 
     my $catalog_rs = $schema->resultset("Stock::Stockprop")->search({type_id => $type_id }, { order_by => {-asc => 'stock_id'} });
+    my $catalog_total = $catalog_rs->count();
+
+    my $limit = $self->limit;
+    my $offset = $self->offset;
+    if (defined($limit) && defined($offset)){
+        $catalog_rs = $catalog_rs->slice($offset, $limit);
+    }
+
     my @catalog_list;
     while (my $r = $catalog_rs->next()){
         my @each_row = ();
@@ -79,9 +92,9 @@ sub get_catalog_items {
         }
         push @catalog_list, [@each_row];
     }
-#    print STDERR "CATALOG LIST =".Dumper(\@catalog_list)."\n";
 
-    return \@catalog_list;
+    return (\@catalog_list, $catalog_total);
+
 }
 
 

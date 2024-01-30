@@ -324,10 +324,15 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my @catalog_items;
+    my $params = $c->req->params() || {};
+    my $rows = $params->{length} || 10;
+    my $offset = $params->{start} || 0;
+    my $limit = ($offset+$rows)-1;
+    my $draw = $params->{draw};
+    $draw =~ s/\D//g; # cast to int
 
-    my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
-    my $catalog_ref = $catalog_obj->get_catalog_items();
-#    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
+    my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema, limit => $limit, offset => $offset});
+    my ($catalog_ref, $catalog_total) = $catalog_obj->get_catalog_items();
     my @catalog_list = @$catalog_ref;
     foreach my $catalog_item (@catalog_list) {
         my @item_details = ();
@@ -359,7 +364,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
         };
     }
 
-    $c->stash->{rest} = {data => \@catalog_items};
+    $c->stash->{rest} = { data => \@catalog_items, draw => $draw, recordsTotal => $catalog_total, recordsFiltered => $catalog_total };
 
 }
 
