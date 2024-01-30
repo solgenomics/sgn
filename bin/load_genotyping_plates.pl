@@ -5,7 +5,9 @@ load_genotyping_plates.pl
 
 =head1 SYNOPSIS
 
-load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -l location [-t]
+NOTE: You need to create the genotyping project in the database first. With the -g option, provide the name of genotyping project the plates should be associated with. Metadata such as year, location and breeding program will be loaded from the genotyping object directly.
+
+load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -u [username] -g genotyping_project [-t] -f format
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -27,21 +29,13 @@ infile
 
 username  (must be in the database) 
 
-=item -b 
-
-breeding program name (must be in the database)  
-
 =item -t
 
 Test run . Rolling back at the end.
 
-=item -l 
+=item -g
 
-location
-
-=item -y 
-
-year
+genotyping project name (the genotyping project to which this plate is associated)
 
 =back
 
@@ -49,37 +43,7 @@ year
 
 Load genotyping plate layouts for many plates
 
-Minimal metadata requirements are
-
-=over 3
-
-=item 
-
-trial_name
-
-=item
-
-trial_description (can also be built from the trial name, type, year, location)
-
-=item
-
-trial_type (read from an input file)
-
-=item 
-
-trial_location geo_description ( must be in the database - nd_geolocation.description - can  be read from metadata file) 
-
-=item
-
-year (can be read from the metadata file ) 
-
-=item
-
-breeding_program (provide with option -b ) 
-
-=back
-
-The infile is an Excel file (.xls format) with the following columns:
+The infile is a tab delimited file with the following columns:
 
 =over 3
 
@@ -137,12 +101,10 @@ use CXGN::Trial; # add project metadata
 
 use CXGN::Trial::TrialCreate;
 
-my ( $help, $dbhost, $dbname, $infile, $sites, $types, $test, $username, $breeding_program_name, $metadata_file, $location, $year, $format );
+my ( $help, $dbhost, $dbname, $infile, $sites, $types, $test, $username, $genotyping_project, $format );
 GetOptions(
     'i=s'        => \$infile,
-    'b=s'        => \$breeding_program_name,
-    'l=s'        => \$location,
-    'y=s'        => \$year,
+    'g=s'        => \$genotyping_project,
     't'          => \$test,
     'f=s'        => \$format,
     'user|u=s'   => \$username,
@@ -154,7 +116,7 @@ GetOptions(
 
 
 pod2usage(1) if $help;
-if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost ) {
+if (!$infile || !$username || !$dbname || !$dbhost ) {
     pod2usage( { -msg => 'Error. Missing options!'  , -verbose => 1, -exitval => 1 } ) ;
 }
 
@@ -173,23 +135,20 @@ my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_db
 my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() } , {on_connect_do => ['SET search_path TO phenome;'] } );
 
 
-# Breeding program for associating the trial/s ##
+# check if genotyping project exists
 #
-
-my $breeding_program = $schema->resultset("Project::Project")->find( 
-            {
-                'me.name'   => $breeding_program_name,
-		'type.name' => 'breeding_program',
-	    }, 
+my $genotyping_project_row = $schema->resultset("Project::Project")->find(
     {
-    join =>  { projectprops => 'type' } , 
-    } ) ;
+	'name' => $genotyping_project,
+#	    'type.name' => 'genotyping_project_name',
+    } );
 
-if (!$breeding_program) { die "Breeding program $breeding_program_name does not exist in the database. Check your input \n"; }
-print "Found breeding program $breeding_program_name " . $breeding_program->project_id . "\n";
+if (! $genotyping_project_row) { die "Please enter a valid genotyping project. You may have to create it before running this script."; }
 
+my $genotyping_project_id = $genotyping_project_row->project_id();
+    
 if (!$format) {
-    die "Please specify format (-f) as CIP. No other format is supported right now\n";
+    $format = "standard";
 }
 
 my $sp_person_id= CXGN::People::Person->get_person_by_username($dbh, $username);
@@ -220,22 +179,14 @@ print "Reading phenotyping file:\n";
 my %phen_params = map { if ($_ =~ m/^\w+\|(\w+:\d{7})$/ ) { $_ => $1 } } @trial_columns  ;
 delete $phen_params{''};
 
-my @traits = (keys %phen_params) ;
-print "Found traits " . Dumper(\%phen_params) . "\n" ; 
-#foreach my $trait_string ( keys %phen_params ) {
-#    my ($trait_name, $trait_accession) = split "|", $col_header ;
-#    my ($db_name, $dbxref_accession) = split ":" , $trait_accession ;
-#}
-
-
 my %trial_design_hash; #multi-level hash of hashes of hashrefs 
 my %phen_data_by_trial; # 
 
-#plot_name	accession_name	plot_number	block_number	trial_name	trial_description	trial_location	year	trial_type	is_a_control	rep_number	range_number	row_number	col_number
-
-
 # CIP format:
-## Item	Plate ID	Intertek plate/well ID	CIP Number	Breeder ID
+# Item	Plate ID	Intertek plate/well ID	CIP Number	Breeder ID
+
+# standard format:
+# Item	Plate ID	Intertek plate/well ID	accession name	Breeder ID
 
 my $operator;
 
@@ -280,37 +231,36 @@ foreach my $plot_name (@trial_rows) {
 	$trial_design_hash{$trial_name}{$plot_number}->{row_number} = $row_number;
 	$trial_design_hash{$trial_name}{$plot_number}->{col_number} = $col_number;
     }
-    else { 
-	$accession    = $spreadsheet->value_at($plot_name, "accession_name");
-	$plot_number  = $spreadsheet->value_at($plot_name, "plot_number");
-	$block_number = $spreadsheet->value_at($plot_name, "block_number");
-	$trial_name   = $spreadsheet->value_at($plot_name, "trial_name");
-	$is_a_control = $spreadsheet->value_at($plot_name, "is_a_control");
-	$rep_number   = $spreadsheet->value_at($plot_name, "rep_number");
-	$range_number = $spreadsheet->value_at($plot_name, "range_number");
-	$row_number   = $spreadsheet->value_at($plot_name, "row_number");
-	$col_number   = $spreadsheet->value_at($plot_name, "col_number");
-    
-	if (!$plot_number) {
-	    $plot_number = 1;
-	    use List::Util qw(max);
-	    my @keys = (keys %{ $trial_design_hash{$trial_name} } );
-	    my $max = max( @keys );
-	    if ( $max ) {
-		$max++;
-		$plot_number = $max ;
-	    }
+    else {
+
+	$accession = $spreadsheet->value_at($plot_name, "accession name");
+	$plot_number = $spreadsheet->value_at($plot_name, "Intertek plate/well ID");
+	$trial_name = $spreadsheet->value_at($plot_name, "Plate ID");
+        $operator = $spreadsheet->value_at($plot_name, "Breeder ID");
+		
+	if (! $accession) {
+	    print STDERR "Ignoring entry for plot_number $plot_number as accession is empty - presumably a check?\n";
+	    next;
+	} # some plates have empty wells - ignore
+
+	if ($plot_number =~ m/^([A-Ha-h])(\d+)$/) {
+	    $row_number = $1;
+	    $col_number = $2;
 	}
+
+	$is_a_control = 0;
+	if ($accession eq "") {
+	    $is_a_control = 1;
+	}
+
+	if (! $row_number ) { die "Weird well number: $plot_number\n"; }
 
 	$trial_design_hash{$trial_name}{$plot_number}->{plot_number} = $plot_number;
 	$trial_design_hash{$trial_name}{$plot_number}->{stock_name} = $accession;
 	$trial_design_hash{$trial_name}{$plot_number}->{plot_name} = $plot_name;
-	$trial_design_hash{$trial_name}{$plot_number}->{block_number} = $block_number;
-	$trial_design_hash{$trial_name}{$plot_number}->{rep_number} = $rep_number;
-	$trial_design_hash{$trial_name}{$plot_number}->{is_a_control} = $is_a_control;
-	$trial_design_hash{$trial_name}{$plot_number}->{range_number} = $range_number;
 	$trial_design_hash{$trial_name}{$plot_number}->{row_number} = $row_number;
 	$trial_design_hash{$trial_name}{$plot_number}->{col_number} = $col_number;
+
     }
     
     # Add the plot name into the multi trial data hashref of hashes
@@ -337,27 +287,42 @@ $phenotype_metadata{'date'} = $date;
 #######
 
 my $coderef= sub  {
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $genotyping_project_id });
+    my $location_data = $trial->get_location();
+    my $location_name = $location_data->[1];
+    my $description = $trial->get_description();
+    my $genotyping_facility = $trial->get_genotyping_facility();
+    my $plate_year = $trial->get_year();
+    
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
+    my $breeding_program_name = $breeding_program_data->[0]->[1];
+
+    print STDERR "Working with genotyping project name $genotyping_project\n";
     foreach my $trial_name (keys %multi_trial_data ) { 
 	
-	my $trial_create = CXGN::Trial::TrialCreate->new({
-	    chado_schema      => $schema,
-	    dbh               => $dbh,
-	    design_type       => 'genotyping_plate',
-	    design            => $trial_design_hash{$trial_name},
-	    program           => $breeding_program->name(),
-	    trial_year        => $year,
-	    trial_description => $trial_name,
-	    trial_location    => $location,
-	    trial_name        => $trial_name,
-            operator          => $operator,
-	    owner_id           => $sp_person_id,
-	    is_genotyping      => 1,
-	    genotyping_user_id => $sp_person_id,
-	    genotyping_plate_format => 96,
-	    genotyping_plate_sample_type => 'accession',
-	    
-
-							 });
+	my $trial_create = CXGN::Trial::TrialCreate->new(
+	    {
+		chado_schema      => $schema,
+		dbh               => $dbh,
+		design_type       => 'genotyping_plate',
+		design            => $trial_design_hash{$trial_name},
+		program           => $breeding_program_name,
+		trial_year        => $plate_year,
+		trial_description => $description,
+		trial_location    => $location_name,
+		trial_name        => $trial_name,
+		operator          => $operator,
+		owner_id           => $sp_person_id,
+		is_genotyping      => 1,
+		genotyping_user_id => $sp_person_id,
+		genotyping_plate_format => $format,
+		genotyping_plate_sample_type => 'accession',
+		genotyping_project_id => $genotyping_project_id,
+		genotyping_facility => $genotyping_facility,
+	    });
+	
 	try {
 	    $trial_create->save_trial();
 	} catch {
@@ -370,12 +335,6 @@ try {
     $schema->txn_do($coderef);
     if (!$test) { print "Transaction succeeded! Commiting project and its metadata \n\n"; }
 } catch {
-    # Transaction failed
-#    foreach my $value ( sort  keys %seq ) {
-#        my $maxval= $seq{$value} || 0;
-#        if ($maxval) { $dbh->do("SELECT setval ('$value', $maxval, true)") ;  }
-#        else {  $dbh->do("SELECT setval ('$value', 1, false)");  }
-#    }
     die "An error occured! Rolling back  and reseting database sequences!" . $_ . "\n";
 };
 

@@ -56,11 +56,10 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 </%perl>
 
+<& /solgs/tools/base.mas &>
+<& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>
 
 % if ($url =~ /cluster\/analysis/) {
-
-  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster"] &>
-
 <& /page/page_title.mas,
    title => "Cluster Analysis"
   &>

@@ -724,9 +724,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $c = shift;
     my $accessions = $c->req->param('seedlot_content_accession_name') ? [$c->req->param('seedlot_content_accession_name')] : [];
     my $crosses = $c->req->param('seedlot_content_cross_name') ? [$c->req->param('seedlot_content_cross_name')] : [];
-#    my $offset = $c->req->param('seedlot_offset') ? $c->req->param('seedlot_offset') : '';
-#    my $limit = $c->req->param('seedlot_limit') ? $c->req->param('seedlot_limit') : '';
-#    my $search_seedlot_name = $c->req->param('seedlot_name') ? $c->req->param('seedlot_name') : '';
+    my $seedlot_id = $c->req->param('seedlot_id') ? $c->req->param('seedlot_id') : '';
     my $search_breeding_program_name = $c->req->param('seedlot_breeding_program_name') ? $c->req->param('seedlot_breeding_program_name') : '';
 #    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
 #    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
@@ -734,7 +732,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my $exclude_discarded = $c->req->param('exclude_discarded') ? $c->req->param('exclude_discarded') : '';
-
+    my $exclude_self = $c->req->param('exclude_self') ? $c->req->param('exclude_self') : '';
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id),
         $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
@@ -773,13 +771,24 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my @stocks;
     foreach my $r (@seedlots) {
         if ($exclude_discarded == 1) {
-            if ($r->{count} ne 'DISCARDED') {
-                push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+            if ($exclude_self == 1) {
+                if (($r->{count} ne 'DISCARDED') && ($seedlot_id != $r->{seedlot_stock_id})) {
+                    push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+                }
+            } else {
+                if ($r->{count} ne 'DISCARDED') {
+                    if ($r->{seedlot_stock_id} == $seedlot_id) {
+                        push @stocks, [ $r->{seedlot_stock_id}, 'unspecified'];
+                    } else {
+                        push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+                    }
+                }
             }
         } else {
             push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
         }
     }
+
     @stocks = sort { $a->[1] cmp $b->[1] } @stocks;
 
     if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
