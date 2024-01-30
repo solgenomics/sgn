@@ -59,7 +59,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
 
     my $item_id = shift;
 #    print STDERR "CATALOG STOCK ID =".Dumper($item_id)."\n";
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $stock_catalog_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), 'stock_catalog_json', 'stock_property')->cvterm_id();
 

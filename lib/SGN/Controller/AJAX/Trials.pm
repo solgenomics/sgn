@@ -24,7 +24,7 @@ __PACKAGE__->config(
 sub get_trials : Path('/ajax/breeders/get_trials') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) } );
 
     my $projects = $p->get_breeding_programs();
@@ -43,7 +43,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $self = shift;
     my $c = shift;
     my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $dir = catdir($c->config->{static_content_path}, "folder");
@@ -62,7 +62,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     my $self = shift;
     my $c = shift;
     my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial','genotyping_trial', 'cross', 'genotyping_project'
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $dir = catdir($c->config->{static_content_path}, "folder");
@@ -123,7 +123,7 @@ sub trial_autocomplete_GET :Args(0) {
     print STDERR "Term: $term\n";
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $trial_design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), "design", "project_property")->cvterm_id();
     my @response_list;
     my $q = "select distinct(name) from project join projectprop using(project_id) where project.name ilike ? and projectprop.type_id = ? ORDER BY name";
@@ -143,7 +143,7 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
     my $self = shift;
     my $c = shift;
     my $trial_name = $c->req->param('name');
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if ( !$trial_name || $trial_name eq '' ) {

@@ -32,7 +32,7 @@ sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $po = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) });
 
     my $breeding_programs = $po->get_breeding_programs();
@@ -51,7 +51,7 @@ sub store_breeding_program :Path('/breeders/program/store') Args(0) {
         $c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
     }
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $p = CXGN::BreedersToolbox::Projects->new( {
         schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
         id => $id,
@@ -71,7 +71,7 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
     my $self = shift;
     my $c = shift;
     my $program_id = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     if ($c->user && ($c->user->check_roles("curator"))) {
     	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) });
     	$p->delete_breeding_program($program_id);
@@ -88,7 +88,7 @@ sub get_breeding_programs_by_trial :Path('/breeders/programs_by_trial/') Args(1)
     my $c = shift;
     my $trial_id = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) } );
 
     my $projects = $p->get_breeding_programs_by_trial($trial_id);
@@ -114,7 +114,7 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
 	return;
     }
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     my $data_agreement_cvterm_id_rs = $schema->resultset('Cv::Cvterm')->search( { name => 'data_agreement' });
@@ -162,7 +162,7 @@ sub get_data_agreement :Path('/breeders/trial/data_agreement/get') :Args(0) {
 
     my $project_id = $c->req->param('project_id');
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     my $data_agreement_cvterm_id_rs = $schema->resultset('Cv::Cvterm')->search( { name => 'data_agreement' });
@@ -193,7 +193,7 @@ sub get_all_years : Path('/ajax/breeders/trial/all_years' ) Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bp = CXGN::BreedersToolbox::Projects->new({ schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) });
     my @years = $bp->get_all_years();
 
@@ -205,7 +205,7 @@ sub get_trial_location : Path('/ajax/breeders/trial/location') Args(1) {
     my $c = shift;
     my $trial_id = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $t = CXGN::Trial->new(
 	{
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
@@ -226,7 +226,7 @@ sub get_trial_type : Path('/ajax/breeders/trial/type') Args(1) {
     my $c = shift;
     my $trial_id = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $t = CXGN::Trial->new(
 	{
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
@@ -241,7 +241,7 @@ sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id));
 
     $c->stash->{rest} = { types => \@types };
@@ -254,7 +254,7 @@ sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
     my $field_trial = $c->req->param("field_trial");
     my $parent_accession = $c->req->param("parent_accession");
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $field_layout_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "field_layout", "experiment_type")->cvterm_id();
     my $dbh = $schema->storage->dbh();
@@ -289,7 +289,7 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     my $self = shift;
     my $c = shift;
     my $file_id = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     print STDERR "Deleting phenotypes from File ID: $file_id and making file obsolete\n";
     my $dbh = $c->dbc->dbh();
@@ -344,7 +344,7 @@ sub progress : Path('/ajax/progress') Args(0) {
 
     print STDERR "Trait id = $trait_id\n";
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $dbh = $schema->storage->dbh();
 
@@ -371,7 +371,7 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $dbh = $schema->storage->dbh();

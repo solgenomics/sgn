@@ -120,7 +120,7 @@ sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) {
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
@@ -136,7 +136,7 @@ sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1)
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
@@ -154,7 +154,7 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     my $c = shift;
     my $trial_id = shift;
     die "No trial id supplied" if !$trial_id;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
     die "Trial does not exist with id $trial_id" if !$trial;

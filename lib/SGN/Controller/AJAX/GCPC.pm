@@ -61,7 +61,7 @@ sub factors :Path('/ajax/gcpc/factors') Args(0) {
 
     my $dataset_id = $c->req->param('dataset_id');
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
@@ -203,7 +203,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     print STDERR "FIXED FACTORS: $fixed_factors\n";
     print STDERR "RANDOM FACTORS: $random_factors\n";
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $list = CXGN::List->new( { dbh => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id)->storage->dbh() , list_id => $sin_list_id });
     my $elements = $list->elements();
 
@@ -472,7 +472,7 @@ sub get_trait_for_accessions {
     my $accessions = shift;
 
     print STDERR "GET TRAIT FOR ACCESSIONS...\n";
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 

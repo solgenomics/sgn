@@ -54,10 +54,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
-    my $sp_person_id;
-    if($c->user){
-        $sp_person_id = $c->user->get_object()->get_sp_person_id();
-    }
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     
     print STDERR "This is sp_person_id from trial detail edit: $sp_person_id \n";
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
@@ -110,7 +107,7 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $c = shift;
     my $datatype = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -222,8 +219,7 @@ sub trial_details_GET{
 sub trial_details_POST  {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id;
-    $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my @categories = $c->req->param("categories[]");
 
@@ -345,7 +341,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
       };
       return;
     }
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $display = $c->req->param('display');
     my $trait = $c->req->param('trait');
@@ -544,7 +540,7 @@ sub get_trial_location :Chained('trial') PathPart('location') Args(0) {
 sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
@@ -557,7 +553,7 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
 sub trial_stocks : Chained('trial') PathPart('stocks') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
@@ -570,7 +566,7 @@ sub trial_stocks : Chained('trial') PathPart('stocks') Args(0) {
 sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
@@ -582,7 +578,7 @@ sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
 sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
@@ -1842,7 +1838,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     my $c = shift;
     my $override = shift;
     my $trial_id = $c->stash->{trial_id};
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     if (!$c->user){
@@ -2075,7 +2071,7 @@ sub obsolete_trial_additional_file_uploaded :Chained('trial') PathPart('obsolete
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
@@ -2088,7 +2084,7 @@ sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
 sub controls_by_plot : Chained('trial') PathPart('controls_by_plot') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my @plot_ids = $c->req->param('plot_ids[]');
 
@@ -2102,7 +2098,7 @@ sub controls_by_plot : Chained('trial') PathPart('controls_by_plot') Args(0) {
 sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2116,7 +2112,7 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
 sub trial_has_data_levels : Chained('trial') PathPart('has_data_levels') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2131,7 +2127,7 @@ sub trial_has_data_levels : Chained('trial') PathPart('has_data_levels') Args(0)
 sub trial_has_subplots : Chained('trial') PathPart('has_subplots') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2141,7 +2137,7 @@ sub trial_has_subplots : Chained('trial') PathPart('has_subplots') Args(0) {
 sub trial_subplots : Chained('trial') PathPart('subplots') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2154,7 +2150,7 @@ sub trial_subplots : Chained('trial') PathPart('subplots') Args(0) {
 sub trial_has_plants : Chained('trial') PathPart('has_plants') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2164,7 +2160,7 @@ sub trial_has_plants : Chained('trial') PathPart('has_plants') Args(0) {
 sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2177,7 +2173,7 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
 sub trial_has_tissue_samples : Chained('trial') PathPart('has_tissue_samples') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2187,7 +2183,7 @@ sub trial_has_tissue_samples : Chained('trial') PathPart('has_tissue_samples') A
 sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2210,7 +2206,7 @@ sub trial_phenotype_metadata : Chained('trial') PathPart('phenotype_metadata') A
 sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial = $c->stash->{trial};
@@ -2229,7 +2225,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
         $c->detach();
     }
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
@@ -2267,7 +2263,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $layout = $c->stash->{trial_layout};
@@ -2279,7 +2275,7 @@ sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
 sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {"plot_name"=>1,"plot_number"=>1,"block_number"=>1,"accession_name"=>1,"is_a_control"=>1,"rep_number"=>1,"row_number"=>1,"col_number"=>1,"plot_geo_json"=>1};
 
@@ -2299,7 +2295,7 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $layout = $c->stash->{trial_layout};
@@ -2354,7 +2350,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $cxgn_project_type = $c->stash->{trial}->get_cxgn_project_type();
@@ -2374,7 +2370,7 @@ sub retrieve_trial_info_POST : Args(0) {
 #sub retrieve_trial_info : chained('trial') Pathpart("trial_phenotyping_info") Args(0) {
     my $self =shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial_id = $c->req->param('trial_id');
     my $layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
@@ -2406,7 +2402,7 @@ sub retrieve_trial_info_POST : Args(0) {
 sub trial_completion_layout_section : Chained('trial') PathPart('trial_completion_layout_section') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $experiment_type = $c->req->param('experiment_type') || 'field_layout';
 
@@ -2433,7 +2429,7 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
 sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_completion_phenotype_section') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -2450,7 +2446,7 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 	my $c = shift;
 	my $trial_id = $c->req->param('trial_id');
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     if ($self->privileges_denied($c)) {
@@ -2480,7 +2476,7 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
   my $old_stock_id = $c->req->param('old_stock_id');
   my $new_stock = $c->req->param('new_stock');
@@ -2523,7 +2519,7 @@ sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
     my $self = shift;
     my $c = shift;
     my $trial_id = $c->stash->{trial_id};
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     my $refresh_fieldmap_cache = CXGN::Trial::FieldMap->new({
@@ -2538,7 +2534,7 @@ sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     my $old_accession = $c->req->param('old_accession');
     my $new_accession = $c->req->param('new_accession');
@@ -2613,7 +2609,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
 sub accession_exists : Chained('trial') PathPart('accession_exists') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     my $accession_name = $c->req->param('accession_name');
     my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $accession_name });
@@ -2640,7 +2636,7 @@ sub check_curator_privileges : Chained('trial') PathPart('check_curator_privileg
 sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
   my $old_accession = $c->req->param('old_accession');
   my $new_accession = $c->req->param('new_accession');
@@ -2689,7 +2685,7 @@ sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions'
 sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
   my $trial_id = $c->stash->{trial_id};
   my $plot_1_info = $c->req->param('plot_1_info');
@@ -2915,7 +2911,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $treatment_date = $c->req->param("treatment_date");
     my $treatment_name = $c->req->param("treatment_name");
@@ -3096,7 +3092,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 sub crosses_in_crossingtrial : Chained('trial') PathPart('crosses_in_crossingtrial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3118,7 +3114,7 @@ sub crosses_in_crossingtrial : Chained('trial') PathPart('crosses_in_crossingtri
 sub crosses_and_details_in_trial : Chained('trial') PathPart('crosses_and_details_in_trial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3156,7 +3152,7 @@ sub crosses_and_details_in_trial : Chained('trial') PathPart('crosses_and_detail
 sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3185,7 +3181,7 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
 sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3205,7 +3201,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
 sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_crossingtrial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3231,7 +3227,7 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
 sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3248,7 +3244,7 @@ sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
 sub get_female_accessions : Chained('trial') PathPart('get_female_accessions') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3265,7 +3261,7 @@ sub get_female_accessions : Chained('trial') PathPart('get_female_accessions') A
 sub get_male_accessions : Chained('trial') PathPart('get_male_accessions') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3281,7 +3277,7 @@ sub get_male_accessions : Chained('trial') PathPart('get_male_accessions') Args(
 sub get_female_plots : Chained('trial') PathPart('get_female_plots') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3297,7 +3293,7 @@ sub get_female_plots : Chained('trial') PathPart('get_female_plots') Args(0) {
 sub get_male_plots : Chained('trial') PathPart('get_male_plots') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3313,7 +3309,7 @@ sub get_male_plots : Chained('trial') PathPart('get_male_plots') Args(0) {
 sub get_female_plants : Chained('trial') PathPart('get_female_plants') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3330,7 +3326,7 @@ sub get_female_plants : Chained('trial') PathPart('get_female_plants') Args(0) {
 sub get_male_plants : Chained('trial') PathPart('get_male_plants') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3346,7 +3342,7 @@ sub get_male_plants : Chained('trial') PathPart('get_male_plants') Args(0) {
 sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $trial_id = $c->stash->{trial_id};
 
@@ -3382,7 +3378,7 @@ sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_
 sub cross_additional_info_trial : Chained('trial') PathPart('cross_additional_info_trial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3412,7 +3408,7 @@ sub cross_additional_info_trial : Chained('trial') PathPart('cross_additional_in
 sub downloaded_intercross_file_metadata : Chained('trial') PathPart('downloaded_intercross_file_metadata') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3426,7 +3422,7 @@ sub downloaded_intercross_file_metadata : Chained('trial') PathPart('downloaded_
 sub uploaded_intercross_file_metadata : Chained('trial') PathPart('uploaded_intercross_file_metadata') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
@@ -3440,7 +3436,7 @@ sub uploaded_intercross_file_metadata : Chained('trial') PathPart('uploaded_inte
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->req->param("selected");
@@ -3562,7 +3558,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
 sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
   my $plot_name = $c->req->param('plot_name');
   my $plot_pheno_value = $c->req->param('phenotype_value');
@@ -3593,7 +3589,7 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     my $c = shift;
     my $pheno_ids = $c->req->param('pheno_id') ? JSON::decode_json($c->req->param('pheno_id')) : [];
     my $trait_ids = $c->req->param('traits_id') ? JSON::decode_json($c->req->param('traits_id')) : [];
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     my $trial = $c->stash->{trial};
 
@@ -3622,7 +3618,7 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
 sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
   my $image_ids =  decode_json $c->req->param('image_ids');
   my $plot_name = $c->req->param('plot_name');
@@ -3702,7 +3698,7 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
 sub field_trial_from_field_trial : Chained('trial') PathPart('field_trial_from_field_trial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $source_field_trials_for_this_trial = $c->stash->{trial}->get_field_trials_source_field_trials();
@@ -3714,7 +3710,7 @@ sub field_trial_from_field_trial : Chained('trial') PathPart('field_trial_from_f
 sub genotyping_trial_from_field_trial : Chained('trial') PathPart('genotyping_trial_from_field_trial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $genotyping_trials_from_field_trial = $c->stash->{trial}->get_genotyping_trials_from_field_trial();
@@ -3727,7 +3723,7 @@ sub delete_genotyping_plate_from_field_trial_linkage : Chained('trial') PathPart
     my $self = shift;
     my $c = shift;
     my $field_trial_id = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if (!$c->user) {
@@ -3750,7 +3746,7 @@ sub delete_genotyping_plate_from_field_trial_linkage : Chained('trial') PathPart
 sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_from_field_trial') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $crossing_trials_from_field_trial = $c->stash->{trial}->get_crossing_trials_from_field_trial();
@@ -4730,7 +4726,7 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
 sub get_entry_numbers : Chained('trial') PathPart('entry_numbers') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $trial = $c->stash->{trial};
 
@@ -4762,7 +4758,7 @@ sub create_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/crea
     my $self = shift;
     my $c = shift;
     my @trial_ids = split(',', $c->req->param('trial_ids'));
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $dir = $c->tempfiles_subdir('download');
@@ -4944,7 +4940,7 @@ sub update_trial_status_POST : Args(0) {
 sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') Args(0){
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $trial_id = $c->stash->{trial_id};
@@ -5003,7 +4999,7 @@ sub update_trial_design_type_POST : Args(0) {
 sub get_linked_field_trials : Chained('trial') PathPart('linked_field_trials') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $trial_id = $c->stash->{trial_id};
     my $trial_location = $c->stash->{trial}->get_location();
@@ -5052,7 +5048,7 @@ sub get_linked_field_trials : Chained('trial') PathPart('linked_field_trials') A
 sub get_all_soil_data :Chained('trial') PathPart('all_soil_data') Args(0){
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $trial_id = $c->stash->{trial_id};
@@ -5149,7 +5145,7 @@ sub delete_soil_data_POST : Args(0) {
 sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_all_genotyping_plates_in_project') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);

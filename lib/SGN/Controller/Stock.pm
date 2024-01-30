@@ -390,7 +390,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
     my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     if (!$genotype_id) {
 

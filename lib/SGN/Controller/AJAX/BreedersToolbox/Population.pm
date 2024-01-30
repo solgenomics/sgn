@@ -24,7 +24,7 @@ __PACKAGE__->config(
 sub create_population :Path('/ajax/population/new') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if(!$c->user){
@@ -56,7 +56,7 @@ sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0
 
     my $population_name = $c->req->param('population_name');
     my $accession_list_id = $c->req->param('accession_list_id');
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $list = CXGN::List->new({dbh=>$dbh, list_id=>$accession_list_id});
@@ -74,7 +74,7 @@ sub delete_population :Path('/ajax/population/delete') Args(0) {
 
     my $population_id = $c->req->param('population_id');
     my $population_name = $c->req->param('population_name');
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
 
@@ -112,7 +112,7 @@ sub remove_population_member :Path('/ajax/population/remove_member') Args(0) {
     }
 
     my $stock_relationship_id = $c->req->param('stock_relationship_id');
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $error;

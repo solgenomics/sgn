@@ -32,7 +32,7 @@ __PACKAGE__->config(
 sub get_all_derived_trait : Path('/ajax/breeders/trial/trait_formula') Args(0) {
     my $self = shift;
     my $c = shift;
-	my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     my $dbh = $c->dbc->dbh();
     my (@cvterm_ids, @derived_traits, @formulas, @derived_traits_array, @trait_ids, @trait_db_ids, @formulas_array, @formulas_array_msg, $formula_json_array);
@@ -72,7 +72,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	print "TRAIT NAME: $selected_trait\n";
 	print "TRIAl ID: $trial_id\n";
 
-	my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -322,7 +322,7 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
     #print STDERR "Trait: $trait_name\n";
     #print STDERR "Method: $method\n";
     #print STDERR "Round: $rounding\n";
-	my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     my @traits;
@@ -383,7 +383,7 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     #print STDERR Dumper $traits;
     #print STDERR $overwrite_values;
 
-	my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);

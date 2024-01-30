@@ -285,7 +285,7 @@ sub validate_rename_accessions {
     
     my @must_not_exist = map { $_->[1] } @$rename;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     $self->schema( $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) );
     print STDERR "INPUT MUST EXIST: ".Dumper(\@must_exist);
     print STDERR "INPUT MUST NOT EXIST: ".Dumper(\@must_not_exist);

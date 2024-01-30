@@ -43,7 +43,7 @@ __PACKAGE__->config(
 sub upload_genotype_qc_verify :  Path('/ajax/genotype_qc/upload') : ActionClass('REST') { }
 sub upload_genotype_qc_verify_POST : Args(0) {
     my ($self, $c) = @_;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();    
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);

@@ -55,7 +55,7 @@ sub process {
     $final_seq = join("\n",@final_sequence);
   } elsif ($sequence =~ m/Solyc\d+g\d+/i) {
     my @ids = split /\s+/, $sequence; 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $rna_id = $schema->resultset("Cv::Cvterm")->find( { name=>'mRNA' })->cvterm_id();
 

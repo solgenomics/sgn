@@ -125,7 +125,7 @@ EOY
 sub _make_organism_search_rs {
     my ( $self, $c, $form ) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $rs = $c->dbic_schema('Bio::Chado::Schema','sgn_chado', $sp_person_id)->resultset('Organism::Organism');
 
     # species
@@ -166,7 +166,7 @@ sub _make_organism_search_rs {
 sub get_taxa_choices : Private {
     my ( $self, $c ) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     $c->stash->{taxa_choices} = [
         map [$_->cvterm_id,ucfirst($_->name)],

@@ -26,7 +26,7 @@ sub search {
     my $folder_id_list = $params->{studyDbId} || ($params->{studyDbIds} || ());
     my $folder_name_list = $params->{studyName} || ($params->{studyNames} || ());
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     my @trial_ids;
@@ -87,7 +87,7 @@ sub detail {
     my $page = $self->page;
     my $status = $self->status;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     my $trial_search = CXGN::Trial::Search->new({

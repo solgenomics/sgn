@@ -177,7 +177,7 @@ After adding, redirects to C<view_sol100>.
 sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
     my ( $self, $c ) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado', $sp_person_id)
                      ->resultset('Organism::Organism')
                      ->search({ species => { ilike => $c->req->body_parameters->{species} }})
@@ -225,7 +225,7 @@ sub invalidate_organism_tree_cache :Args(0) {
 sub find_organism :Chained('/') :PathPart('organism') :CaptureArgs(1) {
     my ( $self, $c, $organism_id ) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $rs =
         $c->dbic_schema('CXGN::Biosource::Schema','sgn_chado', $sp_person_id)
           ->resultset('Organism::Organism');
@@ -262,7 +262,7 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
 
     return unless $c->stash->{organism_id};
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $organism = CXGN::Chado::Organism->new($schema, $c->stash->{organism_id});
     $c->stash->{organism} = $organism;
@@ -376,7 +376,7 @@ sub qtl_data {
 sub phenotype_data {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema','sgn_chado', $sp_person_id);
     my $organism = $c->stash->{organism};
     my $organism_id = $organism->get_organism_id;
@@ -450,7 +450,7 @@ has 'organism_sets' => (
    ); sub _build_organism_sets {
         my $self = shift;
         my $c = shift;
-        my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+        my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
         my $schema = $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado', $sp_person_id);
         my %org_sets;
 
@@ -549,7 +549,7 @@ has 'species_data_summary_cache' => (
 sub _species_summary_cache_configuration {
     my ( $self, $c ) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema   = $self->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     return 'Cache::File', {
@@ -593,7 +593,7 @@ has 'rendered_organism_tree_cache' => (
     lazy_build => 1,
    ); sub _build_rendered_organism_tree_cache {
         my ( $self, $c ) = @_;
-        my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+        my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
         Cache::File->new(
             cache_root      => $self->_app->path_to( $self->_app->tempfiles_subdir('cache','rendered_organism_tree_cache') ),

@@ -35,7 +35,7 @@ sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") 
 sub store_analysis_json_POST {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     print STDERR Dumper $c->req->params();
     my $analysis_to_save_boolean = $c->req->param("analysis_to_save_boolean");
@@ -94,7 +94,7 @@ sub store_analysis_spreadsheet : Path('/ajax/analysis/store/spreadsheet') Action
 sub store_analysis_spreadsheet_POST {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     print STDERR Dumper $c->req->params();
     my $analysis_to_save_boolean = "yes";
@@ -423,7 +423,7 @@ sub store_data {
     my $self = shift;
     my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
@@ -493,7 +493,7 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
@@ -529,7 +529,7 @@ sub list_analyses_models_by_user_table :Path('/ajax/analyses/models/by_user') Ar
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
@@ -564,7 +564,7 @@ sub list_analyses_by_model_table :Path('/ajax/analyses/by_model') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
@@ -607,7 +607,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
@@ -672,7 +672,7 @@ sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);

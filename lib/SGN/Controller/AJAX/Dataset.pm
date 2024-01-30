@@ -151,7 +151,7 @@ sub get_datasets_public :Path('/ajax/dataset/get_public') {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my $datasets = CXGN::Dataset->get_datasets_public(
         $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)
@@ -199,7 +199,7 @@ sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     my $c = shift;
     my $dataset_id = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my $dataset = CXGN::Dataset->new(
 	{

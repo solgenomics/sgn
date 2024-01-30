@@ -28,7 +28,7 @@ BEGIN { extends 'Catalyst::Controller' }
 #
 sub get_variant_details: Chained('get_variant') PathPart('details') :Args(0) {
     my ( $self, $c ) = @_;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $variant_name = $c->stash->{variant_name};
 

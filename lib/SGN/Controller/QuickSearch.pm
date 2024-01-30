@@ -188,7 +188,7 @@ sub redirect_if_only_one_possible : Private {
 sub execute_predefined_searches: Private {
     my ( $self, $c ) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     # execute all the searches and stash the results
     for my $search_name ( sort keys %searches ) {
 	print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";

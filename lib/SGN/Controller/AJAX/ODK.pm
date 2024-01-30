@@ -70,7 +70,7 @@ sub get_crossing_available_forms : Path('/ajax/odk/get_crossing_available_forms'
 
 sub get_crossing_available_forms_GET {
     my ( $self, $c ) = @_;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $dbh = $bcs_schema->storage->dbh;
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};

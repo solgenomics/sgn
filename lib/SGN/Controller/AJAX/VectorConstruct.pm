@@ -41,7 +41,7 @@ sub sync_cass_constructs_POST {
     my $self = shift;
     my $c = shift;
     my $status = '';
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $construct_names = decode_json($c->req->param("data"));
@@ -377,7 +377,7 @@ sub verify_vectors_fuzzy_options : Path('/ajax/vector_list/fuzzy_options') : Act
 
 sub verify_vectors_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $vector_list_id = $c->req->param('vector_list_id');
     my $fuzzy_option_hash = decode_json( encode("utf8", $c->req->param('fuzzy_option_data')));

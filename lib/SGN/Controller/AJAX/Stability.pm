@@ -31,7 +31,7 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
@@ -130,7 +130,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 

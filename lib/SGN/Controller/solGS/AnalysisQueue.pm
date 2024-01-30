@@ -102,7 +102,7 @@ sub check_analyses_names {
 
     my $db_match;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     if ($new_name) {
         my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
         $db_match =

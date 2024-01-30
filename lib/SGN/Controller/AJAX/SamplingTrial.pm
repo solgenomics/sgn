@@ -27,7 +27,7 @@ sub generate_sampling_trial_POST : Args(0) {
         $c->detach();
     }
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $sampling_data = decode_json $c->req->param("sampling_data");
     print STDERR Dumper $sampling_data;
@@ -102,7 +102,7 @@ sub parse_sampling_trial_file : Path('/ajax/breeders/parsesamplingtrial') : Acti
 sub parse_sampling_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);

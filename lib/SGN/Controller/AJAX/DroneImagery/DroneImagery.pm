@@ -69,7 +69,7 @@ sub raw_drone_imagery_plot_image_count : Path('/api/drone_imagery/raw_drone_imag
 sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
@@ -103,7 +103,7 @@ sub drone_imagery_analysis_query : Path('/api/drone_imagery/analysis_query') : A
 sub drone_imagery_analysis_query_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $main_production_site = $c->config->{main_production_site_url};
@@ -223,7 +223,7 @@ sub drone_imagery_calculate_statistics : Path('/api/drone_imagery/calculate_stat
 sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -3926,7 +3926,7 @@ sub drone_imagery_separate_gps_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -4019,7 +4019,7 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -4036,7 +4036,7 @@ sub drone_imagery_check_gps_images_rotation : Path('/api/drone_imagery/check_gps
 sub drone_imagery_check_gps_images_rotation_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $drone_run_project_id = $c->req->param("drone_run_project_id");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -4055,7 +4055,7 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -4294,7 +4294,7 @@ sub drone_imagery_match_and_align_two_images_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -4875,7 +4875,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -4902,7 +4902,7 @@ sub drone_imagery_delete_gps_images_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -4947,7 +4947,7 @@ sub drone_imagery_save_gps_images_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     # print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
@@ -4987,7 +4987,7 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -5084,7 +5084,7 @@ sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : Actio
 sub drone_imagery_rotate_image_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
@@ -5235,7 +5235,7 @@ sub drone_imagery_get_contours : Path('/api/drone_imagery/get_contours') : Actio
 sub drone_imagery_get_contours_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
@@ -5305,7 +5305,7 @@ sub drone_imagery_retrieve_parameter_template : Path('/api/drone_imagery/retriev
 sub drone_imagery_retrieve_parameter_template_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $template_projectprop_id = $c->req->param('plot_polygons_template_projectprop_id');
 
@@ -5322,7 +5322,7 @@ sub drone_imagery_assign_plot_polygons : Path('/api/drone_imagery/assign_plot_po
 sub drone_imagery_assign_plot_polygons_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
@@ -5536,7 +5536,7 @@ sub drone_imagery_manual_assign_plot_polygon_save_partial_template_POST : Args(0
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my @image_ids = $c->req->param('image_ids[]');
@@ -5615,7 +5615,7 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my @image_ids = $c->req->param('image_ids[]');
@@ -5713,7 +5713,7 @@ sub drone_imagery_save_plot_polygons_template : Path('/api/drone_imagery/save_pl
 sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
@@ -5773,7 +5773,7 @@ sub drone_imagery_save_plot_polygons_template_separated_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
@@ -5834,7 +5834,7 @@ sub drone_imagery_denoise : Path('/api/drone_imagery/denoise') : ActionClass('RE
 sub drone_imagery_denoise_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
@@ -5918,7 +5918,7 @@ sub drone_imagery_remove_background_display : Path('/api/drone_imagery/remove_ba
 sub drone_imagery_remove_background_display_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
@@ -5974,7 +5974,7 @@ sub drone_imagery_remove_background_save : Path('/api/drone_imagery/remove_backg
 sub drone_imagery_remove_background_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
     my $image_type = $c->req->param('image_type');
@@ -6073,7 +6073,7 @@ sub drone_imagery_remove_background_percentage_save : Path('/api/drone_imagery/r
 sub drone_imagery_remove_background_percentage_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
     my $image_type_list = $c->req->param('image_type_list');
@@ -6182,7 +6182,7 @@ sub get_drone_run_projects : Path('/api/drone_imagery/drone_runs') : ActionClass
 sub get_drone_run_projects_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
@@ -6250,7 +6250,7 @@ sub get_drone_run_projects_kv : Path('/api/drone_imagery/drone_runs_json') : Act
 sub get_drone_run_projects_kv_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
     my $field_trial_ids = $c->req->param('field_trial_ids');
@@ -6306,7 +6306,7 @@ sub get_plot_polygon_types_images : Path('/api/drone_imagery/plot_polygon_types_
 sub get_plot_polygon_types_images_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
@@ -6457,7 +6457,7 @@ sub get_plot_polygon_types : Path('/api/drone_imagery/plot_polygon_types') : Act
 sub get_plot_polygon_types_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
@@ -6597,7 +6597,7 @@ sub get_drone_run_band_projects : Path('/api/drone_imagery/drone_run_bands') : A
 sub get_drone_run_band_projects_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $field_trial_id = $c->req->param('field_trial_id');
@@ -6702,7 +6702,7 @@ sub get_week_after_planting_date_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
 
@@ -6807,7 +6807,7 @@ sub standard_process_apply : Path('/api/drone_imagery/standard_process_apply') :
 sub standard_process_apply_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
@@ -7068,7 +7068,7 @@ sub standard_process_apply_ground_control_points : Path('/api/drone_imagery/stan
 sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
@@ -7747,7 +7747,7 @@ sub standard_process_apply_previous_imaging_event : Path('/api/drone_imagery/sta
 sub standard_process_apply_previous_imaging_event_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
@@ -7987,7 +7987,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
@@ -8291,7 +8291,7 @@ sub drone_imagery_get_vehicle_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $vehicle_id = $c->req->param('vehicle_id');
@@ -8333,7 +8333,7 @@ sub drone_imagery_get_vehicles : Path('/api/drone_imagery/imaging_vehicles') : A
 sub drone_imagery_get_vehicles_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -8366,7 +8366,7 @@ sub drone_imagery_accession_phenotype_histogram : Path('/api/drone_imagery/acces
 sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -8513,7 +8513,7 @@ sub drone_imagery_save_single_plot_image_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $observation_unit_id = $c->req->param('observation_unit_id');
@@ -8595,7 +8595,7 @@ sub standard_process_minimal_vi_apply : Path('/api/drone_imagery/standard_proces
 sub standard_process_minimal_vi_apply_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
@@ -8748,7 +8748,7 @@ sub standard_process_extended_apply : Path('/api/drone_imagery/standard_process_
 sub standard_process_extended_apply_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
@@ -9321,7 +9321,7 @@ sub get_project_md_image : Path('/api/drone_imagery/get_project_md_image') : Act
 sub get_project_md_image_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $project_image_type_name = $c->req->param('project_image_type_name');
@@ -9350,7 +9350,7 @@ sub drone_imagery_get_image : Path('/api/drone_imagery/get_image') : ActionClass
 sub drone_imagery_get_image_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
     my $size = $c->req->param('size') || 'original_converted';
@@ -9375,7 +9375,7 @@ sub drone_imagery_remove_image : Path('/api/drone_imagery/remove_image') : Actio
 sub drone_imagery_remove_image_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c, 'curator');
@@ -9390,7 +9390,7 @@ sub drone_imagery_crop_image : Path('/api/drone_imagery/crop_image') : ActionCla
 sub drone_imagery_crop_image_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
@@ -9488,7 +9488,7 @@ sub drone_imagery_calculate_fourier_transform : Path('/api/drone_imagery/calcula
 sub drone_imagery_calculate_fourier_transform_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
@@ -9581,7 +9581,7 @@ sub drone_imagery_calculate_vegetative_index : Path('/api/drone_imagery/calculat
 sub drone_imagery_calculate_vegetative_index_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
@@ -9712,7 +9712,7 @@ sub drone_imagery_mask_remove_background : Path('/api/drone_imagery/mask_remove_
 sub drone_imagery_mask_remove_background_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $image_id = $c->req->param('image_id');
     my $mask_image_id = $c->req->param('mask_image_id');
@@ -9784,7 +9784,7 @@ sub drone_imagery_get_plot_polygon_images : Path('/api/drone_imagery/get_plot_po
 sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $plot_polygons_type = $c->req->param('plot_polygons_type');
@@ -9817,7 +9817,7 @@ sub drone_imagery_merge_bands : Path('/api/drone_imagery/merge_bands') : ActionC
 sub drone_imagery_merge_bands_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -10037,7 +10037,7 @@ sub drone_imagery_get_drone_run_image_counts : Path('/api/drone_imagery/get_dron
 sub drone_imagery_get_drone_run_image_counts_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10094,7 +10094,7 @@ sub drone_imagery_update_details : Path('/api/drone_imagery/update_details') : A
 sub drone_imagery_update_details_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10123,7 +10123,7 @@ sub drone_imagery_quality_control_get_images : Path('/api/drone_imagery/quality_
 sub drone_imagery_quality_control_get_images_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10185,7 +10185,7 @@ sub drone_imagery_get_image_for_saving_gcp : Path('/api/drone_imagery/get_image_
 sub drone_imagery_get_image_for_saving_gcp_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10227,7 +10227,7 @@ sub drone_imagery_get_image_for_time_series : Path('/api/drone_imagery/get_image
 sub drone_imagery_get_image_for_time_series_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10313,7 +10313,7 @@ sub drone_imagery_saving_gcp : Path('/api/drone_imagery/saving_gcp') : ActionCla
 sub drone_imagery_saving_gcp_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10362,7 +10362,7 @@ sub drone_imagery_remove_one_gcp : Path('/api/drone_imagery/remove_one_gcp') : A
 sub drone_imagery_remove_one_gcp_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10401,7 +10401,7 @@ sub drone_imagery_obsolete_image_change : Path('/api/drone_imagery/obsolete_imag
 sub drone_imagery_obsolete_image_change_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10418,7 +10418,7 @@ sub drone_imagery_calculate_phenotypes : Path('/api/drone_imagery/calculate_phen
 sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10441,7 +10441,7 @@ sub drone_imagery_generate_phenotypes : Path('/api/drone_imagery/generate_phenot
 sub drone_imagery_generate_phenotypes_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10918,7 +10918,7 @@ sub drone_imagery_compare_images : Path('/api/drone_imagery/compare_images') : A
 sub drone_imagery_compare_images_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -10988,7 +10988,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -11510,7 +11510,7 @@ sub drone_imagery_save_keras_model : Path('/api/drone_imagery/save_keras_model')
 sub drone_imagery_save_keras_model_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -11609,7 +11609,7 @@ sub drone_imagery_predict_keras_model_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -12367,7 +12367,7 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -12788,7 +12788,7 @@ sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run')
 sub drone_imagery_delete_drone_run_GET : Args(0) {
     my $self = shift;
     my $c = shift;    
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -12859,7 +12859,7 @@ sub drone_imagery_get_image_types_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -12874,7 +12874,7 @@ sub drone_imagery_growing_degree_days : Path('/api/drone_imagery/growing_degree_
 sub drone_imagery_growing_degree_days_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -12894,7 +12894,7 @@ sub drone_imagery_precipitation_sum : Path('/api/drone_imagery/precipitation_sum
 sub drone_imagery_precipitation_sum_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -13111,7 +13111,7 @@ sub drone_imagery_retrain_mask_rcnn : Path('/api/drone_imagery/retrain_mask_rcnn
 sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -13330,7 +13330,7 @@ sub drone_imagery_predict_mask_rcnn : Path('/api/drone_imagery/predict_mask_rcnn
 sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -13420,7 +13420,7 @@ sub drone_imagery_export_drone_runs : Path('/api/drone_imagery/export_drone_runs
 sub drone_imagery_export_drone_runs_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);

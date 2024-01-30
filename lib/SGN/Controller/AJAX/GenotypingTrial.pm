@@ -31,7 +31,7 @@ sub generate_genotype_trial_POST : Args(0) {
         $c->detach();
     }
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $plate_info = decode_json $c->req->param("plate_data");
     #print STDERR Dumper $plate_info;
@@ -96,7 +96,7 @@ sub parse_genotype_trial_file : Path('/ajax/breeders/parsegenotypetrial') : Acti
 sub parse_genotype_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -473,7 +473,7 @@ sub get_genotyping_data_projects : Path('/ajax/genotyping_data/projects') : Acti
 sub get_genotyping_data_projects_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
 
@@ -508,7 +508,7 @@ sub get_genotyping_data_protocols : Path('/ajax/genotyping_data/protocols') : Ac
 sub get_genotyping_data_protocols_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     # my @protocol_list = $c->req->param('protocol_ids') ? split ',', $c->req->param('protocol_ids') : ();
@@ -554,7 +554,7 @@ sub create_plate_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $plate_info = decode_json $c->req->param("order_info");
 
@@ -595,7 +595,7 @@ sub store_plate_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $order_info = decode_json $c->req->param("order");
 
@@ -633,7 +633,7 @@ sub set_project_for_genotyping_plate : Path('/ajax/breeders/set_project_for_geno
 sub set_project_for_genotyping_plate_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
     my $genotyping_plate_ids = decode_json $c->req->param("genotyping_plate_ids");

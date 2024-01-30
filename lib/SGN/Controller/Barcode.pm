@@ -22,7 +22,7 @@ sub index : Path('/barcode') Args(0) {
     my $self =shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     # get projects
     my @rows = $schema->resultset('Project::Project')->all();
@@ -296,7 +296,7 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
     my ($db, $accession) = split ":", $cvterm;
 
     print STDERR "Searching $cvterm, DB $db...\n";
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my ($db_row) = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id)->resultset('General::Db')->search( { name => $db } );
 
     print STDERR $db_row->db_id;
@@ -340,7 +340,7 @@ sub barcode_multitool :Path('/barcode/multitool') Args(0) {
 	my ($db, $accession) = split ":", $cvterm;
 
 	print STDERR "Searching $cvterm, DB $db...\n";
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 	my ($db_row) = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id)->resultset('General::Db')->search( { name => $db } );
 
 	print STDERR $db_row->db_id;

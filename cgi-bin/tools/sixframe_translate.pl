@@ -23,7 +23,7 @@ $c->forward_to_mason_view( '/tools/sixframe_translate_standalone.mas',
 sub get_legacy_est {
     my ($cgi) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my $est_id = $cgi->param('est_id')
         or return;
@@ -41,7 +41,7 @@ sub get_legacy_est {
 sub get_legacy_unigene {
     my ($cgi) = @_;
 
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my $unigene_id = $cgi->param('unigene_id')
         or return;

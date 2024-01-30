@@ -443,7 +443,7 @@ sub sort_list_items : Path('/list/sort') Args(0) {
 sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $cross_id_list = decode_json($c->req->param("cross_id_list"));
     #print STDERR Dumper $cross_id_list;
     my $list_id = $c->req->param("list_id");
@@ -621,7 +621,7 @@ sub validate : Path('/list/validate') Args(2) {
     my $c = shift;
     my $list_id = shift;
     my $type = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my $list = $self->retrieve_list($c, $list_id);
 
@@ -653,7 +653,7 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 
 	print STDERR "LIST TYPE = ".$list_types[$n]."\n";
 	my $lv = CXGN::List::Validate->new();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 	my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $list_types[$n], \@flat_list);
 
 
@@ -699,7 +699,7 @@ sub temp_validate_POST : Args(0) {
     my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
 
     my $lv = CXGN::List::Validate->new();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items);
 
     # Set missing
@@ -726,7 +726,7 @@ sub fuzzysearch : Path('/list/fuzzysearch') Args(2) {
     my @flat_list = map { $_->[1] } @$list;
 
     my $f = CXGN::List::FuzzySearch->new();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $data = $f->fuzzysearch($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $list_type, \@flat_list);
 
     $c->stash->{rest} = $data;
@@ -745,7 +745,7 @@ sub transform :Path('/list/transform/') Args(2) {
     my $list_data = $self->retrieve_list($c, $list_id);
 
     my @list_items = map { $_->[1] } @$list_data;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $transform_name, \@list_items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
@@ -763,7 +763,7 @@ sub temp_transform :Path('/list/transform/temp') Args(0) {
     my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
 
     my $t = CXGN::List::Transform->new();
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
@@ -1100,7 +1100,7 @@ sub get_markerset_items :Path('/markerset/items') Args(0) {
     my $self = shift;
     my $c = shift;
     my $markerset_id = $c->req->param("markerset_id");
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $user_id = $self->get_user($c);
@@ -1130,7 +1130,7 @@ sub get_markerset_type :Path('/markerset/type') Args(0) {
     my $self = shift;
     my $c = shift;
     my $markerset_id = $c->req->param("markerset_id");
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $user_id = $self->get_user($c);
@@ -1295,7 +1295,7 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
@@ -1339,7 +1339,7 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
 sub download_list_details : Path('/list/download_details') {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;

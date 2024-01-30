@@ -62,7 +62,7 @@ sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionCl
 
 sub create_cross_wishlist_POST : Args(0) {
     my ($self, $c) = @_;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
@@ -906,7 +906,7 @@ sub list_cross_wishlists : Path('/ajax/cross/list_cross_wishlists') : ActionClas
 
 sub list_cross_wishlists_GET : Args(0) {
     my ($self, $c) = @_;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $q = "SELECT file_table.id, file_table.file_name, mdf.dirname, mdf.filetype, mdf.comment, mdmd.create_date, mdmd.create_person_id, p.first_name, p.last_name
         FROM
@@ -1110,7 +1110,7 @@ sub check_wishlist_accessions : Path('/ajax/cross/check_wishlist_accessions') : 
 
 sub check_wishlist_accessions_POST : Args(0) {
     my ($self, $c) = @_;
-    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $female_trial_id = $c->req->param('female_trial_id');
