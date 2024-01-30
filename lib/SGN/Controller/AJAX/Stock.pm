@@ -2444,4 +2444,28 @@ sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Arg
     $c->stash->{rest} = \@response_list;
 }
 
+sub accession_seedlot_table : Path('/ajax/stock/accession_seedlot_table') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    my $query = "SELECT stock.stock_id, stock.uniquename, seedlot.stock_id, seedlot.uniquename FROM stock join stock_relationship on(stock.stock_id=stock_relationship.object_id) join stock as seedlot on(stock_relationship.subject_id=seedlot.stock_id) where stock.type_id=(select cvterm_id from cvterm where name='accession') and seedlot.type_id=(select cvterm_id from cvterm where name='seedlot') order by stock.uniquename;
+";
+
+    my $h = $dbh->prepare($query);
+    $h->execute();
+
+    my @data;
+    
+    while (my ($stock_id, $uniquename, $seedlot_id, $seedlot_uniquename) = $h->fetchrow_array()) { 
+	push @data, [ "<a href=\"/stock/".$stock_id."/view\">$uniquename</a>", "<a href=\"/stock/".$seedlot_id."/view\">$seedlot_uniquename</a>" ];
+    }
+    $c->stash->{rest} = { data => \@data };
+}
+
+
+
+
 1;

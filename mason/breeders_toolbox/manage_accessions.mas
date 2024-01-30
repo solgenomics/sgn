@@ -92,6 +92,27 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 </div><!-- closes well -->
 
 <div class="well">
+  <&| /page/info_section.mas, title=>"Accessions and Seedlots", id=> "accessions_and_seedlots", collapsible=>1, collapsed=>1&>
+    <table class="table table-hover table-bordered" id="accessions_and_seedlots_table">
+      <thead>
+        <tr>
+          <th>Accession Name</th>
+          <th>Seedlot</th>
+        </tr>
+      </thead>
+    </table>
+    <br>
+    <br>
+    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+      <br>
+      <div style="text-align:right" id="accessions_and_seedlots_list"></div>
+      <div id="accession_and_seedlots" style="display: none;"></div>
+    </&>
+  </&>
+</div><!-- closes well -->
+
+
+<div class="well">
   <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
 
   <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
@@ -175,6 +196,29 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
             }
         });
     });
+
+        jQuery('#accessions_and_seedlots_onswitch').one("click", function(){
+        var result_table = jQuery('#accessions_and_seedlots_table').DataTable({
+            'ajax': { 'url': '/ajax/stock/accession_seedlot_table' },
+            "fnInitComplete": function(oSettings, json) {
+                if (!isLoggedIn()) {
+                    jQuery('#accession_and_seedlots_table').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                }
+		//else {
+                //    var html = "";
+                 //   for(var i=0; i<json.data.length; i++){
+                 //       html += json.data[i][2]+"\n";
+                //    }
+                //    jQuery("#accessions_and_seedlots_list").html(html);
+                //    addToListMenu("accessions_and_seedlots_to_list_menu", "accession_names_missing_pedigree", {
+                //        selectText: true,
+                //        listType:'accessions'
+                //    });
+                //}
+            }
+        });
+    });
+
 
 });
 
