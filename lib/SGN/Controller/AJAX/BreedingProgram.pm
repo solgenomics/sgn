@@ -238,12 +238,15 @@ sub program_locations :Chained('ajax_breeding_program') PathPart('locations') Ar
 sub program_field_trials :Chained('ajax_breeding_program') PathPart('field_trials') Args(0){
     my $self = shift;
     my $c = shift;
+
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
     my $program = $c->stash->{program};
     my $program_id = $program->get_program_id;
     my $schema = $c->stash->{schema};
 
     my $projects = CXGN::BreedersToolbox::Projects->new({schema => $schema});
-    my @all_trials = $projects->get_trials_by_breeding_program($program_id);
+    my @all_trials = $projects->get_trials_by_breeding_program($program_id, $start_date, $end_date);
     my $field_trials_ref = $all_trials[0];
 
     my @field_trials;

@@ -5,7 +5,9 @@ load_genotyping_plates.pl
 
 =head1 SYNOPSIS
 
-load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -g genotyping_project -l location [-t]
+NOTE: You need to create the genotyping project in the database first. With the -g option, provide the name of genotyping project the plates should be associated with. Metadata such as year, location and breeding program will be loaded from the genotyping object directly.
+
+load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -u [username] -g genotyping_project [-t] -f format
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -27,21 +29,9 @@ infile
 
 username  (must be in the database) 
 
-=item -b 
-
-breeding program name (must be in the database)  
-
 =item -t
 
 Test run . Rolling back at the end.
-
-=item -l 
-
-location
-
-=item -y 
-
-year
 
 =item -g
 
@@ -111,12 +101,9 @@ use CXGN::Trial; # add project metadata
 
 use CXGN::Trial::TrialCreate;
 
-my ( $help, $dbhost, $dbname, $infile, $sites, $types, $test, $username, $breeding_program_name, $genotyping_project, $location, $year, $format );
+my ( $help, $dbhost, $dbname, $infile, $sites, $types, $test, $username, $genotyping_project, $format );
 GetOptions(
     'i=s'        => \$infile,
-    'b=s'        => \$breeding_program_name,
-    'l=s'        => \$location,
-    'y=s'        => \$year,
     'g=s'        => \$genotyping_project,
     't'          => \$test,
     'f=s'        => \$format,
@@ -129,7 +116,7 @@ GetOptions(
 
 
 pod2usage(1) if $help;
-if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost ) {
+if (!$infile || !$username || !$dbname || !$dbhost ) {
     pod2usage( { -msg => 'Error. Missing options!'  , -verbose => 1, -exitval => 1 } ) ;
 }
 
@@ -147,21 +134,6 @@ my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_db
 
 my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() } , {on_connect_do => ['SET search_path TO phenome;'] } );
 
-
-# Breeding program for associating the trial/s ##
-#
-
-my $breeding_program = $schema->resultset("Project::Project")->find( 
-            {
-                'me.name'   => $breeding_program_name,
-		'type.name' => 'breeding_program',
-	    }, 
-    {
-    join =>  { projectprops => 'type' } , 
-    } ) ;
-
-if (!$breeding_program) { die "Breeding program $breeding_program_name does not exist in the database. Check your input \n"; }
-print "Found breeding program $breeding_program_name " . $breeding_program->project_id . "\n";
 
 # check if genotyping project exists
 #
@@ -215,9 +187,6 @@ my %phen_data_by_trial; #
 
 # standard format:
 # Item	Plate ID	Intertek plate/well ID	accession name	Breeder ID
-
-
-
 
 my $operator;
 
@@ -319,29 +288,41 @@ $phenotype_metadata{'date'} = $date;
 
 my $coderef= sub  {
 
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $genotyping_project_id });
+    my $location_data = $trial->get_location();
+    my $location_name = $location_data->[1];
+    my $description = $trial->get_description();
+    my $genotyping_facility = $trial->get_genotyping_facility();
+    my $plate_year = $trial->get_year();
+    
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
+    my $breeding_program_name = $breeding_program_data->[0]->[1];
 
     print STDERR "Working with genotyping project name $genotyping_project\n";
     foreach my $trial_name (keys %multi_trial_data ) { 
 	
-	my $trial_create = CXGN::Trial::TrialCreate->new({
-	    chado_schema      => $schema,
-	    dbh               => $dbh,
-	    design_type       => 'genotyping_plate',
-	    design            => $trial_design_hash{$trial_name},
-	    program           => $breeding_program->name(),
-	    trial_year        => $year,
-	    trial_description => $trial_name,
-	    trial_location    => $location,
-	    trial_name        => $trial_name,
-            operator          => $operator,
-	    owner_id           => $sp_person_id,
-	    is_genotyping      => 1,
-	    genotyping_user_id => $sp_person_id,
-	    genotyping_plate_format => 96,
-	    genotyping_plate_sample_type => 'accession',
-	    genotyping_project_id => $genotyping_project_id
-
-							 });
+	my $trial_create = CXGN::Trial::TrialCreate->new(
+	    {
+		chado_schema      => $schema,
+		dbh               => $dbh,
+		design_type       => 'genotyping_plate',
+		design            => $trial_design_hash{$trial_name},
+		program           => $breeding_program_name,
+		trial_year        => $plate_year,
+		trial_description => $description,
+		trial_location    => $location_name,
+		trial_name        => $trial_name,
+		operator          => $operator,
+		owner_id           => $sp_person_id,
+		is_genotyping      => 1,
+		genotyping_user_id => $sp_person_id,
+		genotyping_plate_format => $format,
+		genotyping_plate_sample_type => 'accession',
+		genotyping_project_id => $genotyping_project_id,
+		genotyping_facility => $genotyping_facility,
+	    });
+	
 	try {
 	    $trial_create->save_trial();
 	} catch {
@@ -354,12 +335,6 @@ try {
     $schema->txn_do($coderef);
     if (!$test) { print "Transaction succeeded! Commiting project and its metadata \n\n"; }
 } catch {
-    # Transaction failed
-#    foreach my $value ( sort  keys %seq ) {
-#        my $maxval= $seq{$value} || 0;
-#        if ($maxval) { $dbh->do("SELECT setval ('$value', $maxval, true)") ;  }
-#        else {  $dbh->do("SELECT setval ('$value', 1, false)");  }
-#    }
     die "An error occured! Rolling back  and reseting database sequences!" . $_ . "\n";
 };
 

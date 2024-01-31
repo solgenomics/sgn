@@ -1,0 +1,247 @@
+<%args>
+
+</%args>
+
+
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses', 'CXGN.TrialTreeFolders'] &>
+
+<div class="modal fade" id="add_transactions_using_list_dialog" name="add_transactions_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransactionsUsingListDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_transactions_dismiss_button_1" name="add_transactions_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addTransactions">Add New Transactions Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "add_transactions_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Seedlot Transactions" &>
+
+                            <p>There are four different types of seedlot transactions: Transferring seeds from an existing seedlot to another existing seedlot, to a new seedlot, to a plot or to unspecified seedlot or plot. </p>
+                            <ul>
+                                <li>You can use upload option for all transaction types</li>
+                                <li><b>Seedlot list option can be used only for transferring seeds from existing seedlots to unspecified seedlots/plots.</b></li>
+                            </ul>
+                            <hr>
+
+                            <center>
+                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <form class="form-horizontal" role="form" name="add_new_transaction_form" id="add_new_transaction_form">
+                            <&| /util/workflow.mas:step, title=> "Add New Transactions" &>
+                                <& /page/page_title.mas, title=>"Enter information about the transactions" &>
+                                <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label">Note: This option is for transferring seeds to unspecified seedlots/plots only</label></center>
+                                <br/>
+                                <br/>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Unit Type: </label>
+                                        <div class="col-sm-8">
+                                            <div class="input-group">
+                                                <select class="form-control" id="unit_type">
+                                                    <option value="">Please select a unit type </option>
+                                                    <option value="number_of_seeds">using number of seeds</option>
+                                                    <option value="weight_g">using weight (g)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-4">List of Seedlots:</label>
+                                        <div class="col-sm-8" >
+                                            <div class="input-group">
+                                                <select class="form-control" id="seedlot_list_select"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id ="transaction_form_div">
+                                    </div>
+                                </div>
+                                <br/>
+                                <div id="form_footer" style="display:none" >
+                                    <center>
+                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="new_transaction_submit" id="new_transaction_submit">Submit</button>
+                                    </center>
+                                </div>
+                            </&>
+                        </form>
+
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your seedlot transactions were stored" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                New seedlot transactions were added successfully
+                            </p>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_transactions_dismiss_button_2" name="add_transactions_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transactions_saved_dialog_message" name="transactions_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="transactionsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transactionsSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The seedlot transactions were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_transactions_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var lo = new CXGN.List();
+    jQuery('#seedlot_list_select').html(lo.listSelect('seedlot_list_select', ['seedlots'], 'Select a list of seedlots', undefined, undefined));
+
+    jQuery("#add_transactions_using_list_link").click(function(){
+        jQuery("#add_transactions_using_list_dialog").modal("show");
+    });
+
+    var unit_type;
+    var seedlot_list_id;
+
+    jQuery("#unit_type").change(function() {
+        unit_type = jQuery('#unit_type').val();
+        if (unit_type && seedlot_list_id) {
+            transaction_form(unit_type, seedlot_list_id);
+        }
+
+    });
+
+    jQuery("[name = 'add_transactions_dismiss_button']").click(function() {
+        jQuery("#add_transactions_using_list_dialog").modal("hide");
+        jQuery("#unit_type").val('');
+        location.reload();
+    });
+
+
+    jQuery("#seedlot_list_select").change(function() {
+        seedlot_list_id = jQuery('#seedlot_list_select').val();
+        if (seedlot_list_id){
+            var seedlot_validation = 1;
+            seedlot_validation = lo.legacy_validate(seedlot_list_id, 'seedlots', true);
+            if (seedlot_validation != 1) {
+                alert("This seedlot list did not pass validation. Names in the list must exist in the database and are not marked as discarded.");
+                return;
+            } else if (!unit_type) {
+                alert("Please select a unit type");
+                return;
+            } else if (unit_type && seedlot_list_id) {
+                transaction_form(unit_type, seedlot_list_id);
+            }
+        }
+    })
+
+    function transaction_form (unit_type, seedlot_id) {
+        var seedlot_list = lo.getList(seedlot_list_id);
+
+        if (unit_type == 'number_of_seeds') {
+            var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Seedlot Name</th><th>Number of Seeds Taken</th><th>Reason</th></tr></thead><tbody>';
+            for (var i=0; i<seedlot_list.length; i++){
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="number_of_seeds_info" id="number_of_seeds_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
+            };
+        } else if (unit_type == 'weight_g') {
+            var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>Seedlot Name</th><th>Weight (g) Taken</th><th>Reason</th></tr></thead><tbody>';
+            for (var i=0; i<seedlot_list.length; i++){
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
+            };
+        }
+
+        html = html + '</tbody></table>';
+
+        jQuery('#transaction_form_div').html(html);
+
+        jQuery('#form_footer').show();
+
+    };
+
+    jQuery('#new_transaction_submit').click(function(e){
+        e.preventDefault();
+        var new_transaction_data = [];
+        var seedlot_id = jQuery('#seedlot_list_select').val();
+        var seedlot_list = lo.getList(seedlot_list_id);
+        var unit_type = jQuery('#unit_type').val();
+
+        for (var i=0; i<seedlot_list.length; i++) {
+            var seedlot_name = seedlot_list[i];
+            var weight_g = jQuery('#weight_info_'+ i ).val();
+            var number_of_seeds = jQuery('#number_of_seeds_info_'+ i ).val();
+            var transaction_description = jQuery('#transaction_description_'+ i ).val();
+            if (unit_type == 'number_of_seeds') {
+                if (number_of_seeds === '') {
+                    alert("please provide number of seeds taken from seedlot:" + seedlot_name);
+                    return;
+                }
+            } else if (unit_type == 'weight_g') {
+                if (weight_g === '') {
+                    alert("please provide weight(g) taken from seedlot:" + seedlot_name);
+                    return;
+                }
+            }
+
+            if (transaction_description === '') {
+                alert("Please provide transaction description for seedlot:" + seedlot_name);
+                return;
+            }
+
+            new_transaction_data.push({'seedlot_name':seedlot_name, 'weight_g':weight_g, 'number_of_seeds':number_of_seeds, 'transaction_description':transaction_description});
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/add_transactions_using_list',
+            method: 'POST',
+            data: {
+                'new_transaction_data': JSON.stringify(new_transaction_data),
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.success) {
+                    jQuery("#add_transactions_using_list_dialog").modal("hide");
+                    jQuery('#transactions_saved_dialog_message').modal("show");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred storing new transactions.');
+            },
+        });
+    });
+
+});
+
+
+
+</script>

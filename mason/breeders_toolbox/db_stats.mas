@@ -3,9 +3,76 @@
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js', 'd3pie_min.js' ] &>
+% use JSON;
 
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js', 'd3pie_min.js', 'moment_min',  'd3.graphers.stackedObservationPhenotypeHistogram' ] &>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+  
 <& /page/page_title.mas, title => 'Database Stats' &>
+
+<&| /page/info_section.mas, title => "Date Range" &>
+
+Filter by date of addition to database<br /><br />
+<table><tr><td>
+
+Start Date: <input type="text" id="dbstats_start_date" title="dbstats_start_date"  />
+<td>&nbsp;</td></td><td>
+
+End Date: <input type="text" id="dbstats_end_date" title="dbstats_end_date"  />
+</td><td>
+&nbsp;
+</td><td>
+<input type="checkbox" id="include_dateless_items"> include items without a date</input>
+</td><td>
+&nbsp;
+</td><td>
+<button id="update_dbstats_by_date">Update</button>
+
+</td>
+</tr></table>
+</&>
+
+<script>
+
+var dbstats_start_date_element = jQuery("#dbstats_start_date");
+//set_daterangepicker_default(dbstats_start_date_element);
+
+jQuery('input[title="dbstats_start_date"]').daterangepicker(
+   {
+       "singleDatePicker": true,
+       "showDropdowns": true,
+       "autoUpdateInput": true,
+       "startDate": "1970-01-01",
+       "yearSelect" : true,
+       "minDate": "1970-01-01",
+       "maxDate": "2030-12-31",
+       locale: { 
+        format: 'YYYY-MM-DD'
+      }
+   },
+
+);
+
+var dbstats_end_date_element = jQuery("#dbstats_end_date");
+
+jQuery('input[title="dbstats_end_date"]').daterangepicker(
+    {
+       "singleDatePicker": true,
+       "autoUpdateInput": true,
+       "minDate": "1970-01-01",
+       "maxDate" : "2030-12-31", 
+       "yearSelect" : true,
+       locale: { 
+           format: 'YYYY-MM-DD'
+       },
+       "showDropdowns": true,
+    },
+
+);
+
+</script>
 
 <&| /page/info_section.mas, title => "Data categories" &>
 
@@ -29,85 +96,142 @@ $breeding_programs
 </td></tr>
 </table>
 
-
-
 </&>
 
-<&| /page/info_section.mas, title => "Activity - past 52 weeks" &>
+%# <&| /page/info_section.mas, title => "Activity - past 52 weeks" &>
 
-  <svg class="bargraph" width="800" height="200"></svg>
+%#    <svg class="bargraph" width="800" height="200"></svg>
     
-</&>
+%#  </&>
 
-<&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
+%# <&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
 
-%  foreach (@$breeding_programs){
+%# <div id="program_stats">[loading program stats...]</div>
 
-    <div class="well">
+%# </&>
 
-        <h3>Breeding Program: <% $_->[1] %></h3>
+%# <&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
 
-        <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
-            <& /breeders_toolbox/program/trials.mas, program_id => $_->[0] &>
-        </&>
+%#  %  foreach (@$breeding_programs){
 
-        <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
-            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0], collapse_phenotypes_section => 0  &>
-        </&>
+%#    <div class="well">
 
-    </div>
+%#        <h3>Breeding Program: <% $_->[1] %></h3>
 
-%  }
+%#        <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+%#            <& /breeders_toolbox/program/trials.mas, program_id => $_->[0] &>
+%#        </&>
 
-</&>
+%#        <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+%#            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0], collapse_phenotypes_section => 0  &>
+%#        </&>
+
+%#    </div>
+
+%#  }
+
+%#</&>
 
 <script>
-  jQuery.ajax({
-    url: '/ajax/dbstats/trial_types',
-    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
-    success: function(response)  { 
-  //alert('success' + JSON.stringify(response)); 
-      var types_pie = new d3pie('trial_types_div', response);
-      
-    }
-  });
 
-  jQuery.ajax({
-    url: '/ajax/dbstats/trials_by_breeding_program',
-    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
-    success: function(response)  { 
-      //alert('success' + JSON.stringify(response)); 
-      var types_pie = new d3pie('trials_by_breeding_programs_div', response);
-    }
-  });
+% my $breeding_program_json = encode_json($breeding_programs);
 
-  jQuery.ajax({
-    url: '/ajax/dbstats/traits',
-    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
-    success: function(response)  { 
-      //alert('success' + JSON.stringify(response)); 
-      var types_pie = new d3pie('traits_div', response);
-    }
-  });
+
+jQuery(document).ready( function() { 
+
+    draw_overview_charts();   
+
+    jQuery('#update_dbstats_by_date').click( function() {
+        draw_overview_charts();
+    });
+
+    var breeding_programs = JSON.parse('<% $breeding_program_json %>');
+
+    //   alert(JSON.stringify(breeding_programs));
+
+//   var html = "";
+
+//    for(let i=0; i<breeding_programs.length; i++) {
+// //      alert('table loop '+i + ' for '+breeding_programs[i][1]);
+//       html += "<h3>Breeding Program: "+ breeding_programs[i][1] + "</h3>";
+
+//       html += trial_table(html, breeding_programs[i][0]);
+//       html += trait_table(html, breeding_programs[i][0]);
+//    }
+
+//    jQuery('#program_stats').html(html);
+
+// //   alert(JSON.stringify(breeding_programs));
+
+//    for(let n=0; n<breeding_programs.length; n++) {
+// //       alert('ajax loop '+ n + ' for '+breeding_programs[n][1]);
+//        trial_queries(breeding_programs[n][0], start_date, end_date, include_dateless_items);
+//        trait_queries(breeding_programs[n][0], start_date, end_date, include_dateless_items);
+//    }
+
+
+});
+
+function draw_overview_charts() { 
+ var start_date = jQuery('#dbstats_start_date').val();
+    var end_date   = jQuery('#dbstats_end_date').val();
+    var include_dateless_items = jQuery('#include_dateless_items').prop('checked');
+//	 alert('Drawing charts with start date of '+start_date+' end date of '+end_date+' and '+include_dateless_items);
+     // remove old graphs if present
+       jQuery('#trial_types_div').html("");
+       jQuery('#trials_by_breeding_programs_div').html("");
+       jQuery('#traits_div').html("");
+       jQuery('#stocks_div').html("");
+
+        jQuery.ajax({
+        url: '/ajax/dbstats/trials_by_breeding_program_chart',
+        data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },	
+        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        success: function(response)  { 
+            //alert('success' + JSON.stringify(response)); 
+            var types_pie = new d3pie('trials_by_breeding_programs_div', response);
+        }
+    });
+
+    jQuery.ajax({
+        url: '/ajax/dbstats/traits_chart',
+        data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },	
+        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        success: function(response)  { 
+           //alert('success' + JSON.stringify(response)); 
+           var types_pie = new d3pie('traits_div', response);
+        }
+    });
   
-  jQuery.ajax({
-    url: '/ajax/dbstats/stocks',
-    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
-    success: function(response)  { 
-      var types_pie = new d3pie('stocks_div', response);
-    }
-  });
+    jQuery.ajax({
+        url: '/ajax/dbstats/stocks_chart',
+        data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },
+        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        success: function(response)  { 
+            var types_pie = new d3pie('stocks_div', response);
+        }
+    });
 
+    jQuery.ajax({
+        url: '/ajax/dbstats/trial_types_chart',
+        data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },
+        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        success: function(response)  { 
+            //alert('success' + JSON.stringify(response)); 
+            var types_pie = new d3pie('trial_types_div', response);      
+        }
+    });
 
+//    jQuery.ajax( { 
+//        url : '/ajax/dbstats/activity',
+//        error: function(r) { alert('An error occurred.'); },
+//        success:  function(d) {
+//            d.frequency = +d.frequency;
+//            bargraph(d);
+//        }
+//    });
+}
 
-jQuery.ajax( { 
-  url : '/ajax/dbstats/activity',
-  error: function(r) { alert('An error occurred.'); },
-  success:  function(d) {
-     d.frequency = +d.frequency;
-     bargraph(d);
-  }
-  });
 
 function bargraph(data) { 
     var svg = d3.select(".bargraph"),
@@ -150,5 +274,215 @@ function bargraph(data) {
       .attr("height", function(d) { return height - y(d.frequency); })
       .attr("fill", "#AAAAEE");
   }
+
+
+
+function trial_table(html, bp_id) {
+
+html += `
+<table id="trial_summary_data_`+bp_id+`" class="display">
+    <thead>
+        <tr>
+            <th>Trial name</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+</table>
+`;
+
+//    alert(html);
+
+    return html;
+}
+
+function trait_table(html, bp_id) {
+
+html = `
+<div class="well well-sm table-responsive">
+  <center><h4>Raw Data Statistics</h4></center>
+  <br/>
+
+
+  <div id="pheno_summary_table_`+bp_id+`_div">
+
+    <table id="phenotype_summary_data_`+bp_id+`" class="display">
+      <thead>
+        <tr>
+          <th>Trait</th>
+          <th>Mean</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Std Dev</th>
+          <th>CV</th>
+          <th>Count</th>
+          <th>Histogram</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="well well-sm" id="raw_data_histogram_well_`+bp_id+`">
+  <center><h4>Raw Data Histogram</h4></center><hr>
+  <div id="program_summary_hist_`+bp_id+`_div">
+    <div class="row">
+      <div class="col-sm-8">
+        <form class="form-horizontal">
+          <div class="form-group form-group-sm">
+            <label for="program_summary_hist_dropdown_`+bp_id+`" class="col-sm-2 control-label">Select:</label>
+            <div class="col-sm-10">
+              <div id="traits_assayed_dropdown_`+bp_id+`">
+              </div>
+            </div>
+          </div>
+      </div>
+      <div class="col-sm-4" id="traits_assayed_histogram_cvterm_link_`+bp_id+`">
+      </div>
+    </div>
+
+    <div id="program_summary_hist_`+bp_id+`">
+    </div>
+
+  </div>
+</div>
+
+
+`;
+
+//   alert(html);
+
+   return html;
+}
+
+function trial_queries(bp_id, start_date, end_date, include_dateless_items) { 
+//    alert('AJAX call for '+bp_id +' start_date = '+start_date);
+    jQuery('#trial_summary_data_'+bp_id).DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/breeders/program/'+ bp_id + '/field_trials?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
+    });
+}
+
+function trait_queries(bp_id, start_date, end_date, include_dateless_items) { 
+//    alert('getting trait data...');
+    jQuery("#phenotype_summary_data_"+bp_id).DataTable( {
+        'ajax': '/ajax/breeders/program/'+ bp_id + '/phenotypes?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
+    });
+    
+    trait_summary_hist_display_change(bp_id, start_date, end_date, include_dateless_items);
+
+    ///clicking on the histogram glyph from the dataTable
+    /// scrolls down to the histogram div
+    ///
+    jQuery('#phenotype_summary_data_'+bp_id).on('click', 'a[href^="#"]', function(event) {
+        var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well_'+bp_id).height() - 40;
+        var target = jQuery(this.getAttribute('href'));
+        if( target.length ) {
+            event.preventDefault();
+            jQuery('html, body').stop().animate({
+                scrollTop: target.offset().top - offset
+            }, 1500);
+        }
+    });
+}
+
+function trait_summary_hist_display_change(program_id, start_date, end_date, include_dateless_items) {
+
+    var d3 = d3v4;
+    var draw_histogram = stackedObservationPhenotypeHistogram.draw;
+
+//    alert('trait_summary_hist_display_change!');
+
+    jQuery.ajax ( {
+        url : '/ajax/breeders/program/'+ program_id + '/traits_assayed?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
+        beforeSend: function() {
+	//            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            //console.log(response);
+            if (response.traits_assayed[0][0]) {
+                var traits_assayed_html = "<select class='form-control' id='program_summary_hist_dropdown_"+program_id+"'>";
+//		alert('select: '+traits_assayed_html);
+                for (i=0; i<response.traits_assayed[0].length; i++) {
+                    traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                }
+                traits_assayed_html = traits_assayed_html +"</select>";
+
+//		alert(traits_assayed_html);
+                jQuery("#traits_assayed_dropdown_"+program_id).html(traits_assayed_html);
+//		alert('done with dropdown!');
+                jQuery("#traits_assayed_dropdown_"+program_id).change(function(){
+		    var new_trait_id = jQuery('#traits_assayed_dropdown_'+program_id).find(":selected").val();
+//                    alert("NEW TRAIT ID: "+new_trait_id);
+                    trait_summary_hist_change(program_id, new_trait_id);
+                });
+
+                jQuery('#traits_assayed_histogram_cvterm_link_'+program_id).html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+
+		var trait_id = jQuery("#program_summary_hist_dropdown_"+program_id).val();
+//		alert('TRAIT_ID: '+trait_id);
+                jQuery.ajax( {
+                    url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+trait_id,
+                    type: 'POST',
+                    success: function(response){
+                        jQuery("#working_modal").modal("hide");
+                        var draw_histogram = stackedObservationPhenotypeHistogram.draw;
+                        if (response.error) {
+                            alert(response.error);
+                        }
+                        else if (response.status!="success"){
+                            alert("Problem loading plant/plot data: "+response.status);
+                        }
+                        else {
+                            draw_histogram(response.data, d3.select("#program_summary_hist_"+program_id).node());
+                        }
+                    },
+                    error: function(response) {
+                        jQuery("#working_modal").modal("hide");
+                        alert('An error occured retrieving trait histogram data.');
+                    }
+                });
+            } else {
+                jQuery("#working_modal").modal("hide");
+                jQuery("#program_summary_hist_"+program_id).html("<center><h4>There is no data to plot.</h4></center>");
+            }
+
+        },
+        error: function(response){
+            alert('Error retrieving traits assayed in this breeding program');
+        }
+
+    });
+}
+
+function trait_summary_hist_change(program_id, value) {
+	 
+    jQuery('#traits_assayed_histogram_cvterm_link_'+program_id).html("<a href='/cvterm/"+value+"/view'>Definition</a>");
+    jQuery("#program_summary_hist_dropdown_"+program_id).val(value);
+    jQuery.ajax( {
+        url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+value+'',
+        type: 'POST',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            jQuery("#working_modal").modal("hide");
+	    var draw_histogram = stackedObservationPhenotypeHistogram.draw;
+            if (response.error) {
+                alert(response.error);
+            }
+            else if (response.status!="success"){
+                alert("Problem loading plant/plot data: "+response.status);
+            }
+            else {
+                draw_histogram(response.data, d3.select("#program_summary_hist_"+program_id).node());
+            }
+        },
+        error: function(response) {
+            jQuery("#working_modal").modal("hide");
+            alert('An error occured retrieving trait histogram data.');
+        }
+    });
+}
 
 </script>
