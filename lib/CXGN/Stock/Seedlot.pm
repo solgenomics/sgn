@@ -271,6 +271,11 @@ has 'transactions' =>     (
     builder  => '_build_transactions',
 );
 
+has 'weight_unit' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
 =head2 Accessor breeding_program
 
 The breeding program this seedlot is from. Useful for tracking movement of seedlots across breeding programs
@@ -1223,11 +1228,20 @@ sub _retrieve_quality {
 sub current_weight {
     my $self = shift;
     my $transactions = $self->transactions();
+    my $weight_unit = $self->weight_unit();
 
     my $weight = 0;
-    foreach my $t (@$transactions) {
-        if ($t->weight_gram() ne 'NA'){
-            $weight += $t->weight_gram() * $t->factor();
+    if ($weight_unit eq 'weight_pound') {
+        foreach my $t (@$transactions) {
+            if ($t->weight_pound() ne 'NA'){
+                $weight += $t->weight_pound() * $t->factor();
+            }
+        }
+    } else {
+        foreach my $t (@$transactions) {
+            if ($t->weight_gram() ne 'NA'){
+                $weight += $t->weight_gram() * $t->factor();
+            }
         }
     }
     if ($weight == 0 && scalar(@$transactions)>0){
@@ -1240,7 +1254,13 @@ sub current_weight {
 sub set_current_weight_property {
     my $self = shift;
     my $current_weight = $self->current_weight();
-    my $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
+    my $weight_unit = $self->weight_unit();
+    my $current_weight_cvterm;
+    if ($weight_unit eq 'weight_pound') {
+        $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_pound', 'stock_property');
+    } else {
+        $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
+    }
     my $stock = $self->stock();
     my $recorded_current_weight = $stock->find_related('stockprops', {'me.type_id'=>$current_weight_cvterm->cvterm_id});
     if ($recorded_current_weight){
@@ -1254,9 +1274,15 @@ sub set_current_weight_property {
 # It is convenient and also much faster to retrieve a single value for the current_weight, rather than calculating it from the transactions.
 sub get_current_weight_property {
     my $self = shift;
-    my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
-    my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
-    return $recorded_current_count ? $recorded_current_count->value() : '';
+    my $weight_unit = $self->weight_unit();
+    my $current_weight_cvterm;
+    if ($weight_unit eq 'weight_pound') {
+        $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_pound', 'stock_property');
+    } else {
+        $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
+    }
+    my $recorded_current_weight = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_weight_cvterm->cvterm_id});
+    return $recorded_current_weight ? $recorded_current_weight->value() : '';
 }
 
 

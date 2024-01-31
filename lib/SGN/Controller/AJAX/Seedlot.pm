@@ -343,6 +343,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $no_refresh = $c->req->param("no_refresh");
+    my $weight_unit = $c->config->{weight_unit};
+    print STDERR "WEIGHT UNIT =".Dumper($weight_unit)."\n";
 
     my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename }); #type_id=>$seedlot_cvterm_id});
     if ($previous_seedlot){
@@ -450,23 +452,30 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->factor(1);
         $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
         $transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
+        $transaction->weight_unit($weight_unit);
+
         if ($amount){
             $transaction->amount($amount);
         }
+
         if ($weight){
-            $transaction->weight_gram($weight);
+            if ($weight_unit eq 'weight_pound') {
+                $transaction->weight_pound($weight);
+            } else {
+                $transaction->weight_gram($weight);
+            }
         }
         $transaction->timestamp($timestamp);
         $transaction->description($transaction_description);
         $transaction->operator($operator);
         $transaction->store();
 
-        my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+        my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id, weight_unit=>$weight_unit);
         $sl_new->set_current_count_property();
         $sl_new->set_current_weight_property();
 
         if ( $origin_seedlot_id ) {
-            my $sl_origin = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $origin_seedlot_id);
+            my $sl_origin = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $origin_seedlot_id, weight_unit=>$weight_unit);
             $sl_origin->set_current_count_property();
             $sl_origin->set_current_weight_property();
         }

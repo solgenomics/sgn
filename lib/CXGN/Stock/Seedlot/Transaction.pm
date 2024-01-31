@@ -29,7 +29,17 @@ has 'amount' => (
     is => 'rw',
 );
 
+has 'weight_unit' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
 has 'weight_gram' => (
+    isa => 'Num|Str',
+    is => 'rw',
+);
+
+has 'weight_pound' => (
     isa => 'Num|Str',
     is => 'rw',
 );
@@ -234,16 +244,26 @@ sub get_transactions {
 sub store {
     my $self = shift;
     my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
-
+    my $weight_unit = $self->weight_unit();
     my $amount = defined($self->amount()) ? $self->amount() : 'NA';
-    my $weight = defined($self->weight_gram()) ? $self->weight_gram() : 'NA';
+	my $weight;
+	if ($weight_unit eq 'weight_pound') {
+		$weight = defined($self->weight_pound()) ? $self->weight_pound() : 'NA';
+	} else {
+		$weight = defined($self->weight_gram()) ? $self->weight_gram() : 'NA';
+	}
     my $value = {
         amount => $amount,
-        weight_gram => $weight,
         timestamp => $self->timestamp(),
         operator => $self->operator(),
         description => $self->description(),
     };
+
+	if ($weight_unit eq 'weight_pound') {
+		$value->{weight_pound} = $weight;
+	} else {
+		$value->{weight_gram} = $weight;
+	}
 
     #In the special case where the transaction is between the same seedlot
     if($self->from_stock()->[0] == $self->to_stock()->[0]){
