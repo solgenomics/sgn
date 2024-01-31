@@ -344,7 +344,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $no_refresh = $c->req->param("no_refresh");
     my $weight_unit = $c->config->{weight_unit};
-    print STDERR "WEIGHT UNIT =".Dumper($weight_unit)."\n";
 
     my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename }); #type_id=>$seedlot_cvterm_id});
     if ($previous_seedlot){

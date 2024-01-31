@@ -2,6 +2,7 @@
 $timestamp => localtime()
 $accession_uniquename => ''
 $cross_uniquename => ''
+$weight_unit
 </%args>
 
 <div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
@@ -109,7 +110,20 @@ $cross_uniquename => ''
                         </div>
                     </div>
                 </div>
-
+% if ($weight_unit eq 'weight_pound') {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Amount (number of seeds): </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_amount" placeholder="Amount OR Weight(lb) Required">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Weight (lb): </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_weight" placeholder="Amount OR Weight(lb) Required">
+                    </div>
+                </div>
+% } else {
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Amount (number of seeds): </label>
                     <div class="col-sm-9" >
@@ -122,6 +136,7 @@ $cross_uniquename => ''
                         <input class="form-control" id="seedlot_weight" placeholder="Amount OR Weight(g) Required">
                     </div>
                 </div>
+% }
                 <!--
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Population: </label>
