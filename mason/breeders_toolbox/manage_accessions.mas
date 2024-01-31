@@ -103,11 +103,11 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
     </table>
     <br>
     <br>
-    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
-      <br>
-      <div style="text-align:right" id="accessions_and_seedlots_list"></div>
-      <div id="accession_and_seedlots" style="display: none;"></div>
-    </&>
+%#    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+%#     <br>
+%#      <div style="text-align:right" id="accessions_and_seedlots_list"></div>
+%#      <div id="accession_and_seedlots" style="display: none;"></div>
+%#    </&>
   </&>
 </div><!-- closes well -->
 

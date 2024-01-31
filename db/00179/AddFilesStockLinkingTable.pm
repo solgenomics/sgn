@@ -58,7 +58,7 @@ sub patch {
 --do your SQL here
 --
 
-CREATE TABLE phenome.stock_file (
+CREATE TABLE IF NOT EXISTS phenome.stock_file (
     stock_file_id serial primary key, 
     stock_id int4 NOT NULL REFERENCES stock ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED, 
     file_id int4 NOT NULL REFERENCES metadata.md_files ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED 
