@@ -93,6 +93,7 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 
 <div class="well">
   <&| /page/info_section.mas, title=>"Accessions and Seedlots", id=> "accessions_and_seedlots", collapsible=>1, collapsed=>1&>
+    <table><tr><td>  Filter by accessions</td><td>  <textarea id="accession_list_for_seedlots" name="accession_list_for_seedlots" rows="3"></textarea></td><td><button class="btn btn-primary" id="accession_list_for_seedlots_button">Filter by accessions</button></td></tr></table><br /><br />
     <table class="table table-hover table-bordered" id="accessions_and_seedlots_table">
       <thead>
         <tr>
@@ -150,77 +151,75 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 </style>
 
 <script>
-  jQuery(document).ready(function (){
+    jQuery(document).ready(function (){
 %  if ($list_id){
     verify_accession_list(<% $list_id %>);
 %  }
 
-    jQuery('#accessions_with_pedigree_onswitch').one("click", function(){
-        var result_table = jQuery('#accessions_with_pedigree_table').DataTable({
-            'ajax': { 'url': '/ajax/stock/accessions_with_pedigree' },
-            "fnInitComplete": function(oSettings, json) {
-                if (!isLoggedIn()) {
-                    jQuery('#accessions_with_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-                } else {
-                    var html = "";
-                    for(var i=0; i<json.data.length; i++){
-                        html += json.data[i][4]+"\n";
-                    }
-                    jQuery("#accession_names_with_pedigree").html(html);
-                    addToListMenu("accessions_with_pedigree_to_list_menu", "accession_names_with_pedigree", {
-                        selectText: true,
-                        listType:'accessions'
-                    });
-                }
-            }
-        });
+   jQuery('#accessions_with_pedigree_onswitch').one("click", function(){
+       var result_table = jQuery('#accessions_with_pedigree_table').DataTable({
+           'ajax': { 'url': '/ajax/stock/accessions_with_pedigree' },
+           "fnInitComplete": function(oSettings, json) {
+               if (!isLoggedIn()) {
+                   jQuery('#accessions_with_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+               } else {
+                   var html = "";
+                   for(var i=0; i<json.data.length; i++){
+                       html += json.data[i][4]+"\n";
+                   }
+                   jQuery("#accession_names_with_pedigree").html(html);
+                   addToListMenu("accessions_with_pedigree_to_list_menu", "accession_names_with_pedigree", {
+                       selectText: true,
+                       listType:'accessions'
+                   });
+               }
+           }
+       });
+   });
+	
+   jQuery('#accessions_missing_pedigree_onswitch').one("click", function(){
+       var result_table = jQuery('#accessions_missing_pedigree_table').DataTable({
+	   'ajax': { 'url': '/ajax/stock/accessions_missing_pedigree' },
+	   "fnInitComplete": function(oSettings, json) {
+               if (!isLoggedIn()) {
+                   jQuery('#accessions_missing_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+               } else {
+                   var html = "";
+                   for(var i=0; i<json.data.length; i++){
+                       html += json.data[i][2]+"\n";
+                   }
+                   jQuery("#accession_names_missing_pedigree").html(html);
+                   addToListMenu("accessions_missing_pedigree_to_list_menu", "accession_names_missing_pedigree", {
+                       selectText: true,
+                       listType:'accessions'
+                   });
+               }
+           }
+       });
+   });
+      
+   jQuery('#accession_list_for_seedlots_button').click( function() {
+       display_accession_seedlot_table();
+   });
+
+   jQuery('#accessions_and_seedlots_onswitch').one("click", function(){
+       display_accession_seedlot_table();
+   });
+      
+   function display_accession_seedlot_table()  {
+       var filter_by_accessions = jQuery('#accession_list_for_seedlots').val();
+       var result_table = jQuery('#accessions_and_seedlots_table').DataTable({
+           'ajax': { 'url': '/ajax/stock/accession_seedlot_table', 'filter_by_accessions' : filter_by_accessions },
+           "fnInitComplete": function(oSettings, json) {
+               if (!isLoggedIn()) {
+                   jQuery('#accession_and_seedlots_table').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+               }
+           }
+       });
+       
+   }
+	
     });
-
-    jQuery('#accessions_missing_pedigree_onswitch').one("click", function(){
-        var result_table = jQuery('#accessions_missing_pedigree_table').DataTable({
-            'ajax': { 'url': '/ajax/stock/accessions_missing_pedigree' },
-            "fnInitComplete": function(oSettings, json) {
-                if (!isLoggedIn()) {
-                    jQuery('#accessions_missing_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-                } else {
-                    var html = "";
-                    for(var i=0; i<json.data.length; i++){
-                        html += json.data[i][2]+"\n";
-                    }
-                    jQuery("#accession_names_missing_pedigree").html(html);
-                    addToListMenu("accessions_missing_pedigree_to_list_menu", "accession_names_missing_pedigree", {
-                        selectText: true,
-                        listType:'accessions'
-                    });
-                }
-            }
-        });
-    });
-
-        jQuery('#accessions_and_seedlots_onswitch').one("click", function(){
-        var result_table = jQuery('#accessions_and_seedlots_table').DataTable({
-            'ajax': { 'url': '/ajax/stock/accession_seedlot_table' },
-            "fnInitComplete": function(oSettings, json) {
-                if (!isLoggedIn()) {
-                    jQuery('#accession_and_seedlots_table').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-                }
-		//else {
-                //    var html = "";
-                 //   for(var i=0; i<json.data.length; i++){
-                 //       html += json.data[i][2]+"\n";
-                //    }
-                //    jQuery("#accessions_and_seedlots_list").html(html);
-                //    addToListMenu("accessions_and_seedlots_to_list_menu", "accession_names_missing_pedigree", {
-                //        selectText: true,
-                //        listType:'accessions'
-                //    });
-                //}
-            }
-        });
-    });
-
-
-});
 
 
 
