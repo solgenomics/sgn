@@ -1,4 +1,5 @@
 <%args>
+$weight_unit => undef
 </%args>
 
 <div class="modal fade" id="upload_seedlot_dialog" name="upload_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_dialog">
@@ -17,7 +18,11 @@
                             <ul>
                             <li>Seedlots represent physical seed in packets.</li>
                             <li>This seed can be from crosses or for named accessions.</li>
+% if ($weight_unit eq 'weight_pound') {
+                            <li>Seedlots can have a specific location, box, weight(lb), and count.</li>
+% } else {
                             <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+% }
                             <li>Seedlots can belong to breeding programs and organizations.</li>
                             <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
                             </ul>
@@ -250,7 +255,11 @@
                                 <td>accession_name</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
+% if ($weight_unit eq 'weight_pound') {
+                                <td>weight(lb)</td>
+% } else {
                                 <td>weight(g)</td>
+% }
                                 <td>description</td>
                                 <td>box_name</td>
 				<td>quality</td>
@@ -264,11 +273,19 @@
                     <li>seedlot_name (must be unique)</li>
                     <li>accession_name (must exist in the database. the accession_name is the unique identifier for the named genotype)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
+% if ($weight_unit eq 'weight_pound') {
                     <li>
-                    amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
-                    <br/><b>AND/OR</b><br/>
-                    weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                        amount (number of seeds in seedlot. can be provided in conjunction with weight(lb). must provide a value for amount or weight(lb) or both.)
+                        <br/><b>AND/OR</b><br/>
+                        weight(lb) (weight in pounds of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(lb) or both.)
                     </li>
+%} else {
+                    <li>
+                        amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
+                        <br/><b>AND/OR</b><br/>
+                        weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                    </li>
+% }
                     <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
 
@@ -314,7 +331,12 @@
                                 <td>cross_unique_id</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
+% if ($weight_unit eq 'weight_pound') {
+                                <td>weight(lb)</td>
+
+% } else {
                                 <td>weight(g)</td>
+% }
                                 <td>description</td>
                                 <td>box_name</td>
 				<td>quality</td>
@@ -328,11 +350,19 @@
                     <li>seedlot_name (must be unique)</li>
                     <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
+% if ($weight_unit eq 'weight_pound') {
                     <li>
-                    amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
-                    <br/><b>AND/OR</b><br/>
-                    weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                        amount (number of seeds in seedlot. can be provided in conjunction with weight(lb). must provide a value for amount or weight(lb) or both.)
+                        <br/><b>AND/OR</b><br/>
+                        weight(lb) (weight in pounds of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(lb) or both.)
                     </li>
+% } else {
+                    <li>
+                        amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
+                        <br/><b>AND/OR</b><br/>
+                        weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                    </li>
+% }
                     <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
 
@@ -342,7 +372,7 @@
 		      <li>quality (brief description of quality, e.g.,  "ok", "moldy", "insect damage", etc)</li>
 		      <li>source (an alternate source, such as a plot or plant identifier from which the seed was sourced if no specific cross experiment was entered in the database)</li>
 		    </ul>
-		    
+
 
                 </div>
             </div>

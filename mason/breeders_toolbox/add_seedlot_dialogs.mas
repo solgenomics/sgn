@@ -2,7 +2,7 @@
 $timestamp => localtime()
 $accession_uniquename => ''
 $cross_uniquename => ''
-$weight_unit
+$weight_unit => undef
 </%args>
 
 <div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">

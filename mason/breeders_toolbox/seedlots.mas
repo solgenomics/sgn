@@ -9,7 +9,7 @@ $locations
 $crossing_trials
 $maintenance_enabled => undef
 $user_role => undef
-$weight_unit
+$weight_unit => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -187,7 +187,7 @@ $weight_unit
 
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas, weight_unit=>$weight_unit &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp, weight_unit=>$weight_unit &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
