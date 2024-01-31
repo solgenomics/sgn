@@ -3,11 +3,11 @@
 
 =head1 NAME
 
-  AddInVitroRenerationTerms.pm
+  AddInVitroRegenerationTerms.pm
 
 =head1 SYNOPSIS
 
-mx-run AddInVitroRenerationTerms [options] -H hostname -D dbname -u username [-F]
+mx-run AddInVitroRegenerationTerms [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -33,18 +33,18 @@ it under the same terms as Perl itself.
 =cut
 
 
-package TestDbpatchMoose;
+package AddInVitroRegenerationTerms;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
-
+use Bio::Chado::Schema;
 
 has '+description' => ( default => <<'' );
 Description of this patch goes here
 
 has '+prereq' => (
     default => sub {
-        ['MyPrevPatch'],
+        [],
     },
   );
 
@@ -57,6 +57,9 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+
+    
     my $terms = {
         'project_type' => [
             'in_vitro_regeneration_trial',

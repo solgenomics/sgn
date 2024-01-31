@@ -4,6 +4,7 @@ package SGN::Controller::BreedersToolbox;
 use Moose;
 
 use Data::Dumper;
+use List::MoreUtils qw /any /;
 use SGN::Controller::AJAX::List;
 use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
@@ -408,6 +409,14 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
 	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	      return;
     }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{message} = "You do not have the required privileges to access this page.";
+	$c->stash->{template} = '/generic_message.mas';
+
+	return;
+    }
+    
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id=>$stock_id })->uniquename();
 
     $c->stash->{plot_name} = $stock;
@@ -422,18 +431,72 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_id = $c->req->param('trial_id');
 
+    if (!$trial_id) {
+	$c->stash->{message} = "Please provide a trial id to work with!";
+	$c->stash->{template} = '/generic_message.mas';
+    }
+
     if (!$c->user()) {
 	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	      return;
     }
-    my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{message} = "You do not have the required privileges to access this page.";
+	$c->stash->{template} = '/generic_message.mas';
+
+	return;
+    }
 
     my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
 
     $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
-    $c->stash->{trial_name} = $project_name;
+    $c->stash->{trial_name} = $trial->get_name();
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
+}
+
+sub manage_in_vitro_phenotyping :Path("/breeders/in_vitro_phenotyping") Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    if (!$trial_id) {
+	$c->stash->{message} = "No trial id provided, please specify trial to work with. ";
+	$c->stash->{template} = '/generic_message.mas';
+	return;
+    }
+    
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{message} = "You do not have the required privileges to access this page.";
+	$c->stash->{template} = '/generic_message.mas';
+
+	return;
+    }
+
+    my $trial;
+    eval {
+	$trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id  });
+    };
+
+    if ($@) { 
+	$c->stash->{message} = "The specified trial id, $trial_id, could not be found in this database. ";
+	$c->stash->{template} = '/generic_message.mas';
+	return;
+    }
+    $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
+    $c->stash->{trial_name} = $trial->get_name();
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{template} = '/breeders_toolbox/in_vitro_regeneration/phenotyping.mas';
+    
+    
+
 }
 
 sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {

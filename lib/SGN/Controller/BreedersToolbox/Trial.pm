@@ -299,6 +299,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
     }
+    elsif ($trial_type_name eq "in_vitro_regeneration_trial") {
+	$c->stash->{template} = '/breeders_toolbox/trial/in_vitro_regeneration.mas';
+    }
     else {
         my $field_management_factors = $c->config->{management_factor_types};
         my @management_factor_types = split ',',$field_management_factors;
