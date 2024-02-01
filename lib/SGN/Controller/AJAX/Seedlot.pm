@@ -583,7 +583,10 @@ sub upload_seedlots_POST : Args(0) {
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+
+    my $weight_unit = $c->config->{weight_unit};
+
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, weight_unit => $weight_unit);
     $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
 
@@ -672,24 +675,46 @@ sub upload_seedlots_POST : Args(0) {
 
                 $val->{description} .= " Info: Seedlot XLS upload update.";
 
-                if ($val->{weight_gram} ne 'NA'){
-                    my $weight_difference = $val->{weight_gram} - $current_stored_weight;
-                    my $weight_factor;
-                    if ($weight_difference >= 0){
-                        $weight_factor = 1;
-                    } else {
-                        $weight_factor = -1;
-                        $weight_difference = $weight_difference * -1; #Store positive values only
+                if ($weight_unit eq 'weight_pound') {
+                    if ($val->{weight_pound} ne 'NA'){
+                        my $weight_difference = $val->{weight_pound} - $current_stored_weight;
+                        my $weight_factor;
+                        if ($weight_difference >= 0){
+                            $weight_factor = 1;
+                        } else {
+                            $weight_factor = -1;
+                            $weight_difference = $weight_difference * -1; #Store positive values only
+                        }
+                        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
+                        $transaction->from_stock([$seedlot_id, $key]);
+                        $transaction->to_stock([$seedlot_id, $key]);
+                        $transaction->weight_pound($weight_difference);
+                        $transaction->timestamp($timestamp);
+                        $transaction->description($val->{description});
+                        $transaction->operator($val->{operator_name});
+                        $transaction->factor($weight_factor);
+                        $transaction->store();
                     }
-                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-                    $transaction->from_stock([$seedlot_id, $key]);
-                    $transaction->to_stock([$seedlot_id, $key]);
-                    $transaction->weight_gram($weight_difference);
-                    $transaction->timestamp($timestamp);
-                    $transaction->description($val->{description});
-                    $transaction->operator($val->{operator_name});
-                    $transaction->factor($weight_factor);
-                    $transaction->store();
+                } else {
+                    if ($val->{weight_gram} ne 'NA'){
+                        my $weight_difference = $val->{weight_gram} - $current_stored_weight;
+                        my $weight_factor;
+                        if ($weight_difference >= 0){
+                            $weight_factor = 1;
+                        } else {
+                            $weight_factor = -1;
+                            $weight_difference = $weight_difference * -1; #Store positive values only
+                        }
+                        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
+                        $transaction->from_stock([$seedlot_id, $key]);
+                        $transaction->to_stock([$seedlot_id, $key]);
+                        $transaction->weight_gram($weight_difference);
+                        $transaction->timestamp($timestamp);
+                        $transaction->description($val->{description});
+                        $transaction->operator($val->{operator_name});
+                        $transaction->factor($weight_factor);
+                        $transaction->store();
+                    }
                 }
 
                 if ($val->{amount} ne 'NA'){
@@ -701,7 +726,7 @@ sub upload_seedlots_POST : Args(0) {
                         $amount_factor = -1;
                         $amount_difference = $amount_difference * -1; #Store positive values only
                     }
-                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
                     $transaction->from_stock([$seedlot_id, $key]);
                     $transaction->to_stock([$seedlot_id, $key]);
                     $transaction->amount($amount_difference);
@@ -714,19 +739,23 @@ sub upload_seedlots_POST : Args(0) {
             }
             # If this is not updating an existing seedlot, then it just the initial transaction
             else {
-                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
                 $transaction->factor(1);
                 $transaction->from_stock([$from_stock_id, $from_stock_name]);
                 $transaction->to_stock([$seedlot_id, $key]);
                 $transaction->amount($val->{amount});
-                $transaction->weight_gram($val->{weight_gram});
+                if ($weight_unit eq 'weight_pound') {
+                    $transaction->weight_pound($val->{weight_gram});
+                } else {
+                    $transaction->weight_gram($val->{weight_gram});
+                }
                 $transaction->timestamp($timestamp);
                 $transaction->description($val->{description});
                 $transaction->operator($val->{operator_name});
                 $transaction->store();
             }
 
-            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id, weight_unit=>$weight_unit);
             $sl_new->set_current_count_property();
             $sl_new->set_current_weight_property();
             push @added_stocks, $seedlot_id;

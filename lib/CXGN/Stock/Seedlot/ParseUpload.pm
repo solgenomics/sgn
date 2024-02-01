@@ -35,6 +35,11 @@ has '_parsed_data' => (
     predicate => '_has_parsed_data',
 );
 
+has 'weight_unit' => (
+    is => 'ro',
+    isa => 'Str|Undef',
+);
+
 # db:accession term of the event ontology root
 # this is used by the SeedlotMaintenanceEventXLS validator
 # to validate event type names
