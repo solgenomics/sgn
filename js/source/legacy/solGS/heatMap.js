@@ -71,27 +71,23 @@ solGS.heatmap = {
       heatmapPlotDivId = "#heatmap_plot";
     }
 
-    var fs = 10;
+    var fs = "0.95em";
 
     if (nLabels >= 100) {
       height = 600;
       width = 600;
-      fs = 10 * 0.85;
+      fs = "0.75em";
     } else {
       height = 500;
       width = 500;
-      fs = 10 * 1.2;
     }
 
     if (nLabels < 20) {
       height = height * 0.5;
       width = width * 0.5;
-      fs = 10 * 1.3;
     }
 
-    fs = fs + "px";
-
-    var pad = { left: 150, top: 20, right: 250, bottom: 150 };
+    var pad = { left: 150, top: 20, right: 250, bottom: 100 };
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
@@ -131,8 +127,8 @@ solGS.heatmap = {
 		.domain(labels)
 		.padding(0.00);
     
-  var xAxis = d3.axisBottom(xAxisScale);
-  var yAxis  = d3.axisLeft(yAxisScale);
+    var xAxis = d3.axisBottom(xAxisScale).tickSizeOuter(0).tickPadding(5);
+    var yAxis  = d3.axisLeft(yAxisScale).tickSizeOuter(0);
 
     var svg = d3
       .select(heatmapPlotDivId)
@@ -140,39 +136,40 @@ solGS.heatmap = {
       .attr("height", totalH)
       .attr("width", totalW);
      
-   var  corrplot = svg.append("g")
-    .attr("id", heatmapPlotDivId)
-    .attr("transform", "translate(0, 0)");
+    var  corrplot = svg.append("g")
+      .attr("id", heatmapPlotDivId)
+      .attr("transform", "translate(0, 0)");
 
     corrplot
       .append("g")
       .attr("class", "y_axis")
-      .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+      .attr("transform", `translate(${pad.left}, ${pad.top})`)
       .call(yAxis)
       .selectAll("text")
       .attr("x", -10)
       .attr("y", 0)
-      .attr("dy", ".1em")
+      .attr("dy", ".3em")
       .attr("fill", txtColor)
-      .style({ fill: txtColor, "font-size": fs });
+      .style("font-size", fs);
 
     corrplot
       .append("g")
       .attr("class", "x_axis")
-      .attr("transform", "translate(" + pad.left + "," + (pad.top +  height) + ")")
+      .attr("transform", `translate(${pad.left}, ${pad.top + height})`)
       .call(xAxis)
       .selectAll("text")
-      .attr("x", 30)
+      .style("text-anchor", "end")
+      .attr("x", "-10")
       .attr("y", 0)
-      .attr("dy", ".1em")
-      .attr("transform", "rotate(90)")
+      .attr("dy", ".3em")
+      .attr("transform", "rotate(-90)")
       .attr("fill", txtColor)
-      .style({ "text-anchor": "start", fill: txtColor, "font-size": fs });
-
+      .style("font-size", fs);
+      
     corrplot
       .selectAll()
       .data(corr)
-      .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+      .attr("transform", `translate(${pad.left}, ${pad.top})`)
       .enter()
       .append("rect")
       .attr("class", "cell")
@@ -188,14 +185,14 @@ solGS.heatmap = {
         if (d.value == "NA") {
           return "white";
         } else {
-				return txtColor;
+        return txtColor;
         }})
       .style("stroke-opacity", 0.2)
       .attr("fill", function (d) {
         if (d.value == "NA") {
           return "white";
         } else {
-				return corZscale(d.value);
+        return corZscale(d.value);
         }})
       .attr("stroke", "white")
       .attr("stroke-width", 1)
@@ -214,10 +211,10 @@ solGS.heatmap = {
                   pv = d.pvalue;
                 }
                 return `${labels[d.row]} vs. ${labels[d.col]}:  
-							${d.value}, &alpha;: <${d3.format(".3f")(pv)}`;
+              ${d.value}, &alpha;: <${d3.format(".3f")(pv)}`;
               } else {
                 return `${labels[d.row]} vs. ${labels[d.col]}:  
-								${d.value}`;
+                ${d.value}`;
               }
             })
             .style("fill", function () {
@@ -244,7 +241,7 @@ solGS.heatmap = {
 
     corrplot
       .append("rect")
-      .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
+      .attr("transform", `translate(${pad.left}, ${pad.top})`)
       .attr("height", height)
       .attr("width", width)
       .attr("fill", "none")
@@ -254,6 +251,7 @@ solGS.heatmap = {
 
     var bins = d3.ticks(d3.min(coefs), d3.max(coefs), 10)
     var legendValues = [];
+
     for (var i = 0; i < bins.length; i++) {
       legendValues.push([i, bins[i]])
     }
@@ -273,7 +271,7 @@ solGS.heatmap = {
       .attr("class", "cell")
       .attr(
         "transform",
-        "translate(" + legendX + "," + (legendY) + ")"
+        `translate(${legendX}, ${legendY})`
       )
     
     var recLH = 20;
@@ -303,7 +301,7 @@ solGS.heatmap = {
       .append("g")
       .attr(
         "transform",
-        "translate(" +(legendX + 30) + "," +( legendY + 0.5 * recLH) + ")"
+        `translate(${legendX + 30}, ${legendY + 0.5 * recLH})`
       )
       .attr("id", "legendtext");
 
