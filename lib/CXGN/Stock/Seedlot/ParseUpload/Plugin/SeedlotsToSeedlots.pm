@@ -14,6 +14,7 @@ sub _validate_with_plugin {
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $weight_unit = $self->get_weight_unit();
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -96,8 +97,14 @@ sub _validate_with_plugin {
     if (!$amount_head || $amount_head ne 'amount') {
         push @error_messages, "Cell C1: amount is missing from the header";
     }
-    if (!$weight_head || $weight_head ne 'weight(g)') {
-        push @error_messages, "Cell D1: weight(g) is missing from the header";
+    if ($weight_unit eq 'weight_pound') {
+        if (!$weight_head || $weight_head ne 'weight(lb)') {
+            push @error_messages, "Cell D1: weight(lb) is missing from the header";
+        }
+    } else {
+        if (!$weight_head || $weight_head ne 'weight(g)') {
+            push @error_messages, "Cell D1: weight(g) is missing from the header";
+        }
     }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
         push @error_messages, "Cell E1: operator_name is missing from the header";
@@ -157,11 +164,21 @@ sub _validate_with_plugin {
         if (!defined($amount) || $amount eq '') {
             push @error_messages, "Cell C$row_name: amount missing";
         }
-        if (!defined($weight) || $weight eq '') {
-            push @error_messages, "Cell D$row_name: weight(g) missing";
-        }
-        if ($amount eq 'NA' && $weight eq 'NA') {
-            push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
+
+        if ($weight_unit eq 'weight_pound') {
+            if (!defined($weight) || $weight eq '') {
+                push @error_messages, "Cell D$row_name: weight(lb) missing";
+            }
+            if ($amount eq 'NA' && $weight eq 'NA') {
+                push @error_messages, "On row:$row_name you must provide either a weight in pounds or a seed count amount.";
+            }
+        } else {
+            if (!defined($weight) || $weight eq '') {
+                push @error_messages, "Cell D$row_name: weight(g) missing";
+            }
+            if ($amount eq 'NA' && $weight eq 'NA') {
+                push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
+            }
         }
 
         if (!defined($operator_name) || $operator_name eq '') {
