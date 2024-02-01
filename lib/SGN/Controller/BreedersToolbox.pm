@@ -481,6 +481,9 @@ sub manage_in_vitro_phenotyping :Path("/breeders/in_vitro_phenotyping") Args(0) 
     }
 
     my $trial;
+
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type');
+    
     eval {
 	$trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id  });
     };
@@ -493,6 +496,7 @@ sub manage_in_vitro_phenotyping :Path("/breeders/in_vitro_phenotyping") Args(0) 
     $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
     $c->stash->{trial_name} = $trial->get_name();
     $c->stash->{trial_id} = $trial_id;
+    $c->stash->{plot_type_id} = $plot_type_id;
     $c->stash->{template} = '/breeders_toolbox/in_vitro_regeneration/phenotyping.mas';
     
     

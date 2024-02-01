@@ -1,0 +1,110 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/trial/in_vitro_regeneration.mas - a mason component to display a trial detail page
+
+=head1 AUTHOR
+
+Jeremy D. Edwards
+
+=cut
+
+</%doc>
+
+<%args>
+$trial_id
+$trial_name
+$breeding_program_id
+$breeding_program_name
+$location_id
+$location_name
+$country_name => ""
+$main_production_site_url => undef
+$year => undef
+$trial_type => undef
+$trial_type_id => undef
+$planting_date => undef
+$show_transplanting_date => undef
+$transplanting_date => undef
+$harvest_date => undef
+$trial_description => undef
+$user_can_modify => undef
+$has_plant_entries => undef
+$has_subplot_entries => undef
+$has_tissue_sample_entries => undef
+$hidap_enabled => undef
+$folder_name => undef
+$folder_id => undef
+$plants_per_plot => undef
+$has_expression_atlas => undef
+$expression_atlas_url => undef
+$site_project_name => undef
+$sgn_session_id => undef
+$user_name => undef
+$design_name => undef
+$phenotypes_fully_uploaded => undef
+$has_col_and_row_numbers => undef
+$identifier_prefix => 'SGN'
+$plot_width => undef
+$plot_length => undef
+$field_size => undef
+$field_trial_is_planned_to_be_genotyped => undef
+$field_trial_is_planned_to_cross => undef
+$trial_stock_type => undef
+$trial_stock_count => undef
+$management_factor_types => ()
+$trial_owner => undef
+$latest_trial_activity => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
+
+
+<br/>
+
+<& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "trial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, country_name => $country_name, year => $year, trial_type => $trial_type, planting_date => $planting_date,show_transplanting_date => $show_transplanting_date, transplanting_date => $transplanting_date, harvest_date => $harvest_date, trial_description => $trial_description, plot_width => $plot_width, plot_length => $plot_length, field_size => $field_size, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross, folder_name => $folder_name, folder_id => $folder_id, identifier_prefix => $identifier_prefix, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
+
+<button id="collect_in_vitro_regeneration_data_button" class="btn btn-primary" onclick="window.location.href='/breeders/trial_phenotyping?trial_id=<% $trial_id %>'">Collect data for this in vitro regeneration trial</button><br /><br />
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, show_transplanting_date => $show_transplanting_date, transplanting_date => $transplanting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_id => $folder_id, design_name => $design_name, has_plant_entries => $has_plant_entries, phenotypes_fully_uploaded => $phenotypes_fully_uploaded, user_can_modify => $user_can_modify, user_name => $user_name, info_section_title => "<h4 style='display:inline'>Trial Status</h4>", info_section_subtitle => 'View progress of this trial.', icon_class => "glyphicon glyphicon-forward", info_section_id => "trial_status_section" &>
+
+% my $barcode_section_title = '';
+% if ($trial_stock_type eq 'family_name') {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or family names in this trial.';
+% } elsif ($trial_stock_type eq 'cross') {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or cross unique ids in this trial.';
+% } else {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
+% }
+<div class="row">
+    <div class="col-sm-6">
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, button_id => "generate_trial_barcode_link" &>
+    </div>
+    <div class="col-sm-6">
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", button_id => "direct_phenotyping_link" &>
+    </div>
+</div>
+
+% my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
+% my $layout_buttons = '';
+% if ($has_col_and_row_numbers){
+%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button><button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="gps_field_map_link">Edit Geo Field Layout</button><button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
+% } else {
+%    $layout_buttons = '<h3><span class="glyphicon glyphicon-remove-sign text-danger"></span>&nbsp;&nbsp;&nbsp;This experiment does not have spatial layout info!</h3><button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
+% }
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, has_col_and_row_numbers => $has_col_and_row_numbers, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Raw Data</h4>", info_section_subtitle => 'View phenotyping raw data.', info_section_id => "trial_raw_data", trial_name => $trial_name, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Phenotypic data collection using Excel or Android Fieldbook. Also upload any additional files for this trial.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files", trial_stock_type => $trial_stock_type &>
+
+
+

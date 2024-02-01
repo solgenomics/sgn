@@ -1,0 +1,30 @@
+
+
+<!-- <html> -->
+<!-- <head> -->
+<!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
+<!-- </head> -->
+
+  <!-- body  -->
+
+
+  <%flags>
+  inherit => undef
+</%flags>
+
+<html>
+  <head>
+
+   
+
+  </head>
+  <body>
+
+   
+% $m->call_next();
+
+
+</body>
+</html>
+
+

@@ -1,0 +1,75 @@
+
+
+<%args>
+
+$trial_name
+$trial_id
+$plot_type_id
+
+</%args>
+
+ 
+
+<style>
+  h1 { font-family: sans-serif; font-size: 24pt; color: #666666 }
+  h2 { font-family: sans-serif; font-size: 18pt }
+  select { font-size: 24pt }
+  button { font-size: 24pt }
+  input { font-size: 24pt }
+</style>
+
+
+<center>
+
+  <!-- To scan barcode directly from webpage, https://github.com/LazarSoft/jsqrcode?tab=readme-ov-file -->
+  <a href="/"><img src="/documents/img/Breedbase_HighRes.png" width="200"></a>
+
+  <h1>In Vitro Data Collection</h1>
+  <hr />
+  
+  <!-- h1>Trial: '<% $trial_name %>'</h1 -->
+  
+  <h1>Object identifier</h1>
+  <br />
+    <input id="in_vitro_plot_name" type="text"  />
+    
+    <button id="find_in_vitro_data" class="btn btn-primary btn-lg" >find</button>
+    <br />
+    scan barcode
+    
+    <br /><br />
+    <h1>Status</h1>
+    
+    <select>
+      <option>plated</option>
+      <option>rooted</option>
+      <option>regenerated</option>
+      <option>transferred</option>
+      <option>discarded</option>
+    </select>
+    
+    <br /><br />
+    
+    <button id="store_in_vitro_data" class="btn btn-primary btn-lg" >Store</button>
+    
+</center>
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+<script>
+  
+  jQuery(document).ready( function() { 
+
+       jQuery('#in_vitro_plot_name').autocomplete( {
+           source: "/ajax/stock/stock_autocomplete?plot_type_id=$plot_type_id"
+       });
+
+   });
+</script>
+  
