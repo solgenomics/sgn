@@ -45,10 +45,14 @@ sub detail {
 	my $counter=0;
     ($data,$counter) = _search($self,$params,$page_size,$page,$status);
 
-    my %result = (data=>$data);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
+    if ($data > 0){
+		my $result = @$data[0];
+		my @data_files;
+		my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+		return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Observations result constructed');
+	} else {
+		return CXGN::BrAPI::JSONResponse->return_error($status, 'ObservationDbId not found', 404);
+	}
 }
 
 sub observations_store {
@@ -224,7 +228,8 @@ sub _search {
     my $page = $self->page;
     my $status = $self->status;
 
-    my $observation_db_ids = $params->{observationDbId};
+    # my $observation_db_ids = $params->{observationDbId};
+    my $observation_db_ids = $params->{observationDbId} || ($params->{observationDbIds} || ());
 
     my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
     my @observation_variable_names = $params->{observationVariableNames} ? @{$params->{observationVariableNames}} : ();
@@ -327,7 +332,7 @@ sub _search {
                     studyDbId => qq|$_->{trial_id}|,
                     uploadedBy=> $_->{operator},
                     value => qq|$_->{phenotype_value}|,
-                    geoCoordinates => undef #needs to be implemented for v2.1
+                    # geoCoordinates => undef #needs to be implemented for v2.1
                 };
             }
             $counter++;
@@ -339,3 +344,5 @@ sub _search {
 
 
 1;
+
+
