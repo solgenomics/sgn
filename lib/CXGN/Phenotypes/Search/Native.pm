@@ -186,6 +186,8 @@ sub search {
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
+    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+    my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
     my $notes_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'notes', 'stock_property')->cvterm_id();
     my $include_timestamp = $self->include_timestamp;
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
@@ -274,14 +276,13 @@ sub search {
       JOIN stock as accession ON (object_id=accession.stock_id AND accession.type_id = $accession_type_id)
       $design_layout_sql
       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
-      JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
-      JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
+      JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
       JOIN phenotype USING(phenotype_id)
       $phenotypeprop_sql
       JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
       JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
       JOIN db USING(db_id)
-      JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
+      JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id)
       JOIN project USING(project_id)
       LEFT JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id = $breeding_program_rel_type_id)
       LEFT JOIN project as breeding_program ON (breeding_program.project_id=project_relationship.object_project_id)
@@ -296,13 +297,16 @@ sub search {
       LEFT JOIN projectprop as field_trial_is_planned_to_be_genotyped ON (project.project_id=field_trial_is_planned_to_be_genotyped.project_id AND field_trial_is_planned_to_be_genotyped.type_id = $field_trial_is_planned_to_be_genotyped_type_id)
       LEFT JOIN projectprop as field_trial_is_planned_to_cross ON (project.project_id=field_trial_is_planned_to_cross.project_id AND field_trial_is_planned_to_cross.type_id = $field_trial_is_planned_to_cross_type_id)
       LEFT JOIN stockprop AS notes ON (observationunit.stock_id=notes.stock_id AND notes.type_id = $notes_type_id)
+      LEFT JOIN phenotypeprop as additional_info ON (phenotype.phenotype_id=additional_info.phenotype_id AND additional_info.type_id = $additional_info_type_id)
+      LEFT JOIN phenotypeprop as external_references ON (phenotype.phenotype_id=external_references.phenotype_id AND external_references.type_id = $external_references_type_id)
       LEFT JOIN project_relationship folder_rel ON (project.project_id = folder_rel.subject_project_id AND folder_rel.type_id = $folder_rel_type_id)
       LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id)";
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, count(phenotype.phenotype_id) OVER() AS full_count, string_agg(distinct(notes.value), ', ') AS notes ".$design_layout_select;
+
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, additional_info.value, external_references.value, count(phenotype.phenotype_id) OVER() AS full_count, string_agg(distinct(notes.value), ', ') AS notes ".$design_layout_select;
 
     my $order_clause = " ORDER BY 6, 2, 29";
 
-    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator ".$design_layout_select;
+    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, additional_info.value, external_references.value ".$design_layout_select;
 
     my @where_clause;
 
@@ -425,7 +429,7 @@ sub search {
     my $calendar_funcs = CXGN::Calendar->new({});
 
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $accession_uniquename, $accession_stock_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date,
-    $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $full_count, $notes, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
+    $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $phenotype_external_references, $full_count, $notes, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
         my $timestamp_value;
         my $operator_value;
         if ($include_timestamp) {
@@ -526,7 +530,9 @@ sub search {
             notes => $notes,
             row_number => $row_number,
             col_number => $col_number,
-            plant_number => $plant_number
+            plant_number => $plant_number,
+            phenotype_additional_info => $phenotype_additional_info,
+            phenotype_external_references => $phenotype_external_references
         };
 
     }

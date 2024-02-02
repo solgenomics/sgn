@@ -24,7 +24,11 @@ sub search {
 
     my $data;
 	my $counter=0;
-    ($data,$counter) = _search($self,$params,$page_size,$page,$status);
+    my $limit;
+    my $brapi_study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    if (!$brapi_study_ids_arrayref || scalar (@$brapi_study_ids_arrayref) < 1) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
+
+    ($data,$counter) = _search($self,$params,$limit);
 
     my %result = (data=>$data);
     my @data_files;
@@ -43,7 +47,7 @@ sub detail {
 
     my $data;
 	my $counter=0;
-    ($data,$counter) = _search($self,$params,$page_size,$page,$status);
+    ($data,$counter) = _search($self,$params);
 
     if ($data > 0){
 		my $result = @$data[0];
@@ -224,9 +228,11 @@ sub observations_store {
 sub _search {
     my $self = shift;
     my $params = shift;
+    my $limit = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    
 
     # my $observation_db_ids = $params->{observationDbId};
     my $observation_db_ids = $params->{observationDbId} || ($params->{observationDbIds} || ());
@@ -249,11 +255,6 @@ sub _search {
     # observationUnitLevelOrder
     # observationUnitLevelCode
 
-    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
-    my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
-
-    my $limit;
-    if (!$brapi_study_ids_arrayref || scalar (@$brapi_study_ids_arrayref) < 1) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
     my $offset; # = $page_size*$page;
 
     my $start_index = $page*$page_size;
@@ -293,19 +294,6 @@ sub _search {
             my $additional_info;
             my $external_references;
 
-            #get additional info
-            my $rs = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $additional_info_type_id, phenotype_id => $observation_id });
-            if ($rs->count() > 0){
-                my $additional_info_json = $rs->first()->value();
-                $additional_info  = $additional_info_json ? decode_json($additional_info_json) : undef;
-            }
-            #get external references
-            my $rs2 = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $external_references_type_id, phenotype_id => $observation_id });
-            if ($rs2->count() > 0){
-                my $external_references_json = $rs2->first()->value();
-                $external_references = $external_references_json ? decode_json($external_references_json) : undef;
-            }
-
             my %season = (
                 year => $_->{year},
                 season => $_->{year},
@@ -317,8 +305,8 @@ sub _search {
 
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
-                    additionalInfo=>$additional_info,
-                    externalReferences=>$external_references,
+                    additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
+                    externalReferences => $_->{phenotype_external_references} ? decode_json($_->{phenotype_external_references}) : undef,
                     germplasmDbId => qq|$_->{accession_stock_id}|,
                     germplasmName => $_->{accession_uniquename},
                     observationUnitDbId => qq|$_->{obsunit_stock_id}|,
