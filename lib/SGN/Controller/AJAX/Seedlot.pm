@@ -1836,6 +1836,7 @@ sub upload_transactions_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $weight_unit = $c->config->{weight_unit};
     my $upload_seedlots_to_seedlots = $c->req->upload('seedlots_to_seedlots_file');
     my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
     my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
@@ -1891,7 +1892,7 @@ sub upload_transactions_POST : Args(0) {
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, weight_unit => $weight_unit);
     $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
 
@@ -1917,21 +1918,25 @@ sub upload_transactions_POST : Args(0) {
         eval {
             foreach my $transaction_info (@all_transactions) {
 #            print STDERR "EACH SEEDLOT TO SEEDLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
-                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
                 $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
                 $transaction->to_stock([$transaction_info->{to_seedlot_id}, $transaction_info->{to_seedlot_name}]);
                 $transaction->amount($transaction_info->{amount});
-                $transaction->weight_gram($transaction_info->{weight});
+                if ($weight_unit eq 'weight_pound') {
+                    $transaction->weight_pound($transaction_info->{weight});
+                } else {
+                    $transaction->weight_gram($transaction_info->{weight});
+                }
                 $transaction->timestamp($timestamp);
                 $transaction->description($transaction_info->{transaction_description});
                 $transaction->operator($transaction_info->{operator});
                 my $transaction_id = $transaction->store();
 
-                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id}, weight_unit => $weight_unit);
                 $current_from_seedlot->set_current_count_property();
                 $current_from_seedlot->set_current_weight_property();
 
-                my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
+                my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id}, weight_unit => $weight_unit);
                 $current_to_seedlot->set_current_count_property();
                 $current_to_seedlot->set_current_weight_property();
             }
@@ -1943,17 +1948,21 @@ sub upload_transactions_POST : Args(0) {
         eval {
             foreach my $transaction_info (@all_transactions) {
 #                print STDERR "EACH SEEDLOT TO PLOT TRANSACTION INFO =".Dumper($transaction_info)."\n";
-                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
                 $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
                 $transaction->to_stock([$transaction_info->{to_plot_id}, $transaction_info->{to_plot_name}]);
                 $transaction->amount($transaction_info->{amount});
-                $transaction->weight_gram($transaction_info->{weight});
+                if ($weight_unit eq 'weight_pound') {
+                    $transaction->weight_pound($transaction_info->{weight});
+                } else {
+                    $transaction->weight_gram($transaction_info->{weight});
+                }
                 $transaction->timestamp($timestamp);
                 $transaction->description($transaction_info->{transaction_description});
                 $transaction->operator($transaction_info->{operator});
                 my $transaction_id = $transaction->store();
 
-                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id}, weight_unit => $weight_unit);
                 $current_from_seedlot->set_current_count_property();
                 $current_from_seedlot->set_current_weight_property();
             }
@@ -1973,7 +1982,7 @@ sub upload_transactions_POST : Args(0) {
                 my $new_seedlot_box_name = $new_seedlot_info->[3];
                 my $new_seedlot_quality = $new_seedlot_info->[4];
 
-                my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
+                my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, weight_unit => $weight_unit);
                 $new_seedlot->uniquename($new_seedlot_name);
                 $new_seedlot->location_code($new_seedlot_location);
                 $new_seedlot->box_name($new_seedlot_box_name);
@@ -1987,22 +1996,26 @@ sub upload_transactions_POST : Args(0) {
                 my $new_seedlot_id = $return->{seedlot_id};
                 push @added_seedlots, $new_seedlot_id;
 
-                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
                 $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
                 $transaction->to_stock([$new_seedlot_id, $new_seedlot_name]);
                 $transaction->amount($transaction_info->{amount});
-                $transaction->weight_gram($transaction_info->{weight});
+                if ($weight_unit eq 'weight_pound') {
+                    $transaction->weight_pound($transaction_info->{weight});
+                } else {
+                    $transaction->weight_gram($transaction_info->{weight});
+                }
                 $transaction->timestamp($timestamp);
                 $transaction->description($transaction_info->{transaction_description});
                 $transaction->operator($transaction_info->{operator});
 
                 my $transaction_id = $transaction->store();
 
-                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id}, weight_unit => $weight_unit);
                 $current_from_seedlot->set_current_count_property();
                 $current_from_seedlot->set_current_weight_property();
 
-                my $to_new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $new_seedlot_id);
+                my $to_new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $new_seedlot_id, weight_unit => $weight_unit);
                 $to_new_seedlot->set_current_count_property();
                 $to_new_seedlot->set_current_weight_property();
             }
@@ -2020,18 +2033,22 @@ sub upload_transactions_POST : Args(0) {
             eval {
                 foreach my $transaction_info (@all_transactions) {
     #            print STDERR "EACH SEEDLOT TO UNSPECIFY NAME TRANSACTION INFO =".Dumper($transaction_info)."\n";
-                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
                     $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
                     $transaction->to_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
                     $transaction->amount($transaction_info->{amount});
-                    $transaction->weight_gram($transaction_info->{weight});
+                    if ($weight_unit eq 'weight_pound') {
+                        $transaction->weight_pound($transaction_info->{weight});
+                    } else {
+                        $transaction->weight_gram($transaction_info->{weight});
+                    }
                     $transaction->timestamp($timestamp);
                     $transaction->description($transaction_info->{transaction_description});
                     $transaction->operator($transaction_info->{operator});
                     $transaction->factor(-1);
                     my $transaction_id = $transaction->store();
 
-                    my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                    my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id}, weight_unit => $weight_unit);
                     $current_from_seedlot->set_current_count_property();
                     $current_from_seedlot->set_current_weight_property();
                 }
