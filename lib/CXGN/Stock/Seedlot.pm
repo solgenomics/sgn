@@ -337,6 +337,7 @@ sub list_seedlots {
     my $quality = shift;
     my $only_good_quality = shift;
     my $box_name = shift;
+    my $weight_unit = shift;
 
     select(STDERR);
     $| = 1;
@@ -349,7 +350,12 @@ sub list_seedlots {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
-    my $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
+    my $current_weight_cvterm_id;
+    if ($weight_unit eq 'weight_pound') {
+        $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_pound", "stock_property")->cvterm_id();
+    } else {
+        $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
+    }
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
     my $location_code_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "location_code", "stock_property")->cvterm_id();
@@ -464,15 +470,23 @@ sub list_seedlots {
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
 
+    my $current_weight_key;
+    if ($weight_unit eq 'weight_pound') {
+        $current_weight_key = 'current_weight_pound';
+    } else {
+        $current_weight_key = 'current_weight_gram';
+    }
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
         phenome_schema=>$phenome_schema,
         stock_id_list=>\@seen_seedlot_ids,
         stock_type_id=>$type_id,
-        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1},
+        stockprop_columns_view=>{'current_count'=>1, "$current_weight_key"=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1},
         minimal_info=>1,  #for only returning stock_id and uniquenames
-        display_pedigree=>0 #to calculate and display pedigree
+        display_pedigree=>0, #to calculate and display pedigree
+        weight_unit=>$weight_unit
     });
     my ($stocksearch_result, $records_stock_total) = $stock_search->search();
 
@@ -494,7 +508,7 @@ sub list_seedlots {
         $unique_seedlots{$_}->{box} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} : 'NA';
 	$unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
         $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
-        $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
+        $unique_seedlots{$_}->{"$current_weight_key"} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{"$current_weight_key"} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{"$current_weight_key"} : 'NA';
 
 	push @seedlots, $unique_seedlots{$_};
 

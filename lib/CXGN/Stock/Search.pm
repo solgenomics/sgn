@@ -251,6 +251,12 @@ has 'external_ref_source_list' => (
     is => 'rw',
 );
 
+has 'weight_unit' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
+
 sub search {
     my $self = shift;
     print STDERR "CXGN::Stock::Search search start\n";
@@ -725,6 +731,13 @@ sub _refresh_materialized_stockprop {
     my $self = shift;
     my $stockprop_view = shift;
     my $schema = $self->bcs_schema;
+    my $weight_unit = $self->weight_unit;
+    my $current_weight_key;
+    if ($weight_unit eq 'weight_pound') {
+        $current_weight_key = 'current_weight_pound';
+    } else {
+        $current_weight_key = 'current_weight_gram';
+    }
 
     eval {
         my $stockprop_select_sql .= ', "' . join ('","', @$stockprop_view) . '"';
@@ -734,7 +747,7 @@ sub _refresh_materialized_stockprop {
     };
     if ($@) {
         my @stock_props = ('block', 'col_number', 'igd_synonym', 'is a control', 'location_code', 'organization', 'plant_index_number', 'subplot_index_number', 'tissue_sample_index_number', 'plot number', 'plot_geo_json', 'range', 'replicate', 'row_number', 'stock_synonym', 'T1', 'T2', 'variety',
-        'notes', 'state', 'accession number', 'PUI', 'donor', 'donor institute', 'donor PUI', 'seed source', 'institute code', 'institute name', 'biological status of accession code', 'country of origin', 'type of germplasm storage code', 'entry number', 'acquisition date', 'current_count', 'current_weight_gram', 'crossing_metadata_json', 'ploidy_level', 'genome_structure',
+        'notes', 'state', 'accession number', 'PUI', 'donor', 'donor institute', 'donor PUI', 'seed source', 'institute code', 'institute name', 'biological status of accession code', 'country of origin', 'type of germplasm storage code', 'entry number', 'acquisition date', 'current_count', "$current_weight_key", 'crossing_metadata_json', 'ploidy_level', 'genome_structure',
         'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality');
         my %stockprop_check = map { $_ => 1 } @stock_props;
         my @additional_terms;
