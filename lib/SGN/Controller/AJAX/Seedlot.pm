@@ -2089,16 +2089,17 @@ sub add_transactions_using_list_POST : Args(0) {
     my $user_id = $c->user->get_object->get_sp_person_id;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $weight_unit = $c->config->{weight_unit};
 
     my $new_transaction_data = decode_json $c->req->param('new_transaction_data');
     print STDERR "NEW TRANSACTION DATA =".Dumper($new_transaction_data)."\n";
 
     foreach my $each_transaction (@$new_transaction_data) {
         my $seedlot_name = $each_transaction->{'seedlot_name'};
-        my $weight_g = $each_transaction->{'weight_g'};
+        my $weight = $each_transaction->{'weight'};
         my $number_of_seeds = $each_transaction->{'number_of_seeds'};
-        if (!defined $weight_g) {
-            $weight_g = 'NA';
+        if (!defined $weight) {
+            $weight = 'NA';
         } elsif (!defined $number_of_seeds) {
             $number_of_seeds = 'NA';
         }
@@ -2106,19 +2107,22 @@ sub add_transactions_using_list_POST : Args(0) {
 
         my $seedlot_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name})->stock_id();
 
-        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema, weight_unit => $weight_unit);
         $transaction->to_stock([$seedlot_stock_id, $seedlot_name]);
         $transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
         $transaction->amount($number_of_seeds);
-        $transaction->weight_gram($weight_g);
+        if ($weight_unit eq 'weight_pound') {
+            $transaction->weight_pound($weight);
+        } else {
+            $transaction->weight_gram($weight);
+        }
         $transaction->timestamp($timestamp);
         $transaction->description($transaction_description);
         $transaction->operator($operator);
         $transaction->factor(-1);
         my $transaction_id = $transaction->store();
-        print STDERR "TRANSACTION ID =".Dumper($transaction_id)."\n";
 
-        my $seedlot_rs = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_stock_id);
+        my $seedlot_rs = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_stock_id, weight_unit => $weight_unit);
         $seedlot_rs->set_current_count_property();
         $seedlot_rs->set_current_weight_property();
     }

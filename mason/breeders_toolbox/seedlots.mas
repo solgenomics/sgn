@@ -198,7 +198,7 @@ $weight_unit => undef
 <& /breeders_toolbox/discard_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
 <& /breeders_toolbox/upload_transactions_dialogs.mas &>
-<& /breeders_toolbox/add_transactions_using_list.mas &>
+<& /breeders_toolbox/add_transactions_using_list.mas, weight_unit => $weight_unit &>
 
 
 <script>

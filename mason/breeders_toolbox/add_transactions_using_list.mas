@@ -1,5 +1,5 @@
 <%args>
-
+$weight_unit => undef
 </%args>
 
 
@@ -45,7 +45,11 @@
                                                 <select class="form-control" id="unit_type">
                                                     <option value="">Please select a unit type </option>
                                                     <option value="number_of_seeds">using number of seeds</option>
+% if ($weight_unit eq 'weight_pound') {
+                                                    <option value="weight_lb">using weight (lb)</option>
+% } else {
                                                     <option value="weight_g">using weight (g)</option>
+% }
                                                 </select>
                                             </div>
                                         </div>
@@ -170,6 +174,11 @@ jQuery(document).ready(function(){
             for (var i=0; i<seedlot_list.length; i++){
                 html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
             };
+        } else if (unit_type == 'weight_lb') {
+            var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>Seedlot Name</th><th>Weight (lb) Taken</th><th>Reason</th></tr></thead><tbody>';
+            for (var i=0; i<seedlot_list.length; i++){
+                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
+            };
         }
 
         html = html + '</tbody></table>';
@@ -189,7 +198,7 @@ jQuery(document).ready(function(){
 
         for (var i=0; i<seedlot_list.length; i++) {
             var seedlot_name = seedlot_list[i];
-            var weight_g = jQuery('#weight_info_'+ i ).val();
+            var weight = jQuery('#weight_info_'+ i ).val();
             var number_of_seeds = jQuery('#number_of_seeds_info_'+ i ).val();
             var transaction_description = jQuery('#transaction_description_'+ i ).val();
             if (unit_type == 'number_of_seeds') {
@@ -198,8 +207,13 @@ jQuery(document).ready(function(){
                     return;
                 }
             } else if (unit_type == 'weight_g') {
-                if (weight_g === '') {
+                if (weight === '') {
                     alert("please provide weight(g) taken from seedlot:" + seedlot_name);
+                    return;
+                }
+            } else if (unit_type == 'weight_lb') {
+                if (weight === '') {
+                    alert("please provide weight(lb) taken from seedlot:" + seedlot_name);
                     return;
                 }
             }
@@ -209,7 +223,7 @@ jQuery(document).ready(function(){
                 return;
             }
 
-            new_transaction_data.push({'seedlot_name':seedlot_name, 'weight_g':weight_g, 'number_of_seeds':number_of_seeds, 'transaction_description':transaction_description});
+            new_transaction_data.push({'seedlot_name':seedlot_name, 'weight':weight, 'number_of_seeds':number_of_seeds, 'transaction_description':transaction_description});
         }
 
         jQuery.ajax({
