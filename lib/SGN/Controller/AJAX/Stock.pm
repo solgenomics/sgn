@@ -2448,14 +2448,34 @@ sub accession_seedlot_table : Path('/ajax/stock/accession_seedlot_table') Args(0
     my $self = shift;
     my $c = shift;
 
+    my $list_id = $c->req->param('list_id');
+    if ($list_id eq 'undefined' || $list_id eq 'select') { $list_id=undef; }
+    
+    print STDERR "ACCESSION LIST = $list_id \n";
+
+    my $accession_filter = "";
+    my $list = "";
+    
+
+    if ($list_id) {
+
+	$list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id  });
+	my $quoted_list = "'".join("','", @{$list->elements()})."'";
+	$accession_filter = " and stock.uniquename in ($quoted_list) " ;
+    }
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
 
-    my $query = "SELECT stock.stock_id, stock.uniquename, seedlot.stock_id, seedlot.uniquename FROM stock join stock_relationship on(stock.stock_id=stock_relationship.object_id) join stock as seedlot on(stock_relationship.subject_id=seedlot.stock_id) where stock.type_id=(select cvterm_id from cvterm where name='accession') and seedlot.type_id=(select cvterm_id from cvterm where name='seedlot') order by stock.uniquename;
+    my $query = "SELECT stock.stock_id, stock.uniquename, seedlot.stock_id, seedlot.uniquename FROM stock join stock_relationship on(stock.stock_id=stock_relationship.object_id) join stock as seedlot on(stock_relationship.subject_id=seedlot.stock_id) where stock.type_id=(select cvterm_id from cvterm where name='accession') and seedlot.type_id=(select cvterm_id from cvterm where name='seedlot') $accession_filter order by stock.uniquename;
 ";
 
+    print STDERR "QUERY: $query\n";
     my $h = $dbh->prepare($query);
+
     $h->execute();
+
+
 
     my @data;
     

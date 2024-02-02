@@ -93,7 +93,7 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 
 <div class="well">
   <&| /page/info_section.mas, title=>"Accessions and Seedlots", id=> "accessions_and_seedlots", collapsible=>1, collapsed=>1&>
-    <table><tr><td>  Filter by accessions</td><td>  <textarea id="accession_list_for_seedlots" name="accession_list_for_seedlots" rows="3"></textarea></td><td><button class="btn btn-primary" id="accession_list_for_seedlots_button">Filter by accessions</button></td></tr></table><br /><br />
+    <table><tr><td>  Filter by accessions</td><td>&nbsp;&nbsp;</td><td> <div id="filter_seedlots_by_accession_list">[loading]</div></td><td>&nbsp;&nbsp;</td><td><button class="btn btn-primary" id="accession_list_for_seedlots_button">Filter by accessions</button></td></tr></table><br /><br />
     <table class="table table-hover table-bordered" id="accessions_and_seedlots_table">
       <thead>
         <tr>
@@ -199,26 +199,47 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
    });
       
    jQuery('#accession_list_for_seedlots_button').click( function() {
-       display_accession_seedlot_table();
+       update_accession_seedlot_table();
    });
 
    jQuery('#accessions_and_seedlots_onswitch').one("click", function(){
-       display_accession_seedlot_table();
+       create_accession_seedlot_table();
    });
-      
-   function display_accession_seedlot_table()  {
-       var filter_by_accessions = jQuery('#accession_list_for_seedlots').val();
+	
+   function update_accession_seedlot_table()  {
+       var last_selected;
+
+       var list_id = jQuery('#accession_list_list_select option:selected').val();
+       alert('updated list_id = '.list_id);
        var result_table = jQuery('#accessions_and_seedlots_table').DataTable({
-           'ajax': { 'url': '/ajax/stock/accession_seedlot_table', 'filter_by_accessions' : filter_by_accessions },
+	   'destroy' : true,
+           'ajax': { 'url': '/ajax/stock/accession_seedlot_table?list_id='+list_id },
            "fnInitComplete": function(oSettings, json) {
                if (!isLoggedIn()) {
-                   jQuery('#accession_and_seedlots_table').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                   jQuery('#accessions_and_seedlots_table').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
                }
            }
        });
        
    }
-	
+
+   function create_accession_seedlot_table() {
+       var lo = new CXGN.List();
+       var list_html = lo.listSelect('accession_list', ['accessions'], 'select', undefined);
+       alert(list_html);
+       jQuery("#filter_seedlots_by_accession_list").html(list_html);
+       var list_id = jQuery('#accession_list_list_select option:selected').val();
+       alert('created using list ID = '+list_id);
+       var result_table = jQuery('#accessions_and_seedlots_table').DataTable({
+	   'destroy' : true,
+           'ajax': { 'url': '/ajax/stock/accession_seedlot_table?list_id='+list_id },
+           "fnInitComplete": function(oSettings, json) {
+               if (!isLoggedIn()) {
+                   jQuery('#accessions_and_seedlots_table').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+               }
+           }
+       }); 
+   }
     });
 
 
