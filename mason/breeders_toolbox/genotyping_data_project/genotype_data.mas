@@ -60,6 +60,14 @@ jQuery(document).ready(function () {
         }
     });
 
+    jQuery('#project_genotype_data_download_all_hapmap').click(function(){
+        if (refresh_results) {
+            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=HapMap&format=accession_ids&forbid_cache=1");
+        } else {
+            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=HapMap&format=accession_ids");
+        }
+    });
+
     jQuery('#project_genotype_data_download_all_dosagematrix').click(function(){
         if (refresh_results) {
             window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=DosageMatrix&format=accession_ids&forbid_cache=1");

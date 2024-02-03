@@ -227,6 +227,7 @@ $dataset_id => undef
                         <select class="wizard-download-genotypes-format form-control input-sm" >
                             <option value="VCF">VCF File Format</option>
                             <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
+                            <option value="HapMap">HapMap File Format (.hmp)</option>
                         </select>
                     </td>
                     <td colspan="6">
