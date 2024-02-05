@@ -6,14 +6,14 @@ on:
   push:
     branches: ["master"]
     paths:
-      - 'docs/r_markdown_docs/**'
+      - 'docs/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: write 
+  contents: read
   pages: write
   id-token: write
 
@@ -25,42 +25,23 @@ concurrency:
 
 jobs:
   # Single deploy job since we're just deploying
-  build_and_deploy_static_pages_for_manual:          
-    runs-on: ubuntu-latest    
-    container: 
-      image: bienkowskid/fedora40-r-bookdown
+  deploy_static_pages:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-        with:          
-          token: ${{ secrets.MANUAL_GITACTION }}
-      - name: Save directory for checkout
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: Create gitbook         
-        working-directory: ./docs/r_markdown_docs
-        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::gitbook")'        
-      - name: Create manual pdf         
-        working-directory: ./docs/r_markdown_docs
-        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book")'        
-      - name: Commit and push documentation        
-        run: |          
-          date > generated.txt
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add --force docs/*.*
-          git commit -m "generated"
-          git push
+        uses: actions/checkout@v4
       - name: Setup Pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v4
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           # Upload docs only
           path: './docs'
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
+
   
