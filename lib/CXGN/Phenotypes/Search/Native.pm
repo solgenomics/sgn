@@ -24,6 +24,9 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         trait_contains=>$trait_contains,
         phenotype_min_value=>$phenotype_min_value,
         phenotype_max_value=>$phenotype_max_value,
+        start_date => $start_date,
+        end_date => $end_date,
+        include_dateless_items => $include_dateless_items,
         limit=>$limit,
         offset=>$offset
     }
@@ -140,6 +143,24 @@ has 'phenotype_max_value' => (
     isa => 'Str|Undef',
     is => 'rw'
 );
+
+has 'start_date' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    default => '1900-01-01',
+    );
+
+has 'end_date' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    default => '2100-12-31',
+    );
+
+has 'include_dateless_items' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    default => 1,
+    );
 
 has 'limit' => (
     isa => 'Int|Undef',
@@ -367,12 +388,35 @@ sub search {
             push @where_clause, "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text like '%".lc($_)."%'";
         }
     }
+
+    my $datelessq = "";
+    
+    if ($self->include_dateless_items()) {
+	$datelessq = " phenotype.create_date IS NULL OR ";
+    }
+
+    my ($start_date, $end_date);
+    if ($self->start_date() =~ m/(\d{4}\-\d{2}\-\d{2})/) {
+	$start_date = $1;
+    }
+    
+    if ($self->end_date() =~ m/\d{4}\-\d{2}\-\d{2}/ ) {
+	$end_date = $1;
+    }
+
+    if ($start_date && $end_date) { 
+	push @where_clause, " ( $datelessq ( phenotype.create_date > $start_date and phenotype.create_date < $end_date ) ) ";
+
+    }
+    
+
     if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
         my $arrayref = $self->observation_id_list;
         my $sql = join ("','" , @$arrayref);
         my $phenotype_id_sql = "'" . $sql . "'";
         push @where_clause, "phenotype.phenotype_id in ($phenotype_id_sql)";
     }
+
     if ($self->phenotype_min_value && !$self->phenotype_max_value) {
         push @where_clause, "phenotype.value::real >= ".$self->phenotype_min_value;
         push @where_clause, "phenotype.value~\'$numeric_regex\'";
