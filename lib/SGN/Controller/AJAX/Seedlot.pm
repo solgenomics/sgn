@@ -934,7 +934,8 @@ sub seedlot_transaction_base :Chained('seedlot_base') PathPart('transaction') Ca
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $seedlot_id = $c->stash->{seedlot}->seedlot_id();
     my $transaction_id = shift;
-    my $t_obj = CXGN::Stock::Seedlot::Transaction->new(schema=>$schema, transaction_id=>$transaction_id, seedlot_id=>$seedlot_id);
+    my $weight_unit = $c->config->{weight_unit};
+    my $t_obj = CXGN::Stock::Seedlot::Transaction->new(schema=>$schema, transaction_id=>$transaction_id, seedlot_id=>$seedlot_id, weight_unit=>$weight_unit);
     $c->stash->{transaction_id} = $transaction_id;
     $c->stash->{transaction_object} = $t_obj;
 }
@@ -944,6 +945,7 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
     my $c = shift;
     my $t = $c->stash->{transaction_object};
     my $factor = $t->factor;
+    my $weight_unit = $t->weight_unit;
     my $transaction_type;
     if ($factor == 1) {
         $transaction_type = 'added to this seedlot';
@@ -956,7 +958,11 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
         transaction_id => $t->transaction_id,
         description=>$t->description,
         amount=>$t->amount,
-        weight_gram=>$t->weight_gram,
+        if ($weight_unit eq 'weight_pound') {
+            weight_pound=>$t->weight_pound,
+        } else {
+            weight_gram=>$t->weight_gram,
+        }
         operator=>$t->operator,
         timestamp=>$t->timestamp,
         factor=>$t->factor,
@@ -978,6 +984,7 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
         $c->detach();
     }
 
+    my $weight_unit = $t->weight_unit;
     my $t = $c->stash->{transaction_object};
     my $from_stock = $t->from_stock();
     my $from_stock_id = $from_stock->[0];
@@ -988,12 +995,22 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
 
     my $edit_operator = $c->req->param('operator');
     my $edit_amount = $c->req->param('amount');
+    my $edit_weight;
+    if ($weight_unit eq 'weight_pound') {
+        $edit_weight = $c->req->param('weight_pound');
+    } else {
+        $edit_weight = $c->req->param('weight_gram');
+    }
     my $edit_weight = $c->req->param('weight_gram');
     my $edit_desc = $c->req->param('description');
     my $edit_timestamp = $c->req->param('timestamp');
     $t->operator($edit_operator);
     $t->amount($edit_amount);
-    $t->weight_gram($edit_weight);
+    if ($weight_unit eq 'weight_pound') {
+        $t->weight_pound($edit_weight);
+    } else {
+        $t->weight_gram($edit_weight);
+    }
     $t->description($edit_desc);
     $t->timestamp($edit_timestamp);
     my $transaction_id = $t->store();
@@ -1001,13 +1018,13 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
 
     if ($from_stock_type == $seedlot_cvterm_id) {
-        my $from_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_stock_id);
+        my $from_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_stock_id, weight_unit => $weight_unit);
         $from_stock_update->set_current_count_property();
         $from_stock_update->set_current_weight_property();
     }
 
     if ($to_stock_type == $seedlot_cvterm_id) {
-        my $to_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $to_stock_id);
+        my $to_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $to_stock_id, weight_unit => $weight_unit);
         $to_stock_update->set_current_count_property();
         $to_stock_update->set_current_weight_property();
     }
@@ -1033,6 +1050,7 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
     my %types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $plot_type_id => 'plot', $cross_type_id => 'cross' );
+    my $weight_unit = $t->weight_unit;
 
     #print STDERR Dumper $transactions;
     my @transactions;
@@ -1047,16 +1065,29 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         if ($t->amount() eq 'NA'){
             $value_field = $t->amount;
         }
-        my $weight_value_field = '';
-        if ($t->factor == 1 && $t->weight_gram() ne 'NA'){
-            $weight_value_field = '<span style="color:green">+'.$t->factor()*$t->weight_gram().'</span>';
+
+        if ($weight_unit eq 'weight_pound') {
+            if ($t->factor == 1 && $t->weight_pound() ne 'NA'){
+                $weight_value_field = '<span style="color:green">+'.$t->factor()*$t->weight_pound().'</span>';
+            }
+            if ($t->factor == -1 && $t->weight_pound() ne 'NA'){
+                $weight_value_field = '<span style="color:red">'.$t->factor()*$t->weight_pound().'</span>';
+            }
+            if ($t->weight_pound() eq 'NA'){
+                $weight_value_field = $t->weight_pound;
+            }
+        } else {
+            if ($t->factor == 1 && $t->weight_gram() ne 'NA'){
+                $weight_value_field = '<span style="color:green">+'.$t->factor()*$t->weight_gram().'</span>';
+            }
+            if ($t->factor == -1 && $t->weight_gram() ne 'NA'){
+                $weight_value_field = '<span style="color:red">'.$t->factor()*$t->weight_gram().'</span>';
+            }
+            if ($t->weight_gram() eq 'NA'){
+                $weight_value_field = $t->weight_gram;
+            }
         }
-        if ($t->factor == -1 && $t->weight_gram() ne 'NA'){
-            $weight_value_field = '<span style="color:red">'.$t->factor()*$t->weight_gram().'</span>';
-        }
-        if ($t->weight_gram() eq 'NA'){
-            $weight_value_field = $t->weight_gram;
-        }
+
         my $from_url;
         my $to_url;
         if ($t->from_stock()->[2] == $type_id){
@@ -1089,6 +1120,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $weight_unit = $t->weight_unit;
 
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
@@ -1180,13 +1212,18 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->from_stock([$from_stock_id, $from_stock_name]);
             $transaction->to_stock([$seedlot_id, $to_new_seedlot_name]);
             $transaction->amount($amount);
-            $transaction->weight_gram($weight);
+
+            if ($weight_unit eq 'weight_pound') {
+                $transaction->weight_pound($weight);
+            } else {
+                $transaction->weight_gram($weight);
+            }
             $transaction->timestamp($timestamp);
             $transaction->description($transaction_description);
             $transaction->operator($operator);
             $transaction->store();
 
-            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id, weight_unit=>$weight_unit);
             $new_sl = $sl_new;
 
             $phenome_schema->resultset("StockOwner")->find_or_create({
@@ -1209,6 +1246,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         $existing_sl = CXGN::Stock::Seedlot->new(
             schema => $c->stash->{schema},
             seedlot_id => $stock_id,
+            weight_unit => $weight_unit
         );
     }
     my $to_existing_seedlot_id = $c->req->param('to_existing_seedlot_id');
@@ -1218,6 +1256,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         $existing_sl = CXGN::Stock::Seedlot->new(
             schema => $c->stash->{schema},
             seedlot_id => $stock_id,
+            weight_unit => $weight_unit
         );
     }
 
@@ -1226,7 +1265,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $timestamp = $c->req->param("timestamp");
     my $description = $c->req->param("transaction_description");
     my $factor = $c->req->param("factor");
-    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema});
+    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema}, weight_unit => $weight_unit);
     $transaction->factor($factor);
     if ($factor == 1){
         $transaction->from_stock([$stock_id, $stock_uniquename]);
@@ -1238,7 +1277,13 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         die "factor not specified!\n";
     }
     $transaction->amount($amount);
-    $transaction->weight_gram($weight);
+
+    if ($weight_unit eq 'weight_pound') {
+        $transaction->weight_pound($weight);
+    } else {
+        $transaction->weight_gram($weight);
+    }
+
     $transaction->timestamp($timestamp);
     $transaction->description($description);
     $transaction->operator($c->user->get_object->get_username);
@@ -1692,6 +1737,7 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
 
     my $time = DateTime->now();
     my $discard_date = $time->ymd();
+    my $weight_unit = $c->config->{weight_unit};
 
     if (!$c->user()){
         $c->stash->{rest} = { error_string => "You must be logged in to discard seedlot" };
@@ -1722,7 +1768,13 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
 
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type')->cvterm_id();
     my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", 'stock_property')->cvterm_id();
-    my $current_weight_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", 'stock_property')->cvterm_id();
+
+    my $current_weight_type_id;
+    if ($weight_unit eq 'weight_pound') {
+        $current_weight_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_pound", 'stock_property')->cvterm_id();
+    } else {
+        $current_weight_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", 'stock_property')->cvterm_id();
+    }
 
     foreach my $seedlot_name (@seedlots_to_discard) {
         my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot_name, type_id => $seedlot_type_id });
@@ -1769,6 +1821,7 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh();
     my $seedlot_id = $c->req->param("seedlot_id");
+    my $weight_unit = $c->config->{weight_unit};
 
     if (!$c->user()){
         $c->stash->{rest} = { error_string => "You must be logged in to undo discading this seedlot" };
@@ -1788,7 +1841,7 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
         $discarded_rs->delete();
     }
 
-    my $restored_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id);
+    my $restored_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id, weight_unit => $weight_unit);
     $restored_seedlot->set_current_count_property();
     $restored_seedlot->set_current_weight_property();
 
