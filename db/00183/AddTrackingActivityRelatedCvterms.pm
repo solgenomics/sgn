@@ -1,24 +1,23 @@
 #!/usr/bin/env perl
 
-
 =head1 NAME
 
-AddTrackingIdentifiersListTypesCvterm
+AddTrackingActivityRelatedCvterms.pm
 
 =head1 SYNOPSIS
 
-mx-run AddTrackingIdentifiersListTypesCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run ThisPackageName [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds tracking_identifiers list_types cvterm
+This patch adds activity_record project_type cvterm, tracking_activity experiment_type cvterm, tracking_identifier stock_type cvterm, material_of stock_relationship cvterm and tracking_identifiers list_type cvterm.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
-Titima Tantikanjana <tt15@cornell.edu>
+Titima Tantikanjana<tt15@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -30,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddTrackingIdentifiersListTypesCvterm;
+package AddTrackingActivityRelatedCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,14 +38,14 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'tracking_identifiers' list_types cvterm
+Description of this patch goes here
 
 has '+prereq' => (
 	default => sub {
         [],
     },
 
-);
+  );
 
 sub patch {
     my $self=shift;
@@ -58,14 +57,38 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
+
     print STDERR "INSERTING CV TERMS...\n";
 
-    $schema->resultset("Cv::Cvterm")->create_with({
-        name => 'tracking_identifiers',
-        cv => 'list_types'
-    });
+    my $terms = {
+        'project_type' => [
+            'activity_record'
+        ],
+        'experiment_type' => [
+            'tracking_activity'
+        ],
+        'stock_type' => [
+            'tracking_identifier'
+        ],
+        'stock_relationship' => [
+            'material_of'
+        ],
+        'list_types' => [
+            'tracking_identifiers'
+        ],
+    };
+
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
 
     print "You're done!\n";
+
 }
 
 
