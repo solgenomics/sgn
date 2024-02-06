@@ -763,6 +763,7 @@ stock_property	subplot_index_number				00084
 stock_property	T1				00052
 stock_property	T2				00052
 stock_property	Terminators	Vector property	1/19/2023	mrf252	00164
+stock_property  tissue_culture_data_json  tt15  00125
 stock_property	tissue_sample_index_number				00089
 stock_property	tissue_type	For indicating tissue type in genotype plate well	2/15/2018	nm529	00091
 stock_property	transgenic				00052

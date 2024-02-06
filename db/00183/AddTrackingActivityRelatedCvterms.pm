@@ -12,7 +12,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds activity_record project_type cvterm, tracking_activity experiment_type cvterm, tracking_identifier stock_type cvterm, material_of stock_relationship cvterm and tracking_identifiers list_type cvterm.
+This patch adds activity_record project_type cvterm, tracking_activity experiment_type cvterm, tracking_identifier stock_type cvterm, material_of stock_relationship cvterm, tracking_metadata_json stock_property cvterm and tracking_identifiers list_type cvterm.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -72,6 +72,9 @@ sub patch {
         ],
         'stock_relationship' => [
             'material_of'
+        ],
+        'stock_property' => [
+            'tracking_metadata_json'
         ],
         'list_types' => [
             'tracking_identifiers'
