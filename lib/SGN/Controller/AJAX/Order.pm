@@ -92,6 +92,7 @@ sub submit_order_POST : Args(0) {
 #        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
 #        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
 
+    my $tracking_activity = $c->config->{tracking_activity};
     my $ordering_service_name = $c->config->{ordering_service_name};
     my $ordering_service_url = $c->config->{ordering_service_url};
     my $ona_new_id;
@@ -102,6 +103,10 @@ sub submit_order_POST : Args(0) {
         my $history_info = {};
         my $item_ref = $group_by_contact_id{$contact_id}{'item_list'};
         my %item_hashes = %{$item_ref};
+        my @names = keys %item_hashes;
+        print STDERR "ITEM HASH =".Dumper(\%item_hashes)."\n";
+        print STDERR "NAMES =".Dumper(\@names)."\n";
+
         my @item_list = map { { $_ => $item_hashes{$_} } } sort keys %item_hashes;
 
         my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
@@ -115,6 +120,14 @@ sub submit_order_POST : Args(0) {
             return;
         }
 
+        my @tracking_identifiers = ();
+        if (defined $tracking_activity) {
+            foreach my $name (sort @names) {
+                push @tracking_identifiers, "order".$order_id.":".$name;
+            }
+        }
+        print STDERR "TRACKING IDENTIFIERS =".Dumper(\@tracking_identifiers)."\n";
+
         $history_info ->{'submitted'} = $timestamp;
         push @history, $history_info;
 
@@ -122,6 +135,9 @@ sub submit_order_POST : Args(0) {
         $order_prop->clone_list(\@item_list);
         $order_prop->parent_id($order_id);
         $order_prop->history(\@history);
+        if (defined $tracking_activity) {
+            $order_prop->tracking_identifier_list(\@tracking_identifiers);
+        }
     	my $order_prop_id = $order_prop->store_sp_orderprop();
 #        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
 
