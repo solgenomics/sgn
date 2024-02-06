@@ -123,9 +123,11 @@ sub submit_order_POST : Args(0) {
         }
 
         my @tracking_identifiers = ();
+        my @tracking_ids = ();
         if (defined $tracking_activity) {
             foreach my $name (sort @names) {
                 push @tracking_identifiers, ["order".$order_id.":".$name, $name];
+                push @tracking_ids, "order".$order_id.":".$name;
             }
         }
         print STDERR "TRACKING IDENTIFIERS =".Dumper(\@tracking_identifiers)."\n";
@@ -138,7 +140,7 @@ sub submit_order_POST : Args(0) {
         $order_prop->parent_id($order_id);
         $order_prop->history(\@history);
         if (defined $tracking_activity) {
-            $order_prop->tracking_identifier_list(\@tracking_identifiers);
+            $order_prop->tracking_identifier_list(\@tracking_ids);
         }
     	my $order_prop_id = $order_prop->store_sp_orderprop();
 #        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
