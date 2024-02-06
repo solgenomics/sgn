@@ -10,6 +10,7 @@ use DateTime;
 use CXGN::People::Person;
 use CXGN::Contact;
 use CXGN::Trial::Download;
+use CXGN::Stock::TrackingActivity::TrackingIdentifier;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -42,6 +43,7 @@ sub submit_order_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh();
     my $list_id = $c->req->param('list_id');
     my $time = DateTime->now();
@@ -123,7 +125,7 @@ sub submit_order_POST : Args(0) {
         my @tracking_identifiers = ();
         if (defined $tracking_activity) {
             foreach my $name (sort @names) {
-                push @tracking_identifiers, "order".$order_id.":".$name;
+                push @tracking_identifiers, ["order".$order_id.":".$name, $name];
             }
         }
         print STDERR "TRACKING IDENTIFIERS =".Dumper(\@tracking_identifiers)."\n";
@@ -144,6 +146,19 @@ sub submit_order_POST : Args(0) {
         if (!$order_prop_id){
             $c->stash->{rest} = {error_string => "Error saving your order",};
             return;
+        }
+
+        foreach my $identifier_info (@tracking_identifiers) {
+            my $tracking_identifier = $identifier_info->[0];
+            my $material = $identifier_info->[1];
+            my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new(schema => $schema, tracking_identifier => $tracking_identifier, material => $material );
+            my $return = $tracking_obj->store();
+            my $tracking_id = $return->{tracking_id};
+            print STDERR "TRACKING STOCK ID =".Dumper($tracking_id)."\n";
+            $phenome_schema->resultset("StockOwner")->find_or_create({
+                stock_id     => $tracking_id,
+                sp_person_id =>  $contact_id,
+            });
         }
 
         my $contact_person = CXGN::People::Person -> new($dbh, $contact_id);
