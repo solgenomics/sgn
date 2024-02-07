@@ -240,39 +240,18 @@ $stock_id
             });
         };
 
-                
-        // XPath expression to find the second parent of #pdgv-wrap - it should be content element with Id
-        var xpathIdPicker = "//*[@id='pdgv-wrap']/parent::*/parent::*/parent::*";        
-        
-        // Find the element with randomly generated Id of a panel
-        var result = document.evaluate(
-            xpathIdPicker,
-            document,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
-        );
+        var onSwitchElement = document.getElementById('stock_pedigree_section_onswitch');
+        onSwitchElement.addEventListener('click', onSwitchHandler);
 
-        // Check if a node is found take element if not just trigger drawing tree
-        if (result && result.singleNodeValue) {
-            var contentElement = result.singleNodeValue;            
-        } else {
-            drawPedigreeViewer();
-        } 
-        
-        var onSwitchId = contentElement.id.replace("content", "onswitch");
-        var onSwitchElement = document.getElementById(onSwitchId);
+        // display the viewer automatically - if the section is expanded by default
+        if ( onSwitchElement.style.display === 'none' ) {
+            onSwitchHandler();
+        }
 
         // handler if viewer is collapsed - to trigger only once drawing after click
         function onSwitchHandler() {
             drawPedigreeViewer();
             onSwitchElement.removeEventListener('click', onSwitchHandler);
-        }
-
-        if (onSwitchElement.style.display === 'none') {
-            drawPedigreeViewer();
-        } else {
-            onSwitchElement.addEventListener('click', onSwitchHandler);    
         }
                 
 // ;
