@@ -1,0 +1,87 @@
+
+<%args>
+$identifier_name
+$identifier_id
+$breeding_program => undef
+$user_id => undef
+$identifier_prefix => ''
+</%args>
+
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
+
+% use utf8;
+% my $activity_header = $c->config->{tracking_activities_header};
+% my @column_headers = split ',',$activity_header;
+% my $types = $c->config->{tracking_activities};
+% my @activity_types = split ',',$types;
+
+<& /page/page_title.mas, title => "Activity Record for '$identifier_name'" &>
+
+<&| /page/info_section.mas, title => "General Information" &>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <& /page/form.mas,
+                    &>
+                </div>
+                <div class="col-sm-6">
+                    <br /><br />
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$identifier_id", text=> "$identifier_prefix stock $identifier_id ($identifier_name)", format=>"stock_qrcode"  &>
+                    <br /><br />
+                </div>
+            </div>
+        </div>
+    </div>
+
+</&>
+
+
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+% my $add_activity_info_link = "[Add]";
+% if ($user_id) { $add_activity_info_link = '<a id="add_info_link">[Add]</a>'; }
+
+<&| /page/info_section.mas, title => 'Activity Record', collapsible => 1, collapsed => 0, subtitle => $add_activity_info_link &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                <table id = "activity_info" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+% foreach my $header(@column_headers){
+                        <th><%$header%></th>
+%}
+                        </tr>
+                    </thead>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+<div id="add_activity_info_dialog">
+    <select id="activity_types_select">
+% foreach my $type(@activity_types){
+        <option value="<%$type%>"><%$type%></option>
+%}
+    </select>
+    <input id="activity_value" />
+
+    <button id="activity_info_submit" >Save</button>
+
+</div>
+
+
+<script>
+
+jQuery(document).ready( function() {
+
+});
+
+</script>
