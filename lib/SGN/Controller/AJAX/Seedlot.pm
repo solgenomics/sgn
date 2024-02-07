@@ -1027,12 +1027,17 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         } else {
             $from_url = '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         }
-        if ($t->to_stock()->[2] == $type_id){
-            $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
-        } elsif ($t->from_stock()->[2] == $cross_type_id){
-            $to_url = '<a href="/cross/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+
+        if ($t->from_stock()->[0] == $t->to_stock()->[0]) {
+            $to_url = 'NA';
         } else {
-            $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+            if ($t->to_stock()->[2] == $type_id){
+                $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+            } elsif ($t->from_stock()->[2] == $cross_type_id){
+                $to_url = '<a href="/cross/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+            } else {
+                $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+            }
         }
         push @transactions, { "transaction_id"=>$t->transaction_id(), "timestamp"=>$t->timestamp(), "from"=>$from_url, "to"=>$to_url, "value"=>$value_field, "weight"=>$weight_value_field, "operator"=>$t->operator, "description"=>$t->description() };
     }
@@ -1797,28 +1802,33 @@ sub upload_transactions_POST : Args(0) {
     my $upload_seedlots_to_seedlots = $c->req->upload('seedlots_to_seedlots_file');
     my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
     my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
+    my $upload_seedlots_to_unspecified_names = $c->req->upload('seedlots_to_unspecified_names_file');
 
     my $new_seedlot_breeding_program_id = $c->req->param("new_seedlot_breeding_program_id");
     my $new_seedlot_location = $c->req->param("new_seedlot_location");
     my $new_seedlot_organization = $c->req->param("new_seedlot_organization_name");
 
-    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots){
+    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots && !$upload_seedlots_to_unspecified_names){
         $c->stash->{rest} = {error=>'You must upload a transaction file!'};
         $c->detach();
     }
     my $upload;
     my $parser_type;
-    if ($upload_seedlots_to_seedlots){
+    if (defined $upload_seedlots_to_seedlots){
         $upload = $upload_seedlots_to_seedlots;
         $parser_type = 'SeedlotsToSeedlots';
     }
-    if ($upload_seedlots_to_new_seedlots){
+    if (defined $upload_seedlots_to_new_seedlots){
         $upload = $upload_seedlots_to_new_seedlots;
         $parser_type = 'SeedlotsToNewSeedlots';
     }
-    if ($upload_seedlots_to_plots){
+    if (defined $upload_seedlots_to_plots){
         $upload = $upload_seedlots_to_plots;
         $parser_type = 'SeedlotsToPlots';
+    }
+    if (defined $upload_seedlots_to_unspecified_names){
+        $upload = $upload_seedlots_to_unspecified_names;
+        $parser_type = 'SeedlotsToUnspecifiedNames';
     }
 
     my $subdirectory = "seedlot_transaction_upload";
@@ -1967,6 +1977,28 @@ sub upload_transactions_POST : Args(0) {
                 });
             }
         };
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToUnspecifiedNames')) {
+            my $transactions = $parsed_data->{transactions};
+            my @all_transactions = @$transactions;
+            eval {
+                foreach my $transaction_info (@all_transactions) {
+    #            print STDERR "EACH SEEDLOT TO UNSPECIFY NAME TRANSACTION INFO =".Dumper($transaction_info)."\n";
+                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                    $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                    $transaction->to_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                    $transaction->amount($transaction_info->{amount});
+                    $transaction->weight_gram($transaction_info->{weight});
+                    $transaction->timestamp($timestamp);
+                    $transaction->description($transaction_info->{transaction_description});
+                    $transaction->operator($transaction_info->{operator});
+                    $transaction->factor(-1);
+                    my $transaction_id = $transaction->store();
+
+                    my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                    $current_from_seedlot->set_current_count_property();
+                    $current_from_seedlot->set_current_weight_property();
+                }
+            };
     }
 
     if ($@) {
@@ -1980,6 +2012,72 @@ sub upload_transactions_POST : Args(0) {
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = { success => 1};
+}
+
+
+sub add_transactions_using_list : Path('/ajax/breeders/add_transactions_using_list') : ActionClass('REST') { }
+
+sub add_transactions_using_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to add seedlot transactions!'};
+        $c->detach();
+    }
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transactions' };
+        $c->detach();
+    }
+
+    my $operator = $c->user->get_object->get_username;
+    my $user_id = $c->user->get_object->get_sp_person_id;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $new_transaction_data = decode_json $c->req->param('new_transaction_data');
+    print STDERR "NEW TRANSACTION DATA =".Dumper($new_transaction_data)."\n";
+
+    foreach my $each_transaction (@$new_transaction_data) {
+        my $seedlot_name = $each_transaction->{'seedlot_name'};
+        my $weight_g = $each_transaction->{'weight_g'};
+        my $number_of_seeds = $each_transaction->{'number_of_seeds'};
+        if (!defined $weight_g) {
+            $weight_g = 'NA';
+        } elsif (!defined $number_of_seeds) {
+            $number_of_seeds = 'NA';
+        }
+        my $transaction_description = $each_transaction->{'transaction_description'};
+
+        my $seedlot_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name})->stock_id();
+
+        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+        $transaction->to_stock([$seedlot_stock_id, $seedlot_name]);
+        $transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
+        $transaction->amount($number_of_seeds);
+        $transaction->weight_gram($weight_g);
+        $transaction->timestamp($timestamp);
+        $transaction->description($transaction_description);
+        $transaction->operator($operator);
+        $transaction->factor(-1);
+        my $transaction_id = $transaction->store();
+        print STDERR "TRANSACTION ID =".Dumper($transaction_id)."\n";
+
+        my $seedlot_rs = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_stock_id);
+        $seedlot_rs->set_current_count_property();
+        $seedlot_rs->set_current_weight_property();
+    }
+
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+
+    $c->stash->{rest} = { success => 1};
+
+
 }
 
 
