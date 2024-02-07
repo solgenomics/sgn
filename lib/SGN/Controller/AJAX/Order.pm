@@ -94,7 +94,7 @@ sub submit_order_POST : Args(0) {
 #        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
 #        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
 
-    my $tracking_activity = $c->config->{tracking_activity};
+    my $tracking_activity = $c->config->{tracking_order_activity};
     my $ordering_service_name = $c->config->{ordering_service_name};
     my $ordering_service_url = $c->config->{ordering_service_url};
     my $ona_new_id;
