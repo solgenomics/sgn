@@ -63,10 +63,11 @@ sub add_info {
     my $coderef = sub {
 
         my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
-        my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')();
+        my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property');
 
         my $info_json_string;
         my $info_json_hash = {};
+        my $identifier;
 
         my $tracking_identifier_rs = $schema->resultset("Stock::Stock")->search({ 'uniquename' => $tracking_identifier, 'type_id' => $tracking_identifier_cvterm_id});
         my $id;
@@ -80,13 +81,13 @@ sub add_info {
         if ($previous_info_rs->count == 1){
             $info_json_string = $previous_info_rs->first->value();
             $info_json_hash = decode_json $info_json_string;
-            $info_json_string = _generate_info_hash($activity_type, $value, $info_json_hash);
+            $info_json_string = _generate_info_hash($activity_type, $activity_info, $info_json_hash);
             $previous_info_rs->first->update({value=>$info_json_string});
         } elsif ($previous_info_rs->count > 1) {
             print STDERR "More than one found!\n";
             return;
         } else {
-            $info_json_string = _generate_info_hash($activity_type, $value, $info_json_hash);
+            $info_json_string = _generate_info_hash($activity_type, $activity_info, $info_json_hash);
             $identifier->create_stockprops({$tracking_info_json_cvterm->name() => $info_json_string});
         }
         print STDERR "INFO JSON STRING =".Dumper($info_json_string)."\n";
@@ -108,10 +109,10 @@ sub add_info {
 
 sub _generate_info_hash {
     my $activity_type = shift;
-    my $value = shift;
+    my $activity_info = shift;
     my $info_json_hash = shift;
 
-    $info_json_hash->{$activity_type} = $value;
+    $info_json_hash->{$activity_type} = $activity_info;
     #print STDERR Dumper $info_json_hash;
     my $info_json_string = encode_json $info_json_hash;
 
