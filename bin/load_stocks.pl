@@ -148,16 +148,19 @@ my $coderef= sub  {
         my $synonym_string   =  $spreadsheet->value_at($accession, "synonyms");
 	my @synonyms = split /\|/ , $synonym_string;
 
-	print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
-	my $population = $stock_rs->find_or_create(
-	    {
-		'me.name'        => $population_name,
-		'me.uniquename'  => $population_name,
-		'me.organism_id' => $organism_id,
-		type_id          => $population_cvterm->cvterm_id,
-	    },
-	    { join => 'type' }
-	    );
+	my $population;
+	if ($population_name) { 
+	    print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
+	    $population = $stock_rs->find_or_create(
+		{
+		    'me.name'        => $population_name,
+			'me.uniquename'  => $population_name,
+			'me.organism_id' => $organism_id,
+			type_id          => $population_cvterm->cvterm_id,
+		},
+		{ join => 'type' }
+		);
+	}
 	
 	print "Find or create stock for accesssion $accession\n";
 	my $stock = $schema->resultset("Stock::Stock")->find_or_create(
@@ -180,11 +183,13 @@ my $coderef= sub  {
 	# the stock belongs to the population:
         # add new stock_relationship
 	#
-	print "Accession $accession is member_of population $population_name \n";
-	$population->find_or_create_related('stock_relationship_objects', {
-	    type_id => $member_of->cvterm_id(),
-	    subject_id => $stock->stock_id(),
-					    } );
+	if ($population_name) { 
+	    print "Accession $accession is member_of population $population_name \n";
+	    $population->find_or_create_related('stock_relationship_objects', {
+		type_id => $member_of->cvterm_id(),
+		subject_id => $stock->stock_id(),
+						} );
+	}
         if ($synonym_string) {print "Adding synonyms #" . scalar(@synonyms) . "\n"; }
 	foreach my $syn (@synonyms) {
 	    if ($syn && defined($syn) && ($syn ne $accession) ) {
