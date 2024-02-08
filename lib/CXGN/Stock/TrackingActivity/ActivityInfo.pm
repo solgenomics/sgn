@@ -53,7 +53,7 @@ has 'value' => (
 
 sub add_info {
     my $self = shift;
-    my $schema = $self->get_chado_schema();
+    my $schema = $self->get_schema();
     my $tracking_identifier = $self->get_tracking_identifier();
     my $activity_type = $self->get_activity_type();
     my $activity_info = $self->get_value();

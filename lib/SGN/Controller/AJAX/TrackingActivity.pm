@@ -52,9 +52,9 @@ sub activity_info_save_POST : Args(0) {
         return;
     }
 
-    my $tracking_identifier = $c->req->param("tracking_identifiers");
+    my $tracking_identifier = $c->req->param("tracking_identifier");
     my $activity_type = $c->req->param("activity_type");
-    my $value = $c->req->param("value");
+    my $value = $c->req->param("activity_info");
    #    print STDERR "ACTIVITY TYPE =".Dumper($activity_type)."\n";
    #    print STDERR "VALUE =".Dumper($value)."\n";
 
@@ -62,7 +62,7 @@ sub activity_info_save_POST : Args(0) {
     my $check_tracking_identifier = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});
 
     my $add_activity_info = CXGN::Stock::TrackingActivity::ActivityInfo->new({
-        chado_schema => $schema,
+        schema => $schema,
         tracking_identifier => $tracking_identifier,
         activity_type => $activity_type,
         value => $value,

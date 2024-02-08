@@ -25,12 +25,12 @@ $identifier_prefix => ''
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div id="add_activity_info">
-                    <select id="activity_types_select">
+                    <select id="activity_type_select">
 % foreach my $type(@activity_types){
                         <option value="<%$type%>"><%$type%></option>
 %}
                     </select>
-                    <input id="activity_value" />
+                    <input id="activity_info" />
                     <button id="activity_info_submit" >Save</button>
                 </div>
             </div>
@@ -65,6 +65,39 @@ $identifier_prefix => ''
 <script>
 
 jQuery(document).ready( function() {
+
+    jQuery('#activity_info_submit').click( function() {
+        var activity_type = jQuery('#activity_type_select').val();
+        var activity_info = jQuery('#activity_info').val();
+
+        jQuery.ajax({
+            url: '/ajax/tracking_activity/save',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'tracking_identifier' : "<%$identifier_name%>",
+                'activity_type': activity_type,
+                'activity_info': activity_info
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating the order');
+            }
+        });
+
+    });
+
 
 });
 
