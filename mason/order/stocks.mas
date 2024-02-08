@@ -177,7 +177,7 @@ $user_id
                 <div class = "panel-body">
 
                 <div style="overflow:scroll">
-                    <table class="table table-hover table-bordered" id="cross_properties_crossingtrial_table">
+                    <table class="table table-hover table-bordered" id="order_progress_table">
                         <thead>
                             <tr>
                                 <th>Tracking ID</th>
@@ -322,6 +322,11 @@ $(window).ready( function() {
                 alert('An error occurred updating the order');
             }
         });
+    });
+
+    jQuery('#order_progress_table').DataTable({
+        'autoWidth': false,
+        'ajax': '/ajax/order/progress',
     });
 
 });

@@ -717,7 +717,53 @@ sub get_active_order_tracking_ids :Path('/ajax/order/active_order_tracking_ids')
 }
 
 
+sub get_order_progress :Path('/ajax/order/progress') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+    my $tracking_activities = $c->config->{tracking_activities};
+    my @activity_types = split ',',$tracking_activities;
+    my $user_id;
 
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
+        $c->detach();
+    }
+
+    if ($c->user){
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        my $check_vendor_role = $c->user->check_roles('vendor');
+    }
+
+    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, bcs_schema => $schema, order_to_id => $user_id});
+    my $order_activities = $orders->get_orders_to_person_id_progress();
+
+    my @order_progress;
+    foreach my $activity_info (@$order_activities) {
+        my @row = ();
+        my $identifier_name = $activity_info->[0];
+        my $identifier_id = $activity_info->[1];
+        my $material_name = $activity_info->[2];
+        my $material_id = $activity_info->[3];
+        my $material_type = $activity_info->[4];
+        push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+        push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+        my $progress = $activity_info->[5];
+        foreach my $type (@activity_types){
+            push @row, $progress->{$type};
+        }
+        push @order_progress,[@row];
+
+    }
+
+
+    print STDERR "ORDER PROGRESS =".Dumper(\@order_progress)."\n";
+
+    $c->stash->{rest} = {data => \@order_progress};
+
+}
 
 
 
