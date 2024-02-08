@@ -9,15 +9,15 @@ perl filter_imputed_genotype.pl -i unfiltered.vcf -o filtered.vcf -d 0.75 -f 0.0
 
 =head1 COMMAND-LINE OPTIONS
 -i vcf file with imputed (using beagle 5.0 or later) genotype data. Required.
--o vcf file to write filtered output to. Optional. By default it writes to [unfiltered]_filtered.vcf
--d DR2 (dosage R-squared) threshold.  SNPs with greater than the threshold will be kept. Defaults to 0.75.
+-o vcf file to write filtered output to. Optional. By default it writes to a file ending in _filtered.vcf
+-d DR2 (dosage R-squared) threshold.  SNPs with greater than the threshold will be kept. Defaults to 0.75. Optional.
 -f MAF (minor allele frequency) threshold. SNPs with greater than the threshold will be kept. Defaults to 0.005. Optional. 
 -h HWE (Hardy Weinberg Equilibrium) threshold. NOT used for now.
 
 =head1 DESCRITPION
 Filters SNPs based on DR2 and MAF cutoffs from genotype data. 
 Requires that the file is a vcf file and in the INFO column there are DR2 and AF.
-It generates two files, one with SNPs that have DR2 and MAF above the cutoffs and another file
+It generates two files, one with SNPs that have DR2 and MAF above the cutoffs (*_filtered.vcf) and another file (*_removed.vcf)
 with the ones below the thresholds of either DR2 or MAF.
 
 =head1 AUTHOR
@@ -79,11 +79,11 @@ while (<$I>) {
         my $maf = $alt_freq < 0.5 ? $alt_freq : 1 - $alt_freq;
         
         if ($dr2 < $dr2_cutoff || $maf < $maf_cutoff) {
-            print STDERR "\nREMOVING SNP $cols[1] --info: $info_col --DR2: $dr2 --MAF: $maf --alt-freq(AF): $alt_freq";
+            print STDERR "\nREMOVING SNP $cols[1] --info: $info_col --DR2: $dr2 --alt-freq(AF): $alt_freq --MAF: $maf ";
             $removed_snp_cnt++;
             $removed_snps .= $_;
         } else {
-            print STDERR "\nKEEPING SNP $cols[1] --info: $info_col --DR2: $dr2 --MAF: $maf --alt-freq(AF): $alt_freq";
+            print STDERR "\nKEEPING SNP $cols[1] --info: $info_col --DR2: $dr2 --alt-freq(AF): $alt_freq --MAF: $maf";
             $kept_snp_cnt++;
             $kept_snps .= $_;  
         }
