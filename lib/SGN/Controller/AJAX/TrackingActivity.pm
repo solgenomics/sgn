@@ -12,6 +12,7 @@ use CXGN::Contact;
 use CXGN::Trial::Download;
 use CXGN::Stock::TrackingActivity::TrackingIdentifier;
 use CXGN::Stock::TrackingActivity::ActivityInfo;
+use SGN::Model::Cvterm;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -79,4 +80,33 @@ sub activity_info_save_POST : Args(0) {
 }
 
 
- 1;
+sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $identifier_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my @details;
+    my $tracking_activities = $c->config->{tracking_activities};
+    my @activity_types = split ',',$tracking_activities;
+
+    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
+    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
+    if ($activity_info_rs) {
+        my @row = ();
+        my $activity_json = $activity_info_rs->value();
+        my $activity_hash = JSON::Any->jsonToObj($activity_json);
+        foreach my $type (@activity_types){
+            push @row, $activity_hash->{$type};
+        }
+        push @details, [@row];
+    }
+
+    print STDERR "DETAILS =".Dumper(\@details)."\n";
+
+    $c->stash->{rest} = { data => \@details };
+
+}
+
+
+1;

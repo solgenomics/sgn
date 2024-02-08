@@ -20,7 +20,7 @@ $identifier_prefix => ''
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<&| /page/info_section.mas, title => 'Record Activities', collapsible => 1, collapsed => 0, subtitle => '' &>
+<&| /page/info_section.mas, title => 'Record Activity Information', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -44,20 +44,20 @@ $identifier_prefix => ''
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                <table id = "activity_info" class="table table-hover table-striped">
-                    <thead>
-                        <tr>
+                    <table id = "activity_info_table" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
 % foreach my $header(@column_headers){
-                        <th><%$header%></th>
+                                <th><%$header%></th>
 %}
-                        </tr>
-                    </thead>
-                </table>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
- </&>
+</&>
 
 
 
@@ -65,6 +65,15 @@ $identifier_prefix => ''
 <script>
 
 jQuery(document).ready( function() {
+
+    var identifier_id = "<%$identifier_id%>";
+
+    jQuery('#activity_info_table').DataTable({
+        'autoWidth': false,
+        'searching' : false,
+        'ajax': '/ajax/tracking_activity/details/'+identifier_id,
+    });
+
 
     jQuery('#activity_info_submit').click( function() {
         var activity_type = jQuery('#activity_type_select').val();
