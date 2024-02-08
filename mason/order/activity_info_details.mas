@@ -17,35 +17,29 @@ $identifier_prefix => ''
 
 <& /page/page_title.mas, title => "Activity Record for '$identifier_name'" &>
 
-<&| /page/info_section.mas, title => "General Information" &>
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-sm-6">
-                    <& /page/form.mas,
-                    &>
-                </div>
-                <div class="col-sm-6">
-                    <br /><br />
-                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$identifier_id", text=> "$identifier_prefix stock $identifier_id ($identifier_name)", format=>"stock_qrcode"  &>
-                    <br /><br />
+<&| /page/info_section.mas, title => 'Record Activities', collapsible => 1, collapsed => 0, subtitle => '' &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div id="add_activity_info">
+                    <select id="activity_types_select">
+% foreach my $type(@activity_types){
+                        <option value="<%$type%>"><%$type%></option>
+%}
+                    </select>
+                    <input id="activity_value" />
+                    <button id="activity_info_submit" >Save</button>
                 </div>
             </div>
         </div>
     </div>
-
 </&>
 
 
-
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-% my $add_activity_info_link = "[Add]";
-% if ($user_id) { $add_activity_info_link = '<a id="add_info_link">[Add]</a>'; }
-
-<&| /page/info_section.mas, title => 'Activity Record', collapsible => 1, collapsed => 0, subtitle => $add_activity_info_link &>
+<&| /page/info_section.mas, title => 'Activity Info', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -65,17 +59,7 @@ $identifier_prefix => ''
     </div>
  </&>
 
-<div id="add_activity_info_dialog">
-    <select id="activity_types_select">
-% foreach my $type(@activity_types){
-        <option value="<%$type%>"><%$type%></option>
-%}
-    </select>
-    <input id="activity_value" />
 
-    <button id="activity_info_submit" >Save</button>
-
-</div>
 
 
 <script>

@@ -11,6 +11,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 sub activity_details :Path('/activity/details') : Args(1) {
     my $self = shift;
     my $c = shift;
+    my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $dbh = $c->dbc->dbh;
@@ -22,7 +23,6 @@ sub activity_details :Path('/activity/details') : Args(1) {
         return;
     }
 
-    my $identifier_id = shift;
     my $identifier_name = $schema->resultset("Stock::Stock")->find({stock_id => $identifier_id})->uniquename();
 
 
