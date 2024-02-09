@@ -5,15 +5,15 @@ $identifier_id
 $breeding_program => undef
 $user_id => undef
 $identifier_prefix => ''
+$type_select_options
+$activity_headers
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
 
 % use utf8;
-% my $activity_header = $c->config->{tracking_activities_header};
-% my @column_headers = split ',',$activity_header;
-% my $types = $c->config->{tracking_activities};
-% my @activity_types = split ',',$types;
+% my @column_headers = @$activity_headers;
+% my @activity_types = @$type_select_options;
 
 <& /page/page_title.mas, title => "Activity Record for '$identifier_name'" &>
 
@@ -25,13 +25,15 @@ $identifier_prefix => ''
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div id="add_activity_info">
-                    <select id="activity_type_select">
+                    <center>
+                        <select id="activity_type_select">
 % foreach my $type(@activity_types){
-                        <option value="<%$type%>"><%$type%></option>
+                            <option value="<%$type%>"><%$type%></option>
 %}
-                    </select>
-                    <input id="activity_info" />
-                    <button id="activity_info_submit" >Save</button>
+                        </select>
+                        <input id="activity_info" />
+                        <button id="activity_info_submit" >Save</button>
+                    </center>
                 </div>
             </div>
         </div>
