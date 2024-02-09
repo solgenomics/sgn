@@ -869,27 +869,12 @@ sub observationunits_store {
     };
     if ($error_resp) { return $error_resp; }
 
-    # Refresh materialized view so data can be retrieved. This can take a while
-    # $self->_refresh_matviews($dbh, $c, 5 * 60);
-
     # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
     my @observationUnitNames;
-    foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; } print STDERR "\n\n--finish storing..." . Dumper \@observationUnitNames;
+    foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; }
     my $search_params = {observationUnitNames => \@observationUnitNames};
-    $self->page_size(scalar @{$data}); print STDERR "\n-sent oun" . Dumper \@observationUnitNames;
+    $self->page_size(scalar @{$data});
     return $self->search($search_params, $c);
-}
-
-sub _refresh_matviews {
-    my $self = shift;
-    my $dbh = shift;
-    my $c = shift;
-    my $timeout = shift || 5 * 60;
-
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-
-    # Refresh materialized view so data can be retrieved
-    $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath}, 0);
 }
 
 sub _order {
