@@ -184,6 +184,14 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
         }
     }
 
+    # sort types alphabetically, case insensitive
+
+    #print STDERR "types before sort: ".Dumper(\@types);
+    
+    @types = sort { uc($a->[1]) cmp uc($b->[1]) } @types;
+
+    #print STDERR "types after sort: ".Dumper(\@types);
+    
     if ($empty) {
         unshift @types, [ '', "None" ];
     }
