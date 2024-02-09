@@ -100,7 +100,7 @@ sub _search {
     my $offset = $page_size*$page;
     print STDERR "ObservationUnits call Checkpoint 1: ".DateTime->now()."\n";
 
-    my $phenotypes_search = CXGN::Trial::TrialLayoutSearch->new(
+    my $layout_search = CXGN::Trial::TrialLayoutSearch->new(
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level->[0],
@@ -110,7 +110,7 @@ sub _search {
             accession_list=>$accession_ids_arrayref,
             folder_list=>$folder_ids_arrayref,
             program_list=>$program_ids_arrayref,
-            plot_list=>$observation_unit_db_id,
+            observation_unit_id_list=>$observation_unit_db_id,
             observation_unit_names_list=>$observation_unit_names_list,
             xref_id_list=>$reference_ids_arrayref,
             xref_source_list=>$reference_sources_arrayref,
@@ -118,7 +118,7 @@ sub _search {
             
         }
     );
-    my ($data, $unique_traits) = $phenotypes_search->search();
+    my ($data, $unique_traits) = $layout_search->search();
     print STDERR "ObservationUnits call Checkpoint 2: ".DateTime->now()."\n";
     #print STDERR Dumper $data;
     my $start_index = $page*$page_size;
