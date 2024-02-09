@@ -5,6 +5,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trait;
+use CXGN::Trial::TrialLayoutSearch;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
@@ -29,12 +30,23 @@ sub search {
     my $result;
     my $total_count = 0;
 
+    my ($data,$total_count, $page_size,$page,$status) = _search($self, $params,  $c);
 
-    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    my %results = (data=>$data);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%results, $pagination, \@data_files, $status, 'Observation Units search result constructed');
+}
 
-    if ($study_ids_arrayref && scalar @$study_ids_arrayref == 1) {
-        ($result,$total_count, $page_size,$page,$status) = _search($self,$params,$c,$page_size,$page,$status);
-    } else {
+
+sub _search {
+    my $self = shift;
+	my $params = shift;
+    my $c = shift;
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $total_count = 0;
 
     my $data_level = $params->{observationUnitLevelName} || ['all'];
     my $years_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
@@ -57,7 +69,8 @@ sub search {
     my $reference_ids_arrayref = $params->{externalReferenceId} || $params->{externalReferenceID} || ($params->{externalReferenceIds} || $params->{externalReferenceIDs} || ());
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
-    
+    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+
     my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
     my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
     my $plot_geo_json_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_geo_json', 'stock_property')->cvterm_id();
@@ -86,30 +99,23 @@ sub search {
     my $limit = $page_size;
     my $offset = $page_size*$page;
     print STDERR "ObservationUnits call Checkpoint 1: ".DateTime->now()."\n";
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        'MaterializedViewTable',
+
+    my $phenotypes_search = CXGN::Trial::TrialLayoutSearch->new(
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level->[0],
             trial_list=>$study_ids_arrayref,
-            trait_list=>$trait_ids_arrayref,
-            include_timestamp=>1,
-            year_list=>$years_arrayref,
+            include_observations=>$include_observations,
             location_list=>$location_ids_arrayref,
             accession_list=>$accession_ids_arrayref,
             folder_list=>$folder_ids_arrayref,
             program_list=>$program_ids_arrayref,
             plot_list=>$observation_unit_db_id,
-            limit=>$limit,
-            offset=>$offset,
-            # Order by plot_number, account for non-numeric plot numbers
-            order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::numeric' : undef,
             observation_unit_names_list=>$observation_unit_names_list,
             xref_id_list=>$reference_ids_arrayref,
-            xref_source_list=>$reference_sources_arrayref
-            # phenotype_min_value=>$phenotype_min_value,
-            # phenotype_max_value=>$phenotype_max_value,
-            # exclude_phenotype_outlier=>$exclude_phenotype_outlier
+            xref_source_list=>$reference_sources_arrayref,
+            order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::numeric' : undef,
+            
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
@@ -126,7 +132,7 @@ sub search {
     my %plant_parents;
     foreach my $obs_unit (@$data){
         if ($obs_unit->{observationunit_type_name} eq 'plant') {
-            push @plant_ids, $obs_unit->{observationunit_stock_id};
+            push @plant_ids, $obs_unit->{obsunit_stock_id};
         }
     }
     if (@plant_ids && scalar @plant_ids > 0) {
@@ -177,7 +183,7 @@ sub search {
                     value => qq|$_->{value}|,
                     germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
                     germplasmName => $obs_unit->{germplasm_uniquename},
-                    observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+                    observationUnitDbId => qq|$obs_unit->{obsunit_stock_id}|,
                     observationUnitName => $obs_unit->{observationunit_uniquename},
                     studyDbId  => qq|$obs_unit->{trial_id}|,
                     uploadedBy=>undef,
@@ -200,13 +206,13 @@ sub search {
 
         my $sp_rs ='';
         eval { 
-            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
+            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
         };
         my %geolocation_lookup;
         while( my $r = $sp_rs->next()){
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
-        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : undef;
+        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{obsunit_stock_id}} ?$geolocation_lookup{$obs_unit->{obsunit_stock_id}} : undef;
         my $geo_coordinates; 
 
         if ($geo_coordinates_string){
@@ -214,30 +220,30 @@ sub search {
         }
 
         my $additional_info;
-        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
+        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
         if ($rs->count() > 0){
             my $additional_info_json = $rs->first()->value();
             $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
         }
 
-        my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
+        my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
 
-        my $replicate = $obs_unit->{obsunit_rep};
-        my $block = $obs_unit->{obsunit_block};
+        my $replicate = $obs_unit->{rep};
+        my $block = $obs_unit->{block};
         my $plot;
         my $plant;
         if ($obs_unit->{observationunit_type_name} eq 'plant') {
-            $plant = $obs_unit->{obsunit_plant_number};
-            if ($plant_parents{$obs_unit->{observationunit_stock_id}}) {
-                my $plot_object = $plant_parents{$obs_unit->{observationunit_stock_id}};
+            $plant = $obs_unit->{plant_number};
+            if ($plant_parents{$obs_unit->{obsunit_stock_id}}) {
+                my $plot_object = $plant_parents{$obs_unit->{obsunit_stock_id}};
                 $plot = $plot_object->{plot_number};
                 $additional_info->{observationUnitParent} = $plot_object->{id};
             }
         } else {
-            $plot = $obs_unit->{obsunit_plot_number};
+            $plot = $obs_unit->{plot_number};
         }
 
-        my $level_name = $obs_unit->{observationunit_type_name};
+        my $level_name = $obs_unit->{obsunit_type_name};
         my $level_order = _order($level_name) + 0;
         my $level_code = eval "\$$level_name" || "";
          
@@ -282,11 +288,10 @@ sub search {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $geo_coordinates,
-            positionCoordinateX => $obs_unit->{obsunit_col_number} ? $obs_unit->{obsunit_col_number} + 0 : undef,
+            positionCoordinateX => $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
-            positionCoordinateY => $obs_unit->{obsunit_row_number} ? $obs_unit->{obsunit_row_number} + 0 : undef,
+            positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
             positionCoordinateYType => 'GRID_ROW',
-            # replicate => $obs_unit->{obsunit_rep}, #obsolete v2?
             observationLevel =>  { 
                 levelName => $level_name,       
                 levelOrder => $level_order,
@@ -302,7 +307,7 @@ sub search {
             bcs_schema => $self->bcs_schema,
             table_name => 'stock',
             table_id_key => 'stock_id',
-            id => qq|$obs_unit->{observationunit_stock_id}|
+            id => qq|$obs_unit->{obsunit_stock_id}|
         });
         my $external_references = $references->search();
         my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
@@ -311,7 +316,7 @@ sub search {
 			eval {
 	            my $image_id = CXGN::Stock->new({
 	    			schema => $self->bcs_schema,
-	    			stock_id => $obs_unit->{observationunit_stock_id},
+	    			stock_id => $obs_unit->{obsunit_stock_id},
 	    		});
 	    		@plot_image_ids = $image_id->get_image_ids();
 	    	};
@@ -320,23 +325,22 @@ sub search {
                 push @ids, $arrayimage->[0];
             }
         
-
         push @data_window, {
             externalReferences => @formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
-            locationDbId => qq|$obs_unit->{trial_location_id}|,
-            locationName => $obs_unit->{trial_location_name},
-            observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+            locationDbId => qq|$obs_unit->{location_id}|,
+            locationName => $obs_unit->{location_name},
+            observationUnitDbId => qq|$obs_unit->{obsunit_stock_id}|,
             observations => \@brapi_observations,
-            observationUnitName => $obs_unit->{observationunit_uniquename},
+            observationUnitName => $obs_unit->{obsunit_uniquename},
             observationUnitPosition => $brapi_observationUnitPosition,
-            observationUnitPUI => $main_production_site_url . "/stock/" . $obs_unit->{observationunit_stock_id} . "/view",
+            observationUnitPUI => $main_production_site_url . "/stock/" . $obs_unit->{obsunit_stock_id} . "/view",
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-            seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
-            seedLotName => $obs_unit->{seedlot_uniquename} ? qq|$obs_unit->{seedlot_uniquename}| : undef,
+            seedLotDbId => $obs_unit->{seedlot_id} ? qq|$obs_unit->{seedlot_id}| : undef,
+            seedLotName => $obs_unit->{seedlot_name} ? qq|$obs_unit->{seedlot_name}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             plotImageDbIds => \@ids,
@@ -348,255 +352,9 @@ sub search {
         
     }
     print STDERR "ObservationUnits call Checkpoint 4: ".DateTime->now()."\n";
-    $result = (data=>\@data_window);
-    }
-    my $results = $result;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($results, $pagination, \@data_files, $status, 'Observation Units search result constructed');
-}
+    my $results = (data=>\@data_window);
 
-sub _search {
-	my $self = shift;
-	my $inputs = shift;
-    my $c = shift;
-    my $study_id = $inputs->{studyDbId}->[0];
-    my $format = $inputs->{format} || 'json';
-    my $page_size = shift;
-    my $page = shift;
-    my $status = shift;
-	# my $page_size = $self->page_size;
-	# my $page = $self->page;
-	# my $status = $self->status;
-    my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id, experiment_type => 'field_layout'   });
-	my $tl = $trial->get_layout();
-	my $design = $tl->get_design();
-    my $design_type = $tl->get_design_type();
-
-    # print STDERR "TRIAL:" . Dumper \$trial;
-
-    my $level_order_arrayref = $inputs->{observationUnitLevelOrder} || ($inputs->{observationUnitLevelOrders} || ());
-    my $level_code_arrayref = $inputs->{observationUnitLevelCode} || ($inputs->{observationUnitLevelCodes} || ());
-    my $levels_arrayref = $inputs->{observationLevels} || ();
-    my $data_level = $inputs->{observationUnitLevelName} || ['all'];
-
-    if ($levels_arrayref){
-        $data_level = ();
-        foreach ( @{$levels_arrayref} ){
-            push @$level_code_arrayref, $_->{levelCode} if ($_->{levelCode});
-            push @{$data_level}, $_->{levelName} if ($_->{levelName});
-        }
-        if (! $data_level) {
-            $data_level = ['all'];
-        }
-    }
-
-    my $cxgn_trial_type = $trial->get_cxgn_project_type();
-    my $plot_geo_json_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_geo_json', 'stock_property')->cvterm_id();
-
-    #get seedlots
-    my %seedlots = get_seedlots($self,$study_id);
-
-	my $plot_data = [];
-	my $formatted_plot = {};
-	my $check_id;
-	my $entry_type;
-	my $count = 0;
-    my $window_count = 0;
-	my $offset = $page*$page_size;
-
-	foreach my $plot_number (sort keys %$design) {
-		if ($count >= $offset && $window_count < $page_size){
-			$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
-			if ($check_id == 1) {
-				$entry_type = 'check';
-			} else {
-				$entry_type = 'test';
-			}
-            my %additional_info;
-			if ($design->{$plot_number}->{plant_names}){
-				$additional_info{plantNames} = $design->{$plot_number}->{plant_names};
-			}
-			if ($design->{$plot_number}->{plant_ids}){
-				$additional_info{plantDbIds} = $design->{$plot_number}->{plant_ids};
-			}
-			my @plot_image_ids;
-			eval {
-	            my $image_id = CXGN::Stock->new({
-	    			schema => $self->bcs_schema,
-	    			stock_id => $design->{$plot_number}->{plot_id},
-	    		});
-	    		@plot_image_ids = $image_id->get_image_ids();
-	    	};
-            my @ids;
-            foreach my $arrayimage (@plot_image_ids){
-                push @ids, $arrayimage->[0];
-            }
-            my $plot_id = $design->{$plot_number}->{plot_id};
-            $additional_info{plotImageDbIds} = \@ids;
-            $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
-            $additional_info{designType} = $design_type;
-
-            if (exists($seedlots{$plot_id})) {
-            	$additional_info{seedLotDbId} = qq|$seedlots{$plot_id}[0]|;
-            	$additional_info{seedLotName} = $seedlots{$plot_id}[1];
-            } else {
-            	$additional_info{seedLotDbId} = undef;
-            	$additional_info{seedLotName} = undef;
-            }
-
-            ### Position:
-
-            my @brapi_treatments;
-            my @brapi_observations;
-            my $page_obj = CXGN::Page->new();
-            my $main_production_site_url = $page_obj->get_hostname();
-
-            # if ($c->config->{brapi_treatments_no_management_factor}) {
-                # my $treatments = $obs_unit->{treatments};
-                # while (my ($factor, $modality) = each %$treatments) {
-                #     my $modality = $modality ? $modality : undef;
-                #     push @brapi_treatments, {
-                #         factor   => $factor,
-                #         modality => $modality,
-                #     };
-                # }
-            # }
-
-            my $sp_rs ='';
-            eval { 
-                $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $design->{$plot_number}->{plot_id} });
-            };
-            my %geolocation_lookup;
-            while( my $r = $sp_rs->next()){
-                $geolocation_lookup{$r->stock_id} = $r->value;
-            }
-            my $geo_coordinates_string = $geolocation_lookup{$design->{$plot_number}->{plot_id}} ?$geolocation_lookup{$design->{$plot_number}->{plot_id}} : undef;
-            my $geo_coordinates; 
-
-            if ($geo_coordinates_string){
-                $geo_coordinates = decode_json $geo_coordinates_string;
-            }
-            my %plant_parents;
-            my @plant_ids = $design->{$plot_number}->{plant_names};
-            if (@plant_ids && scalar @plant_ids > 0) {
-                # %plant_parents = $self->_get_plants_plot_parent(\@plant_ids);
-            }
-
-            my $replicate = $design->{$plot_number}->{rep_number} ? $design->{$plot_number}->{rep_number} : undef;
-            my $block = $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : undef;
-            my $plot;
-            my $plant;
-            if (@plant_ids && scalar @plant_ids > 0){
-				$plant = $design->{$plot_number}->{plant_names}->[0];
-                # $plant = $obs_unit->{obsunit_plant_number};
-                if ($plant_parents{$design->{$plot_number}->{plot_id}}) {
-                    my $plot_object = $plant_parents{$design->{$plot_number}->{plot_id}};
-                    $plot = $design->{$plot_number}->{plot_number};
-                    # $additional_info->{observationUnitParent} = $plot_object->{id};
-                }
-                $plot = $design->{$plot_number}->{plot_number};
-            } else {
-                $plot = $design->{$plot_number}->{plot_number};
-            }
-
-            my $level_name = $cxgn_trial_type->{data_level};
-            my $level_order = _order($level_name) + 0;
-            my $level_code = eval "\$$level_name" || "";
-            
-            if ( $level_order_arrayref &&  ! grep { $_ eq $level_order } @{$level_order_arrayref}  ) { next; } 
-            if ( $level_code_arrayref &&  ! grep { $_ eq $level_code } @{$level_code_arrayref}  ) { next; } 
-
-            my @observationLevelRelationships;
-            if ($replicate) {
-                push @observationLevelRelationships, {
-                    levelCode => $replicate,
-                    levelName => "rep",
-                    levelOrder => _order("replicate"),
-                };
-                push @observationLevelRelationships, {
-                    levelCode => $replicate,
-                    levelName => "replicate",
-                    levelOrder => _order("replicate"),
-                };
-            }
-            if ($block) {
-                push @observationLevelRelationships, {
-                    levelCode => $block,
-                    levelName => "block",
-                    levelOrder => _order("block"),
-                }
-            }
-            if ($plot) {
-                push @observationLevelRelationships, {
-                    levelCode => $plot,
-                    levelName => "plot",
-                    levelOrder => _order("plot"),
-                }
-            }
-            if ($plant) {
-                push @observationLevelRelationships, {
-                    levelCode => $plant,
-                    levelName => "plant",
-                    levelOrder => _order("plant"),
-                }
-            }
-
-            my %observationUnitPosition = (
-                entryType => $entry_type,
-                geoCoordinates => $geo_coordinates,
-                positionCoordinateX => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} + 0 : undef,
-                positionCoordinateXType => 'GRID_COL',
-                positionCoordinateY => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} + 0 : undef,
-                positionCoordinateYType => 'GRID_ROW',
-                # replicate => $obs_unit->{obsunit_rep}, #obsolete v2?
-                observationLevel =>  { 
-                    levelName => $level_name,       
-                    levelOrder => $level_order,
-                    levelCode => $level_code,
-                },
-                observationLevelRelationships => \@observationLevelRelationships,
-            );
-
-            my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
-
-
-            $formatted_plot =  {
-                externalReferences => undef, #@formatted_external_references,
-                additionalInfo => \%additional_info,
-                germplasmDbId => qq|$design->{$plot_number}->{accession_id}|,
-                germplasmName => $design->{$plot_number}->{accession_name},
-                # locationDbId => qq|$obs_unit->{trial_location_id}|, ##
-                # locationName => $obs_unit->{trial_location_name}, ##
-                observationUnitDbId => qq|$design->{$plot_number}->{plot_id}|,
-                observations => \@brapi_observations,
-                observationUnitName => $design->{$plot_number}->{plot_name},
-                observationUnitPosition => $brapi_observationUnitPosition, 
-                observationUnitPUI => $main_production_site_url. "/stock/" . $design->{$plot_number}->{plot_id} . "/view", #
-                # programName => $obs_unit->{breeding_program_name},##
-                # programDbId => qq|$obs_unit->{breeding_program_id}|,##
-                seedLotDbId => $seedlots{$plot_id} ? qq|$seedlots{$plot_id}[0]| : undef,
-                seedLotName => $seedlots{$plot_id} ? $seedlots{$plot_id}[1] : undef,
-                studyDbId => qq|$study_id|,
-                studyName => $trial->{trial_name}, 
-                plotImageDbIds => undef, #\@ids, ##
-                treatments => \@brapi_treatments, 
-                # trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
-                # trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
-            };
-
-
-			push @$plot_data, $formatted_plot;
-            $window_count++;
-		}
-		$count++;
-	}
-    my @data_files;
-
-    my   %result = (data=>$plot_data);
-
-    # my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-    # return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies layout result constructed');
-    return (\%result, $count, $page_size,$page,$status);
+    return ($results,$total_count, $page_size,$page,$status);
 }
 
 sub _get_plants_plot_parent {
@@ -628,9 +386,12 @@ sub detail {
         observationUnitDbIds => [ $observation_unit_db_id ],
         includeObservations  => 'true' 
     };
-    my $response = $self->search($search_params, $c);
-    $response->{result} = scalar $response->{result}->{data} > 0 ? $response->{result}->{data}->[0] : {};
-    return $response;
+
+    my @data_files;
+    my ($data,$total_count, $page_size,$page,$status) = _search($self, $search_params,  $c);
+    my $results = $data->[0];
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($results, $pagination, \@data_files, $status, 'Observation Units search result constructed');
 }
 
 sub observationunits_update {
@@ -1113,9 +874,9 @@ sub observationunits_store {
 
     # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
     my @observationUnitNames;
-    foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; }
+    foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; } print STDERR "\n\n--finish storing..." . Dumper \@observationUnitNames;
     my $search_params = {observationUnitNames => \@observationUnitNames};
-    $self->page_size(scalar @{$data});
+    $self->page_size(scalar @{$data}); print STDERR "\n-sent oun" . Dumper \@observationUnitNames;
     return $self->search($search_params, $c);
 }
 
