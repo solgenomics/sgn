@@ -96,6 +96,10 @@ jQuery(document).ready( function() {
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
+                    alert('Saved');
+                    jQuery('#activity_info').val('');
+                    location.reload();
+
                 }
                 if (response.error_string) {
                     alert(response.error);
