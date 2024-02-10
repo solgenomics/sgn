@@ -56,8 +56,9 @@ sub activity_info_save_POST : Args(0) {
     my $tracking_identifier = $c->req->param("tracking_identifier");
     my $activity_type = $c->req->param("activity_type");
     my $value = $c->req->param("activity_info");
-   #    print STDERR "ACTIVITY TYPE =".Dumper($activity_type)."\n";
-   #    print STDERR "VALUE =".Dumper($value)."\n";
+    print STDERR "IDENTIFIER =".Dumper($tracking_identifier)."\n";
+    print STDERR "ACTIVITY TYPE =".Dumper($activity_type)."\n";
+    print STDERR "VALUE =".Dumper($value)."\n";
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $check_tracking_identifier = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});

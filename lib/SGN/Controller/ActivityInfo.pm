@@ -58,8 +58,9 @@ sub activity_details :Path('/activity/details') : Args(1) {
 sub record_activity :Path('/activity/record') :Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $identifier_name = $c->req->param("identifier_name");
-    print STDERR "IDENTIFIER NAME =".Dumper($identifier_name)."\n";
+#    print STDERR "IDENTIFIER NAME =".Dumper($identifier_name)."\n";
 
     if (! $c->user()) {
 	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -71,7 +72,40 @@ sub record_activity :Path('/activity/record') :Args(0) {
         $c->stash->{check_vendor_role} = $check_vendor_role;
     }
 
+    my $types = $c->config->{tracking_activities};
+    my @activity_types = split ',',$types;
 
+    my $activity_type_header = $c->config->{tracking_activities_header};
+    my @activity_headers = split ',',$activity_type_header;
+
+    my $identifier_id;
+    if ($identifier_name) {
+        $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
+    }
+    print STDERR "IDENTIFIER ID =".Dumper($identifier_id)."\n";
+    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
+    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
+    my @type_select_options = ();
+    if ($activity_info_rs) {
+        my $activity_json = $activity_info_rs->value();
+        my $activity_hash = JSON::Any->jsonToObj($activity_json);
+        my @recorded_activities = keys %$activity_hash;
+        foreach my $type (@activity_types){
+            if ($type ~~ @recorded_activities) {
+                next;
+            } else {
+                push @type_select_options, $type;
+            }
+        }
+    } else {
+        @type_select_options = @activity_types;
+    }
+
+
+
+    $c->stash->{identifier_id} = $identifier_id;
+    $c->stash->{activity_headers} = \@activity_headers;
+    $c->stash->{type_select_options} = \@type_select_options;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

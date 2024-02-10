@@ -1,32 +1,89 @@
 <%args>
 
+$identifier_id => undef
+$activity_select => undef
+$activity_headers
+$type_select_options => undef
+
 </%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
 
 <& /page/page_title.mas, title=>"Record Activity" &>
 <br /><br />
-    <div class="well ">
-        <form class="form-horizontal" >
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Identifier Name: </label>
-                <div class="col-sm-5">
-                    <input class="form-control" id="identifier_name_input" name="identifier_name_input" type="text" value="">
-                </div>
-                <div class="col-sm-2">
-                    <button id="identifier_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+<div class="well ">
+    <form class="form-horizontal" >
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Identifier Name: </label>
+            <div class="col-sm-5">
+                <input class="form-control" id="record_page_identifier_name_input" name="record_page_identifier_name_input" type="text" value="">
+            </div>
+            <div class="col-sm-2">
+                <button id="identifier_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Activity Type: </label>
+            <div class="col-sm-5">
+% if ($type_select_options) {
+                <select id="record_page_activity_type_select">
+% foreach my $type(@$type_select_options){
+                    <option value="<%$type%>"><%$type%></option>
+% }
+                </select>
+% }
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Activity Info: </label>
+            <div class="col-sm-5">
+                <input class="form-control" id="record_page_activity_info_input" name="record_page_activity_info_input" type="text" value="">
+            </div>
+        </div>
+        <center>
+            <button id="record_page_activity_info_submit" class="btn btn-primary">Save</button>
+        </center>
+    </form>
+</div>
+
+
+% if ($identifier_id) {
+    <&| /page/info_section.mas, title => 'Activity Info', collapsible => 1, collapsed => 0, subtitle => '' &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <div style="overflow:scroll">
+                        <table id = "record_page_activity_info_table" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+% foreach my $header(@$activity_headers){
+                                    <th><%$header%></th>
+%}
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
             </div>
-
-
-
-
-        </form>
-    </div>
-
+        </div>
+    </&>
+% }
 
 
 <script>
 
 $(window).ready( function() {
+
+    var identifier_id = "<%$identifier_id%>";
+
+    if (identifier_id) {
+        jQuery('#record_page_activity_info_table').DataTable({
+            'autoWidth': false,
+            'searching' : false,
+            'ajax': '/ajax/tracking_activity/details/'+identifier_id,
+        });
+    }
+
     parseArgs();
     jQuery('#identifier_name_barcode').click(scanBarcode);
 
@@ -39,9 +96,46 @@ $(window).ready( function() {
         const urlSearchParams = new URLSearchParams(window.location.search);
         if ( urlSearchParams.has('identifier_name') ) {
             let identifier_name = decodeURIComponent(urlSearchParams.get('identifier_name'));
-            jQuery('input[name="identifier_name_input"]').val(identifier_name);
+            jQuery('input[name="record_page_identifier_name_input"]').val(identifier_name);
         }
     }
+
+    jQuery('#record_page_activity_info_submit').click( function() {
+        var identifier_name = jQuery('#record_page_identifier_name_input').val();
+        var activity_type = jQuery('#record_page_activity_type_select').val();
+        var activity_info = jQuery('#record_page_activity_info_input').val();
+
+        jQuery.ajax({
+            url: '/ajax/tracking_activity/save',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'tracking_identifier' : identifier_name,
+                'activity_type': activity_type,
+                'activity_info': activity_info
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert('Saved');
+                    jQuery('#record_page_activity_info_input').val('');
+
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating the order');
+            }
+        });
+
+    });
+
 
 });
 

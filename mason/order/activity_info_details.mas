@@ -5,7 +5,7 @@ $identifier_id
 $breeding_program => undef
 $user_id => undef
 $identifier_prefix => ''
-$type_select_options
+$type_select_options => undef
 $activity_headers
 </%args>
 
