@@ -55,4 +55,27 @@ sub activity_details :Path('/activity/details') : Args(1) {
 }
 
 
+sub record_activity :Path('/activity/record') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $identifier_name = $c->req->param("identifier_name");
+    print STDERR "IDENTIFIER NAME =".Dumper($identifier_name)."\n";
+
+    if (! $c->user()) {
+	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if ($c->user) {
+        my $check_vendor_role = $c->user->check_roles('vendor');
+        $c->stash->{check_vendor_role} = $check_vendor_role;
+    }
+
+
+    $c->stash->{template} = '/tracking_activities/record_activity.mas';
+
+}
+
+
+
 1;

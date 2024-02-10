@@ -195,6 +195,10 @@ $user_id
             </div>
         </div>
     </&>
+    <td>
+        <a href="/activity/record"><p>Go to Record Page</p></a>
+    </td>
+
 % }
 
 <& /order/create_item_file_dialog.mas&>

@@ -1,0 +1,48 @@
+<%args>
+
+</%args>
+
+<& /page/page_title.mas, title=>"Record Activity" &>
+<br /><br />
+    <div class="well ">
+        <form class="form-horizontal" >
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Identifier Name: </label>
+                <div class="col-sm-5">
+                    <input class="form-control" id="identifier_name_input" name="identifier_name_input" type="text" value="">
+                </div>
+                <div class="col-sm-2">
+                    <button id="identifier_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+                </div>
+            </div>
+
+
+
+
+        </form>
+    </div>
+
+
+
+<script>
+
+$(window).ready( function() {
+    parseArgs();
+    jQuery('#identifier_name_barcode').click(scanBarcode);
+
+    function scanBarcode() {
+        window.location = "/barcode/read?return=/activity/record&param=identifier_name";
+        return false;
+    }
+
+    function parseArgs() {
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        if ( urlSearchParams.has('identifier_name') ) {
+            let identifier_name = decodeURIComponent(urlSearchParams.get('identifier_name'));
+            jQuery('input[name="identifier_name_input"]').val(identifier_name);
+        }
+    }
+
+});
+
+</script>
