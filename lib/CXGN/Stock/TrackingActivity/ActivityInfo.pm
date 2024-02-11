@@ -45,7 +45,7 @@ has 'activity_type' => (
 );
 
 has 'value' => (
-    isa =>'Str',
+    isa =>'HashRef',
     is => 'rw',
     required => 1,
 );

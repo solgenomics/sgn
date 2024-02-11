@@ -53,12 +53,16 @@ sub activity_info_save_POST : Args(0) {
         return;
     }
 
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
     my $tracking_identifier = $c->req->param("tracking_identifier");
-    my $activity_type = $c->req->param("activity_type");
-    my $value = $c->req->param("activity_info");
-    print STDERR "IDENTIFIER =".Dumper($tracking_identifier)."\n";
-    print STDERR "ACTIVITY TYPE =".Dumper($activity_type)."\n";
-    print STDERR "VALUE =".Dumper($value)."\n";
+    my $activity_type = $c->req->param("type");
+    my $input = $c->req->param("input");
+    my $record_timestamp = $c->req->param("record_timestamp");
+
+    my %value_hash;
+    $value_hash{$record_timestamp}{'operator'} = $user_id;
+    $value_hash{$record_timestamp}{'input'} = $input;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $check_tracking_identifier = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});
@@ -67,7 +71,7 @@ sub activity_info_save_POST : Args(0) {
         schema => $schema,
         tracking_identifier => $tracking_identifier,
         activity_type => $activity_type,
-        value => $value,
+        value => \%value_hash,
     });
     $add_activity_info->add_info();
 

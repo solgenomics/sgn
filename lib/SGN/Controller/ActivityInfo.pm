@@ -21,34 +21,23 @@ sub activity_details :Path('/activity/details') : Args(1) {
     }
 
     my $types = $c->config->{tracking_activities};
-    my @activity_types = split ',',$types;
+    my @type_select_options = split ',',$types;
 
     my $activity_type_header = $c->config->{tracking_activities_header};
     my @activity_headers = split ',',$activity_type_header;
 
     my $identifier_name = $schema->resultset("Stock::Stock")->find({stock_id => $identifier_id})->uniquename();
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
-    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
-    my @type_select_options = ();
-    if ($activity_info_rs) {
-        my $activity_json = $activity_info_rs->value();
-        my $activity_hash = JSON::Any->jsonToObj($activity_json);
-        my @recorded_activities = keys %$activity_hash;
-        foreach my $type (@activity_types){
-            if ($type ~~ @recorded_activities) {
-                next;
-            } else {
-                push @type_select_options, $type;
-            }
-        }
-    } else {
-        @type_select_options = @activity_types;
-    }
+    my $material_of_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
+    my $material_info = $schema->resultset("Stock::StockRelationship")->find( { object_id => $identifier_id, type_id => $material_of_cvterm_id} );
+    my $material_id = $material_info->subject_id();
+    my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
+    my $material_name = $material_rs->uniquename();
 
     $c->stash->{identifier_id} = $identifier_id;
     $c->stash->{identifier_name} = $identifier_name;
     $c->stash->{type_select_options} = \@type_select_options;
     $c->stash->{activity_headers} = \@activity_headers;
+    $c->stash->{material_name} = $material_name;
 
     $c->stash->{template} = '/order/activity_info_details.mas';
 
