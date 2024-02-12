@@ -100,18 +100,50 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
     my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
     if ($activity_info_rs) {
-        my @row = ();
         my $activity_json = $activity_info_rs->value();
-        my $activity_hash = JSON::Any->jsonToObj($activity_json);
+        my $info = JSON::Any->jsonToObj($activity_json);
+        my %info_hash = %{$info};
         foreach my $type (@activity_types){
-            push @row, $activity_hash->{$type};
+            my $empty_string;
+            my @each_type_details = ();
+            my $each_timestamp_string;
+            my $each_type_string;
+            if ($info_hash{$type}) {
+                my @each_type_details = ();
+                my $details = {};
+                my %details_hash = ();
+                $details = $info_hash{$type};
+                %details_hash = %{$details};
+                print STDERR "DETAILS HASH =".Dumper(\%details_hash);
+                foreach my $timestamp (keys %details_hash) {
+                    my @each_timestamp_details = ();
+                    push @each_timestamp_details, "timestamp".":"."".$timestamp;
+                    my $operator_id = $details_hash{$timestamp}{'operator_id'};
+                    push @each_timestamp_details, "operator".":"."".$operator_id;
+                    my $input = $details_hash{$timestamp}{'input'};
+                    push @each_timestamp_details, "count".":"."".$input;
+                    push @each_timestamp_details, $empty_string;
+
+                    $each_timestamp_string = join("<br>", @each_timestamp_details);
+                    push @each_type_details, $each_timestamp_string;
+                }
+
+                $each_type_string = join("<br>", @each_type_details);
+                print STDERR "EACH TYPE STRING =".Dumper($each_type_string)."\n";
+                push @details, $each_type_string;
+            } else {
+                my $empty_string;
+                push @details, $empty_string;
+            }
         }
-        push @details, [@row];
     }
 
-#    print STDERR "DETAILS =".Dumper(\@details)."\n";
+    my @all_details;
+    push @all_details, [@details];
 
-    $c->stash->{rest} = { data => \@details };
+    print STDERR "ALL DETAILS =".Dumper(\@all_details)."\n";
+
+    $c->stash->{rest} = { data => \@all_details };
 
 }
 
