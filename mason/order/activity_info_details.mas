@@ -12,7 +12,7 @@ $material_name
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
 
 % use utf8;
 % my @column_headers = @$activity_headers;
@@ -47,7 +47,7 @@ $material_name
             <div class="form-group">
                 <label class="col-sm-3 control-label">Count: </label>
                 <div class="col-sm-5">
-                    <input class="form-control" id="count_input" name="count_input" type="text" value="">
+                    <input class="form-control" id="selected_type_input" name="selected_type_input" type="text" value="">
                 </div>
             </div>
             <div class="form-group">
@@ -97,8 +97,8 @@ jQuery(document).ready( function() {
 
 
     jQuery('#activity_info_submit').click( function() {
-        var type = jQuery('#type_select').val();
-        var count_input = jQuery('#count_input').val();
+        var selected_type = jQuery('#type_select').val();
+        var input = jQuery('#selected_type_input').val();
         var record_timestamp = jQuery('#record_timestamp').val();
 
         jQuery.ajax({
@@ -107,8 +107,8 @@ jQuery(document).ready( function() {
             type: 'POST',
             data : {
                 'tracking_identifier' : "<%$identifier_name%>",
-                'type': type,
-                'input': count_input,
+                'selected_type': selected_type,
+                'input': input,
                 'record_timestamp': record_timestamp
             },
             beforeSend: function(response){
@@ -118,7 +118,7 @@ jQuery(document).ready( function() {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
                     alert('Saved');
-                    jQuery('#count_input').val('');
+                    jQuery('#selected_type_input').val('');
                     location.reload();
 
                 }

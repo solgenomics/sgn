@@ -751,13 +751,25 @@ sub get_order_progress :Path('/ajax/order/progress') Args(0) {
         push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
         push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
         my $progress = $activity_info->[5];
+        my %progress_hash = %{$progress};
+        my $input;
         foreach my $type (@activity_types){
-            push @row, $progress->{$type};
+            if ($progress_hash{$type}) {
+                my $details = {};
+                my %details_hash = ();
+                $details = $progress_hash{$type};
+                %details_hash = %{$details};
+                my $input = 0;
+                foreach my $key (keys %details_hash) {
+                    $input += $details_hash{$key}{'input'};
+                }
+                push @row, $input
+            } else {
+                push @row, $input;
+            }
         }
         push @order_progress,[@row];
-
     }
-
 
     print STDERR "ORDER PROGRESS =".Dumper(\@order_progress)."\n";
 

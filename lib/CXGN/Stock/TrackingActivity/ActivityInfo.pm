@@ -39,15 +39,27 @@ has 'tracking_identifier' => (
     required => 1,
 );
 
-has 'activity_type' => (
+has 'selected_type' => (
     isa =>'Str', is => 'rw',
     required => 1,
 );
 
-has 'value' => (
-    isa =>'HashRef',
+has 'input' => (
+    isa => 'Maybe[Int]',
     is => 'rw',
     required => 1,
+);
+
+has 'operator_id' => (
+    isa => 'Int',
+    is => 'rw',
+    required => 1
+);
+
+has 'timestamp' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    required => 1
 );
 
 
@@ -55,9 +67,10 @@ sub add_info {
     my $self = shift;
     my $schema = $self->get_schema();
     my $tracking_identifier = $self->get_tracking_identifier();
-    my $activity_type = $self->get_activity_type();
-    my $activity_info = $self->get_value();
-
+    my $selected_type = $self->get_selected_type();
+    my $input = $self->get_input();
+    my $operator_id = $self->get_operator_id();
+    my $timestamp = $self->get_timestamp();
     my $error;
 
     my $coderef = sub {
@@ -66,7 +79,7 @@ sub add_info {
         my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property');
 
         my $info_json_string;
-        my $info_json_hash = {};
+        my $info_ref = {};
         my $identifier;
 
         my $tracking_identifier_rs = $schema->resultset("Stock::Stock")->search({ 'uniquename' => $tracking_identifier, 'type_id' => $tracking_identifier_cvterm_id});
@@ -78,19 +91,25 @@ sub add_info {
         }
 
         my $previous_info_rs = $identifier->stockprops({type_id=>$tracking_info_json_cvterm->cvterm_id()});
+        print STDERR "COUNT =".Dumper($previous_info_rs->count)."\n";
         if ($previous_info_rs->count == 1){
             $info_json_string = $previous_info_rs->first->value();
-            $info_json_hash = decode_json $info_json_string;
-            $info_json_string = _generate_info_hash($activity_type, $activity_info, $info_json_hash);
-            $previous_info_rs->first->update({value=>$info_json_string});
+            my $previous_info = decode_json $info_json_string;
+            my %info_hash = %{$previous_info};
+            $info_hash{$selected_type}{$timestamp}{'operator_id'} = $operator_id;
+            $info_hash{$selected_type}{$timestamp}{'input'} = $input;
+            my $new_value = encode_json \%info_hash;
+            $previous_info_rs->first->update({value=>$new_value});
         } elsif ($previous_info_rs->count > 1) {
             print STDERR "More than one found!\n";
             return;
         } else {
-            $info_json_string = _generate_info_hash($activity_type, $activity_info, $info_json_hash);
-            $identifier->create_stockprops({$tracking_info_json_cvterm->name() => $info_json_string});
+            my %new_info;
+            $new_info{$selected_type}{$timestamp}{'operator_id'} = $operator_id;
+            $new_info{$selected_type}{$timestamp}{'input'} = $input;
+            my $new_value = encode_json \%new_info;
+            $identifier->create_stockprops({$tracking_info_json_cvterm->name() => $new_value});
         }
-        print STDERR "INFO JSON STRING =".Dumper($info_json_string)."\n";
     };
 
     try {
@@ -105,19 +124,6 @@ sub add_info {
     }
 
     return 1;
-}
-
-sub _generate_info_hash {
-    my $activity_type = shift;
-    my $activity_info = shift;
-    my $info_json_hash = shift;
-
-    $info_json_hash->{$activity_type} = $activity_info;
-    #print STDERR Dumper $info_json_hash;
-    my $info_json_string = encode_json $info_json_hash;
-
-    return $info_json_string;
-
 }
 
 

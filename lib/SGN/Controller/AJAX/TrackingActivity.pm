@@ -54,15 +54,14 @@ sub activity_info_save_POST : Args(0) {
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    print STDERR "USER ID =".Dumper($user_id)."\n";
 
     my $tracking_identifier = $c->req->param("tracking_identifier");
-    my $activity_type = $c->req->param("type");
+    my $selected_type = $c->req->param("selected_type");
     my $input = $c->req->param("input");
     my $record_timestamp = $c->req->param("record_timestamp");
-
-    my %value_hash;
-    $value_hash{$record_timestamp}{'operator'} = $user_id;
-    $value_hash{$record_timestamp}{'input'} = $input;
+    my $tracking_activities = $c->config->{tracking_activities};
+    my @types = split ',',$tracking_activities;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $check_tracking_identifier = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});
@@ -70,10 +69,13 @@ sub activity_info_save_POST : Args(0) {
     my $add_activity_info = CXGN::Stock::TrackingActivity::ActivityInfo->new({
         schema => $schema,
         tracking_identifier => $tracking_identifier,
-        activity_type => $activity_type,
-        value => \%value_hash,
+        selected_type => $selected_type,
+        input => $input,
+        timestamp => $record_timestamp,
+        operator_id => $user_id,
     });
     $add_activity_info->add_info();
+    print STDERR "ADD INFO =".Dumper ($add_activity_info->add_info())."\n";
 
     if (!$add_activity_info->add_info()){
         $c->stash->{rest} = {error_string => "Error saving info",};
@@ -107,7 +109,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
         push @details, [@row];
     }
 
-    print STDERR "DETAILS =".Dumper(\@details)."\n";
+#    print STDERR "DETAILS =".Dumper(\@details)."\n";
 
     $c->stash->{rest} = { data => \@details };
 
