@@ -98,27 +98,28 @@ sub _search {
 
     my $limit = $page_size;
     my $offset = $page_size*$page;
-    print STDERR "ObservationUnits call Checkpoint 1: ".DateTime->now()."\n";
+    print STDERR "ObservationUnits call Checkpoint 1: ".DateTime->now()."\n"; 
 
     my $layout_search = CXGN::Trial::TrialLayoutSearch->new(
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level->[0],
-            trial_list=>$study_ids_arrayref,
-            include_observations=>$include_observations,
+            trial_list=>$study_ids_arrayref,            
             location_list=>$location_ids_arrayref,
             accession_list=>$accession_ids_arrayref,
             folder_list=>$folder_ids_arrayref,
             program_list=>$program_ids_arrayref,
             observation_unit_id_list=>$observation_unit_db_id,
             observation_unit_names_list=>$observation_unit_names_list,
+            experiment_type=>'field_layout',
+            include_observations=>  lc($include_observations) eq 'true' ? 1 : 0,
             xref_id_list=>$reference_ids_arrayref,
             xref_source_list=>$reference_sources_arrayref,
             order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::numeric' : undef,
             
         }
     );
-    my ($data, $unique_traits) = $layout_search->search();
+    my $data = $layout_search->search();
     print STDERR "ObservationUnits call Checkpoint 2: ".DateTime->now()."\n";
     #print STDERR Dumper $data;
     my $start_index = $page*$page_size;
@@ -126,12 +127,11 @@ sub _search {
 
     my @data_window;
 
-
     # Get the plot parents of the plants
     my @plant_ids;
     my %plant_parents;
     foreach my $obs_unit (@$data){
-        if ($obs_unit->{observationunit_type_name} eq 'plant') {
+        if ($obs_unit->{obsunit_type_name} eq 'plant') {
             push @plant_ids, $obs_unit->{obsunit_stock_id};
         }
     }
@@ -140,6 +140,8 @@ sub _search {
     }
     print STDERR "ObservationUnits call Checkpoint 3: ".DateTime->now()."\n";
     foreach my $obs_unit (@$data){
+
+        ## Formatting observations
         my @brapi_observations;
         
         if( lc $include_observations eq 'true') {
@@ -184,13 +186,14 @@ sub _search {
                     germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
                     germplasmName => $obs_unit->{germplasm_uniquename},
                     observationUnitDbId => qq|$obs_unit->{obsunit_stock_id}|,
-                    observationUnitName => $obs_unit->{observationunit_uniquename},
+                    observationUnitName => $obs_unit->{obsunit_uniquename},
                     studyDbId  => qq|$obs_unit->{trial_id}|,
                     uploadedBy=>undef,
                 };
             }
         }
 
+        ## Formatting treatments
         my @brapi_treatments;
 
         if ($c->config->{brapi_treatments_no_management_factor}) {
@@ -204,6 +207,7 @@ sub _search {
             }
         }
 
+        ## Getting gps coordinates
         my $sp_rs ='';
         eval { 
             $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
@@ -219,6 +223,7 @@ sub _search {
             $geo_coordinates = decode_json $geo_coordinates_string;
         }
 
+        ## Getting additional info
         my $additional_info;
         my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
         if ($rs->count() > 0){
@@ -232,7 +237,9 @@ sub _search {
         my $block = $obs_unit->{block};
         my $plot;
         my $plant;
-        if ($obs_unit->{observationunit_type_name} eq 'plant') {
+
+        ## Following code lines add observationUnitParent to additionalInfo, useful for BI
+        if ($obs_unit->{obsunit_type_name} eq 'plant') {
             $plant = $obs_unit->{plant_number};
             if ($plant_parents{$obs_unit->{obsunit_stock_id}}) {
                 my $plot_object = $plant_parents{$obs_unit->{obsunit_stock_id}};
@@ -243,6 +250,7 @@ sub _search {
             $plot = $obs_unit->{plot_number};
         }
 
+        ## Format position coordinates 
         my $level_name = $obs_unit->{obsunit_type_name};
         my $level_order = _order($level_name) + 0;
         my $level_code = eval "\$$level_name" || "";
@@ -312,6 +320,7 @@ sub _search {
         my $external_references = $references->search();
         my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
+        ## Get plot images
         my @plot_image_ids;
 			eval {
 	            my $image_id = CXGN::Stock->new({

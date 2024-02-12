@@ -73,7 +73,6 @@ has 'folder_list' => (
     is => 'rw',
 );
 
-
 has 'accession_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
@@ -105,6 +104,12 @@ has 'experiment_type' => (
     default => 'field_layout',
     );
 
+has 'include_observations' => (
+    isa => 'Int|Undef',
+    is => 'rw',
+    default => 0
+);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -132,15 +137,7 @@ sub search {
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
-    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-    my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
-
-    my $design_layout_sql = '';
-    my $design_layout_select = '';
-    my $phenotypeprop_sql = '';
-    my %design_layout_hash;
-    my $using_layout_hash;
-    #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
+    #For performance reasons the number of joins to stock can be reduced if a trial is given.     
 
     my $from_clause = " FROM stock as observationunit 
         JOIN stock_relationship ON (observationunit.stock_id=subject_id)
@@ -154,13 +151,12 @@ sub search {
         LEFT JOIN project_relationship folder_rel ON (project.project_id = folder_rel.subject_project_id AND folder_rel.type_id = $folder_rel_type_id)
         LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id) 
         LEFT JOIN projectprop as location ON (project.project_id=location.project_id AND location.type_id = $project_location_type_id)
-        
-    LEFT JOIN nd_experiment_stock treatment_nds ON (treatment_nds.type_id = $treatment_experiment_type_id AND treatment_nds.stock_id = observationunit.stock_id)
-    LEFT JOIN nd_experiment_project treatment_ndp ON (treatment_ndp.nd_experiment_id = treatment_nds.nd_experiment_id)     
-    LEFT JOIN project_relationship treatment_rel ON (project.project_id = treatment_rel.object_project_id AND treatment_rel.type_id = $treatment_rel_type_id)
-    LEFT JOIN project treatment ON (treatment.project_id = treatment_rel.subject_project_id AND treatment.project_id = treatment_ndp.project_id)
-    LEFT JOIN stock_relationship AS seedplot_planted ON(seedplot_planted.subject_id = observationunit.stock_id AND seedplot_planted.type_id=$seedlot_transaction_type_id)
-    LEFT JOIN stock AS seedlot ON(seedplot_planted.object_id = seedlot.stock_id AND seedlot.type_id=$seedlot_type_id)
+        LEFT JOIN nd_experiment_stock treatment_nds ON (treatment_nds.type_id = $treatment_experiment_type_id AND treatment_nds.stock_id = observationunit.stock_id)
+        LEFT JOIN nd_experiment_project treatment_ndp ON (treatment_ndp.nd_experiment_id = treatment_nds.nd_experiment_id)     
+        LEFT JOIN project_relationship treatment_rel ON (project.project_id = treatment_rel.object_project_id AND treatment_rel.type_id = $treatment_rel_type_id)
+        LEFT JOIN project treatment ON (treatment.project_id = treatment_rel.subject_project_id AND treatment.project_id = treatment_ndp.project_id)
+        LEFT JOIN stock_relationship AS seedplot_planted ON(seedplot_planted.subject_id = observationunit.stock_id AND seedplot_planted.type_id=$seedlot_transaction_type_id)
+        LEFT JOIN stock AS seedlot ON(seedplot_planted.object_id = seedlot.stock_id AND seedlot.type_id=$seedlot_type_id)
         LEFT JOIN stockprop AS rep ON (observationunit.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
         LEFT JOIN stockprop AS block_number ON (observationunit.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
         LEFT JOIN stockprop AS plot_number ON (observationunit.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
@@ -169,7 +165,6 @@ sub search {
         LEFT JOIN stockprop AS plant_number ON (observationunit.stock_id=plant_number.stock_id AND plant_number.type_id = $plant_number_type_id)
         LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id) ";
 
-        
 
     my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, treatment.name, treatment.description, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count ";
 
@@ -190,8 +185,6 @@ sub search {
             push @where_clause, " observationunit.uniquename ilike '".($_)."'";
         }
     }
-
-
 
     if ($self->observation_unit_id_list && scalar(@{$self->observation_unit_id_list})>0) {
         my $plot_sql = _sql_from_arrayref($self->observation_unit_id_list);
@@ -238,7 +231,6 @@ sub search {
     $h->execute();
     my @result;
 
-    my $calendar_funcs = CXGN::Calendar->new({});
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
@@ -249,7 +241,6 @@ sub search {
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $accession_uniquename, $accession_stock_id, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, 
     $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count) = $h->fetchrow_array()) {
 
-        my $synonyms = $synonym_hash_lookup{$accession_uniquename};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
         my $treatments = $treatment_name ? { $treatment_name => $treatment_description } : { 'No ManagementFactor'=>undef };
 
@@ -263,7 +254,6 @@ sub search {
             obsunit_type_name => $observationunit_type_name,
             germplasm_uniquename => $accession_uniquename,
             germplasm_stock_id => $accession_stock_id,
-            synonyms => $synonyms,
             trial_id => $project_project_id,
             trial_name => $project_name,
             trial_description => $project_description,
