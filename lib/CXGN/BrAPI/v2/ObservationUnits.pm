@@ -6,12 +6,10 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trait;
 use CXGN::Trial::TrialLayoutSearch;
-use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::BrAPI::v2::ExternalReferences;
 use Try::Tiny;
-use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::List::Transform;
 use Scalar::Util qw(looks_like_number);
 use JSON;
@@ -76,7 +74,6 @@ sub _search {
     my $plot_geo_json_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_geo_json', 'stock_property')->cvterm_id();
     my $stock_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
 
-    #TODO: Use materialized_view_stockprop or construct own query. Materialized phenotype jsonb takes too long when there is data in the db
     if ($levels_arrayref){
         $data_level = ();
         foreach ( @{$levels_arrayref} ){
@@ -503,14 +500,19 @@ sub observationunits_update {
         #     $accession_name = $germplasm_search_result->{name};
         # }
 
+
         if(defined $accession_id){
-            my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate('MaterializedViewTable',
+            # Speed can be improved here by adding a simple query
+            my $layout_search = CXGN::Trial::TrialLayoutSearch->new(
             {
                 bcs_schema=>$schema,
                 data_level=>'all',
-                plot_list=>[$observation_unit_db_id],
+                observation_unit_id_list=>[$observation_unit_db_id],
+                experiment_type=>'field_layout',
+                include_observations=>0,           
             });
-            my ($data, $unique_traits) = $phenotypes_search->search();
+
+            my $data = $layout_search->search();
             my $old_accession;
             my $old_accession_id;
             foreach my $obs_unit (@$data){

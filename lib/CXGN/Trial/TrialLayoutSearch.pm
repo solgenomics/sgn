@@ -286,7 +286,7 @@ sub search {
 
 sub _sql_from_arrayref {
     my $arrayref = shift;
-    my $sql = join ("','" , @$arrayref);
+    my $sql = join ("," , @$arrayref);
     return $sql;
 }
 
