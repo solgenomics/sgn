@@ -8,6 +8,8 @@ use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
 use Encode;
+use CXGN::BrAPI::v2::ExternalReferences;
+use Try::Tiny;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -27,6 +29,11 @@ has 'name' => (
 has 'description' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
+);
+
+has 'external_references' => (
+    isa => 'ArrayRef[HashRef[Str]]',
+    is  => 'ro',
 );
 
 
@@ -52,7 +59,21 @@ sub get_breeding_programs {
 
     my @projects;
     while (my $row = $rs->next()) {
-	push @projects, [ $row->project_id, $row->name, $row->description ];
+
+        my @project_array = ($row->project_id);
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->schema,
+            table_name => 'project',
+            table_id_key => 'project_id',
+            id => \@project_array
+        });
+        my $external_references = $references->search();
+        my @external_references_array;
+        foreach my $values (values %{$external_references}) {
+            push @external_references_array, $values;
+        }
+
+	    push @projects, [ $row->project_id, $row->name, $row->description, @external_references_array ];
     }
 
     return \@projects;
@@ -107,19 +128,29 @@ sub get_breeding_program_by_name {
 sub _get_all_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+    my $include_dateless_trials = shift || 1;
+    
     my $dbh = $self->schema->storage->dbh();
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
     my $trials = [];
     my $h;
+
+    my $datelessq;
+    if ($include_dateless_trials) {
+	$datelessq = " trial.create_date IS NULL OR ";
+    }
+    
     if ($breeding_project_id) {
 	# need to convert to dbix class.... good luck!
 	#my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id=? AND (projectprop.type_id IS NULL OR projectprop.type_id != ?))";
-	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id = ?)";
+	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE ( $datelessq (trial.create_date > ? and trial.create_date < ?) ) and project.project_id = ?";
 
 	$h = $dbh->prepare($q);
 	#$h->execute($breeding_project_id, $cross_cvterm_id);
-	$h->execute($breeding_project_id);
+	$h->execute($start_date, $end_date, $breeding_project_id);
 
     }
     else {
@@ -475,6 +506,7 @@ sub store_breeding_program {
     my $id = $self->id();
     my $name = $self->name();
     my $description = $self->description();
+    my $external_references = $self->external_references();
 
     my $type_id = $self->get_breeding_program_cvterm_id();
 
@@ -484,7 +516,9 @@ sub store_breeding_program {
 
     my $existing_name_rs = $schema->resultset("Project::Project")->search({ name => $name });
     if (!$id && $existing_name_rs->count() > 0) {
-        return { error => "A breeding program with name '$name' already exists." };
+        return { error => "A breeding program with name '$name' already exists.",
+            nameExists => 1
+        };
     }
 
     # Add new program if no id supplied
@@ -512,6 +546,23 @@ sub store_breeding_program {
 
                 });
             $prop_row->insert();
+
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $self->schema,
+                    external_references => $external_references,
+                    table_name          => 'project',
+                    table_id_key         => 'project_id',
+                    id             => $id
+                });
+
+                $references->store();
+
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
+            }
         }
         catch {
             $error =  $_;
@@ -546,6 +597,23 @@ sub store_breeding_program {
 
             $row->insert();
             $id = $row->project_id();
+
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $self->schema,
+                    external_references => $external_references,
+                    table_name          => 'project',
+                    table_id_key         => 'project_id',
+                    id             => $id
+                });
+
+                $references->store();
+
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
+            }
 
         }
         catch {

@@ -107,19 +107,13 @@ sub genotyping_project_plates_GET : Args(0) {
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @result;
     foreach my $plate(@$data){
-        my $folder_string = '';
-        if ($plate->{folder_name}){
-            $folder_string = "<a href=\"/folder/$plate->{folder_id}\">$plate->{folder_name}</a>";
-        }
         push @result,
         [
             "<a href=\"/breeders_toolbox/trial/$plate->{plate_id}\">$plate->{plate_name}</a>",
             $plate->{plate_description},
-            $folder_string,
             $plate->{plate_format},
             $plate->{sample_type},
             $plate->{number_of_samples},
-            $plate->{number_of_samples_with_data},
             "<a class='btn btn-sm btn-default' href='/breeders/trial/$plate->{plate_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
         ];
     }
@@ -155,22 +149,25 @@ sub genotyping_project_protocols_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $genotyping_project_id = $c->req->param('genotyping_project_id');
-    my @project_list = ($genotyping_project_id);
-    my $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema, undef, undef, undef, undef, undef ,\@project_list);
-#    print STDERR "PROTOCOL SEARCH RESULT =".Dumper($protocol_search_result)."\n";
-    my @protocol_info;
-    foreach my $protocol (@$protocol_search_result){
-        my $protocol_id = $protocol->{protocol_id};
-        my $protocol_name = $protocol->{protocol_name};
-        push @protocol_info, {
-            protocol_id => $protocol_id,
-            protocol_name => $protocol_name
-        }
 
+    my $protocol_info = CXGN::Genotype::GenotypingProject->new({
+        bcs_schema => $bcs_schema,
+        project_id => $genotyping_project_id
+    });
+    my $associated_protocol  = $protocol_info->get_associated_protocol();
+#    print STDERR "ASSOCIATED PROTOCOL =".Dumper($associated_protocol)."\n";
+    my @info;
+    if ( defined $associated_protocol && scalar(@$associated_protocol)>1) {
+        $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+        return;
+    } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
+        push @info, {
+            protocol_id => $associated_protocol->[0]->[0],
+            protocol_name => $associated_protocol->[0]->[1]
+        }
     }
 
-
-    $c->stash->{rest} = { data => \@protocol_info };
+    $c->stash->{rest} = { data => \@info };
 
 }
 

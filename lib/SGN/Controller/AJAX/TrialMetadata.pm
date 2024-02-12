@@ -5,6 +5,7 @@ use Data::Dumper;
 use Bio::Chado::Schema;
 use CXGN::Trial;
 use CXGN::Trial::TrialLookup;
+use CXGN::Trial::Search;
 use Math::Round::Var;
 use File::Temp 'tempfile';
 use Text::CSV;
@@ -190,18 +191,20 @@ sub trial_phenotypes_fully_uploaded_POST  {
 
 sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
 
-sub trial_details_GET   {
+sub trial_details_GET{
     my $self = shift;
     my $c = shift;
 
     my $trial = $c->stash->{trial};
     my $planting_date = $trial->get_planting_date();
+    my $transplanting_date = $trial->get_transplanting_date();
     my $harvest_date = $trial->get_harvest_date();
     my $get_location_noaa_station_id = $trial->get_location_noaa_station_id();
 
     $c->stash->{rest} = {
         details => {
             planting_date => $planting_date,
+            transplanting_date => $transplanting_date,
             harvest_date => $harvest_date,
             location_noaa_station_id => $get_location_noaa_station_id
         }
@@ -262,25 +265,30 @@ sub trial_details_POST  {
     # set each new detail that is defined
     #print STDERR Dumper $details;
     eval {
-      if ($details->{name}) { $trial->set_name($details->{name}); }
-      if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
-      if ($details->{location}) { $trial->set_location($details->{location}); }
-      if ($details->{year}) { $trial->set_year($details->{year}); }
-      if ($details->{type}) { $trial->set_project_type($details->{type}); }
-      if ($details->{planting_date}) {
+        if ($details->{name}) { $trial->set_name($details->{name}); }
+        if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
+        if ($details->{location}) { $trial->set_location($details->{location}); }
+        if ($details->{year}) { $trial->set_year($details->{year}); }
+        if ($details->{type}) { $trial->set_project_type($details->{type}); }
+        if ($details->{planting_date}) {
         if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
         else { $trial->set_planting_date($details->{planting_date}); }
-      }
-      if ($details->{harvest_date}) {
-        if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
-        else { $trial->set_harvest_date($details->{harvest_date}); }
-      }
-      if ($details->{description}) { $trial->set_description($details->{description}); }
-      if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
-      if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
-      if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
-      if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
-      if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
+    }
+        if ($details->{transplanting_date}) {
+            if ($details->{transplanting_date} eq 'remove') { $trial->remove_transplanting_date($trial->get_transplanting_date()); }
+            else { $trial->set_transplanting_date($details->{transplanting_date}); }
+        }
+        if ($details->{harvest_date}) {
+            if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
+            else { $trial->set_harvest_date($details->{harvest_date}); }
+        }
+
+        if ($details->{description}) { $trial->set_description($details->{description}); }
+        if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
+        if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
+        if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
+        if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
+        if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
     };
 
     if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }
@@ -310,6 +318,10 @@ sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
 sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $start_date = shift;
+    my $end_date = shift;
+    my $include_dateless_items = shift;
+    
     #get userinfo from db
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user = $c->user();
@@ -326,7 +338,10 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
         search_type => "Native",
         data_level => $display,
         trait_list=> [$trait],
-        trial_list => [$c->stash->{trial_id}]
+        trial_list => [$c->stash->{trial_id}],
+	start_date => $start_date,
+	end_date => $end_date,
+	include_dateless_items => $include_dateless_items,
     );
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = {
@@ -449,8 +464,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
 
+    my @numeric_trait_ids;
+    
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
+	push @numeric_trait_ids, $trait_id;
+	
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -477,6 +496,48 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         push @phenotype_data, \@return_array;
     }
 
+    # get data from the non-numeric trait ids
+    #
+    
+    # prevent sql statement from failing if there are no numeric traits
+    #
+    my $exclude_numeric_trait_ids = "";
+    if (@numeric_trait_ids) {
+	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
+    }
+	
+    my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+        cvterm.cvterm_id,
+        count(phenotype.value)
+	$select_clause_additional	
+        FROM cvterm
+            JOIN phenotype ON (cvterm_id=cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN nd_experiment_stock USING(nd_experiment_id)
+            JOIN stock as plot USING(stock_id)
+            JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
+            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
+            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
+        WHERE project_id=?
+            AND stock_relationship.type_id=?
+            AND plot.type_id=?
+            AND accession.type_id=?
+	     	$exclude_numeric_trait_ids
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        ORDER BY cvterm.name ASC
+        $order_by_additional ";
+
+    my $h = $dbh->prepare($q);
+    
+    $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+
+    while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
+	my @return_array;
+	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
+        push @phenotype_data, \@return_array;
+    }
+    
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
@@ -4613,7 +4674,8 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
         overwrite_values=>1,
         ignore_new_values=>0,
         metadata_hash=>\%phenotype_metadata,
-        composable_validation_check_name=>$c->config->{composable_validation_check_name}
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
@@ -4890,6 +4952,247 @@ sub update_trial_design_type_POST : Args(0) {
 
     return;
 
+}
+
+
+#
+# GET TRIAL PLOT ORDERS
+# Get the ordered plots of one or more trials based on the requested ordering parameters
+# Arguments:
+#   - trial_ids: array of trial ids
+#   - type: plot order file type ('planting', 'harvest', or 'harvestmaster')
+#   - order: the order to traverse the plots ('by_col_serpentine', 'by_col_zigzag', 'by_row_serpentine', 'by_row_zigzag')
+#   - start: the corner of the trial layout to start the traversal ('bottom_left', 'top_left', 'top_right', 'bottom_right')
+#   - top_border: set to true to include a top border
+#   - right_border: set to true to include a right border
+#   - bottom_border: set to true to include a bottom border
+#   - left_border: set to true to include a left border
+#   - gaps: set to true to include gaps / missing plots
+#   - hm_pltid: property to use as the harvestmaster PLTID (default: 'plot_id')
+#   - hm_range: property to use as the harvestmaster range (default: 'row_number')
+#   - hm_row: property to use as the harvestmaster row (default: 'col_number')
+#
+sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my @trial_ids = split(',', $c->req->param('trial_ids') || '');
+    my $type = $c->req->param('type') || 'planting';
+    my $order = $c->req->param('order') || 'by_row_zigzag';
+    my $start = $c->req->param('start') || 'bottom_left';
+    my $top_border = $c->req->param('top_border') || 'false';
+    my $right_border = $c->req->param('right_border') || 'false';
+    my $bottom_border = $c->req->param('bottom_border') || 'false';
+    my $left_border = $c->req->param('left_border') || 'false';
+    my $gaps = $c->req->param('gaps') || 'false';
+    my $hm_pltid = $c->req->param('hm_pltid') || 'plot_id';
+    my $hm_range = $c->req->param('hm_range') || 'row_number';
+    my $hm_row = $c->req->param('hm_row') || 'col_number';
+
+    # Check parameters
+    if ( scalar(@trial_ids) eq 0 ) {
+        $c->stash->{rest} = { error => "No trial_ids provided!" };
+        return;
+    }
+    if ( $type ne 'planting' && $type ne 'harvest' && $type ne 'harvestmaster' ) {
+        $c->stash->{rest} = { error => "Unrecognized type!" };
+        return;
+    }
+    if ( ( $order !~ /by_col/ && $order !~ /by_row/ ) || ( $order !~ /serpentine/ && $order !~ /zigzag/ ) ) {
+        $c->stash->{rest} = { error => "Unrecognized order!" };
+        return;
+    }
+    if ( ( $start !~ /bottom/ && $start !~ /top/ ) || ( $start !~ /left/ && $start !~ /right/ ) ) {
+        $c->stash->{rest} = { error => "Unrecognized start!" };
+        return;
+    }
+    my %borders = (
+        top => $top_border eq 'true' || 0,
+        right => $right_border eq 'true' || 0,
+        bottom => $bottom_border eq 'true' || 0,
+        left => $left_border eq 'true' || 0
+    );
+
+    # Get the sorted plots
+    my $results = CXGN::Trial->get_sorted_plots($schema, \@trial_ids, $order, $start, \%borders, $gaps eq 'true' || 0);
+
+    # Return error message, if set
+    if ( !defined $results->{error} && !defined $results->{plots} ) {
+        $results->{error} = "An unknown error occurred";
+    }
+    if ( defined $results->{error} ) {
+        $c->stash->{rest} = { error => $results->{error} };
+        return;
+    }
+
+    # Generate CSV file
+    my $filename;
+    my @data;
+    if ( $type eq 'planting' || $type eq 'harvest' ) {
+        $filename = $type . "_order.csv";
+        my $col = $type . "_order";
+
+        # Add CSV headers
+        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control");
+        push(@data, \@headers);
+
+        # Add plot rows
+        my $plots = $results->{plots};
+        foreach (@$plots) {
+            if ( $_->{type} eq 'plot' ) {
+                my @d = (
+                    $_->{order},
+                    $_->{type},
+                    "\"$_->{location_name}\"",
+                    $_->{trial_name},
+                    $_->{plot_number},
+                    $_->{plot_name},
+                    $_->{accession_name},
+                    $_->{seedlot_name},
+                    $_->{row_number},
+                    $_->{col_number},
+                    $_->{rep_number},
+                    $_->{block_number},
+                    $_->{is_a_control}
+                );
+                push(@data, \@d);
+            }
+            else {
+                my @d = (
+                    $_->{order},
+                    $_->{type},
+                    "", # location
+                    "", # trial
+                    "", # plot number
+                    "", # plot name
+                    "", # accession
+                    "", # seedlot
+                    $_->{row_number},
+                    $_->{col_number},
+                    "", # rep
+                    "", # block
+                    "", # control
+                );
+                push(@data, \@d);
+            }
+        }
+    }
+
+    elsif ( $type eq 'harvestmaster' ) {
+        $filename = "harvest_master.csv";
+
+        # Add CSV headers
+        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "rep_number", "block_number", "is_a_control");
+        push(@data, \@headers);
+
+        # Add plot rows
+        my $plots = $results->{plots};
+        foreach (@$plots) {
+            if ( $_->{type} eq 'plot' ) {
+                my @d = (
+                    $_->{$hm_pltid},
+                    $_->{$hm_range},
+                    $_->{$hm_row},
+                    $_->{type},
+                    "\"$_->{location_name}\"",
+                    $_->{trial_name},
+                    $_->{plot_number},
+                    $_->{plot_name},
+                    $_->{accession_name},
+                    $_->{seedlot_name},
+                    $_->{rep_number},
+                    $_->{block_number},
+                    $_->{is_a_control}
+                );
+                push(@data, \@d);
+            }
+            else {
+                my @d = (
+                    $_->{type},
+                    $_->{$hm_range},
+                    $_->{$hm_row},
+                    $_->{type},
+                    "", # location
+                    "", # trial
+                    "", # plot number
+                    "", # plot name
+                    "", # accession
+                    "", # seedlot
+                    "", # rep
+                    "", # block
+                    "", # control
+                );
+                push(@data, \@d);
+            }
+        }
+
+    }
+
+    # Return the generated file
+    $c->res->content_type('text/csv');
+    $c->res->headers->push_header("Content-disposition', 'attachment; filename=\"$filename\"");
+    $c->res->body( join("\n", map { $_ = join(",", @{$_}) } @data) );
+    return;
+}
+
+
+#
+# GET LINKED FIELD TRIALS
+# Get additional field trials that share the same physical field (to display together in the plot layout tool)
+# A linked trial: shares the same year, the same location, and the location type is 'Field'
+# path param: trial id
+# return:
+#   error: error message
+#   trials: list of linked trials
+#       trial_id: id of trial
+#       trial_name: name of trial
+#       ...
+#
+sub get_linked_field_trials : Chained('trial') PathPart('linked_field_trials') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->stash->{trial_id};
+    my $trial_location = $c->stash->{trial}->get_location();
+    my $trial_location_id = $trial_location->[0];
+    my $trial_year = $c->stash->{trial}->get_year();
+
+    # Check Trial Location: ensure that it is a "field" type location
+    my $locations = CXGN::Trial::get_all_locations($schema);
+    foreach my $l (@$locations) {
+        if ( $l->[0] eq $trial_location_id ) {
+            my $location_type = $l->[8];
+            if ( $location_type ne "Field" ) {
+                $c->stash->{rest} = { error => "The location for this trial is a \"$location_type\" location.  In order to group trials together: they must share the same year, the same location, and the location type must be \"Field\"" };
+                return;
+            }
+        }
+    }
+
+    # Get Trials that share the same year and location
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema => $schema,
+        location_id_list => [$trial_location_id],
+        year_list => [$trial_year],
+        field_trials_only => 1
+    });
+    my ($data, $total_count) = $trial_search->search();
+
+    # Parse Results
+    my @rtn;
+    foreach my $t (@$data) {
+        push(@rtn, $t);
+    }
+
+    # No matches found...
+    if ( scalar(@rtn) == 0 ) {
+        $c->stash->{rest} = { error => "No linked Trials found.  In order to group trials together: they must share the same year, the same location, and the location type must be \"Field\"" };
+        return;
+    }
+
+    # Return the matches...
+    $c->stash->{rest} = { trials => \@rtn };
+    return;
 }
 
 

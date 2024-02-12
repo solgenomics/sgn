@@ -595,6 +595,7 @@ sub output_files {
       $c->controller('solGS::Path')->page_type( $c, $c->req->referer );
     my $analysis_type = $c->stash->{analysis_type} || $page_type;
     $analysis_type =~ s/\s+/_/g;
+   
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
     $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};

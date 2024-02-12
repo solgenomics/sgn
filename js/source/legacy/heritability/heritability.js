@@ -216,7 +216,7 @@ function phenotypicHeritability () {
  
     var population = getPopulationDetails();
     
-    jQuery("#heritability_message").html("Running heritability... please wait...");
+    jQuery("#heritability_message").html("Running heritability...");
          
     jQuery.ajax({
             type: 'POST',
@@ -239,7 +239,7 @@ function phenotypicHeritability () {
             error: function(response) {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("Error 1 occured preparing the phenotype data for heritability analysis.");
+                    .html("Please check if the data has replicates.");
 
 		jQuery("#run_pheno_heritability").show();
             }
@@ -274,7 +274,7 @@ function runPhenoHeritabilityAnalysis () {
             } else {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("There is no heritability output for this dataset."); 
+                    .html("Please, check if there is numerical data and replicates for this trial."); 
         
 		jQuery("#run_pheno_heritability").show();
             }

@@ -78,7 +78,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(90);
+    sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -127,7 +127,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
-    sleep(120);
+    sleep(150);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
 
@@ -162,9 +162,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'queue selection prediction job')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing form')->send_keys('Test DMCP selection pred Kasese');
+    $d->find_element_ok('analysis_name', 'id', 'fill in selection prediction job name')->send_keys('Test DMCP selection pred nacrri');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	$d->find_element_ok('user_email', 'id', 'fill user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(180);
@@ -177,6 +177,17 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
     sleep(5);
     
+    my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('check_genetic_gain', 'id',  'run plot genetic gain')->click();
+    sleep(20);
+    $d->find_element_ok('boxplot', 'partial_link_text',  'checkout boxplot download link');
+    sleep(2);
+
+    $d->driver->refresh();
+    sleep(3);
+
 	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
     sleep(2);
@@ -185,7 +196,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Analysis log', 'partial_link_text',  'download analysis log');
     sleep(3);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
-    sleep(120);
+    sleep(150);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
     
@@ -329,19 +340,34 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test DMCP-FRW selection pred naccri');
+    $d->find_element_ok('analysis_name', 'id', 'fill in job name')->send_keys('Test DMCP-FRW selection pred naccri');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	$d->find_element_ok('user_email', 'id', 'fill in user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
-    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'go back')->click();
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'check multi traits selection prediction ')->click();
     sleep(5);
 
     $d->driver->go_back();
     sleep(6);
+
+    my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('gg_pops_select', 'id', 'select list sl pop')->click();
+    sleep(3);
+    $d->find_element_ok('//select[@id="gg_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select selection pop')->click();
+    sleep(3);
+    $d->find_element_ok('check_genetic_gain', 'id',  'run plot genetic gain')->click();
+    sleep(40);
+    $d->find_element_ok('boxplot', 'partial_link_text',  'check multi traits  boxplot download link');
+    sleep(2);
+
+    $d->driver->refresh();
+    sleep(3);
 
     $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);

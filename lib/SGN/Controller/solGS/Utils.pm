@@ -7,6 +7,7 @@ use File::Slurp qw /write_file read_file edit_file/;
 use JSON;
 use List::MoreUtils qw(first_index);
 
+
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
 
@@ -344,7 +345,6 @@ sub stash_json_args {
 
 }
 
-
 sub generic_message {
     my ($self, $c, $msg) = @_;
 
@@ -357,6 +357,7 @@ sub require_login {
 
     my $page = "/" . $c->req->path;
     $c->res->redirect("/solgs/login/message?page=$page");
+
     $c->detach;
 
 }

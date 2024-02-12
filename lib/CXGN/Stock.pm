@@ -42,6 +42,7 @@ use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
 use Try::Tiny;
 use CXGN::Metadata::Metadbdata;
+use File::Basename qw | basename dirname|;
 
 =head2 accessor schema()
 
@@ -74,6 +75,23 @@ has 'schema' => (
 
 has 'phenome_schema' => (
     isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+);
+
+=head2 accessor metadata_schema()
+
+ Usage:
+ Desc:         provides access the the CXGN::Metadata::Schema, needed for
+               certain user related functions
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
     is => 'rw',
 );
 
@@ -994,6 +1012,105 @@ sub associate_owner {
     return $id;
 }
 
+=head2 associate_owner()
+
+ Usage: $self->associate_uploaded_file($owner_sp_person_id, $archived_filename_with_path, $md5checksum, $stock_id )
+ Desc:  Associate files with metadata and stock
+ Ret:   a database id
+ Args:  owner_id, archived_filename_with_path, md5checksum, stock_id
+ Side Effects:  store a metadata row
+ Example:
+
+=cut
+
+sub associate_uploaded_file {
+
+    my $self = shift;
+    my $user_id = shift;
+    my $archived_filename_with_path = shift;
+    my $md5checksum = shift;
+    my $stock_id = shift;
+
+    my $metadata_id = $self->_new_metadata_id($user_id);
+
+    my $metadata_schema = CXGN::Metadata::Schema->connect(
+        sub { $self->schema()->storage()->dbh() },
+        { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
+        );
+
+    my $file_row = $metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_filename_with_path),
+            dirname  => dirname($archived_filename_with_path),
+            filetype => 'accession_additional_file_upload',
+            md5checksum => $md5checksum,
+            metadata_id => $metadata_id,
+        });
+    my $file_id = $file_row->file_id();
+
+    my $phenome_schema = CXGN::Phenome::Schema->connect(
+	sub { $self->schema()->storage()->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }
+	);
+
+    my $stock_file = $phenome_schema->resultset("StockFile")
+        ->create({
+            stock_id => $stock_id,
+            file_id => $file_id,
+        });
+
+    return {success => 1, file_id=>$file_id};
+}
+
+=head2 obsolete_uploaded_file()
+
+ Usage: $self->obsolete_uploaded_file($file_id, $user_id, $role )
+ Desc:  Obsolete files with metadata 
+ Side Effects:  
+ Example:
+
+=cut
+
+sub obsolete_uploaded_file {
+
+    my $self = shift;
+    my $file_id = shift;
+    my $user_id = shift;
+    my $role = shift;
+
+    my @errors;
+    # check ownership of that file
+    my $q = "SELECT metadata.md_metadata.create_person_id, metadata.md_metadata.metadata_id, metadata.md_files.file_id 
+    FROM metadata.md_metadata 
+    join metadata.md_files using(metadata_id) 
+    where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
+
+    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $h = $dbh->prepare($q);
+
+    $h->execute($file_id, $user_id);
+
+    if (my ($create_person_id, $metadata_id, $file_id) = $h->fetchrow_array()) {
+	if ($create_person_id == $user_id || $role eq "curator") {
+	    my $uq = "UPDATE metadata.md_metadata SET obsolete=1 where metadata_id = ?";
+	    my $uh = $dbh->prepare($uq);
+	    $uh->execute($metadata_id);
+	}
+	else {
+	    push @errors, "Only the owner of the uploaded file, or a curator, can delete this file.";
+	}
+
+    }
+    else {
+	push @errors, "No such file currently exists.";
+    }
+
+    if (@errors >0) {
+	return { errors => \@errors };
+    }
+
+    return { success => 1 };
+}
+
 =head2 get_trait_list()
 
  Usage:
@@ -1340,6 +1457,28 @@ sub _update_stockprop {
     $self->_store_stockprop($type,$value);
 }
 
+# Doesn't split the value like the _store_stockprop method
+sub _store_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    # print STDERR Dumper $type;
+    my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
+    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+}
+
+sub _update_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $stockprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->stock->search_related('stockprops', {'type_id'=>$stockprop_cvterm_id});
+    while(my $r=$rs->next){
+        $r->delete();
+    }
+    $self->_store_stockprop_raw($type,$value);
+}
+
 =head2 _retrieve_stockprop
 
  Usage:
@@ -1422,6 +1561,29 @@ sub _remove_stockprop {
 
 }
 
+sub _remove_stockprop_all_of_type {
+
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id() } );
+    
+    if ($rs->count() > 0) {
+        while (my $row = $rs->next()) {
+            $row->delete();
+        }
+        return 1;
+    }
+    elsif ($rs->count() == 0) {
+        return 0;
+    }
+    else {
+        print STDERR "Error removing stockprop from stock ".$self->stock_id().". Please check this manually.\n";
+        return 0;
+    }
+}
+
 sub _retrieve_organismprop {
     my $self = shift;
     my $type = shift;
@@ -1502,6 +1664,47 @@ sub _retrieve_populations {
         $self->population_name($pop_string);
     }
 }
+
+sub _store_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_accession = shift;
+    my $cross_type = shift;
+    my $schema = $self->schema;
+    my $parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my %return;
+
+    print STDERR "***STOCK.PM : Storing parent relationship $parent_cvterm_id \n\n";
+    my $parent = $schema->resultset("Stock::Stock")->find({
+        uniquename => $parent_accession
+    });
+
+    # TODO: Check the cross type
+
+    if (defined $parent) {
+        # Object is the child, subject is the mother
+        $self->stock->find_or_create_related('stock_relationship_subjects', {
+            type_id    => $parent_cvterm_id,
+            object_id  => $self->stock_id(),
+            subject_id => $parent->stock_id(),
+            value      => $cross_type
+        });
+    } else {
+        return $return{error} = "Parent accession not found: ".$parent_accession;
+    }
+}
+
+sub _remove_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id=>$parent_cvterm_id, object_id => $self->stock_id() } );
+
+    while (my $r=$rs->next){
+        $r->delete();
+    }
+}
+
 ###
 
 =head2 _new_metadata_id()

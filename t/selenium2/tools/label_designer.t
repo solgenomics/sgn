@@ -17,7 +17,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(3);
 
-    $t->driver->find_element("//button[\@title='Select a list, crossing exp, trial, or GT plate']")->click();
+    $t->driver->find_element("//button[\@title='Select a data source for the labels']")->click();
 
     sleep(3);
 
@@ -226,7 +226,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(3);
 
-    $t->driver->find_element("//button[\@title='Select a list, crossing exp, trial, or GT plate']")->click();
+    $t->driver->find_element("//button[\@title='Select a data source for the labels']")->click();
 
     sleep(3);
 

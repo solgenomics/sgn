@@ -19,4 +19,13 @@ sub dbstats :Path('/breeders/dbstats') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/db_stats.mas';
 }
 
+sub recent_activity :Path('/dbstats/recent_activity') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    $c->stash->{template} = '/dbstats/recent_activity.mas';
+}
+
+    
+
 1;

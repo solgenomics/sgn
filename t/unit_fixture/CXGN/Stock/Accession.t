@@ -73,7 +73,7 @@ is_deeply($s->population_name, $stock1_pop_name);
 is($s->description, $stock1_desc);
 is($s->type, 'accession');
 is($s->accessionNumber, $stock1_accession_number);
-is($s->germplasmPUI, $stock1_pui.",$main_production_site_url/stock/$stock_id1/view");
+is($s->germplasmPUI, "$main_production_site_url/stock/$stock_id1/view,".$stock1_pui);
 is($s->germplasmSeedSource, $stock1_source);
 print STDERR Dumper $s->synonyms;
 is_deeply($s->synonyms, $stock1_synonyms);

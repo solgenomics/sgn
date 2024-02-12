@@ -46,3 +46,8 @@ js/package-lock.json
 typescript
 docs/Gemfile.lock
 docs/_site/
+.DS_Store
+sgn.iml
+docs/*
+!docs/r_markdown_docs
+.idea/
