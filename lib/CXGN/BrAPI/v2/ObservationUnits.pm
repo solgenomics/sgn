@@ -113,10 +113,11 @@ sub _search {
             xref_id_list=>$reference_ids_arrayref,
             xref_source_list=>$reference_sources_arrayref,
             order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::numeric' : undef,
-            
+            limit=>$limit,
+            offset=>$offset,
         }
     );
-    my $data = $layout_search->search();
+    my ($data,$observations_data) = $layout_search->search();
     print STDERR "ObservationUnits call Checkpoint 2: ".DateTime->now()."\n";
     #print STDERR Dumper $data;
     my $start_index = $page*$page_size;
@@ -139,55 +140,11 @@ sub _search {
     foreach my $obs_unit (@$data){
 
         ## Formatting observations
-        my @brapi_observations;
+        my $brapi_observations = [];
         
-        if( lc $include_observations eq 'true') {
-
-            my $observations = $obs_unit->{observations};
-            foreach (@$observations){
-                my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-                if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
-                if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
-                my @season = {
-                    year => $obs_unit->{year},
-                    season => undef,
-                    seasonDbId => undef
-                };
-                
-                my $additional_info;
-                my $external_references;
-                #get additional info
-                my $rs = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $phenotype_additional_info_type_id, phenotype_id => $_->{phenotype_id}  });
-                if ($rs->count() > 0){
-                    my $additional_info_json = $rs->first()->value();
-                    $additional_info  = $additional_info_json ? decode_json($additional_info_json) : undef;
-                }
-
-                #get external references
-                my $rs2 = $self->bcs_schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $external_references_type_id, phenotype_id => $_->{phenotype_id} });
-                if ($rs2->count() > 0){
-                    my $external_references_json = $rs2->first()->value();
-                    $external_references  = $external_references_json ? decode_json($external_references_json) : undef;
-                }
-
-                push @brapi_observations, {
-                    additionalInfo => $additional_info,
-                    externalReferences => $external_references,
-                    observationDbId => qq|$_->{phenotype_id}|,
-                    observationVariableDbId => qq|$_->{trait_id}|,
-                    observationVariableName => $_->{trait_name},
-                    observationTimeStamp => $obs_timestamp,
-                    season => \@season,
-                    collector => $_->{operator},
-                    value => qq|$_->{value}|,
-                    germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
-                    germplasmName => $obs_unit->{germplasm_uniquename},
-                    observationUnitDbId => qq|$obs_unit->{obsunit_stock_id}|,
-                    observationUnitName => $obs_unit->{obsunit_uniquename},
-                    studyDbId  => qq|$obs_unit->{trial_id}|,
-                    uploadedBy=>undef,
-                };
-            }
+        if( lc $include_observations eq 'true' && $observations_data) {            
+            my $observation_id = $obs_unit->{obsunit_stock_id};
+            $brapi_observations = %{$observations_data}{$observation_id} ?  %{$observations_data}{$observation_id} : [];
         }
 
         ## Formatting treatments
@@ -339,7 +296,7 @@ sub _search {
             locationDbId => qq|$obs_unit->{location_id}|,
             locationName => $obs_unit->{location_name},
             observationUnitDbId => qq|$obs_unit->{obsunit_stock_id}|,
-            observations => \@brapi_observations,
+            observations => $brapi_observations,
             observationUnitName => $obs_unit->{obsunit_uniquename},
             observationUnitPosition => $brapi_observationUnitPosition,
             observationUnitPUI => $main_production_site_url . "/stock/" . $obs_unit->{obsunit_stock_id} . "/view",
@@ -503,19 +460,20 @@ sub observationunits_update {
 
         if(defined $accession_id){
             # Speed can be improved here by adding a simple query
-            my $layout_search = CXGN::Trial::TrialLayoutSearch->new(
+            my $layout_accession_search = CXGN::Trial::TrialLayoutSearch->new(
             {
                 bcs_schema=>$schema,
                 data_level=>'all',
                 observation_unit_id_list=>[$observation_unit_db_id],
-                experiment_type=>'field_layout',
-                include_observations=>0,           
+                # experiment_type=>'field_layout',
+                include_observations=>1,           
             });
 
-            my $data = $layout_search->search();
+            my ($data_accession,$data_accession_observations) = $layout_accession_search->search();
             my $old_accession;
             my $old_accession_id;
-            foreach my $obs_unit (@$data){
+            
+            foreach my $obs_unit (@$data_accession){
                 $old_accession = $obs_unit->{germplasm_uniquename};
                 $old_accession_id = $obs_unit->{germplasm_stock_id};
             }
@@ -598,7 +556,6 @@ sub observationunits_update {
         if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }      
         if (%additional_info){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$additional_info_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>encode_json \%additional_info },{ key=>'stockprop_c1' }); }      
 
-
         #store/update external references
         if ($observationUnit_x_ref){
             my $references = CXGN::BrAPI::v2::ExternalReferences->new({
@@ -609,15 +566,14 @@ sub observationunits_update {
                 id => $observation_unit_db_id
             });
             my $reference_result = $references->store();
-        }
+        } 
     }
-
-    # $self->_refresh_matviews($dbh, $c, 5 * 60);
 
     my @observation_unit_db_ids;
     foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
+
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
-    $self->search($search_params, $c);
+    return $self->search($search_params, $c);
 }
 
 sub _get_existing_germplasm {
@@ -875,7 +831,8 @@ sub observationunits_store {
         $schema->txn_do($coderef);
     }
     catch {
-        print Dumper("Error: $_\n");
+        print "Error: :". Dumper($_);
+        # print Dumper("Error: $_\n");
         $error_resp = CXGN::BrAPI::JSONResponse->return_error($self->status, $_->{error}, $_->{errorCode} || 500);
     };
     if ($error_resp) { return $error_resp; }

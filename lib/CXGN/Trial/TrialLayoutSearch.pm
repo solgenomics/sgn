@@ -181,9 +181,10 @@ sub search {
     }
 
     if ($self->observation_unit_names_list && scalar(@{$self->observation_unit_names_list})>0) {
-        foreach (@{$self->observation_unit_names_list}) {
-            push @where_clause, " observationunit.uniquename ilike '".($_)."'";
-        }
+        my $arrayref = $self->observation_unit_names_list;
+        my $sql = join ("','" , @$arrayref);
+        my $observationunit_sql = "'" . $sql . "'";
+        push @where_clause, "observationunit.uniquename in ($observationunit_sql)";
     }
 
     if ($self->observation_unit_id_list && scalar(@{$self->observation_unit_id_list})>0) {
@@ -238,6 +239,8 @@ sub search {
         $location_id_lookup{$r->nd_geolocation_id} = $r->description;
     }
 
+    my @observation_units;
+
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $accession_uniquename, $accession_stock_id, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, 
     $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count) = $h->fetchrow_array()) {
 
@@ -247,6 +250,8 @@ sub search {
         if ($project_description) { $project_description =~ s/\R//g; }
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
         if ($folder_description) { $folder_description =~ s/\R//g };
+
+        push @observation_units, $observationunit_stock_id;
 
         push @result, {
             obsunit_stock_id => $observationunit_stock_id,
@@ -280,8 +285,72 @@ sub search {
 
     }
 
+    ## Query observations if requested. No requested by default
+    my $observations;
+    if ($self->include_observations > 0){
+
+        $observations = _include_observations($self,\@observation_units)
+
+    }
+
     print STDERR "Search End:".localtime."\n";
-    return \@result;
+    return (\@result,$observations);
+}
+
+sub _include_observations {
+    my $self = shift;
+    my $observation_units = shift;
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+    'Native',
+    {
+        bcs_schema=>$self->bcs_schema,
+        data_level=>$self->data_level,
+        plot_list=>$observation_units,
+        order_by=>"plot_number",
+        include_timestamp=>1
+    });
+    my ($data, $unique_traits) = $phenotypes_search->search();
+
+    my %data_window;
+
+    foreach (@$data){
+
+        if (  $_->{phenotype_value}  && $_->{phenotype_value} ne "" ) {
+            my $observation_id = "$_->{phenotype_id}";
+            my $observation_unit_id = "$_->{obsunit_stock_id}";
+            my $additional_info;
+            my $external_references;
+
+            my %season = (
+                year => $_->{year},
+                season => undef,
+                seasonDbId => undef
+            );
+
+            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
+
+            push @{$data_window{$observation_unit_id}}, {
+                additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
+                externalReferences => $_->{phenotype_external_references} ? decode_json($_->{phenotype_external_references}) : undef,
+                germplasmDbId => qq|$_->{accession_stock_id}|,
+                germplasmName => $_->{accession_uniquename},
+                observationUnitDbId => qq|$_->{obsunit_stock_id}|,
+                observationUnitName => $_->{obsunit_uniquename},
+                observationDbId => $observation_id,
+                observationVariableDbId => qq|$_->{trait_id}|,
+                observationVariableName => $_->{trait_name},
+                observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
+                season => \%season,
+                collector => $_->{operator},
+                studyDbId => qq|$_->{trial_id}|,
+                uploadedBy=> $_->{operator},
+                value => qq|$_->{phenotype_value}|,
+                # geoCoordinates => undef #needs to be implemented for v2.1
+            };
+        }
+    }
+    return \%data_window;
 }
 
 sub _sql_from_arrayref {
