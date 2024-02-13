@@ -41,7 +41,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     title       => $title,
 &>
 
-<& /solgs/genotyping_protocol.mas &>
+<& /solgs/genotyping_protocol/index.mas &>
 
   <div  class="form-inline">
   <div  id="selection_pops_div">
