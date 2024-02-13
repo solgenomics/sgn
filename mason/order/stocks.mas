@@ -180,6 +180,7 @@ $user_id
                     <table class="table table-hover table-bordered" id="order_progress_table">
                         <thead>
                             <tr>
+                                <th>Order Number</th>
                                 <th>Tracking ID</th>
                                 <th>Material</th>
 % my $activity_types = $c->config->{tracking_activities_header};

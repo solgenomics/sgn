@@ -63,7 +63,27 @@ $material_name
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Activity Info', collapsible => 1, collapsed => 0, subtitle => '' &>
+<&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "activity_summary_table" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+% foreach my $header(@column_headers){
+                                <th><%$header%></th>
+%}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -93,6 +113,16 @@ jQuery(document).ready( function() {
         'autoWidth': false,
         'searching' : false,
         'ajax': '/ajax/tracking_activity/details/'+identifier_id,
+    });
+
+    jQuery('#activity_summary_table').DataTable({
+        'autoWidth': false,
+        'searching' : false,
+        'dom': 'rtip',
+        'ordering': false,
+        'paging': false,
+        'info': false,
+        'ajax': '/ajax/tracking_activity/summary/'+identifier_id,
     });
 
 

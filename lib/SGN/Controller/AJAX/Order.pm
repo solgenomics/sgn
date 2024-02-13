@@ -743,14 +743,16 @@ sub get_order_progress :Path('/ajax/order/progress') Args(0) {
     my @order_progress;
     foreach my $activity_info (@$order_activities) {
         my @row = ();
-        my $identifier_name = $activity_info->[0];
-        my $identifier_id = $activity_info->[1];
-        my $material_name = $activity_info->[2];
-        my $material_id = $activity_info->[3];
-        my $material_type = $activity_info->[4];
+        my $order_id = $activity_info->[0];
+        my $identifier_name = $activity_info->[1];
+        my $identifier_id = $activity_info->[2];
+        my $material_name = $activity_info->[3];
+        my $material_id = $activity_info->[4];
+        my $material_type = $activity_info->[5];
+        push @row, qq{<a href="/order/details/view/$order_id">$order_id</a>};
         push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
         push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
-        my $progress = $activity_info->[5];
+        my $progress = $activity_info->[6];
         my $input;
 
         if ($progress) {

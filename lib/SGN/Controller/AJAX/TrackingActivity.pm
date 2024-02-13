@@ -96,6 +96,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $c = shift;
     my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
 
     my @details;
     my $tracking_activities = $c->config->{tracking_activities};
@@ -123,7 +124,11 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                     my @each_timestamp_details = ();
                     push @each_timestamp_details, "timestamp".":"."".$timestamp;
                     my $operator_id = $details_hash{$timestamp}{'operator_id'};
-                    push @each_timestamp_details, "operator".":"."".$operator_id;
+
+                    my $person= CXGN::People::Person->new($dbh, $operator_id);
+                    my $operator_name = $person->get_first_name()." ".$person->get_last_name();
+
+                    push @each_timestamp_details, "operator".":"."".$operator_name;
                     my $input = $details_hash{$timestamp}{'input'};
                     push @each_timestamp_details, "count".":"."".$input;
                     push @each_timestamp_details, $empty_string;
@@ -150,6 +155,60 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     $c->stash->{rest} = { data => \@all_details };
 
 }
+
+
+sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $identifier_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my @summary = ();
+    my $tracking_activities = $c->config->{tracking_activities};
+    my @activity_types = split ',',$tracking_activities;
+
+    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
+    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
+    if ($activity_info_rs) {
+        my $input;
+        my $activity_json = $activity_info_rs->value();
+        my $info = JSON::Any->jsonToObj($activity_json);
+        my %info_hash = %{$info};
+        foreach my $type (@activity_types){
+            my $empty_string;
+            my @each_type_details = ();
+            my $each_timestamp_string;
+            my $each_type_string;
+            if ($info_hash{$type}) {
+                my $details = {};
+                my %details_hash = ();
+                $details = $info_hash{$type};
+                %details_hash = %{$details};
+                my $input = 0;
+                foreach my $key (keys %details_hash) {
+                    $input += $details_hash{$key}{'input'};
+                }
+                push @summary, $input;
+            } else {
+                push @summary, $input;
+            }
+        }
+    } else {
+        foreach my $type (@activity_types) {
+            my $input;
+            push @summary, $input;
+        }
+    }
+
+    my @all_summary;
+    push @all_summary, [@summary];
+
+    print STDERR "ALL SUMMARY =".Dumper(\@all_summary)."\n";
+
+    $c->stash->{rest} = { data => \@all_summary };
+
+}
+
 
 
 1;

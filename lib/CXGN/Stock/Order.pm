@@ -318,7 +318,7 @@ sub get_orders_to_person_id_progress {
                     $activity_hash = JSON::Any->jsonToObj($activity_json);
                 }
 
-                push @activity_info, [$identifier, $identifier_id, $material_name, $material_id, $material_type, $activity_hash];
+                push @activity_info, [$order_id, $identifier, $identifier_id, $material_name, $material_id, $material_type, $activity_hash];
             }
         }
     }

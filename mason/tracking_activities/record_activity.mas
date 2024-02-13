@@ -55,7 +55,7 @@ $timestamp => localtime()
 
 
 % if ($identifier_id) {
-    <&| /page/info_section.mas, title => 'Activity Info', collapsible => 1, collapsed => 0, subtitle => '' &>
+    <&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
@@ -87,7 +87,11 @@ $(window).ready( function() {
         jQuery('#record_page_activity_info_table').DataTable({
             'autoWidth': false,
             'searching' : false,
-            'ajax': '/ajax/tracking_activity/details/'+identifier_id,
+            'dom': 'rtip',
+            'ordering': false,
+            'paging': false,
+            'info': false,
+            'ajax': '/ajax/tracking_activity/summary/'+identifier_id,
         });
     }
 
