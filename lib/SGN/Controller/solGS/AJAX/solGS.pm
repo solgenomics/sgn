@@ -68,9 +68,7 @@ sub solgs_population_search_autocomplete_GET :Args() {
             {
                 push @response_list, $row->name;
             }           
-        }  
-    else
-	{  
+        }  else {  
         #filter out trials of analysis_type (with stored analyzed results) and with out phenotype data from search
         #result of trials relevant to training populations. 
         my $has_phenotype = $c->controller('solGS::Search')->model($c)->has_phenotype($pop_id);            
