@@ -4,6 +4,7 @@ $identifier_id => undef
 $activity_select => undef
 $activity_headers
 $type_select_options => undef
+$timestamp => localtime()
 
 </%args>
 
@@ -23,10 +24,10 @@ $type_select_options => undef
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-3 control-label">Activity Type: </label>
+            <label class="col-sm-3 control-label">Type: </label>
             <div class="col-sm-5">
 % if ($type_select_options) {
-                <select id="record_page_activity_type_select">
+                <select id="record_page_type_select">
 % foreach my $type(@$type_select_options){
                     <option value="<%$type%>"><%$type%></option>
 % }
@@ -35,9 +36,15 @@ $type_select_options => undef
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-3 control-label">Activity Info: </label>
+            <label class="col-sm-3 control-label">Count: </label>
             <div class="col-sm-5">
-                <input class="form-control" id="record_page_activity_info_input" name="record_page_activity_info_input" type="text" value="">
+                <input class="form-control" id="record_page_info_input" name="record_page_info_input" type="text" value="">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Timestamp: </label>
+            <div class="col-sm-5">
+                <input class="form-control" id="record_timestamp_record_page" name="record_timestamp_record_page" type="text" disabled value="<%$timestamp%>">
             </div>
         </div>
         <center>
@@ -102,8 +109,9 @@ $(window).ready( function() {
 
     jQuery('#record_page_activity_info_submit').click( function() {
         var identifier_name = jQuery('#record_page_identifier_name_input').val();
-        var activity_type = jQuery('#record_page_activity_type_select').val();
-        var activity_info = jQuery('#record_page_activity_info_input').val();
+        var selected_type = jQuery('#record_page_type_select').val();
+        var input = jQuery('#record_page_info_input').val();
+        var record_timestamp = jQuery('#record_timestamp_record_page').val();
 
         jQuery.ajax({
             url: '/ajax/tracking_activity/save',
@@ -111,8 +119,9 @@ $(window).ready( function() {
             type: 'POST',
             data : {
                 'tracking_identifier' : identifier_name,
-                'activity_type': activity_type,
-                'activity_info': activity_info
+                'selected_type': selected_type,
+                'input': input,
+                'record_timestamp': record_timestamp
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -121,7 +130,7 @@ $(window).ready( function() {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
                     alert('Saved');
-                    jQuery('#record_page_activity_info_input').val('');
+                    jQuery('#record_page_info_input').val('');
 
                 }
                 if (response.error_string) {

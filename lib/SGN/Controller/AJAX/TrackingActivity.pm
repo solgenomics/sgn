@@ -60,11 +60,15 @@ sub activity_info_save_POST : Args(0) {
     my $selected_type = $c->req->param("selected_type");
     my $input = $c->req->param("input");
     my $record_timestamp = $c->req->param("record_timestamp");
-    my $tracking_activities = $c->config->{tracking_activities};
-    my @types = split ',',$tracking_activities;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $check_tracking_identifier = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});
+    print STDERR "AJAX IDENTIFIER =".Dumper($tracking_identifier)."\n";
+    print STDERR "AJAX SELECTED TYPE =".Dumper($selected_type)."\n";
+    print STDERR "AJAX INPUT =".Dumper($input)."\n";
+    print STDERR "AJAX TIMESTAMP =".Dumper($record_timestamp)."\n";
+    print STDERR "OPERATOR ID =".Dumper($user_id)."\n";
+
 
     my $add_activity_info = CXGN::Stock::TrackingActivity::ActivityInfo->new({
         schema => $schema,
@@ -114,7 +118,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                 my %details_hash = ();
                 $details = $info_hash{$type};
                 %details_hash = %{$details};
-                print STDERR "DETAILS HASH =".Dumper(\%details_hash);
+#                print STDERR "DETAILS HASH =".Dumper(\%details_hash);
                 foreach my $timestamp (keys %details_hash) {
                     my @each_timestamp_details = ();
                     push @each_timestamp_details, "timestamp".":"."".$timestamp;
@@ -129,7 +133,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                 }
 
                 $each_type_string = join("<br>", @each_type_details);
-                print STDERR "EACH TYPE STRING =".Dumper($each_type_string)."\n";
+#                print STDERR "EACH TYPE STRING =".Dumper($each_type_string)."\n";
                 push @details, $each_type_string;
             } else {
                 my $empty_string;
@@ -141,7 +145,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my @all_details;
     push @all_details, [@details];
 
-    print STDERR "ALL DETAILS =".Dumper(\@all_details)."\n";
+#    print STDERR "ALL DETAILS =".Dumper(\@all_details)."\n";
 
     $c->stash->{rest} = { data => \@all_details };
 

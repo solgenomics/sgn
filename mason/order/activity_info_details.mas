@@ -118,8 +118,8 @@ jQuery(document).ready( function() {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
                     alert('Saved');
-                    jQuery('#selected_type_input').val('');
-                    location.reload();
+//                    jQuery('#selected_type_input').val('');
+//                    location.reload();
 
                 }
                 if (response.error_string) {
