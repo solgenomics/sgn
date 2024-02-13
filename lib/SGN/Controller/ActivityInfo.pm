@@ -32,12 +32,15 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $material_id = $material_info->subject_id();
     my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
     my $material_name = $material_rs->uniquename();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
 
     $c->stash->{identifier_id} = $identifier_id;
     $c->stash->{identifier_name} = $identifier_name;
     $c->stash->{type_select_options} = \@type_select_options;
     $c->stash->{activity_headers} = \@activity_headers;
     $c->stash->{material_name} = $material_name;
+    $c->stash->{timestamp} = $timestamp;
 
     $c->stash->{template} = '/order/activity_info_details.mas';
 
@@ -72,12 +75,13 @@ sub record_activity :Path('/activity/record') :Args(0) {
         $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
     }
     print STDERR "IDENTIFIER ID =".Dumper($identifier_id)."\n";
-
-
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
 
     $c->stash->{identifier_id} = $identifier_id;
     $c->stash->{activity_headers} = \@activity_headers;
     $c->stash->{type_select_options} = \@type_select_options;
+    $c->stash->{timestamp} = $timestamp;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

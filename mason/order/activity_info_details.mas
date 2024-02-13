@@ -7,7 +7,7 @@ $user_id => undef
 $identifier_prefix => ''
 $type_select_options => undef
 $activity_headers
-$timestamp => localtime()
+$timestamp => undef
 $material_name
 
 </%args>

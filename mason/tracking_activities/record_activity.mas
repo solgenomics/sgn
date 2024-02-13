@@ -4,7 +4,7 @@ $identifier_id => undef
 $activity_select => undef
 $activity_headers
 $type_select_options => undef
-$timestamp => localtime()
+$timestamp => undef
 
 </%args>
 
