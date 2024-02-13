@@ -207,8 +207,8 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    my $training_pop_id = $c->stash->{training_pop_id};
-    my $data_set_type   = $c->stash->{data_set_type};
+    my $pop_id = $c->stash->{training_pop_id};
+    my $type   = $c->stash->{data_set_type};
     my $trait_id        = $c->stash->{trait_id};
     my $protocol_id     = $c->stash->{genotyping_protocol_id};
 
@@ -243,6 +243,7 @@ sub selection_trait : Path('/solgs/selection/') Args() {
         $trait_id,  $gp,              $protocol_id
     ) = @_;
 
+    my ($protocol_id, $sel_pop_protocol_id) = split(/-/, $protocol_id);
     $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
     my $trait_abbr = $c->stash->{trait_abbr};
 

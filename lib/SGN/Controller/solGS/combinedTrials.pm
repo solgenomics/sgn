@@ -347,7 +347,7 @@ sub selection_combined_pops_trait : Path('/solgs/combined/model/') Args() {
     my (
         $self,     $c,                $model_id,
         $sel_key,  $selection_pop_id, $trait_key,
-        $trait_id, $gp,               $protocol_id
+        $trait_id, $gp,               $protocol_ids
     ) = @_;
 
     my $data_set_type = 'combined_populations';

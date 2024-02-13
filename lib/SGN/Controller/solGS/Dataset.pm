@@ -194,8 +194,7 @@ sub create_dataset_geno_data_query_jobs {
 
     if ( $data->{categories}->{accessions}->[0] ) {
         $self->dataset_genotype_query_jobs( $c, $dataset_id, $protocol_id );
-    }
-    elsif ( $data->{categories}->{trials}->[0] ) {
+    } elsif ( $data->{categories}->{trials}->[0] ) {
         my $trials_ids = $data->{categories}->{trials};
         $c->controller('solGS::combinedTrials')
           ->multi_pops_geno_files( $c, $trials_ids, $protocol_id );
@@ -203,7 +202,7 @@ sub create_dataset_geno_data_query_jobs {
 
         $c->controller('solGS::AsyncJob')
           ->get_trials_genotype_query_jobs_args( $c, $trials_ids,
-            $geno_protocol );
+            $protocol_id );
         $c->stash->{dataset_geno_data_query_jobs} =
           $c->stash->{trials_genotype_query_jobs_args};
     }
