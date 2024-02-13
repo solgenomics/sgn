@@ -132,7 +132,7 @@ sub page_type {
     my ( $self, $c, $url ) = @_;
 
     $url = $c->req->path if !$url;
-
+    print STDERR "\nurl: $url\n";
     my $model_pages =
         'solgs/trait'
       . '|solgs/traits/all/'
@@ -156,9 +156,9 @@ sub page_type {
 	elsif ($url =~ $training_pop_pages) {
 		$type = 'training_population';
 	}
-	elsif ($url =~ /^solgs\/search|^solgs$/) 
+	elsif ($url =~ /solgs\/search|solgs$/) 
 	{
-		$type = 'home page';
+		$type = 'home_page';
 	}
 
     return $type;
