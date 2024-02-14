@@ -1,3 +1,9 @@
+<style>
+  .control-label {
+    width: 200px;
+    text-align: right;
+  }
+</style>
 
 <%args>
 $breeding_programs
@@ -66,9 +72,9 @@ $design_types => ()
                                             <br>
 
                                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_multiple_trial_designs_form" name="upload_multiple_trial_designs_form">
-                                              <div class="form-group">
+                                                <div class="form-group">
                                                   <input type="file" name="multiple_trial_designs_upload_file" id="multiple_trial_designs_upload_file" encoding="multipart/form-data" />
-                                              </div>
+                                                </div>
                                               <div class="form-group">
                                                   <div class="col-sm-4"></div>
                                                   <label class="col-sm-2 control-label">Ignore Warnings: </label>
@@ -78,6 +84,14 @@ $design_types => ()
                                                   <div class="col-sm-4"></div>
                                               </div>
                                             </form>
+                                              <div class="form-group" style="margin-bottom: 50px;">
+                                                  <div class="col-sm-4"></div>
+                                                  <label class="col-sm-2 control-label">Email Report: </label>
+                                                  <div class="col-sm-2" >
+                                                      <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                                                  </div>
+                                                  <div class="col-sm-4"></div>
+                                              </div>
 
                                             <div style="display:none" id="upload_multiple_trials_warning_messages" class="alert-warning" role="alert">
                                             </div>
@@ -799,5 +813,11 @@ jQuery(document).ready(function(){
         jQuery('#upload_multiple_trials_warning_messages').hide();
       }
     });
+
+    jQuery('#email_option_to_recieve_trial_upload_status').change(function() {
+      if (this.checked) {
+        jQuery('#email_option_to_recieve_trial_upload_status').hide();
+	  }
+	});
 });
 </script>
