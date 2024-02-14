@@ -178,10 +178,12 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my @project_ids = split(',', $c->req->param('genotyping_project_id'));
+    my $limit = defined $c->req->param('limit');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     my %rtn;
     foreach my $project_id (@project_ids) {
+        $rtn{$project_id} = [];
 
         # Get the most-recent archived VCF file for the genotyping project
         my $q = "SELECT dirname, basename, create_date, uploader, username FROM (
@@ -195,27 +197,35 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
                     GROUP BY dirname, basename, create_date, first_name, last_name, username
                 ) AS t
                 WHERE t.create_date IS NOT NULL
-                ORDER BY t.create_date DESC
-                LIMIT 1;";
+                ORDER BY t.create_date DESC";
+        if ( $limit ) {
+            $q .= " LIMIT 1";
+        }
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($project_id);
-        my ($dirname, $basename, $create_date, $uploader, $username) = $h->fetchrow_array();
         
-        # Check if the file actually exists
-        my $exists = "false";
-        if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
-            $exists = "true";
-        }
+        # Parse the results for all of the archived files
+        while (my ($dirname, $basename, $create_date, $uploader, $username) = $h->fetchrow_array()) {
+        
+            # Check if the file actually exists
+            my $exists = "false";
+            if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
+                $exists = "true";
+            }
 
-        # Set return properties
-        $rtn{$project_id} = {
-            dirname => $dirname,
-            basename => $basename,
-            create_date => $create_date,
-            uploader => $uploader,
-            username => $username,
-            exists => $exists
-        };
+            # Set return properties
+            my %props = (
+                dirname => $dirname,
+                basename => $basename,
+                create_date => $create_date,
+                uploader => $uploader,
+                username => $username,
+                exists => $exists
+            );
+
+            # Add to existing project props
+            push(@{$rtn{$project_id}}, \%props);
+        }
 
     }
 
