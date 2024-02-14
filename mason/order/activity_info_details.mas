@@ -57,7 +57,7 @@ $material_name
                 </div>
             </div>
             <center>
-                <button id="activity_info_submit" class="btn btn-primary">Save</button>
+                <button id="activity_info_submit" name="activity_info_submit" class="btn btn-primary">Save</button>
             </center>
         </form>
     </div>

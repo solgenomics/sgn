@@ -287,7 +287,7 @@ sub get_orders_to_person_id_progress {
     my $dbh = $self->dbh();
 
     my $tracking_identifier_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
+    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     my $material_of_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
 
     my $order_rs = $people_schema->resultset('SpOrder')->search( { order_to_id => $person_id } );

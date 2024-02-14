@@ -48,7 +48,7 @@ $timestamp => undef
             </div>
         </div>
         <center>
-            <button id="record_page_activity_info_submit" class="btn btn-primary">Save</button>
+            <button id="record_page_activity_info_submit" name="record_page_activity_info_submit" class="btn btn-primary">Save</button>
         </center>
     </form>
 </div>

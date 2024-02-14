@@ -102,7 +102,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
 
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
+    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
     if ($activity_info_rs) {
         my $activity_json = $activity_info_rs->value();
@@ -167,7 +167,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
 
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property')->cvterm_id();
+    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
     if ($activity_info_rs) {
         my $input;

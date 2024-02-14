@@ -83,7 +83,7 @@ sub add_info {
     my $coderef = sub {
 
         my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
-        my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_metadata_json', 'stock_property');
+        my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property');
 
         my $info_json_string;
         my $info_ref = {};
@@ -116,7 +116,7 @@ sub add_info {
             $new_info{$selected_type}{$timestamp}{'operator_id'} = $operator_id;
             $new_info{$selected_type}{$timestamp}{'input'} = $input;
             my $new_value = encode_json \%new_info;
-            print STDERR "NEW VALUE 2 =".Dumper($new_value)."\n";            
+            print STDERR "NEW VALUE 2 =".Dumper($new_value)."\n";
             $identifier->create_stockprops({$tracking_info_json_cvterm->name() => $new_value});
         }
     };
