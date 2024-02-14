@@ -172,5 +172,55 @@ sub genotyping_project_protocols_GET : Args(0) {
 }
 
 
+sub genotyping_project_has_archived_vcf : Path('/ajax/genotyping_project/has_archived_vcf') : ActionClass('REST') { }
+
+sub genotyping_project_has_archived_vcf_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my @project_ids = split(',', $c->req->param('genotyping_project_id'));
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    my %rtn;
+    foreach my $project_id (@project_ids) {
+
+        # Get the most-recent archived VCF file for the genotyping project
+        my $q = "SELECT dirname, basename, create_date, uploader, username FROM (
+                    SELECT md_files.dirname, md_files.basename, md_metadata.create_date, CONCAT(sp_person.first_name, ' ', sp_person.last_name) AS uploader, sp_person.username
+                    FROM public.nd_experiment_project
+                    LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
+                    LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
+                    LEFT JOIN metadata.md_metadata ON (md_files.metadata_id = md_metadata.metadata_id)
+                    LEFT JOIN sgn_people.sp_person ON (md_metadata.create_person_id = sp_person.sp_person_id)
+                    WHERE nd_experiment_project.project_id = ?
+                    GROUP BY dirname, basename, create_date, first_name, last_name, username
+                ) AS t
+                WHERE t.create_date IS NOT NULL
+                ORDER BY t.create_date DESC
+                LIMIT 1;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($project_id);
+        my ($dirname, $basename, $create_date, $uploader, $username) = $h->fetchrow_array();
+        
+        # Check if the file actually exists
+        my $exists = "false";
+        if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
+            $exists = "true";
+        }
+
+        # Set return properties
+        $rtn{$project_id} = {
+            dirname => $dirname,
+            basename => $basename,
+            create_date => $create_date,
+            uploader => $uploader,
+            username => $username,
+            exists => $exists
+        };
+
+    }
+
+    $c->stash->{rest} = \%rtn;
+}
+
 
 1;
