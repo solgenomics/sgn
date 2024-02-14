@@ -145,15 +145,17 @@ solGS.genotypingProtocol = {
   },
 
   getGenotypingProtocolId: function (divPlace) {
-    divPlace = solGS.genotypingProtocol.formatId(divPlace);
-		var protocolId = jQuery(divPlace + ' #genotyping_protocol #genotyping_protocol_id').val();
-		if (!protocolId) {
-			protocolId = jQuery('#genotyping_protocol_id').val();
-		}
+
+    var protocolId;
+    if (divPlace) {
+     divPlace = solGS.genotypingProtocol.formatId(divPlace);
+		  protocolId = jQuery(divPlace + ' #genotyping_protocol #genotyping_protocol_id').val();
+    }
 	
     if (!protocolId) {
-      protocolId = sessionStorage.getItem("genotyping_protocol_id");
+     protocolId = jQuery('#genotyping_protocol_id').val() || sessionStorage.getItem("genotyping_protocol_id");
     }
+
 		return protocolId;
 	},
 
@@ -166,11 +168,14 @@ solGS.genotypingProtocol = {
   getPredictionGenotypingProtocols: function () {
     var protocolId = this.getGenotypingProtocolId();
     var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
-
     var sessionSelPopProtocolId = sessionStorage.getItem("selection_pop_genotyping_protocol_id");
 
-    if (!selPopProtocolId || selPopProtocolId != 'undefined') {
+    if (!selPopProtocolId) {
       selPopProtocolId = sessionSelPopProtocolId;
+    }
+
+    if (!selPopProtocolId) {
+      selPopProtocolId = protocolId;
     }
 
     return {
