@@ -373,6 +373,9 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_project_plates'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_plates.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_plates
+% if ($info_section_id eq 'genotyping_data_archived_vcf') {
+                                <& /breeders_toolbox/genotyping_data_project/genotype_archived_vcf.mas, trial_id=>$trial_id &>
+% } #End genotyping_data_archived_vcf
 % if ($info_section_id eq 'genotyping_project_deletion_section'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_deletion_section

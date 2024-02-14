@@ -15,6 +15,7 @@ package SGN::Controller::AJAX::Search::GenotypingDataProject;
 use Moose;
 use Data::Dumper;
 use JSON;
+use File::Slurp qw | read_file |;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
 use CXGN::Genotype::GenotypingProject;
@@ -186,15 +187,16 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
         $rtn{$project_id} = [];
 
         # Get the most-recent archived VCF file for the genotyping project
-        my $q = "SELECT dirname, basename, create_date, uploader, username FROM (
-                    SELECT md_files.dirname, md_files.basename, md_metadata.create_date, CONCAT(sp_person.first_name, ' ', sp_person.last_name) AS uploader, sp_person.username
+        my $q = "SELECT dirname, basename, create_date, uploader_id, uploader_name, uploader_username FROM (
+                    SELECT md_files.dirname, md_files.basename, md_metadata.create_date, 
+                        sp_person.sp_person_id AS uploader_id, CONCAT(sp_person.first_name, ' ', sp_person.last_name) AS uploader_name, sp_person.username AS uploader_username
                     FROM public.nd_experiment_project
                     LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
                     LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
                     LEFT JOIN metadata.md_metadata ON (md_files.metadata_id = md_metadata.metadata_id)
                     LEFT JOIN sgn_people.sp_person ON (md_metadata.create_person_id = sp_person.sp_person_id)
                     WHERE nd_experiment_project.project_id = ?
-                    GROUP BY dirname, basename, create_date, first_name, last_name, username
+                    GROUP BY dirname, basename, create_date, sp_person_id, first_name, last_name, username
                 ) AS t
                 WHERE t.create_date IS NOT NULL
                 ORDER BY t.create_date DESC";
@@ -205,7 +207,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
         $h->execute($project_id);
         
         # Parse the results for all of the archived files
-        while (my ($dirname, $basename, $create_date, $uploader, $username) = $h->fetchrow_array()) {
+        while (my ($dirname, $basename, $create_date, $uploader_id, $uploader_name, $uploader_username) = $h->fetchrow_array()) {
         
             # Check if the file actually exists
             my $exists = "false";
@@ -218,8 +220,9 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
                 dirname => $dirname,
                 basename => $basename,
                 create_date => $create_date,
-                uploader => $uploader,
-                username => $username,
+                uploader_id => $uploader_id,
+                uploader_name => $uploader_name,
+                uploader_username => $uploader_username,
                 exists => $exists
             );
 
@@ -232,5 +235,37 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
     $c->stash->{rest} = \%rtn;
 }
 
+
+sub genotyping_project_download_archived_vcf : Path('/ajax/genotyping_project/download_archived_vcf') : ActionClass('REST') { }
+
+sub genotyping_project_download_archived_vcf_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = $c->req->param('genotyping_project_id');
+    my $basename = $c->req->param('basename');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    # Get the file information
+    my $q = "SELECT md_files.dirname, md_files.basename
+            FROM public.nd_experiment_project
+            LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
+            LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
+            WHERE nd_experiment_project.project_id = ? AND md_files.basename = ?
+            GROUP BY dirname, basename;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($project_id, $basename);
+    my ($dirname, $basename) = $h->fetchrow_array();
+
+    print STDERR "DIRNAME: $dirname\n";
+    print STDERR "BASENAME: $basename\n";
+
+    # Return the file, if it exists
+    if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
+        my $contents = read_file("$dirname/$basename");
+        $c->res->content_type('text/plain');
+        $c->res->header('Content-Disposition', qq[attachment; filename="$basename"]);
+        $c->res->body($contents);
+    }
+}
 
 1;
