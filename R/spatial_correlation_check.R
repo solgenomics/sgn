@@ -92,7 +92,22 @@ check_quality <- function(data, phenotype, replicate) {
     # Check the distribution and normality of phenotypic data
     ###################################################################
     no_na <- trait_vals[!is.na(trait_vals)]
-    if (length(no_na) < 3) {
+    write(paste("no_na p-value: ", no_na), stderr())
+    write(paste("no_na??: ", class(no_na)), stderr())
+    if (!is.numeric(no_na)) {
+      message("Data not numeric")
+      skewness <- NA
+      shapiro_val <- data.frame(p.value = NA)
+      shapiro_val$p.value <- NA
+      return ( summary_table <- data.frame(
+        phenotype = phenotype,
+        missing_data = nas,
+        skewness = skewness,
+        shapiro_val = NA,
+        outliers = 0,
+        unique_count = 0,
+        replicate_count = 0))
+    } else if (length(no_na) < 3) {
         message("Not enough data to check for normality")
         skewness <- NA
         shapiro_val <- data.frame(p.value = NA)
