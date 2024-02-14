@@ -59,6 +59,8 @@ jQuery.noConflict();
 jQuery(document).ready(function($) {
 
     jQuery('#create_activity_project_link').click(function() {
+        var lo = new CXGN.List();
+        get_select_box('years', 'activity_project_year', {'id':'activity_project_year_select', 'name':'activity_project_year_select', 'auto_generate':1});
         jQuery("#create_activity_project_dialog").modal("show");
     });
 

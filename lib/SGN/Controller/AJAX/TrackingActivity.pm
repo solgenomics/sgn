@@ -38,6 +38,42 @@ __PACKAGE__->config(
    );
 
 
+sub create_activity_project : Path('/ajax/tracking_activity/create_activity_project') : ActionClass('REST'){ }
+
+sub create_activity_project_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+    $c->stash->{rest} = { error => "You must be logged in to add project." };
+        return;
+    }
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to create activity project." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $project_name = $c->req->param("project_name");
+    my $activity_type = $c->req->param("activity_type");
+    my $breeding_program = $c->req->param("breeding_program");
+    my $project_location = $c->req->param("project_location");
+    my $year = $c->req->param("year");
+    my $project_description = $c->req->param("project_description");
+
+    print STDERR "NAME =".Dumper($project_name)."\n";
+    print STDERR "TYPE =".Dumper($activity_type)."\n";
+    print STDERR "PROGRAM =".Dumper($breeding_program)."\n";
+    print STDERR "LOCATION =".Dumper($project_location)."\n";
+    print STDERR "YEAR =".Dumper($year)."\n";
+    print STDERR "DESCRIPTION =".Dumper($project_description)."\n";
+
+    $c->stash->{rest} = { success => 1};
+
+}
+
 sub activity_info_save : Path('/ajax/tracking_activity/save') : ActionClass('REST'){ }
 
 sub activity_info_save_POST : Args(0) {

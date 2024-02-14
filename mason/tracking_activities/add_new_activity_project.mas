@@ -29,13 +29,22 @@ $locations
                         </&>
 
                         <form class="form-horizontal" role="form" name="create_activity_project_form" id="create_activity_project_form">
-                            <&| /util/workflow.mas:step, title=> "Add an activity project" &>
+                            <&| /util/workflow.mas:step, title=> "Add project info" &>
                                 <& /page/page_title.mas, title=>"Enter basic information about the project" &>
                                     <br/>
                                     <div class="form-group">
                                         <label class="col-sm-4 control-lable">Project Name: </label>
                                         <div class="col-sm-8">
                                             <input class="form-control" type="text" id="activity_project_name" name="activity_project_name"  />
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Activity Type: </label>
+                                        <div class="col-sm-8">
+                                            <select class="form-control" id="activity_type" name="activity_type">
+                                                <option value="">Select an activity type</option>
+                                                <option value="tissue_culture">tissue culture</option>
+                                            </select>
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
@@ -119,13 +128,6 @@ foreach my $program (@$programs) {
 
 jQuery(document).ready(function(){
 
-//    jQuery('#create_activity_project_link').click(function() {
-//        var lo = new CXGN.List();
-//        get_select_box('years', 'activity_project_year', {'id':'activity_project_year_select', 'name':'activity_project_year_select', 'auto_generate':1});
-//        jQuery("#create_activity_project_dialog").modal("show");
-//    });
-
-
     var selectedProgram = jQuery('#activity_project_program option:selected').text()
 
     filter_options(selectedProgram, 'program', 'activity_project_location');
@@ -143,6 +145,73 @@ jQuery(document).ready(function(){
         jQuery('#activity_project_description').val('');
     });
 
+    jQuery('#create_activity_project_submit').click(function() {
+        var project_name = jQuery("#activity_project_name").val();
+        if (!project_name) {
+            alert("Project name is required");
+            return;
+        }
+
+        var activity_type = jQuery("#activity_type").val();
+        if (!activity_type) {
+            alert("Activity type is required");
+            return;
+        }
+
+        var breeding_program = jQuery("#activity_project_program").val();
+        if (!breeding_program) {
+            alert("Breeding program is required");
+            return;
+        }
+
+        var project_location = jQuery("#activity_project_location").val();
+        if (!project_location) {
+            alert ("Location is required");
+            return;
+        }
+
+        var year = jQuery("#activity_project_year_select").val();
+        if (!year) {
+            alert ("Year is required");
+            return;
+        }
+
+        var project_description = jQuery("#activity_project_description").val();
+        if (!project_description) {
+            alert ("Description is required");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/tracking_activity/create_activity_project',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'project_name' : project_name,
+                'activity_type': activity_type,
+                'breeding_program': breeding_program,
+                'project_location': project_location,
+                'year': year,
+                'project_description': project_description
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert('Saved');
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating the order');
+            }
+        });
+    });
 
 });
 
