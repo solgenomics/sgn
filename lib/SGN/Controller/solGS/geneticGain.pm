@@ -41,13 +41,16 @@ sub get_training_pop_gebvs : Path('/solgs/get/gebvs/training/population/')
   Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash->{training_pop_id} = $c->req->param('training_pop_id');
-    $c->stash->{trait_id}        = $c->req->param('trait_id');
-    $c->stash->{population_type} = 'training_population';
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::genotypingProtocol')
-      ->stash_protocol_id( $c, $protocol_id );
+    # $c->stash->{training_pop_id} = $c->req->param('training_pop_id');
+    # $c->stash->{trait_id}        = $c->req->param('trait_id');
+    # $c->stash->{population_type} = 'training_population';
+
+    my $protocol_id = $c->stash->{'genotyping_protocol_id'};
+    # $c->controller('solGS::genotypingProtocol')
+    #   ->stash_protocol_id( $c, $protocol_id );
 
     $c->stash->{rest}{gebv_exists} = undef;
 
@@ -69,18 +72,12 @@ sub get_selection_pop_gebvs : Path('/solgs/get/gebvs/selection/population/')
   Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash->{selection_pop_id} = $c->req->param('selection_pop_id');
-    $c->stash->{training_pop_id}  = $c->req->param('training_pop_id');
-    $c->stash->{trait_id}         = $c->req->param('trait_id');
-    $c->stash->{population_type}  = 'selection_prediction';
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
+    my $protocol_id = $c->stash->{'genotyping_protocol_id'};
     my $sel_pop_protocol_id =
-      $c->req->param('selection_pop_genotyping_protocol_id');
-    $c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
-
-    $c->controller('solGS::genotypingProtocol')
-      ->stash_protocol_id( $c, $protocol_id );
+      $c->stash->{'selection_pop_genotyping_protocol_id'};
 
     $c->stash->{rest}{gebv_exists} = undef;
 
@@ -104,14 +101,13 @@ sub genetic_gain_boxplot : Path('/solgs/genetic/gain/boxplot/') Args(0) {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    $c->stash->{rest}{boxplot} = undef;
-
     my $result = $self->check_genetic_gain_output($c);
 
     if ( !$result ) {
         $self->run_boxplot($c);
     }
 
+    $c->stash->{rest}{boxplot} = undef;
     $result = $self->check_genetic_gain_output($c);
     if ($result) {
         $self->boxplot_download_files($c);
@@ -176,10 +172,7 @@ sub get_selection_pop_gebv_file {
 
     if ( $selection_pop_id && $trait_id && $training_pop_id ) {
 
-        # my $identifier = "${training_pop_id}_${selection_pop_id}";
-        $c->controller('solGS::Files')
-          ->rrblup_selection_gebvs_file( $c, $training_pop_id,
-            $selection_pop_id, $trait_id, $protocol_id);
+        $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c);
         $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
     }
 
@@ -196,10 +189,12 @@ sub boxplot_id {
     my $protocol_id         = $c->stash->{genotyping_protocol_id};
     my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     my $multi_traits        = $c->stash->{training_traits_ids};
-    if ( scalar(@$multi_traits) > 1 ) {
-
+    
+    if ($multi_traits->[0] && scalar(@$multi_traits) > 1) {
         $trait_id = crc( join( '', @$multi_traits ) );
     }
+
+    $protocol_id .= '-' . $sel_pop_protocol_id if $sel_pop_protocol_id;
 
     $c->stash->{boxplot_id} =
       "${training_pop_id}_${selection_pop_id}_${trait_id}-${protocol_id}";
