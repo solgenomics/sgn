@@ -54,13 +54,12 @@ export function WizardDownloads(main_id,wizard){
       selections["genotyping_protocols"]:
       [];
     main.select(".wizard-download-genotypes-info")
-      .attr("value",`${accessions.length||"Too few"} accessions, ${
-        protocols.length==1?"selected protocol":
-        protocols.length>1?"too many protocols selected":
-        "default protocol"
+      .attr("value",`${accessions.length||"Too few"} accessions ${
+        protocols.length<1?", select a protocol":
+        protocols.length>1?", too many protocols":""
       }`);
     main.selectAll(".wizard-download-genotypes")
-      .attr("disabled",!!accessions.length&&protocols.length<=1?null:true)
+      .attr("disabled",accessions.length<1||protocols.length<1?true:null)
       .on("click",()=>{
         event.preventDefault();
         var accession_ids = accessions.map(d=>d.id);

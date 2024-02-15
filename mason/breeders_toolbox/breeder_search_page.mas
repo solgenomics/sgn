@@ -178,6 +178,7 @@ $dataset_id => undef
                 <span class="glyphicon glyphicon-info-sign" title="To download related genotype data, select 1 or more Accessions and optionally no more than 1 Genotyping Protocol in the wizard. If no genotyping protocol is selected, the database default protocol will be used. Click the checkbox here to compute genotypes for the selected accessions from genotypes of parents; this works for downloading genotypes, downloading the GRM, and performing GWAS."></span>
                 <span>Download Genotype Data</span>
                 <input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input>
+                <input class="wizard-download-genotypes-info2 form-control input-sm" type="text" hidden></input>
               </td>
               <td colspan="4">
                   <span>Compute From Parents</span><br/>
@@ -493,11 +494,15 @@ $dataset_id => undef
     window.sWizard.reload_lists();
   });
 
-
   // Wizard Callback: get chromosome names for a single selected genotyping protocol
   var SELECTED_GENOTYPING_PROTOCOL = undefined;
+  var SELECTED_ACCESSIONS = undefined;
+  var num_markers = 0;
+  var download_units = 0;
   window.sWizard.wizard.on_change(function(categories, selections, operations) {
     var selected_genotyping_protocols = selections.hasOwnProperty('genotyping_protocols') ? selections.genotyping_protocols : [];
+    var selected_accessions = selections.hasOwnProperty('accessions') ? selections.accessions : [];
+    selected_accessions = selected_accessions.length;
     if ( selected_genotyping_protocols.length <= 1 ) {
       var selected_genotyping_protocol = selected_genotyping_protocols.length === 1 ? selected_genotyping_protocols[0].id : "";
       if ( selected_genotyping_protocol !== SELECTED_GENOTYPING_PROTOCOL ) {
@@ -522,11 +527,46 @@ $dataset_id => undef
             }
           }
         });
+        if ( selected_accessions > 0 ) {
+            console.log("found " + selected_accessions);
+        } else {
+            console.log("no accessions");
+        }
+        jQuery.ajax({
+          url: '/ajax/genotyping_protocol/num_markers',
+          method: "GET",
+          data: { 'protocol_ids': SELECTED_GENOTYPING_PROTOCOL },
+          error: function(response) {
+            console.log("ERROR: Could not get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+            console.log(response);
+          },
+          success: function(response) {
+            if (response.error) {
+              console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+              console.log(repsonse.error);
+            }
+            else {
+              num_markers = response.data;
+            }
+          }
+        });
       }
     }
     else {
       SELECTED_GENOTYPING_PROTOCOL = "";
       updateChromosomeNames();
+    }
+    if ( selected_accessions !== SELECTED_ACCESSIONS ) {
+      console.log("accessions new " + selected_accessions);
+      SELECTED_ACCESSIONS = selected_accessions;
+      download_units = num_markers * selected_accessions;
+      if (download_units > 100000) {
+            $(".wizard-download-genotypes-info2").show();
+            $(".wizard-download-genotypes-info2").val(download_units + " download will be slow");
+      } else {
+            $(".wizard-download-genotypes-info2").hide();
+            $(".wizard-download-genotypes-info2").val(download_units.toString());
+      }
     }
   });
   updateChromosomeNames();
