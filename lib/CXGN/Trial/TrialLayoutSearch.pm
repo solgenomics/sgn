@@ -110,6 +110,11 @@ has 'include_observations' => (
     default => 0
 );
 
+has 'order_by' => (
+    isa => 'Str|Undef',
+    is => 'rw'
+);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -168,7 +173,7 @@ sub search {
 
     my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, treatment.name, treatment.description, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count ";
 
-    my $order_clause = " ORDER BY 6, 2 ";
+    my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
 
     my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, treatment.name, treatment.description, seedlot.stock_id, seedlot.uniquename ";
 
