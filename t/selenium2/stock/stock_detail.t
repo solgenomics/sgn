@@ -1,6 +1,6 @@
 use lib 't/lib';
 
-use Test::More 'tests' => 43;
+use Test::More 'tests' => 46;
 
 use SGN::Test::WWW::WebDriver;
 
@@ -57,9 +57,9 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     # Test adding and removing synonyms from stock additional info section
-    my $synonym_onswitch = $t->find_element_ok("stock_additional_info_section_onswitch",  "id",  "click to open image panel");
-    $synonym_onswitch->click();
-    sleep(3);
+    # my $synonym_onswitch = $t->find_element_ok("stock_additional_info_section_onswitch",  "id",  "click to open image panel");
+    # $synonym_onswitch->click();
+    # sleep(3);
 
     $t->find_element_ok("stock_add_synonym", "id", "find add synonym link")->click();
     sleep(1);
@@ -92,8 +92,14 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('stock/38879/view');
     sleep(2);
 
-    $t->find_element_ok("add_parent_link", "id", "find add parent link")->click();
+    my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
+    $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
+    sleep(2);
+    $pedigree_section->click();
+    sleep(2);
 
+    my $add_parent_link = $t->find_element_ok('add_parent_link', 'id', 'find add parent link');
+    $add_parent_link->click();
     sleep(1);
 
     my $stock_name = $t->find_element_ok("stock_autocomplete", "id", "add parent input");
@@ -130,7 +136,14 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('stock/38879/view');
     sleep(5);
 
-    $t->find_element_ok('//button[@id="add_parent_link"]', "xpath", "find add parent link")->click();
+    my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
+    $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
+    sleep(2);
+    $pedigree_section->click();
+    sleep(2);
+
+    my $add_parent_link = $t->find_element_ok('add_parent_link', 'id', 'find add parent link');
+    $add_parent_link->click();
     sleep(1);
 
     $stock_name = $t->find_element_ok("stock_autocomplete", "id", "add parent input");
@@ -150,6 +163,12 @@ $t->while_logged_in_as("submitter", sub {
     # Test if parents were added to database and now in a view
     $t->get_ok('stock/38879/view');
     sleep(5);
+
+    my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
+    $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
+    sleep(2);
+    $pedigree_section->click();
+    sleep(2);
 
     my $pedigree_view = $t->find_element_ok(
         '//div[@id="pdgv-wrap"]',
@@ -178,6 +197,12 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
     sleep(3);
+
+    my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
+    $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
+    sleep(2);
+    $pedigree_section->click();
+    sleep(2);
 
     $t->find_element_ok("remove_parent_link", "id", "find delete parent link")->click();
     sleep(1);

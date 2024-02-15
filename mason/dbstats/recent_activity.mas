@@ -1,0 +1,161 @@
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, entries => [ 'recent_activity' ], classes => [ 'jquery' ]  &>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+<& /page/page_title.mas, title => 'Recent activity' &>
+
+Start Date: <input type="text" id="dbstats_start_date" title="dbstats_start_date"  />
+<td>&nbsp;</td></td><td>
+
+End Date: <input type="text" id="dbstats_end_date" title="dbstats_end_date"  />
+</td><td>
+&nbsp;
+</td><td>
+<input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
+</td><td>
+&nbsp;
+</td><td>
+<button id="update_dbstats_by_date">Update</button>
+<br /><br />
+<div id="dbstats_message"></div>
+
+<h3>Trials</h3>
+<div id="recent_activity_trials_div">
+  <table id="recent_activity_trials" width="600">
+  <thead>
+    <tr><th width="200">Breeding Program</th><th width="200">Trials</th></tr>
+    </thead>
+  </table>
+</div>
+
+<h3>Phenotypes</h3>
+<div id="recent_activity_phenotypes_div">
+  <table id="recent_activity_phenotypes" width="600">
+  <thead>
+    <tr><th width="200">Breeding Program</th><th width="200">Phenotypes</th></tr>
+    </thead>
+  </table>
+</div>
+
+<h3>Accessions</h3>
+<div id="recent_activity_accessions_div">
+  <table id="recent_activity_accessions" width="600">
+  <thead>
+    <tr><th width="200">Breeding Program</th><th width="200">Accessions</th></tr>
+    </thead>
+  </table>
+</div>
+
+<h3>Plots</h3>
+<div id="recent_activity_plots_div">
+  <table id="recent_activity_plots" width="600">
+  <thead>
+    <tr><th width="200">Breeding Program</th><th width="200">Plots</th></tr>
+    </thead>
+  </table>
+</div>
+
+<script>
+
+    jQuery(document).ready( function() {
+	update_dbstats_tables();
+    });
+
+    jQuery('#update_dbstats_by_date').click( function() {
+	update_dbstats_tables();
+    });
+
+
+function update_dbstats_tables(start_date, end_date, include_dateless_items) { 
+    var start_date = jQuery('#dbstats_start_date').val();
+    var end_date = jQuery('#dbstats_end_date').val();
+    var include_dateless_items = jQuery('#include_dateless_items').prop('checked');
+    
+    var html = "Showing database items generated from date: "+start_date+" to date: "+end_date;
+    if (include_dateless_items === true) { html += '. Including data items that do not have an associated date.'; }
+    jQuery('#dbstats_message').html(html);
+
+    jQuery('#recent_activity_trials').dataTable( {
+	ajax : '/ajax/dbstats/trials_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info:false
+	
+    }
+    );
+
+    jQuery('#recent_activity_phenotypes').dataTable({
+	ajax : '/ajax/dbstats/phenotypes_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info: false,
+    });
+
+    jQuery('#recent_activity_accessions').dataTable({
+	ajax : '/ajax/dbstats/accessions_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info: false
+	
+    }
+	
+    );
+
+
+    jQuery('#recent_activity_plots').dataTable({
+	ajax : '/ajax/dbstats/plots_by_breeding_program?start_date='+start_date+'&end_date='+end_date+'&include_dateless_items='+include_dateless_items,
+	destroy: true,
+	searching: false,
+	paginate: false,
+	info: false
+    }
+	
+    );
+}
+
+
+jQuery('input[title="dbstats_start_date"]').daterangepicker(
+   {
+       "singleDatePicker": true,
+       "showDropdowns": true,
+       "autoUpdateInput": true,
+       "startDate": "1960-01-01",
+       "yearSelect" : true,
+       "minDate": "1960-01-01",
+       "maxDate": "2030-12-31",
+       locale: { 
+        format: 'YYYY-MM-DD'
+      }
+   },
+
+);
+
+var dbstats_end_date_element = jQuery("#dbstats_end_date");
+
+jQuery('input[title="dbstats_end_date"]').daterangepicker(
+    {
+       "singleDatePicker": true,
+       "autoUpdateInput": true,
+       "minDate": "1960-01-01",
+       "maxYear" : "2030-12-31", 
+       "yearSelect" : true,
+       locale: { 
+           format: 'YYYY-MM-DD'
+       },
+       "showDropdowns": true,
+    },
+
+);
+
+
+</script>
+
