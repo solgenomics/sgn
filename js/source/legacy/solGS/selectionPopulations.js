@@ -19,8 +19,11 @@ solGS.selectionPopulation = {
 
   checkSelectionPopulations: function () {
     var args = solGS.getModelArgs();
-    args = JSON.stringify(args);
 
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+    args["selection_pop_genotyping_protocol_id"] = protocols.selection_pop_genotyping_protocol_id;
+    args = JSON.stringify(args);
+    
     var checkPop = jQuery.ajax({
       type: "POST",
       data: { arguments: args },
@@ -32,14 +35,17 @@ solGS.selectionPopulation = {
   },
 
   checkSelectionPopulationRelevance: function (popName) {
-    var modelVars = solGS.getModelArgs();
+    var selPopArgs = solGS.getModelArgs();
     modelVars["selection_pop_name"] = popName;
 
-    var popData = JSON.stringify(modelVars);
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+    selPopArgs["selection_pop_genotyping_protocol_id"] = protocols.selection_pop_genotyping_protocol_id;
+    selPopArgs = JSON.stringify(selPopArgs);
+
     var checkRelevance = jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: { arguments: popData },
+      data: { arguments: selPopArgs },
       url: "/solgs/check/selection/population/relevance/",
     });
 
