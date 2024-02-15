@@ -66,13 +66,6 @@ sub create_activity_project_POST : Args(0) {
     my $year = $c->req->param("year");
     my $project_description = $c->req->param("project_description");
 
-    print STDERR "NAME =".Dumper($project_name)."\n";
-    print STDERR "TYPE =".Dumper($activity_type)."\n";
-    print STDERR "PROGRAM =".Dumper($breeding_program_id)."\n";
-    print STDERR "LOCATION =".Dumper($project_location)."\n";
-    print STDERR "YEAR =".Dumper($year)."\n";
-    print STDERR "DESCRIPTION =".Dumper($project_description)."\n";
-
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($project_location);
     if(!$geolocation_lookup->get_geolocation()){
