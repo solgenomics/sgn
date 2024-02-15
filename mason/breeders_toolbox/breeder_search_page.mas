@@ -178,7 +178,6 @@ $dataset_id => undef
                 <span class="glyphicon glyphicon-info-sign" title="To download related genotype data, select 1 or more Accessions and optionally no more than 1 Genotyping Protocol in the wizard. If no genotyping protocol is selected, the database default protocol will be used. Click the checkbox here to compute genotypes for the selected accessions from genotypes of parents; this works for downloading genotypes, downloading the GRM, and performing GWAS."></span>
                 <span>Download Genotype Data</span>
                 <input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input>
-                <input class="wizard-download-genotypes-info2 form-control input-sm" type="text" hidden></input>
               </td>
               <td colspan="4">
                   <span>Compute From Parents</span><br/>
@@ -234,15 +233,16 @@ $dataset_id => undef
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="6">
+                    <td colspan="8">
                         <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, or markerset. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
                         <span>Download Genotypes</span><br/>
                         <button class="wizard-download-genotypes btn btn-sm btn-primary">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                             Download Genotypes
                         </button>
+                        <input class="wizard-download-genotypes-info2 form-control btn-warning" type="text" hidden></input>
                     </td>
-                    <td colspan="6">
+                    <td colspan="4">
                     </td>
                 </tr>
             </table>
@@ -560,7 +560,7 @@ $dataset_id => undef
       console.log("accessions new " + selected_accessions);
       SELECTED_ACCESSIONS = selected_accessions;
       download_units = num_markers * selected_accessions;
-      if (download_units > 100000) {
+      if (download_units > 1000000) {
             $(".wizard-download-genotypes-info2").show();
             $(".wizard-download-genotypes-info2").val(download_units + " download will be slow");
       } else {
