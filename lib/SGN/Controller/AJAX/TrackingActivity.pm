@@ -12,7 +12,9 @@ use CXGN::Contact;
 use CXGN::Trial::Download;
 use CXGN::Stock::TrackingActivity::TrackingIdentifier;
 use CXGN::Stock::TrackingActivity::ActivityInfo;
+use CXGN::TrackingActivity::AddActivityProject;
 use SGN::Model::Cvterm;
+use CXGN::Location::LocationLookup;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -55,22 +57,62 @@ sub create_activity_project_POST : Args(0) {
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
 
     my $project_name = $c->req->param("project_name");
     my $activity_type = $c->req->param("activity_type");
-    my $breeding_program = $c->req->param("breeding_program");
+    my $breeding_program_id = $c->req->param("breeding_program");
     my $project_location = $c->req->param("project_location");
     my $year = $c->req->param("year");
     my $project_description = $c->req->param("project_description");
 
     print STDERR "NAME =".Dumper($project_name)."\n";
     print STDERR "TYPE =".Dumper($activity_type)."\n";
-    print STDERR "PROGRAM =".Dumper($breeding_program)."\n";
+    print STDERR "PROGRAM =".Dumper($breeding_program_id)."\n";
     print STDERR "LOCATION =".Dumper($project_location)."\n";
     print STDERR "YEAR =".Dumper($year)."\n";
     print STDERR "DESCRIPTION =".Dumper($project_description)."\n";
 
-    $c->stash->{rest} = { success => 1};
+    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+    $geolocation_lookup->set_location_name($project_location);
+    if(!$geolocation_lookup->get_geolocation()){
+        $c->stash->{rest}={error => "Location not found"};
+        return;
+    }
+
+    my $error;
+    eval{
+        my $add_activity_project = CXGN::TrackingActivity::AddActivityProject->new({
+            bcs_schema => $schema,
+            dbh => $dbh,
+            breeding_program_id => $breeding_program_id,
+            year => $year,
+            project_description => $project_description,
+            activity_project_name => $project_name,
+            activity_type => $activity_type,
+            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
+            owner_id => $user_id
+        });
+
+        my $return = $add_activity_project->save_activity_project();
+        print STDERR "RETURN =".Dumper($return)."\n";
+
+        if ($return->{error}){
+            $error = $return->{error};
+        }
+    };
+
+    if ($@) {
+        $c->stash->{rest} = {error => $@};
+        return;
+    };
+
+
+    if ($error){
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {success => 1};
+    }
 
 }
 

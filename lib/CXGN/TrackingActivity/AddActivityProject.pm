@@ -1,11 +1,11 @@
 =head1 NAME
 
-CXGN::AddActivityProject - a module for adding activity project
+CXGN::TrackingActivity::AddActivityProject - a module for adding activity project
 
 =cut
 
 
-package CXGN::AddActivityProject;
+package CXGN::TrackingActivity::AddActivityProject;
 
 use Moose;
 use MooseX::FollowPBP;
@@ -15,8 +15,9 @@ use CXGN::Location::LocationLookup;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::TrackingActivity::ActivityProject;
 
-has 'schema' => (
+has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1,
@@ -57,6 +58,12 @@ has 'activity_project_name' => (
     required => 1,
 );
 
+has 'activity_type' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'parent_folder_id' => (
     isa => 'Str',
     is => 'rw',
@@ -72,7 +79,7 @@ has 'owner_id' => (
 sub existing_project_name {
     my $self = shift;
     my $activity_project_name = $self->get_activity_project_name();
-    my $schema = $self->get_schema();
+    my $schema = $self->get_bcs_schema();
     if($schema->resultset('Project::Project')->find({name => $activity_project_name})){
         return 1;
     }
@@ -84,7 +91,7 @@ sub existing_project_name {
 
 sub save_activity_project {
     my $self = shift;
-    my $schema = $self->get_schema();
+    my $schema = $self->get_bcs_schema();
 
     if ($self->existing_project_name()){
         print STDERR "Can't create activity project: Project name already exists\n";
@@ -99,8 +106,8 @@ sub save_activity_project {
     my $parent_folder_id;
     $parent_folder_id = $self->get_parent_folder_id() || 0;
 
-    my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'project year', 'project_property');
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_record', 'project_type')->cvterm_id();
+    my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
 
     my $project = $schema->resultset('Project::Project')
         ->create({
@@ -109,21 +116,30 @@ sub save_activity_project {
               type_id => $project_type_cvterm_id
         });
 
+    my $project_id = $project->project_id();
 
-    my $activity_project = CXGN::TrackingActivity::ActivityProject->new({
+    my $activity_project = CXGN::Trial->new({
         bcs_schema => $schema,
-        project_id => $project->project_id(),
+        project_id => $project_id,
     });
 
     if ($self->get_nd_geolocation_id()){
         $activity_project->set_location($self->get_nd_geolocation_id());
     }
 
+    $activity_project->set_project_type($project_type_cvterm_id);
     $activity_project->set_year($self->get_year());
-    $activity_project->set_breeding_program($self->get_breeding_program_id);
+    $activity_project->set_breeding_program($self->get_breeding_program_id());
     $activity_project->set_trial_owner($self->get_owner_id);
 
-    return {success=>1, activity_project_id=>$activity_project->get_activity_project_id};
+    my $activity_projectprop = $schema->resultset('Project::Projectprop')->create({
+        project_id => $project_id,
+        type_id => $activity_type_cvterm_id,
+        value => $self->get_activity_type(),
+    });
+
+    return {success=>1, activity_project_id => $activity_project->get_trial_id};
+
 }
 
 
