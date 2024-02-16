@@ -1,0 +1,12 @@
+
+<%args>
+$phenotype_files => ''
+</%args>
+
+<& /page/page_title.mas, title => 'Recent changes to Breedbase code' &>
+
+<& /homepage/github_pullrequests.mas &>
+
+% if ($phenotype_files) {
+     <& homepage/phenotype_uploads.mas, phenotype_files=>$phenotype_files &>
+% }
