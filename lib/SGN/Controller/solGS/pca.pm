@@ -54,6 +54,7 @@ sub run_pca_analysis : Path('/run/pca/analysis') Args() {
 
     my $cached =
       $c->controller('solGS::CachedResult')->check_pca_output( $c, $file_id );
+
     if ( !$cached->{scores_file} ) {
         $self->run_pca($c);
     }
@@ -442,16 +443,15 @@ sub training_selection_geno_files {
 
     my $tr_pop_id  = $c->stash->{training_pop_id};
     my $sel_pop_id = $c->stash->{selection_pop_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+    my $tr_pop_protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my @files;
-    foreach my $id ( ( $tr_pop_id, $sel_pop_id ) ) {
-        $c->controller('solGS::Files')->genotype_file_name( $c, $id );
-        push @files, $c->stash->{genotype_file_name};
-    }
-
-    my $sel_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     $c->controller('solGS::Files')
-      ->genotype_file_name( $c, $sel_pop_id, $sel_protocol_id );
+      ->genotype_file_name( $c, $sel_pop_id, $sel_pop_protocol_id );
+    push @files, $c->stash->{genotype_file_name};
+
+    $c->controller('solGS::Files')
+      ->genotype_file_name( $c, $tr_pop_id, $tr_pop_protocol_id );
     push @files, $c->stash->{genotype_file_name};
 
     my $files = join( "\t", @files );
@@ -490,7 +490,7 @@ sub run_pca {
     $c->stash->{dependent_jobs} = $c->stash->{pca_r_jobs_file};
 
     $c->controller('solGS::AsyncJob')->run_async($c);
-
+    
 }
 
 sub run_pca_single_core {
