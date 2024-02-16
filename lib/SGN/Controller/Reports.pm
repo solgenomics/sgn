@@ -58,6 +58,13 @@ sub overview : Path('/reports/overview') Args(0) {
     $c->stash->{template} = '/reports/overview.mas';
 }
 
+sub code_changes :Path('/reports/recent_code_changes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/reports/recent_code_changes.mas';
+
+}
 
 
 1;
