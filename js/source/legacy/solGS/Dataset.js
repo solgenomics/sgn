@@ -97,10 +97,8 @@ solGS.dataset = {
           };
 
           if (trialsIds.length > 1) {
-            console.log("geno pro id " + genoProId);
             solGS.combinedTrials.downloadCombinedTrialsTrainingPopData(args);
           } else {
-            console.log("geno pro id " + genoProId);
             solGS.combinedTrials.downloadSingleTrialTrainingPopData(singleArgs);
           }
         } else {
@@ -165,11 +163,13 @@ solGS.dataset = {
     var dataset = new CXGN.Dataset();
     var d = dataset.getDataset(datasetId);
 
-    var protocolId;
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+    var selPopProtocolId;
+    var protocolId = protocols.genotyping_protocol_id;
     if (d.categories["genotyping_protocols"]) {
-      protocolId = d.categories["genotyping_protocols"][0];
+      selPopProtocolId = d.categories["genotyping_protocols"][0];
     } else {
-      protocolId = jQuery("#genotyping_protocol_id").val();
+      selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
     }
 
     var args = {
@@ -182,6 +182,7 @@ solGS.dataset = {
       population_type: "dataset_selection",
       data_set_type: trainingPopDetails.data_set_type,
       genotyping_protocol_id: protocolId,
+      selection_pop_genotyping_protocol_id: selPopProtocolId,
     };
 
     return args;
@@ -213,11 +214,11 @@ solGS.dataset = {
         url: "/solgs/check/predicted/dataset/selection",
         success: function (response) {
           args = JSON.parse(args);
-
-          if (response.output) {
+          var selPopLink = response.output;
+          if (selPopLink) {
             solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(
               args,
-              response.output
+              selPopLink
             );
 
             if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
@@ -227,22 +228,16 @@ solGS.dataset = {
               solGS.cluster.listClusterPopulations();
             }
           } else {
-            solGS.dataset.queueDatasetSelectionPredictionJob(datasetId);
+            solGS.dataset.queueDatasetSelectionPredictionJob(datasetId, selPopLink);
           }
         },
       });
     }
   },
 
-  queueDatasetSelectionPredictionJob: function (datasetId) {
+  queueDatasetSelectionPredictionJob: function (datasetId, selPopLink) {
     var args = this.createDatasetSelectionArgs(datasetId);
-    var modelId = args.training_pop_id;
-    var selectionPopId = args.selection_pop_id;
-
-    var hostName = window.location.protocol + "//" + window.location.host;
-    var page = hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId;
-
-    solGS.waitPage(page, args);
+    solGS.waitPage(selPopLink, args);
   },
 
   /////
