@@ -148,7 +148,7 @@ solGS.genotypingProtocol = {
 
     var protocolId;
     if (divPlace) {
-     divPlace = solGS.genotypingProtocol.formatId(divPlace);
+     divPlace = solGS.genotypingProtocol.formatDivId(divPlace);
 		  protocolId = jQuery(divPlace + ' #genotyping_protocol #genotyping_protocol_id').val();
     }
 	
