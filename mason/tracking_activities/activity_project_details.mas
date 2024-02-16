@@ -115,3 +115,5 @@ $trial_owner
     </div>
 </div>
 <button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
+
+<& /tracking_activities/generate_tracking_identifiers_dialog.mas &>
