@@ -21,6 +21,7 @@ use SGN::Model::Cvterm;
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Stock::TissueSample::Search;
 use CXGN::Genotype::Protocol;
+use CXGN::TrackingActivity::ActivityProject;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -145,6 +146,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
     $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
+
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
 
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
@@ -298,6 +301,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $locations_by_program_json = encode_json(\@locations_by_program);
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
+    } elsif ($trial_type_name eq 'activity_record') {
+        $c->stash->{template} = '/tracking_activities/activity_project.mas';
     }
     else {
         my $field_management_factors = $c->config->{management_factor_types};

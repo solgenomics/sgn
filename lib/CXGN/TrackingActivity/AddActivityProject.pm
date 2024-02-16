@@ -128,11 +128,11 @@ sub save_activity_project {
         $activity_project->set_location($self->get_nd_geolocation_id());
     }
 
+    $activity_project->set_project_type($project_type_cvterm_id);
     $activity_project->set_year($self->get_year());
     $activity_project->set_breeding_program($self->get_breeding_program_id());
     $activity_project->set_trial_owner($self->get_owner_id);
 
-    print STDERR "ACTIVITY TYPE =".Dumper($self->get_activity_type())."\n";
     my $activity_projectprop = $schema->resultset('Project::Projectprop')->create({
         project_id => $project_id,
         type_id => $activity_type_cvterm_id,
