@@ -179,56 +179,91 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my @project_ids = split(',', $c->req->param('genotyping_project_id'));
+    my @protocol_ids = split(',', $c->req->param('genotyping_protocol_id'));
     my $limit = defined $c->req->param('limit');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
+    # Get projects that match the provided protocol(s)
+    if ( scalar(@protocol_ids) > 0 ) {
+        my $ph = join ( ',', ('?') x @protocol_ids );
+        my $q = "SELECT genotyping_project_id FROM genotyping_projectsxgenotyping_protocols WHERE genotyping_project_id IS NOT NULL AND genotyping_protocol_id IN ($ph);";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute(@protocol_ids);
+        while (my ($project_id) = $h->fetchrow_array()) {
+            push(@project_ids, $project_id);
+        }
+    }
+
+    # Initiate the return hash (key = project id, value = array of vcf file data)
     my %rtn;
     foreach my $project_id (@project_ids) {
         $rtn{$project_id} = [];
+    }
 
-        # Get the most-recent archived VCF file for the genotyping project
-        my $q = "SELECT dirname, basename, create_date, uploader_id, uploader_name, uploader_username FROM (
-                    SELECT md_files.dirname, md_files.basename, md_metadata.create_date, 
-                        sp_person.sp_person_id AS uploader_id, CONCAT(sp_person.first_name, ' ', sp_person.last_name) AS uploader_name, sp_person.username AS uploader_username
-                    FROM public.nd_experiment_project
-                    LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
-                    LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
-                    LEFT JOIN metadata.md_metadata ON (md_files.metadata_id = md_metadata.metadata_id)
-                    LEFT JOIN sgn_people.sp_person ON (md_metadata.create_person_id = sp_person.sp_person_id)
-                    WHERE nd_experiment_project.project_id = ?
-                    GROUP BY dirname, basename, create_date, sp_person_id, first_name, last_name, username
-                ) AS t
-                WHERE t.create_date IS NOT NULL
-                ORDER BY t.create_date DESC";
-        if ( $limit ) {
-            $q .= " LIMIT 1";
-        }
-        my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($project_id);
+    # Get metadata about the archived vcf files for all of the requested projects 
+    my $ph = join ( ',', ('?') x @project_ids );
+    my $q = "SELECT genotyping_protocol_id, genotyping_protocol_name, genotyping_project_id, genotyping_project_name,
+                dirname, basename, create_date, uploader_id, uploader_name, uploader_username
+            FROM (
+                SELECT genotyping_protocols.genotyping_protocol_id, genotyping_protocols.genotyping_protocol_name, 
+                    genotyping_projects.genotyping_project_id, genotyping_projects.genotyping_project_name,
+                    md_files.dirname, md_files.basename, md_metadata.create_date,
+                    sp_person.sp_person_id AS uploader_id,
+                    CONCAT(sp_person.first_name, ' ', sp_person.last_name) AS uploader_name,
+                    sp_person.username AS uploader_username
+                FROM public.nd_experiment_project
+                LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
+                LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
+                LEFT JOIN metadata.md_metadata ON (md_files.metadata_id = md_metadata.metadata_id)
+                LEFT JOIN sgn_people.sp_person ON (md_metadata.create_person_id = sp_person.sp_person_id)
+                LEFT JOIN public.genotyping_projects ON (nd_experiment_project.project_id = genotyping_projects.genotyping_project_id)
+                LEFT JOIN public.genotyping_projectsxgenotyping_protocols ON (genotyping_projects.genotyping_project_id = genotyping_projectsxgenotyping_protocols.genotyping_project_id)
+                LEFT JOIN public.genotyping_protocols ON (genotyping_projectsxgenotyping_protocols.genotyping_protocol_id = genotyping_protocols.genotyping_protocol_id)
+                WHERE nd_experiment_project.project_id IN ($ph)
+                GROUP BY genotyping_projects.genotyping_project_id, genotyping_project_name, 
+                    genotyping_protocols.genotyping_protocol_id, genotyping_protocol_name, 
+                    dirname, basename, create_date, sp_person_id, first_name, last_name, username
+            ) AS t
+            WHERE t.create_date IS NOT NULL
+            ORDER BY t.genotyping_protocol_name, t.genotyping_project_name, t.create_date DESC";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute(@project_ids);
+
+    # Parse the results for all of the archived files
+    my %seen_projects;
+    while (my ($geno_proto_id, $geno_proto_name, $geno_proj_id, $geno_proj_name, $dirname, $basename, $create_date, $uploader_id, $uploader_name, $uploader_username) = $h->fetchrow_array()) {
         
-        # Parse the results for all of the archived files
-        while (my ($dirname, $basename, $create_date, $uploader_id, $uploader_name, $uploader_username) = $h->fetchrow_array()) {
-        
-            # Check if the file actually exists
-            my $exists = "false";
-            if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
-                $exists = "true";
-            }
-
-            # Set return properties
-            my %props = (
-                dirname => $dirname,
-                basename => $basename,
-                create_date => $create_date,
-                uploader_id => $uploader_id,
-                uploader_name => $uploader_name,
-                uploader_username => $uploader_username,
-                exists => $exists
-            );
-
-            # Add to existing project props
-            push(@{$rtn{$project_id}}, \%props);
+        # When limit is defined (to only return the most recent file for each project),
+        # skip processing the file if one was already found (newer files are processed first since the query is sorted by date DESC)
+        # This should really be implemented in the query, but not sure of the best way to do that - maybe a lateral join?
+        if ( $limit && exists($seen_projects{$geno_proj_id}) ) {
+            next;
         }
+        $seen_projects{$geno_proj_id} = 1;
+
+        # Check if the file actually exists
+        my $exists = "false";
+        if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
+            $exists = "true";
+        }
+
+        # Set return properties
+        my %props = (
+            genotyping_protocol_id => $geno_proto_id,
+            genotyping_protocol_name => $geno_proto_name,
+            genotyping_project_id => $geno_proj_id,
+            genotyping_project_name => $geno_proj_name,
+            dirname => $dirname,
+            basename => $basename,
+            create_date => $create_date,
+            uploader_id => $uploader_id,
+            uploader_name => $uploader_name,
+            uploader_username => $uploader_username,
+            exists => $exists
+        );
+
+        # Add to existing project props
+        push(@{$rtn{$geno_proj_id}}, \%props);
 
     }
 
@@ -242,7 +277,7 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $project_id = $c->req->param('genotyping_project_id');
-    my $basename = $c->req->param('basename');
+    my $requested_basename = $c->req->param('basename');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     # Get the file information
@@ -253,11 +288,8 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
             WHERE nd_experiment_project.project_id = ? AND md_files.basename = ?
             GROUP BY dirname, basename;";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($project_id, $basename);
+    $h->execute($project_id, $requested_basename);
     my ($dirname, $basename) = $h->fetchrow_array();
-
-    print STDERR "DIRNAME: $dirname\n";
-    print STDERR "BASENAME: $basename\n";
 
     # Return the file, if it exists
     if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
