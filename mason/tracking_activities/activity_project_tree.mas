@@ -66,13 +66,13 @@ jQuery(document).ready(function($) {
 
 
     jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',
+      url: '/ajax/breeders/get_trials_with_folders_cached?type=activity',
       success: function(response) {
         var html = '<ul>'+response.html+'</ul>';
 
-        jQuery('#crosses_list').html(html);
+        jQuery('#activities_list').html(html);
         //console.log(html);
-        jQuery('#crosses_list').jstree( {
+        jQuery('#activities_list').jstree( {
             "core": { 'themes': { 'name': 'proton', 'responsive': true}},
             "valid_children" : [ "folder", "trial", "breeding_program" ],
             "types" : {
@@ -82,7 +82,7 @@ jQuery(document).ready(function($) {
                 "folder" : {
                     "icon": 'glyphicon glyphicon-folder-open text-danger',
                 },
-                "cross" : {
+                "activity" : {
                     "icon": 'glyphicon glyphicon-grain text-success',
                 }
             },
@@ -121,7 +121,7 @@ jQuery(document).ready(function($) {
             if (node.type == 'folder') {
                 window.open('/folder/'+node.id);
                 event.stopPropagation();
-            } else if (node.type == 'cross') {
+            } else if (node.type == 'activity') {
                 window.open('/breeders_toolbox/trial/'+node.id);
                 event.stopPropagation();
             }
