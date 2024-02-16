@@ -75,22 +75,26 @@ $design_types => ()
                                                 <div class="form-group">
                                                   <input type="file" name="multiple_trial_designs_upload_file" id="multiple_trial_designs_upload_file" encoding="multipart/form-data" />
                                                 </div>
-                                              <div class="form-group">
-                                                  <div class="col-sm-4"></div>
+                                              <div class="form-group"> 
+                                                  <div class="col-sm-3"></div>
                                                   <label class="col-sm-2 control-label">Ignore Warnings: </label>
-                                                  <div class="col-sm-2" >
+                                                  <div class="col-sm-2"  style="margin-right: 50px;">
                                                       <input id="upload_multiple_trials_ignore_warnings" name="upload_multiple_trials_ignore_warnings" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
                                                   </div>
-                                                  <div class="col-sm-4"></div>
+                                                  <div class="col-sm-5"></div>
                                               </div>
                                             </form>
-                                              <div class="form-group" style="margin-bottom: 50px;">
-                                                  <div class="col-sm-4"></div>
-                                                  <label class="col-sm-2 control-label">Email Report: </label>
-                                                  <div class="col-sm-2" >
-                                                      <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
-                                                  </div>
-                                                  <div class="col-sm-4"></div>
+                                                <div class="form-group" style="margin-bottom: 50px;">
+                                                    <div class="col-sm-3"></div>
+                                                    <label class="col-sm-2 control-label">Email Report: </label>
+                                                    <div class="col-sm-2" style="margin-left: -5px;">
+                                                        <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                                                    </div>
+                                                    <label class="col-sm-1 control-label">Email: </label>
+                                                    <div class="col-sm-2">
+                                                        <input id="email_address" name="email_address" type="email" value="<% my $email_address %>">
+                                                    </div>
+                                                    <div class="col-sm-2"></div>
                                               </div>
 
                                             <div style="display:none" id="upload_multiple_trials_warning_messages" class="alert-warning" role="alert">
@@ -814,10 +818,6 @@ jQuery(document).ready(function(){
       }
     });
 
-    jQuery('#email_option_to_recieve_trial_upload_status').change(function() {
-      if (this.checked) {
-        jQuery('#email_option_to_recieve_trial_upload_status').hide();
-	  }
-	});
+    jQuery('#email_option_to_recieve_trial_upload_status')
 });
 </script>

@@ -50,6 +50,10 @@ use YAML;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
 use CXGN::BreedersToolbox::SoilData;
+use Email::Sender::Simple qw /sendmail/;
+use DateTime;
+use Email::Simple;
+use Email::Simple::Creator;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1440,5 +1444,40 @@ sub upload_soil_data_POST : Args(0) {
 
 }
 
+# sub get_user_details {
+#     my ( $slef, $c ) = @_;
+
+#     my $user = $c-> user();
+
+#     my $contact;
+#     if ($user) {
+#         my $private_email = $user-> get_private_email();
+#         my $public_email  = $user->get_contact_email();
+
+#         my $email =
+#             $public_email
+#           ? $public_email
+#           : $private_email;
+
+#         my $salutation = $user->get_salutation();
+#         my $first_name = $user->get_first_name();
+#         my $last_name  = $user->get_last_name();
+#         my $user_role  = $user->get_object->get_user_role();
+#         my $user_id    = $user->get_object()->get_sp_person_id();
+#         my $user_name  = $user->get_object->get_username();
+
+#         $contact = {
+#             'first_name' => $first_name,
+#             'email'      => $email,
+#             'user_role'  => $user_role,
+#             'user_id'    => $user_id,
+#             'user_name'  => $user_name,
+#         };
+
+#     }
+
+#     return $contact;
+
+# }
 
 1;
