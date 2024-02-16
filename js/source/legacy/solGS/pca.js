@@ -17,6 +17,13 @@ solGS.pca = {
   getPcaArgs: function () {
     var page = location.pathname;
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+    var selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
+
+    if (!protocolId) {
+      protocolId = protocols.genotyping_protocol_id;
+    }
+
     var dataType = this.getSelectedDataType();
 
     if (page.match(/pca\/analysis/)) {
@@ -27,6 +34,7 @@ solGS.pca = {
       var selectionPopId;
       var dataType;
       var dataStr;
+ 
 
       var trainingPopId = jQuery("#training_pop_id").val();
       if (page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\/|\/breeders\/trial\//)) {
@@ -37,6 +45,7 @@ solGS.pca = {
       } else if (page.match(/\/selection\/|\/prediction\//)) {
         selectionPopId = jQuery("#selection_pop_id").val();
         pcaPopId = selectionPopId;
+
       } else if (page.match(/solgs\/traits\/all\/population\/|models\/combined\/trials\//)) {
         pcaPopId = trainingPopId;
       }
@@ -50,7 +59,7 @@ solGS.pca = {
           var dataSetType = "combined_populations";
         }
       }
-
+  
       pcaArgs = {
         pca_pop_id: pcaPopId,
         training_pop_id: trainingPopId,
@@ -60,6 +69,7 @@ solGS.pca = {
         data_type: dataType,
         data_set_type: dataSetType,
         genotyping_protocol_id: protocolId,
+        selection_pop_genotyping_protocol_id: selPopProtocolId,
         trait_id: traitId,
         analysis_type: "pca analysis",
       };
