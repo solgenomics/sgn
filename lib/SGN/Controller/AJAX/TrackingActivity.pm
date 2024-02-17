@@ -127,7 +127,6 @@ sub generate_tracking_identifiers_POST : Args(0) {
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-    print STDERR "USER ID =".Dumper($user_id)."\n";
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh();
@@ -152,24 +151,24 @@ sub generate_tracking_identifiers_POST : Args(0) {
         push @check_identifier_names, $project_name.":".$name;
     }
 
-    print STDERR "TRACKING IDENTIFIERS =".Dumper(\@tracking_identifiers)."\n";
-    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+    foreach my $identifier_info (@tracking_identifiers) {
+        my $tracking_identifier = $identifier_info->[0];
+        my $material = $identifier_info->[1];
 
-#    foreach my $identifier_info (@tracking_identifiers) {
-#        my $tracking_identifier = $identifier_info->[0];
-#        my $material = $identifier_info->[1];
+        my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new({
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            tracking_identifier => $tracking_identifier,
+            material => $material,
+            project_id => $project_id,
+            user_id => $user_id
+         });
 
-#        my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new({
-#            schema => $schema,
-#            phenome_schema => $phenome_schema,
-#            tracking_identifier => $tracking_identifier,
-#            material => $material,
-#            project_id => $project_id,
-#         });
-
-#        my $return = $tracking_obj->store();
-#        my $tracking_id = $return->{tracking_id};
-#    }
+        my $return = $tracking_obj->store();
+        if (!$return) {
+            
+        }
+    }
 
     $c->stash->{rest} = { success => 1};
 
