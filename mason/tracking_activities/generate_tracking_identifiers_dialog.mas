@@ -1,5 +1,7 @@
 <%args>
 
+$trial_name
+
 </%args>
 
 
@@ -57,7 +59,7 @@
                                     </div>
                                 </div>
                                 <br/>
-                                <div id="form_footer" style="display:none" >
+                                <div id="form_footer"  >
                                     <center>
                                         <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="generate_tracking_identifiers_submit" id="generate_tracking_identifiers_submit">Submit</button>
                                     </center>
@@ -110,18 +112,69 @@
 
 jQuery(document).ready(function(){
 
+    var lo = new CXGN.List();
+    var project_name = "<%$trial_name%>";
+
     jQuery("#generate_identifiers_link").click(function(){
         jQuery("#generate_tracking_identifiers_dialog").modal("show");
     });
 
-
     jQuery("#material_type").change(function() {
         var selected_material_type = jQuery('#material_type').val();
-
-        var lo = new CXGN.List();
         jQuery('#item_list_select').html(lo.listSelect('item_list_select', [selected_material_type], 'Select a list of materials', undefined, undefined));
     })
 
+    jQuery("#generate_tracking_identifiers_submit").click(function(){
+        var selected_material_type = jQuery('#material_type').val();
+        var item_list_id = jQuery('#item_list_select').val();
+
+        if (!selected_material_type) {
+            alert("Material type is required");
+            return;
+        }
+
+        if (!item_list_id) {
+            alert("Please select a list");
+            return;
+        }
+
+        var item_validation = 1;
+        item_validation = lo.legacy_validate(item_list_id, selected_material_type, true);
+        if (item_validation != 1) {
+            alert("This list did not pass validation. Names in the list must exist in the database and are the selected material type.");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/tracking_activity/generate_tracking_identifiers',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'list_id' : item_list_id,
+                'project_name': project_name,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert('Saved');
+                    jQuery('#material_type').val('');
+                    jQuery('#item_list_select').val('');
+
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating the order');
+            }
+        });
+
+    });
 
 });
 

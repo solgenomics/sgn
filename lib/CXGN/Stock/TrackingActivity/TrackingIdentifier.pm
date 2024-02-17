@@ -39,6 +39,11 @@ has 'material' => (
     is => 'rw',
 );
 
+has 'project_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
 
 sub store {
     my $self = shift;

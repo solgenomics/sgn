@@ -15,6 +15,7 @@ use CXGN::Stock::TrackingActivity::ActivityInfo;
 use CXGN::TrackingActivity::AddActivityProject;
 use SGN::Model::Cvterm;
 use CXGN::Location::LocationLookup;
+use CXGN::List;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -108,6 +109,72 @@ sub create_activity_project_POST : Args(0) {
     }
 
 }
+
+
+sub generate_tracking_identifiers : Path('/ajax/tracking_activity/generate_tracking_identifiers') : ActionClass('REST'){ }
+
+sub generate_tracking_identifiers_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to generate tracking identifiers." };
+        return;
+    }
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to generate tracking identifiers." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    print STDERR "USER ID =".Dumper($user_id)."\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh();
+
+    my $project_name = $c->req->param("project_name");
+    my $list_id = $c->req->param("list_id");
+    my $project_id;
+    my $project_rs = $schema->resultset("Project::Project")->find( { name => $project_name });
+    if (!$project_rs) {
+        print STDERR "Error! Project name: $project_name was not found in the database.\n";
+    } else {
+        $project_id = $project_rs->project_id();
+    }
+
+    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $material_names = $list->elements();
+
+    my @check_identifier_names;
+    my @tracking_identifiers;
+    foreach my $name (sort @$material_names) {
+        push @tracking_identifiers, [$project_name.":".$name, $name];
+        push @check_identifier_names, $project_name.":".$name;
+    }
+
+    print STDERR "TRACKING IDENTIFIERS =".Dumper(\@tracking_identifiers)."\n";
+    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+
+#    foreach my $identifier_info (@tracking_identifiers) {
+#        my $tracking_identifier = $identifier_info->[0];
+#        my $material = $identifier_info->[1];
+
+#        my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new({
+#            schema => $schema,
+#            phenome_schema => $phenome_schema,
+#            tracking_identifier => $tracking_identifier,
+#            material => $material,
+#            project_id => $project_id,
+#         });
+
+#        my $return = $tracking_obj->store();
+#        my $tracking_id = $return->{tracking_id};
+#    }
+
+    $c->stash->{rest} = { success => 1};
+
+}
+
 
 sub activity_info_save : Path('/ajax/tracking_activity/save') : ActionClass('REST'){ }
 
