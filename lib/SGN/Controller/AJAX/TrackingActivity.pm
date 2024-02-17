@@ -166,7 +166,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
 
         my $return = $tracking_obj->store();
         if (!$return) {
-            
+
         }
     }
 
@@ -346,6 +346,18 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
 
 }
 
+sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active_identifiers') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+
+    my @all_identifiers;
+
+    $c->stash->{rest} = { data => \@all_identifiers };
+
+}
 
 
 1;
