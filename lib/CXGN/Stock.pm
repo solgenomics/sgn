@@ -474,6 +474,29 @@ has 'user_name' => (
 
 =head2 accessor modification_note()
 
+ Usage:         get or set the accession name template
+ Desc:          the template should be of the form of a string 
+                followed by numbers
+ Ret:           the next free accession name, as derived from 
+                the template (with the numeric extension incremented by 1)
+                The template is specified in the sgn.conf with the 
+                accession_name_template key and should be a regular 
+                expression of the form "string(\d+)" and fed to this 
+                function (retrieve with $c->config->{accession_name_template}
+                in the controller.
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'accession_name_template' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+=head2 accessor modification_note()
+
  Usage:
  Desc:
  Ret:
@@ -2093,6 +2116,74 @@ sub merge {
 COUNTS
 
 }
+
+
+=head2 CLASS function next_accession_name()
+
+ Usage:         my $new_accession_name = CXGN::Stock->next_accession_name($schema, $template);
+ Desc:          retrieves the latest accession name according to the 
+                template (the accession with the highest number) 
+                increments the number by 1
+ Ret:
+ Args:          required: $schema. required: $template.
+                
+ Side Effects:  accesses database
+ Example:
+
+=cut
+
+sub next_accession_name {
+    my $class = shift;
+    my $schema = shift;
+    my $template = shift;
+
+    if (! $template) {  die "need a template to generate next accession name"; }
+    
+    my $dbh = $schema->storage->dbh();
+
+    print STDERR "Using template $template\n";
+
+    my $stem = "";
+    
+    if ($template =~ m/^(.+?)\(\\d\+\)$/) {
+	$stem = $1;
+	print STDERR "STEM: $stem\n";
+    }
+    else {
+	print STDERR "THIS DIDN'T MATCH!!!!\n";
+    }
+
+    
+    my $q = "select max(substring(uniquename from ?)::INT) from stock";
+    my $h = $dbh->prepare($q);
+    $h->execute($template);
+
+
+    my ($max_number) = $h->fetchrow_array();
+
+    my $regex = "$stem\\0*$max_number";
+    my $q2 = "select stock_id, uniquename from stock where uniquename ~ ?";
+    my $h = $dbh->prepare($q2);
+    $h->execute($regex);
+
+    my ($stock_id, $uniquename)= $h->fetchrow_array();
+
+    print STDERR "STOCK ID: $stock_id, UNIQUENAME: $uniquename\n";
+
+    my $digits =~ s/\w+?(\d+)$/$1/;
+    print STDERR "DIGITS: $digits\n";
+    my $digit_count = length($digits);
+    
+    
+    my $new_number = $max_number + 1;
+
+    my $next_accession_name = $stem.sprintf("%0".$digit_count."d", $new_number);
+
+    print STDERR "Next accession name: $next_accession_name (from previous max of $max_number)\n";
+    
+    return $next_accession_name;
+}
+
 
 =head2 delete
 

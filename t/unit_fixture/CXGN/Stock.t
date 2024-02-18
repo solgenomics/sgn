@@ -12,6 +12,10 @@ use_ok('CXGN::Stock');
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
 
+# test next_accession_name function
+my $next_accession_name = CXGN::Stock->next_accession_name($schema, "test_trial(\\d+)");
+is($next_accession_name, "test_trial216", "check next accession name");
+
 print STDERR "Create new stock... ";
 my $new_s = CXGN::Stock->new(schema => $schema);
 $new_s->uniquename("aniceuniquename");
