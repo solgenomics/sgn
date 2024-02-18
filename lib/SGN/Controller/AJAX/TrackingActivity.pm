@@ -283,6 +283,10 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                 push @details, $empty_string;
             }
         }
+    } else {
+        foreach my $type (@activity_types) {
+            push @details, 'NA';
+        }
     }
 
     my @all_details;
@@ -333,15 +337,12 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
         }
     } else {
         foreach my $type (@activity_types) {
-            my $input;
-            push @summary, $input;
+            push @summary, 'NA';
         }
     }
 
     my @all_summary;
     push @all_summary, [@summary];
-
-    print STDERR "ALL SUMMARY =".Dumper(\@all_summary)."\n";
 
     $c->stash->{rest} = { data => \@all_summary };
 
@@ -354,7 +355,7 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
-    
+
     my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
     my $all_identifier_info = $activity_project->get_project_active_identifiers();
     my @all_identifiers;
