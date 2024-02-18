@@ -156,7 +156,7 @@ sub submit_order_POST : Args(0) {
             my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new(schema => $schema, tracking_identifier => $tracking_identifier, material => $material );
             my $return = $tracking_obj->store();
             my $tracking_id = $return->{tracking_id};
-            print STDERR "TRACKING STOCK ID =".Dumper($tracking_id)."\n";
+#            print STDERR "TRACKING STOCK ID =".Dumper($tracking_id)."\n";
             $phenome_schema->resultset("StockOwner")->find_or_create({
                 stock_id     => $tracking_id,
                 sp_person_id =>  $contact_id,
