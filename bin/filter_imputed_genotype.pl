@@ -72,18 +72,35 @@ while (<$I>) {
         my $info_col = $cols[$info_idx];
         # my $format_col = $cols[$format_idx];
 
-        my ($dr2, $alt_freq, $imp) = split(/;/, $info_col);
-        $dr2 =~ s/DR2=//;
-        $alt_freq =~ s/AF=//;
+        my @info = split(/;/, $info_col);
+        my ($dr2) = grep(/DR2=\d+\.\d+/, @info);
+        my ($af) = grep(/AF=\d+\.\d+/, @info);
+        print STDERR "\nDR2: $dr2 -- AF: $af\n";
 
-        my $maf = $alt_freq < 0.5 ? $alt_freq : 1 - $alt_freq;
+        if (!$dr2 && !$af) {
+            die "\nThe INFO column has no DR2 and AF values. Stopping filtering attempt.\n";
+        }
+
+        if (!$dr2) {
+            warn "\nThe INFO has no DR2 values. DR2 filter will not be applied\n";
+        }
+
+        if (!$af) {
+            warn "\nThe INFO has no AF values. MAF filter will not be applied\n";
+        }
+
+
+        $dr2 =~ s/DR2=//;
+        $af =~ s/AF=//;
+
+        my $maf = $af < 0.5 ? $af : 1 - $af;
         
         if ($dr2 < $dr2_cutoff || $maf < $maf_cutoff) {
-            print STDERR "\nREMOVING SNP $cols[1] --info: $info_col --DR2: $dr2 --alt-freq(AF): $alt_freq --MAF: $maf ";
+            print STDERR "\nREMOVING SNP $cols[1] --info: $info_col --DR2: $dr2 --AF: $af --MAF: $maf ";
             $removed_snp_cnt++;
             $removed_snps .= $_;
         } else {
-            print STDERR "\nKEEPING SNP $cols[1] --info: $info_col --DR2: $dr2 --alt-freq(AF): $alt_freq --MAF: $maf";
+            print STDERR "\nKEEPING SNP $cols[1] --info: $info_col --DR2: $dr2 --AF: $af --MAF: $maf";
             $kept_snp_cnt++;
             $kept_snps .= $_;  
         }
