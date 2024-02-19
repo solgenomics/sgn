@@ -172,6 +172,7 @@ sub submit_order_POST : Args(0) {
 
             my $order_tracking_identifier_prop = CXGN::Stock::OrderTrackingIdentifier->new({ bcs_schema => $schema, people_schema => $people_schema});
             $order_tracking_identifier_prop->tracking_identifiers(\@identifier_stock_ids);
+            $order_tracking_identifier_prop->parent_id($order_id);
         	my $prop_id = $order_tracking_identifier_prop->store_sp_orderprop();
             print STDERR "ORDER PROP ID =".($prop_id)."\n";
 
