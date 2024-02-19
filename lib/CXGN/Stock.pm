@@ -2141,13 +2141,10 @@ sub next_accession_name {
     
     my $dbh = $schema->storage->dbh();
 
-    print STDERR "Using template $template\n";
-
     my $stem = "";
     
     if ($template =~ m/^(.+?)\(\\d\+\)$/) {
 	$stem = $1;
-	print STDERR "STEM: $stem\n";
     }
     else {
 	die "Could not extract stem from template";
@@ -2158,9 +2155,10 @@ sub next_accession_name {
     my $h = $dbh->prepare($q);
     $h->execute($template);
 
-
     my ($max_number) = $h->fetchrow_array();
 
+    # now let's retrieve the whole uniquename for the max match
+    #
     my $regex = $stem."0*".$max_number;
     my $q2 = "select stock_id, uniquename from stock where uniquename ~ ?";
     my $h = $dbh->prepare($q2);
@@ -2168,20 +2166,20 @@ sub next_accession_name {
 
     my ($stock_id, $uniquename)= $h->fetchrow_array();
 
-    print STDERR "STOCK ID: $stock_id, UNIQUENAME: $uniquename\n";
-
+    # retrieve the number of digits in the uniquename
+    #
     my $digits = $uniquename;
     $digits =~ s/^\w+?(\d+)$/$1/;
-    print STDERR "DIGITS: $digits\n";
     my $digit_count = length($digits);
     
-    
+    # calculate the new highest number
+    #
     my $new_number = $max_number + 1;
 
+    # adjust the leading zeros, if necessary, to match the other uniquenames
+    #
     my $next_accession_name = $stem.sprintf("%0".$digit_count."d", $new_number);
 
-    print STDERR "Next accession name: $next_accession_name (from previous max of $max_number)\n";
-    
     return $next_accession_name;
 }
 
