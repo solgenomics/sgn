@@ -2,6 +2,7 @@
 
 $role => "stock_orderer"
 $check_vendor_role => undef
+$tracking_order_activity => undef
 $user_id
 
 </%args>
@@ -163,7 +164,7 @@ $user_id
     </div>
 </div>
 
-% if ($check_vendor_role == 1) {
+% if (($check_vendor_role == 1) && $tracking_order_activity) {
     <&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">
             <div class = "panel panel-default">

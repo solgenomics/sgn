@@ -66,7 +66,7 @@ sub patch {
         ],
         'project_property' => [
             'activity_type'
-        ],		
+        ],
         'experiment_type' => [
             'tracking_activity'
         ],
@@ -77,10 +77,14 @@ sub patch {
             'material_of'
         ],
         'stock_property' => [
-            'tracking_tissue_culture_json'
+            'tracking_tissue_culture_json',
+            'terminated_metadata',
         ],
         'list_types' => [
             'tracking_identifiers'
+        ],
+        'sp_order_property' => [
+            'order_tracking_identifiers'
         ],
     };
 

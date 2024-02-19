@@ -26,6 +26,9 @@ sub order_stocks :Path('/order/stocks/view') :Args(0) {
         $c->stash->{user_id} = $user_id;
     }
 
+    my $tracking_order_activity = $c->config->{tracking_order_activity};
+    $c->stash->{tracking_order_activity} = $tracking_order_activity;    
+
     $c->stash->{template} = '/order/stocks.mas';
 
 }
