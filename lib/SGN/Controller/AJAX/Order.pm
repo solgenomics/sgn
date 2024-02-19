@@ -11,6 +11,7 @@ use CXGN::People::Person;
 use CXGN::Contact;
 use CXGN::Trial::Download;
 use CXGN::Stock::TrackingActivity::TrackingIdentifier;
+use CXGN::Stock::OrderTrackingIdentifier;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -122,13 +123,28 @@ sub submit_order_POST : Args(0) {
             return;
         }
 
+        $history_info ->{'submitted'} = $timestamp;
+        push @history, $history_info;
+
+        my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
+        $order_prop->clone_list(\@item_list);
+        $order_prop->parent_id($order_id);
+        $order_prop->history(\@history);
+    	my $order_prop_id = $order_prop->store_sp_orderprop();
+#        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
+
+        if (!$order_prop_id){
+            $c->stash->{rest} = {error_string => "Error saving your order",};
+            return;
+        }
+
         my @tracking_identifiers = ();
+        my @identifier_stock_ids = ();
         my @tracking_ids = ();
         my $activity_project_id;
         if (defined $tracking_activity) {
             foreach my $name (sort @names) {
                 push @tracking_identifiers, ["order".$order_id.":".$name, $name];
-#                push @tracking_ids, "order".$order_id.":".$name;
             }
 
             my $activity_project_name = $user_name."_"."tracking_orders";
@@ -138,38 +154,31 @@ sub submit_order_POST : Args(0) {
                 print STDERR "ACTIVITY PROJECT ID =".Dumper($activity_project_id)."\n";
             }
 
-        }
-        print STDERR "TRACKING IDENTIFIERS =".Dumper(\@tracking_identifiers)."\n";
+            foreach my $identifier_info (@tracking_identifiers) {
+                my $tracking_identifier = $identifier_info->[0];
+                my $material = $identifier_info->[1];
+                my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new({
+                    schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    tracking_identifier => $tracking_identifier,
+                    material => $material,
+                    project_id => $activity_project_id,
+                    user_id => $contact_id
+                 });
+                my $tracking_stock_id = $tracking_obj->store();
+                print STDERR "TRACKING STOCK ID =".Dumper($tracking_stock_id)."\n";
+                push @identifier_stock_ids, $tracking_stock_id;
+            }
 
-        $history_info ->{'submitted'} = $timestamp;
-        push @history, $history_info;
+            my $order_tracking_identifier_prop = CXGN::Stock::OrderTrackingIdentifier->new({ bcs_schema => $schema, people_schema => $people_schema});
+            $order_tracking_identifier_prop->tracking_identifiers(\@identifier_stock_ids);
+        	my $prop_id = $order_tracking_identifier_prop->store_sp_orderprop();
+            print STDERR "ORDER PROP ID =".($prop_id)."\n";
 
-        my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
-        $order_prop->clone_list(\@item_list);
-        $order_prop->parent_id($order_id);
-        $order_prop->history(\@history);
-#        if (defined $tracking_activity) {
-#            $order_prop->tracking_identifier_list(\@tracking_ids);
-#        }
-    	my $order_prop_id = $order_prop->store_sp_orderprop();
-#        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
-
-        if (!$order_prop_id){
-            $c->stash->{rest} = {error_string => "Error saving your order",};
-            return;
-        }
-
-        foreach my $identifier_info (@tracking_identifiers) {
-            my $tracking_identifier = $identifier_info->[0];
-            my $material = $identifier_info->[1];
-            my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new(schema => $schema, tracking_identifier => $tracking_identifier, material => $material );
-            my $return = $tracking_obj->store();
-            my $tracking_id = $return->{tracking_id};
-#            print STDERR "TRACKING STOCK ID =".Dumper($tracking_id)."\n";
-            $phenome_schema->resultset("StockOwner")->find_or_create({
-                stock_id     => $tracking_id,
-                sp_person_id =>  $contact_id,
-            });
+            if (!$prop_id){
+                $c->stash->{rest} = {error_string => "Error saving your tracking identifiers",};
+                return;
+            }
         }
 
         my $contact_person = CXGN::People::Person -> new($dbh, $contact_id);

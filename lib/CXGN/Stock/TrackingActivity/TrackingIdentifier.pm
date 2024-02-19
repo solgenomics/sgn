@@ -58,8 +58,6 @@ has 'user_id' => (
     required => 1,
 );
 
-
-
 sub store {
     my $self = shift;
     my $schema = $self->get_schema();
@@ -133,8 +131,7 @@ sub store {
         sp_person_id => $user_id,
     });
 
-
-    return 1;
+    return $tracking_id;
 
 }
 
