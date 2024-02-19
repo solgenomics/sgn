@@ -16,6 +16,9 @@ my $schema = $f->bcs_schema();
 my $next_accession_name = CXGN::Stock->next_accession_name($schema, "test_trial(\\d+)");
 is($next_accession_name, "test_trial216", "check next accession name");
 
+my $next_accession_name_2 = CXGN::Stock->next_accession_name($schema, "test5P(\\d+)");
+is($next_accession_name_2, "test5P006", "check next accession with leading zeroes");
+
 print STDERR "Create new stock... ";
 my $new_s = CXGN::Stock->new(schema => $schema);
 $new_s->uniquename("aniceuniquename");
