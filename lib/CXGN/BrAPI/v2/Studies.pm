@@ -557,6 +557,28 @@ sub _search {
 	my $sort_by = shift;
 	my $sort_order = shift;
 
+	if($sort_order){
+		if($sort_order eq "Ascending"){
+			$sort_order = ' ASC'
+		} elsif ($sort_order eq "Descending"){
+			$sort_order = ' DESC';
+		} else{
+			$sort_order = undef;
+			nor recognize
+		}
+	}
+
+	if($sort_by){
+		my %sort_by_items = (
+			"locationDbId" => " location.value ",
+			"studyDbId" => " study.project_id ",
+			"studyName" => " study.name",
+			"trialDbId" => " folder.project_id ",
+			"trialName" => " folder.name "
+		);
+		$sort_by = $sort_by_items{$sort_by} ? " ORDER BY " . $sort_by_items{$sort_by} : undef;
+	}
+
 	# my $c = shift;
 	my $page_obj = CXGN::Page->new();
     my $main_production_site_url = $page_obj->get_hostname();
