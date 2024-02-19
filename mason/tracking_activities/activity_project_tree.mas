@@ -5,6 +5,7 @@ $locations
 $roles
 </%args>
 
+
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
@@ -15,7 +16,7 @@ $roles
     <thead>
         <tr>
             <th>Information</th>
-            <th>Breeding Programs -- Folders -- Tracking Activities&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_activities_jstree_html_trialtree_button" name="refresh_activities_jstree_html">Refresh</button></th>
+            <th>Breeding Programs -- Folders -- Tracking Activities&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_activity_jstree_html_trialtree_button" name="refresh_activity_jstree_html">Refresh</button></th>
         </tr>
     </thead>
     <tbody>

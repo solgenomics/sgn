@@ -124,11 +124,20 @@ sub submit_order_POST : Args(0) {
 
         my @tracking_identifiers = ();
         my @tracking_ids = ();
+        my $activity_project_id;
         if (defined $tracking_activity) {
             foreach my $name (sort @names) {
                 push @tracking_identifiers, ["order".$order_id.":".$name, $name];
-                push @tracking_ids, "order".$order_id.":".$name;
+#                push @tracking_ids, "order".$order_id.":".$name;
             }
+
+            my $activity_project_name = $user_name."_"."tracking_orders";
+            my $activity_project_rs = $schema->resultset('Project::Project')->find({name=>$activity_project_name});
+            if ($activity_project_rs) {
+                $activity_project_id = $activity_project_rs->project_id();
+                print STDERR "ACTIVITY PROJECT ID =".Dumper($activity_project_id)."\n";
+            }
+
         }
         print STDERR "TRACKING IDENTIFIERS =".Dumper(\@tracking_identifiers)."\n";
 
@@ -139,9 +148,9 @@ sub submit_order_POST : Args(0) {
         $order_prop->clone_list(\@item_list);
         $order_prop->parent_id($order_id);
         $order_prop->history(\@history);
-        if (defined $tracking_activity) {
-            $order_prop->tracking_identifier_list(\@tracking_ids);
-        }
+#        if (defined $tracking_activity) {
+#            $order_prop->tracking_identifier_list(\@tracking_ids);
+#        }
     	my $order_prop_id = $order_prop->store_sp_orderprop();
 #        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
 
