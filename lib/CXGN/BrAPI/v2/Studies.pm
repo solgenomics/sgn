@@ -558,13 +558,13 @@ sub _search {
 	my $sort_order = shift;
 
 	if($sort_order){
-		if($sort_order eq "Ascending"){
+		if(lc $sort_order eq "ascending"){
 			$sort_order = ' ASC'
-		} elsif ($sort_order eq "Descending"){
+		} elsif (lc $sort_order eq "descending"){
 			$sort_order = ' DESC';
 		} else{
 			$sort_order = undef;
-			nor recognize
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortOrder valid values are: Ascending or Descending", 400);
 		}
 	}
 
@@ -576,7 +576,11 @@ sub _search {
 			"trialDbId" => " folder.project_id ",
 			"trialName" => " folder.name "
 		);
-		$sort_by = $sort_by_items{$sort_by} ? " ORDER BY " . $sort_by_items{$sort_by} : undef;
+		if ($sort_by_items{$sort_by}){
+			$sort_by = " ORDER BY " . $sort_by_items{$sort_by} ;
+		} else {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortBy valid values are only: locationDbId, studyDbId, studyName, trialDbId or trialName at the moment.", 400);
+		}
 	}
 
 	# my $c = shift;
