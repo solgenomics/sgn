@@ -2150,7 +2150,7 @@ sub next_accession_name {
 	print STDERR "STEM: $stem\n";
     }
     else {
-	print STDERR "THIS DIDN'T MATCH!!!!\n";
+	die "Could not extract stem from template";
     }
 
     
@@ -2161,7 +2161,7 @@ sub next_accession_name {
 
     my ($max_number) = $h->fetchrow_array();
 
-    my $regex = "$stem\\0*$max_number";
+    my $regex = $stem."0*".$max_number;
     my $q2 = "select stock_id, uniquename from stock where uniquename ~ ?";
     my $h = $dbh->prepare($q2);
     $h->execute($regex);
@@ -2170,7 +2170,8 @@ sub next_accession_name {
 
     print STDERR "STOCK ID: $stock_id, UNIQUENAME: $uniquename\n";
 
-    my $digits =~ s/\w+?(\d+)$/$1/;
+    my $digits = $uniquename;
+    $digits =~ s/^\w+?(\d+)$/$1/;
     print STDERR "DIGITS: $digits\n";
     my $digit_count = length($digits);
     
