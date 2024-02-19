@@ -267,17 +267,6 @@ sub get_query {
             $_ =~ s/\"//g;
         }
 
-        my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
-        my $categories = $trait->categories;
-        my @categories = split '/', $categories;
-        my @brapi_categories;
-        foreach (@categories) {
-            push @brapi_categories, {
-                label => $_,
-                value => $_
-            };
-        }
-
         # Get the external references
         my @references_cvterms = ($cvterm_id);
         my $references = CXGN::BrAPI::v2::ExternalReferences->new({
@@ -538,6 +527,8 @@ sub _construct_variable_response {
     my $scale_json;
     if (defined($variable->scale)) { $scale_json = $variable->scale->scale_db();}
     my @synonyms = $variable->synonyms;
+    my $variable_id = $variable->cvterm_id;
+    my $variable_db_id = $variable->db_id ;
 
     return {
         additionalInfo => $variable->additional_info || {},
@@ -550,11 +541,11 @@ sub _construct_variable_response {
         institution  => undef,
         language => 'eng',
         method => $method_json,
-        observationVariableDbId => $variable->cvterm_id,
+        observationVariableDbId => qq|$variable_id|,
         observationVariableName => $variable->name."|".$variable->db.":".$variable->accession,
         ontologyReference => {
             documentationLinks => $variable->uri ? $variable->uri : undef,
-            ontologyDbId => $variable->db_id ? $variable->db_id : undef,
+            ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
             ontologyName => $variable->db ? $variable->db : undef,
             version => undef,
         },
@@ -572,7 +563,7 @@ sub _construct_variable_response {
             mainAbbreviation => undef,
             ontologyReference => {
                 documentationLinks => $variable->uri ? $variable->uri : undef,
-                ontologyDbId => $variable->db_id ? $variable->db_id : undef,
+                ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
                 ontologyName => $variable->db ? $variable->db : undef,
                 version => undef,
             },
@@ -580,7 +571,7 @@ sub _construct_variable_response {
             synonyms => @synonyms,
             traitClass => undef,
             traitDescription => $variable->definition,
-            traitDbId => $variable->cvterm_id,
+            traitDbId => qq|$variable_id|,
             traitName => $variable->name,
         }
     }
