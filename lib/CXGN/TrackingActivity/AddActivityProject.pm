@@ -75,6 +75,12 @@ has 'owner_id' => (
     is => 'rw',
 );
 
+has 'project_vendor' => (
+    isa => 'Int|Undef',
+    is => 'rw',
+);
+
+
 
 sub existing_project_name {
     my $self = shift;
@@ -108,6 +114,7 @@ sub save_activity_project {
 
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_record', 'project_type')->cvterm_id();
     my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+    my $project_vendor_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_vendor', 'project_property')->cvterm_id();
 
     my $project = $schema->resultset('Project::Project')
         ->create({
@@ -117,7 +124,7 @@ sub save_activity_project {
         });
 
     my $project_id = $project->project_id();
-    print STDERR "NEW PROJECT ID =".Dumper($project_id)."\n";
+#    print STDERR "NEW PROJECT ID =".Dumper($project_id)."\n";
 
     my $activity_project = CXGN::TrackingActivity::ActivityProject->new({
         bcs_schema => $schema,
@@ -139,7 +146,16 @@ sub save_activity_project {
         value => $self->get_activity_type(),
     });
 
-    return {success=>1};
+    my $project_vendor = $self->get_project_vendor();
+    if (defined $project_vendor) {
+        my $vendor_projectprop = $schema->resultset('Project::Projectprop')->create({
+            project_id => $project_id,
+            type_id => $project_vendor_cvterm_id,
+            value => $project_vendor,
+        });
+    }
+
+    return $project_id;
 
 }
 

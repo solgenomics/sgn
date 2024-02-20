@@ -12,6 +12,8 @@ use CXGN::Contact;
 use CXGN::Trial::Download;
 use CXGN::Stock::TrackingActivity::TrackingIdentifier;
 use CXGN::Stock::OrderTrackingIdentifier;
+use CXGN::TrackingActivity::AddActivityProject;
+use CXGN::Location::LocationLookup;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -87,18 +89,16 @@ sub submit_order_POST : Args(0) {
         my $contact_person_id = $item_info_hash->{'contact_person_id'};
         my $item_type = $item_info_hash->{'item_type'};
         my $item_source = $item_info_hash->{'material_source'};
+        my $breeding_program_id = $item_info_hash->{'breeding_program'};
+        print STDERR "BREEDING PROGRAM =".Dumper($breeding_program_id)."\n";
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'item_type'} = $item_type;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'material_source'} = $item_source;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name} = \%each_item_details;
+        $group_by_contact_id{$contact_person_id}{'breeding_program'} = $breeding_program_id;
     }
 
-#        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
-#        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
-
     my $tracking_activity = $c->config->{tracking_order_activity};
-    my $ordering_service_name = $c->config->{ordering_service_name};
-    my $ordering_service_url = $c->config->{ordering_service_url};
-    my $ona_new_id;
+
     my @item_list;
     my @contact_email_list;
     foreach my $contact_id (keys %group_by_contact_id) {
@@ -147,11 +147,36 @@ sub submit_order_POST : Args(0) {
                 push @tracking_identifiers, ["order".$order_id.":".$name, $name];
             }
 
-            my $activity_project_name = $user_name."_"."tracking_orders";
+            my $activity_project_name = $user_name."_"."order_progress";
             my $activity_project_rs = $schema->resultset('Project::Project')->find({name=>$activity_project_name});
             if ($activity_project_rs) {
                 $activity_project_id = $activity_project_rs->project_id();
-                print STDERR "ACTIVITY PROJECT ID =".Dumper($activity_project_id)."\n";
+                print STDERR "OLD PROJECT ID =".Dumper($activity_project_id)."\n";
+            } else {
+                my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+                $geolocation_lookup->set_location_name('NA');
+                if(!$geolocation_lookup->get_geolocation()){
+                    $c->stash->{rest}={error => "Location not found"};
+                    return;
+                }
+
+                my $breeding_program_id = $group_by_contact_id{$contact_id}{'breeding_program'};
+
+                my $add_activity_project = CXGN::TrackingActivity::AddActivityProject->new({
+                    bcs_schema => $schema,
+                    dbh => $dbh,
+                    breeding_program_id => $breeding_program_id,
+                    year => '2024',
+                    project_description => 'Tracking order progress',
+                    activity_project_name => $activity_project_name,
+                    activity_type => 'tissue_culture',
+                    nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
+                    owner_id => $contact_id,
+                    project_vendor => $contact_id
+                });
+
+                $activity_project_id = $add_activity_project->save_activity_project();
+                print STDERR "NEW PROJECT ID =".Dumper($activity_project_id)."\n";
             }
 
             foreach my $identifier_info (@tracking_identifiers) {
@@ -205,11 +230,7 @@ END_HEREDOC
         CXGN::Contact::send_email($subject,$body,$each_email);
     }
 
-    if ($ona_new_id) {
-        $c->stash->{rest}->{success} .= 'Your order has been sent successfully to Banana Ordering System.';
-    } else {
-        $c->stash->{rest}->{success} .= 'Your order has been submitted successfully and the vendor has been notified.';
-    }
+    $c->stash->{rest}->{success} .= 'Your order has been submitted successfully and the vendor has been notified.';
 
 }
 

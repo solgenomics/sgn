@@ -65,7 +65,8 @@ sub patch {
             'activity_record'
         ],
         'project_property' => [
-            'activity_type'
+            'activity_type',
+            'project_vendor'
         ],
         'experiment_type' => [
             'tracking_activity'
