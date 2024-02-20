@@ -446,6 +446,7 @@ sub training_selection_geno_files {
     my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     my $tr_pop_protocol_id = $c->stash->{genotyping_protocol_id};
 
+    my @files;
     $c->controller('solGS::Files')
       ->genotype_file_name( $c, $sel_pop_id, $sel_pop_protocol_id );
     push @files, $c->stash->{genotype_file_name};
