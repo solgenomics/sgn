@@ -1223,6 +1223,27 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }
 
+sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('delete') Args(0) {
+#depends on CXGN/Stock/Seedlot/Transaction.pm: delete_transaction sub
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete seedlot transactions" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlot transactions. Please contact us." };
+        $c->detach();
+    }
+    my $success = $c->stash->{transaction_object}->delete_transaction();
+    if ($success){
+        $c->stash->{rest} = { success => 1 };
+    }
+    else {
+        $c->stash->{rest} = { error => "An error occured deleting the seedlot transaction" };
+    }
+}
 
 #
 # SEEDLOT MAINTENANCE EVENTS
