@@ -78,9 +78,12 @@ sub store {
 
 sub get_orders_from_person_id {
     my $self = shift;
+    my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $person_id = $self->order_from_id();
     my $dbh = $self->dbh();
+
+    my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
     my $order_rs = $people_schema->resultset('SpOrder')->search( { order_from_id => $person_id } );
     my @orders;
@@ -95,7 +98,7 @@ sub get_orders_from_person_id {
         my $person= CXGN::People::Person->new($dbh, $order_to_id);
         my $order_to_name=$person->get_first_name()." ".$person->get_last_name();
 
-        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id, type_id => $order_batch_json_cvterm_id } );
         my $all_items = ();
         while (my $item_result = $orderprop_rs->next()){
             my @list;
@@ -121,9 +124,11 @@ sub get_orders_from_person_id {
 
 sub get_orders_to_person_id {
     my $self = shift;
+    my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $person_id = $self->order_to_id();
     my $dbh = $self->dbh();
+    my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
     my $order_rs = $people_schema->resultset('SpOrder')->search( { order_to_id => $person_id } );
     my @orders;
@@ -138,7 +143,7 @@ sub get_orders_to_person_id {
         my $person= CXGN::People::Person->new($dbh, $order_from_id);
         my $order_from_name=$person->get_first_name()." ".$person->get_last_name();
 
-        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id, type_id => $order_batch_json_cvterm_id } );
         my $all_items = ();
         while (my $item_result = $orderprop_rs->next()){
             my @list;
@@ -164,10 +169,12 @@ sub get_orders_to_person_id {
 
 sub get_order_details {
     my $self = shift;
+    my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $dbh = $self->dbh();
     my $order_id = $self->sp_order_id();
     my @order_details;
+    my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
     my $order_rs = $people_schema->resultset('SpOrder')->find( { sp_order_id => $order_id } );
 
@@ -184,7 +191,7 @@ sub get_order_details {
     my $completion_date = $order_rs->completion_date();
     my $comments = $order_rs->comments();
 
-    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id } );
+    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id, type_id => $order_batch_json_cvterm_id } );
     my $item_json = $orderprop_rs->value();
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
@@ -202,8 +209,9 @@ sub get_tracking_info {
     my $people_schema = $self->people_schema();
     my $dbh = $self->dbh();
     my $order_id = $self->sp_order_id();
+    my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
-    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id } );
+    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id, type_id => $order_batch_json_cvterm_id } );
     my $item_json = $orderprop_rs->value();
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
@@ -235,6 +243,7 @@ sub get_active_item_tracking_info {
     my $schema = $self->bcs_schema();
     my $dbh = $self->dbh();
     my @all_tracking_info;
+    my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
     my $order_rs = $people_schema->resultset('SpOrder')->search( { order_to_id => $person_id } );
     my @orders;
@@ -249,7 +258,7 @@ sub get_active_item_tracking_info {
         my $person= CXGN::People::Person->new($dbh, $order_from_id);
         my $order_from_name=$person->get_first_name()." ".$person->get_last_name();
 
-        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id, type_id => $order_batch_json_cvterm_id } );
         my $all_items = ();
         while (my $item_result = $orderprop_rs->next()){
             my @list;

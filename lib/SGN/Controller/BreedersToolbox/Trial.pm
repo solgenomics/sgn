@@ -302,6 +302,18 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
     } elsif ($trial_type_name eq 'activity_record') {
+        my $project_id = $c->stash->{trial_id};
+        my $project_vendor_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_vendor', 'project_property')->cvterm_id();
+        my $project_vendor_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id => $project_id,
+            type_id => $project_vendor_cvterm_id
+        });
+        my $vendor_id;
+        if ($project_vendor_rs) {
+            $vendor_id = $project_vendor_rs->value();
+        }
+
+        $c->stash->{vendor_id} = $vendor_id;
         $c->stash->{template} = '/tracking_activities/activity_project.mas';
     }
     else {

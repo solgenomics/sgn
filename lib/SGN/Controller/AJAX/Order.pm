@@ -90,7 +90,6 @@ sub submit_order_POST : Args(0) {
         my $item_type = $item_info_hash->{'item_type'};
         my $item_source = $item_info_hash->{'material_source'};
         my $breeding_program_id = $item_info_hash->{'breeding_program'};
-        print STDERR "BREEDING PROGRAM =".Dumper($breeding_program_id)."\n";
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'item_type'} = $item_type;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'material_source'} = $item_source;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name} = \%each_item_details;
@@ -112,7 +111,7 @@ sub submit_order_POST : Args(0) {
 
         my @item_list = map { { $_ => $item_hashes{$_} } } sort keys %item_hashes;
 
-        my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
+        my $new_order = CXGN::Stock::Order->new( { bcs_schema => $schema, people_schema => $people_schema, dbh => $dbh});
         $new_order->order_from_id($user_id);
         $new_order->order_to_id($contact_id);
         $new_order->order_status("submitted");
@@ -254,7 +253,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
-    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $all_orders_ref = $orders->get_orders_from_person_id();
 
     my @current_orders;
@@ -306,7 +305,7 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
-    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $all_orders_ref = $orders->get_orders_from_person_id();
     my @completed_orders;
     my @all_orders = @$all_orders_ref;
@@ -361,7 +360,7 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
-    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
     my @vendor_current_orders;
@@ -418,7 +417,7 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
-    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
     my @vendor_completed_orders;
@@ -483,7 +482,7 @@ sub update_order_POST : Args(0) {
         my $re_open_name = $re_open_by_person->get_first_name()." ".$re_open_by_person->get_last_name();
         $new_status = 're-opened by'." ".$re_open_name;
 
-        my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
+        my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
         my $order_result = $order_obj->get_order_details();
         my $vendor_id = $order_result->[7];
         if ($user_id != $vendor_id) {
@@ -509,9 +508,9 @@ END_HEREDOC
 
     my $order_obj;
     if ($new_status eq 'completed') {
-        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp, comments => $contact_person_comments});
+        $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp, comments => $contact_person_comments});
     } else {
-        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, comments => $contact_person_comments});
+        $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, comments => $contact_person_comments});
     }
 
     my $updated_order = $order_obj->store();
@@ -588,7 +587,7 @@ sub single_step_submission_POST : Args(0) {
     my @history = ();
     my $history_info = {};
 
-    my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
+    my $new_order = CXGN::Stock::Order->new( { bcs_schema => $schema, people_schema => $people_schema, dbh => $dbh});
     $new_order->order_from_id($user_id);
     $new_order->order_to_id($contact_person_id);
     $new_order->order_status("submitted");

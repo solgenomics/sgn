@@ -11,6 +11,7 @@ $folder_name
 $folder_id
 $identifier_prefix
 $trial_owner
+$vendor_id
 </%args>
 
 
@@ -114,6 +115,8 @@ $trial_owner
         </div>
     </div>
 </div>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
+%if (!$vendor_id) {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
+%}
 
 <& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name &>
