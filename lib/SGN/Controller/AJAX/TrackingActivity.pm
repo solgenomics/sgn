@@ -370,7 +370,8 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
         my $progress = $identifier_info->[5];
         my $input;
         if ($progress) {
-            my %progress_hash = %{$progress};
+            my $progress_ref = JSON::Any->jsonToObj($progress);
+            my %progress_hash = %{$progress_ref};
             foreach my $type (@activity_types){
                 if ($progress_hash{$type}) {
                     my $details = {};
