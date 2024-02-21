@@ -21,13 +21,13 @@ $vendor_id
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Activity Project Name</b></td>
+                <td><b>Tracking Activity Project Name</b></td>
                 <td>
                     <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "<span class='text-danger'>[No Activity Project Name]</span>";
+%   print "<span class='text-danger'>[No Tracking Activity Project Name]</span>";
 % }
                     </div>
                 </td>
