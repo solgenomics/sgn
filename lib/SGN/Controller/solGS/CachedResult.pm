@@ -37,6 +37,9 @@ sub check_cached_result : Path('/solgs/check/cached/result') Args(0) {
     my $analysis_page = $c->req->param('page');
     my $args          = $c->req->param('arguments');
 
+    print STDERR "\nanalysis_page: $analysis_page\n";
+    print STDERR "\nargs: $args\n";
+
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
     $self->_check_cached_output( $c, $analysis_page );
@@ -63,12 +66,12 @@ sub _check_cached_output {
     $c->stash->{rest}{cached} = undef;
 
     if ( $analysis_page =~ /solgs\/population\// ) {
-        $self->_check_single_trial_training_data( $c, $training_pop_id);
+        $self->_check_single_trial_training_data( $c, $training_pop_id, $protocol_id);
     } elsif ( $analysis_page =~ /solgs\/populations\/combined\// ) {
-        $self->_check_combined_trials_data( $c, $training_pop_id );
+        $self->_check_combined_trials_data( $c, $training_pop_id, $protocol_id);
     }
     elsif ( $analysis_page =~ /solgs\/trait\// ) {
-        $self->_check_single_trial_model_output( $c, $training_pop_id, $trait_id );
+        $self->_check_single_trial_model_output( $c, $training_pop_id, $trait_id, $protocol_id);
     }
     elsif ( $analysis_page =~ /solgs\/model\/combined\/trials\// ) {
         $self->_check_combined_trials_model_output( $c, $training_pop_id, $trait_id );
@@ -150,14 +153,14 @@ sub _check_single_trial_training_data {
 }
 
 sub _check_single_trial_model_output {
-    my ( $self, $c, $pop_id, $trait_id ) = @_;
+    my ( $self, $c, $pop_id, $trait_id, $protocol_id ) = @_;
 
     my $cached_pop_data =
       $self->check_single_trial_training_data( $c, $pop_id );
 
     if ($cached_pop_data) {
         $c->stash->{rest}{cached} =
-          $self->check_single_trial_model_output( $c, $pop_id, $trait_id );
+          $self->check_single_trial_model_output( $c, $pop_id, $trait_id, $protocol_id);
     }
 }
 
@@ -202,14 +205,14 @@ sub _check_combined_trials_data {
 }
 
 sub _check_combined_trials_model_output {
-    my ( $self, $c, $pop_id, $trait_id ) = @_;
+    my ( $self, $c, $pop_id, $trait_id, $protocol_id ) = @_;
 
     my $cached_pop_data =
       $self->check_combined_trials_training_data( $c, $pop_id, $trait_id );
 
     if ($cached_pop_data) {
         $c->stash->{rest}{cached} =
-          $self->check_single_trial_model_output( $c, $pop_id, $trait_id );
+          $self->check_single_trial_model_output( $c, $pop_id, $trait_id, $protocol_id );
     }
 
 }
