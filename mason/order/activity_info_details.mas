@@ -187,7 +187,7 @@ jQuery(document).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred saving info');
+                alert('An error occurred saving new information');
             }
         });
     });
@@ -197,9 +197,6 @@ jQuery(document).ready( function() {
         var input = jQuery('#selected_type_input').val('');
         location.reload();
     });
-
-
-
 
 });
 

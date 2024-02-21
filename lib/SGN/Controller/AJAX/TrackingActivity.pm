@@ -258,7 +258,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                 $details = $info_hash{$type};
                 %details_hash = %{$details};
 #                print STDERR "DETAILS HASH =".Dumper(\%details_hash);
-                foreach my $timestamp (keys %details_hash) {
+                foreach my $timestamp (sort keys %details_hash) {
                     my @each_timestamp_details = ();
                     push @each_timestamp_details, "timestamp".":"."".$timestamp;
                     my $operator_id = $details_hash{$timestamp}{'operator_id'};
