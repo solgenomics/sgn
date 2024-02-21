@@ -27,17 +27,10 @@ solGS.listTypeSelectionPopulation = {
     return checkPredicted;
   },
 
-  askSelectionJobQueueing: function (listId) {
+  askSelectionJobQueueing: function (listId, selPopLink) {
     var args = this.createSelectionReqArgs(listId);
-    var modelId = args.training_pop_id;
-    var selectionPopId = args.selection_pop_id;
-    var protocolId = args.genotyping_protocol_id;
+    solGS.waitPage(selPopLink, args);
 
-    var hostName = window.location.protocol + "//" + window.location.host;
-    var page =
-      hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId + "/gp/" + protocolId;
-
-    solGS.waitPage(page, args);
   },
 
   createSelectionReqArgs: function (listId) {
@@ -53,6 +46,8 @@ solGS.listTypeSelectionPopulation = {
 
       var selectionPopId = "list_" + listId;
       var protocolId = modelArgs.genotyping_protocol_id;
+      var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+      var selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
       var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
       var args = {
@@ -66,6 +61,7 @@ solGS.listTypeSelectionPopulation = {
         population_type: popType,
         training_traits_ids: trainingTraitsIds,
         genotyping_protocol_id: protocolId,
+        selection_pop_genotyping_protocol_id: selPopProtocolId
       };
 
       return args;
@@ -184,9 +180,11 @@ jQuery(document).ready(function () {
               .checkPredictedListSelection(selectedPop.id)
               .done(function (res) {
                 var args = solGS.listTypeSelectionPopulation.createSelectionReqArgs(selectedPop.id);
+                var selPopLink = res.output;
+                if (selPopLink) {
+                  console.log(`checkPredictedListSelection res.out: ${selPopLink}`)
 
-                if (res.output) {
-                  solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(args, res.output);
+                  solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(args, selPopLink);
 
                   if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
                     solGS.sIndex.populateSindexMenu();
@@ -195,7 +193,7 @@ jQuery(document).ready(function () {
                     solGS.cluster.listClusterPopulations();
                   }
                 } else {
-                  solGS.listTypeSelectionPopulation.askSelectionJobQueueing(selectedPop.id);
+                  solGS.listTypeSelectionPopulation.askSelectionJobQueueing(selectedPop.id, selPopLink);
                 }
               })
               .fail(function () {
