@@ -293,15 +293,14 @@ sub analysis_report_file {
     my $cache_dir = $c->stash->{cache_dir} || $c->stash->{solgs_cache_dir};
     my $file_id   = $c->stash->{file_id};
 
-    if (!$file_id) 
-    {
+    if (!$file_id) {
         my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
         my $trait_abbr = $c->stash->{trait_abbr};
         my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-        if ($analysis_type =~ /selection_prediction/) 
-        {     
-            $pop_id .= "_" . $c->stash->{selection_pop_id};
+        if ($analysis_type =~ /selection_prediction/) {     
+            $pop_id .= "_" . $c->stash->{selection_pop_id};  
+            $protocol_id .= "-" . $c->stash->{selection_pop_genotyping_protocol_id};
         }
 
         $file_id  = "${pop_id}-${trait_abbr}-GP-${protocol_id}";
@@ -611,14 +610,16 @@ sub gebvs_file_id {
     my $selection_pop_id = $c->stash->{selection_pop_id};
     my $trait_id  = $c->stash->{trait_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id} || $protocol_id;
 
     my $identifier = $training_pop_id;
+    my $referer = $c->req->referer;
+    my $path = $c->req->path;
 
-    if ($type =~ /selection/) 
+    if ($type =~ /selection/ || $path =~ /solgs\/check\/selection\/populations\//) 
     {
-        $identifier = "${identifier}-${selection_pop_id}";
-        my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
-        $protocol_id .= '-' . $sel_pop_protocol_id if $sel_pop_protocol_id;
+        $identifier = "${identifier}-${selection_pop_id}";     
+        $protocol_id .= '-' . $sel_pop_protocol_id;
     }
 
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
@@ -636,7 +637,6 @@ sub rrblup_selection_gebvs_file {
     $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
 
     my $file_id = $self->gebvs_file_id($c, $type);
-
     my $cache_data = {key  => 'rrblup_selection_gebvs_' . $file_id,
                       file      => 'rrblup_selection_gebvs_' . $file_id,
                       stash_key => 'rrblup_selection_gebvs_file',
