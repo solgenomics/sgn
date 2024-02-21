@@ -18,7 +18,7 @@ $material_name
 % my @column_headers = @$activity_headers;
 % my @activity_types = @$type_select_options;
 
-<& /page/page_title.mas, title => "Activity Record for '$identifier_name'" &>
+<& /page/page_title.mas, title => "Tracking Activities of '$identifier_name'" &>
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
@@ -103,6 +103,29 @@ $material_name
     </div>
 </&>
 
+<div class="modal fade" id="info_saved_dialog_message" name="info_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="infoSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="infoSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        New information was saved.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_info_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready( function() {
@@ -125,13 +148,22 @@ jQuery(document).ready( function() {
         'ajax': '/ajax/tracking_activity/summary/'+identifier_id,
     });
 
-
-    jQuery('#activity_info_submit').click( function() {
+    jQuery('#activity_info_submit').click( function(e) {
+        e.preventDefault();
         var selected_type = jQuery('#type_select').val();
         var input = jQuery('#selected_type_input').val();
         var record_timestamp = jQuery('#record_timestamp').val();
 
-        jQuery.ajax({
+        if (selected_type == '') {
+            alert("Please select a type");
+            return;
+        }
+        if (input == '') {
+            alert("Please provide an input");
+            return;
+        }
+
+        new jQuery.ajax({
             url: '/ajax/tracking_activity/save',
             dataType: "json",
             type: 'POST',
@@ -147,10 +179,7 @@ jQuery(document).ready( function() {
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert('Saved');
-//                    jQuery('#selected_type_input').val('');
-//                    location.reload();
-
+                    jQuery('#info_saved_dialog_message').modal("show");
                 }
                 if (response.error_string) {
                     alert(response.error);
@@ -158,11 +187,18 @@ jQuery(document).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating the order');
+                alert('An error occurred saving info');
             }
         });
-
     });
+
+    jQuery("#dismiss_info_saved_dialog").click(function(){
+        var selected_type = jQuery('#type_select').val('');
+        var input = jQuery('#selected_type_input').val('');
+        location.reload();
+    });
+
+
 
 
 });

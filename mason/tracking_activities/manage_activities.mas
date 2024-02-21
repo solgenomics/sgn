@@ -7,11 +7,11 @@ $user_id
 
 <%perl>
     my $subtitle;
-    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_activity_project_link" name="create_activity_project_link">Add Activity Project</button> ';
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_activity_project_link" name="create_activity_project_link">Add Tracking Project</button> ';
 </%perl>
 
 <br />
-<& /page/page_title.mas, title => "Manage Activities" &>
+<& /page/page_title.mas, title => "Tracking Activities" &>
 
 <div class="container-fluid">
 

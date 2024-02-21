@@ -224,7 +224,7 @@ sub activity_info_save_POST : Args(0) {
         return;
     }
 
-    $c->stash->{rest} = { success => 1};
+    $c->stash->{rest} = {success => 1};
 
 }
 

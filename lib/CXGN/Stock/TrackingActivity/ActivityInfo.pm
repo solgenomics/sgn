@@ -73,11 +73,11 @@ sub add_info {
     my $timestamp = $self->get_timestamp();
     my $error;
 
-    print STDERR "IDENTIFIER =".Dumper($tracking_identifier)."\n";
-    print STDERR "SELECTED TYPE =".Dumper($selected_type)."\n";
-    print STDERR "INPUT =".Dumper($input)."\n";
-    print STDERR "TIMESTAMP =".Dumper($timestamp)."\n";
-    print STDERR "OPERATOR ID =".Dumper($operator_id)."\n";
+#    print STDERR "IDENTIFIER =".Dumper($tracking_identifier)."\n";
+#    print STDERR "SELECTED TYPE =".Dumper($selected_type)."\n";
+#    print STDERR "INPUT =".Dumper($input)."\n";
+#    print STDERR "TIMESTAMP =".Dumper($timestamp)."\n";
+#    print STDERR "OPERATOR ID =".Dumper($operator_id)."\n";
 
 
     my $coderef = sub {
@@ -98,7 +98,7 @@ sub add_info {
         }
 
         my $previous_info_rs = $identifier->stockprops({type_id=>$tracking_info_json_cvterm->cvterm_id()});
-        print STDERR "COUNT =".Dumper($previous_info_rs->count)."\n";
+#        print STDERR "COUNT =".Dumper($previous_info_rs->count)."\n";
         if ($previous_info_rs->count == 1){
             $info_json_string = $previous_info_rs->first->value();
             my $previous_info = decode_json $info_json_string;
@@ -106,7 +106,7 @@ sub add_info {
             $info_hash{$selected_type}{$timestamp}{'operator_id'} = $operator_id;
             $info_hash{$selected_type}{$timestamp}{'input'} = $input;
             my $new_value = encode_json \%info_hash;
-            print STDERR "NEW VALUE 1 =".Dumper($new_value)."\n";
+#            print STDERR "NEW VALUE 1 =".Dumper($new_value)."\n";
             $previous_info_rs->first->update({value=>$new_value});
         } elsif ($previous_info_rs->count > 1) {
             print STDERR "More than one found!\n";
@@ -116,7 +116,7 @@ sub add_info {
             $new_info{$selected_type}{$timestamp}{'operator_id'} = $operator_id;
             $new_info{$selected_type}{$timestamp}{'input'} = $input;
             my $new_value = encode_json \%new_info;
-            print STDERR "NEW VALUE 2 =".Dumper($new_value)."\n";
+#            print STDERR "NEW VALUE 2 =".Dumper($new_value)."\n";
             $identifier->create_stockprops({$tracking_info_json_cvterm->name() => $new_value});
         }
     };
