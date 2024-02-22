@@ -198,7 +198,7 @@ $user_id
         </div>
     </&>
     <td>
-        <a href="/activity/record"><p>Go to Record Page</p></a>
+        <a href="/activity/record" class="btn btn-default">Go to Record Page</a>
     </td>
 
 % }
