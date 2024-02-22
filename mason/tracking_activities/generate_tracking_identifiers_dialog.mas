@@ -35,7 +35,6 @@ $trial_name
                             <&| /util/workflow.mas:step, title=> "Generate Tracking Identifiers" &>
                                 <& /page/page_title.mas, title=>"" &>
                                 <br/>
-                                <br/>
                                 <div class="form-horizontal">
                                     <div class="form-group">
                                         <label class="col-sm-4 control-label">Material Type: </label>
@@ -49,7 +48,7 @@ $trial_name
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group" id="get_list_of_items" style="display: none">
                                         <label class="control-label col-sm-4">List of Items:</label>
                                         <div class="col-sm-8" >
                                             <div class="input-group">
@@ -107,6 +106,27 @@ $trial_name
     </div>
 </div>
 
+<div class="modal fade" id="tracking_identifiers_saved_dialog_message" name="tracking_identifiers_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="trackingIdentifiersSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trackingIdentifiersSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        New tracking identifiers were saved.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_tracking_identifiers_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 
@@ -122,6 +142,7 @@ jQuery(document).ready(function(){
     jQuery("#material_type").change(function() {
         var selected_material_type = jQuery('#material_type').val();
         jQuery('#item_list_select').html(lo.listSelect('item_list_select', [selected_material_type], 'Select a list of materials', undefined, undefined));
+        jQuery("#get_list_of_items").modal("show");
     })
 
     jQuery("#generate_tracking_identifiers_submit").click(function(){
@@ -159,10 +180,8 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert('Saved');
-                    jQuery('#material_type').val('');
-                    jQuery('#item_list_select').val('');
-
+                    jQuery("#generate_tracking_identifiers_dialog").modal("hide");
+                    jQuery("#tracking_identifiers_saved_dialog_message").modal("show");
                 }
                 if (response.error_string) {
                     alert(response.error);
@@ -174,6 +193,20 @@ jQuery(document).ready(function(){
             }
         });
 
+    });
+
+    jQuery("#dismiss_tracking_identifiers_saved_dialog").click(function(){
+        jQuery("#tracking_identifiers_saved_dialog_message").modal("hide");
+        jQuery('#material_type').val('');
+        jQuery('#item_list_select').val('');
+        location.reload();
+    });
+
+    jQuery("[name = 'generate_tracking_identifiers_dismiss_button']").click(function() {
+        jQuery("#generate_tracking_identifiers_dialog").modal("hide");
+        jQuery("#material_type").val('');
+        jQuery('#item_list_select').val('');
+        location.reload();
     });
 
 });

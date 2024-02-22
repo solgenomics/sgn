@@ -37,8 +37,9 @@ $material_name
                 <div class="col-sm-5">
 % if ($type_select_options) {
                     <select id="type_select">
+                        <option value="">Please select a type</option>
 % foreach my $type(@$type_select_options){
-                         <option value="<%$type%>"><%$type%></option>
+                        <option value="<%$type%>"><%$type%></option>
 % }
                     </select>
 % }
