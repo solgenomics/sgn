@@ -197,16 +197,11 @@ sub activity_info_save_POST : Args(0) {
     my $tracking_identifier = $c->req->param("tracking_identifier");
     my $selected_type = $c->req->param("selected_type");
     my $input = $c->req->param("input");
+    my $note = $c->req->param("note");
     my $record_timestamp = $c->req->param("record_timestamp");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $check_tracking_identifier = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});
-    print STDERR "AJAX IDENTIFIER =".Dumper($tracking_identifier)."\n";
-    print STDERR "AJAX SELECTED TYPE =".Dumper($selected_type)."\n";
-    print STDERR "AJAX INPUT =".Dumper($input)."\n";
-    print STDERR "AJAX TIMESTAMP =".Dumper($record_timestamp)."\n";
-    print STDERR "OPERATOR ID =".Dumper($user_id)."\n";
-
 
     my $add_activity_info = CXGN::Stock::TrackingActivity::ActivityInfo->new({
         schema => $schema,
@@ -215,6 +210,7 @@ sub activity_info_save_POST : Args(0) {
         input => $input,
         timestamp => $record_timestamp,
         operator_id => $user_id,
+        note => $note,
     });
     $add_activity_info->add_info();
     print STDERR "ADD INFO =".Dumper ($add_activity_info->add_info())."\n";
@@ -269,6 +265,9 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                     push @each_timestamp_details, "operator".":"."".$operator_name;
                     my $input = $details_hash{$timestamp}{'input'};
                     push @each_timestamp_details, "count".":"."".$input;
+                    my $note = $details_hash{$timestamp}{'note'};
+                    push @each_timestamp_details, "note".":"."".$note;
+
                     push @each_timestamp_details, $empty_string;
 
                     $each_timestamp_string = join("<br>", @each_timestamp_details);
