@@ -26,6 +26,11 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $activity_type_header = $c->config->{tracking_activities_header};
     my @activity_headers = split ',',$activity_type_header;
 
+    my @options = ();
+    for my $i (0 .. $#type_select_options) {
+        push @options, [$type_select_options[$i], $activity_headers[$i]];
+    }
+
     my $identifier_name = $schema->resultset("Stock::Stock")->find({stock_id => $identifier_id})->uniquename();
     my $material_of_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
     my $material_info = $schema->resultset("Stock::StockRelationship")->find( { object_id => $identifier_id, type_id => $material_of_cvterm_id} );
@@ -37,7 +42,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
 
     $c->stash->{identifier_id} = $identifier_id;
     $c->stash->{identifier_name} = $identifier_name;
-    $c->stash->{type_select_options} = \@type_select_options;
+    $c->stash->{type_select_options} = \@options;
     $c->stash->{activity_headers} = \@activity_headers;
     $c->stash->{material_name} = $material_name;
     $c->stash->{timestamp} = $timestamp;
@@ -70,6 +75,11 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $activity_type_header = $c->config->{tracking_activities_header};
     my @activity_headers = split ',',$activity_type_header;
 
+    my @options = ();
+    for my $i (0 .. $#type_select_options) {
+        push @options, [$type_select_options[$i], $activity_headers[$i]];
+    }
+
     my $identifier_id;
     if ($identifier_name) {
         $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
@@ -79,8 +89,8 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $timestamp = $time->ymd()."_".$time->hms();
 
     $c->stash->{identifier_id} = $identifier_id;
+    $c->stash->{type_select_options} = \@options;
     $c->stash->{activity_headers} = \@activity_headers;
-    $c->stash->{type_select_options} = \@type_select_options;
     $c->stash->{timestamp} = $timestamp;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 

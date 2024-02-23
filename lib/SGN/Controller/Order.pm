@@ -27,7 +27,7 @@ sub order_stocks :Path('/order/stocks/view') :Args(0) {
     }
 
     my $tracking_order_activity = $c->config->{tracking_order_activity};
-    $c->stash->{tracking_order_activity} = $tracking_order_activity;    
+    $c->stash->{tracking_order_activity} = $tracking_order_activity;
 
     $c->stash->{template} = '/order/stocks.mas';
 
@@ -37,6 +37,7 @@ sub order_stocks :Path('/order/stocks/view') :Args(0) {
 sub order_details :Path('/order/details/view') : Args(1) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
@@ -54,7 +55,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     }
 
     my $order_number = shift;
-    my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_number});
+    my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, sp_order_id => $order_number});
     my $order_result = $order_obj->get_order_details();
 
     my $all_items = $order_result->[3];
