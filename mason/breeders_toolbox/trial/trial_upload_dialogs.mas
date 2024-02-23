@@ -9,6 +9,8 @@
 $breeding_programs
 $locations
 $design_types => ()
+$email_address => ""
+$full_name => ""
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
@@ -88,11 +90,13 @@ $design_types => ()
                                                     <div class="col-sm-3"></div>
                                                     <label class="col-sm-2 control-label">Email Report: </label>
                                                     <div class="col-sm-2" style="margin-left: -5px;">
-                                                        <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                                                        <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle">
                                                     </div>
-                                                    <label class="col-sm-1 control-label">Email: </label>
-                                                    <div class="col-sm-2">
-                                                        <input id="email_address" name="email_address" type="email" value="<% my $email_address %>">
+                                                    <div id="email_field" style = "display: none;">
+                                                        <label class="col-sm-1 control-label">Email: </label>
+                                                        <div class="col-sm-2">
+                                                            <input id="email_address" name="email_address" type="email" value="<% $email_address %>">
+                                                        </div>
                                                     </div>
                                                     <div class="col-sm-2"></div>
                                               </div>
@@ -818,6 +822,21 @@ jQuery(document).ready(function(){
       }
     });
 
-    jQuery('#email_option_to_recieve_trial_upload_status')
+
+    jQuery(document).ready(function() {
+        function toggleEmailField() {
+            var checkbox = jQuery('#email_option_to_recieve_trial_upload_status');
+            var emailField = jQuery('#email_field');
+            if (checkbox.prop('checked')) {
+                emailField.show();
+            } else {
+                emailField.hide();
+            }
+        }
+
+        jQuery('#email_option_to_recieve_trial_upload_status').on('change', toggleEmailField);
+        // Call the function initially in case the checkbox is already checked
+        toggleEmailField();
+    });
 });
 </script>
