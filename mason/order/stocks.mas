@@ -182,6 +182,7 @@ $user_id
                         <thead>
                             <tr>
                                 <th>Order Number</th>
+                                <th>Order Details</th>
                                 <th>Tracking ID</th>
                                 <th>Material</th>
 % my $activity_types = $c->config->{tracking_activities_header};

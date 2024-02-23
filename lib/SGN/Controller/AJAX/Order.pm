@@ -764,6 +764,10 @@ sub get_order_progress :Path('/ajax/order/progress') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
+
+    my $order_properties = $c->config->{order_properties};
+    my @properties = split ',',$order_properties;
+
     my $user_id;
 
     if (!$c->user){
@@ -778,17 +782,29 @@ sub get_order_progress :Path('/ajax/order/progress') Args(0) {
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, bcs_schema => $schema, order_to_id => $user_id});
     my $order_activities = $orders->get_orders_to_person_id_progress();
-
     my @order_progress;
     foreach my $activity_info (@$order_activities) {
         my @row = ();
+        my @request_details = ();
+        my $empty_string;
         my $order_id = $activity_info->[0];
         my $identifier_name = $activity_info->[1];
         my $identifier_id = $activity_info->[2];
         my $material_name = $activity_info->[3];
         my $material_id = $activity_info->[4];
         my $material_type = $activity_info->[5];
+        my $order_info = $activity_info->[7];
+
+        foreach my $field (@properties) {
+            my $each_detail = $order_info->{$field};
+            my $detail_string = $field. ":"."".$each_detail;
+            push @request_details, $detail_string;
+        }
+        push @request_details, $empty_string;
+        my $details_string = join("<br>", @request_details);
+
         push @row, qq{<a href="/order/details/view/$order_id">$order_id</a>};
+        push @row, $details_string;
         push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
         push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
         my $progress = $activity_info->[6];

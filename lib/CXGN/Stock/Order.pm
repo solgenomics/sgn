@@ -299,22 +299,34 @@ sub get_orders_to_person_id_progress {
     my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     my $material_of_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
     my $order_identifier_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_tracking_identifiers', 'sp_order_property')->cvterm_id();
+    my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
     my $order_rs = $people_schema->resultset('SpOrder')->search( { order_to_id => $person_id } );
     my @activity_info;
     while (my $result = $order_rs->next()){
+        my %required_info = ();
         my $order_id = $result->sp_order_id();
-        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id, type_id => $order_identifier_cvterm_id } );
-        my $all_items = ();
-        while (my $order_details_result = $orderprop_rs->next()){
+        my $orderprop_item_info_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id, type_id => $order_batch_json_cvterm_id } );
+        my $item_json = $orderprop_item_info_rs->value();
+        my $item_hash = JSON::Any->jsonToObj($item_json);
+        my $all_items_info = $item_hash->{'clone_list'};
+        foreach my $item (@$all_items_info) {
+            my %item_details = %$item;
+            my ($name, $value) = %item_details;
+            $required_info{$name} = $value;
+        }
+
+        my $orderprop_identifiers_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id, type_id => $order_identifier_cvterm_id } );
+        while (my $order_details_result = $orderprop_identifiers_rs->next()){
             my @list = ();
             my $order_details_json = $order_details_result->value();
             my $order_details_hash = JSON::Any->jsonToObj($order_details_json);
             my $tracking_identifier = $order_details_hash->{'tracking_identifiers'};
             @list = @$tracking_identifier;
-            print STDERR "ID LIST =".Dumper(\@list)."\n";
+
             foreach my $identifier_id (@list) {
-                my $activity_hash = ();
+                my $order_info = {};
+                my $activity_hash = {};
                 my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_cvterm_id });
                 my $identifier_name = $identifier_rs->uniquename();
                 my $material_info = $schema->resultset("Stock::StockRelationship")->find( { object_id => $identifier_id, type_id => $material_of_cvterm_id} );
@@ -322,14 +334,14 @@ sub get_orders_to_person_id_progress {
                 my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
                 my $material_name = $material_rs->uniquename();
                 my $material_type = $material_rs->type_id();
-
+                $order_info =  $required_info{$material_name};
                 my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
                 if ($activity_info_rs) {
                     my $activity_json = $activity_info_rs->value();
                     $activity_hash = JSON::Any->jsonToObj($activity_json);
                 }
 
-                push @activity_info, [$order_id, $identifier_name, $identifier_id, $material_name, $material_id, $material_type, $activity_hash];
+                push @activity_info, [$order_id, $identifier_name, $identifier_id, $material_name, $material_id, $material_type, $activity_hash, $order_info];
             }
         }
     }
