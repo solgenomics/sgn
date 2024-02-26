@@ -80,7 +80,7 @@ sub store {
         uniquename => $tracking_identifier,
     });
     if ($check_id_rs->count() > 0){
-        return { error => "$tracking_identifier already used in the database! " };
+        return { error_string => "$tracking_identifier already used in the database! " };
     }
 
     my $coderef = sub {
@@ -122,8 +122,7 @@ sub store {
     };
 
     if ($error) {
-        print STDERR "Error creating a tracking identifier: $error\n";
-        return;
+        return { error => "Error creating a tracking identifier: $error\n" };
     }
 
     $phenome_schema->resultset("StockOwner")->find_or_create({

@@ -184,12 +184,12 @@ jQuery(document).ready(function(){
                     jQuery("#tracking_identifiers_saved_dialog_message").modal("show");
                 }
                 if (response.error_string) {
-                    alert(response.error);
+                    alert(response.error_string);
                 }
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating the order');
+                alert('An error occurred generating identifiers');
             }
         });
 
