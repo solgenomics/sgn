@@ -127,7 +127,7 @@
                                 <div id="upload_seedlots_missing_accessions_div" style="display:none">
                                     <div class="well">
                                         <ul>
-                                            <li>Accessions must exist in the database prior to adding seedlots of them. The reason for this is that an accession can be exist in many seedlots and therefore exists as a separate entity in the database. We also want to be careful about adding new accessions into the database because we do not want incorrectly duplicated data.</li>
+                                            <li>Accessions must exist in the database prior to adding seedlots of them. The reason for this is that there could be many seedlots for a single accession and therefore exists as a separate entity in the database. We also want to be careful about adding new accessions into the database because we do not want incorrectly duplicated data.</li>
                                             <li>When adding accessions into the database, you can use either a list of accessions or an Excel file.</li>
                                         </ul>
                                     </div>

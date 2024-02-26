@@ -472,7 +472,7 @@ has 'user_name' => (
     is => 'rw',
 );
 
-=head2 accessor modification_note()
+=head2 accessor accession_name_template()
 
  Usage:         get or set the accession name template
  Desc:          the template should be of the form of a string 
@@ -481,9 +481,10 @@ has 'user_name' => (
                 the template (with the numeric extension incremented by 1)
                 The template is specified in the sgn.conf with the 
                 accession_name_template key and should be a regular 
-                expression of the form "string(\d+)" and fed to this 
+                expression of the form "string(\\d+)" and fed to this 
                 function (retrieve with $c->config->{accession_name_template}
-                in the controller.
+                in the controller. Note that you have to double backslash
+                backslashes of the regexp.
  Args:
  Side Effects:
  Example:
