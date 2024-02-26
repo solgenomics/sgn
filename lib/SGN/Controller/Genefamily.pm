@@ -1,7 +1,9 @@
 
 package SGN::Controller::Genefamily;
 
+use Moose;
 
+BEGIN { extends 'Catalyst::Controller'; }
 
 sub genefamily_index :Path('/tools/genefamily') Args(0) {
     my $self = shift;
@@ -15,8 +17,8 @@ sub search : Path('/tools/genefamily/search') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if ($c->user() ) { 
-	$c->user->has_roles("curator", "genefamily_editor") { 
+    if ($c->user()) { 
+	if (grep(/curator|genefamily_editor/, $c->user->get_object()->get_roles() )) { 
 	    
 	    $c->stash->{genefamily_id} = $c->req->param("genefamily_id") || '';
 	    $c->stash->{dataset} = $c->req->param("dataset") || '';
@@ -37,3 +39,6 @@ sub search : Path('/tools/genefamily/search') Args(0) {
     }
 	
 }
+
+
+1;
