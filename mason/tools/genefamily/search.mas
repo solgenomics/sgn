@@ -23,7 +23,7 @@ if ($genefamily_id eq '') { $genefamily_id=0; }
 
 if ($action eq 'detail') {
     my $gf = SGN::Genefamily->new(
-        name      => "ORTHOMCL$genefamily_id",
+        name      => $genefamily_id,
         dataset   => $dataset,
         files_dir => $DIR,
        );
