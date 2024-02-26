@@ -190,7 +190,7 @@ jQuery(document).ready( function() {
                 if (response.success == 1) {
                     jQuery('#info_saved_dialog_message').modal("show");
                 }
-                if (response.error_string) {
+                if (response.error) {
                     alert(response.error);
                 }
             },
@@ -202,8 +202,9 @@ jQuery(document).ready( function() {
     });
 
     jQuery("#dismiss_info_saved_dialog").click(function(){
-        var selected_type = jQuery('#type_select').val('');
-        var input = jQuery('#selected_type_input').val('');
+        jQuery('#type_select').val('');
+        jQuery('#selected_type_input').val('');
+        jQuery('#selected_type_note').val('');        
         location.reload();
     });
 

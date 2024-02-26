@@ -42,18 +42,20 @@ __PACKAGE__->config(
    );
 
 
-sub create_activity_project : Path('/ajax/tracking_activity/create_activity_project') : ActionClass('REST'){ }
+sub create_tracking_activity_project : Path('/ajax/tracking_activity/create_tracking_activity_project') : ActionClass('REST'){ }
 
-sub create_activity_project_POST : Args(0) {
+sub create_tracking_activity_project_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!$c->user()) {
-    $c->stash->{rest} = { error => "You must be logged in to add project." };
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
-    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-        $c->stash->{rest} = { error => "You do not have sufficient privileges to create activity project." };
+
+    if (!($user->has_role('submitter') or $user->has_role('curator'))) {
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to create tracking activity project." };
         return;
     }
 
@@ -90,7 +92,6 @@ sub create_activity_project_POST : Args(0) {
         });
 
         my $return = $add_activity_project->save_activity_project();
-        print STDERR "RETURN =".Dumper($return)."\n";
 
         if ($return->{error}){
             $error = $return->{error};
@@ -183,16 +184,15 @@ sub activity_info_save_POST : Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "You must be logged in to add properties." };
+        $c->stash->{rest} = { error => "You must be logged in to add new information." };
         return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-        $c->stash->{rest} = { error => "You do not have sufficient privileges to record activity info." };
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to record new information." };
         return;
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-    print STDERR "USER ID =".Dumper($user_id)."\n";
 
     my $tracking_identifier = $c->req->param("tracking_identifier");
     my $selected_type = $c->req->param("selected_type");
@@ -201,7 +201,6 @@ sub activity_info_save_POST : Args(0) {
     my $record_timestamp = $c->req->param("record_timestamp");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $check_tracking_identifier = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});
 
     my $add_activity_info = CXGN::Stock::TrackingActivity::ActivityInfo->new({
         schema => $schema,
@@ -212,15 +211,15 @@ sub activity_info_save_POST : Args(0) {
         operator_id => $user_id,
         note => $note,
     });
-    $add_activity_info->add_info();
-    print STDERR "ADD INFO =".Dumper ($add_activity_info->add_info())."\n";
+    my $return = $add_activity_info->add_info();
+#    print STDERR "ADD INFO =".Dumper ($add_activity_info->add_info())."\n";
 
-    if (!$add_activity_info->add_info()){
-        $c->stash->{rest} = {error_string => "Error saving info",};
+    if (!$return){
+        $c->stash->{rest} = {error => "Error saving info",};
         return;
+    } else {
+        $c->stash->{rest} = $return;
     }
-
-    $c->stash->{rest} = {success => 1};
 
 }
 

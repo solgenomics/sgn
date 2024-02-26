@@ -88,8 +88,7 @@ sub existing_project_name {
     my $schema = $self->get_bcs_schema();
     if($schema->resultset('Project::Project')->find({name => $activity_project_name})){
         return 1;
-    }
-    else{
+    } else {
         return;
     }
 }
@@ -101,12 +100,12 @@ sub save_activity_project {
 
     if ($self->existing_project_name()){
         print STDERR "Can't create activity project: Project name already exists\n";
-        return {error => "Activity project not saved: Project name already exists"};
+        return {error => "Tracking activity project not saved: Project name already exists"};
     }
 
     if (!$self->get_breeding_program_id()){
         print STDERR "Can't create activity project: Breeding program does not exist\n";
-        return {error => "Activity project not saved: Breeding program does not exist"};
+        return {error => "Tracking activity project not saved: Breeding program does not exist"};
     }
 
     my $parent_folder_id;

@@ -213,7 +213,7 @@ $(window).ready( function() {
                 if (response.success == 1) {
                     jQuery('#record_page_saved_dialog_message').modal("show");
                 }
-                if (response.error_string) {
+                if (response.error) {
                     alert(response.error);
                 }
             },
@@ -228,7 +228,7 @@ $(window).ready( function() {
         jQuery('input[name="record_page_identifier_name_input"]').val('');
         jQuery('#record_page_type_select').val('');
         jQuery('#record_page_info_input').val('');
-        jQuery('#record_page_note').val('');        
+        jQuery('#record_page_note').val('');
         location.reload();
     });
 

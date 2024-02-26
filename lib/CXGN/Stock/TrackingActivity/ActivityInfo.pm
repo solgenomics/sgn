@@ -83,19 +83,16 @@ sub add_info {
         my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
         my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property');
 
-        my $info_json_string;
-        my $info_ref = {};
-        my $identifier;
-
-        my $tracking_identifier_rs = $schema->resultset("Stock::Stock")->search({ 'uniquename' => $tracking_identifier, 'type_id' => $tracking_identifier_cvterm_id});
-        my $id;
-        if ($tracking_identifier_rs->count == 1) {
-            $identifier = $tracking_identifier_rs->first;
-        } else {
-            return;
+        my $tracking_identifier_stock = $self->_get_tracking_identifier($tracking_identifier);
+        if (!$tracking_identifier_stock) {
+            return { error => "$tracking_identifier could not be found." };
         }
 
-        my $previous_info_rs = $identifier->stockprops({type_id=>$tracking_info_json_cvterm->cvterm_id()});
+        my $info_json_string;
+        my $info_ref = {};
+        my $id;
+
+        my $previous_info_rs = $tracking_identifier_stock->stockprops({type_id=>$tracking_info_json_cvterm->cvterm_id()});
 #        print STDERR "COUNT =".Dumper($previous_info_rs->count)."\n";
         if ($previous_info_rs->count == 1){
             $info_json_string = $previous_info_rs->first->value();
@@ -118,7 +115,7 @@ sub add_info {
             $new_info{$selected_type}{$timestamp}{'note'} = $note;
             my $new_value = encode_json \%new_info;
 #            print STDERR "NEW VALUE 2 =".Dumper($new_value)."\n";
-            $identifier->create_stockprops({$tracking_info_json_cvterm->name() => $new_value});
+            $tracking_identifier_stock->create_stockprops({$tracking_info_json_cvterm->name() => $new_value});
         }
     };
 
@@ -129,13 +126,31 @@ sub add_info {
     };
 
     if ($error) {
-        print STDERR "Error storing tracking information: $error\n";
-        return;
+        return { error => "Error storing tracking information: $error\n" };
+    } else {
+        return { success => 1};
     }
 
-    return 1;
 }
 
+
+sub _get_tracking_identifier {
+    my $self = shift;
+    my $identifier_name = shift;
+    my $schema = $self->get_schema();
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+    my $stock;
+    my $tracking_identifier_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type');
+
+    $stock_lookup->set_stock_name($identifier_name);
+    $stock = $stock_lookup->get_tracking_identifier_exact();
+
+    if (!$stock) {
+        print STDERR "Tracking identifier does not exist\n";
+        return;
+    }
+    return $stock;
+}
 
 
 #######
