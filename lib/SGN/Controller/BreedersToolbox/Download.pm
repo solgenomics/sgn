@@ -1060,6 +1060,15 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
 
 # seedlot maintenanve events download -- end
 
+sub convert_vcf_to_hapmap {
+    my ($self, $vcf_file) = @_;
+    my $hapmap_file = $vcf_file . '.hapmap';
+
+    system("./bin/convert_vcf_to_hmp.pl", $vcf_file);
+
+    return $hapmap_file;
+    
+}
 
 #Used from wizard page and manage download page for downloading gbs from accessions
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
@@ -1113,6 +1122,12 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $filename = '';
     if ($download_format eq 'VCF') {
         $filename = 'BreedBaseGenotypesDownload.vcf';
+    }
+    elsif ($download_format eq 'HapMap') {
+        $filename = 'BreedBaseGenotypesDownload.hapmap';
+        my $vcf_file = 'BreedBaseGenotypesDownload.vcf';
+        my $hapmap_file = $self->convert_vcf_to_hapmap($vcf_file);
+        $filename = $hapmap_file;
     }
     else {
         $filename = 'BreedBaseGenotypesDownload.tsv';
