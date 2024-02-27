@@ -18,11 +18,17 @@ $locations
 
                     <&| /util/workflow.mas, id=> "add_tracking_activity_project_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"...." &>
-
-                            <p>......</p>
+                            <& /page/page_title.mas, title=>"Tracking Activity Tool" &>
+                            <p>You can use tracking tool to track and record activity information related to materials stored in the database (i.e. tracking tissue culture process of an accession). Data types of each process can be customized (please contact us).</p>
+                            <ul>
+                                <li>Tracking identifier is a globally unique name assigned to each material for capturing related information.</li>
+                                <li>Tracking identifiers are grouped in a Tracking Activity project</li>
+                                <li>You can generate tracking identifiers by using a link on the Tracking Activity project page</li>
+                                <li>Record page allows you to record inputs of different data types. The link can be found on the project page. To record new information, you can retrieve any tracking identifier by scanning a barcode.</li>
+                                <li>Each tracking identifier has its own details page. In addition to the record page, you can record data directly using this details page. Tracking Identifier details page displays details of each data entry including an input, operator and timestamp as well as summary of multiple entries of the same data type</li>
+                                <li>If you would like to track preparation process for requested items from ordering tool, ordering tool can be connected with tracking tool (please contact us).</li>
+                            </ul>
                             <hr>
-
                             <center>
                                 <button id="next_step_add_new_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
