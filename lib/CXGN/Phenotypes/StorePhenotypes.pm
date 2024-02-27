@@ -314,21 +314,11 @@ sub verify {
     my %check_unique_trait_stock = %{$self->unique_trait_stock};
     my %check_unique_trait_stock_timestamp = %{$self->unique_trait_stock_timestamp};
 
-    my %check_trait_category;
-    my $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_categories';";
-    my $sth = $schema->storage->dbh->prepare($sql);
-    $sth->execute();
-    while (my ($category_value, $cvterm_id) = $sth->fetchrow_array) {
-        $check_trait_category{$cvterm_id} = $category_value;
-    }
-
-    my %check_trait_format;
-    $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_format';";
-    $sth = $schema->storage->dbh->prepare($sql);
-    $sth->execute();
-    while (my ($format_value, $cvterm_id) = $sth->fetchrow_array) {
-        $check_trait_format{$cvterm_id} = $format_value;
-    }
+    my %check_trait_category = $self->get_trait_props('trait_categories');
+    my %check_trait_format = $self->get_trait_props('trait_format');
+    my %check_trait_min_value = $self->get_trait_props('trait_minimum');
+    my %check_trait_max_value = $self->get_trait_props('trait_maximum');
+    my %check_trait_repeat_type = $self->get_trait_props('trait_repeat_type');
 
     my %image_plot_full_names;
     #This is for saving Fieldbook images, which are only associated to a stock. To save images that are associated to a stock and a trait and a value, use the ExcelAssociatedImages parser
@@ -1030,6 +1020,22 @@ sub handle_operator {
 
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
     $h->execute($operator, $phenotype_id);
+}
+
+sub get_term_props {
+    my $self = shift;
+    my $cvterm_id = shift;
+    my $property_name = shift;
+
+    my %property_by_cvterm_id;
+    $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name=? ";
+    $sth= $schema->storage->dbh->prepare($sql);
+    $sth->execute($cvterm_id, $property_name);
+    while (my ($property_value, $cvterm_id, $cvterm_name) = $sth->fetchrow_array) {
+	$property_by_cvterm_id{$cvterm_id} = $property_value;
+    }
+
+    return %property_by_cvterm_id;
 }
 
 ###
