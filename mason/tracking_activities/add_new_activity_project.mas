@@ -39,23 +39,23 @@ $locations
                                 <& /page/page_title.mas, title=>"Enter basic information about the project" &>
                                     <br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-lable">Project Name: </label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-lable">Project Name: </label>
+                                        <div class="col-sm-9">
                                             <input class="form-control" type="text" id="activity_project_name" name="activity_project_name"  />
                                         </div>
-                                    </div><br/>
+                                    </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Activity Type: </label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Activity Type: </label>
+                                        <div class="col-sm-9">
                                             <select class="form-control" id="activity_type" name="activity_type">
                                                 <option value="">Select an activity type</option>
                                                 <option value="tissue_culture">tissue culture</option>
                                             </select>
                                         </div>
-                                    </div><br/>
+                                    </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Breeding Program: </label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <div class="col-sm-9">
                                             <select class="form-control" id="activity_project_program" name="activity_project_program">
                                                 <option value="">Select Breeding Program</option>
 <%perl>
@@ -69,10 +69,10 @@ foreach my $program (@$programs) {
 </%perl>
                                             </select>
                                         </div>
-                                    </div><br/>
+                                    </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Location of this project: </label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Location of this project: </label>
+                                        <div class="col-sm-9">
                                             <select class="form-control" id="activity_project_location" name="activity_project_location">
                                                 <option value="">Select Location</option>
 <%perl>
@@ -85,16 +85,16 @@ foreach my $program (@$programs) {
 </%perl>
                                             </select>
                                         </div>
-                                    </div><br/>
+                                    </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Year:</label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Year:</label>
+                                        <div class="col-sm-9">
                                             <div id="activity_project_year" name="activity_project_year" ></div>
                                         </div>
-                                    </div><br/>
+                                    </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Description:</label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Description:</label>
+                                        <div class="col-sm-9">
                                             <textarea class="form-control" id="activity_project_description" name="activity_project_description" ></textarea>
                                         </div>
                                     </div>
