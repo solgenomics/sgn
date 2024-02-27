@@ -141,7 +141,8 @@ sub submit_order_POST : Args(0) {
         my @identifier_stock_ids = ();
         my @tracking_ids = ();
         my $activity_project_id;
-        if (defined $tracking_activity) {
+        print STDERR "TRACKING ORDER ACTIVITY =".Dumper($tracking_activity)."\n";
+        if ($tracking_activity) {
             foreach my $name (sort @names) {
                 push @tracking_identifiers, ["order".$order_id.":".$name, $name];
             }
