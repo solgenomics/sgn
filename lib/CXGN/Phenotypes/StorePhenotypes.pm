@@ -347,6 +347,22 @@ sub verify {
         }
     }
 
+
+    # PERFORMS CHECKS in the following way:
+    #
+    # IMPORTANT: for multiple and time_series trait_repeat_types, the acquisition datetime
+    #            must be present!
+    #
+    # * check that values are of the correct format (numeric vs string vs date etc)
+    # * if categorical, check if legal categories
+    # * if numerical, check boundaries (trait_minimum, trait_maximum)
+    # * if trait_repeat_type = single, check if measurement has already been taken, and
+    #    emit warning depending on selected mode (overwrite vs. not)
+    # * if trait_repeat_type = multiple, check if measurement already exists, otherwise add
+    # * if trait_repeat_type = time_series, check if measurement for time point already exists,
+    #   otherwise add
+    #
+    
     my %check_file_stock_trait_duplicates;
 
     foreach my $plot_name (@plot_list) {
