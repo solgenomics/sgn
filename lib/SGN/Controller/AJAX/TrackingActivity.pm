@@ -415,4 +415,23 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
 }
 
 
+sub get_project_active_identifier_names :Path('/ajax/tracking_activity/project_active_identifier_names') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
+    my $all_identifier_info = $activity_project->get_project_active_identifiers();
+    my @identifier_names;
+    foreach my $identifier_info (@$all_identifier_info) {
+        push @identifier_names, $identifier_info->[1];
+    }
+
+    $c->stash->{rest} = { data => \@identifier_names };
+
+}
+
+
+
 1;

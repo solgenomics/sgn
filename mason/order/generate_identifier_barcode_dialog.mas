@@ -3,6 +3,7 @@
 $order_id => undef
 $identifier => undef
 $user_id => undef
+$trial_id => undef
 
 </%args>
 
@@ -218,7 +219,7 @@ $user_id => undef
 <script>
 
 jQuery(document).ready(function () {
-
+    var project_id = "<%$trial_id%>";
     var dialog_subtitle = '';
     var dialog_subtitle2 = '';
     var barcode_button_label = '';
@@ -261,6 +262,31 @@ jQuery(document).ready(function () {
 
                 for (i=0; i<response.tracking_info.length; i++) {
                     order_item_html = order_item_html + response.tracking_info[i][0] + "\n";
+                }
+                order_item_html = order_item_html + "</textarea>";
+                jQuery('#item_list').empty();
+                jQuery('#item_list').html(order_item_html);
+
+            },
+            error: function(response){
+                alert("Error retrieving requested item info.");
+            }
+        });
+    });
+
+    jQuery('#generate_barcodes_project_page').click(function() {
+        jQuery('#generate_identifier_barcode_dialog').modal("show");
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for active tracking identifiers');
+
+        jQuery.ajax({
+            url:'/ajax/tracking_activity/project_active_identifier_names/'+project_id,
+
+            success: function(response){
+                console.log(response);
+                var order_item_html = '<textarea class="form-control" id="identifier_names" name="identifier_names" >';
+
+                for (i=0; i<response.data.length; i++) {
+                    order_item_html = order_item_html + response.data[i] + "\n";
                 }
                 order_item_html = order_item_html + "</textarea>";
                 jQuery('#item_list').empty();

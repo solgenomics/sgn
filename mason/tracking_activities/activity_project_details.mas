@@ -115,8 +115,8 @@ $vendor_id
         </div>
     </div>
 </div>
-%if (!$vendor_id) {
+% if (!$vendor_id) {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
-%}
+% }
 
 <& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name &>
