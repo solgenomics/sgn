@@ -92,10 +92,14 @@ sub create_tracking_activity_project_POST : Args(0) {
         });
 
         my $return = $add_activity_project->save_activity_project();
-
-        if ($return->{error}){
-            $error = $return->{error};
+        if (!$return){
+            $c->stash->{rest} = {error => "Error saving project",};
+            return;
         }
+
+#        if ($return->{error}){
+#            $error = $return->{error};
+#        }
     };
 
     if ($@) {

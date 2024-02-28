@@ -119,7 +119,7 @@ sub save_activity_project {
         ->create({
               name => $self->get_activity_project_name(),
               description => $self->get_project_description(),
-              type_id => $project_type_cvterm_id
+#              type_id => $project_type_cvterm_id
         });
 
     my $project_id = $project->project_id();
