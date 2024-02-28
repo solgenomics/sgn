@@ -173,7 +173,8 @@ $user_id
                     <button id="download_active_item_file_button" class="btn btn-primary">Download Item File</button>
                     <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
                     -->
-                    <button id="generate_active_item_barcode_button" class="btn btn-primary">Generate Item Barcode</button>
+                    <button id="generate_active_item_barcode_button" class="btn btn-primary">Generate Item Barcodes</button>
+                    <a href="/activity/record" class="btn btn-default">Go to Record Page</a>
                 </div>
                 <div class = "panel-body">
 
@@ -198,10 +199,6 @@ $user_id
             </div>
         </div>
     </&>
-    <td>
-        <a href="/activity/record" class="btn btn-default">Go to Record Page</a>
-    </td>
-
 % }
 
 <& /order/create_item_file_dialog.mas&>
