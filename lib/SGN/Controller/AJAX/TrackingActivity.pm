@@ -410,7 +410,7 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
                 push @row, $input;
             }
         }
-
+        push @row, $identifier_name;
         push @all_identifiers,[@row];
     }
 
