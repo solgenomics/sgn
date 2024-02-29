@@ -524,7 +524,7 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     my $default = $c->req->param("default") || 0;
     my $type = $c->req->param("type");
 
-    my $user_id = $c->user()->get_sp_person_id();
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     # my $all_lists = CXGN::List::all_types($c->dbc->dbh());
 
