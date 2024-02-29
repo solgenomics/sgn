@@ -175,7 +175,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     };
 }
 
-sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
+sub retrieve_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -185,9 +185,10 @@ sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
 	return;
     }
 
+    my $sp_person_id = $c->user() ? $c->user()->get_object->get_sp_person_id() : undef;
     my $datasets = CXGN::Dataset->get_datasets_by_user(
-	$c->dbic_schema("CXGN::People::Schema", undef, $user),
-	$user->get_object()->get_sp_person_id()
+	$c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+	$sp_person_id
 	);
 
     $c->stash->{rest} = $datasets;
@@ -203,9 +204,11 @@ sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
         return;
     }
 
+    my $sp_person_id = $c->user() ? $c->user()->get_object->get_sp_person_id() : undef;
+
     my $datasets = CXGN::Dataset->get_datasets_by_user(
-        $c->dbic_schema("CXGN::People::Schema", undef, $user),
-        $user->get_object()->get_sp_person_id()
+        $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+        $sp_person_id
         );
 
     my @result;
