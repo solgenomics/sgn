@@ -115,32 +115,21 @@ while (<$F>) {
 
 	my $seedlot = CXGN::Stock::Seedlot->new(  schema => $schema, seedlot_id => $seedlot_row->stock_id() );
 
-	my $accession = $seedlot->accession();
+	my $name = "";
+	my $type = "";
 
-	#my $accession = CXGN::Stock->new( { schema => $schema, stock_id => $accession_id });
-
-	$accession_name = $accession->[1];
-	# my $rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $seedlot_row->stock_id() });
-
-	# my @accessions;
-	# while (my $stock_rel_row = $rs->next()) {
-	#     my $accession_row = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_rel_row->subject_id(), type_id=> $stock_type_id });
-
-
-	#     if (!$accession_row) {
-	# 	$accession_name = "[NONE]";
-	#     }
-	#     else {
-	# 	push @accessions, $accession_row->uniquename();
-		
-	#     }
-	    
-	    
-	# }
-	# $accession_name = join (", ", @accessions);
+	
+	if (my $accession = $seedlot->accession()) {
+	    $name = $accession->[1];
+	    $type = "accession";
+	}
+	elsif (my $cross = $seedlot->cross()) {
+	    $name = $cross->[1];
+	    $type = "cross";
+	}
 
     }
-    print join("\t", $accession_name, $seedlot, @row)."\n";
+    print join("\t", $name, $seedlot, @row)."\n";
     
 }
 
