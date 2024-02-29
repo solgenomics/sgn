@@ -101,24 +101,19 @@ while (<$F>) {
     
     my $seedlot_row = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot, type_id=> $seedlot_type_id });
 
-    my $accession_name = "";
+    my $name = "";
+    my $type = "";
     
     if (! defined($seedlot_row)) {
-	$accession_name = "[SEEDLOT NOT IN DB]";
+	$name = "[SEEDLOT NOT IN DB]";
 	print STDERR "ROW === ".Dumper($seedlot_row);
-	
     }
-    
     else {
 
 	print STDERR "FOUND SEEDLOT!\n";
 
 	my $seedlot = CXGN::Stock::Seedlot->new(  schema => $schema, seedlot_id => $seedlot_row->stock_id() );
 
-	my $name = "";
-	my $type = "";
-
-	
 	if (my $accession = $seedlot->accession()) {
 	    $name = $accession->[1];
 	    $type = "accession";
@@ -130,7 +125,6 @@ while (<$F>) {
 
     }
     print join("\t", $name, $seedlot, @row)."\n";
-    
 }
 
 close($F);
