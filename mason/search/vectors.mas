@@ -2,7 +2,7 @@
 <%args>
 
 $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
-$stock_types     => undef
+$stock_types     => []
 $editable_vector_props => undef
 </%args>
 
