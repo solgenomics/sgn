@@ -389,6 +389,13 @@ sub verify {
                         if (!$trait_format_checked) {
                             $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                         }
+			if ($trait_value < $trait_min_value{$trait_cvterm_id}) {
+			    $error_message .= "<small>For trait '$trait_name' the trait value ($trait_value) should not be smaller than the defined trait_minimum, $trait_min_value{$trait_cvterm_id}</small><hr />";
+			}
+			
+			if ($trait_value > $trait_max_value{$trait_cvterm_id}) {
+			    $error_message .= "<small>For the trait '$trait_name' The trait vlue($trait_value) should not be larger than the defined trait_maximum, $trait_max_value{$trait_cvterm_id}</small></hr>";
+			}
                     }
                     if ($check_trait_format{$trait_cvterm_id} eq 'image') {
                         $trait_value =~ s/^.*photos\///;
@@ -397,6 +404,7 @@ sub verify {
                         }
                     }
                 }
+
                 if (exists($check_trait_category{$trait_cvterm_id})) {
                     my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
                     my %trait_categories_hash;
@@ -414,25 +422,56 @@ sub verify {
                     }
 
                     if (!exists($trait_categories_hash{$trait_value})) {
-                        $error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                        $error_message .= "<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                     }
                 }
 
+
+		my $repeat_type = "single";
+		if (exists($check_trait_repeat_type{$trait_cvterm_id})) {
+
+		    if (grep /$check_trait_repeat_type{$trait_cvterm_id}/, ("single", "multiple", "time_series")) {
+			$repeat_type = $check_trait_repeat_type{$trait_cvterm_id};
+		    }
+		    else {
+			print STDERR "the trait repeat type of $check_trait_repeat_type{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
+		    }
+
+		    
+		}
+
+		if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
+		    if (!defined($timestamp)) {
+			$error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
+		    }
+		}
+		
                 #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
                 #check if the plot_name, trait_name combination already exists in database.
-                if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
-                } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
-                } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
-                }
+		if ($repeat_type eq "single") { 
+		    if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
+			$warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
+		    }
+		    elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
+			$warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+		    }
+		    elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
+			$warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
+		    }
 
-                #check if the plot_name, trait_name combination already exists in same file.
-                if (exists($check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
-                }
-                $check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id} = 1;
+		    #check if the plot_name, trait_name combination already exists in same file.
+		    if (exists($check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id})) {
+			$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
+		    }
+		    $check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id} = 1;
+		    
+		}
+		else {   ## multiple or time_series - warn only if the timestamp/value are identical
+		    if (exists($check_unique_trait_stock_timestamp($trait_cvterm_id, $stock_id, $timestamp}) && $check_unique_trait_stock_timestamp($trait_cvterm_id, $stock_id, $timestamp) eq $trait_value) {
+			$warning_message .= "For trait 'trait_name', the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr />";
+		    }
+		}
+
             }
 
             if ($timestamp_included) {
