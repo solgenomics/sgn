@@ -3,8 +3,6 @@
 $dataset_id => undef
 </%args>
 
-% use Data::Dumper;
-
 <& /util/import_javascript.mas, entries => ["wizard"] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
