@@ -1076,7 +1076,7 @@ sub handle_operator {
     $h->execute($operator, $phenotype_id);
 }
 
-sub get_term_props {
+sub get_trait_props {
     my $self = shift;
     my $cvterm_id = shift;
     my $property_name = shift;
@@ -1084,11 +1084,11 @@ sub get_term_props {
     my %property_by_cvterm_id;
     my $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name=? ";
     my $sth= $self->bcs_schema()->storage()->dbh()->prepare($sql);
-    $sth->execute($cvterm_id, $property_name);
+    $sth->execute($property_name);
     while (my ($property_value, $cvterm_id, $cvterm_name) = $sth->fetchrow_array) {
 	$property_by_cvterm_id{$cvterm_id} = $property_value;
     }
-
+    print STDERR "PROPERTIES FROM $property_name: ".Dumper(\%property_by_cvterm_id);
     return %property_by_cvterm_id;
 }
 
