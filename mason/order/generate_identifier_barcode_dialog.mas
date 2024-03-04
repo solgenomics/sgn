@@ -19,6 +19,9 @@ $trial_id => undef
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
+                    <p>
+                        <button type="button" class="btn btn-primary" name="design_custom_barcode" id="design_custom_barcode">Design Custom Barcodes Using a List</button>
+                    </p>
                     <p id = "barcode_dialog_subtitle2">
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                     </p>
@@ -299,6 +302,9 @@ jQuery(document).ready(function () {
         });
     });
 
+    jQuery('#design_custom_barcode').click(function () {
+        location.href = '/tools/label_designer';
+    });
 
 });
 
