@@ -11,6 +11,10 @@ $roles
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
 <& /tracking_activities/add_new_activity_project.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type=>'activity_record' &>
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'activity_record' &>
+<& /breeders_toolbox/folder/folder_move.mas, project_type=>'activity_record' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Tracking Activities', folder_tree_identifier => 'activities_list', folder_tree_refresh_name => 'refresh_activity_jstree_html' &>
 
 <table class="table table-bordered">
     <thead>
