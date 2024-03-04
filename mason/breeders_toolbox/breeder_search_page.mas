@@ -631,6 +631,41 @@ $dataset_id => undef
       var protocol_name = '<% $c->config->{default_genotyping_protocol} %>';
       $(".wizard-download-genotypes-info3").show();
       $(".wizard-download-genotypes-info3").val("genotype protocol \"" + protocol_name + "\""); 
+      jQuery.ajax({
+          url: '/get/genotyping/protocols/',
+          method: "POST",
+          dataType: "json",
+          error: function(response) {
+            console.log("ERROR: Could not get genotyping protocol");
+            console.log(response);
+          },
+          success: function(response) {
+           if (response.error) {
+              console.log("ERROR: Server returned an error trying to get genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+              console.log(repsonse.error);
+            } else {
+              SELECTED_GENOTYPING_PROTOCOL = response.default_protocol.protocol_id;
+              console.log(response.default_protocol.protocol_id);
+              jQuery.ajax({
+                url: '/ajax/genotyping_protocol/num_markers',
+                method: "GET",
+                data: { 'protocol_ids': SELECTED_GENOTYPING_PROTOCOL },
+                error: function(response) {
+                  console.log("ERROR: Could not get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+                  console.log(response);
+                },
+                success: function(response) {
+                  if (response.error) {
+                    console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+                    console.log(repsonse.error);
+                  } else {
+                    num_markers = response.data;
+                  }
+               }
+              });
+            }
+          }
+      });
     }
     if ( selected_accessions !== SELECTED_ACCESSIONS ) {
       SELECTED_ACCESSIONS = selected_accessions;
