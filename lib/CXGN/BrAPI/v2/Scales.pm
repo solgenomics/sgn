@@ -425,20 +425,22 @@ sub delete {
 
 sub _format_data_type {
     my $value => shift;
-    my $dataType = "Numerical"; #Numerical is the default trait_format for phenotypes in breedbase
+    my $dataType = "Text"; #Text is the default trait_format for phenotypes in breedbase
 
     if ($value) {
         my %formats = (
             "numeric"  => "Numerical",
             "qualitative"  => "Nominal",
-            # "Code"
-            # "Date" 
-            # "Duration" 
-            # "Ordinal" 
-            # "Text"
+            "numerical"  => "Numerical",
+            "nominal"  => "Nominal",
+            "code" => "Code",
+            "date" => "Date" ,
+            "duration" => "Duration",
+            "ordinal" => "Ordinal",
+            "text"=> "Text",
         );
 
-        $dataType = $formats{$value} ? $formats{$value} : $dataType;
+        $dataType = $formats{lc $value} ? $formats{lc $value} : $dataType;
     }
     return $dataType;
 }
