@@ -576,7 +576,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-            dataset_exluded_outliers=>$outliers,
+            dataset_excluded_outliers=>$outliers,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
