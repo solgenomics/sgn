@@ -273,6 +273,7 @@ sub list {
 	my $folder_for_crosses = $args->{folder_for_crosses};
 	my $folder_for_genotyping_trials = $args->{folder_for_genotyping_trials};
 	my $folder_for_genotyping_projects = $args->{folder_for_genotyping_projects};
+	my $folder_for_tracking_activities = $args->{folder_for_tracking_activities};
 
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'trial_folder', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
@@ -284,7 +285,7 @@ sub list {
 	}
 
 	my %projectprop_params;
-	if (!$folder_for_trials && !$folder_for_crosses && !$folder_for_genotyping_trials && !$folder_for_genotyping_projects){
+	if (!$folder_for_trials && !$folder_for_crosses && !$folder_for_genotyping_trials && !$folder_for_genotyping_projects && !$folder_for_tracking_activities){
 		$projectprop_params{'projectprops.type_id'} = $folder_cvterm_id;
 	} elsif ($folder_for_trials){
 		my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_trials', 'project_property')->cvterm_id();
@@ -297,6 +298,9 @@ sub list {
         $projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
 	} elsif ($folder_for_genotyping_projects){
         my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_genotyping_projects', 'project_property')->cvterm_id();
+        $projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
+    } elsif ($folder_for_tracking_activities){
+        my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_tracking_activities', 'project_property')->cvterm_id();
         $projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
     }
 

@@ -134,6 +134,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
     my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
     my $folder_for_genotyping_projects = 1 ? $c->req->param("folder_for_genotyping_projects") eq 'true' : 0;
+    my $folder_for_tracking_activities = 1 ? $c->req->param("folder_for_tracking_activities") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -146,7 +147,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
         folder_for_trials => $folder_for_trials,
         folder_for_crosses => $folder_for_crosses,
         folder_for_genotyping_trials => $folder_for_genotyping_trials,
-        folder_for_genotyping_projects => $folder_for_genotyping_projects
+        folder_for_genotyping_projects => $folder_for_genotyping_projects,
+        folder_for_tracking_activities => $folder_for_tracking_activities
     });
 
     if ($empty) {
@@ -187,11 +189,11 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
     # sort types alphabetically, case insensitive
 
     #print STDERR "types before sort: ".Dumper(\@types);
-    
+
     @types = sort { uc($a->[1]) cmp uc($b->[1]) } @types;
 
     #print STDERR "types after sort: ".Dumper(\@types);
-    
+
     if ($empty) {
         unshift @types, [ '', "None" ];
     }
@@ -242,6 +244,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_crossing_trials = $c->req->param("get_crossing_trials");
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
     my $get_genotyping_projects = $c->req->param("get_genotyping_projects");
+    my $get_tracking_activities_projects = $c->req->param("get_tracking_activities_projects");
     my $include_analyses = $c->req->param("include_analyses");
     my $excluded_plates_in_project_id = $c->req->param("excluded_plates_in_project_id");
 
@@ -273,7 +276,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 
     my @projects;
     foreach my $project (@$projects) {
-        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects) = $p->get_trials_by_breeding_program($project->[0]);
+        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $tracking_activities_projects) = $p->get_trials_by_breeding_program($project->[0]);
         if ($get_field_trials){
             if ($field_trials && scalar(@$field_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
@@ -311,6 +314,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         if ($get_genotyping_projects){
             if ($genotyping_projects && scalar(@$genotyping_projects)>0){
                 my @g_projects = sort { $a->[1] cmp $b->[1] } @$genotyping_projects;
+                push @projects, @g_projects;
+            }
+        }
+        if ($get_tracking_activities_projects){
+            if ($tracking_activities_projects && scalar(@$tracking_activities_projects)>0){
+                my @g_projects = sort { $a->[1] cmp $b->[1] } @$tracking_activities_projects;
                 push @projects, @g_projects;
             }
         }
