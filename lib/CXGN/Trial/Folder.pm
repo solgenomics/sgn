@@ -616,6 +616,7 @@ sub get_jstree_html {
     }
     elsif ($project_type_of_interest eq 'activity') {
         $local_type_of_interest = 'activity_record';
+        $folder_type_of_interest = 'folder_for_tracking_activities';
     }
 
     $html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
@@ -648,7 +649,7 @@ sub get_jstree_html {
             elsif ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
-            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && !$children{$child}->{'folder_for_genotyping_projects'} && $children{$child}->{'trial_folder'}) {
+            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && !$children{$child}->{'folder_for_genotyping_projects'} && !$children{$child}->{'folder_for_tracking_activities'} && $children{$child}->{'trial_folder'}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif (($local_type_of_interest eq 'design' && $children{$child}->{'genotyping_plate'}) || ($local_type_of_interest eq 'design' && $children{$child}->{'genotype_data_project'}) || ($local_type_of_interest eq 'design' && $children{$child}->{'pcr_genotype_data_project'})){
