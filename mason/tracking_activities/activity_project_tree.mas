@@ -36,7 +36,7 @@ $roles
 
                 <h4>Folders</h4>
                 <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move activity project(s) to folder</button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move tracking project(s) to folder</button><br/><br/>
                 <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
 
                 <div id="folder_edit_options" style="display:none">
