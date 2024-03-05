@@ -151,9 +151,14 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
         folder_for_tracking_activities => $folder_for_tracking_activities
     });
 
+    if (scalar(@folders)>0){
+        @folders = sort { $a->[1] cmp $b->[1] } @folders;
+    }
+
     if ($empty) {
       unshift @folders, [ 0, "None" ];
     }
+#    print STDERR "FOLDERS =".Dumper(\@folders)."\n";
 
     my $html = simple_selectbox_html(
       name => $name,
@@ -335,7 +340,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
             unshift @projects, [ "", "Please select a trial" ];
         }
     }
-
+#    print STDERR "PROJECTS =".Dumper(\@projects)."\n";
     my $html = simple_selectbox_html(
       multiple => $multiple,
       live_search => $live_search,
