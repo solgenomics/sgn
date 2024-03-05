@@ -22,7 +22,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     include_timestamp=>$include_timestamp,
     include_pedigree_parents=>$include_pedigree_parents,
     exclude_phenotype_outlier=>0,
-    dataset_exluded_outliers=>$dataset_exluded_outliers,
+    dataset_excluded_outliers=>$dataset_excluded_outliers,
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
     phenotype_max_value=>$phenotype_max_value,
@@ -144,7 +144,7 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
-has 'dataset_exluded_outliers' => (
+has 'dataset_excluded_outliers' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -192,14 +192,27 @@ has 'offset' => (
     is => 'rw'
 );
 
+has 'multiple_observations_treatment' =>  (
+    isa => 'Str|Undef',
+    is => 'rw',
+   default => 'average',  # can be first, last, average, all
+);
+
+has 'trait_repeat_types' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    default => sub { return []; },
+}
+
 sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
 
+    $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
-
+    
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         $self->search_type,
         {
@@ -217,7 +230,7 @@ sub get_phenotype_matrix {
             subplot_list=>$self->subplot_list,
             include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
-            dataset_exluded_outliers=>$self->dataset_exluded_outliers,
+            dataset_excluded_outliers=>$self->dataset_excluded_outliers,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
@@ -295,31 +308,13 @@ sub get_phenotype_matrix {
                 push @line, ($parents->{'mother'}, $parents->{'mother_id'}, $parents->{'father'}, $parents->{'father_id'});
             }
 
-            my $observations = $obs_unit->{observations};
+
+	    my $observations = $obs_unit->{observations};
+	    my %phenotype_ids;
+	    
+	    my %trait_observations = $self->format_observations($obs_unit);
+
 #            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
-            my $include_timestamp = $self->include_timestamp;
-            my %trait_observations;
-            my %phenotype_ids;
-            my $dataset_exluded_outliers_ref = $self->dataset_exluded_outliers;
-            foreach my $observation (@$observations){
-                my $collect_date = $observation->{collect_date};
-                my $timestamp = $observation->{timestamp};
-
-                if ($include_timestamp && $timestamp) {
-                    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
-                }
-                elsif ($include_timestamp && $collect_date) {
-                    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
-                }
-                else {
-                    $trait_observations{$observation->{trait_name}} = $observation->{value};
-                }
-
-                # dataset outliers will be empty fields if are in @$dataset_exluded_outliers_ref list of pheno_id outliers
-                if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_exluded_outliers_ref) {
-                    $trait_observations{$observation->{trait_name}} = ''; # empty field for outlier NA
-                }
-            }
 
             if ($include_phenotype_primary_key) {
                 foreach my $observation (@$observations) {
@@ -473,4 +468,138 @@ sub get_phenotype_matrix {
     return @info;
 }
 
+sub format_observations {
+    my $self = shift;
+    my $obs_unit = shift;
+
+    my $observations = $obs_unit->{observations};
+    my %trait_observations;
+    my $include_timestamp = $self->include_timestamp;
+    my %phenotype_ids;
+    my $dataset_excluded_outliers_ref = $self->dataset_excluded_outliers;
+
+
+
+    foreach my $observation (@$observations){
+	my $collect_date = $observation->{collect_date};
+	my $timestamp = $observation->{timestamp};
+	
+	if ($include_timestamp && $timestamp) {
+	    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
+	}
+	elsif ($include_timestamp && $collect_date) {
+	    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
+	}
+	else {
+	    $trait_observations{$observation->{trait_name}} = $observation->{value};
+	}
+	
+	# dataset outliers will be empty fields if are in @$dataset_excluded_outliers_ref list of pheno_id outliers
+	if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_excluded_outliers_ref) {
+	    $trait_observations{$observation->{trait_name}} = ''; # empty field for outlier NA
+	}
+    }
+
+    $self->detect_multiple_measurements($observations);
+
+    return %trait_observations;
+}
+
+sub detect_multiple_measurements {
+    my $self = shift;
+    my $observations = shift;
+
+    my %duplicate_measurements;
+    my %duplicate_measurements;
+
+    foreach my $o (@$observations) {
+	push @{$duplicate_measurements{$o->{trait_id}}}, $o;
+    }
+
+    foreach my $trait_id (keys %duplicate_measurements) {
+	if (scalar(@{$duplicate_measurements{$trait_id}})>1) {
+	    $self->process_duplicate_measurements($duplicate_measurement{$trait_id});
+	}
+    }
+
+
+}
+
+sub process_duplicate_measurements {
+    my $self = shift;
+    my $observations = shift;
+    
+    if ($self->multiple_observations_treatment() eq "first") {
+	$observations = [ $observations->[0] ]
+    }
+
+    if ($self->multiple_observations_treatment() eq "last") {
+	$observations = [ $observations->[-1] ];
+    }
+
+    if ($self->multiple_observations_treatment() eq "average") {
+	$observations = $self->average_observations($observations);
+    }
+
+
+    if ($self->multiple_observations_treatment() eq "all") {
+	my $collated_observations = $observations->[0];
+	my @trait_values;
+	foreach my $o (@$observations) {
+	    push @trait_values, $o->{trait_name};
+	}
+	
+	$collated_multiple_observation->{trait_name} = join ("|", @trait_values);
+	
+	$observations = $collated_multiple_observation;
+    }
+}
+
+
+
+sub average_observations {
+    my $self = shift;
+    my $observations_ref = shift || [];
+
+    if (! @$observations_ref) { return; }
+    
+    print STDERR "Averaging Observations: ".Dumper($observations_ref);
+    
+    my $sum = 0;
+    my $count = 0;
+    foreach my $v (@$observations_ref) {
+	$sum += $v->{value};
+	$count++;
+    }
+
+    my $avg = $sum / $count;
+
+    
+    
+    my $sqr_diff;
+
+    foreach my $v (@$observations_ref) {
+	my $diff = $v->{value} - $avg;
+	$sqr_diff += $diff * $diff;
+	$count++;
+    }
+    my $stddev = sqrt($sqr_diff/$count);
+
+    my $averaged_observation = $observations_ref->[0];
+    $averaged_observation->{value} = $avg;
+    $averaged_observation->{stddev} = $stddev;
+    
+    print STDERR "Averaged Observation: ".Dumper( [ $averaged_observation ] );
+
+    return [ $averaged_observation ];
+		      
+}
+
+sub retrieve_trait_repeat_types {
+    my $self = shift;
+
+    
+}
+	    
+	
 1;
