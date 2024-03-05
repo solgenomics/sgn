@@ -696,7 +696,7 @@ sub retrieve_phenotypes {
         push @trait_ids, $_->[0];
     }
 
-    my $dataset_exluded_outliers = $self->exclude_dataset_outliers() ? $self->outliers() : undef;
+    my $dataset_excluded_outliers = $self->exclude_dataset_outliers() ? $self->outliers() : undef;
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         search_type=>'MaterializedViewTable',
@@ -707,7 +707,7 @@ sub retrieve_phenotypes {
         accession_list=>\@accession_ids,
         exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
         include_phenotype_primary_key=>$self->include_phenotype_primary_key,
-        dataset_exluded_outliers=>$dataset_exluded_outliers
+        dataset_excluded_outliers=>$dataset_excluded_outliers
     );
     my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
