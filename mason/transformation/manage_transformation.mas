@@ -1,0 +1,23 @@
+<%args>
+$locations
+$programs
+$roles
+$user_id
+</%args>
+
+<%perl>
+    my $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_transformation_project_link">Add Transformation Project</button>';
+</%perl>
+
+<br />
+<& /page/page_title.mas, title => "Manage Transformation" &>
+
+<div class="container-fluid">
+
+<&| /page/info_section.mas, title=>"Transformation" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+
+<& /transformation/transformation_project_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles,  &>
+
+</&>
+
+</div>

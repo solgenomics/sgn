@@ -921,5 +921,51 @@ sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
 
 }
 
+sub manage_transformation : Path("/breeders/transformation") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+
+	# redirect to login page
+	#
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations;
+
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{template} = '/transformation/manage_transformation.mas';
+
+}
+
+
 
 1;
