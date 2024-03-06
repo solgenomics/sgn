@@ -51,7 +51,7 @@ $vendor_id
                 <td><b>Location</b></td>
                 <td>
                     <div id="trial_location">
-% if ($location_name) {
+% if ($location_name && ($location_name ne '[Computation]')) {
 %  print "$location_name ( $country_name )";
 % } else {
 %  print "<span class='text-danger'>[No Location]</span>";

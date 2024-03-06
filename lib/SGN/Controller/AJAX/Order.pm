@@ -154,7 +154,7 @@ sub submit_order_POST : Args(0) {
                 print STDERR "OLD PROJECT ID =".Dumper($activity_project_id)."\n";
             } else {
                 my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
-                $geolocation_lookup->set_location_name('Sendusu');
+                $geolocation_lookup->set_location_name('[Computation]');
                 if(!$geolocation_lookup->get_geolocation()){
                     $c->stash->{rest}={error => "Location not found"};
                     return;
