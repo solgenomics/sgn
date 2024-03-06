@@ -81,7 +81,8 @@ sub search {
 
     ## Additional stock props for additional info.
     my %additional_stock_props;
-    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my @editable_stock_props =  SGN::Context->new()->get_conf('editable_stock_props') ? split ',', SGN::Context->new()->get_conf('editable_stock_props'): undef;
+
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
     foreach (keys %editable_stock_props){
@@ -167,8 +168,8 @@ sub search {
             }
         }
         my @donors = {
-            donorAccessionNumber=>$_->{donor},
-            donorInstituteCode=>$_->{'donor institute'},
+            donorAccessionNumber=>$_->{'donor'} ne '' ? $_->{'donor'} : undef ,
+            donorInstituteCode=>$_->{'donor institute'} ne '' ? $_->{'donor institute'} : undef ,
         };
         my @synonyms;
         if($_->{synonyms}){
@@ -236,7 +237,7 @@ sub search {
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
+            documentationURL=>$_->{'PUI'} && $_->{'PUI'} ne '' ? $_->{'PUI'} : $main_production_site_url . "/stock/$_->{stock_id}/view",
             donors=>\@donors,
             externalReferences=>\@references,
             genus=>$_->{genus},
@@ -1093,7 +1094,7 @@ sub _simple_search {
 
     ## Additional stock props for additional info.
     my %additional_stock_props;
-    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my @editable_stock_props =  SGN::Context->new()->get_conf('editable_stock_props') ? split ',', SGN::Context->new()->get_conf('editable_stock_props'): undef;
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
     foreach (keys %editable_stock_props){
@@ -1144,8 +1145,8 @@ sub _simple_search {
             }
         }
         my @donors = {
-            donorAccessionNumber=>$_->{donor},
-            donorInstituteCode=>$_->{'donor institute'},
+            donorAccessionNumber=>$_->{donor} ne '' ? $_->{'donor'} : undef ,
+            donorInstituteCode=>$_->{'donor institute'} ne '' ? $_->{'donor institute'} : undef ,
         };
         my @synonyms;
         if($_->{synonyms} && scalar @{ $_->{synonyms} } > 0){
@@ -1210,7 +1211,7 @@ sub _simple_search {
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
+            documentationURL=>$_->{'PUI'} && $_->{'PUI'} ne '' ? $_->{'PUI'} : $main_production_site_url . "/stock/$_->{stock_id}/view",
             donors=>\@donors,
             externalReferences=>\@references,
             genus=>$_->{genus},
