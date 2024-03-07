@@ -933,12 +933,13 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $bp = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
 
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
+    my $transformation = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
 
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
@@ -953,8 +954,7 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
         }
     }
 
-    my $locations;
-
+    my $locations = $transformation->get_all_locations_by_breeding_program();
 
     $c->stash->{locations} = $locations;
 

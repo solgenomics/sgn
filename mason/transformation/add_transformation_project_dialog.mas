@@ -137,35 +137,70 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#create_transformation_project_submit').click(function() {
-        var transformation_project_name = $("#transformation_project_name").val();
+        var transformation_project_name = jQuery("#transformation_project_name").val();
         if (!transformation_project_name) {
             alert("Project name is required");
             return;
         }
 
-        var selectedProgram = $("#transformation_project_program").val();
+        var selectedProgram = jQuery("#transformation_project_program").val();
         if (!selectedProgram) {
             alert("Breeding program is required");
             return;
         }
 
-        var transformation_project_location = $("#transformation_project_location").val();
+        var transformation_project_location = jQuery("#transformation_project_location").val();
         if (!transformation_project_location) {
             alert ("Location is required");
             return;
         }
 
-        var year = $("#transformation_project_year_select").val();
+        var year = jQuery("#transformation_project_year_select").val();
         if (!year) {
             alert ("Year is required");
             return;
         }
 
-        var project_description = $('textarea#transformation_project_description').val();
+        var project_description = jQuery('textarea#transformation_project_description').val();
         if (!project_description) {
             alert ("Description is required");
             return;
         }
+
+        jQuery.ajax({
+            url: '/ajax/transformation/add_transformation_project',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'project_name': transformation_project_name,
+                'project_program_id': selectedProgram,
+                'project_location': transformation_project_location,
+                'year': year,
+                'project_description': project_description,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            error: function(response) {
+                alert("An error occurred!" + JSON.stringify(response));
+                return;
+            },
+            parseerror: function(response) {
+                alert("A parse error occurred!" + response);
+                return;
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    refreshtransformationJsTree(0);
+                    Workflow.focus("#add_transformation_project_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_transformation_project_workflow");
+                    jQuery("#working_modal").modal("hide");
+                }
+            },
+        });
+
 
 
     });

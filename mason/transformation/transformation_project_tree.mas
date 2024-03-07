@@ -19,7 +19,7 @@ $user_id => undef
     <thead>
         <tr>
             <th>Information</th>
-            <th>Breeding Programs -- Folders -- Transformation Projects&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html">Refresh</button></th>
+            <th>Breeding Programs -- Folders -- Transformation Projects&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_transformation_projects_jstree_html_trialtree_button" name="refresh_transformation_projects_jstree_html">Refresh</button></th>
         </tr>
     </thead>
     <tbody>
