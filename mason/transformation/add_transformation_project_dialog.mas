@@ -4,14 +4,14 @@ $locations
 </%args>
 
 
-<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses', 'CXGN.TrialTreeFolders'] &>
+<& /util/import_javascript.mas, classes => ['CXGN.TrialTreeFolders'] &>
 
 <div class="modal fade" id="create_transformation_project_dialog" name="create_transformation_project_dialog" tabindex="-1" role="dialog" aria-labelledby="createTransformationProjectDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="reset" class="close" id="add_transformation_project_dismiss_button_1" name="add_transformation_project_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="createTransformationProject">Add New Transformation Project</h4></center>
+                <center><h4 class="modal-title" id="createTransformationProjectDialog">Add New Transformation Project</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -33,14 +33,14 @@ $locations
                                 <& /page/page_title.mas, title=>"Enter basic information about the transformation project" &>
                                     <br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-lable">Transformation Project Name: </label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-lable">Project Name: </label>
+                                        <div class="col-sm-9">
                                             <input class="form-control" type="text" id="transformation_project_name" name="transformation_project_name"  />
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Breeding Program: </label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <div class="col-sm-9">
                                             <select class="form-control" id="transformation_project_program" name="transformation_project_program">
                                                 <option value="">Select Breeding Program</option>
 <%perl>
@@ -56,8 +56,8 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Location of transformation project: </label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Location: </label>
+                                        <div class="col-sm-9">
                                             <select class="form-control" id="transformation_project_location" name="transformation_project_location">
                                                 <option value="">Select Location</option>
 <%perl>
@@ -72,14 +72,14 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Year:</label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Year:</label>
+                                        <div class="col-sm-9">
                                             <div id="transformation_project_year" name="transformation_project_year" ></div>
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Description:</label>
-                                        <div class="col-sm-8">
+                                        <label class="col-sm-3 control-label">Description:</label>
+                                        <div class="col-sm-9">
                                             <textarea class="form-control" id="transformation_project_description" name="transformation_project_description" ></textarea>
                                         </div>
                                     </div>

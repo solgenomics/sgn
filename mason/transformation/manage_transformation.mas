@@ -6,7 +6,8 @@ $user_id
 </%args>
 
 <%perl>
-    my $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_transformation_project_link">Add Transformation Project</button>';
+    my $subtitle;
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_transformation_project_link" name="create_transformation_project_link" >Add Transformation Project</button>';
 </%perl>
 
 <br />
