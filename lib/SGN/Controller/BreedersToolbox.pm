@@ -921,7 +921,7 @@ sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
 
 }
 
-sub manage_transformation : Path("/breeders/transformation") Args(0) {
+sub manage_transformations : Path("/breeders/transformations") Args(0) {
     my $self = shift;
     my $c = shift;
 

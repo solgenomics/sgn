@@ -10,11 +10,11 @@ $user_id
 </%perl>
 
 <br />
-<& /page/page_title.mas, title => "Manage Transformation" &>
+<& /page/page_title.mas, title => "Manage Transformations" &>
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>"Transformation" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+<&| /page/info_section.mas, title=>"Transformations" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
 
 <& /transformation/transformation_project_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles,  &>
 
