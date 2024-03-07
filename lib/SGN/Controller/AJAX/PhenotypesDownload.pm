@@ -70,9 +70,11 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
     my $trial_stock_type = $c->req->param('trial_stock_type');
     #print STDERR Dumper $sample_number;
     #print STDERR Dumper $predefined_columns;
-
+   
+    my $trial_name = "";
     foreach (@trial_ids){
         my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
+	$trial_name = $trial->get_name();
         if ($data_level eq 'plants') {
             if (!$trial->has_plant_entries()) {
                 $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
@@ -95,7 +97,8 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 
     my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
     my $dir = $c->tempfiles_subdir('/download');
-    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$trial_name"."_phenotype_collectionXXXX");
+    $rel_file = substr $rel_file, 0, -4;
     my $tempfile = $c->config->{basepath}."/".$rel_file.".xlsx";
 
     my $create_spreadsheet = CXGN::Trial::Download->new({
