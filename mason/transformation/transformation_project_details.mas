@@ -114,4 +114,20 @@ $trial_owner
         </div>
     </div>
 </div>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link">Add Transformation Identifiers</button>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link">Add Transformation Identifier</button>
+
+<& /transformation/add_transformation_identifier_dialog.mas  &>
+
+<script>
+
+jQuery(document).ready(function($) {
+
+    jQuery('#new_transformation_identifier_link').click(function() {
+
+        jQuery("#add_transformation_identifier_dialog").modal("show");
+
+    });
+
+});
+
+</script>

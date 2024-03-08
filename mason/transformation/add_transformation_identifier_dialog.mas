@@ -1,0 +1,117 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="modal fade" id="add_transformation_identifier_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransformationIdentifierDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTransformationIdentifierDialog">Add New Transformation Identifier</h4>
+            </div>
+            <div class="modal-body" id="add_new_transformation_identifier_body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" >Transformation Identifier: </label>
+                                <div class="col-sm-7">
+                                    <input class="form-control" type="text" id="new_transformation_identifier_name" name="new_transformation_identifier_name"  />
+                                </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" >Plant Material (accession name): </label>
+                                <div class="col-sm-7">
+                                    <input class="form-control" type="text" id="plant_material" name="plant_material"  />
+                                </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" >Vector Construct: </label>
+                                <div class="col-sm-7">
+                                    <input class="form-control" type="text" id="vector_construct" name="vector_construct"  />
+                                </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" >Note: </label>
+                                <div class="col-sm-7">
+                                    <div class="input-group">
+                                        <textarea class="form-control" id="transformation_identifier_note" rows="5" maxlength="250"></textarea>
+                                    </div>
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="add_new_transformation_identifier_cancel_button">Close</button>
+                <button type="button" class="btn btn-primary" id="new_transformation_identifier_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#new_transformation_identifier_submit').click(function() {
+        var transformation_identifier = jQuery("#new_transformation_identifier_name").val();
+        if (!transformation_identifier) {
+            alert("Transformation identifier name is required");
+            return;
+        }
+
+        var plant_material = jQuery("#plant_material").val();
+        if (!plant_material) {
+            alert("Plant material is required");
+            return;
+        }
+
+        var vector_construct = jQuery("#vector_construct").val();
+        if (!vector_construct) {
+            alert ("Vector construct is required");
+            return;
+        }
+
+        var note = jQuery("#transformation_identifier_note").val();
+
+
+        jQuery.ajax({
+            url: '/ajax/transformation/add_transformation_identifier',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'transformation_identifier': transformation_identifier,
+                'plant_material': plant_material,
+                'vector_construct': vector_construct,
+                'note': note,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            error: function(response) {
+                alert("An error occurred!" + JSON.stringify(response));
+                return;
+            },
+            parseerror: function(response) {
+                alert("A parse error occurred!" + response);
+                return;
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#working_modal").modal("hide");
+                }
+            },
+        });
+
+    });
+
+
+});
+
+
+</script>
