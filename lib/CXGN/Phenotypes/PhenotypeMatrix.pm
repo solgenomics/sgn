@@ -199,10 +199,10 @@ has 'multiple_observations_treatment' =>  (
 );
 
 has 'trait_repeat_types' => (
-    isa => 'Str|Undef',
+    isa => 'HashRef|Undef',
     is => 'rw',
-    default => sub { return []; },
-}
+    default => sub { return {} },
+);
 
 sub get_phenotype_matrix {
     my $self = shift;
@@ -283,6 +283,8 @@ sub get_phenotype_matrix {
 
         push @info, \@line;
 
+	#print STDERR "DATA = ".Dumper($data);
+	
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{germplasm_synonyms};
@@ -308,25 +310,36 @@ sub get_phenotype_matrix {
                 push @line, ($parents->{'mother'}, $parents->{'mother_id'}, $parents->{'father'}, $parents->{'father_id'});
             }
 
-
+	    #print STDERR "OBS UNIT = ".Dumper($obs_unit);
 	    my $observations = $obs_unit->{observations};
+
+	    #print STDERR "OBSERVATIONS BEFORE FORMAT: ".Dumper($observations);
+
+#	    if (scalar(@$observations) > 0) {
+
+	    
 	    my %phenotype_ids;
 	    
-	    my %trait_observations = $self->format_observations($obs_unit);
+	    my %trait_observations = $self->format_observations($obs_unit->{observations});
+	    
+	    #print STDERR "FORMATTED OBSERVATIONS =".Dumper($formatted_observations)."\n";
+	    
+	    ####$obs_unit->{observations} = $trait_observations;
+	    
+	    if ($include_phenotype_primary_key) {
+		foreach my $observation (@$observations) {
+			$phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
+		}
+	    }
+	    foreach my $trait (@sorted_traits) {
+		
+		push @line, $trait_observations{$trait};
 
-#            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
-
-            if ($include_phenotype_primary_key) {
-                foreach my $observation (@$observations) {
-                    $phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
-                }
-            }
-            foreach my $trait (@sorted_traits) {
-                push @line, $trait_observations{$trait};
-                if ($include_phenotype_primary_key) {
-                    push @line, $phenotype_ids{$trait};
-                }
-            }
+		if ($include_phenotype_primary_key) {
+		    push @line, $phenotype_ids{$trait};
+		}
+	    }
+		    
             push @line, $obs_unit->{notes};
 
             # add treatment values to each obsunit line
@@ -340,7 +353,9 @@ sub get_phenotype_matrix {
 
             push @info, \@line;
         }
-    } else {
+    }
+    else {  ### NATIVE ??!!
+	
         $data = $phenotypes_search->search();
         #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
@@ -470,29 +485,51 @@ sub get_phenotype_matrix {
 
 sub format_observations {
     my $self = shift;
-    my $obs_unit = shift;
+    my $observations = shift;
 
-    my $observations = $obs_unit->{observations};
+    if (scalar(@$observations) == 0) {
+	print STDERR "No observations in this obs_unit... Skipping.\n";
+	return [];
+    }
+    
     my %trait_observations;
     my $include_timestamp = $self->include_timestamp;
-    my %phenotype_ids;
     my $dataset_excluded_outliers_ref = $self->dataset_excluded_outliers;
 
-
-
-    foreach my $observation (@$observations){
+    my $de_duplicated_observations = $self->detect_multiple_measurements($observations);
+    
+    foreach my $observation (@$de_duplicated_observations){
 	my $collect_date = $observation->{collect_date};
 	my $timestamp = $observation->{timestamp};
 	
 	if ($include_timestamp && $timestamp) {
-	    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
+
+	    if (ref($observation->{value})) {
+		$observation->{value} = join("|", map { $_->{value}.",".$timestamp}  @$observation);
+	    }
+	    else { 
+		$trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
+	    }
 	}
 	elsif ($include_timestamp && $collect_date) {
-	    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
+	    if (ref($observation->{value})) {
+		$observation->{value} = join("|", map {$_->{value}.",".$collect_date} @$observation);
+	    }
+	    else {
+		$trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
+	    }
 	}
 	else {
-	    $trait_observations{$observation->{trait_name}} = $observation->{value};
+	    if (ref($observation->{value})) {
+		$observation->{value} = join("|", map { $_->{value} } @$observation);
+	    }
+	    else { 
+		$trait_observations{$observation->{trait_name}} = $observation->{value};
+	    }
 	}
+
+	### FOR debugging only:
+	$trait_observations{$observation->{trait_name}}.=$observation->{squash_method};
 	
 	# dataset outliers will be empty fields if are in @$dataset_excluded_outliers_ref list of pheno_id outliers
 	if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_excluded_outliers_ref) {
@@ -500,62 +537,92 @@ sub format_observations {
 	}
     }
 
-    $self->detect_multiple_measurements($observations);
+    #print STDERR "detecting multiple observations in ".Dumper($observations);
+    
+
 
     return %trait_observations;
 }
 
 sub detect_multiple_measurements {
     my $self = shift;
-    my $observations = shift;
+    my $trait_observations = shift;
 
     my %duplicate_measurements;
-    my %duplicate_measurements;
 
-    foreach my $o (@$observations) {
-	push @{$duplicate_measurements{$o->{trait_id}}}, $o;
+    #print STDERR "OBSERVATIONS IN: ".Dumper($trait_observations);
+
+    if (! $trait_observations) { return []; }
+    foreach my $o (@$trait_observations) {
+	my $trait_id = $o->{trait_id};
+	push @{$duplicate_measurements{$trait_id}}, $o;
     }
 
     foreach my $trait_id (keys %duplicate_measurements) {
 	if (scalar(@{$duplicate_measurements{$trait_id}})>1) {
-	    $self->process_duplicate_measurements($duplicate_measurement{$trait_id});
+	    print STDERR "De-duplicating measurements... ".Dumper($duplicate_measurements{$trait_id});
+	    
+	    my $trait_observations = $self->process_duplicate_measurements($duplicate_measurements{$trait_id});
+	    $duplicate_measurements{$trait_id} = [ $trait_observations ];
+
+	    print STDERR "After de-duplication: ".Dumper($duplicate_measurements{$trait_id});
 	}
     }
 
+    #print STDERR "DUPLICATE MEASUREMENTS: ".Dumper(\%duplicate_measurements);
 
+    my @processed_observations;
+    foreach my $trait_id (keys %duplicate_measurements) { 
+	push @processed_observations, @{$duplicate_measurements{$trait_id}}[0];
+    }
+
+    #print STDERR "PROCESSED observations = ".Dumper(\@processed_observations);
+    
+    return \@processed_observations; 
 }
 
 sub process_duplicate_measurements {
     my $self = shift;
-    my $observations = shift;
+    my $trait_observations = shift;
+
+    #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
     if ($self->multiple_observations_treatment() eq "first") {
-	$observations = [ $observations->[0] ]
+	print STDERR "Retrieving first value...\n";
+	$trait_observations = [ $trait_observations->[0] ];
+	$trait_observations->{squash_method} = "first";
     }
 
     if ($self->multiple_observations_treatment() eq "last") {
-	$observations = [ $observations->[-1] ];
+	print STDERR "Retrieving last value...\n";
+	$trait_observations = [ $trait_observations->[-1] ];
+	$trait_observations->{squash_method} = "last";
     }
 
     if ($self->multiple_observations_treatment() eq "average") {
-	$observations = $self->average_observations($observations);
+	
+	print STDERR "Averaging values ...\n";
+	$trait_observations = $self->average_observations($trait_observations);
+	$trait_observations->{squash_method} = "average";
     }
 
 
     if ($self->multiple_observations_treatment() eq "all") {
-	my $collated_observations = $observations->[0];
+	print STDERR "Retrieving all values...\n";
+	my $collated_multiple_observation = $trait_observations->[0];
 	my @trait_values;
-	foreach my $o (@$observations) {
-	    push @trait_values, $o->{trait_name};
+	foreach my $o (@$trait_observations) {
+	    push @trait_values, $o->{value};
 	}
-	
-	$collated_multiple_observation->{trait_name} = join ("|", @trait_values);
-	
-	$observations = $collated_multiple_observation;
+
+	$collated_multiple_observation->{value} = \@trait_values;
+	$collated_multiple_observation->{squash_method} = $self->multiple_observations_treatment();
+	$trait_observations = $collated_multiple_observation;
     }
+
+    #print STDERR "DONE WITH DUPLICATES, NOW: ".Dumper($trait_observations);
+    return $trait_observations;
 }
-
-
 
 sub average_observations {
     my $self = shift;
@@ -563,19 +630,20 @@ sub average_observations {
 
     if (! @$observations_ref) { return; }
     
-    print STDERR "Averaging Observations: ".Dumper($observations_ref);
+    #print STDERR "Averaging Observations: ".Dumper($observations_ref);
     
     my $sum = 0;
     my $count = 0;
+    my @values;
     foreach my $v (@$observations_ref) {
-	$sum += $v->{value};
-	$count++;
+	if (! $v->{outlier}) { 
+	    $sum += $v->{value};
+	    $count++;
+	    push @values, $v->{value};
+	}
     }
 
     my $avg = $sum / $count;
-
-    
-    
     my $sqr_diff;
 
     foreach my $v (@$observations_ref) {
@@ -588,17 +656,25 @@ sub average_observations {
     my $averaged_observation = $observations_ref->[0];
     $averaged_observation->{value} = $avg;
     $averaged_observation->{stddev} = $stddev;
-    
-    print STDERR "Averaged Observation: ".Dumper( [ $averaged_observation ] );
+    $averaged_observation->{averaged_from} = join(", ", @values);
+    print STDERR "Averaged Observation: ".Dumper( $averaged_observation );
 
-    return [ $averaged_observation ];
+    return $averaged_observation;
 		      
 }
 
 sub retrieve_trait_repeat_types {
     my $self = shift;
 
-    
+    my %property_by_cvterm_id;
+    my $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name='trait_repeat_type' ";
+    my $sth= $self->bcs_schema()->storage()->dbh()->prepare($sql);
+    $sth->execute();
+    while (my ($property_value, $cvterm_id, $cvterm_name) = $sth->fetchrow_array) {
+        $property_by_cvterm_id{$cvterm_id} = $property_value;
+    }
+
+    return \%property_by_cvterm_id;
 }
 	    
 	
