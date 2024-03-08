@@ -21,10 +21,10 @@ $trial_id => undef
   </center>
 </div>
 <br>
-<form id="formOptions" class="form-inline" style="padding:10px;">
-    <a class="btn btn-default" onclick="load()">Load plots</a>
-    <a class="btn btn-default" onclick="update()">Save Geo coordinates</a>
-</form>
+<div id="formOptions" class="form-inline" style="padding:10px;">
+    <button id="btn-load-plots" class="btn btn-default" onclick="load()">Load plots</button>
+    <button id="btn-save-geo-coordinates" class="btn btn-default" onclick="update()">Save Geo coordinates</button>
+</div>
 
 
 <div id="map" style="width: 780px; height: 600px"></div>
@@ -65,10 +65,16 @@ $trial_id => undef
         setupBrAPI();
 
         if (studyDbId){
+            jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", true);
+            jQuery("#btn-load-plots").html("Loading...");
             fieldMap.load(studyDbId)
                 .then((value)=>{
                   if (!value) return setLocation(studyDbId); 
                   else { jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }
+                })
+                .finally(() => {
+                    jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", false);
+                    jQuery("#btn-load-plots").html("Load plots");
                 }); 
             document.getElementById("formOptions").style.display="block";
         } else alert("Invalid trial!");
@@ -81,7 +87,13 @@ $trial_id => undef
     
     function update() {
         setupBrAPI(true);
-        fieldMap.update().then((resp)=>alert(resp), (resp)=>alert(resp));
+        jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", true);
+        jQuery("#btn-save-geo-coordinates").html("Saving...");
+        fieldMap.update().then((resp)=> {
+            alert(resp);
+            jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", false);
+            jQuery("#btn-save-geo-coordinates").html("Save Geo coordinates");
+        });
     }
 
     var fieldMap = new BrAPIFieldmap("#map",brapi_endpoint);
