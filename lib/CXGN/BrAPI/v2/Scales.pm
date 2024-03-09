@@ -245,7 +245,7 @@ has 'scale_db' => (
             $scale_ref->{'validValues'}{'categories'} = \@array;
         }
         $scale_ref->{'additionalInfo'} = $additional_info;
-        $scale_ref->{'dataType'} = _format_data_type($data_type);
+        $scale_ref->{'dataType'} = $self-> _format_data_type($data_type);
         $scale_ref->{'decimalPlaces'} = $decimal_places;
         $scale_ref->{'validValues'}{'maximumValue'} = $valid_values_max;
         $scale_ref->{'validValues'}{'minimumValue'} = $valid_values_min;
@@ -424,11 +424,13 @@ sub delete {
 }
 
 sub _format_data_type {
-    my $value => shift;
+    my $self = shift;
+    my $value = shift;
     my $dataType = "Text"; #Text is the default trait_format for phenotypes in breedbase
 
     if ($value) {
         my %formats = (
+	    "categorical" => "Ordinal",
             "numeric"  => "Numerical",
             "qualitative"  => "Nominal",
             "numerical"  => "Numerical",
