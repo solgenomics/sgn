@@ -11,6 +11,7 @@ use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use CXGN::List;
 use CXGN::Transformation::AddTransformationProject;
+use CXGN::Transformation::AddTransformationIdentifier;
 use List::MoreUtils qw /any /;
 
 
@@ -34,6 +35,8 @@ sub add_transformation_project_POST :Args(0){
     my $location = $c->req->param('project_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
+    $project_name =~ s/^\s+|\s+$//g;
+
     print STDERR "PROJECT NAME =".Dumper($project_name)."\n";
     if (!$c->user()){
         $c->stash->{rest} = {error => "You need to be logged in to add a transformation project."};
@@ -87,7 +90,75 @@ sub add_transformation_project_POST :Args(0){
 }
 
 
+sub add_transformation_identifier : Path('/ajax/transformation/add_transformation_identifier') : ActionClass('REST') {}
 
+sub add_transformation_identifier_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $transformation_identifier = $c->req->param('transformation_identifier');
+    my $plant_material = $c->req->param('plant_material');
+    my $vector_construct = $c->req->param('vector_construct');
+    my $notes = $c->req->param('notes');
+    my $transformation_project_id = $c->req->param('transformation_project_id');
+    $transformation_identifier =~ s/^\s+|\s+$//g;
+
+    print STDERR "TRANSFORMATION IDENTIFIER =".Dumper($transformation_identifier)."\n";
+
+    if (!$c->user()){
+        $c->stash->{rest} = {error => "You need to be logged in to add a transformation transformation identifier."};
+        return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation identifier." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
+    my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'vector_construct', 'stock_type')->cvterm_id();
+
+    if ($schema->resultset("Stock::Stock")->find({uniquename => $transformation_identifier})){
+        $c->stash->{rest} = {error =>  "Transformation identifier already exists." };
+        return 0;
+    }
+
+    if (! $schema->resultset("Stock::Stock")->find({uniquename => $plant_material, type_id => $accession_cvterm_id })){
+        $c->stash->{rest} = {error =>  "Plant material does not exist or does not exist as accession uniquename." };
+        return;
+    }
+
+    if (! $schema->resultset("Stock::Stock")->find({uniquename => $vector_construct, type_id => $vector_construct_cvterm_id })){
+        $c->stash->{rest} = {error =>  "vector construct does not exist or does not exist as vector construct uniquename." };
+        return;
+    }
+
+    eval {
+        my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            transformation_project_id => $transformation_project_id,
+            transformation_identifier => $transformation_identifier,
+            plant_material => $plant_material,
+            vector_construct => $vector_construct,
+            notes => $notes,
+            owner_id => $user_id,
+        });
+
+        $add_transformation->add_transformation_identifier();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred: $@"};
+        return 0;
+    }
+    return 1;
+
+}
 
 
 

@@ -116,7 +116,7 @@ $trial_owner
 </div>
 <button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link">Add Transformation Identifier</button>
 
-<& /transformation/add_transformation_identifier_dialog.mas  &>
+<& /transformation/add_transformation_identifier_dialog.mas, trial_id => $trial_id &>
 
 <script>
 

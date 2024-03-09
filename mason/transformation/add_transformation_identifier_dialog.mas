@@ -1,5 +1,7 @@
 <%args>
 
+$trial_id
+
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -37,7 +39,7 @@
                             <label class="col-sm-4 control-label" >Note: </label>
                                 <div class="col-sm-7">
                                     <div class="input-group">
-                                        <textarea class="form-control" id="transformation_identifier_note" rows="5" maxlength="250"></textarea>
+                                        <textarea class="form-control" id="transformation_identifier_notes" ></textarea>
                                     </div>
                                 </div>
                         </div>
@@ -55,6 +57,8 @@
 <script>
 
 jQuery(document).ready(function(){
+
+    var transformation_project_id = "<%$trial_id%>";
 
     jQuery('#new_transformation_identifier_submit').click(function() {
         var transformation_identifier = jQuery("#new_transformation_identifier_name").val();
@@ -75,8 +79,7 @@ jQuery(document).ready(function(){
             return;
         }
 
-        var note = jQuery("#transformation_identifier_note").val();
-
+        var notes = jQuery("#transformation_identifier_notes").val();
 
         jQuery.ajax({
             url: '/ajax/transformation/add_transformation_identifier',
@@ -86,7 +89,8 @@ jQuery(document).ready(function(){
                 'transformation_identifier': transformation_identifier,
                 'plant_material': plant_material,
                 'vector_construct': vector_construct,
-                'note': note,
+                'notes': notes,
+                'transformation_project_id': transformation_project_id
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
