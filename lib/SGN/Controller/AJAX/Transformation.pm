@@ -12,6 +12,7 @@ use CXGN::List::Validate;
 use CXGN::List;
 use CXGN::Transformation::AddTransformationProject;
 use CXGN::Transformation::AddTransformationIdentifier;
+use CXGN::Transformation::Transformation;
 use List::MoreUtils qw /any /;
 
 
@@ -160,6 +161,27 @@ sub add_transformation_identifier_POST :Args(0){
 
 }
 
+
+sub get_transformations_in_project :Path('/ajax/transformation/transformations_in_project') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
+
+    my $result = $transformation_obj->get_transformations_in_project();
+    print STDERR "RESULT =".Dumper($result)."\n";
+    my @transformations;
+    foreach my $r (@$result){
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name) =@$r;
+        push @transformations, [qq{<a href="/stock/$transformation_id/view">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}];
+    }
+
+    $c->stash->{rest} = { data => \@transformations };
+
+}
 
 
 ###

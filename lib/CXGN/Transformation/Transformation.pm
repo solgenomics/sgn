@@ -1,0 +1,82 @@
+=head1 NAME
+
+CXGN::Transformation::Transformation - an object representing transformation in the database
+
+=head1 DESCRIPTION
+
+
+=head1 AUTHORS
+
+    Titima Tantikanjana <tt15@cornell.edu>
+
+=head1 METHODS
+
+=cut
+
+package CXGN::Transformation::Transformation;
+
+use Moose;
+use SGN::Model::Cvterm;
+use Data::Dumper;
+use JSON;
+
+has 'schema' => (isa => 'DBIx::Class::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'dbh' => (
+    is  => 'rw',
+    required => 1,
+);
+
+has 'project_id' => (isa => "Int",
+    is => 'rw',
+);
+
+sub get_transformations_in_project {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $project_id = $self->project_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+	my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
+    my $plant_material_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plant_material_of", "stock_relationship")->cvterm_id();
+    my $vector_construct_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct_of", "stock_relationship")->cvterm_id();
+    my $transformation_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_experiment', 'experiment_type')->cvterm_id();
+
+    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename
+        FROM nd_experiment_project
+		JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+		JOIN stock AS transformation ON (nd_experiment_stock.stock_id = transformation.stock_id) AND transformation.type_id = ?
+		JOIN stock_relationship AS plant_relationship ON (plant_relationship.object_id = transformation.stock_id) AND plant_relationship.type_id = ?
+		JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
+		JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformation.stock_id) AND vector_relationship.type_id = ?
+		JOIN stock AS vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
+		WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $project_id);
+
+    my @transformations = ();
+    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name) = $h->fetchrow_array()){
+        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name]
+    }
+    print STDERR "RESULTS =".Dumper(\@transformations)."\n";
+    return \@transformations;
+}
+
+
+
+
+###
+1;
+###
+
+
+
+
+###
+1;
+###
