@@ -80,7 +80,6 @@ sub add_transformation_identifier {
 	my $transformation_project_id = $self->get_transformation_project_id();
 	my $plant_material_stock_id;
 	my $vector_construct_stock_id;
-    my $transaction_error;
     my %return;
 	my $transformation_stock_id;
 
@@ -93,20 +92,12 @@ sub add_transformation_identifier {
         my $transformation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_project', 'project_type')->cvterm_id();
         my $plant_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'plant_material_of', 'stock_relationship')->cvterm_id();
         my $vector_construct_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'vector_construct_of', 'stock_relationship')->cvterm_id();
-        my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
+#        my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
 		my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 		my $vector_construct_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
 
 		my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
 		my $geolocation_rs = $schema->resultset("Project::Projectprop")->find({project_id => $transformation_project_id, type_id => $project_location_cvterm_id});
-
-		my $transformation_identifier_rs = $schema->resultset("Stock::Stock")->search({
-			uniquename => $transformation_identifier,
-		});
-
-		if ($transformation_identifier_rs->count > 0){
-			return;
-		}
 
 		my $plant_material_rs = $schema->resultset("Stock::Stock")->find({
 			uniquename => $plant_material,
@@ -131,7 +122,6 @@ sub add_transformation_identifier {
 			type_id => $transformation_experiment_cvterm_id,
 		});
 		my $nd_experiment_id = $experiment->nd_experiment_id();
-
 
 		my $transformation_identifier_stock = $schema->resultset("Stock::Stock")->find_or_create({
 			name => $transformation_identifier,
@@ -162,26 +152,25 @@ sub add_transformation_identifier {
 
         $transformation_stock_id = $transformation_identifier_stock->stock_id();
     };
-
-	print STDERR "STOCK ID =".Dumper($transformation_stock_id)."\n";
-
+    print STDERR "TRANSFORMATION STOCK ID =".Dumper($transformation_stock_id)."\n";
+    my $transaction_error;
     try {
         $schema->txn_do($coderef);
     } catch {
+        print STDERR "Transaction Error: $_\n";
         $transaction_error =  $_;
     };
 
-    if ($transaction_error) {
-		$return{error} = "Error creating transformation identifier $transformation_identifier: $transaction_error";
-		return \%return;
+    if ($transaction_error){
+        return { error=>$transaction_error };
+    } else {
+        $phenome_schema->resultset("StockOwner")->find_or_create({
+            stock_id => $transformation_stock_id,
+            sp_person_id =>  $owner_id,
+        });
+
+        return { success=>1, transformation_id=>$transformation_stock_id };
     }
-
-    $phenome_schema->resultset("StockOwner")->find_or_create({
-        stock_id => $transformation_stock_id,
-        sp_person_id =>  $owner_id,
-    });
-
-	return \%return;
 
 }
 

@@ -104,8 +104,6 @@ sub add_transformation_identifier_POST :Args(0){
     my $transformation_project_id = $c->req->param('transformation_project_id');
     $transformation_identifier =~ s/^\s+|\s+$//g;
 
-    print STDERR "TRANSFORMATION IDENTIFIER =".Dumper($transformation_identifier)."\n";
-
     if (!$c->user()){
         $c->stash->{rest} = {error => "You need to be logged in to add a transformation transformation identifier."};
         return;
@@ -153,10 +151,12 @@ sub add_transformation_identifier_POST :Args(0){
     };
 
     if ($@) {
-        $c->stash->{rest} = { error => "An error occurred: $@"};
-        return 0;
+        $c->stash->{rest} = { success => 0, error => $@ };
+        print STDERR "An error condition occurred, was not able to create transformation identifier. ($@).\n";
+        return;
     }
-    return 1;
+
+    $c->stash->{rest} = { success => 1 };
 
 }
 

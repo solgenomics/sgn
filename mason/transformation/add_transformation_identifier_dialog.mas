@@ -92,24 +92,23 @@ jQuery(document).ready(function(){
                 'notes': notes,
                 'transformation_project_id': transformation_project_id
             },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            error: function(response) {
-                alert("An error occurred!" + JSON.stringify(response));
-                return;
-            },
-            parseerror: function(response) {
-                alert("A parse error occurred!" + response);
-                return;
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
             },
             success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The transformation identifier has been created.");
+                    jQuery('#add_transformation_identifier_dialog').modal('hide');
+                }
                 if (response.error) {
                     alert(response.error);
-                } else {
-                    jQuery("#working_modal").modal("hide");
                 }
             },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred creating transformation identifier');
+            }
         });
 
     });
