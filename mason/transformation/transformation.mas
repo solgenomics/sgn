@@ -59,6 +59,7 @@ $identifier_prefix => ''
         </div>
     </div>
 </&>
+<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name  &>
 
 
 <script>

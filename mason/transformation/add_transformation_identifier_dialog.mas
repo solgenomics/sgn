@@ -1,7 +1,5 @@
 <%args>
-
 $trial_id
-
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>

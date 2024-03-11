@@ -1,0 +1,74 @@
+<%args>
+$transformation_id
+$transformation_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="modal fade" id="add_new_transformant_names_dialog" name="add_new_transformant_names_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewTransformantNamesDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addNewTransformantNamesDialog">Add New Transformant (Accession) Names</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" id="create_new_transformants_form" name="create_new_transformants_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Prefix: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_transformant_prefix" name="new_transformant_prefix" type="text" disabled value="<%$transformation_name%>"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">How Many? </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="number_of_new_transformants" name="number_of_new_transformants" type="number" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="new_transformants_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('#add_new_transformants_link').click(function(){
+        jQuery('#add_new_transformant_names_dialog').modal('show');
+    });
+
+    jQuery('#new_transformants_submit').click(function(){
+        var new_transformant_prefix = jQuery('#new_transformant_prefix').val();
+        var new_name_count = jQuery('#number_of_new_transformants').val();
+        jQuery.ajax({
+            url : '/ajax/breeders/add_new_transformants',
+            data : {
+                'new_transformant_prefix': new_transformant_prefix,
+                'new_name_count': new_name_count,
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error){
+                    alert(response.error);
+                }
+                if(response.success){
+                    alert(response.success);
+                }
+            },
+            error: function(response){
+                alert('Error submitting new transformant!');
+            }
+        });
+    });
+});
+
+</script>
