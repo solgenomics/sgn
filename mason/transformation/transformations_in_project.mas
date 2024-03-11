@@ -12,6 +12,8 @@ $trial_id
                 <th>Transformation ID</th>
                 <th>Plant Material</th>
                 <th>Vector Construct</th>
+                <th>Notes</th>
+                <th>No of Transformants (Accessions)</th>
             </tr>
         </thead>
     </table>

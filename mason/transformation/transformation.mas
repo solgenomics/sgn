@@ -1,0 +1,71 @@
+<%args>
+$transformation_id
+$transformation_name => ''
+$user_id => undef
+$identifier_prefix => ''
+</%args>
+
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<& /page/page_title.mas, title => "Details for transformation '$transformation_name'" &>
+
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <table class="table table-bordered table-hover">
+                        <tr><td><b>Plant Material</b></td><td></td></tr>
+                        <tr><td><b>Vector Construct</b></td><td></td></tr>
+                        <tr><td><b>Notes</b></td><td></td></tr>
+                        <tr><td><b>Plant Selection Marker</b></td><td></td></tr>
+                    </table>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_transformants_link">Add New Transformants (Accessions)</button>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from this Transformation ', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="transformants_table">
+                    <thead>
+                        <tr>
+                            <th>Accessions</th>
+                        </tr>
+                    </thead>
+
+                    </table>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <&| /page/info_section.mas, title => 'Add transformants (accessions) to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding transformants (accessions) to a new or exisiting list</i>'&>
+                            <br>
+                            <div id="transformant_to_new_list" style="display:none"></div>
+                            <div id="transformant_add_to_list"></div>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+
+});
+
+</script>

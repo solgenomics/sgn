@@ -176,7 +176,7 @@ sub get_transformations_in_project :Path('/ajax/transformation/transformations_i
     my @transformations;
     foreach my $r (@$result){
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name) =@$r;
-        push @transformations, [qq{<a href="/stock/$transformation_id/view">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}];
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>},'' , ''];
     }
 
     $c->stash->{rest} = { data => \@transformations };
