@@ -109,9 +109,8 @@ foreach my $db (@dbs) {
 	     warn $db->file_base." needs to be updated, but has no source_url.  Skipped.\n";
 	     next;
     }
-
     my $source_url = $db->source_url ;
-    $source_url =~ s/^ftp/http/;
+    $source_url =~ s/^ftp:\/\/ftp.solgenomics.net/http:\/\/solgenomics.net\/ftp/;
 
     if( $opt{x} ) {
 	     print "Would update ".$db->file_base." from source url ".$source_url."\n";
