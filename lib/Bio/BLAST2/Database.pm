@@ -239,7 +239,7 @@ sub format_from_file {
            -out => $new_ffbn,
            ($title ? (-title => $title) : ()),
            -logfile => 'makeblastdb.log',
-           -dbtype => type eq 'protein' ? 'prot' : 'nucl',
+           -dbtype => $self->type eq 'protein' ? 'prot' : 'nucl',
            ($args{indexed_seqs} ? (-hash_index => $args{indexed_seqs}) : ()),
          );
 

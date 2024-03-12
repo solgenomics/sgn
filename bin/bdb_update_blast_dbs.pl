@@ -110,7 +110,7 @@ foreach my $db (@dbs) {
 	     next;
     }
     my $source_url = $db->source_url ;
-    $source_url =~ s/^ftp:\/\/ftp.solgenomics.net/http:\/\/solgenomics.net\/ftp/;
+    $source_url =~ s/^ftp:\/\/ftp.sgn.cornell.edu/http:\/\/solgenomics.net\/ftp/;
 
     if( $opt{x} ) {
 	     print "Would update ".$db->file_base." from source url ".$source_url."\n";
