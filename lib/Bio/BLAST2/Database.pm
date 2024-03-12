@@ -218,7 +218,7 @@ sub format_from_file {
       }
   }
 
-  #now run formatdb, formatting into files with a -blast-db-new
+  #now run makeblastdb, formatting into files with a -blast-db-new
   #appended to the filebase, so the old databases are still available
   #while the format is running
   my $ffbn = $self->full_file_basename;
@@ -233,13 +233,14 @@ sub format_from_file {
   }
   -w $ffbn_subdir or croak "Directory '$ffbn_subdir' is not writable\n";
 
-  systemx( 'formatdb',
+  #makeblastdb -in database.fasta -dbtype [prot|nucl] -parse_seqids
+  systemx( 'makeblastdb',
            -i => $seqfile,
            -n => $new_ffbn,
            ($title ? (-t => $title) : ()),
-           -l => devnull(),
-           -o => $args{indexed_seqs}      ? 'T' : 'F',
-           -p => $self->type eq 'protein' ? 'T' : 'F',
+           -logfile => devnull(),
+           -dbtype => self->type eq 'protein' ? 'prot' : 'nucl',
+           -hash_index => $args{indexed_seqs}      ? 'T' : 'F',
          );
 
   #now if it made an alias file, fix it up to remove the -blast-db-new
@@ -479,7 +480,7 @@ sub _read_blastdbcmd_info {
                           or die "could not parse output of blastdbcmd (2):\n$blastdbcmd";
 
     print STDERR "FILES = ".Dumper(\@files);
-    
+
     my $indexed = (any {/tf$/} @files) && (any {/to$/} @files);
 
     ### set our data
@@ -573,7 +574,7 @@ database on disk, which is a set of files, the exact structure of
 which varies a bit with the type and size of the sequence set.
 
 This is mostly an object-oriented wrapper for using NCBI's C<blastdbcmd>
-and C<formatdb> tools.
+and C<makeblastdb> tools.
 
 =head1 ATTRIBUTES
 
@@ -649,9 +650,9 @@ at the existing files and sets this
   Args : hash-style list as:
           seqfile => filename containing sequences,
           title   => (optional) title for this blast database,
-          indexed_seqs => (optional) if true, formats the database with
+          hash_index => (optional) if true, formats the database with
                           indexing (and sets indexed_seqs in this obj)
-  Side Effects: runs 'formatdb' to format the given sequences,
+  Side Effects: runs 'makeblastdb' to format the given sequences,
                 dies on failure
 
 =head2 file_modtime
@@ -702,7 +703,7 @@ at the existing files and sets this
   Usage: print "that thing is split, yo" if $db->is_split;
   Desc : determine whether this database is in multiple parts
   Ret  : true if this database has been split into multiple
-         files by formatdb (e.g. nr.00.pin, nr.01.pin, etc.)
+         files by makeblastdb (e.g. nr.00.pin, nr.01.pin, etc.)
   Args : none
   Side Effects: looks in filesystem
 
@@ -756,4 +757,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
