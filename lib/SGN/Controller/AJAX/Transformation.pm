@@ -13,6 +13,7 @@ use CXGN::List;
 use CXGN::Transformation::AddTransformationProject;
 use CXGN::Transformation::AddTransformationIdentifier;
 use CXGN::Transformation::Transformation;
+use CXGN::Transformation::AddTransformant;
 use List::MoreUtils qw /any /;
 
 
@@ -172,7 +173,7 @@ sub get_transformations_in_project :Path('/ajax/transformation/transformations_i
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
 
     my $result = $transformation_obj->get_transformations_in_project();
-    print STDERR "RESULT =".Dumper($result)."\n";
+#    print STDERR "RESULT =".Dumper($result)."\n";
     my @transformations;
     foreach my $r (@$result){
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name) =@$r;
@@ -182,6 +183,70 @@ sub get_transformations_in_project :Path('/ajax/transformation/transformations_i
     $c->stash->{rest} = { data => \@transformations };
 
 }
+
+
+sub add_transformants : Path('/ajax/transformation/add_transformants') : ActionClass('REST') {}
+
+sub add_transformants_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $transformation_name = $c->req->param('transformation_name');
+    my $transformation_stock_id = $c->req->param('transformation_stock_id');
+    my $new_name_count = $c->req->param('new_name_count');
+    print STDERR "TRANSFORMATION NAME =".Dumper($transformation_name)."\n";
+    print STDERR "COUNT =".Dumper($new_name_count)."\n";
+
+    if (!$c->user()){
+        $c->stash->{rest} = {error => "You need to be logged in to add new transformants."};
+        return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add new transformants." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $start_number = 1;
+    my $basename = $transformation_name.'_T';
+    my @new_transformant_names = ();
+    foreach my $n (1..$new_name_count) {
+        push @new_transformant_names, $basename. (sprintf "%04d", $n + $start_number -1);
+    }
+
+    foreach my $new_name (@new_transformant_names) {
+        my $validate_new_name_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $new_name});
+        if ($validate_new_name_rs->count() > 0) {
+            $c->stash->{rest} = {error_string => "Error creating new transformant name",};
+            return;
+        }
+    }
+
+    eval {
+        my $add_transformants = CXGN::Transformation::AddTransformant->new({
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            transformation_stock_id => $transformation_stock_id,
+            transformant_names => \@new_transformant_names,
+            owner_id => $user_id,
+        });
+
+        $add_transformants->add_transformant();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => $@ };
+        print STDERR "An error condition occurred, was not able to create transformation identifier. ($@).\n";
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
 
 
 ###
