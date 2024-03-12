@@ -248,6 +248,27 @@ sub add_transformants_POST :Args(0){
 }
 
 
+sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+
+    my $result = $transformation_obj->get_transformants();
+#    print STDERR "RESULT =".Dumper($result)."\n";
+    my @transformants;
+    foreach my $r (@$result){
+        my ($stock_id, $stock_name) =@$r;
+        push @transformants, [qq{<a href="/stock/$stock_id/view">$stock_name</a>}];
+    }
+
+    $c->stash->{rest} = { data => \@transformants };
+
+}
+
 
 ###
 1;#

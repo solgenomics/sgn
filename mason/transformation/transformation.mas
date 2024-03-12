@@ -66,6 +66,12 @@ $identifier_prefix => ''
 
 jQuery(document).ready(function(){
 
+    var transformation_stock_id = "<%$transformation_id%>";
+    var transformants_table = jQuery('#transformants_table').DataTable({
+        'ajax': '/ajax/transformation/transformants/'+transformation_stock_id,
+        'autoWidth': false,
+    });
+
 
 });
 
