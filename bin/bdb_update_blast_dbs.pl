@@ -20,20 +20,20 @@ sub usage {
     my $sgn_schema = shift;
     my $message = shift || '';
     $message = "Error: $message\n" if $message;
-    
+
 #    my $file_bases = join '', sort map '    '.$_->file_base."\n", CXGN::BlastDB->retrieve_all($sgn_schema, $opt{d});
-    
+
     die <<EOU;
     $message
       Usage:
 	$FindBin::Script [ options ] -d <path>
-	
+
   Go over all the BLAST databases we keep in stock and update them if
   needed.  When run with just the -g option, goes over all the BLAST
   dbs listed in the sgn.blast_db table and updates them if needed,
   putting them under the top-level BLAST db path given with the -d
   option.
-  
+
   Options:
 
   -H <dbhost>
@@ -67,10 +67,10 @@ print STDERR "Connecting to database... $opt{H} $opt{D}\n";
 
 my $dbh;
 
-if (!$opt{p}) { 
+if (!$opt{p}) {
     $dbh = CXGN::DB::InsertDBH->new( { dbhost => $opt{H}, dbname => $opt{D} });
 }
-else { 
+else {
     $dbh = CXGN::DB::Connection->new( { dbhost => $opt{H}, dbname => $opt{D}, dbpass => $opt{p}, dbuser => $opt{U} });
 }
 
@@ -86,7 +86,7 @@ $opt{d} or usage($sgn_schema, '-d option is required');
 
 my $bdbs = CXGN::Blast->new( sgn_schema => $sgn_schema, dbpath => $opt{d} );
 
-my @dbs = $opt{f} ? CXGN::Blast->search( $sgn_schema, $opt{d}, file_base => $opt{f} ) 
+my @dbs = $opt{f} ? CXGN::Blast->search( $sgn_schema, $opt{d}, file_base => $opt{f} )
     : CXGN::Blast->retrieve_all($sgn_schema, $opt{d});
 unless(@dbs) {
     print $opt{f} ? "No database found with file_base='$opt{f}'.\n"
@@ -94,29 +94,29 @@ unless(@dbs) {
 }
 
 foreach my $db (@dbs) {
-    
+
     print STDERR "Processing database ".$db->title()."\n";
-    
+
     #check if the blast db needs an update
     unless($opt{f} || $db->needs_update) {
 	print $db->file_base." is up to date.\n";
 	next;
     }
-    
+
     print STDERR "checking source url..\n";
     #skip the DB if it does not have a source url defined
     unless($db->source_url) {
 	warn $db->file_base." needs to be updated, but has no source_url.  Skipped.\n";
 	next;
     }
-    
+
     if( $opt{x} ) {
 	print "Would update ".$db->file_base." from source url ".$db->source_url."\n";
 	next;
     } else {
 	print "Updating ".$db->file_base." from source url...\n";
     }
-    
+
     eval {
 
 	print STDERR "Checking permissions...\n";
@@ -125,24 +125,27 @@ foreach my $db (@dbs) {
 	if( my $perm_error = $db->check_format_permissions() ) {
 	    die "Cannot format ".$db->file_base.":\n$perm_error";
 	}
-	
+
+  my $source_url = $db->source_url ;
+  $source_url =~ s/^ftp/http/;
+
 	#download the sequences from the source url to a tempfile
 	print STDERR "Downloading source (".$db->source_url.")...\n";
 	my (undef,$sourcefile) = tempfile('blastdb-source-XXXXXXXX',
 					  DIR => $opt{t},
 					  UNLINK => 1,
 	    );
-	
+
 	my $wget_opts = { cache => 0 };
 	$wget_opts->{gunzip} = 1 if $db->source_url =~ /\.gz$/i;
 	wget_filter( $db->source_url => $sourcefile, $wget_opts );
-	
+
 	#formatdb it into the correct place
 	print STDERR "Formatting database...";
 	$db->format_from_file($sourcefile);
-	
+
 	unlink $sourcefile or warn "$! unlinking tempfile '$sourcefile'";
-	
+
 	print $db->file_base." done.\n";
     }; if( $EVAL_ERROR ) {
 	print "Update failed for ".$db->file_base.":\n$EVAL_ERROR";
@@ -151,5 +154,3 @@ foreach my $db (@dbs) {
 }
 
 $dbh->disconnect();
-
-
