@@ -236,9 +236,9 @@ sub format_from_file {
   #makeblastdb -in database.fasta -dbtype [prot|nucl] -parse_seqids
   systemx( 'makeblastdb',
            -in => $seqfile,
-           -n => $new_ffbn,
+           -out => $new_ffbn,
            ($title ? (-title => $title) : ()),
-           -logfile => devnull(),
+           -logfile => 'makeblastdb.log',
            -dbtype => type eq 'protein' ? 'prot' : 'nucl',
            ($args{indexed_seqs} ? (-hash_index => $args{indexed_seqs}) : ()),
          );
