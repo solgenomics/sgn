@@ -235,12 +235,12 @@ sub format_from_file {
 
   #makeblastdb -in database.fasta -dbtype [prot|nucl] -parse_seqids
   systemx( 'makeblastdb',
-           -i => $seqfile,
+           -in => $seqfile,
            -n => $new_ffbn,
-           ($title ? (-t => $title) : ()),
+           ($title ? (-title => $title) : ()),
            -logfile => devnull(),
            -dbtype => type eq 'protein' ? 'prot' : 'nucl',
-           -hash_index => $args{indexed_seqs}      ? 'T' : 'F',
+           ($args{indexed_seqs} ? (-hash_index => $args{indexed_seqs}) : ()),
          );
 
   #now if it made an alias file, fix it up to remove the -blast-db-new

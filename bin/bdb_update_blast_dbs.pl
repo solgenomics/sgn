@@ -129,14 +129,14 @@ foreach my $db (@dbs) {
 	}
 
 	#download the sequences from the source url to a tempfile
-	print STDERR "Downloading source (".$db->source_url.")...\n";
+	print STDERR "Downloading source (".$source_url.")...\n";
 	my (undef,$sourcefile) = tempfile('blastdb-source-XXXXXXXX',
 					  DIR => $opt{t},
 					  UNLINK => 1,
 	    );
 
 	my $wget_opts = { cache => 0 };
-	$wget_opts->{gunzip} = 1 if $db->source_url =~ /\.gz$/i;
+	$wget_opts->{gunzip} = 1 if $source_url =~ /\.gz$/i;
 	wget_filter( $source_url => $sourcefile, $wget_opts );
 
 	#formatdb it into the correct place
