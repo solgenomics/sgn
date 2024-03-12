@@ -106,15 +106,18 @@ foreach my $db (@dbs) {
     print STDERR "checking source url..\n";
     #skip the DB if it does not have a source url defined
     unless($db->source_url) {
-	warn $db->file_base." needs to be updated, but has no source_url.  Skipped.\n";
-	next;
+	     warn $db->file_base." needs to be updated, but has no source_url.  Skipped.\n";
+	     next;
     }
 
+    my $source_url = $db->source_url ;
+    $source_url =~ s/^ftp/http/;
+
     if( $opt{x} ) {
-	print "Would update ".$db->file_base." from source url ".$db->source_url."\n";
-	next;
+	     print "Would update ".$db->file_base." from source url ".$source_url."\n";
+	      next;
     } else {
-	print "Updating ".$db->file_base." from source url...\n";
+	     print "Updating ".$db->file_base." from source url...\n";
     }
 
     eval {
@@ -125,9 +128,6 @@ foreach my $db (@dbs) {
 	if( my $perm_error = $db->check_format_permissions() ) {
 	    die "Cannot format ".$db->file_base.":\n$perm_error";
 	}
-
-  my $source_url = $db->source_url ;
-  $source_url =~ s/^ftp/http/;
 
 	#download the sequences from the source url to a tempfile
 	print STDERR "Downloading source (".$db->source_url.")...\n";
