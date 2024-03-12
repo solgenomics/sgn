@@ -138,7 +138,7 @@ foreach my $db (@dbs) {
 
 	my $wget_opts = { cache => 0 };
 	$wget_opts->{gunzip} = 1 if $db->source_url =~ /\.gz$/i;
-	wget_filter( $db->source_url => $sourcefile, $wget_opts );
+	wget_filter( $source_url => $sourcefile, $wget_opts );
 
 	#formatdb it into the correct place
 	print STDERR "Formatting database...";

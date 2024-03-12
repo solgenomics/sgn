@@ -239,7 +239,7 @@ sub format_from_file {
            -n => $new_ffbn,
            ($title ? (-t => $title) : ()),
            -logfile => devnull(),
-           -dbtype => self->type eq 'protein' ? 'prot' : 'nucl',
+           -dbtype => type eq 'protein' ? 'prot' : 'nucl',
            -hash_index => $args{indexed_seqs}      ? 'T' : 'F',
          );
 
