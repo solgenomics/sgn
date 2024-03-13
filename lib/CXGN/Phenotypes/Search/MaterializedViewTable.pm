@@ -387,7 +387,7 @@ sub search {
 	    
 	    my $o = $ordered_observations{$pheno_id};
 
-	    print STDERR "O: ".Dumper($o);
+	    ###print STDERR "O: ".Dumper($o);
 	    
 	    my $trait_name = $o->{trait_name};
 	    if ($filter_trait_names){
