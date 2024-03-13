@@ -357,7 +357,7 @@ sub get_phenotype_matrix {
     else {  ### NATIVE ??!!
 	
         $data = $phenotypes_search->search();
-        #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
+        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
@@ -367,6 +367,18 @@ sub get_phenotype_matrix {
         my @unique_obsunit_list = ();
         my %seen_obsunits;        
 
+
+	foreach my $d (@$data) {
+	    my $value = "";
+	    if ($include_timestamp && exists($d->{timestamp})) {
+		$value = "$d->{phenotype_value},$d->{timestamp}";
+	    }
+	    else {
+		$value = $d->{phenotype_value};
+	    }
+	    push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
+	}
+	
         foreach my $d (@$data) {
             my $cvterm = $d->{trait_name};
             if ($cvterm){
@@ -379,11 +391,43 @@ sub get_phenotype_matrix {
                 my $timestamp_value = $d->{timestamp};
                 my $value = $d->{phenotype_value};
                 #my $cvterm = $trait."|".$cvterm_accession;
-                if ($include_timestamp && $timestamp_value) {
-                    $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
-                } else {
-                    $obsunit_data{$obsunit_id}->{$cvterm} = $value;
-                }
+                # if ($include_timestamp && $timestamp_value) {
+                #     $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
+                # } else {
+                #     $obsunit_data{$obsunit_id}->{$cvterm} = $value;
+                # }
+
+		if (ref($obsunit_data{$obsunit_id}->{$cvterm})) {
+
+		    if ($self->multiple_observations_treatment() eq "first") {
+			$obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+			
+		    }
+
+		    if ($self->multiple_observations_treatment() eq "last") {
+			$obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+		    }
+
+		    if ($self->multiple_observations_treatment() eq "average") {
+			my $count = 0;
+			my $sum = 0;
+			foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
+			    $sum += $v;
+			    $count++;
+			}
+			$obsunit_data{$obsunit_id}->{$cvterm} = $sum/$count;
+					
+		    }
+		    
+		    if ($self->multiple_observations_treatment() eq "all") {
+			$obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
+		    }
+		    
+
+
+		}
+
+		
                 $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
 
                 my $synonyms = $d->{synonyms};
@@ -431,8 +475,8 @@ sub get_phenotype_matrix {
                 $traits{$cvterm}++;
             }
         }
-        #print STDERR Dumper \%plot_data;
-        #print STDERR Dumper \%traits;
+        #print STDERR "PLOT DATA = ".Dumper \%plot_data;
+        print STDERR "TRAITS = ".Dumper \%traits;
 
         # retrieve treatments
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
@@ -507,29 +551,27 @@ sub format_observations {
 	    if (ref($observation->{value})) {
 		$observation->{value} = join("|", map { $_->{value}.",".$timestamp}  @$observation);
 	    }
-	    else { 
-		$trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
-	    }
+	    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
+	    
 	}
 	elsif ($include_timestamp && $collect_date) {
 	    if (ref($observation->{value})) {
 		$observation->{value} = join("|", map {$_->{value}.",".$collect_date} @$observation);
 	    }
-	    else {
-		$trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
-	    }
+	    
+	    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
+	    
 	}
 	else {
 	    if (ref($observation->{value})) {
-		$observation->{value} = join("|", map { $_->{value} } @$observation);
+		$observation->{value} = join("|", @{$observation->{value}});
 	    }
-	    else { 
-		$trait_observations{$observation->{trait_name}} = $observation->{value};
-	    }
+	    $trait_observations{$observation->{trait_name}} = $observation->{value};
+	    
 	}
 
 	### FOR debugging only:
-	$trait_observations{$observation->{trait_name}}.=$observation->{squash_method};
+	#$trait_observations{$observation->{trait_name}}.=$observation->{squash_method};
 	
 	# dataset outliers will be empty fields if are in @$dataset_excluded_outliers_ref list of pheno_id outliers
 	if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_excluded_outliers_ref) {
@@ -550,8 +592,8 @@ sub detect_multiple_measurements {
 
     my %duplicate_measurements;
 
-    #print STDERR "OBSERVATIONS IN: ".Dumper($trait_observations);
-
+    print STDERR "CHECKING MULTIPLE MEASUREMENTS...\n";
+    
     if (! $trait_observations) { return []; }
     foreach my $o (@$trait_observations) {
 	my $trait_id = $o->{trait_id};
@@ -585,22 +627,21 @@ sub process_duplicate_measurements {
     my $self = shift;
     my $trait_observations = shift;
 
-    #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
+    print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
     if ($self->multiple_observations_treatment() eq "first") {
 	print STDERR "Retrieving first value...\n";
-	$trait_observations = [ $trait_observations->[0] ];
+	$trait_observations =  $trait_observations->[0];
 	$trait_observations->{squash_method} = "first";
     }
 
     if ($self->multiple_observations_treatment() eq "last") {
 	print STDERR "Retrieving last value...\n";
-	$trait_observations = [ $trait_observations->[-1] ];
+	$trait_observations = $trait_observations->[-1] ;
 	$trait_observations->{squash_method} = "last";
     }
 
     if ($self->multiple_observations_treatment() eq "average") {
-	
 	print STDERR "Averaging values ...\n";
 	$trait_observations = $self->average_observations($trait_observations);
 	$trait_observations->{squash_method} = "average";
