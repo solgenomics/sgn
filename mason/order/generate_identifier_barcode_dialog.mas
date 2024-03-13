@@ -32,6 +32,8 @@ $trial_id => undef
                         <div class="col-md-10 col-lg-10">
 % if ($order_id) {
                         <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?order_id=<%$order_id%>" >
+% } elsif ($trial_id) {
+                        <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?trial_id=<%$trial_id%>" >
 % } else {
                         <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/identifier/download/pdf?user_id=<%$user_id%>" >
 % }
