@@ -48,6 +48,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
+use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
 
