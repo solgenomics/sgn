@@ -12,6 +12,7 @@ Options:
  -H the database host
  -D the database name
  -x flag; if present, delete the empty remaining accession
+ -P password
 
 mergefile.txt: A tab-separated file with two columns. Include the following header as the first line: bad name  good name
 
@@ -32,13 +33,16 @@ use CXGN::DB::Schemas;
 use CXGN::Stock;
 
 
-our($opt_H, $opt_D, $opt_x);
-getopts('H:D:x');
+our($opt_H, $opt_D, $opt_x, $opt_P);
+getopts('H:D:xP:');
 
+my $pw = $opt_P;
 
-print "Password for $opt_H / $opt_D: \n";
-my $pw = (<STDIN>);
-chomp($pw);
+if (! $pw) { 
+    print "Password for $opt_H / $opt_D: \n";
+    $pw = (<STDIN>);
+    chomp($pw);
+}
 
 my $delete_merged_stock = $opt_x;
 

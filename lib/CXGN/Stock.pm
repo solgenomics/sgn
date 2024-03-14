@@ -2092,6 +2092,7 @@ sub merge {
     Other stock deleted: $other_stock_deleted.
 COUNTS
 
+	return undef;
 }
 
 =head2 delete
