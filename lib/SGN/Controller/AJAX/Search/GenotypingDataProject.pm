@@ -200,6 +200,12 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
         $rtn{$project_id} = [];
     }
 
+    # Make sure there is at least 1 matching project
+    if ( scalar(@project_ids) < 1 ) {
+        $c->stash->{rest} = { error => "No genotyping projects selected!" };
+        return;
+    }
+
     # Get metadata about the archived vcf files for all of the requested projects 
     my $ph = join ( ',', ('?') x @project_ids );
     my $q = "SELECT genotyping_protocol_id, genotyping_protocol_name, genotyping_project_id, genotyping_project_name,
