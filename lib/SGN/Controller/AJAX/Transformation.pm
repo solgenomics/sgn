@@ -260,7 +260,7 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     my @transformants;
     foreach my $r (@$result){
         my ($stock_id, $stock_name) =@$r;
-        push @transformants, [qq{<a href="/stock/$stock_id/view">$stock_name</a>}];
+        push @transformants, [qq{<a href="/stock/$stock_id/view">$stock_name</a>}, $stock_name];
     }
 
     $c->stash->{rest} = { data => \@transformants };

@@ -31,7 +31,7 @@ $vector_construct
                     </table>
                 </div>
             </div>
-            <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_transformants_link">Add New Transformants (Accessions)</button>
+            <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_transformants_link">Add New Transformants (Accessions)</button><button class="btn btn-sm btn-primary" style="margin:3px" id="custom_barcode_link">Design Custom Barcodes Using a List</button>
         </div>
     </div>
 </&>
@@ -42,12 +42,11 @@ $vector_construct
             <div class = "panel-body">
                 <div style="overflow:scroll">
                     <table class="table table-hover table-bordered" id="transformants_table">
-                    <thead>
-                        <tr>
-                            <th>Accessions</th>
-                        </tr>
-                    </thead>
-
+                        <thead>
+                            <tr>
+                                <th>Accessions</th>
+                            </tr>
+                        </thead>
                     </table>
                 </div>
                 <div class="panel panel-default">
@@ -74,8 +73,28 @@ jQuery(document).ready(function(){
     var transformants_table = jQuery('#transformants_table').DataTable({
         'ajax': '/ajax/transformation/transformants/'+transformation_stock_id,
         'autoWidth': false,
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#transformant_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i][1]+"\n";
+                }
+                jQuery("#transformant_to_new_list").html(html);
+                addToListMenu("transformant_add_to_list", "transformant_to_new_list", {
+                    selectText: true,
+                    listType: 'accessions',
+                });
+            }
+        }
+
     });
 
+    jQuery('#custom_barcode_link').click(function() {
+        location.href = '/tools/label_designer';
+    })
 
 });
 
