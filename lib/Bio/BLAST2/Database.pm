@@ -233,14 +233,18 @@ sub format_from_file {
   }
   -w $ffbn_subdir or croak "Directory '$ffbn_subdir' is not writable\n";
 
+  print STDERR "*** in = $seqfile\n out = $new_ffbn\n title = $title\n dbtype = " . $self->type . "\n indexed seqs = " . $args{indexed_seqs} . "\n\n" ;
+  my $dbtype =  ($self->type eq 'protein') ? 'prot' : 'nucl';
+
   #makeblastdb -in database.fasta -dbtype [prot|nucl] -parse_seqids
   systemx( 'makeblastdb',
            -in => $seqfile,
            -out => $new_ffbn,
            ($title ? (-title => $title) : ()),
+           -dbtype => $dbtype,
+           -parse_seqids ,
+           ($args{indexed_seqs} ? -hash_index  : ()),
            -logfile => 'makeblastdb.log',
-           -dbtype => $self->type eq 'protein' ? 'prot' : 'nucl',
-           ($args{indexed_seqs} ? (-hash_index => $args{indexed_seqs}) : ()),
          );
 
   #now if it made an alias file, fix it up to remove the -blast-db-new

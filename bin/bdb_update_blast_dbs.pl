@@ -59,7 +59,7 @@ EOU
 
 
 our %opt;
-getopts('xt:d:f:H:D:p:U:h',\%opt) or die "Invalid arguments";
+getopts('xt:s:d:f:H:D:p:U:h',\%opt) or die "Invalid arguments";
 
 $opt{t} ||= File::Spec->tmpdir;
 
@@ -127,17 +127,17 @@ foreach my $db (@dbs) {
 	if( my $perm_error = $db->check_format_permissions() ) {
 	    die "Cannot format ".$db->file_base.":\n$perm_error";
 	}
-
+  my $file_path =  $opt{s} . $_->file_base;
 	#download the sequences from the source url to a tempfile
-	print STDERR "Downloading source (".$source_url.")...\n";
+	print STDERR "Reading source file (".$file_path.")...\n";
 	my (undef,$sourcefile) = tempfile('blastdb-source-XXXXXXXX',
 					  DIR => $opt{t},
 					  UNLINK => 1,
 	    );
 
-	my $wget_opts = { cache => 0 };
-	$wget_opts->{gunzip} = 1 if $source_url =~ /\.gz$/i;
-	wget_filter( $source_url => $sourcefile, $wget_opts );
+#	my $wget_opts = { cache => 0 };
+#	$wget_opts->{gunzip} = 1 if $source_url =~ /\.gz$/i;
+#	wget_filter( $source_url => $sourcefile, $wget_opts );
 
 	#formatdb it into the correct place
 	print STDERR "Formatting database...";
