@@ -195,8 +195,7 @@ sub add_transformants_POST :Args(0){
     my $transformation_name = $c->req->param('transformation_name');
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
     my $new_name_count = $c->req->param('new_name_count');
-    print STDERR "TRANSFORMATION NAME =".Dumper($transformation_name)."\n";
-    print STDERR "COUNT =".Dumper($new_name_count)."\n";
+    my $last_number = $c->req->param('last_number');
 
     if (!$c->user()){
         $c->stash->{rest} = {error => "You need to be logged in to add new transformants."};
@@ -209,11 +208,10 @@ sub add_transformants_POST :Args(0){
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $start_number = 1;
     my $basename = $transformation_name.'_T';
     my @new_transformant_names = ();
     foreach my $n (1..$new_name_count) {
-        push @new_transformant_names, $basename. (sprintf "%04d", $n + $start_number -1);
+        push @new_transformant_names, $basename. (sprintf "%04d", $n + $last_number);
     }
 
     foreach my $new_name (@new_transformant_names) {
@@ -239,7 +237,7 @@ sub add_transformants_POST :Args(0){
 
     if ($@) {
         $c->stash->{rest} = { success => 0, error => $@ };
-        print STDERR "An error condition occurred, was not able to create transformation identifier. ($@).\n";
+        print STDERR "An error condition occurred, was not able to create new transformants. ($@).\n";
         return;
     }
 

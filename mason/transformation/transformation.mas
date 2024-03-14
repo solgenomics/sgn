@@ -3,6 +3,8 @@ $transformation_id
 $transformation_name => ''
 $user_id => undef
 $identifier_prefix => ''
+$next_new_transformant => undef
+$last_number => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
@@ -59,7 +61,7 @@ $identifier_prefix => ''
         </div>
     </div>
 </&>
-<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name  &>
+<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number  &>
 
 
 <script>

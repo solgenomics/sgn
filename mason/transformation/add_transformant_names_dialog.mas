@@ -1,6 +1,8 @@
 <%args>
 $transformation_id
 $transformation_name
+$next_new_transformant
+$last_number
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -17,13 +19,19 @@ $transformation_name
                 <div class="container-fluid">
                     <form class="form-horizontal" id="create_new_transformants_form" name="create_new_transformants_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Prefix: </label>
+                            <label class="col-sm-3 control-label">Basename: </label>
                             <div class="col-sm-9">
                                 <input class="form-control" id="transformation_name" name="transformation_name" type="text" disabled value="<%$transformation_name%>"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">How Many? </label>
+                            <label class="col-sm-3 control-label">Next New Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="next_transformant_name" name="next_transformant_name" type="text" disabled value="<%$next_new_transformant%>"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">How many?</label>
                             <div class="col-sm-9">
                                 <input class="form-control" id="number_of_new_transformants" name="number_of_new_transformants" type="number" />
                             </div>
@@ -42,6 +50,9 @@ $transformation_name
 <script>
 
 jQuery(document).ready(function(){
+
+    var last_number = "<% $last_number %>";
+
     jQuery('#add_new_transformants_link').click(function(){
         jQuery('#add_new_transformant_names_dialog').modal('show');
     });
@@ -57,6 +68,7 @@ jQuery(document).ready(function(){
                 'transformation_name': transformation_name,
                 'transformation_stock_id': "<%$transformation_id%>",
                 'new_name_count': new_name_count,
+                'last_number': last_number,
             },
             success: function(response){
                 console.log(response);
