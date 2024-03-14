@@ -110,6 +110,24 @@ ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
 
 my $protocol_id = $message_hash->{nd_protocol_id};
+my $project_id = $message_hash->{project_id};
+
+
+# Test download of archived vcf file of uploaded project
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/has_archived_vcf?genotyping_project_id=$project_id");
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+is($message_hash->{$project_id}->[0]->{exists}, 'true');
+is($message_hash->{$project_id}->[0]->{genotyping_project_id}, $project_id);
+
+my $vcf_basename = $message_hash->{$project_id}->[0]->{basename};
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&basename=$vcf_basename");
+ok($response->is_success);
+$message = $response->decoded_content;
+my $first_header_line = ($message =~ /\A(.*?)$/ms)[0];
+is($first_header_line, '##fileformat=VCFv4.0');
+
 
 #adding genotype data using same protocol as before to different project
 $ua = LWP::UserAgent->new;
