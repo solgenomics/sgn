@@ -32,6 +32,9 @@ sub transformation_page : Path('/transformation') Args(1) {
     }
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+    my $info = $transformation_obj->get_transformation_info();
+    my $plant_material = qq{<a href="/stock/$info->[0]->[0]/view">$info->[0]->[1]</a>};
+    my $vector_construct = qq{<a href="/stock/$info->[0]->[2]/view">$info->[0]->[3]</a>};
     my $result = $transformation_obj->get_transformants();
     my $number_of_transformants = scalar(@$result);
     my $basename = $transformation_name.'_T';
@@ -41,6 +44,8 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{transformation_name} = $transformation_name;
     $c->stash->{next_new_transformant} = $next_new_transformant;
     $c->stash->{last_number} = $number_of_transformants;
+    $c->stash->{plant_material} = $plant_material;
+    $c->stash->{vector_construct} = $vector_construct;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{template} = '/transformation/transformation.mas';
 

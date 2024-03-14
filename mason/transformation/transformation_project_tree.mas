@@ -32,12 +32,12 @@ $user_id => undef
                 <h5><i>Double click<br />transformation project (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
                 <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
-
+                <!--
                 <h4>Folders</h4>
                 <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
                 <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move transformation project(s) to folder</button><br/><br/>
                 <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
-
+                -->
                 <div id="folder_edit_options" style="display:none">
                     <hr>
                     <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
