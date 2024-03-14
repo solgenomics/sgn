@@ -322,7 +322,7 @@ $dataset_id => undef
           <span class="btnn btn-link">Archived Genotype Data</span>
         </div>
         <div id="wiz-down-1-c-a" class="panel-collapse collapse" role="tabpanel">
-          <p style="margin: 15px; text-color: #999; font-size: 90%">Download archived VCF files of entire genotyping projects.  Select <strong>one or more genotyping projects and/or genotyping protocols</strong> to download a VCF file of any matching project(s).</p>
+          <p style="margin: 15px; text-color: #999; font-size: 90%">Download the original archived VCF files of entire genotyping projects.  Select <strong>one or more genotyping projects and/or genotyping protocols</strong> to download a VCF file of any matching project(s).</p>
           <div id="wiz-down-1-c-a-body" style="min-height: 50px"></div>
         </div>
       </div>
