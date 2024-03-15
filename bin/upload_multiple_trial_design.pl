@@ -223,15 +223,21 @@ if ($metadata_file =~ /\.xlsx$/i) {
     # Populate metadata rows and columns
     @metadata_rows = map { $xlsx_worksheet->get_cell($_, 0)->value } 1..$xlsx_worksheet->row_range;
     @metadata_columns = map { $xlsx_worksheet->get_cell(0, $_)->value } $xlsx_worksheet->col_range;
-} elsif ($infile =~ /\.xls$/i) {
+} elsif ($metadata_file =~ /\.xls$/i) {
     my $xls_parser    = Spreadsheet::ParseExcel->new;
     my $xls_workbook  = $xls_parser->parse($metadata_file);
     my $xls_worksheet = $xls_workbook->worksheet(0);
-
+    
     # Populate metadata rows and columns
     @metadata_rows    = map { $xls_worksheet->get_cell($_, 0)->value } 1..$xls_worksheet->row_range;
     @metadata_columns = map { $xls_worksheet->get_cell(0, $_)->value } $xls_worksheet->col_range;
+} else {
+#     $trial_metadata   = CXGN::Tools::File::Spreadsheet->new( $metadata_file ) ;
+#     @metadata_rows    = $trial_metadata->row_labels();
+#     @metadata_columns = $trial_metadata->column_labels();
+#     print "Trial metadata column labels = " . Dumper(\@metadata_columns);
 }
+
 
 print "Trial metadata rows: @metadata_rows\n";
 print "Trial metadata columns: @metadata_columns\n";
