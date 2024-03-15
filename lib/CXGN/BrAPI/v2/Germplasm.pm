@@ -19,6 +19,8 @@ extends 'CXGN::BrAPI::v2::Common';
 sub search {
     my $self = shift;
     my $params = shift;
+    my $c = shift;
+
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -61,6 +63,38 @@ sub search {
 
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
+
+    my %stock_props = (
+            'accession number'=>1,
+            'acquisition date'=>1,
+            'biological status of accession code'=>1,
+            'country of origin'=>1,
+            'donor'=>1,
+            'donor institute'=>1,
+            'institute code'=>1,
+            'institute name'=>1,
+            'ncbi_taxonomy_id'=>1,
+            'PUI'=>1,
+            'seed source'=>1,
+            'stock_additional_info'=>1,
+            'type of germplasm storage code'=>1 );
+
+    ## Additional stock props for additional info.
+    my %additional_stock_props;
+    my @editable_stock_props =  SGN::Context->new()->get_conf('editable_stock_props') ? split ',', SGN::Context->new()->get_conf('editable_stock_props'): undef;
+
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
+    foreach (keys %editable_stock_props){
+        if(!%stock_props{$_}){
+            $additional_stock_props{$_} = 1;
+        }
+    }
+
+    if (%additional_stock_props){
+        %stock_props = (%stock_props, %additional_stock_props);
+    }
+
 
     my %stockprops_values;
     if ($accession_numbers_arrayref && scalar(@$accession_numbers_arrayref)>0){
@@ -107,19 +141,7 @@ sub search {
         stock_id_list=>$germplasm_ids_arrayref,
         stock_type_id=>$accession_type_cvterm_id,
         stockprops_values=>\%stockprops_values,
-        stockprop_columns_view=>{
-            'accession number'=>1,
-            'PUI'=>1,
-            'seed source'=>1,
-            'institute code'=>1,
-            'institute name'=>1,
-            'biological status of accession code'=>1,
-            'country of origin'=>1,
-            'type of germplasm storage code'=>1,
-            'acquisition date'=>1,
-            'ncbi_taxonomy_id'=>1,
-            'stock_additional_info'=>1
-        },
+        stockprop_columns_view=>\%stock_props,                     
         trial_id_list=>$study_db_id,
         trial_name_list=>$study_names,
         external_ref_id_list=>$external_reference_id_arrayref,
@@ -146,9 +168,8 @@ sub search {
             }
         }
         my @donors = {
-            donorAccessionNumber=>$_->{donors}->[0]->{donorAccessionNumber},
-            donorInstituteCode=>$_->{donors}->[0]->{donorInstituteCode},
-            germplasmPUI=>$_->{donors}->[0]->{germplasmPUI}
+            donorAccessionNumber=>$_->{'donor'} ne '' ? $_->{'donor'} : undef ,
+            donorInstituteCode=>$_->{'donor institute'} ne '' ? $_->{'donor institute'} : undef ,
         };
         my @synonyms;
         if($_->{synonyms}){
@@ -186,10 +207,29 @@ sub search {
             $cross_type = "unknown";
         }
 
+        #getting additional info
+        my $additional_info;
+        my %additional;
+        foreach my $prop (keys %additional_stock_props){
+            if($_->{$prop}){
+                $additional{$prop} = $_->{$prop};
+            }
+        }        
+
+        if (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' && %additional) {
+            $additional_info = decode_json($_->{'stock_additional_info'});
+            $additional_info = {%$additional_info , ("additionalProps" => \%additional)} ;
+        } elsif (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '') {
+            $additional_info = decode_json($_->{'stock_additional_info'});        
+        } elsif (%additional) {
+            $additional_info = {"additionalProps" => \%additional};
+        }
+
+        #Populating data
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
-            additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne ''? decode_json $_->{'stock_additional_info'} : undef,
+            additionalInfo=>$additional_info,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
@@ -197,7 +237,7 @@ sub search {
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
+            documentationURL=>$_->{'PUI'} && $_->{'PUI'} ne '' ? $_->{'PUI'} : $main_production_site_url . "/stock/$_->{stock_id}/view",
             donors=>\@donors,
             externalReferences=>\@references,
             genus=>$_->{genus},
@@ -229,6 +269,7 @@ sub search {
 sub germplasm_detail {
     my $self = shift;
     my $stock_id = shift;
+    my $c = shift;
 
     my $status = $self->status;
     my $page_size = $self->page_size;
@@ -239,7 +280,7 @@ sub germplasm_detail {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
     }
 
-    my @result = _simple_search($self,[$stock_id]);
+    my @result = _simple_search($self,[$stock_id],undef,$c);
     my $total_count = scalar(@result);
 
     print STDERR "germ detail: " . Dumper @result ."\n";
@@ -1032,9 +1073,41 @@ sub _simple_search {
     my $self = shift;
     my $germplasm_ids_arrayref = shift;
     my $germplasm_names_arrayref = shift;
+    my $c = shift;
 
     my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
 
+    my %stock_props = (
+            'accession number'=>1,
+            'acquisition date'=>1,
+            'biological status of accession code'=>1,
+            'country of origin'=>1,
+            'donor'=>1,
+            'donor institute'=>1,
+            'institute code'=>1,
+            'institute name'=>1,
+            'ncbi_taxonomy_id'=>1,
+            'PUI'=>1,
+            'seed source'=>1,
+            'stock_additional_info'=>1,
+            'type of germplasm storage code'=>1 );
+
+    ## Additional stock props for additional info.
+    my %additional_stock_props;
+    my @editable_stock_props =  SGN::Context->new()->get_conf('editable_stock_props') ? split ',', SGN::Context->new()->get_conf('editable_stock_props'): undef;
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
+    foreach (keys %editable_stock_props){
+        if(!%stock_props{$_}){
+            $additional_stock_props{$_} = 1;
+        }
+    }
+
+    if (%additional_stock_props){
+        %stock_props = (%stock_props, %additional_stock_props);
+    }
+
+    ##Getting references
     my $references = CXGN::BrAPI::v2::ExternalReferences->new({
         bcs_schema => $self->bcs_schema,
         table_name => 'stock',
@@ -1051,19 +1124,7 @@ sub _simple_search {
         uniquename_list=>$germplasm_names_arrayref,
         stock_id_list=>$germplasm_ids_arrayref,
         stock_type_id=>$accession_type_cvterm_id,
-        stockprop_columns_view=>{
-            'accession number'=>1,
-            'PUI'=>1,
-            'seed source'=>1,
-            'institute code'=>1,
-            'institute name'=>1,
-            'biological status of accession code'=>1,
-            'country of origin'=>1,
-            'type of germplasm storage code'=>1,
-            'acquisition date'=>1,
-            'ncbi_taxonomy_id'=>1,
-            'stock_additional_info'=>1
-        },
+        stockprop_columns_view=>\%stock_props,
         display_pedigree=>1
     });
     my ($result, $total_count) = $stock_search->search();
@@ -1084,16 +1145,15 @@ sub _simple_search {
             }
         }
         my @donors = {
-            donorAccessionNumber=>$_->{donors}->[0]->{donorAccessionNumber},
-            donorInstituteCode=>$_->{donors}->[0]->{donorInstituteCode},
-            germplasmPUI=>$_->{donors}->[0]->{germplasmPUI}
+            donorAccessionNumber=>$_->{donor} ne '' ? $_->{'donor'} : undef ,
+            donorInstituteCode=>$_->{'donor institute'} ne '' ? $_->{'donor institute'} : undef ,
         };
         my @synonyms;
         if($_->{synonyms} && scalar @{ $_->{synonyms} } > 0){
             foreach(@{ $_->{synonyms} }){
                 print STDERR "pushing synonym: " . Dumper $_;
                 push @synonyms, {
-                    synonym=>$_,
+                    synonym=>$_,    
                     type=>undef
                 };
             }
@@ -1123,10 +1183,27 @@ sub _simple_search {
             $cross_type = "unknown";
         }
 
+        my $additional_info;
+        my %additional;
+        foreach my $prop (keys %additional_stock_props){
+            if($_->{$prop}){
+                $additional{$prop} = $_->{$prop};
+            }
+        }        
+
+        if (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' && %additional) {
+            $additional_info = decode_json($_->{'stock_additional_info'});
+            $additional_info = {%$additional_info , ("additionalProps" => \%additional)} ;
+        } elsif (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '') {
+            $additional_info = decode_json($_->{'stock_additional_info'});        
+        } elsif (%additional) {
+            $additional_info = {"additionalProps" => \%additional};
+        }
+
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
-            additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' ? decode_json $_->{'stock_additional_info'} : undef,
+            additionalInfo=> $additional_info,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
@@ -1134,7 +1211,7 @@ sub _simple_search {
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
+            documentationURL=>$_->{'PUI'} && $_->{'PUI'} ne '' ? $_->{'PUI'} : $main_production_site_url . "/stock/$_->{stock_id}/view",
             donors=>\@donors,
             externalReferences=>\@references,
             genus=>$_->{genus},
