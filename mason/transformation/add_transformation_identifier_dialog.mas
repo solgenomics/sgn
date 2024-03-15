@@ -9,7 +9,7 @@ $trial_id
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="reset" class="close" id="add_transformation_id_dismiss_button_1" name="add_transformation_id_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addTransformationIdentifierDialog">Add New Transformation ID</h4>
             </div>
             <div class="modal-body" id="add_new_transformation_identifier_body">
@@ -45,12 +45,35 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="add_new_transformation_identifier_cancel_button">Close</button>
+                <button id="add_transformation_id_dismiss_button_2" name="add_transformation_id_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="new_transformation_identifier_submit">Submit</button>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="transformation_id_saved_dialog_message" name="transformation_id_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="transformationIDSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationIDSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The transformation ID was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_transformation_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -104,8 +127,9 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert("The transformation ID has been created.");
                     jQuery('#add_transformation_identifier_dialog').modal('hide');
+                    jQuery('#transformation_id_saved_dialog_message').modal("show");
+
                 }
                 if (response.error) {
                     alert(response.error);
@@ -118,6 +142,19 @@ jQuery(document).ready(function(){
         });
 
     });
+
+    jQuery("[name='add_transformation_id_dismiss_button']").click(function() {
+        jQuery('#add_transformation_identifier_dialog').modal('hide');
+        jQuery('#new_transformation_identifier_name').val('');
+        jQuery('#plant_material').val('');
+        jQuery('#vector_construct').val('');
+        jQuery('#transformation_identifier_notes').val('');
+    });
+
+    jQuery("#dismiss_transformation_id_saved_dialog").click(function(){
+        location.reload();
+    });
+
 
 
 });
