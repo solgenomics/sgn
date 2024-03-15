@@ -357,7 +357,7 @@ sub get_phenotype_matrix {
     else {  ### NATIVE ??!!
 	
         $data = $phenotypes_search->search();
-        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
+        #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
@@ -592,7 +592,7 @@ sub detect_multiple_measurements {
 
     my %duplicate_measurements;
 
-    print STDERR "CHECKING MULTIPLE MEASUREMENTS...\n";
+#    print STDERR "CHECKING MULTIPLE MEASUREMENTS...\n";
     
     if (! $trait_observations) { return []; }
     foreach my $o (@$trait_observations) {
@@ -602,12 +602,12 @@ sub detect_multiple_measurements {
 
     foreach my $trait_id (keys %duplicate_measurements) {
 	if (scalar(@{$duplicate_measurements{$trait_id}})>1) {
-	    print STDERR "De-duplicating measurements... ".Dumper($duplicate_measurements{$trait_id});
+	    #print STDERR "De-duplicating measurements... ".Dumper($duplicate_measurements{$trait_id});
 	    
 	    my $trait_observations = $self->process_duplicate_measurements($duplicate_measurements{$trait_id});
 	    $duplicate_measurements{$trait_id} = [ $trait_observations ];
 
-	    print STDERR "After de-duplication: ".Dumper($duplicate_measurements{$trait_id});
+	    #print STDERR "After de-duplication: ".Dumper($duplicate_measurements{$trait_id});
 	}
     }
 
@@ -627,7 +627,7 @@ sub process_duplicate_measurements {
     my $self = shift;
     my $trait_observations = shift;
 
-    print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
+    #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
     if ($self->multiple_observations_treatment() eq "first") {
 	print STDERR "Retrieving first value...\n";
@@ -698,7 +698,7 @@ sub average_observations {
     $averaged_observation->{value} = $avg;
     $averaged_observation->{stddev} = $stddev;
     $averaged_observation->{averaged_from} = join(", ", @values);
-    print STDERR "Averaged Observation: ".Dumper( $averaged_observation );
+    #print STDERR "Averaged Observation: ".Dumper( $averaged_observation );
 
     return $averaged_observation;
 		      
