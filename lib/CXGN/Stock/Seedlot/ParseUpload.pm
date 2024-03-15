@@ -28,6 +28,14 @@ has 'parse_errors' => (
     predicate => 'has_parse_errors',
 );
 
+has 'info_messages' => {
+    is => 'rw',
+    isa => 'ListRef',
+    writer => '_set_info_messages',
+    reader => 'get_info_messages',
+    predicate => 'has_info_messages',
+);
+
 has '_parsed_data' => (
     is => 'ro',
     isa => 'HashRef',

@@ -26,8 +26,12 @@ sub _validate_with_plugin {
     }
 
     my @error_messages;
+    my @info_messages;
     my %errors;
     my %missing_accessions;
+
+    ## header in the seedlot file:
+    ## (empty-accession name would go here)	InvNo	Ped	Source	YL	Descr	Breeder	Original Wt (g)	Current Wt (g)	Storage Location	Comments	InInv	To be discarded	Issues
 
     #try to open the excel file and report any errors
     my $excel_obj = $parser->parse($filename);
@@ -55,74 +59,33 @@ sub _validate_with_plugin {
     }
 
     #get column headers
-    my $seedlot_name_head;
-    my $accession_name_head;
-    my $operator_name_head;
-    my $amount_head;
-    my $weight_head;
-    my $description_head;
-    my $box_name_head;
-    my $seedlot_quality;
-    my $seedlot_source;
+
+    my $accession_name_header;
+    my $inv_no_header;
+    my $ped_header;
 
     if ($worksheet->get_cell(0,0)) {
-        $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
-        $seedlot_name_head =~ s/^\s+|\s+$//g;
+        $accession_name_header  = $worksheet->get_cell(0,0)->value();
+        $accession_name_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,1)) {
-        $accession_name_head  = $worksheet->get_cell(0,1)->value();
-        $accession_name_head =~ s/^\s+|\s+$//g;
+        $inv_no_header = $worksheet->get_cell(0,1)->value();
+        $inv_no_header =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,2)) {
-        $operator_name_head  = $worksheet->get_cell(0,2)->value();
-        $operator_name_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,3)) {
-        $amount_head  = $worksheet->get_cell(0,3)->value();
-        $amount_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,4)) {
-        $weight_head  = $worksheet->get_cell(0,4)->value();
-        $weight_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,5)) {
-        $description_head  = $worksheet->get_cell(0,5)->value();
-        $description_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,6)) {
-        $box_name_head  = $worksheet->get_cell(0,6)->value();
-        $box_name_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,7)) {
-	$seedlot_quality = $worksheet->get_cell(0,7)->value();
-    }
-    if ($worksheet->get_cell(0,8)) {
-	$seedlot_source = $worksheet->get_cell(0, 8)->value();
+        $ped_header  = $worksheet->get_cell(0,2)->value();
+        $ped_header =~ s/^\s+|\s+$//g;
     }
 
-    if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
-        push @error_messages, "Cell A1: seedlot_name is missing from the header";
+    if ($accession_name_header) {
+	print STDERR "The accession column should have an empty header, not $accession_name_header\n";	
     }
-    if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-        push @error_messages, "Cell B1: accession_name is missing from the header";
+    if (!$inv_no_header || $inv_no_header ne 'InvNo') {
+        push @error_messages, "Cell B1: InvNo is missing from the header";
     }
-    if (!$operator_name_head || $operator_name_head ne 'operator_name') {
-        push @error_messages, "Cell C1: operator_name is missing from the header";
+    if (!$ped_header || $ped_header ne 'Ped') {
+        push @error_messages, "Cell C1: Ped is missing from the header";
     }
-    if (!$amount_head || $amount_head ne 'amount') {
-        push @error_messages, "Cell D1: amount is missing from the header";
-    }
-    if (!$weight_head || $weight_head ne 'weight(g)') {
-        push @error_messages, "Cell E1: weight(g) is missing from the header";
-    }
-    if (!$description_head || $description_head ne 'description') {
-        push @error_messages, "Cell F1: description is missing from the header";
-    }
-    if (!$box_name_head || $box_name_head ne 'box_name') {
-        push @error_messages, "Cell G1: box_name is missing from the header";
-    }
-
-    # (seedlot quality and seedlot source are not required fields)
 
     my %seen_seedlot_names;
     my %seen_accession_names;
@@ -130,84 +93,123 @@ sub _validate_with_plugin {
 
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
-        my $seedlot_name;
-        my $accession_name;
-        my $operator_name;
-        my $amount = 'NA';
-        my $weight = 'NA';
-        my $description;
-        my $box_name;
-        my $quality;
-        my $source;
 
+	my $accession_name;
+        my $seedlot_name;
+        my $ped_name;
+	my $source;
+	my $YL;
+	my $desc;
+	my $breeder;
+	my $original_wt_g;
+	my $current_wt_g;
+	my $storage_location;
+	my $comments;
+	my $in_inv;
+	my $to_be_discarded;
+	my $issues;
+	
         if ($worksheet->get_cell($row,0)) {
-            $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $accession_name = $worksheet->get_cell($row,0)->value();
+	    $accession_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
-            $accession_name = $worksheet->get_cell($row,1)->value();
+            $seedlot_name = $worksheet->get_cell($row,1)->value();
+	    $seedlot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
-            $operator_name = $worksheet->get_cell($row,2)->value();
+            $ped_name = $worksheet->get_cell($row,2)->value();
+	    $ped_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
-            $amount =  $worksheet->get_cell($row,3)->value();
+            $source =  $worksheet->get_cell($row,3)->value();
+	    $source =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,4)) {
-            $weight =  $worksheet->get_cell($row,4)->value();
+            $YL =  $worksheet->get_cell($row,4)->value();
+	    $YL =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
-            $description =  $worksheet->get_cell($row,5)->value();
+            $desc =  $worksheet->get_cell($row,5)->value();
+	    $desc =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,6)) {
-            $box_name =  $worksheet->get_cell($row,6)->value();
+            $breeder =  $worksheet->get_cell($row,6)->value();
+	    $breeder =~ s/^\s+|\s+$//g;
         }
         if ($seedlot_quality && $worksheet->get_cell($row, 7)) {
-            $quality = $worksheet->get_cell($row, 7)-> value();
+            $original_wt_g = $worksheet->get_cell($row, 7)-> value();
+	    $original_wt_g =~ s/^\s+|\s+$//g;
         }
-        if ($seedlot_source && $worksheet->get_cell($row, 8)) {
-            $source = $worksheet->get_cell($row, 8)->value();
-            $source =~ s/^\s+|\s+$//g;
+        if ($seedlot_quality && $worksheet->get_cell($row, 8)) {
+            $current_wt_g = $worksheet->get_cell($row, 8)-> value();
+	    $current_wt_g =~ s/^\s+|\s+$//g;
         }
 
-        if (!defined $seedlot_name && !defined $accession_name) {
+	if ($seedlot_quality && $worksheet->get_cell($row, 9)) {
+            $storage_location = $worksheet->get_cell($row, 9)-> value();
+	    $storage_location =~ s/^\s+|\s+$//g;
+        }
+
+	if ($seedlot_quality && $worksheet->get_cell($row, 10)) {
+            $comments = $worksheet->get_cell($row, 10)-> value();
+	    $comments =~ s/^\s+|\s+$//g;
+        }
+
+	if ($seedlot_quality && $worksheet->get_cell($row, 11)) {
+            $in_inv = $worksheet->get_cell($row, 11)-> value();
+	    $in_inv =~ s/^\s+|\s+$//g;
+        }
+
+	if ($seedlot_quality && $worksheet->get_cell($row, 12)) {
+            $to_be_discarded = $worksheet->get_cell($row, 12)-> value();
+	    $to_be_discarded =~  s/^\s+|\s+$//g;
+        }
+
+	if ($seedlot_quality && $worksheet->get_cell($row, 14)) {
+            $issues = $worksheet->get_cell($row, 14)-> value();
+	    $issues =~ s/^\s+|\s+$//g;
+        }
+
+        if (!defined $seedlot_name && !defined $ped_name) {
             last;
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
-            push @error_messages, "Cell A$row_name: seedlot_name missing.";
+            push @error_messages, "Cell B$row_name: seedlot_name missing.";
         }
         elsif ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_name: seedlot_name must not contain spaces or slashes.";
+            push @error_messages, "Cell B$row_name: seedlot_name must not contain spaces or slashes.";
         }
         else {
             #file must not contain duplicate plot names
             if ($seen_seedlot_names{$seedlot_name}) {
-                push @error_messages, "Cell A$row_name: duplicate seedlot_name at cell A".$seen_seedlot_names{$seedlot_name}.": $seedlot_name";
+                push @error_messages, "Cell B$row_name: duplicate seedlot_name at cell A".$seen_seedlot_names{$seedlot_name}.": $seedlot_name";
             }
             $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
-        if ($accession_name || $accession_name ne '') {
-            push @error_messages, "Cell B:$row_name: the accession name field must be empty as it will be generated by the database.";
-        } 
-
-        if (!defined($operator_name) || $operator_name eq '') {
-            push @error_messages, "Cell C$row_name: operator_name missing";
+        if ($accession_name || $accession_name ne '') {  ### OR JUST CHECK IF IT IS LEGAL IN THE DATABASE?
+            push @error_messages, "Cell A:$row_name: the accession name field must be empty as it will be generated by the database.";
         }
 
-        if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell D$row_name: amount missing";
-        }
-        if (!defined($weight) || $weight eq '') {
-            push @error_messages, "Cell E$row_name: weight(g) missing";
-        }
-        if ($amount eq 'NA' && $weight eq 'NA') {
-            push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
+	if (!defined($desc) || $desc eq '') {
+	    push @info_messages, "Cell F$row_name: description missing";
+
+        if (!defined($breeder) || $breeder eq '') {
+            push @info_messages, "Cell G$row_name: breeder missing";
         }
 
-        if (!defined($box_name) || $box_name eq '') {
-            push @error_messages, "Cell G$row_name: box_name missing";
+        if (!defined($original_wt_g) || $original_wt_g eq '') {
+            push @info_messages, "Cell H$row_name: original_wt_g missing";
+        }
+        if (!defined($current_wt_g) || $current_wt_g eq '') {
+            push @info_messages, "Cell I$row_name: current weight(g) missing";
+        }
+        
+        if (!defined($storage_location) || $storage_location eq '') {
+            push @error_messages, "Cell J$row_name: storage_location missing";
         }
 
 	if ($source) {
