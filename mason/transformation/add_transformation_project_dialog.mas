@@ -20,9 +20,14 @@ $locations
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"What are Transformation Projects?" &>
 
-                            <p>()</p>
+                            <p>You can use Transformation Projects to manage and organize your transformation experiemnts</p>
+                            <ul>
+                                <li>Different transformation experiments within a project are identified using Transformation IDs.</li>
+                                <li>Each transformation ID captures information about plant material and vector construct used in that experiment.</li>
+                                <li>You can use Transformation Details page to automatically add new transformants (accessions) to database by simply indicating the number of transformants.</li>
+                                <li>Each transformant (accession) name consists of transformation ID as basename and incremental serial number. </li>
+                            </ul>
                             <hr>
-
                             <center>
                                 <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
@@ -94,14 +99,9 @@ foreach my $program (@$programs) {
 
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your transformation project is now in the database" &>
-                            <p>
-                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                Transformation project was added successfully
-                            </p>
-
                             <ul>
-                                <li>You may want to proceed to the transformation project detail page you just created.</li>
-                                <li>You can add or upload transformation information into your project.</li>
+                                <li>Please click on 'Refresh' button to view your newly created project on the manage page.</li>
+                                <li>You can use your transformation project page to create transformation IDs.</li>
                             </ul>
                             <br/>
                         </&>
@@ -190,18 +190,17 @@ jQuery(document).ready(function(){
                 return;
             },
             success: function(response) {
+                jQuery('#working_modal').modal('hide');
                 if (response.error) {
                     alert(response.error);
-                } else {
-                    refreshtransformationJsTree(0);
+                }
+                if (response.success == 1) {
                     Workflow.focus("#add_transformation_project_workflow", -1); //Go to success page
                     Workflow.check_complete("#add_transformation_project_workflow");
-                    jQuery("#working_modal").modal("hide");
                 }
             },
+
         });
-
-
 
     });
 

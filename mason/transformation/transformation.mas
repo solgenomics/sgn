@@ -31,7 +31,7 @@ $vector_construct
                     </table>
                 </div>
             </div>
-            <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_transformants_link">Add New Transformants (Accessions)</button><button class="btn btn-sm btn-primary" style="margin:3px" id="custom_barcode_link">Design Custom Barcodes Using a List</button>
+            <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_transformants_link">Add New Transformants (Accessions)</button><button class="btn btn-sm btn-default" style="margin:3px" id="custom_barcode_link">Design Custom Barcodes Using a List</button>
         </div>
     </div>
 </&>
