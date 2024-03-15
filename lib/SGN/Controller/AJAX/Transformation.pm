@@ -107,12 +107,12 @@ sub add_transformation_identifier_POST :Args(0){
     $transformation_identifier =~ s/^\s+|\s+$//g;
 
     if (!$c->user()){
-        $c->stash->{rest} = {error => "You need to be logged in to add a transformation transformation identifier."};
+        $c->stash->{rest} = {error => "You need to be logged in to add a transformation ID."};
         return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation identifier." };
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation ID." };
         return;
     }
 
@@ -122,7 +122,7 @@ sub add_transformation_identifier_POST :Args(0){
     my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'vector_construct', 'stock_type')->cvterm_id();
 
     if ($schema->resultset("Stock::Stock")->find({uniquename => $transformation_identifier})){
-        $c->stash->{rest} = {error =>  "Transformation identifier already exists." };
+        $c->stash->{rest} = {error =>  "Transformation ID already exists. Please use another name" };
         return 0;
     }
 
@@ -154,7 +154,7 @@ sub add_transformation_identifier_POST :Args(0){
 
     if ($@) {
         $c->stash->{rest} = { success => 0, error => $@ };
-        print STDERR "An error condition occurred, was not able to create transformation identifier. ($@).\n";
+        print STDERR "An error condition occurred, was not able to create transformation ID. ($@).\n";
         return;
     }
 
