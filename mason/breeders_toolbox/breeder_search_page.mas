@@ -559,7 +559,7 @@ $dataset_id => undef
         $(".wizard-download-genotypes-info2").hide();
       }
     } else if ( selected_genotyping_projects.length >= 1 ) {
-      var selected_genotyping_project = selected_genotyping_projects.length === 1 ? selected_genotyping_projects[0].id : "";
+      var selected_genotyping_project = selected_genotyping_projects[0].id;
       if ( selected_genotyping_project !== SELECTED_GENOTYPING_PROJECT ) {
         console.log("project new " + selected_genotyping_project);
         SELECTED_GENOTYPING_PROJECT = selected_genotyping_project;
