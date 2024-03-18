@@ -12,7 +12,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds transformation_project project_type, transformation_experiment experiment_type, folder_for_transformation project_property, transformation stock_type, plant_material_of, vector_construct_of, transformant_of stock_relationship cvterms.
+This patch adds transformation_project project_type, transformation_experiment experiment_type, folder_for_transformations project_property, transformation stock_type, plant_material_of, vector_construct_of, transformant_of stock_relationship cvterms.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -65,7 +65,7 @@ sub patch {
             'transformation_project'
         ],
         'project_property' => [
-            'folder_for_transformation'
+            'folder_for_transformations'
         ],
         'experiment_type' => [
             'transformation_experiment'
