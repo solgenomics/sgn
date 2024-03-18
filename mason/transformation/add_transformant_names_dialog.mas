@@ -12,7 +12,7 @@ $last_number
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="reset" class="close" id="add_new_transformants_dismiss_button_1" name="add_new_transformants_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addNewTransformantNamesDialog">Add New Transformant (Accession) Names</h4>
             </div>
             <div class="modal-body">
@@ -40,12 +40,35 @@ $last_number
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_new_transformants_dismiss_button_2" name="add_new_transformants_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="new_transformants_submit">Submit</button>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="new_transformants_saved_dialog_message" name="new_transformants_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="newTransformantsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="newTransformantsSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The new transformants (accessions) were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_new_transformants_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -70,20 +93,38 @@ jQuery(document).ready(function(){
                 'new_name_count': new_name_count,
                 'last_number': last_number,
             },
-            success: function(response){
-                console.log(response);
-                if(response.error){
-                    alert(response.error);
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#add_new_transformant_names_dialog').modal('hide');
+                    jQuery('#new_transformants_saved_dialog_message').modal("show");
+
                 }
-                if(response.success){
-                    alert(response.success);
+                if (response.error) {
+                    alert(response.error);
                 }
             },
             error: function(response){
-                alert('Error submitting new transformant!');
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred creating new transformants');
             }
         });
     });
+
+    jQuery("[name='add_new_transformants_dismiss_button']").click(function() {
+        jQuery('#add_new_transformant_names_dialog').modal('hide');
+        jQuery('#number_of_new_transformants').val('');
+    });
+
+    jQuery("#dismiss_new_transformants_saved_dialog").click(function(){
+        jQuery('#number_of_new_transformants').val('');
+        location.reload();
+    });
+
 });
+
 
 </script>

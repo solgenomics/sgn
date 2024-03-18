@@ -152,10 +152,12 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#dismiss_transformation_id_saved_dialog").click(function(){
+        jQuery('#new_transformation_identifier_name').val('');
+        jQuery('#plant_material').val('');
+        jQuery('#vector_construct').val('');
+        jQuery('#transformation_identifier_notes').val('');
         location.reload();
     });
-
-
 
 });
 
