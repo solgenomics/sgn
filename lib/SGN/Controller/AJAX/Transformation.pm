@@ -177,7 +177,10 @@ sub get_transformations_in_project :Path('/ajax/transformation/transformations_i
     my @transformations;
     foreach my $r (@$result){
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes) =@$r;
-        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, ''];
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+        my $transformants = $transformation_obj->get_transformants();
+        my $number_of_transformants = scalar(@$transformants);
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };
