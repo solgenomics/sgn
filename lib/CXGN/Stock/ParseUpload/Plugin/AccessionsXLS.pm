@@ -183,6 +183,7 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $do_fuzzy_search = $self->get_do_fuzzy_search();
+    my $append_synonyms = $self->get_append_synonyms();
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -354,6 +355,18 @@ sub _parse_with_plugin {
         #For "updating" existing accessions by adding properties.
         if ($stock_id){
             $row_info{stock_id} = $stock_id;
+
+            # lookup existing accessions, if append_synonyms is selected
+            if ( $append_synonyms ) {
+                my @existing_synonyms;
+                my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+                my $rs = $schema->resultset("Stock::Stockprop")->search({ type_id => $synonym_type_id, stock_id => $stock_id });
+                while( my $r = $rs->next() ) {
+                    push(@existing_synonyms, $r->value);
+                }
+                push(@existing_synonyms, @synonyms);
+                $row_info{synonyms} = \@existing_synonyms;
+            }
         }
 
         my $counter = 0;
