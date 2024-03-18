@@ -7,6 +7,7 @@ $next_new_transformant => undef
 $last_number => undef
 $plant_material
 $vector_construct
+$transformation_notes => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
@@ -26,8 +27,7 @@ $vector_construct
                     <table class="table table-bordered table-hover">
                         <tr><td><b>Plant Material</b></td><td><%$plant_material%></td></tr>
                         <tr><td><b>Vector Construct</b></td><td><%$vector_construct%></td></tr>
-                        <tr><td><b>Notes</b></td><td></td></tr>
-                        <tr><td><b>Plant Selection Marker</b></td><td></td></tr>
+                        <tr><td><b>Notes</b></td><td><%$transformation_notes%></td></tr>
                     </table>
                 </div>
             </div>

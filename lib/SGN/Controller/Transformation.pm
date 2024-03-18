@@ -35,6 +35,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $info = $transformation_obj->get_transformation_info();
     my $plant_material = qq{<a href="/stock/$info->[0]->[0]/view">$info->[0]->[1]</a>};
     my $vector_construct = qq{<a href="/stock/$info->[0]->[2]/view">$info->[0]->[3]</a>};
+    my $transformation_notes = $info->[0]->[4];
     my $result = $transformation_obj->get_transformants();
     my $number_of_transformants = scalar(@$result);
     my $basename = $transformation_name.'_T';
@@ -46,6 +47,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{last_number} = $number_of_transformants;
     $c->stash->{plant_material} = $plant_material;
     $c->stash->{vector_construct} = $vector_construct;
+    $c->stash->{transformation_notes} = $transformation_notes;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{template} = '/transformation/transformation.mas';
 

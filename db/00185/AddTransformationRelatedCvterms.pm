@@ -78,6 +78,9 @@ sub patch {
             'vector_construct_of',
             'transformant_of'
         ],
+        'stock_property' => [
+            'transformation_notes',
+        ],
     };
 
     foreach my $t (keys %$terms){

@@ -92,7 +92,7 @@ sub add_transformation_identifier {
         my $transformation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_project', 'project_type')->cvterm_id();
         my $plant_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'plant_material_of', 'stock_relationship')->cvterm_id();
         my $vector_construct_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'vector_construct_of', 'stock_relationship')->cvterm_id();
-#        my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
+        my $transformation_notes_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property');
 		my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 		my $vector_construct_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
 
@@ -150,9 +150,13 @@ sub add_transformation_identifier {
 			project_id => $transformation_project_id,
 		});
 
+        if ($transformation_notes) {
+            $transformation_identifier_stock->create_stockprops({$transformation_notes_cvterm->name() => $transformation_notes});
+        }
+
         $transformation_stock_id = $transformation_identifier_stock->stock_id();
     };
-    print STDERR "TRANSFORMATION STOCK ID =".Dumper($transformation_stock_id)."\n";
+
     my $transaction_error;
     try {
         $schema->txn_do($coderef);
