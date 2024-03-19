@@ -7,7 +7,7 @@ $user_id
 
 <%perl>
     my $subtitle;
-    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_transformation_project_link" name="create_transformation_project_link" >Add Transformation Project</button>';
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_transformation_project_link" name="create_transformation_project_link" >Add Transformation Project</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_vector_construct_link">Add Vector Construct</button>';
 </%perl>
 
 <br />
@@ -22,3 +22,13 @@ $user_id
 </&>
 
 </div>
+
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('#add_vector_construct_link').click(function() {
+        location.href = '/vector/new';
+    })
+});
+
+</script>

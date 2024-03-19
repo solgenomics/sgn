@@ -29,7 +29,7 @@ $user_id => undef
                 <input type="text" class="form-control input-sm" id="transformation_tree_search" placeholder="Search" />
                 <hr>
 
-                <h5><i>Double click<br />transformation project (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+                <h5><i>Double click<br />transformation project (&nbsp;<span class="glyphicon glyphicon-text-width text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
                 <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
                 <!--
@@ -85,7 +85,7 @@ jQuery(document).ready(function($) {
                         "icon": 'glyphicon glyphicon-folder-open text-danger',
                     },
                     "transformation" : {
-                        "icon": 'glyphicon glyphicon-grain text-success',
+                        "icon": 'glyphicon glyphicon-text-width text-success',
                     }
                 },
                 "search" : {
