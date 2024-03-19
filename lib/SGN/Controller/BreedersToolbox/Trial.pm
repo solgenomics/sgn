@@ -479,9 +479,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $trial_name = $trial->get_name();
+    $trial_name =~ s/ /\_/g;
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
-    #my $temp_file_name = $trial_id . "_" . "$what" . "XXXX";
     my $temp_file_name = $trial_name . "_" . "$what" . "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";

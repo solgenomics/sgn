@@ -220,6 +220,7 @@ sub download {
 
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $trial_name = $selected_trial->get_name();
+    $trial_name =~ s/ /\_/g;
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
