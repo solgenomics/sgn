@@ -56,8 +56,8 @@ $check_vendor_role =>undef
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
-                    <button id="download_item_file_button" class="btn btn-primary">Download Item File</button>
                     <!--
+                    <button id="download_item_file_button" class="btn btn-primary">Download Item File</button>
                     <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
                     -->
                     <button id="generate_item_barcode_button" class="btn btn-primary">Generate Item Barcode</button>
