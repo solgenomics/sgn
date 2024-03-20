@@ -537,6 +537,8 @@ sub upload_seedlots_POST : Args(0) {
     my $organization = $c->req->param("upload_seedlot_organization_name");
     my $upload_from_accessions = $c->req->upload('seedlot_uploaded_file');
     my $upload_harvested_from_crosses = $c->req->upload('seedlot_harvested_uploaded_file');
+    my $upload_seedlots_create_accessions = $c->req->param('upload_seedlots_create_accessions');
+    
     if (!$upload_from_accessions && !$upload_harvested_from_crosses){
         $c->stash->{rest} = {error=>'You must upload a seedlot file!'};
         $c->detach();
@@ -551,7 +553,11 @@ sub upload_seedlots_POST : Args(0) {
         $upload = $upload_harvested_from_crosses;
         $parser_type = 'SeedlotHarvestedXLS';
     }
-
+    if ($upload_seedlots_create_accessions)  {
+	$upload = $upload_from_accessions;
+	$parser_type = 'CreateMissingAccessionsForSeedlotsXLS';
+    }
+    
     my $subdirectory = "seedlot_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -577,6 +583,8 @@ sub upload_seedlots_POST : Args(0) {
     unlink $upload_tempfile;
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin($parser_type);
+    $parser->accession_name_template($c->config->{accession_name_template});
+    
     my $parsed_data = $parser->parse();
 
     if (!$parsed_data) {

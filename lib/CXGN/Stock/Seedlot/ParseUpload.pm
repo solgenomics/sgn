@@ -51,6 +51,12 @@ has 'event_ontology_root' => (
     isa => 'Maybe[Str]'
 );
 
+has 'accession_name_template' => (
+    is => 'rw',
+    isa => 'Maybe[Str]',
+);
+
+
 sub parse {
     my $self = shift;
 
