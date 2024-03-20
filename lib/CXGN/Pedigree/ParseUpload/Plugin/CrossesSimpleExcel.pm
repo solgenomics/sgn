@@ -41,6 +41,7 @@ sub _validate_with_plugin {
     $supported_cross_types{'bulk_open'} = 1; #only female population required
     $supported_cross_types{'bulk'} = 1; #both female population and male accession required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
+    $supported_cross_types{'dihaploid_induction'} = 1; # ditto
     $supported_cross_types{'polycross'} = 1; #both parents required
     $supported_cross_types{'backcross'} = 1; #both parents required, parents can be cross or accession stock type
 
