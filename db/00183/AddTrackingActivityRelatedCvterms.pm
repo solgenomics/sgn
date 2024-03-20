@@ -66,7 +66,8 @@ sub patch {
         ],
         'project_property' => [
             'activity_type',
-            'project_vendor'
+            'project_vendor',
+            'folder_for_tracking_activities'
         ],
         'experiment_type' => [
             'tracking_activity'
