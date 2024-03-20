@@ -365,6 +365,7 @@ sub _parse_with_plugin {
                     push(@existing_synonyms, $r->value);
                 }
                 push(@existing_synonyms, @synonyms);
+                s{^\s+|\s+$}{}g foreach @existing_synonyms;
                 $row_info{synonyms} = \@existing_synonyms;
             }
         }
