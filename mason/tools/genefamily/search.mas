@@ -12,6 +12,32 @@ $action => undef
 
 <& /page/page_title.mas, title=>'Gene family search' &>
 
+
+<h4>Browse Genefamilies</h4>
+
+<table id="genefamily_datatable">
+<thead>
+  <th>Genefamily ID</th><th>Details</th><th>Sequences</th><th>Alignments</th><th>Trees</th></thead>
+  </thead>
+  <tbody>
+  </tbody>
+  </table>
+
+
+<script>
+
+jQuery(document).ready( function() {
+   alert('hello');
+   jQuery('#genefamily_datatable').DataTable( {
+      ajax: '/ajax/tools/genefamily/table',
+      destroy: true
+      });
+      });
+
+</script>
+
+
+
 <%perl>
 
 use SGN::Genefamily;
@@ -125,6 +151,9 @@ Sequences in fasta:</td><td>
 <td colspan="2">
       <pre><% $fasta_data %></pre>
 </td></tr></table>
+
+
+
 
 <%perl>
 }
