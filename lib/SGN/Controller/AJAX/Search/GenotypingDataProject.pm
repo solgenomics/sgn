@@ -301,8 +301,14 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
     if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
         my $filepath = "$dirname/$basename";
 
+        # Check if the file is a vcf (.vcf extension of ##filformat=VCF header on first line)
+        open my $FH, '<', $filepath;
+        my $firstline = <$FH>;
+        close $FH;
+        my $is_a_vcf = rindex($firstline, "##fileformat=VCF", 0) == 0 || $filepath =~ m/\.vcf$/;
+
         # Transpose the VCF file (to a temp file)
-        if ($filepath =~ m/\.vcf$/) {
+        if ($is_a_vcf) {
             my $dir = $c->tempfiles_subdir('download');
             my ($Fout, $temp_file_transposed) = $c->tempfile(TEMPLATE=>"download/download_vcf_XXXXX", SUFFIX=>".vcf", UNLINK=>0);
             open (my $F, "< :encoding(UTF-8)", $filepath) or die "Can't open file $filepath \n";
