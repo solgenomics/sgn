@@ -16,6 +16,7 @@ use Moose;
 use Data::Dumper;
 use JSON;
 use File::Slurp qw | read_file |;
+use File::Basename;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
 use CXGN::Genotype::GenotypingProject;
@@ -341,6 +342,10 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
             close($F);
             close($Fout);
             $filepath = $c->config->{basepath} . '/' . $temp_file_transposed;
+            my ($name,$path,$suffix) = fileparse($basename,qr"\..[^.]*$");
+            if ( $suffix ne '.vcf' ) {
+                $basename = "$basename.vcf";
+            }
         }
 
         my $contents = read_file($filepath);
