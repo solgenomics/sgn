@@ -148,6 +148,10 @@ sub generate_tracking_identifiers_POST : Args(0) {
         $project_id = $project_rs->project_id();
     }
 
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
+    my $all_identifiers = $activity_project->get_project_active_identifiers();
+    my $last_number = scalar (@$all_identifiers);
+
     my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
     my $material_names = $list->elements();
 
@@ -155,8 +159,10 @@ sub generate_tracking_identifiers_POST : Args(0) {
     my @tracking_identifiers;
     my @error_messages;
     foreach my $name (sort @$material_names) {
-        push @tracking_identifiers, [$project_name.":".$name, $name];
-        push @check_identifier_names, $project_name.":".$name;
+        $last_number++;
+        my $tracking_id = $project_name.":".$name."_"."T".(sprintf "%04d", $last_number);
+        push @tracking_identifiers, [$tracking_id, $name];
+        push @check_identifier_names, $tracking_id;
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({

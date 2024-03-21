@@ -142,7 +142,7 @@ sub submit_order_POST : Args(0) {
             my $n = 0;
             foreach my $name (sort @names) {
                 $n++;
-                push @tracking_identifiers, ["order".$order_id.":".$name."_".(sprintf "%04d", $n), $name];
+                push @tracking_identifiers, ["order".$order_id.":".$name."_"."T".(sprintf "%04d", $n), $name];
             }
 
             my $activity_project_name = $user_name."_"."order_progress";
