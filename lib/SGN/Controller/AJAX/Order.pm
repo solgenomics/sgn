@@ -66,13 +66,12 @@ sub submit_order_POST : Args(0) {
 
     my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
     my $items = $list->elements();
-#    print STDERR "ITEMS =".Dumper($items)."\n";
+
     my $catalog_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
     my %group_by_contact_id;
     my @all_new_rows;
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
-        my @ona_info = ();
         my $order_details_ref = decode_json ($ordered_item);
         my %order_details = %{$order_details_ref};
         my $item_name = $order_details{'Item Name'};
@@ -106,8 +105,6 @@ sub submit_order_POST : Args(0) {
         my $item_ref = $group_by_contact_id{$contact_id}{'item_list'};
         my %item_hashes = %{$item_ref};
         my @names = keys %item_hashes;
-        print STDERR "ITEM HASH =".Dumper(\%item_hashes)."\n";
-        print STDERR "NAMES =".Dumper(\@names)."\n";
 
         my @item_list = map { { $_ => $item_hashes{$_} } } sort keys %item_hashes;
 
@@ -141,17 +138,17 @@ sub submit_order_POST : Args(0) {
         my @identifier_stock_ids = ();
         my @tracking_ids = ();
         my $activity_project_id;
-        print STDERR "TRACKING ORDER ACTIVITY =".Dumper($tracking_activity)."\n";
         if ($tracking_activity) {
+            my $n = 0;
             foreach my $name (sort @names) {
-                push @tracking_identifiers, ["order".$order_id.":".$name, $name];
+                $n++;
+                push @tracking_identifiers, ["order".$order_id.":".$name."_".(sprintf "%04d", $n), $name];
             }
 
             my $activity_project_name = $user_name."_"."order_progress";
             my $activity_project_rs = $schema->resultset('Project::Project')->find({name=>$activity_project_name});
             if ($activity_project_rs) {
                 $activity_project_id = $activity_project_rs->project_id();
-                print STDERR "OLD PROJECT ID =".Dumper($activity_project_id)."\n";
             } else {
                 my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
                 $geolocation_lookup->set_location_name('[Computation]');
@@ -176,7 +173,6 @@ sub submit_order_POST : Args(0) {
                 });
 
                 $activity_project_id = $add_activity_project->save_activity_project();
-                print STDERR "NEW PROJECT ID =".Dumper($activity_project_id)."\n";
             }
 
             foreach my $identifier_info (@tracking_identifiers) {
@@ -191,7 +187,6 @@ sub submit_order_POST : Args(0) {
                     user_id => $contact_id
                  });
                 my $tracking_stock_id = $tracking_obj->store();
-                print STDERR "TRACKING STOCK ID =".Dumper($tracking_stock_id)."\n";
                 push @identifier_stock_ids, $tracking_stock_id;
             }
 
@@ -199,7 +194,6 @@ sub submit_order_POST : Args(0) {
             $order_tracking_identifier_prop->tracking_identifiers(\@identifier_stock_ids);
             $order_tracking_identifier_prop->parent_id($order_id);
         	my $prop_id = $order_tracking_identifier_prop->store_sp_orderprop();
-            print STDERR "ORDER PROP ID =".($prop_id)."\n";
 
             if (!$prop_id){
                 $c->stash->{rest} = {error_string => "Error saving your tracking identifiers",};
