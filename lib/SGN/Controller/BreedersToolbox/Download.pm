@@ -12,6 +12,7 @@ use warnings;
 use utf8;
 use JSON::XS;
 use Data::Dumper;
+use CGI;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use File::Slurp qw | read_file |;
@@ -1099,7 +1100,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             $associated_protocol = $protocol_info->get_associated_protocol();
 	    $protocol_id = $associated_protocol->[0]->[0];
 	    print STDERR "using protocol_id from project = $protocol_id\n";
-        } else {
+        } elsif (!defined $genotyping_project_id) {
             my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
             $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
 	    print STDERR "using default protocol_id = $protocol_id\n";
@@ -1155,8 +1156,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my @genotyping_project_list;
     if (defined $genotyping_project_id) {
         push @genotyping_project_list, $genotyping_project_id;
-    } elsif (defined $project_id) {
-	push @genotyping_project_list, $project_id;
     }
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
