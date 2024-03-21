@@ -65,7 +65,7 @@ export function WizardDownloads(main_id,wizard){
         var accession_ids = accessions.map(d=>d.id);
         var trial_ids = (selections["trials"]||[]).map(d=>d.id);
         var protocol_id = protocols.length==1?protocols[0].id:'';
-	var project_id = projects.length==1?projects[0].id:'';
+	var project_id = projects.length>0?projects[0].id:'';
         var chromosome_number = d3.select(".wizard-download-genotypes-chromosome-number").node().value;
         var start_position = d3.select(".wizard-download-genotypes-start-position").node().value;
         var end_position = d3.select(".wizard-download-genotypes-end-position").node().value;
@@ -101,7 +101,7 @@ export function WizardDownloads(main_id,wizard){
         var accession_ids = accessions.map(d=>d.id);
         var trial_ids = (selections["trials"]||[]).map(d=>d.id);
         var protocol_id = protocols.length==1?protocols[0].id:'';
-	var project_id = projects.length==1?projects[0].id:'';
+	var project_id = projects.length>0?projects[0].id:'';
         var download_format = d3.select(".wizard-download-genotypes-grm-format").node().value;
         var maf = d3.select(".wizard-download-genotypes-grm-maf").node().value;
         var marker_filter = d3.select(".wizard-download-genotypes-grm-marker-filter").node().value;
@@ -111,6 +111,7 @@ export function WizardDownloads(main_id,wizard){
         openWindowWithPost(url, {
             ids: accession_ids.join(","),
             protocol_id: protocol_id,
+	    project_id: project_id,
             format: 'accession_ids',
             trial_ids: trial_ids.join(","),
             download_format: download_format,
