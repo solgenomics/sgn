@@ -41,7 +41,7 @@ sub _validate_with_plugin {
     $supported_cross_types{'bulk_open'} = 1; #only female population required
     $supported_cross_types{'bulk'} = 1; #both female population and male accession required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
-    $supported_cross_types{'dihaploid_induction'} = 1; # ditto
+    $supported_cross_types{'dihaploid_induction'} = 1; # only female parent required
     $supported_cross_types{'polycross'} = 1; #both parents required
     $supported_cross_types{'backcross'} = 1; #both parents required, parents can be cross or accession stock type
 
@@ -168,6 +168,9 @@ sub _validate_with_plugin {
             $male_parent =  $worksheet->get_cell($row,4)->value();
         }
 
+	$female_parent =~ s/^\s+|\s+$//g;
+	$male_parent =~ s/^\s+|\s+$//g;
+	
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross unique id missing";
@@ -180,6 +183,14 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: duplicate cross unique id: $cross_name";
         }
 
+	if (($cross_type eq 'double_haploid') || ($cross_type eq 'dihaploid_induction') || ($cross_type eq 'self')) {
+	    if ($female_parent ne $male_parent) {
+		push @error_messages, "For double haploid, dihaploid_induction, and self, female parent needs to be identical to male parent in row $row_name";
+	    }
+	}
+		
+
+	
         #cross type must not be blank
         if (!$cross_type || $cross_type eq '') {
             push @error_messages, "Cell C$row_name: cross type missing";
@@ -203,13 +214,14 @@ sub _validate_with_plugin {
             $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
+	
 
         if (($cross_type eq 'bulk') || ($cross_type eq 'bulk_self') || ($cross_type eq 'bulk_open')) {
-            $female_parent =~ s/^\s+|\s+$//g;
+            #$female_parent =~ s/^\s+|\s+$//g;
             $seen_population_names{$female_parent}++;
             if ($cross_type eq 'bulk_open') {
                 if ($male_parent) {
-                    $male_parent =~ s/^\s+|\s+$//g;
+                    #$male_parent =~ s/^\s+|\s+$//g;
                     $seen_population_names{$male_parent}++;
                 }
             } elsif ($cross_type eq 'bulk') {
@@ -217,23 +229,23 @@ sub _validate_with_plugin {
                 $seen_accession_names{$male_parent}++;
             }
         } elsif (($cross_type eq 'polycross') || ($cross_type eq 'open')) {
-            $female_parent =~ s/^\s+|\s+$//g;
+            #$female_parent =~ s/^\s+|\s+$//g;
             $seen_accession_names{$female_parent}++;
             if ($male_parent) {
-                $male_parent =~ s/^\s+|\s+$//g;
+             #   $male_parent =~ s/^\s+|\s+$//g;
                 $seen_population_names{$male_parent}++;
             }
         } elsif ($cross_type eq 'backcross') {
-            $female_parent =~ s/^\s+|\s+$//g;
+            #$female_parent =~ s/^\s+|\s+$//g;
             $seen_backcross_parents{$female_parent}++;
-            $male_parent =~ s/^\s+|\s+$//g;
+            #$male_parent =~ s/^\s+|\s+$//g;
             $seen_backcross_parents{$male_parent}++;
         } else {
-            $female_parent =~ s/^\s+|\s+$//g;
+            #$female_parent =~ s/^\s+|\s+$//g;
             $seen_accession_names{$female_parent}++;
 
             if ($male_parent){
-                $male_parent =~ s/^\s+|\s+$//g;
+             #   $male_parent =~ s/^\s+|\s+$//g;
                 $seen_accession_names{$male_parent}++;
             }
         }
