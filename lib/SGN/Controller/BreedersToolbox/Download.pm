@@ -1155,6 +1155,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my @genotyping_project_list;
     if (defined $genotyping_project_id) {
         push @genotyping_project_list, $genotyping_project_id;
+    } elsif (defined $project_id) {
+	push @genotyping_project_list, $project_id;
     }
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
