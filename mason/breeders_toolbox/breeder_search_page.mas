@@ -172,6 +172,7 @@ $dataset_id => undef
           <span class="btnn btn-link">Related Genotype Data</span>
         </div>
         <div id="wiz-down-1-c" class="panel-collapse collapse" role="tabpanel">
+          <p style="margin: 15px; text-color: #999; font-size: 90%">Download matching genotype records from the database.  Select a <strong>single genotyping protocol</strong> and <strong>one or more accessions</strong> to download the matching genotype data.</p>
           <table class="table">
             <tr>
               <td colspan="4">
@@ -313,6 +314,16 @@ $dataset_id => undef
             </table>
 
           </div>
+        </div>
+      </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-1-c-a" aria-controls="wiz-down-1-c-a">
+          <span class="btnn btn-link">Archived Genotype Data</span>
+        </div>
+        <div id="wiz-down-1-c-a" class="panel-collapse collapse" role="tabpanel">
+          <p style="margin: 15px; text-color: #999; font-size: 90%">Download the original archived VCF files of entire genotyping projects.  Select <strong>one or more genotyping projects and/or genotyping protocols</strong> to download a VCF file of any matching project(s).</p>
+          <div id="wiz-down-1-c-a-body" style="min-height: 50px"></div>
         </div>
       </div>
 
@@ -499,6 +510,75 @@ $dataset_id => undef
     window.sWizard.reload_lists();
   });
 
+
+  // Wizard Callback: get archived vcf files available for selected genotyping protocol / project
+  window.sWizard.wizard.on_change(function(categories, selections, operations) {
+    var protocols = (selections.genotyping_protocols || []).map((i) => i.id);
+    var projects = (selections.genotyping_projects || []).map((i) => i.id);
+    if ( protocols.length === 0 && projects.length === 0 ) {
+      updateArchivedVCFFiles({ no_geno_selected: true });
+    }
+    else {
+      updateArchivedVCFFiles({ loading: true });
+      jQuery.ajax({
+        url: '/ajax/genotyping_project/has_archived_vcf',
+        method: 'GET',
+        data: {
+          genotyping_protocol_id: !projects || projects.length === 0 ? (protocols.length > 0 ? protocols.join(',') : undefined) : undefined,
+          genotyping_project_id: projects.length > 0 ? projects.join(',') : undefined,
+          limit: true
+        },
+        error: function(response) {
+          console.log(`ERROR: Could not query database for archived vcf files [protocols: ${protocols.join(',')}, projects: ${projects.join(',')}]`);
+          console.log(response);
+          updateArchivedVCFFiles({ error: true });
+        },
+        success: function(response) {
+          updateArchivedVCFFiles({ data: response });
+        }
+      });
+    }
+  });
+  updateArchivedVCFFiles({ no_geno_selected: true });
+  
+  // Set the display of the Archived Genotype Data section
+  function updateArchivedVCFFiles({ no_geno_selected = false, loading = false, error = false, data = {} } = {}) {
+    let html = '';
+    if ( no_geno_selected ) {
+      html += "<p style='text-align: center; margin: 15px; font-size: 90%'>Select one or more <em>genotyping protocols</em> and/or <em>genotyping projects</em>...</p>";
+    }
+    else if ( loading ) {
+      html += "<p style='text-align: center; margin: 15px'>Loading...</p>";
+    }
+    else if ( error ) {
+      html += "<p style='text-align: center; margin: 15px'>Error: Could not check for archived files</p>";
+    }
+    else if ( data ) {
+      html += "<table class='table table-hover table-striped'>";
+      html += "<thead><tr><th>Protocol</th><th>Project</th><th>VCF File</th></tr></thead>";
+      html += "<tbody>";
+      Object.keys(data).forEach((proj_id) => {
+        const files = data[proj_id];
+        files.forEach((file) => {
+          html += "<tr>";
+          html += `<td><a href="/breeders_toolbox/protocol/${file.genotyping_protocol_id}" target="_blank">${file.genotyping_protocol_name}</td>`;
+          html += `<td><a href="/breeders/trial/${file.genotyping_project_id}" target="_blank">${file.genotyping_project_name}</td>`;
+          if ( file.exists === 'true' ) {
+            html += `<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=${file.genotyping_project_id}&basename=${file.basename}" target="_blank">Download</a></td>`;
+          }
+          else {
+            html += "<td>File not found</td>";
+          }
+          html += "</tr>";
+        });
+      });
+      html += "</tbody>";
+      html += "</table>";
+    }
+
+    jQuery('#wiz-down-1-c-a-body').html(html);
+  }
+
   // Wizard Callback: get chromosome names for a single selected genotyping protocol
   var SELECTED_GENOTYPING_PROTOCOL = undefined;
   var SELECTED_GENOTYPING_PROJECT = undefined;
@@ -559,7 +639,7 @@ $dataset_id => undef
         $(".wizard-download-genotypes-info2").hide();
       }
     } else if ( selected_genotyping_projects.length >= 1 ) {
-      var selected_genotyping_project = selected_genotyping_projects.length === 1 ? selected_genotyping_projects[0].id : "";
+      var selected_genotyping_project = selected_genotyping_projects[0].id;
       if ( selected_genotyping_project !== SELECTED_GENOTYPING_PROJECT ) {
         console.log("project new " + selected_genotyping_project);
         SELECTED_GENOTYPING_PROJECT = selected_genotyping_project;

@@ -316,6 +316,22 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{vendor_id} = $vendor_id;
         $c->stash->{template} = '/tracking_activities/activity_project.mas';
     }
+    elsif ($trial_type_name eq "transformation_project"){
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = $program_object->get_all_locations_by_breeding_program();
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
+        $c->stash->{template} = '/transformation/transformation_project.mas';
+    }
     else {
         my $field_management_factors = $c->config->{management_factor_types};
         my @management_factor_types = split ',',$field_management_factors;

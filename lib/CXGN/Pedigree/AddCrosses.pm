@@ -259,7 +259,7 @@ sub add_crosses {
                 });
             }
 
-            if ($cross_type eq "self" && $female_parent) {
+            if ( ( $cross_type eq "self" || $cross_type eq "dihaploid_induction" || $cross_type eq "doubled_haploid") &&  $female_parent) {
                 $cross_stock->find_or_create_related('stock_relationship_objects', {
                     type_id => $male_parent_cvterm->cvterm_id(),
                     object_id => $cross_stock->stock_id(),

@@ -446,11 +446,12 @@ is_deeply(\@all_project_types, [
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
-	        'heterosis_trial',
-	      	'misc_trial',
-	        'phenotyping_trial',
+          'heterosis_trial',
+          'misc_trial',
+          'phenotyping_trial',
           'pollinating_trial',
-          'storage_trial'
+          'storage_trial',
+          'transformation_project'
       ], "check get_all_project_types");
 
 

@@ -621,6 +621,9 @@ sub get_jstree_html {
     elsif ($project_type_of_interest eq 'activity') {
         $local_type_of_interest = 'activity_record';
         $folder_type_of_interest = 'folder_for_tracking_activities';
+	}
+    elsif ($project_type_of_interest eq 'transformation') {
+        $local_type_of_interest = 'transformation_project';
     }
 
     $html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
@@ -689,10 +692,9 @@ sub _jstree_li_html {
         $url = "/breeders/program/".$id;
     } elsif ($type eq 'genotyping_project') {
 		$url = "/breeders/trial/".$id;
-    } elsif ($type eq 'activity') {
+    } elsif ($type eq 'activity' || $type eq 'transformation') {
         $url = "/breeders/trial/".$id;
     }
-
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
 }
