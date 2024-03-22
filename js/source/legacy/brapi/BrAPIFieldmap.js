@@ -2738,29 +2738,28 @@
 	      return Promise.reject('There are no plots loaded');
 	    }
 	    let brapi = BrAPI(this.brapi_endpoint, "2.0", this.opts.brapi_auth);
-	    let nodes = [];
-	    this.plots.features.forEach((plot)=>{
-	      let params = {
-	        observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: this.opts.brapi_levelName }},
-	        observationUnitDbId: plot.properties.observationUnitDbId
-	      };
-	      // XXX Using internal brapijs method for now
-	      nodes.push(brapi.simple_brapi_call({
-	        'defaultMethod': 'put', // TODO patch
-	        'urlTemplate': '/observationunits/{observationUnitDbId}',
-	        'params': params,
-	        'behavior': 'map',
-	      }));
-	    });
-	    return new Promise((resolve, reject)=> {
-	      if (nodes.length > 0) {
-	        brapi.join(...nodes).all(()=> {
-	          resolve('Plots updated!');
-	        });
-	      } else {
-	        reject('There are no plots loaded');
-	      }
-	    })
+
+			let params = {};
+			this.plots.features.forEach((plot)=>{
+				params[plot.properties.observationUnitDbId] = {
+					observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: this.opts.brapi_levelName }}
+				};
+			});
+
+			return new Promise((resolve, reject)=> {
+				if ( Object.keys(params).length > 0 ) {
+					brapi.simple_brapi_call({
+						'defaultMethod': 'put',
+						'urlTemplate': '/observationunits?pageSize={pageSize}',
+						'params': { pageSize: Object.keys(params).length+1, ...params },
+						'behavior': 'map'
+					}).all(() => {
+						return resolve("Plots updated!");
+					});
+				} else {
+					return reject('There are no plots loaded');
+				}
+			});
 	  }
 	}
 

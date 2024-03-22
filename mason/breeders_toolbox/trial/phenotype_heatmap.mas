@@ -756,7 +756,12 @@ jQuery(document).ready( function() {
             var observations;
             jQuery.ajax({
                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-                url: '/brapi/v2/observations?studyDbId='+trial_id+'&pageSize=10000',
+                method: 'GET',
+                url: '/brapi/v2/observations',
+                data: {
+                    studyDbId: trial_ids,
+                    pageSize: 10000
+                },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -1185,7 +1190,8 @@ jQuery(document).ready( function() {
         jQuery("#d3legend").css("display", "none");
     });
 
-    jQuery(document).on('change', '#trait_list_dropdown', function () {
+    jQuery(document).on('change', '#trait_list_dropdown', on_change_view);
+    function on_change_view() {
         selected = jQuery("#trait_list_dropdown").val();
         if (selected == 'fieldmap'){
             d3.select("svg").remove();
@@ -1216,12 +1222,12 @@ jQuery(document).ready( function() {
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#view_ctrl_button").show();
-            jQuery("#include_linked_trials").css("display", "none");
+            jQuery("#include_linked_trials").css("display", "block");
             FieldMap.heatmap_selected = true;
             FieldMap.heatmap_selection = selected;
             heatmap(selected);
         }
-    });
+    }
 
     jQuery(document).on('change', '#include_linked_trials_checkmark', () => {
         trial_ids = [trial_id];
@@ -1269,6 +1275,9 @@ jQuery(document).ready( function() {
             jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
             jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
             jQuery("#include_linked_trials_list_container").css("display", include_linked_trials ? 'block' : 'none');
+            jQuery("#trait_list_dropdown").val("fieldmap");
+            on_change_view();
+            FieldMap.heatmap_queried = false;
             field_map_view();
         }
     });

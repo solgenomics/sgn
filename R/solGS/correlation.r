@@ -143,6 +143,9 @@ if (is.null(correInputData)) {
   stop("Can't run correlation analysis. There is no input data.")
 }
 
+correInputData <- correInputData %>%
+                  select(where(~n_distinct(.) > 2)) 
+
 coefpvalues <- rcor.test(correInputData,
                          method="pearson",
                          use="pairwise"

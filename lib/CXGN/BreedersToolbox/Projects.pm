@@ -128,19 +128,29 @@ sub get_breeding_program_by_name {
 sub _get_all_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+    my $include_dateless_trials = shift || 1;
+
     my $dbh = $self->schema->storage->dbh();
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
     my $trials = [];
     my $h;
+
+    my $datelessq;
+    if ($include_dateless_trials) {
+	$datelessq = " trial.create_date IS NULL OR ";
+    }
+
     if ($breeding_project_id) {
 	# need to convert to dbix class.... good luck!
 	#my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id=? AND (projectprop.type_id IS NULL OR projectprop.type_id != ?))";
-	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id = ?)";
+	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE ( $datelessq (trial.create_date > ? and trial.create_date < ?) ) and project.project_id = ?";
 
 	$h = $dbh->prepare($q);
 	#$h->execute($breeding_project_id, $cross_cvterm_id);
-	$h->execute($breeding_project_id);
+	$h->execute($start_date, $end_date, $breeding_project_id);
 
     }
     else {
@@ -166,11 +176,13 @@ sub get_trials_by_breeding_program {
     my $drone_run_band_projects;
     my $analyses_projects;
     my $sampling_trial_projects;
+    my $transformation_projects;
 
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
     my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
+    my $transformation_project_cvterm_id = $self->get_transformation_project_cvterm_id();
 
     my %projects_that_are_crosses;
     my %project_year;
@@ -183,6 +195,7 @@ sub get_trials_by_breeding_program {
     my %projects_that_are_drone_run_band_projects;
     my %projects_that_are_analyses;
     my %projects_that_are_sampling_trials;
+    my %projects_that_are_transformation_projects;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
         #print STDERR "PROP: $prop, $propvalue \n";
@@ -223,6 +236,9 @@ sub get_trials_by_breeding_program {
                 if ($propvalue eq "drone_run_band") {
                     $projects_that_are_drone_run_band_projects{$id} = 1;
                 }
+                if ($propvalue eq "transformation_project") {
+                    $projects_that_are_transformation_projects{$id} = 1;
+                }
             }
         }
     }
@@ -248,10 +264,12 @@ sub get_trials_by_breeding_program {
             push @$analyses_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_sampling_trials{$id_key}) {
             push @$sampling_trial_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_transformation_projects{$id_key}) {
+            push @$transformation_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         }
     }
 
-    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects);
+    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects);
 }
 
 sub get_genotyping_trials_by_breeding_program {
@@ -731,6 +749,13 @@ sub get_crossing_trial_cvterm_id {
   return $crossing_trial_cvterm_id->cvterm_id();
 }
 
+sub get_transformation_project_cvterm_id {
+    my $self = shift;
+
+    my $transformation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'transformation_project',  'project_type');
+    return $transformation_project_cvterm_id->cvterm_id();
+}
+
 sub _get_design_trial_cvterm_id {
     my $self = shift;
      my $cvterm = $self->schema->resultset("Cv::Cvterm")
@@ -774,7 +799,7 @@ sub get_related_treatments {
 	    treatment_details => {},
 	};
 
-	
+
     }
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
 

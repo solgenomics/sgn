@@ -31,6 +31,7 @@ experiment_type	pedigree experiment
 experiment_type	phenotyping_experiment				00052
 experiment_type	sampling_layout	For saving sampling trials	11/25/2020	nm529	00132
 experiment_type	seedlot_experiment				00077
+experiment_type transformation_experiment  tt15  00184
 experiment_type	treatment_experiment				00081
 genotype_property	igd number
 genotype_property	infinium array					sgn database
@@ -604,6 +605,7 @@ project_property	file_metadata_json For recording metadata of intercross files (
 project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071
 project_property	folder_for_genotyping_projects	For determining if a folder appears on manage genotyping projects page		tt15	00164
 project_property	folder_for_genotyping_trials	For determining if a folder appears on manage genotyping plate page	6/20/18	nm529	00098
+project_property    folder_for_transformations  tt15  00184
 project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071
 project_property	genomic selection
 project_property	genotyping_facility	For genotyping plate to indicate where the plate was submitted	2/16/2017	nm529	00091
@@ -671,6 +673,7 @@ project_type	Seed Multiplication
 project_type	Sensory trial trials involving sensory panel traits usually measured by multiple panelists	07/05/2022	nm249	00160
 project_type	Specialty Trial		 00116
 project_type	Storage				00082
+project_type    transformation_project  00184 tt15
 project_type	Uniform Yield Trial				00052
 project_type	Variety Release Trial
 protocol_property	analysis_model_properties_multi_trial	Properties of analysis model for single/multi trials in json	3/15/2021	nm529	00140
@@ -767,6 +770,7 @@ stock_property	T2				00052
 stock_property	Terminators	Vector property	1/19/2023	mrf252	00164
 stock_property	tissue_sample_index_number				00089
 stock_property	tissue_type	For indicating tissue type in genotype plate well	2/15/2018	nm529	00091
+stock_property  transformation_notes  tt15  00184
 stock_property	transgenic				00052
 stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076
 stock_property	variety	Found in editable_stock_props
@@ -784,6 +788,7 @@ stock_relationship	male_plant_of			00094
 stock_relationship	male_plot_of		00086
 stock_relationship	member_of				00052
 stock_relationship	offspring_of				00052
+stock_relationship  plant_material_of  tt15  00184
 stock_relationship	plant_of				00052
 stock_relationship	plant_of_subplot				00084
 stock_relationship	plot_of				00052
@@ -792,6 +797,8 @@ stock_relationship	scion_of					00079
 stock_relationship	seed transaction				00077
 stock_relationship	subplot_of				00084
 stock_relationship	tissue_sample_of				00052
+stock_relationship  transformant_of  tt15  00184
+stock_relationship  vector_construct_of  tt15  00184
 stock_type	accession				00052
 stock_type	analysis_instance	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 stock_type	backcross population				00052
@@ -808,6 +815,7 @@ stock_type	seedlot				00077
 stock_type	subplot				00084
 stock_type	tissue_sample				00052
 stock_type	training population				00052
+stock_type  transformation  tt15  00184
 stock_type	vector_construct				00052
 trait_property	cvterm_additional_info
 trait_property	trait_attribute

@@ -26,6 +26,9 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
     phenotype_max_value=>$phenotype_max_value,
+    start_date => $start_date,
+    end_date => $end_date,
+    include_dateless_items => $include_dateless_items,
     limit=>$limit,
     offset=>$offset
 );
@@ -159,7 +162,25 @@ has 'phenotype_min_value' => (
 has 'phenotype_max_value' => (
     isa => 'Str|Undef',
     is => 'rw'
-);
+    );
+
+has 'start_date' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    default => sub { return "1900-01-01"; },
+    );
+
+has 'end_date' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    default => sub { return "2100-12-31"; },
+    );
+
+has 'include_dateless_items' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    default => sub { return 1; },
+    );
 
 has 'limit' => (
     isa => 'Int|Undef',
@@ -200,6 +221,9 @@ sub get_phenotype_matrix {
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
+	    start_date => $self->start_date(),
+	    end_date => $self->end_date(),
+	    include_dateless_items => $self->include_dateless_items(),
             limit=>$self->limit,
             offset=>$self->offset
         }
