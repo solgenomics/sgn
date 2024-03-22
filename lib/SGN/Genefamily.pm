@@ -21,11 +21,23 @@ package SGN::Genefamily;
 
 use Moose;
 
-use Module::Pluggable require => 1;
+with 'MooseX::Object::Pluggable';
 use namespace::autoclean;
 use File::Slurp qw/slurp/;
 use File::Spec::Functions;
 use File::Basename qw/basename/;
+
+=head2 accessors genefamily_method()
+
+=cut
+
+has 'genefamily_format' => (
+    is => 'rw',
+    isa => 'Str',
+    );
+
+
+
 
 =head2 accessors name()
 
@@ -68,20 +80,20 @@ has 'files_dir' => (
     required => 1,
    );
 
-=head2 dataset
+=head2 build
 
- Usage:        my $d = $gf->dataset()
+ Usage:        my $d = $gf->build()
  Desc:         under the genefamily dir (files_dir), a number of sub-dirs
                should be present, each of which represents a separate
                gene family clustering (for example, based on different
                species or different clustering parameters).
- Property:     the dataset name [string]
+ Property:     the build name [string]
  Side Effects:
  Example:
 
 =cut
 
-has 'dataset' => (
+has 'build' => (
     is       => 'rw',
     required => 1,
    );
@@ -187,38 +199,36 @@ sub get_member_ids {
 
 }
 
-=head2 get_available_datasets
+=head2 get_available_builds
 
- Usage:        my @ds = SGN::Genefamily->get_available_datasets($DIR)
- Desc:         a class function that returns the available datasets
- Ret:          a list of dataset names
- Args:         the $DIR where the datasets are located.
+ Usage:        my @ds = SGN::Genefamily->get_available_builds($DIR)
+ Desc:         a class function that returns the available builds
+ Ret:          a list of build names
+ Args:         the $DIR where the builds are located.
  Side Effects:
  Example:
 
 =cut
 
-sub get_available_datasets {
+sub get_available_builds {
     my $class = shift;
     my $path  = shift;
-    my @dirs  = map { basename($_) } grep -d, glob $self->files_dir()."/".$self->dataset()."/*";
+    my @dirs  = map { basename($_) } grep -d, glob $path."/*";
     return @dirs;
 }
 
 sub get_path {
     my $self = shift;
-    return catfile( $self->files_dir(), $self->dataset() );
+    return catfile( $self->files_dir(), $self->build() );
 }
 
 sub table {
     my $self = shift;
 
-    my $table;
-    foreach my $p ($self->plugins()) {
-	if ($self->genefamily_format() eq $p->name()) {
-	    $table = $p->table();
-	}
-    }
+    my $plugin = $self->genefamily_format();
+    $self->load_plugin($plugin);
+    my $table = $self->get_data($self->build());
+
     return $table;
 }
     

@@ -21,7 +21,7 @@ sub search : Path('/tools/genefamily/search') Args(0) {
 	if (grep(/curator|genefamily_editor/, $c->user->get_object()->get_roles() )) { 
 	    
 	    $c->stash->{genefamily_id} = $c->req->param("genefamily_id") || '';
-	    $c->stash->{dataset} = $c->req->param("dataset") || '';
+	    $c->stash->{build} = $c->req->param("build") || '';
 	    $c->stash->{member_id} = $c->req->param("member_id") || '';
 	    $c->stash->{action} = $c->req->param("action") || '';
 	    

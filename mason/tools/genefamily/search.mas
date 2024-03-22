@@ -4,7 +4,7 @@
 </%doc>
 
 <%args>
-$dataset
+$build => "dummy_build_test"
 $genefamily_id => undef
 $member_id => undef
 $action => undef
@@ -50,7 +50,7 @@ if ($genefamily_id eq '') { $genefamily_id=0; }
 if ($action eq 'detail') {
     my $gf = SGN::Genefamily->new(
         name      => $genefamily_id,
-        dataset   => $dataset,
+        build   => $build,
         files_dir => $DIR,
        );
 
@@ -159,8 +159,8 @@ Sequences in fasta:</td><td>
 }
 
 if ($action eq 'search' && $member_id) {
-    die 'must provide dataset' unless $dataset;
-    my $member_file = catfile($DIR,$dataset,'genefamily_defs.txt');
+    die 'must provide build' unless $build;
+    my $member_file = catfile($DIR,$build,'genefamily_defs.txt');
     open (my $F, "<", $member_file) || die "can't open family file $member_file";
     my $family_nr = 0;
     my $found = 0;
@@ -178,9 +178,9 @@ if ($action eq 'search' && $member_id) {
 </%perl>
 
         <form name="genefamily_display_form">
-        In dataset <b><% $dataset %></b>, sequence <% $member_id %> is in family <% $family_nr %>.
+        In build <b><% $build %></b>, sequence <% $member_id %> is in family <% $family_nr %>.
         <input type="hidden" name="genefamily_id" value="<% $family_nr %>" />
-	<input type="hidden" name="dataset" value="<% $dataset %>" />
+	<input type="hidden" name="build" value="<% $build %>" />
 	  <input type="hidden" name="action" value="detail" />
 	  <input type="submit" name="view_family" value="view family <% $family_nr %>" />
         </form>
@@ -193,12 +193,12 @@ if ($action eq 'search' && $member_id) {
 %}
 
 <%perl>
-my @datasets = SGN::Genefamily->get_available_datasets($DIR);
+my @builds = SGN::Genefamily->get_available_builds($DIR);
 
-my $select = '<select name="dataset">';
+my $select = '<select name="build">';
 my $selected = "";
-foreach my $d (@datasets) {
-  if ($d eq $dataset) { $selected="selected=\"selected\" "; }
+foreach my $d (@builds) {
+  if ($d eq $build) { $selected="selected=\"selected\" "; }
   else { $selected= ""; }
   $select .= qq | <option value="$d" $selected>$d</option> |;
 }

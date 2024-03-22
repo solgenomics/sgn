@@ -1,12 +1,17 @@
 
-package SGN::Genefamily::Plugin::Orthofinder.pm
+package SGN::Genefamily::Plugin::Orthofinder;
 
-use Moose;
+use Moose::Role;
 
 sub get_data {
     my $self = shift;
-    
-    open(my $F, "<", $self->genefamily_dir()."/".$self->build()."/genefamily_defs") || die "Can't find gene family definition file";
+
+    my $build = shift;
+
+    my $genefamily_definition_file =  $self->files_dir()."/$build/genefamily_defs.txt";
+
+    print STDERR "Working with definition file at $genefamily_definition_file\n";
+    open(my $F, "<", $genefamily_definition_file) || die "Can't find gene family definition file";
     
     my $header = <$F>;
     chomp($header);
@@ -17,6 +22,11 @@ sub get_data {
     while (<$F>) {
 	chomp;
 	my ($orthogroup, @per_species_members) = split/\t/;
+
+	my $sequence_link = qq | <a href="/tools/genefamily/$build/fasta/$orthogroup.fa">seqs</a> |;
+	my $alignment_link = qq | <a href="/tools/genefamily/$build/alignments/$orthogroup.aln">alignment</a> |;
+	my $tree = qq | <a href="/tools/genefamily/$build/trees/$orthogroup.tree">tree</a> |;
+	
 	my $sequence_link = "<a href=\"/tools/genefamily/$build/...\">seqs</a>";
 	my $alignment_link = "<a href=\"\">alignments</a>";
 	my $tree = "<a>tree</a>";
@@ -30,6 +40,7 @@ sub get_data {
 	my $members = join(",", @all_members);
 	push @table, [$orthogroup, $sequence_link, $alignment_link, $tree, $members];
     }
+    return \@table;
 }
 
 
