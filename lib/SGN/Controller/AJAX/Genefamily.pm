@@ -10,20 +10,15 @@ sub browse_families_table :Path('/ajax/tools/genefamily/table') Args(0) {
     my $c = shift;
 
     my $build = $c->req->param("build");
+
+    my $genefamily_dir = $c->config->{genefamily_dir};
+    my $genefamily_format = $c->config->{genefamily_format};
+
+    my $gf = CXGN::Genefamily->new( { genefamily_dir => $genefamily_dir, genefamily_format => $genefamily_format });
+
+    my $data_ref = $gf -> table();
     
-    open(my $F, "<", $c->config->{genefamily_dir}."/$build/genefamily_defs") || die "Can't find gene family definition file";
-
-    my @table;
-    while (<$F>) {
-	chomp;
-	my ($orthogroup, $members) = split/\t/;
-	my $sequence_link = "<a href=\"/tools/genefamily/$build/...\">seqs</a>";
-	my $alignment_link = "<a href=\"\">alignments</a>";
-	my $tree = "<a>tree</a>";
-	push @table, [$orthogroup, $sequence_link, $alignment_link, $tree, $members];
-    }
-
-    $c->stash->{rest} = { data => \@table };
+    $c->stash->{rest} = { data => $data_ref };
 
 }
     

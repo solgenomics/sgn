@@ -20,6 +20,8 @@ Methods in this class include:
 package SGN::Genefamily;
 
 use Moose;
+
+use Module::Pluggable require => 1;
 use namespace::autoclean;
 use File::Slurp qw/slurp/;
 use File::Spec::Functions;
@@ -199,7 +201,7 @@ sub get_member_ids {
 sub get_available_datasets {
     my $class = shift;
     my $path  = shift;
-    my @dirs  = map { basename($_) } grep -d, glob "$path/*";
+    my @dirs  = map { basename($_) } grep -d, glob $self->files_dir()."/".$self->dataset()."/*";
     return @dirs;
 }
 
@@ -207,5 +209,18 @@ sub get_path {
     my $self = shift;
     return catfile( $self->files_dir(), $self->dataset() );
 }
+
+sub table {
+    my $self = shift;
+
+    my $table;
+    foreach my $p ($self->plugins()) {
+	if ($self->genefamily_format() eq $p->name()) {
+	    $table = $p->table();
+	}
+    }
+    return $table;
+}
+    
 
 1;
