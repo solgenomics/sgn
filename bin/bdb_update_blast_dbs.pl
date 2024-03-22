@@ -52,6 +52,8 @@ sub usage {
 
   -f <db name>  force-update the DB with the given file base (e.g. 'genbank/nr')
 
+  -a force update all dbs in blast dir - override needs_update and run makeblastdb on all blast datasets found in filebase
+
    Current list of file_bases:
 
 EOU
@@ -59,7 +61,7 @@ EOU
 
 
 our %opt;
-getopts('xt:s:d:f:H:D:p:U:h',\%opt) or die "Invalid arguments";
+getopts('axt:d:f:H:D:p:U:h',\%opt) or die "Invalid arguments";
 
 $opt{t} ||= File::Spec->tmpdir;
 
@@ -93,12 +95,14 @@ unless(@dbs) {
 	: "No dbs found in database.\n";
 }
 
+my $count;
+my @errs;
+
 foreach my $db (@dbs) {
 
-    print STDERR "Processing database ".$db->title()."\n";
-
+    print STDERR "Processing database ".$db->title(). "\n".  $db->file_base . "\n" ;
     #check if the blast db needs an update
-    unless($opt{f} || $db->needs_update) {
+    unless($opt{f} || $db->needs_update || $opt{a}) {
 	print $db->file_base." is up to date.\n";
 	next;
     }
@@ -109,14 +113,18 @@ foreach my $db (@dbs) {
 	     warn $db->file_base." needs to be updated, but has no source_url.  Skipped.\n";
 	     next;
     }
-    my $source_url = $db->source_url ;
-    $source_url =~ s/^ftp:\/\/ftp.sgn.cornell.edu/http:\/\/solgenomics.net\/ftp/;
+    ###########
+    ###do not use source_url. Need to make sure all db fasta files are in the blast basedir
+    #my $source_url = $db->source_url ;
+    #$source_url =~ s/^ftp:\/\/ftp.sgn.cornell.edu/http:\/\/solgenomics.net\/ftp/;
+    ###########
+    my $file_path =  $opt{d} . $db->file_base;
 
     if( $opt{x} ) {
-	     print "Would update ".$db->file_base." from source url ".$source_url."\n";
+	     print "Would update ".$db->file_base." from file  ".$file_path."\n";
 	      next;
     } else {
-	     print "Updating ".$db->file_base." from source url...\n";
+	     print "Updating ".$db->file_base." from file...\n";
     }
 
     eval {
@@ -127,13 +135,16 @@ foreach my $db (@dbs) {
 	if( my $perm_error = $db->check_format_permissions() ) {
 	    die "Cannot format ".$db->file_base.":\n$perm_error";
 	}
-  my $file_path =  $opt{s} . $_->file_base;
+
 	#download the sequences from the source url to a tempfile
 	print STDERR "Reading source file (".$file_path.")...\n";
-	my (undef,$sourcefile) = tempfile('blastdb-source-XXXXXXXX',
-					  DIR => $opt{t},
-					  UNLINK => 1,
-	    );
+
+  #### no longer used. Check if some blast dbs need to be copied manually to the blast basedir
+  #use source_url only if file not found in file_path
+  #my (undef,$sourcefile) = tempfile('blastdb-source-XXXXXXXX',
+	#				  DIR => $opt{t},
+	#				  UNLINK => 1,
+	 #   );
 
 #	my $wget_opts = { cache => 0 };
 #	$wget_opts->{gunzip} = 1 if $source_url =~ /\.gz$/i;
@@ -141,15 +152,20 @@ foreach my $db (@dbs) {
 
 	#formatdb it into the correct place
 	print STDERR "Formatting database...";
-	$db->format_from_file($sourcefile);
+	$db->format_from_file($file_path);
 
-	unlink $sourcefile or warn "$! unlinking tempfile '$sourcefile'";
+	#unlink $sourcefile or warn "$! unlinking tempfile '$sourcefile'";
 
 	print $db->file_base." done.\n";
     }; if( $EVAL_ERROR ) {
-	print "Update failed for ".$db->file_base.":\n$EVAL_ERROR";
-    }
+        print STDERR "Update failed for ".$db->file_base.":\n$EVAL_ERROR";
+        push(@errs , "Update failed for ".$db->file_base.":\n$EVAL_ERROR\n");
+       }
+      $count++;
+  }
 
-}
+  print STDERR "Updated $count blast dbs\n";
+  print STDERR  join(", ", @errs);
+
 
 $dbh->disconnect();
