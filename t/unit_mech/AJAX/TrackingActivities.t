@@ -80,20 +80,20 @@ my $identifier_stock_id_3 = $schema->resultset("Stock::Stock")->find({ uniquenam
 
 my $time = DateTime->now();
 my $timestamp_1 = $time->ymd() . "_" . $time->hms();
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120001_T0001', 'selected_type' => 'subculture_count', 'input' => '4', 'note' => 'test', 'record_timestamp' => $timestamp_1 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120001_T0001', 'selected_type' => 'subculture_count', 'input' => '4', 'notes' => 'test', 'record_timestamp' => $timestamp_1 ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
 my $timestamp_2 = $time->ymd();
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120001_T0001', 'selected_type' => 'subculture_count', 'input' => '10', 'note' => 'test 2', 'record_timestamp' => $timestamp_2 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120001_T0001', 'selected_type' => 'subculture_count', 'input' => '10', 'notes' => 'test 2', 'record_timestamp' => $timestamp_2 ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120002_T0002', 'selected_type' => 'subculture_count', 'input' => '7', 'note' => 'test', 'record_timestamp' => $timestamp_1 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120002_T0002', 'selected_type' => 'subculture_count', 'input' => '7', 'notes' => 'test', 'record_timestamp' => $timestamp_1 ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120002_T0002', 'selected_type' => 'rooted_count', 'input' => '3', 'note' => 'test', 'record_timestamp' => $timestamp_2 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120002_T0002', 'selected_type' => 'rooted_count', 'input' => '3', 'notes' => 'test', 'record_timestamp' => $timestamp_2 ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 

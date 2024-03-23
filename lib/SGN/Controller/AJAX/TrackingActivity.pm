@@ -223,7 +223,7 @@ sub activity_info_save_POST : Args(0) {
     my $tracking_identifier = $c->req->param("tracking_identifier");
     my $selected_type = $c->req->param("selected_type");
     my $input = $c->req->param("input");
-    my $note = $c->req->param("note");
+    my $notes = $c->req->param("notes");
     my $record_timestamp = $c->req->param("record_timestamp");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -235,7 +235,7 @@ sub activity_info_save_POST : Args(0) {
         input => $input,
         timestamp => $record_timestamp,
         operator_id => $user_id,
-        note => $note,
+        notes => $notes,
     });
     my $return = $add_activity_info->add_info();
 #    print STDERR "ADD INFO =".Dumper ($add_activity_info->add_info())."\n";
@@ -290,8 +290,8 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                     push @each_timestamp_details, "operator".":"."".$operator_name;
                     my $input = $details_hash{$timestamp}{'input'};
                     push @each_timestamp_details, "count".":"."".$input;
-                    my $note = $details_hash{$timestamp}{'note'};
-                    push @each_timestamp_details, "note".":"."".$note;
+                    my $notes = $details_hash{$timestamp}{'notes'};
+                    push @each_timestamp_details, "notes".":"."".$notes;
 
                     push @each_timestamp_details, $empty_string;
 

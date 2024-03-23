@@ -46,9 +46,9 @@ $activity_headers
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-3 control-label">Note:</label>
+            <label class="col-sm-3 control-label">Notes:</label>
             <div class="col-sm-5">
-                <textarea class="form-control" id="record_page_note" name="record_page_note" ></textarea>
+                <textarea class="form-control" id="record_page_notes" name="record_page_notes" ></textarea>
             </div>
         </div>
         <div class="form-group">
@@ -178,7 +178,7 @@ $(window).ready( function() {
         var selected_type = jQuery('#record_page_type_select').val();
         var input = jQuery('#record_page_info_input').val();
         var record_timestamp = jQuery('#record_timestamp_record_page').val();
-        var note = jQuery('#record_page_note').val();
+        var notes = jQuery('#record_page_notes').val();
 
         if (identifier_name == '') {
             alert("Please scan an identifier name barcode");
@@ -203,7 +203,7 @@ $(window).ready( function() {
                 'selected_type': selected_type,
                 'input': input,
                 'record_timestamp': record_timestamp,
-                'note': note,
+                'notes': notes,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -228,7 +228,7 @@ $(window).ready( function() {
         jQuery('input[name="record_page_identifier_name_input"]').val('');
         jQuery('#record_page_type_select').val('');
         jQuery('#record_page_info_input').val('');
-        jQuery('#record_page_note').val('');
+        jQuery('#record_page_notes').val('');
         location.reload();
     });
 

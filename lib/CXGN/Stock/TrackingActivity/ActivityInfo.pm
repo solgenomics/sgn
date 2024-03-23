@@ -62,7 +62,7 @@ has 'timestamp' => (
     required => 1
 );
 
-has 'note' => (
+has 'notes' => (
     isa =>'Str|Undef',
     is => 'rw',
 );
@@ -75,7 +75,7 @@ sub add_info {
     my $input = $self->get_input();
     my $operator_id = $self->get_operator_id();
     my $timestamp = $self->get_timestamp();
-    my $note = $self->get_note();
+    my $notes = $self->get_notes();
     my $error;
 
     my $coderef = sub {
@@ -100,7 +100,7 @@ sub add_info {
             my %info_hash = %{$previous_info};
             $info_hash{$selected_type}{$timestamp}{'operator_id'} = $operator_id;
             $info_hash{$selected_type}{$timestamp}{'input'} = $input;
-            $info_hash{$selected_type}{$timestamp}{'note'} = $note;
+            $info_hash{$selected_type}{$timestamp}{'notes'} = $notes;
 
             my $new_value = encode_json \%info_hash;
 #            print STDERR "NEW VALUE 1 =".Dumper($new_value)."\n";
@@ -112,7 +112,7 @@ sub add_info {
             my %new_info;
             $new_info{$selected_type}{$timestamp}{'operator_id'} = $operator_id;
             $new_info{$selected_type}{$timestamp}{'input'} = $input;
-            $new_info{$selected_type}{$timestamp}{'note'} = $note;
+            $new_info{$selected_type}{$timestamp}{'notes'} = $notes;
             my $new_value = encode_json \%new_info;
 #            print STDERR "NEW VALUE 2 =".Dumper($new_value)."\n";
             $tracking_identifier_stock->create_stockprops({$tracking_info_json_cvterm->name() => $new_value});
