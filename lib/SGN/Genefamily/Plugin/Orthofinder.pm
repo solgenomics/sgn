@@ -23,6 +23,7 @@ sub get_data {
 	chomp;
 	my ($orthogroup, @per_species_members) = split/\t/;
 
+	my $orthogroup_link = qq | <a href="/tools/genefamily/details/$build/$orthogroup">$orthogroup</a> | ;
 	my $sequence_link = qq | <a href="/tools/genefamily/$build/fasta/$orthogroup.fa">seqs</a> |;
 	my $alignment_link = qq | <a href="/tools/genefamily/$build/alignments/$orthogroup.aln">alignment</a> |;
 	my $tree = qq | <a href="/tools/genefamily/$build/trees/$orthogroup.tree">tree</a> |;
@@ -38,7 +39,7 @@ sub get_data {
 	    @all_members = (@all_members, @members);
 	}
 	my $members = join(",", @all_members);
-	push @table, [$orthogroup, $sequence_link, $alignment_link, $tree, $members];
+	push @table, [$orthogroup_link,  $sequence_link, $alignment_link, $tree, scalar(@all_members)." members: ".$members];
     }
     return \@table;
 }
