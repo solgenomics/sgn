@@ -55,7 +55,7 @@ print $select."<br /><br />";
 jQuery(document).ready( function() {
 
     var build = jQuery('#build option:selected').val();
-    alert('using build '+build);	      
+    //alert('using build '+build);	      
     jQuery('#genefamily_datatable').dataTable( {
 	ajax: '/ajax/tools/genefamily/table?build='+build,
 	destroy: true,
