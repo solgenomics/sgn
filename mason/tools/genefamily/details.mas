@@ -1,6 +1,8 @@
 
 <%args>
 $genefamily_id
+$members => undef
+$member_count => undef
 $annot_data => undef
 $errors => undef
 $tree_data => undef
@@ -16,6 +18,13 @@ $align_link_disabled => undef
 <table><tr><td>Family: <b><% $genefamily_id %></b></td><td><% $annot_data %></td></tr>
   <tr><td colspan="2">Note: <% $errors %></td></tr>
 </table>
+
+<h2>Gene family members</h2>
+Member count: <% $member_count %><br />
+<div id="family_members">
+  <% $members %>
+</div>	
+
 <table><tr>
     <hr>
     <td>View</td>

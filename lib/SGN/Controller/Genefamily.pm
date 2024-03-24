@@ -3,6 +3,8 @@ package SGN::Controller::Genefamily;
 
 use Moose;
 
+use Data::Dumper;
+
 BEGIN { extends 'Catalyst::Controller'; }
 
 sub genefamily_index :Path('/tools/genefamily') Args(0) {
@@ -40,6 +42,55 @@ sub search : Path('/tools/genefamily/search') Args(0) {
 	
 }
 
+sub sequence_details :Path('/tools/genefamily/seq') Args(3) {
+    my $self = shift;
+    my $c = shift;
+    my $build = shift;
+    my $family = shift;
+    my $sequence = shift;
+
+    my $gf = SGN::Genefamily->new(
+	name      => $family,
+        build   => $build,
+        files_dir => $c->config()->{genefamily_dir},
+	);
+
+    print STDERR "Trying to locate sequence $sequence\n";
+    
+    my $seq_info  = $gf->get_sequence($sequence);
+
+    my ($seq_id, $desc, $seq) = @$seq_info;
+    $c->stash->{build} = $build;
+    $c->stash->{family} = $family;
+    $c->stash->{seq_id} = $seq_id;
+    $c->stash->{desc} = $desc || "[ no description provided ]";
+    $c->stash->{seq} = $seq;
+
+    $c->stash->{template} = '/tools/genefamily/sequence.mas';
+    
+
+}
+
+sub get_family_fasta :Path('/tools/genefamily/fasta/') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $build = shift;
+    my $family = shift;
+
+    my $gf = SGN::Genefamily->new(
+	name      => $family,
+        build   => $build,
+        files_dir => $c->config()->{genefamily_dir},
+	);
+    
+    my $fasta_seq = $gf -> get_fasta();
+
+    $c->stash->{build} = $build;
+    $c->stash->{family} = $family;
+    $c->stash->{fasta} = $fasta_seq;
+    
+    $c->stash->{template} = '/tools/genefamily/fasta.mas';
+}
 
 sub genefamily_details :Path('/tools/genefamily/details') Args(2) {
     my $self = shift;
@@ -74,19 +125,30 @@ sub genefamily_details :Path('/tools/genefamily/details') Args(2) {
     }
 
     $c->stash->{genefamily_id} = $family;
+
+    my $members = $gf->get_members($family);
+    
+    print STDERR "Members: ".Dumper($members);
+
+    $c->stash->{member_count} = scalar(@$members);
+    $c->stash->{members} = join(", ", @$members);
+
     
     eval {
-      $seq_data = $gf->get_alignment();
+      $c->stash->{seq_data} = $gf->get_alignment();
     };
+    
     if ($@) {
       $errors .= "Alignment data not available. ";
       $big_errors++;
       $align_link_disabled="disabled";
     }
+    
     eval {
-      $fasta_data = $gf->get_fasta();
+      $c->stash->{fasta_data} = $gf->get_fasta();
 
     };
+    
     if ($@) {
       $errors .= "Sequence data not available. ";
       $big_errors++;

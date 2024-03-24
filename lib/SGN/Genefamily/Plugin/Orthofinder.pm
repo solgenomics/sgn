@@ -23,15 +23,24 @@ sub get_data {
 	chomp;
 	my ($orthogroup, @per_species_members) = split/\t/;
 
-	my $orthogroup_link = qq | <a href="/tools/genefamily/details/$build/$orthogroup">$orthogroup</a> | ;
-	my $sequence_link = qq | <a href="/tools/genefamily/$build/fasta/$orthogroup.fa">seqs</a> |;
-	my $alignment_link = qq | <a href="/tools/genefamily/$build/alignments/$orthogroup.aln">alignment</a> |;
-	my $tree = qq | <a href="/tools/genefamily/$build/trees/$orthogroup.tree">tree</a> |;
-	
-	my $sequence_link = "<a href=\"/tools/genefamily/$build/...\">seqs</a>";
-	my $alignment_link = "<a href=\"\">alignments</a>";
-	my $tree = "<a>tree</a>";
 
+	    
+
+	my $orthogroup_link = qq | <a href="/tools/genefamily/details/$build/$orthogroup">$orthogroup</a> | ;
+	my $sequence_link = qq | <a href="/tools/genefamily/fasta/$build/$orthogroup">seqs</a> |;
+
+	my $alignment_link = "alignment";
+	if ( -e $self->files_dir()."/$build/alignments/$orthogroup.aln" ) {
+	    $alignment_link = qq | <a href="/tools/genefamily/alignments/$build/$orthogroup">alignment</a> |;
+	}
+
+	my $tree_link = "tree";
+
+	if ( -e $self->files_dir()."/$build/trees/$orthogroup.tree") { 
+	    $tree_link = qq | <a href="/tools/genefamily/$build/trees/$orthogroup">tree</a> |;
+	}
+
+	
 	my @all_members;
 	for (my $species =1; $species< @per_species_members; $species++) { 
 	    my @members = split /\,/, $per_species_members[$species];
@@ -39,8 +48,9 @@ sub get_data {
 	    @all_members = (@all_members, @members);
 	}
 	my $members = join(",", @all_members);
-	push @table, [$orthogroup_link,  $sequence_link, $alignment_link, $tree, scalar(@all_members)." members", $members];
+	push @table, [$orthogroup_link,  $sequence_link, $alignment_link, $tree_link, scalar(@all_members)." members", $members];
     }
+    
     return \@table;
 }
 
