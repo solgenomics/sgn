@@ -39,7 +39,7 @@ sub get_data {
 	    @all_members = (@all_members, @members);
 	}
 	my $members = join(",", @all_members);
-	push @table, [$orthogroup_link,  $sequence_link, $alignment_link, $tree, scalar(@all_members)." members: ".$members];
+	push @table, [$orthogroup_link,  $sequence_link, $alignment_link, $tree, scalar(@all_members)." members", $members];
     }
     return \@table;
 }

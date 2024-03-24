@@ -17,7 +17,7 @@ $action => undef
 
 <table id="genefamily_datatable">
 <thead>
-  <th>Genefamily ID</th><th>Sequences</th><th>Alignments</th><th>Trees</th><th>Members</th></thead>
+  <th>Genefamily ID</th><th>Sequences</th><th>Alignments</th><th>Trees</th><th>Member Count</th><th>Members</th></thead>
   </thead>
   <tbody>
   </tbody>
@@ -28,13 +28,18 @@ $action => undef
 
 jQuery(document).ready( function() {
 
-   var build = jQuery('#build option:selected').val();
-      alert('using build '+build);	      
-   jQuery('#genefamily_datatable').DataTable( {
-      ajax: '/ajax/tools/genefamily/table?build='+build,
-      destroy: true
-      });
-      });
+    var build = jQuery('#build option:selected').val();
+    alert('using build '+build);	      
+    jQuery('#genefamily_datatable').dataTable( {
+	ajax: '/ajax/tools/genefamily/table?build='+build,
+	destroy: true,
+	"aoColumnsDefs": [
+            { "bSearchable" : true,
+	      "bVisible"   : false,
+	      "aTargets"   : [ 5 ]
+	    }]
+    });
+});
 
 </script>
 
@@ -54,7 +59,7 @@ if ($genefamily_id eq '') { $genefamily_id=0; }
 
 
 <%perl>
-}
+
 
 if ($action eq 'search' && $member_id) {
     die 'must provide build' unless $build;
