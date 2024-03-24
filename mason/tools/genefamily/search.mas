@@ -15,6 +15,32 @@ $action => undef
 
 <h4>Browse Genefamilies</h4>
 
+<%perl>
+
+use SGN::Genefamily;
+use Bio::Seq;
+
+my  $DIR = $c->get_conf('genefamily_dir'); # '/home/mueller/dutch_tomato_assembly/tomato_ara_rice_comparison/';
+if (!$action) { $action = "input"; }
+if ($genefamily_id eq '') { $genefamily_id=0; }
+
+
+my @builds = SGN::Genefamily->get_available_builds($DIR);
+
+my $select = '<select id="build" name="build">';
+my $selected = "";
+foreach my $d (@builds) {
+  if ($d eq $build) { $selected="selected=\"selected\" "; }
+  else { $selected= ""; }
+  $select .= qq | <option value="$d" $selected>$d</option> |;
+}
+$select .= "</select>";
+
+print $select."<br /><br />";
+
+</%perl>
+
+
 <table id="genefamily_datatable">
 <thead>
   <th>Genefamily ID</th><th>Sequences</th><th>Alignments</th><th>Trees</th><th>Member Count</th><th>Members</th></thead>
@@ -45,96 +71,10 @@ jQuery(document).ready( function() {
 
 
 
-<%perl>
-
-use SGN::Genefamily;
-use Bio::Seq;
-
-my  $DIR = $c->get_conf('genefamily_dir'); # '/home/mueller/dutch_tomato_assembly/tomato_ara_rice_comparison/';
-if (!$action) { $action = "input"; }
-if ($genefamily_id eq '') { $genefamily_id=0; }
-
-</%perl>
 
 
 
-<%perl>
 
-
-if ($action eq 'search' && $member_id) {
-    die 'must provide build' unless $build;
-    my $member_file = catfile($DIR,$build,'genefamily_defs.txt');
-    open (my $F, "<", $member_file) || die "can't open family file $member_file";
-    my $family_nr = 0;
-    my $found = 0;
-    while(<$F>) {
-	
-	if ($_=~/\b$member_id\b/i) {
-	    $found=1;
-	    last();
-	}
-	$family_nr++;
-    }
-
-
-    if ($found) {
-</%perl>
-
-        <form name="genefamily_display_form">
-        In build <b><% $build %></b>, sequence <% $member_id %> is in family <% $family_nr %>.
-        <input type="hidden" name="genefamily_id" value="<% $family_nr %>" />
-	<input type="hidden" name="build" value="<% $build %>" />
-	  <input type="hidden" name="action" value="detail" />
-	  <input type="submit" name="view_family" value="view family <% $family_nr %>" />
-        </form>
-
-%   }
-%   else {
-        <% $member_id %> was not found in any family.
-%	return;
-%   }
-%}
-
-<%perl>
-my @builds = SGN::Genefamily->get_available_builds($DIR);
-
-my $select = '<select id="build" name="build">';
-my $selected = "";
-foreach my $d (@builds) {
-  if ($d eq $build) { $selected="selected=\"selected\" "; }
-  else { $selected= ""; }
-  $select .= qq | <option value="$d" $selected>$d</option> |;
-}
-$select .= "</select>";
-
-if ($action eq 'input')  {
-
-</%perl>
-
-	  <table>
-	    <tr><td colspan="2">If you know the ID of your gene family, enter it below.</td></tr>
-	    <tr><td>Genefamily id</td><td>
-		<form name="genefamily_detail_form">
-		  <input name="genefamily_id" size="10" />(a number)
-		  <input type="hidden" name="action" value="detail" />
-		  <% $select %>
-		  <input type="submit" value="Details" />
-		</form>
-	    </td></tr>
-	    <tr><td colspan="2"><b>-OR-</b></td></tr>
-	    <tr><td colspan="2">if you know a member ID, search for the corresponding family:</td></tr>
-	    <tr><td>Member id</td><td>
-	      <form name="member_search_form">
-		<input name="member_id" size="10" /> (e.g. At1g01060)
-		<input type="hidden" name="action" value="search" />
-		<% $select %>
-		<input type="submit" />
-	      </form>
-</td>
-</tr>
-</table>
-
-% }
 
 <%init>
 use File::Spec::Functions;
