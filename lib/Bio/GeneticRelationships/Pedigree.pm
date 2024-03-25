@@ -36,6 +36,7 @@ subtype 'CrossType',
       $_ eq 'bulk_self' ||
       $_ eq 'bulk_open' ||
       $_ eq 'doubled_haploid' ||
+      $_ eq 'dihaploid_induction' ||	  
       $_ eq 'backcross' ||
       $_ eq 'genetic_transformation' ||
       $_ eq 'reselected' ||

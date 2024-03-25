@@ -1276,6 +1276,72 @@ sub cross_male_parent_autocomplete_GET : Args(0){
 }
 
 
+=head2 only_accession_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub only_accession_autocomplete : Local : ActionClass('REST') { }
+
+sub only_accession_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='accession' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 vector_construct_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub vector_construct_autocomplete : Local : ActionClass('REST') { }
+
+sub vector_construct_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='vector_construct' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
 sub parents : Local : ActionClass('REST') {}
 
 sub parents_GET : Path('/ajax/stock/parents') Args(0) {

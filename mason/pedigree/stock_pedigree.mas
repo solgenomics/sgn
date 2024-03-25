@@ -78,6 +78,7 @@ $stock_id
                                     <option value="bulk_self">bulk selfed</option>
                                     <option value="bulk_open">bulk and open pollinated</option>
                                     <option value="doubled_haploid">doubled haploid</option>
+				    <option value="dihaploid_induction">dihaploid induction</option>
                                     <option value="polycross">polycross</option>
                                     <option value="reciprocal">reciprocal</option>
                                     <option value="multicross">multicross</option>
