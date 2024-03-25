@@ -26,7 +26,8 @@ Public path: /genomes
 sub list_genomes : Path( '/genomes' ) Args(0) {
     my ( $self, $c ) = @_;
 
-    my $schema = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado', $sp_person_id );
 
     $c->stash(
 
@@ -54,13 +55,14 @@ links.
 sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     my ( $self, $c ) = @_;
 
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $organism = $c->stash->{organism};
     $c->throw_404 unless $organism && $organism->search_related('organismprops',
                              { 'type.name' => 'genome_page', 'me.value' => 1 },
                              { join => 'type' },
                          )->count;
 
-    $c->stash->{dbh} = $c->dbic_schema("Bio::Chado::Schema")->storage()->dbh();
+    $c->stash->{dbh} = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id)->storage()->dbh();
     
     (my $template_name = '/genomes/'.$organism->species.'.mas') =~ s/ /_/g;
 

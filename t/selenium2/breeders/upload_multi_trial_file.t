@@ -88,28 +88,44 @@ $t->while_logged_in_as("submitter", sub {
         sleep(5);
 
         my $table_content = $t->find_element_ok('trial_year', 'id', 'find cell of table with year information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{year}/, "Verify info in the table trial year: $trail->{year}");
+        sleep(3);
 
         $table_content = $t->find_element_ok('trial_name', 'id', 'find cell of table with trial name information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{name}/, "Verify info in the table trial name: $trail->{name}");
+        sleep(3);
 
         $table_content = $t->find_element_ok('planting_date', 'id', 'find cell of table with planting date information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{planting_date}/, "Verify info in the table trail planting date: $trail->{planting_date}");
+        sleep(3);
 
         $table_content = $t->find_element_ok('harvest_date', 'id', 'find cell of table with trial harvest date information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{harvest_date}/, "Verify info in the table trail harvest date: $trail->{harvest_date}");
+        sleep(3);
 
         $table_content = $t->find_element_ok('transplanting_date', 'id', 'find cell of table with trial transplanting date information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table trail transplanting date: $trail->{transplanting_date}");
+        sleep(3);
 
         $table_content = $t->find_element_ok('plot_width', 'id', 'find cell of table with trial plot width information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{plot_width}/, "Verify info in the table trail plot width: $trail->{plot_width}");
+        sleep(3);
 
         $table_content = $t->find_element_ok('plot_length', 'id', 'find cell of table with trial plot length information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{plot_length}/, "Verify info in the table trail plot width: $trail->{plot_length}");
+        sleep(3);
 
         $table_content = $t->find_element_ok('field_size', 'id', 'find cell of table with trial field size information')->get_attribute('innerHTML');
+        sleep(3);
         ok($table_content =~ /$trail->{field_size}/, "Verify info in the table trail plot width: $trail->{field_size}");
+        sleep(3);
 
         $f->clean_up_db();
     }

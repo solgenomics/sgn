@@ -1,0 +1,165 @@
+<%doc>
+=head1 NAME
+
+/about/audit.mas- display organism search results and search form
+
+=head1 ARGS
+
+<!--
+
+=head2 results
+
+optional L<DBIx::Class::ResultSet> object for the set of results to
+display.  if not set or not passed, only the search form will be
+displayed.
+
+=head2 form 
+
+required L<HTML::FormFu> form object for the search form.  will call
+C<$form->render> on this.
+
+=head2 pagination_link_maker
+
+subroutine reference that takes a single integer page number for the
+results and returns the appropriate URL for going to that page of results
+
+--> 
+
+=cut
+
+</%doc>
+
+<%args>
+</%args>
+
+
+<& /page/page_title.mas, title=>"Database Audit Tables" &>
+
+<div class="container-fluid">
+
+<style>
+</style>
+
+</div>
+
+
+<!--here is where I pasted in the drop down and search code -->
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+          <div class="col-sm-1">
+            </div>
+            <div class="row">
+                <div class="col-sm-11">
+                   <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-4">Select a database table to see audits:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="db_table_list_select">
+                                    </select>
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="search_audit_button"><i class="glyphicon glyphicon-search"></i> View audits </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   </div>
+               </div>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Audit table", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="audit_results">
+                </table>
+            </&>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+
+jQuery(document).ready(function(){
+
+    jQuery.ajax({
+        url: '/ajax/audit/retrieve_table_names',
+        success: function(response){
+            var json_names = JSON.parse(response.result1);
+            for (var i=0; i<json_names.length; i++){
+                var opt = json_names[i];
+                var displayname = opt.replace("_audit","");
+                jQuery("select#db_table_list_select").append(jQuery("<option>")
+                    .val(opt)
+                    .html(displayname)
+                    );
+                }
+        }
+    });
+    jQuery("#search_audit_button").click(function(){
+        if ( jQuery.fn.dataTable.isDataTable( '#audit_results' ) ) {
+            table = jQuery('#audit_results').DataTable();
+            table.destroy();
+        }
+        var db_table_list_id = jQuery('#db_table_list_select').find(":selected").val();
+        jQuery.ajax({
+            url: '/ajax/audit/retrieve_results',
+            data: {'db_table_list_id':db_table_list_id},
+            timeout: 300000,
+            success: function(response){
+
+            var all_audits = response.result;
+            
+
+        var json_object = JSON.parse(all_audits);
+        
+            jQuery('#audit_results').DataTable({
+                data: json_object,
+                columns: [
+                    { title: 'Timestamp' },
+                    { title: 'Operation' },
+                    { title: 'Username' },
+                    { title: 'Logged in User' },
+                    { title: 'Before' },
+                    { title: 'After' },
+                    { title: 'Transaction Code'},
+                    { title: 'Primary Key'},
+                    { title: 'Is Undo'},
+                ],
+                "rowCallback" : function (row, data, index){
+                    if(data[1] == "INSERT"){
+                        jQuery('td', row).css('background-color', 'HoneyDew');
+                    }
+                    if(data[1] == "UPDATE"){
+                        jQuery('td',row).css('background-color', 'LightCyan');
+                    }
+                    if(data[1] == "DELETE"){
+                        jQuery('td',row).css('background-color', 'LightSalmon');
+                    }
+
+                }
+                
+            });
+
+            
+            }
+        });
+        
+	});
+});
+
+</script>
+
+
+<%init>
+  use Number::Format;
+  use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
+
+</%init>
+

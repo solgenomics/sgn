@@ -35,7 +35,8 @@ sub define_object {
     my $user_type = $self->get_user()->get_user_type();
     my %json_hash= $self->get_json_hash();
 
-    my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado', $sp_person_id );
     my $dbh = $schema->storage->dbh;
     $self->set_object_id($pub_id);
     $self->set_object_name('publication'); #this is useful for email messages

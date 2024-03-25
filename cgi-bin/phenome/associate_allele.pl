@@ -13,7 +13,8 @@ my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
 
 my $dbh = $c->dbc->dbh;
-my $schema = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+my $schema = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado', $sp_person_id);
 my($login_person_id,$login_user_type)=CXGN::Login->new($dbh)->verify_session();
 
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {

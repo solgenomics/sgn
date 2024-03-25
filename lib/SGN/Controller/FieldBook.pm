@@ -18,8 +18,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 sub field_book :Path("/fieldbook") Args(0) {
     my ($self , $c) = @_;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
     if (!$c->user()) {
 	# redirect to login page
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -27,7 +26,9 @@ sub field_book :Path("/fieldbook") Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $user_id);
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my @rows = $schema->resultset('Project::Project')->all();
     #limit to owner
     my @projects = ();
@@ -119,7 +120,8 @@ sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) {
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
     print STDERR "\n\n\nfile name:".$file_row->basename."\n";
@@ -134,7 +136,8 @@ sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1)
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
     print STDERR "\n\n\nfile name:".$file_row->basename."\n";
@@ -151,7 +154,8 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     my $c = shift;
     my $trial_id = shift;
     die "No trial id supplied" if !$trial_id;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
     die "Trial does not exist with id $trial_id" if !$trial;
     my $dir = $c->tempfiles_subdir('/other');

@@ -38,7 +38,8 @@ sub raw_drone_imagery_summary_top : Path('/api/drone_imagery/raw_drone_imagery_t
 sub raw_drone_imagery_summary_top_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
     my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
@@ -255,7 +256,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $main_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($schema);

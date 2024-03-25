@@ -9,6 +9,7 @@ use CXGN::Login;
 use CXGN::People::Person;
 use List::MoreUtils 'uniq';
 use JSON::XS;
+use Data::Dumper;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -213,6 +214,8 @@ sub _make_head_post_html {
 
 Run for every request to the site.
 
+
+
 =cut
 
 sub auto : Private {
@@ -220,14 +223,33 @@ sub auto : Private {
     CatalystX::GlobalContext->set_context( $c );
     $c->stash->{c} = $c;
     weaken $c->stash->{c};
+    
 
     # gluecode for logins
     #
     unless( $c->config->{'disable_login'} ) {
         my $dbh = $c->dbc->dbh;
         if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
+            #For audit system
+            $dbh->do("CREATE temporary table IF NOT EXISTS logged_in_user (sp_person_id bigint)");
+            print STDERR "inserting $sp_person_id\n";
+            my $insert_query = "INSERT INTO logged_in_user (sp_person_id) VALUES (?)";
+            my $insert_handle = $dbh->prepare($insert_query);
+            $insert_handle->execute($sp_person_id);
 
-            my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
+            my $count_q = "select count(*) from logged_in_user";
+            my $count_h = $dbh -> prepare($count_q);
+            $count_h -> execute();
+            my ($count) = $count_h->fetchrow_array();
+            print STDERR "count: $count \n";
+
+            my $logged_in_user_q = "select * from logged_in_user";
+            my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
+            $logged_in_user_h->execute();
+            my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
+            print STDERR "logged in user in Root.pm: ".Dumper($logged_in_user_arr)."\n";
+
+            my $sp_person = CXGN::People::Person->new($dbh, $sp_person_id);
 
             $c->authenticate({
                 username => $sp_person->get_username(),

@@ -29,6 +29,7 @@ $user_status => undef
             <a href="/solpeople/personal-info.pl?action=edit&sp_person_id=<% $sp_person_id %>">View or update personal (contact and research) information</a><br />
             <a href="/user/update">Update account information</a><br />
             <a href="/forum/topics.pl">Post to SGN forum</a><br />
+	    <a href="/about/audit">View audit tables</a><br />
         </div>
     </&>
 

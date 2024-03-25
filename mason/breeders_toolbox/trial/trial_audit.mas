@@ -1,0 +1,75 @@
+<%args>
+$trial_id
+$project_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table class="table table-hover table-bordered" id="audit_results">
+
+</table>
+
+<script> 
+    jQuery(document).ready(function () {
+      var trial_id = "<% $trial_id %>";
+      jQuery.ajax({
+        url: '/ajax/audit/retrieve_trial_audits',
+        data: {'trial_id':trial_id},
+        timeout: 300000,
+          success: function(response){
+            var json_object = JSON.parse(response.match_project);
+            var datastring;
+            for (var row = 0; row < json_object.length; row++){
+                for (var column = 4; column <= 5; column++){
+                    datastring = json_object[row][column];
+                    if(datastring != null){
+                        for(var character = 0; character < datastring.length; character++){
+                            if(datastring[character] == '{' || datastring[character] == '}' || datastring[character] == '"' || datastring[character] == ','){
+                                if(datastring[character] == ','){
+                                    datastring = datastring.replace(datastring[character],'\n');
+                                }else{
+                                    datastring = datastring.replace(datastring[character],'');
+                                    character --;
+                                }
+                            }
+                        }
+                    }
+                    json_object[row][column] = datastring;
+                }
+            }
+            jQuery('#audit_results').DataTable({
+              data: json_object,
+              columns: [
+                  { title: 'Timestamp' },
+                    { title: 'Operation' },
+                    { title: 'Username' },
+                    { title: 'Logged in User' },
+                    { title: 'Before' },
+                    { title: 'After' },
+                    { title: 'Transaction Code'},
+                    { title: 'Primary Key'},
+                    { title: 'Is Undo'},
+              ],
+              "rowCallback" : function (row, data, index){
+                    if(data[1] == "INSERT"){
+                        jQuery('td', row).css('background-color', 'HoneyDew');
+                    }
+                    if(data[1] == "UPDATE"){
+                        jQuery('td',row).css('background-color', 'LightCyan');
+                    }
+                    if(data[1] == "DELETE"){
+                        jQuery('td',row).css('background-color', 'LightSalmon');
+                    }
+
+                }
+                
+          });
+
+          },
+        
+      });
+    });
+
+</script>

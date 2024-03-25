@@ -19,7 +19,7 @@ has 'schema' => (
     lazy_build => 1,
 );
 sub _build_schema {
-    shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+    shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado')
 }
 
 has 'default_page_size' => (
@@ -93,9 +93,9 @@ sub get_feature : Chained('/') CaptureArgs(1) PathPart('feature') {
 
     #debug mode
     #$c->dbic_schema('Bio::Chado::Schema','sgn_chado')->storage->debug(1);
-
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $matching_features =
-        $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+        $c->dbic_schema('Bio::Chado::Schema','sgn_chado', $sp_person_id)
           ->resultset('Sequence::Feature')
           ->search(
               #{ 'me.'.$identifier_type => $id },

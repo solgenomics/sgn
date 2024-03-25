@@ -21,7 +21,7 @@ sub add_genotyping_project : Path('/ajax/breeders/add_genotyping_project') : Act
 
 sub add_genotyping_project_POST :Args(0){
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
     my $dbh = $c->dbc->dbh;
     my $project_name = $c->req->param('project_name');
     my $project_breeding_program = $c->req->param('project_breeding_program');
@@ -43,6 +43,7 @@ sub add_genotyping_project_POST :Args(0){
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
     my $error;
     eval{

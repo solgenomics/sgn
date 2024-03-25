@@ -57,6 +57,9 @@ $trial_stock_count => undef
 $management_factor_types => ()
 $trial_owner => undef
 $latest_trial_activity => undef
+
+
+$project_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -116,6 +119,8 @@ $latest_trial_activity => undef
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>JBrowse Genome Alignments For this Experiment</h4>", info_section_subtitle => 'View JBrowse alignments for accessions in this trial.', icon_class => "glyphicon glyphicon-align-left", info_section_id => "trial_jbrowse_data" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_type => $trial_type, info_section_title => "<h4 style='display:inline'>Experiment Linkage</h4>", info_section_subtitle => 'View other experiments, crosses, and genotyping plates linked to this experiment.', icon_class => "glyphicon glyphicon-link", info_section_id => "trial_linkage_section" &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_type => $trial_type, project_id => $project_id, info_section_title => "<h4 style='display:inline'>Audit Table</h4>", info_section_subtitle => 'Track audit information linked to this experiment.', icon_class => "glyphicon glyphicon-time", info_section_id => "trial_audit_table_section" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Delete Experiment Data</h4>", info_section_subtitle => 'Delete phenotypes, field layout, and/or the entire experiment from the database.', icon_class => "glyphicon glyphicon-trash", info_section_id => "trial_deletion_section" &>
 

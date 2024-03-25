@@ -495,12 +495,19 @@ sub test_controller : Path('ajax/trial/test_controller/') : ActionClass('REST') 
     return $c;
 }
 
-sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
+sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { print STDERR "went into save_experimental_design \n"; }
 
 sub save_experimental_design_POST : Args(0) {
+    #$| = 1;
+    print STDERR "This message means it is printing from the subroutine save_experimental_design_POST \n";
     my ($self, $c) = @_;
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    print STDERR "this is sp_person_id from saving trial details: ".$user_id."\n";
+   # open my $file(STDERR "This is getting read to file: user id: ".$user_id);
+
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $save;
@@ -515,7 +522,7 @@ sub save_experimental_design_POST : Args(0) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
         return;
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    
 
     my $user_name = $c->user()->get_object()->get_username();
     my $error;
