@@ -107,11 +107,12 @@ foreach my $db (@dbs) {
     }
 
     print STDERR "checking source url..\n";
+    ##Not usig source_url anymore. Source files need to be in the blast db dir
     #skip the DB if it does not have a source url defined
-    unless($db->source_url) {
-	     warn $db->file_base." needs to be updated, but has no source_url.  Skipped.\n";
-	     next;
-    }
+    #unless($db->source_url) {
+	  #   warn $db->file_base." needs to be updated, but has no source_url.  Skipped.\n";
+	  #   next;
+    #}
     ###########
     ###do not use source_url. Need to make sure all db fasta files are in the blast basedir
     #my $source_url = $db->source_url ;
