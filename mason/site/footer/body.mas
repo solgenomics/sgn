@@ -26,6 +26,8 @@
             <span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span> is located at the <a href="https://btiscience.org">Boyce Thompson Institute</a>.<br />
             <a href="https://btiscience.org"><img src="/static/img/bti_logo_2024.png" width="200"></a>
           </div>
+
+
           <div class="col-12 col-md-3">
             <div class="git-version">
               <p>
@@ -39,6 +41,8 @@
 % }
                 <br />
                 <span class="git-version-updated"><% $updated %></span>
+		<br /><br />
+		<a target="_new" href="https://brapi.org/"><img src="/documents/img/brapi-logo.svg" width="160" /></a> 
               </p>
             </div>
           </div>
