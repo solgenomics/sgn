@@ -11,7 +11,6 @@ use Data::Dumper;
 use File::Spec;
 use File::Temp qw/tempfile/;
 
-use CXGN::Tools::Wget qw/wget_filter/;
 use SGN::Schema;
 use CXGN::Blast;
 use CXGN::DB::InsertDBH;

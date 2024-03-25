@@ -265,8 +265,7 @@ sub format_from_file {
         print $a_fh $aliases;
         #closing not necessary for indirect filehandles in lexical variables
       } else {
-          print STDERR "Cannot read file $new_ffbn . $type \n";
-      }
+          print STDERR "Cannot read file $new_ffbn " . $self->type . "\n";
 
   #list of files we will be replacing
   my @oldfiles = _list_files($ffbn,$self->type);
