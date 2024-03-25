@@ -1,0 +1,24 @@
+<%args>
+$locations
+$programs
+$roles
+$user_id
+</%args>
+
+<%perl>
+    my $subtitle;
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_activity_project_link" name="create_activity_project_link">Add Tracking Activities Project</button> ';
+</%perl>
+
+<br />
+<& /page/page_title.mas, title => "Tracking Activities" &>
+
+<div class="container-fluid">
+
+<&| /page/info_section.mas, title=>"Tracking Activities" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+
+<& /tracking_activities/activity_project_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles &>
+
+</&>
+
+</div>

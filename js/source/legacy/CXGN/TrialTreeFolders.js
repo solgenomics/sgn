@@ -17,6 +17,10 @@ jQuery(document).ready(function($) {
         refreshGenotypingProjectJsTree(1);
     });
 
+    jQuery("[name='refresh_activity_jstree_html']").click(function(){
+        refreshActivityJsTree(1);
+    });
+
     jQuery("[name='refresh_transformation_project_jstree_html']").click( function() {
         refreshTransformationProjectJsTree(1);
     });
@@ -97,6 +101,27 @@ function refreshGenotypingProjectJsTree(refreshpage){
         error: function(response) {
             jQuery("#working_modal").modal("hide");
             alert('An error occurred refreshing genotype project jstree html');
+        }
+    });
+}
+
+function refreshActivityJsTree(refreshpage){
+    jQuery.ajax( {
+        url: '/ajax/breeders/get_trials_with_folders?type=activity',
+        beforeSend: function() {
+            if (refreshpage == 1){
+                jQuery("#working_modal").modal("show");
+            }
+        },
+        success: function(response) {
+            if (refreshpage == 1){
+                jQuery("#working_modal").modal("hide");
+                location.reload();
+            }
+        },
+        error: function(response) {
+            jQuery("#working_modal").modal("hide");
+            alert('An error occurred refreshing activity jstree html');
         }
     });
 }

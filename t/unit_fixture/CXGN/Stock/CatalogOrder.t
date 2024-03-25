@@ -145,7 +145,7 @@ is($after_adding_an_order, $before_adding_an_order + 1);
 CXGN::List::delete_list($dbh, $your_cart_id);
 
 #test retrieving order from janedoe
-my $buyer_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $janedoe_id });
+my $buyer_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, order_from_id => $janedoe_id });
 my $buyer_orders = $buyer_order_obj->get_orders_from_person_id();
 my $first_order_info = $buyer_orders->[0];
 is($first_order_info->{'order_id'}, '1');
@@ -157,7 +157,7 @@ my $buyer_num_items = @$items;
 is($buyer_num_items, '2');
 
 #test retrieving order to johndoe
-my $vendor_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $johndoe_id });
+my $vendor_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, order_to_id => $johndoe_id });
 my $vendor_orders = $vendor_order_obj->get_orders_to_person_id();
 
 my $order = $vendor_orders->[0];
@@ -174,7 +174,7 @@ is($vendor_num_items, '2');
 #test updating order status by johndoe
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
-my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => '1', order_to_id => $johndoe_id, order_status => 'completed', completion_date => $timestamp, comments => 'updated by johndoe'});
+my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, sp_order_id => '1', order_to_id => $johndoe_id, order_status => 'completed', completion_date => $timestamp, comments => 'updated by johndoe'});
 my $updated_order = $order_obj->store();
 my $after_updating_an_order = $people_schema->resultset('SpOrder')->search( { order_to_id => $johndoe_id })->count();
 is($after_updating_an_order, $after_adding_an_order);
@@ -184,7 +184,7 @@ $mech->post_ok('http://localhost:3010/ajax/order/update', ['order_id' => '1', 'n
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-my $re_opened_order = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => '1' });
+my $re_opened_order = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, sp_order_id => '1' });
 my $order_result = $re_opened_order->get_order_details();
 my $order_status = $order_result->[5];
 is($order_status, 're-opened by Jane Doe');

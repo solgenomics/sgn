@@ -1,14 +1,23 @@
-
 <%args>
+
 $role => "stock_orderer"
-$check_vendor_role
+$check_vendor_role => undef
+$tracking_order_activity => undef
+$user_id
+
 </%args>
+
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
 
-<&| /page/page_title.mas, title => "Your Orders" &>
+% if ($check_vendor_role == 1) {
+    <&| /page/page_title.mas, title => "Manage Orders for Vendor" &>
+    </&>
+% } else {
+    <&| /page/page_title.mas, title => "Your Orders" &>
+    </&>
+%}
 
-</&>
 <td>
     <a href="/catalog/view"><p>Go to Catalog Page</p></a>
 </td>
@@ -28,7 +37,7 @@ $check_vendor_role
         </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Completed Orders', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => 'Completed Orders', collapsible=>1, collapsed=>1 &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
@@ -155,6 +164,47 @@ $check_vendor_role
     </div>
 </div>
 
+% if (($check_vendor_role == 1) && $tracking_order_activity) {
+    <&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <!--
+                    <button id="download_active_item_file_button" class="btn btn-primary">Download Item File</button>
+                    <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
+                    -->
+                    <button id="generate_active_item_barcode_button" class="btn btn-primary">Generate Item Barcodes</button>
+                    <a href="/activity/record" class="btn btn-default">Go to Record Page</a>
+                </div>
+                <div class = "panel-body">
+
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="order_progress_table">
+                        <thead>
+                            <tr>
+                                <th>Order Number</th>
+                                <th>Order Details</th>
+                                <th>Tracking ID</th>
+                                <th>Material</th>
+% my $activity_types = $c->config->{tracking_activities_header};
+% my @column_header = split ',',$activity_types;
+% foreach my $column_header(@column_header){
+                                <th><%$column_header%></th>
+%}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </&>
+% }
+
+<& /order/create_item_file_dialog.mas&>
+<& /order/create_ontology_file_dialog.mas &>
+<& /order/generate_identifier_barcode_dialog.mas, identifier => "", user_id => $user_id &>
+
 <script>
 
 $(window).ready( function() {
@@ -276,6 +326,11 @@ $(window).ready( function() {
                 alert('An error occurred updating the order');
             }
         });
+    });
+
+    jQuery('#order_progress_table').DataTable({
+        'autoWidth': false,
+        'ajax': '/ajax/order/progress',
     });
 
 });

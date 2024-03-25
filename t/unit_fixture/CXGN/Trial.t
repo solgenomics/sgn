@@ -438,6 +438,7 @@ is_deeply(\@all_project_types, [
           'Specialty Trial',
           'Uniform Yield Trial',
           'Variety Release Trial',
+          'activity_record',
           'crossing_block_trial',
           'crossing_trial',
           'genetic_gain_trial',

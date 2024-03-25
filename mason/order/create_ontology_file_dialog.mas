@@ -1,0 +1,48 @@
+<div class="modal fade" id="create_ontology_file_dialog" name="create_ontology_file_dialog" tabindex="-1" role="dialog" aria-labelledby="createOntologyFileDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="createOntologyFileDialog">Create a Progress Ontology File for the Android Fieldbook App</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" >
+                        <div class="form-group">
+                            <label class="control-label col-sm-3">Ontologies:</label>
+                            <div class="col-sm-9" >
+                                <div class="input-group">
+                                    <select class="form-control" id="ontology_list_select"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="ontology_file_name">File name:</label>
+                            <div class="col-sm-9">
+                                <input id="ontology_file_name" type="text" class="form-control" placeholder="Type name here">
+                            </div>
+                        </div>
+                    </form><br/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="create_ontology_file_cancel_button" id="create_ontology_file_cancel_button" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="create_ontology_file_submit_button" id="create_ontology_file_submit_button" title="Submit">Create File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var lo = new CXGN.List();
+    jQuery('#ontology_list_select').html(lo.listSelect('ontology_list_select', ['traits'], 'Select a list of ontologies', undefined, undefined));
+
+    jQuery("#download_ontology_file_button").click( function() {
+        jQuery('#create_ontology_file_dialog').modal('show');
+    });
+});
+
+</script>

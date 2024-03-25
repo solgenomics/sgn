@@ -12,6 +12,7 @@
 
     <li role="separator" class="divider"></li>
     <li><a href="/order/stocks/view">Order Stocks</a></li>
+    <li><a href="/breeders/activities">Tracking Activities</a></li>
     <li><a href="/breeders/transformations/">Transformations</a></li>
 
     <li role="separator" class="divider"></li>
