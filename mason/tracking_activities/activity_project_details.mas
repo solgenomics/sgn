@@ -12,6 +12,7 @@ $folder_id
 $identifier_prefix
 $trial_owner
 $vendor_id
+$activity_type
 </%args>
 
 
@@ -28,6 +29,19 @@ $vendor_id
 %   print "$trial_name";
 % } else {
 %   print "<span class='text-danger'>[No Tracking Activity Project Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Activity Type</b></td>
+                <td>
+                    <div id="activity_type">
+% if ($activity_type) {
+%   print "$activity_type";
+% } else {
+%   print "<span class='text-danger'>[No Activity Type]</span>";
 % }
                     </div>
                 </td>

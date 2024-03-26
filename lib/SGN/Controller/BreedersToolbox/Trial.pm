@@ -313,6 +313,20 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $vendor_id = $project_vendor_rs->value();
         }
 
+        my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+        my $activity_type_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id => $project_id,
+            type_id => $activity_type_cvterm_id
+        });
+        my $activity_type;
+        if ($activity_type_rs) {
+            $activity_type = $activity_type_rs->value();
+            if ($activity_type eq 'tissue_culture') {
+                $activity_type = 'Tissue Culture'
+            }
+        }
+
+        $c->stash->{activity_type} = $activity_type;
         $c->stash->{vendor_id} = $vendor_id;
         $c->stash->{template} = '/tracking_activities/activity_project.mas';
     }
