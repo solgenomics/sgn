@@ -321,9 +321,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $activity_type;
         if ($activity_type_rs) {
             $activity_type = $activity_type_rs->value();
-            if ($activity_type eq 'tissue_culture') {
-                $activity_type = 'Tissue Culture'
-            }
         }
 
         $c->stash->{activity_type} = $activity_type;

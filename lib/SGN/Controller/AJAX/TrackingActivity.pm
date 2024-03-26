@@ -139,6 +139,9 @@ sub generate_tracking_identifiers_POST : Args(0) {
 
     my $project_name = $c->req->param("project_name");
     my $list_id = $c->req->param("list_id");
+    my $material_type = $c->req->param("material_type");
+    my $activity_type = $c->req->param("activity_type");
+#    print STDERR "MATERIAL TYPE =".Dumper($material_type)."\n";
     my $project_id;
     my $project_rs = $schema->resultset("Project::Project")->find( { name => $project_name });
     if (!$project_rs) {
@@ -188,7 +191,9 @@ sub generate_tracking_identifiers_POST : Args(0) {
             tracking_identifier => $tracking_identifier,
             material => $material,
             project_id => $project_id,
-            user_id => $user_id
+            user_id => $user_id,
+            material_type => $material_type,
+            activity_type => $activity_type
          });
 
         my $return = $tracking_obj->store();

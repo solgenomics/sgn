@@ -38,10 +38,12 @@ $activity_type
                 <td><b>Activity Type</b></td>
                 <td>
                     <div id="activity_type">
-% if ($activity_type) {
-%   print "$activity_type";
+% if ($activity_type eq 'tissue_culture') {
+%    print "Tissue Culture";
+% } elsif ($activity_type eq 'trial_treatments') {
+%    print "Trial Treatments"
 % } else {
-%   print "<span class='text-danger'>[No Activity Type]</span>";
+%    print "<span class='text-danger'>[No Activity Type]</span>";
 % }
                     </div>
                 </td>
@@ -133,4 +135,4 @@ $activity_type
     <button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
 % }
 
-<& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name &>
+<& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name, activity_type => $activity_type &>

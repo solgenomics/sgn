@@ -50,6 +50,7 @@ $locations
                                             <select class="form-control" id="activity_type" name="activity_type">
                                                 <option value="">Select an activity type</option>
                                                 <option value="tissue_culture">tissue culture</option>
+                                                <option value="trial_treatments">trial treatments</option>
                                             </select>
                                         </div>
                                     </div><br/><br/>

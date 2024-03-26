@@ -62,10 +62,13 @@ sub patch {
 
     my $terms = {
         'stock_property' => [
-            'tracking_trial_treatment_json',
+            'tracking_trial_treatments_json',
             'data_type',
-            'source_type',
+            'material_type',
             'source_project',
+        ],
+        'experiment_type' => [
+            'project_tracking_identifier'
         ],
     };
 
