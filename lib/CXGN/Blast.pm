@@ -14,13 +14,13 @@ CXGN::Blast - a BLAST database that we keep in stock and updated.
 
   The constructor now requires some additional arguments:
 
-  my $db = CXGN::Blast->new( { blast_db_id => $x, 
+  my $db = CXGN::Blast->new( { blast_db_id => $x,
                                  sgn_schema => $s,
                                  dbpath => $p,
                                });
 
   (this standard constructor now replaces the previous from_id() constructor).
- 
+
   my @dbs = CXGN::Blast->retrieve_all(); #get all blastDB objects
 
   #change the title of a blast db in memory
@@ -108,7 +108,7 @@ has 'dbpath' => ( isa => 'Maybe[Str]',
 		  is => 'rw',
 		  required => 1,
    );
-		  
+
 has 'file_base' => ( isa => 'Maybe[Str]',
 		     is => 'rw',
     );
@@ -132,7 +132,7 @@ has 'lookup_url' => (isa => 'Maybe[Str]',
 		     default => '',
     );
 
-has 'info_url' => ( isa => 'Maybe[Str]', 
+has 'info_url' => ( isa => 'Maybe[Str]',
 		    is => 'rw',
     );
 
@@ -181,10 +181,10 @@ has 'jbrowse_src' => (isa => 'Maybe[Str]',
   #  'description',  # text description of the database, display on the database details page
  ### );
 
-sub BUILD { 
-    my $self = shift;    
+sub BUILD {
+    my $self = shift;
 
-    if ($self->blast_db_id) { 
+    if ($self->blast_db_id) {
 	my $row = $self->sgn_schema()->resultset("BlastDb")->find( { blast_db_id => $self->blast_db_id() } );
 	if (!$row) { die "The blast_db_id with the id ".$self->blast_db_id()." does not exist in this database\n"; }
 	$self->file_base($row->file_base());
@@ -199,24 +199,24 @@ sub BUILD {
 	$self->description($row->description());
 	$self->jbrowse_src($row->jbrowse_src());
     }
-    else { 
+    else {
 	print STDERR "No blast_db_id provided. Creating empty object...\n";
     }
 }
 
 # class function
 
-sub retrieve_all { 
+sub retrieve_all {
     my $class = shift;
     my $sgn_schema = shift;
     my $dbpath = shift;
 
     my @dbs = $class->search($sgn_schema, $dbpath);
-    
+
     return @dbs;
 }
 
-sub search { 
+sub search {
     my $class = shift;
     my $sgn_schema = shift;
     my $dbpath = shift;
@@ -225,9 +225,9 @@ sub search {
     my $rs = $sgn_schema->resultset("BlastDb")->search( { %search } );
 
     my @dbs = ();
-    
-    while (my $db = $rs->next()) { 
-	my $bdbo = CXGN::Blast->new( sgn_schema => $sgn_schema, dbpath => $dbpath, blast_db_id => $db->blast_db_id() ); 
+
+    while (my $db = $rs->next()) {
+	my $bdbo = CXGN::Blast->new( sgn_schema => $sgn_schema, dbpath => $dbpath, blast_db_id => $db->blast_db_id() );
 	push @dbs, $bdbo;
     }
     return @dbs;
@@ -245,7 +245,7 @@ sub search {
 
 # =cut
 
-# sub from_id {  
+# sub from_id {
 #     shift->retrieve(@_);
 #    }
 
@@ -350,11 +350,11 @@ sub format_time {
 
 sub full_file_basename {
     my $self = shift;
-    
+
     return scalar File::Spec->catfile( $self->dbpath,
 				       $self->file_base,
 	);
-    
+
 }
 
 =head2 list_files
@@ -458,7 +458,7 @@ sub sequences_count {
 #__PACKAGE__->has_many( _lib_annots => 'CXGN::Genomic::LibraryAnnotationDB' );
 sub is_contaminant_for {
     my ($this,$lib) = @_;
-    
+
     #return true if any arguments are true
     return any( map { $_->is_contaminant && $_->library_id == $lib } $this->_lib_annots);
 }
@@ -476,22 +476,22 @@ sub is_contaminant_for {
 
 sub needs_update {
     my ($self) = @_;
-    
+
     #it of course needs an update if it is not complete
     return 1 unless $self->files_are_complete;
-    
+
     my $modtime = $self->format_time();
-    
+
     #if no modtime, files must not even be there
     return 1 unless $modtime;
-    
+
     #manually updated DBs never _need_ updates if their
     #files are there
     return 0 if $self->update_freq eq 'manual';
-    
+
     #also need update if it is set to be indexed but is not indexed
     return 1 if $self->index_seqs && ! $self->is_indexed;
-    
+
     #figure out the maximum number of seconds we'll tolerate
     #the files being out of date
     my $max_time_offset = 60 * 60 * 24 * do { #figure out number of days
@@ -502,7 +502,7 @@ sub needs_update {
 	    confess "invalid update_freq ".$self->update_freq;
 	}
     };
-    
+
     #subtract from modtime and make a decision
     return time-$modtime > $max_time_offset ? 1 : 0;
 }
@@ -548,7 +548,7 @@ sub check_format_permissions {
 sub format_from_file {
     my ($self,$seqfile,$ffbn) = @_;
     $ffbn and croak "ffbn arg no longer supported.  maybe you should make a new Bio::BLAST2::Database object";
-    
+
     $self->_fileset('write')
 	->format_from_file( seqfile => $seqfile, indexed_seqs => $self->index_seqs, title => $self->title );
 }
@@ -620,7 +620,7 @@ sub get_sequence {
 sub identifier_url {
     my ($self,$ident) = @_;
     $ident or croak 'must pass an identifier to link';
-    
+
     return $self->lookup_url
 	? sprintf($self->lookup_url,$ident)
 	: do { require CXGN::Tools::Identifiers; CXGN::Tools::Identifiers::identifier_url($ident) };
@@ -632,7 +632,7 @@ memoize '_fileset',
 	my $s = shift; join ',',$s,@_,$s->full_file_basename
 };
 
-sub _fileset { 
+sub _fileset {
 my ($self,$write) = @_;
 my $ffbn = $self->full_file_basename;
 return Bio::BLAST2::Database->open( full_file_basename => $ffbn,
