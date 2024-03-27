@@ -27,7 +27,7 @@ use CXGN::DB::InsertDBH;
 use CXGN::Trial;
 use CXGN::Dataset;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_b, $opt_i, $opt_n, $opt_t, $opt_r);
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_b, $opt_i, $opt_n, $opt_t, $opt_r, $opt_y);
 
 getopts('H:D:U:P:b:i:t:r:ny:');
 
@@ -66,7 +66,7 @@ if ($opt_i || $opt_n) {
 
 if ($opt_b && $opt_y) {
     my @years = split /\,/, $opt_y;
-    my @breeding_program_names = split/\,/, $breeding_programs;
+    my @breeding_program_names = split/\,/, $opt_b;
 
     my @breeding_program_ids;
     my $rs = $schema->resultset('Project::Project')->search( { name => [ @breeding_program_names ] });
@@ -83,8 +83,8 @@ if ($opt_b && $opt_y) {
     my $trials = $ds->retrieve_trials();
 
     foreach my $t (@$trials) {
-	push @trials_ids, $t->[0];
-	push @trials_names, $t->[1];
+	push @trial_ids, $t->[0];
+	push @trial_names, $t->[1];
     }
     
 }
