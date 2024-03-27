@@ -25,18 +25,22 @@ use CXGN::Metadata::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Trial;
+use CXGN::Dataset;
 
 our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_b, $opt_i, $opt_n, $opt_t, $opt_r);
 
-getopts('H:D:U:P:b:i:t:r:n');
+getopts('H:D:U:P:b:i:t:r:ny:');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $dbuser = $opt_U;
 my $dbpass = $opt_P;
 my $trial_ids = $opt_i;
+my $years = $opt_y;
+my $breeding_programs = $opt_b;
 my $trial_names = $opt_t;
 my $non_interactive = $opt_n;
+
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
@@ -49,9 +53,42 @@ print STDERR "Connecting to database...\n";
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_dbh() });
 my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() });
+my $people_schema = CXGN::Schema::People->connect( sub { $dbh->get_actual_dbh()});
 
-my @trial_ids = split ",", $trial_ids;
-my @trial_names = split ",", $trial_names;
+my @trial_ids;
+my @trial_names;
+
+if ($opt_i || $opt_n) { 
+    @trial_ids = split ",", $trial_ids;
+    @trial_names = split ",", $trial_names;
+
+}
+
+if ($opt_b && $opt_y) {
+    my @years = split /\,/, $opt_y;
+    my @breeding_program_names = split/\,/, $breeding_programs;
+
+    my @breeding_program_ids;
+    my $rs = $schema->resultset('Project::Project')->search( { name => [ @breeding_program_names ] });
+
+    while (my $bp_row = $rs->next()) {
+	push @breeding_program_ids, $rs->project_id();
+    }
+    
+    my $ds = CXGN::Dataset->new( { schema => $schema, people_schema => $people_schema });
+
+    $ds->years(\@years);
+    $ds->breeding_programs(\@breeding_programs);
+
+    my $trials = $ds->retrieve_trials();
+
+    foreach my $t (@$trials) {
+	push @trials_ids, $t->[0];
+	push @trials_names, $t->[1];
+    }
+    
+}
+    
 
 foreach my $name (@trial_names) { 
     my $trial = $schema->resultset("Project::Project")->find( { name => $name });
