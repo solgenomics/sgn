@@ -78,7 +78,7 @@ if ($opt_b && $opt_y) {
     my $ds = CXGN::Dataset->new( { schema => $schema, people_schema => $people_schema });
 
     $ds->years(\@years);
-    $ds->breeding_programs(\@breeding_programs);
+    $ds->breeding_programs(\@breeding_program_ids);
 
     my $trials = $ds->retrieve_trials();
 
