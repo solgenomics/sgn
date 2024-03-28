@@ -382,10 +382,21 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
     my $c = shift;
     my $project_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+    my $activity_type_rs = $schema->resultset("Project::Projectprop")->find ({
+        project_id => $project_id,
+        type_id => $activity_type_cvterm_id
+    });
+    my $activity_type;
+    if ($activity_type_rs) {
+        $activity_type = $activity_type_rs->value();
+    }
+
     my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
 
-    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id, activity_type => $activity_type);
     my $all_identifier_info = $activity_project->get_project_active_identifiers();
     my @all_identifiers;
     foreach my $identifier_info (@$all_identifier_info) {
@@ -395,8 +406,13 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
         my $material_id = $identifier_info->[2];
         my $material_name = $identifier_info->[3];
         push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
-        push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
-        my $progress = $identifier_info->[5];
+
+        if ($activity_type eq 'trial_treatments') {
+            push @row, qq{<a href=\"/breeders_toolbox/trial/$material_id\">$material_name</a>};
+        } else {
+            push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+        }
+        my $progress = $identifier_info->[4];
         my $input;
         if ($progress) {
             my $progress_ref = JSON::Any->jsonToObj($progress);
