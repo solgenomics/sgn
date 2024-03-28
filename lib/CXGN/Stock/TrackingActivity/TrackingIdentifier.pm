@@ -1,8 +1,8 @@
-package CXGN::Stock::TrackingActivity::TrackingIdentifier;
+package CXGN::Stock::TrackingActivity::AddTrackingIdentifier;
 
 =head1 NAME
 
-CXGN::Stock::TrackingActivity::TrackingIdentifier - a module to handle tracking identifier.
+CXGN::Stock::TrackingActivity::AddTrackingIdentifier - a module to add tracking identifier.
 
 =head1 USAGE
 
