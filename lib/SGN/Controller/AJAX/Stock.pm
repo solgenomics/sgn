@@ -2068,7 +2068,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
 
 	if (! $cross_type) { $cross_type = 'unspecified'; }
 	
-      push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$stock_name</a>} ];
+	push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name ];	
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -2091,9 +2091,12 @@ sub get_siblings:Chained('/stock/get_stock') PathPart('datatables/siblings') Arg
         foreach my $sib(@$family){
             my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $sibling_id, $sibling_name, $cross_type) = @$sib;
             if ($sibling_id != $stock_id) {
-                push @siblings, [ qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
-                qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
-                qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type, $sibling_name ];
+                push @siblings, [
+		    qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
+		    qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+		    qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
+		    $cross_type,
+		    $sibling_name ];
             }
         }
     }
