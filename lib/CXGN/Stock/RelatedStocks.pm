@@ -63,7 +63,7 @@ sub get_progenies {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename FROM stock_relationship
+    my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename, stock_relationship.value FROM stock_relationship
              INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
              INNER JOIN cvterm ON (stock_relationship.type_id =cvterm.cvterm_id)
              WHERE stock_relationship.subject_id = ? AND(stock_relationship.type_id =?
@@ -73,8 +73,8 @@ sub get_progenies {
     $h->execute($stock_id, $female_parent_type_id, $male_parent_type_id, $accession_type_id);
 
     my @progenies =();
-        while(my($cvterm_name, $stock_id, $stock_name) = $h->fetchrow_array()){
-        push @progenies, [$cvterm_name, $stock_id, $stock_name]
+        while(my($cvterm_name, $stock_id, $stock_name, $cross_type) = $h->fetchrow_array()){
+        push @progenies, [$cvterm_name, $stock_id, $stock_name, $cross_type]
         }
 
         return\@progenies;
