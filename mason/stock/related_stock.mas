@@ -259,7 +259,7 @@ jQuery(document).ready(function(){
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){
-                        html += json.data[i][2]+"\n";
+                        html += json.data[i][3]+"\n";
                     }
                     jQuery("#progeny_names").html(html);
                     addToListMenu("progenies_to_list_menu", "progeny_names", {
