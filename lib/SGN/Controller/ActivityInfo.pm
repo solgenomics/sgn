@@ -4,6 +4,7 @@ package SGN::Controller::ActivityInfo;
 use Moose;
 use URI::FromHash 'uri';
 use Data::Dumper;
+use CXGN::Stock::TrackingIdentifier;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -20,23 +21,37 @@ sub activity_details :Path('/activity/details') : Args(1) {
         return;
     }
 
-    my $types = $c->config->{tracking_activities};
-    my @type_select_options = split ',',$types;
+    my $tracking_identifier = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier_id);
+    my $identifier_name = $tracking_identifier->uniquename;
+    my $data_type = $tracking_identifier->data_type;
+    my $material_type = $tracking_identifier->material_type;
+    my $material = $tracking_identifier->get_material;
+    my $material_name = $material->[1];
 
-    my $activity_type_header = $c->config->{tracking_activities_header};
-    my @activity_headers = split ',',$activity_type_header;
+    my $types;
+    my @type_select_options = ();
+    my $activity_type_header;
+    my @activity_headers = ();
+
+    if ($data_type eq 'trial_treatments') {
+        $types = $c->config->{tracking_trial_treatments};
+        @type_select_options = split ',',$types;
+
+        $activity_type_header = $c->config->{tracking_trial_treatments_header};
+        @activity_headers = split ',',$activity_type_header;
+    } else {
+        $types = $c->config->{tracking_activities};
+        @type_select_options = split ',',$types;
+
+        $activity_type_header = $c->config->{tracking_activities_header};
+        @activity_headers = split ',',$activity_type_header;        
+    }
 
     my @options = ();
     for my $i (0 .. $#type_select_options) {
         push @options, [$type_select_options[$i], $activity_headers[$i]];
     }
 
-    my $identifier_name = $schema->resultset("Stock::Stock")->find({stock_id => $identifier_id})->uniquename();
-    my $material_of_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
-    my $material_info = $schema->resultset("Stock::StockRelationship")->find( { object_id => $identifier_id, type_id => $material_of_cvterm_id} );
-    my $material_id = $material_info->subject_id();
-    my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
-    my $material_name = $material_rs->uniquename();
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
