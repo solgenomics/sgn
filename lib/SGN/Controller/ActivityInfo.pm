@@ -44,7 +44,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
         @type_select_options = split ',',$types;
 
         $activity_type_header = $c->config->{tracking_activities_header};
-        @activity_headers = split ',',$activity_type_header;        
+        @activity_headers = split ',',$activity_type_header;
     }
 
     my @options = ();
@@ -72,10 +72,21 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $identifier_name = $c->req->param("identifier_name");
-#    print STDERR "IDENTIFIER NAME =".Dumper($identifier_name)."\n";
+    my $identifier_id;
+    if ($identifier_name) {
+           $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
+    }
 
-    if (! $c->user()) {
-	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    my $tracking_identifier = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier_id);
+    my $data_type = $tracking_identifier->data_type;
+    my $material_type = $tracking_identifier->material_type;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error_string => "You must be logged in to use record page." };
+        return;
+    }
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
+        $c->stash->{rest} = { error_string => "You do not have sufficient privileges to use record page." };
         return;
     }
 
@@ -84,22 +95,29 @@ sub record_activity :Path('/activity/record') :Args(0) {
         $c->stash->{check_vendor_role} = $check_vendor_role;
     }
 
-    my $types = $c->config->{tracking_activities};
-    my @type_select_options = split ',',$types;
+    my $types;
+    my @type_select_options = ();
+    my $activity_type_header;
+    my @activity_headers = ();
+    if ($data_type eq 'trial_treatments') {
+        $types = $c->config->{tracking_trial_treatments};
+        @type_select_options = split ',',$types;
 
-    my $activity_type_header = $c->config->{tracking_activities_header};
-    my @activity_headers = split ',',$activity_type_header;
+        $activity_type_header = $c->config->{tracking_trial_treatments_header};
+        @activity_headers = split ',',$activity_type_header;
+    } else {
+        $types = $c->config->{tracking_activities};
+        @type_select_options = split ',',$types;
+
+        $activity_type_header = $c->config->{tracking_activities_header};
+        @activity_headers = split ',',$activity_type_header;
+    }
 
     my @options = ();
     for my $i (0 .. $#type_select_options) {
         push @options, [$type_select_options[$i], $activity_headers[$i]];
     }
 
-    my $identifier_id;
-    if ($identifier_name) {
-        $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
-    }
-    print STDERR "IDENTIFIER ID =".Dumper($identifier_id)."\n";
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
