@@ -251,12 +251,12 @@ sub _get_pedigrees_from_file {
             $c->stash->{rest} = { error => "No cross type on line $line_num! Must be one of these: biparental, open, self, sib, backcross, reselected, polycross." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected'){
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
             $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross, sib, reselected, polycross." };
             $c->detach();
         }
         if ($female eq $male) {
-            if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected'){
+            if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
                 $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self, sib or reselected." };
                 $c->detach();
             }
@@ -266,7 +266,7 @@ sub _get_pedigrees_from_file {
             $c->detach();
         }
 
-        if(($cross_type eq "self") || ($cross_type eq "reselected")) {
+        if(($cross_type eq "self") || ($cross_type eq "reselected") || ($cross_type eq "dihaploid_induction") || ($cross_type eq "doubled_haploid") ) {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
         }
@@ -321,6 +321,8 @@ sub _get_pedigrees_from_file {
             $opts->{male_parent} = $male_parent;
         }
 
+	print STDERR "PEDIGREE NOW: ".Dumper($opts);
+	
         my $p = Bio::GeneticRelationships::Pedigree->new($opts);
         push @pedigrees, $p;
         $line_num++;
