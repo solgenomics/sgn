@@ -48,7 +48,7 @@ Other OPTIONAL trial metadata (projectprops)
 
 
 
-Naama Menda (nm249@cornell.edu)
+Srikanth (sk2783@cornell.edu)
 
     November 2016
 
