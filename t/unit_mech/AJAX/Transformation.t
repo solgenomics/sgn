@@ -112,7 +112,7 @@ my $result = $transformation_obj->get_transformants();
 foreach my $transformant (@$result) {
     push @all_new_stocks, $transformant->[0];
 }
-print STDERR "ALL NEW STOCKS =".Dumper(\@all_new_stocks)."\n";
+#print STDERR "ALL NEW STOCKS =".Dumper(\@all_new_stocks)."\n";
 my $dbh = $schema->storage->dbh;
 my $q = "delete from phenome.stock_owner where stock_id=?";
 my $h = $dbh->prepare($q);
