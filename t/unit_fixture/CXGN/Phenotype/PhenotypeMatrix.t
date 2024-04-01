@@ -56,7 +56,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     data_level=> 'plot',
     trial_list=> [ 139 ],
     trait_list=> [ 70773 ],
-    multiple_observations_treatment => 'average',
+    repetitive_measurements => 'average',
 #   #  program_list=>$self->program_list,
     # folder_list=>$self->folder_list,
     # year_list=>$year_list,
@@ -81,10 +81,10 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 my @results = ( '2.25', '1.5|3.0', '1.5', '3.0' );
 
 my $search_type = 'MaterializedViewTable';
-foreach my $multiple_observations_treatment ('average', 'all', 'first', 'last') {
+foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
     
     $phenotypes_search->search_type($search_type);
-    $phenotypes_search->multiple_observations_treatment($multiple_observations_treatment);
+    $phenotypes_search->repetitive_measurements($repetitive_measurements);
     
     
     my @data = $phenotypes_search->get_phenotype_matrix();
@@ -92,7 +92,7 @@ foreach my $multiple_observations_treatment ('average', 'all', 'first', 'last') 
     foreach my $d (@data) { 
 	if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
 	    my $result = shift(@results);
-	    print STDERR "$search_type, $multiple_observations_treatment, GOT: $d->[39], EXPECTED: $result\n";
+	    print STDERR "$search_type, $repetitive_measurements, GOT: $d->[39], EXPECTED: $result\n";
 	    
 	    is( $d->[39], $result, "test $result" );
 	    print STDERR "MATCHED: ".Dumper($d);
@@ -107,10 +107,10 @@ foreach my $multiple_observations_treatment ('average', 'all', 'first', 'last') 
 @results = ( '2.25', '1.5|3.0', '1.5', '3.0' );
 $search_type = "Native";
 
-foreach my $multiple_observations_treatment ('average', 'all', 'first', 'last') {
+foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
     
     $phenotypes_search->search_type($search_type);
-    $phenotypes_search->multiple_observations_treatment($multiple_observations_treatment);
+    $phenotypes_search->repetitive_measurements($repetitive_measurements);
     
     
     my @data = $phenotypes_search->get_phenotype_matrix();
@@ -118,7 +118,7 @@ foreach my $multiple_observations_treatment ('average', 'all', 'first', 'last') 
     foreach my $d (@data) { 
 	if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
 	    my $result = shift(@results);
-	    print STDERR "$search_type, $multiple_observations_treatment, GOT: $d->[30], EXPECTED: $result\n";
+	    print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
 	    
 	    is( $d->[30], $result, "test $result" );
 	    print STDERR "MATCHED: ".Dumper($d);

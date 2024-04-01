@@ -220,6 +220,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xlsx";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
+    my $repetitive_measurements = $c->req->param("repetitive_measurements") || "average";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
@@ -408,7 +409,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
         has_header => $has_header,
-        search_type => $search_type
+        search_type => $search_type,
+	repetitive_measurements => $repetitive_measurements,
     });
 
     my $error = $download->download();
@@ -423,7 +425,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
 
 #Deprecated. Look to download_phenotypes_action
-#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) {
+#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/downoad') Args(1) {
 #    my $self = shift;
 #    my $c = shift;
 #    my $trial_id = shift;

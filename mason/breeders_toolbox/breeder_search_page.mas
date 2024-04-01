@@ -394,7 +394,7 @@ $dataset_id => undef
               <td>
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-timestamp" type="checkbox">
+                    <input class="wizard-download-phenotypes-timestamp" type="checkbox" />
                     Include timestamps
                   </label>
                 </div>
@@ -402,21 +402,34 @@ $dataset_id => undef
               <td colspan="2">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox">
+                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" />
                     Include accession entry numbers
                   </label>
                 </div>
               </td>
             </tr>
             <tr>
-              <td colspan="3" style="border-top: none; padding-top: 0">
+              <td style="border-top: none; padding-top: 0">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-outliers" type="checkbox">
+                    <input class="wizard-download-phenotypes-outliers" type="checkbox" />
                     Supress user defined phenotype outliers
                   </label>
                 </div>
               </td>
+	      <td style="border-top: none; padding-top: 0">
+		Repetitive measurements: <br />
+
+		<select class="form-control" id="repetitive_measurements_treatment_option">
+                  <option>first value</option>
+                  <option>last value</option>
+                  <option selected>averaged value</option>
+                  <option>all values</option>
+		</select>
+	      </td>
+	      <td style="border-top: none; padding-top: 0">
+		&nbsp;
+	      </td>
             </tr>
             <tr>
               <td>

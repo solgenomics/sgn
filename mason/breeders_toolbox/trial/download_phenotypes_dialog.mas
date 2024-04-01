@@ -66,6 +66,18 @@ $dialog_name => undef
 <&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
 
             <div class="form-group">
+	      <label class="col-sm-3 control-label">For repeated measurements, return the </label>
+		<div class="col-sm-9">
+		  <select class="form-control" id="repeated_measurements_treatment_option">
+		    <option>first value</option>
+		    <option>last value</option>
+		    <option selected>averaged value</option>
+		    <option>all values</option>
+		  </select>
+		</div>
+	    </div>
+	    
+            <div class="form-group">
                 <label class="col-sm-3 control-label">Include Timestamps: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_timestamp_option">
