@@ -93,7 +93,8 @@ sub download {
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $search_type = $self->search_type();
-
+    my $repetitive_measurements => $self->repetitive_measurements();
+    
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my @data;
@@ -125,7 +126,8 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
-            include_pedigree_parents=>$include_pedigree_parents
+            include_pedigree_parents=>$include_pedigree_parents,
+	    repetitive_measurements => $repetitive_measurements,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

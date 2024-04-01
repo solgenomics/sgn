@@ -11,45 +11,52 @@ CXGN::Trial::Download::Plugin::TrialPhenotypeExcelEntryNumbers
 
 This plugin module is loaded from CXGN::Trial::Download
 
-------------------------------------------------------------------
+=head1 DESCRIPTION
 
 This plugin extends the base TrialPhenotypeExcel plugin to include 
 an additional column for trial-level accession entry numbers.
 
 As a CSV:
-my $plugin = 'TrialPhenotypeCSVEntryNumbers';
 
+    my $plugin = 'TrialPhenotypeCSVEntryNumbers';
+ 
 As a xls:
-my $plugin = 'TrialPhenotypeExcelEntryNumbers';
 
-my $download = CXGN::Trial::Download->new({
-    bcs_schema => $schema,
-    trait_list => \@trait_list_int,
-    year_list => \@year_list,
-    location_list => \@location_list_int,
-    trial_list => \@trial_list_int,
-    accession_list => \@accession_list_int,
-    plot_list => \@plot_list_int,
-    plant_list => \@plant_list_int,
-    filename => $tempfile,
-    format => $plugin,
-    data_level => $data_level,
-    include_timestamp => $timestamp_option,
-    exclude_phenotype_outlier => $exclude_phenotype_outlier,
-    trait_contains => \@trait_contains_list,
-    phenotype_min_value => $phenotype_min_value,
-    phenotype_max_value => $phenotype_max_value,
-    has_header=>$has_header
-});
-my $error = $download->download();
-my $file_name = "phenotype.$format";
-$c->res->content_type('Application/'.$format);
-$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-my $output = read_file($tempfile);
-$c->res->body($output);
+    my $plugin = 'TrialPhenotypeExcelEntryNumbers';
+
+Then:
+
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        trait_list => \@trait_list_int,
+        year_list => \@year_list,
+        location_list => \@location_list_int,
+        trial_list => \@trial_list_int,
+        accession_list => \@accession_list_int,
+        plot_list => \@plot_list_int,
+        plant_list => \@plant_list_int,
+        filename => $tempfile,
+        format => $plugin,
+        data_level => $data_level,
+        include_timestamp => $timestamp_option,
+        exclude_phenotype_outlier => $exclude_phenotype_outlier,
+        trait_contains => \@trait_contains_list,
+        phenotype_min_value => $phenotype_min_value,
+        phenotype_max_value => $phenotype_max_value,
+        has_header=>$has_header,
+        repetitive_measurements => 'average', 
+    });
+    my $error = $download->download();
+    my $file_name = "phenotype.$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
 
 
 =head1 AUTHORS
+
+David Waring
 
 =cut
 
@@ -95,6 +102,7 @@ sub download {
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $search_type = $self->search_type();
+    my $repetitive_measurements = $self->repetitive_measurements();
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my @data;
@@ -124,6 +132,7 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
+	    repetitive_measurements => $repetitive_measurements,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

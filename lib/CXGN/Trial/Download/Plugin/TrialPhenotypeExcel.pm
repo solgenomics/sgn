@@ -9,52 +9,53 @@ CXGN::Trial::Download::Plugin::TrialPhenotypeExcel
 
 This plugin module is loaded from CXGN::Trial::Download
 
-------------------------------------------------------------------
+=head1 DESCRIPTION
 
-For downloading phenotypes in a matrix where columns contain the phenotypes
-and rows contain the observation unit (as used from
-SGN::Controller::BreedersToolbox::Download->download_phenotypes_action which
-is used from the wizard, trial detail page, and manage trials page for
-downlading phenotypes):
+For downloading phenotypes in a matrix where columns contain the phenotypes and rows contain the observation unit (as used from SGN::Controller::BreedersToolbox::Download->download_phenotypes_action which is used from the wizard, trial detail page, and manage trials page for downlading phenotypes):
 
-There a number of optional keys for filtering down the phenotypes
-(trait_list, year_list, location_list, etc). Keys can be entirely ignored
-if you don't need to filter by them.
+There are a number of optional keys for filtering down the phenotypes (trait_list, year_list, location_list, etc). Keys can be entirely ignored if you don't need to filter by them.
 
 As a CSV:
-my $plugin = 'TrialPhenotypeCSV';
+
+    my $plugin = 'TrialPhenotypeCSV';
 
 As a xls:
-my $plugin = 'TrialPhenotypeExcel';
 
-my $download = CXGN::Trial::Download->new({
-    bcs_schema => $schema,
-    trait_list => \@trait_list_int,
-    year_list => \@year_list,
-    location_list => \@location_list_int,
-    trial_list => \@trial_list_int,
-    accession_list => \@accession_list_int,
-    plot_list => \@plot_list_int,
-    plant_list => \@plant_list_int,
-    filename => $tempfile,
-    format => $plugin,
-    data_level => $data_level,
-    include_timestamp => $timestamp_option,
-    exclude_phenotype_outlier => $exclude_phenotype_outlier,
-    trait_contains => \@trait_contains_list,
-    phenotype_min_value => $phenotype_min_value,
-    phenotype_max_value => $phenotype_max_value,
-    has_header=>$has_header
-});
-my $error = $download->download();
-my $file_name = "phenotype.$format";
-$c->res->content_type('Application/'.$format);
-$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-my $output = read_file($tempfile);
-$c->res->body($output);
+    my $plugin = 'TrialPhenotypeExcel';
+
+Then:
+
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema                => $schema,
+        trait_list                => \@trait_list_int,
+        year_list                 => \@year_list,
+        location_list             => \@location_list_int,
+        trial_list                => \@trial_list_int,
+        accession_list            => \@accession_list_int,
+        plot_list                 => \@plot_list_int,
+        plant_list                => \@plant_list_int,
+        filename                  => $tempfile,
+        format                    => $plugin,
+        data_level                => $data_level,
+        include_timestamp         => $timestamp_option,
+        exclude_phenotype_outlier => $exclude_phenotype_outlier,
+        trait_contains            => \@trait_contains_list,
+        phenotype_min_value       => $phenotype_min_value,
+        phenotype_max_value       => $phenotype_max_value,
+        has_header                => $has_header,
+        repetitive_measurements   => 'average', # or 'first', 'last', 'all'
+    });
+    my $error = $download->download();
+    my $file_name = "phenotype.$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
 
 
 =head1 AUTHORS
+
+Nick Morales, Lukas Mueller, Dariusz Bienkowski
 
 =cut
 
