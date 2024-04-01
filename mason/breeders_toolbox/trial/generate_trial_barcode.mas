@@ -310,7 +310,6 @@ $trial_stock_type => undef
 </div>
 
 
-
 <script>
 
 jQuery(document).ready(function () {
@@ -618,7 +617,6 @@ jQuery(document).ready(function () {
             }
         });
     });
-
 
 
 });

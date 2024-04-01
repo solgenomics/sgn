@@ -322,6 +322,28 @@ sub get_stock_variety {
 
 }
 
+=head2 function get_tracking_identifier_exact()
+
+retrieves the stock row with tracking_identifier stock type and with an exact match to the stock name
+
+=cut
+
+sub get_tracking_identifier_exact {
+    my $self = shift;
+    my $schema = $self->get_schema();
+    my $stock_name = $self->get_stock_name();
+    my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,'tracking_identifier','stock_type')->cvterm_id;
+
+    my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'me.is_obsolete' => { '!=' => 't' }, 'uniquename' => $stock_name, 'type_id' => $tracking_identifier_type_id });
+    my $stock;
+    if ($stock_rs->count == 1) {
+        $stock = $stock_rs->first;
+    } else {
+        return;
+    }
+    return $stock;
+}
+
 
 #######
 1;
