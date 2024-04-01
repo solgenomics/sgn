@@ -192,13 +192,25 @@ has 'offset' => (
     is => 'rw'
 );
 
-has 'multiple_observations_treatment' =>  (
+#has 'multiple_observations_treatment' =>  (
+#    isa => 'Str|Undef',
+#    is => 'rw',
+#   default => 'average',  # can be first, last, average, all
+#    );
+
+has 'repetitive_measurements' => (
+    isa => 'Str',
+    is => 'rw',
+    default => sub { return 'average'; }, # can be first, last, average, all
+    );
+
+has 'single_measurements' => (
     isa => 'Str|Undef',
     is => 'rw',
-   default => 'average',  # can be first, last, average, all
-);
+    default => 'last', # can be first or last
+    );
 
-has 'trait_repeat_types' => (
+has 'trait_repeat_types' => ( # returns the repeat type for every trait keyed by cvterm_id
     isa => 'HashRef|Undef',
     is => 'rw',
     default => sub { return {} },
@@ -319,16 +331,16 @@ sub get_phenotype_matrix {
 
 	    
 	    my %phenotype_ids;
+	    my %trait_observations = ();
+	    if (@$observations > 0) { 
+		%trait_observations = $self->format_observations($observations);
+	    }
 	    
-	    my %trait_observations = $self->format_observations($obs_unit->{observations});
-	    
-	    #print STDERR "FORMATTED OBSERVATIONS =".Dumper($formatted_observations)."\n";
-	    
-	    ####$obs_unit->{observations} = $trait_observations;
+	    print STDERR "FORMATTED OBSERVATIONS =".Dumper(\%trait_observations)."\n";
 	    
 	    if ($include_phenotype_primary_key) {
 		foreach my $observation (@$observations) {
-			$phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
+		    $phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
 		}
 	    }
 	    foreach my $trait (@sorted_traits) {
@@ -397,29 +409,36 @@ sub get_phenotype_matrix {
                 #     $obsunit_data{$obsunit_id}->{$cvterm} = $value;
                 # }
 
-		if (ref($obsunit_data{$obsunit_id}->{$cvterm})) {
+		if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
 
-		    if ($self->multiple_observations_treatment() eq "first") {
+		    if ($self->repetitive_measurements() eq "first") {
 			$obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
 			
 		    }
 
-		    if ($self->multiple_observations_treatment() eq "last") {
+		    if ($self->repetitive_measurements() eq "last") {
 			$obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
 		    }
 
-		    if ($self->multiple_observations_treatment() eq "average") {
+		    if ($self->repetitive_measurements() eq "average") {
 			my $count = 0;
-			my $sum = 0;
+			my $sum = undef;
 			foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
-			    $sum += $v;
-			    $count++;
+			    if (defined($v)) {   
+				$sum += $v;
+				$count++;
+			    }
 			}
-			$obsunit_data{$obsunit_id}->{$cvterm} = $sum/$count;
+			if (defined($sum) && ($count > 0) ) {
+			    $obsunit_data{$obsunit_id}->{$cvterm} = $sum/$count;
+			}
+			else {
+			    $obsunit_data{$obsunit_id}->{$cvterm} = undef;
+			}
 					
 		    }
 		    
-		    if ($self->multiple_observations_treatment() eq "all") {
+		    if ($self->repetitive_measurements() eq "all") {
 			$obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
 		    }
 		    
@@ -629,26 +648,26 @@ sub process_duplicate_measurements {
 
     #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
-    if ($self->multiple_observations_treatment() eq "first") {
+    if ($self->repetitive_measurements() eq "first") {
 	print STDERR "Retrieving first value...\n";
 	$trait_observations =  $trait_observations->[0];
 	$trait_observations->{squash_method} = "first";
     }
 
-    if ($self->multiple_observations_treatment() eq "last") {
+    if ($self->repetitive_measurements() eq "last") {
 	print STDERR "Retrieving last value...\n";
 	$trait_observations = $trait_observations->[-1] ;
 	$trait_observations->{squash_method} = "last";
     }
 
-    if ($self->multiple_observations_treatment() eq "average") {
+    if ($self->repetitive_measurements() eq "average") {
 	print STDERR "Averaging values ...\n";
 	$trait_observations = $self->average_observations($trait_observations);
 	$trait_observations->{squash_method} = "average";
     }
 
 
-    if ($self->multiple_observations_treatment() eq "all") {
+    if ($self->repetitive_measurements() eq "all") {
 	print STDERR "Retrieving all values...\n";
 	my $collated_multiple_observation = $trait_observations->[0];
 	my @trait_values;
@@ -657,7 +676,7 @@ sub process_duplicate_measurements {
 	}
 
 	$collated_multiple_observation->{value} = \@trait_values;
-	$collated_multiple_observation->{squash_method} = $self->multiple_observations_treatment();
+	$collated_multiple_observation->{squash_method} = $self->repetitive_measurements();
 	$trait_observations = $collated_multiple_observation;
     }
 
@@ -673,27 +692,33 @@ sub average_observations {
     
     #print STDERR "Averaging Observations: ".Dumper($observations_ref);
     
-    my $sum = 0;
+    my $sum = undef;
     my $count = 0;
     my @values;
     foreach my $v (@$observations_ref) {
-	if (! $v->{outlier}) { 
+	if (! $v->{outlier} && defined($v->{value}) ) { 
 	    $sum += $v->{value};
 	    $count++;
 	    push @values, $v->{value};
 	}
     }
 
-    my $avg = $sum / $count;
-    my $sqr_diff;
-
-    foreach my $v (@$observations_ref) {
-	my $diff = $v->{value} - $avg;
-	$sqr_diff += $diff * $diff;
-	$count++;
+    my $avg;
+    my $stddev;
+    
+    if (defined($sum) && ($count > 0) ) {   # make sure to return undef for measurements that are all undef
+	$avg = $sum / $count;
+    
+	my $sqr_diff;
+	
+	foreach my $v (@$observations_ref) {
+	    my $diff = $v->{value} - $avg;
+	    $sqr_diff += $diff * $diff;
+	    $count++;
+	}
+	$stddev = sqrt($sqr_diff/$count);
     }
-    my $stddev = sqrt($sqr_diff/$count);
-
+    
     my $averaged_observation = $observations_ref->[0];
     $averaged_observation->{value} = $avg;
     $averaged_observation->{stddev} = $stddev;
