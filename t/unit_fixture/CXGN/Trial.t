@@ -438,6 +438,7 @@ is_deeply(\@all_project_types, [
           'Specialty Trial',
           'Uniform Yield Trial',
           'Variety Release Trial',
+          'activity_record',
           'crossing_block_trial',
           'crossing_trial',
           'genetic_gain_trial',
@@ -445,11 +446,12 @@ is_deeply(\@all_project_types, [
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
-	        'heterosis_trial',
-	      	'misc_trial',
-	        'phenotyping_trial',
+          'heterosis_trial',
+          'misc_trial',
+          'phenotyping_trial',
           'pollinating_trial',
-          'storage_trial'
+          'storage_trial',
+          'transformation_project'
       ], "check get_all_project_types");
 
 
@@ -932,8 +934,8 @@ $trial->set_year(2013);
 is($trial->get_year(), 2013, "set year test");
 
 # test planting date accessors
-# 
-#$trial-> set_planting_date ('2016/01/02 12:21:12'); 
+#
+#$trial-> set_planting_date ('2016/01/02 12:21:12');
 #my $planting_date = $trial -> get_planting_date();
 #print STDERR Dumper $planting_date;
 #is($planting_date, '2016-January-02 12:21:12', "set planting_date test");

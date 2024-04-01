@@ -21,7 +21,7 @@ $trial_name => undef
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Introduction" &>
                             <ul>
-                                <li>Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_open, bulk_self, or doubled_haploid)</li>
+                                <li>Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_open, bulk_self, doubled_haploid, or dihaploid_induction)</li>
                                     <ul class="a">
                                         <li>cross type descriptions:</li>
                                         <ul class="b">
@@ -35,6 +35,7 @@ $trial_name => undef
                                             <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
                                             <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                             <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+					    <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from tetraploid to diploid.</li>
                                         </ul>
                                     </ul>
                                 </li>
@@ -376,7 +377,7 @@ $trial_name => undef
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, or doubled_haploid)
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, doubled_haploid, dihaploid_induction)
                             <ul class="a">
                                 <li><b>cross type descriptions:</b></li>
                                 <ul class="b">
@@ -390,6 +391,8 @@ $trial_name => undef
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
                                     <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>                                
                                     <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+				    <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
+				    <li>
                                 </ul>
                             </ul>
                         </li>

@@ -1276,6 +1276,72 @@ sub cross_male_parent_autocomplete_GET : Args(0){
 }
 
 
+=head2 only_accession_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub only_accession_autocomplete : Local : ActionClass('REST') { }
+
+sub only_accession_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='accession' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 vector_construct_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub vector_construct_autocomplete : Local : ActionClass('REST') { }
+
+sub vector_construct_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='vector_construct' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
 sub parents : Local : ActionClass('REST') {}
 
 sub parents_GET : Path('/ajax/stock/parents') Args(0) {
@@ -1998,8 +2064,11 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my $result = $progenies->get_progenies();
     my @stocks;
     foreach my $r (@$result){
-      my ($cvterm_name, $stock_id, $stock_name) = @$r;
-      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
+	my ($cvterm_name, $stock_id, $stock_name, $cross_type) = @$r;
+
+	if (! $cross_type) { $cross_type = 'unspecified'; }
+	
+	push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name ];	
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -2022,14 +2091,42 @@ sub get_siblings:Chained('/stock/get_stock') PathPart('datatables/siblings') Arg
         foreach my $sib(@$family){
             my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $sibling_id, $sibling_name, $cross_type) = @$sib;
             if ($sibling_id != $stock_id) {
-                push @siblings, [ qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
-                qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
-                qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type, $sibling_name ];
+                push @siblings, [
+		    qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
+		    qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+		    qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
+		    $cross_type,
+		    $sibling_name ];
             }
         }
     }
     $c->stash->{rest}={data=>\@siblings};
 }
+
+sub get_parents :Chained('/stock/get_stock') PathPart('datatables/parents') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$stock_id});
+    my $parents = $stock->get_parents();
+    my $female_parent = $parents->{'mother'};
+    my $female_parent_id = $parents->{'mother_id'};
+    my $male_parent = $parents->{'father'};
+    my $male_parent_id = $parents->{'father_id'};
+    
+    my $female_parent_link = qq { <a href="/stock/$female_parent_id/view">$female_parent</a> };
+
+    my $male_parent_link = qq { <a href="/stock/$male_parent_id/view">$male_parent</a> };
+
+    my $cross_type = $parents->{'cross_type'};
+    
+    print STDERR "PARENTS: ".Dumper($parents);
+    $c->stash->{rest}= { data => [ [ $female_parent_link, $male_parent_link, $cross_type ] ] };
+
+}
+    
 
 sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
     my $self = shift;
