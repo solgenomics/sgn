@@ -93,8 +93,9 @@ sub download {
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $search_type = $self->search_type();
-    my $repetitive_measurements => $self->repetitive_measurements();
-    
+
+    my $repetitive_measurements = $self->repetitive_measurements();
+
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my @data;
