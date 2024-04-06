@@ -151,7 +151,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
         $project_id = $project_rs->project_id();
     }
 
-    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id, activity_type => $activity_type);
     my $all_identifiers = $activity_project->get_project_active_identifiers();
     my $last_number = scalar (@$all_identifiers);
 
@@ -452,12 +452,25 @@ sub get_project_active_identifier_names :Path('/ajax/tracking_activity/project_a
     my $project_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
+    my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+    my $activity_type_rs = $schema->resultset("Project::Projectprop")->find ({
+        project_id => $project_id,
+        type_id => $activity_type_cvterm_id
+    });
+    my $activity_type;
+    if ($activity_type_rs) {
+        $activity_type = $activity_type_rs->value();
+    }
+
+
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id, activity_type => $activity_type);
     my $all_identifier_info = $activity_project->get_project_active_identifiers();
     my @identifier_names;
     foreach my $identifier_info (@$all_identifier_info) {
         push @identifier_names, $identifier_info->[1];
     }
+
+    print STDERR "IDENTIFIER NAMES =".Dumper(\@identifier_names)."\n";
 
     $c->stash->{rest} = { data => \@identifier_names };
 
