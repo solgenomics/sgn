@@ -262,17 +262,32 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
 
-    my @details;
-    my $tracking_activities = $c->config->{tracking_activities};
-    my @activity_types = split ',',$tracking_activities;
+    my $tracking_identifier = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier_id);
+    my $data_type = $tracking_identifier->data_type;
+    my $types_string;
+    my @input_types = ();
+    my $tracking_cvterm_id;
 
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
-    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
+    my $tracking_tissue_culture_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
+    my $tracking_trial_treatment_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_trial_treatments_json', 'stock_property')->cvterm_id();
+
+    if ($data_type eq 'trial_treatments') {
+        $types_string = $c->config->{tracking_trial_treatments};
+        @input_types = split ',',$types_string;
+        $tracking_cvterm_id = $tracking_trial_treatment_json_cvterm_id;
+    } else {
+        $types_string = $c->config->{tracking_activities};
+        @input_types = split ',',$types_string;
+        $tracking_cvterm_id = $tracking_tissue_culture_json_cvterm_id;
+    }
+
+    my @details;
+    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_cvterm_id});
     if ($activity_info_rs) {
         my $activity_json = $activity_info_rs->value();
         my $info = JSON::Any->jsonToObj($activity_json);
         my %info_hash = %{$info};
-        foreach my $type (@activity_types){
+        foreach my $type (@input_types){
             my $empty_string;
             my @each_type_details = ();
             my $each_timestamp_string;
@@ -313,7 +328,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
             }
         }
     } else {
-        foreach my $type (@activity_types) {
+        foreach my $type (@input_types) {
             push @details, 'NA';
         }
     }
@@ -333,19 +348,33 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $c = shift;
     my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
+    my $tracking_identifier = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier_id);
+    my $data_type = $tracking_identifier->data_type;
+    my $types_string;
+    my @input_types = ();
+    my $tracking_cvterm_id;
     my @summary = ();
-    my $tracking_activities = $c->config->{tracking_activities};
-    my @activity_types = split ',',$tracking_activities;
 
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
-    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
+    my $tracking_tissue_culture_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
+    my $tracking_trial_treatment_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_trial_treatments_json', 'stock_property')->cvterm_id();
+
+    if ($data_type eq 'trial_treatments') {
+        $types_string = $c->config->{tracking_trial_treatments};
+        @input_types = split ',',$types_string;
+        $tracking_cvterm_id = $tracking_trial_treatment_json_cvterm_id;
+    } else {
+        $types_string = $c->config->{tracking_activities};
+        @input_types = split ',',$types_string;
+        $tracking_cvterm_id = $tracking_tissue_culture_json_cvterm_id;
+    }
+
+    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_cvterm_id});
     if ($activity_info_rs) {
         my $input;
         my $activity_json = $activity_info_rs->value();
         my $info = JSON::Any->jsonToObj($activity_json);
         my %info_hash = %{$info};
-        foreach my $type (@activity_types){
+        foreach my $type (@input_types){
             my $empty_string;
             my @each_type_details = ();
             my $each_timestamp_string;
@@ -365,7 +394,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
             }
         }
     } else {
-        foreach my $type (@activity_types) {
+        foreach my $type (@input_types) {
             push @summary, 'NA';
         }
     }
