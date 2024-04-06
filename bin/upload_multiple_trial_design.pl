@@ -5,7 +5,7 @@ load_cxgn_multi_trials.pl
 
 =head1 SYNOPSIS
 
-    upload_multiple_trial_design.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -m [trial metadata file] [-t] -e [email address] -l [logged in user]
+    upload_multiple_trial_design.pl  -H [dbhost] -D [dbname] -i infile -b [breeding program name] -u [username] -m [trial metadata file] [-t] -e [email address] -l [logged in user]
 
 =head1 COMMAND-LINE OPTIONS
 

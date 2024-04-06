@@ -54,6 +54,7 @@ use Email::Sender::Simple qw /sendmail/;
 use DateTime;
 use Email::Simple;
 use Email::Simple::Creator;
+use CXGN::Tools::Run;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1260,6 +1261,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
         }
 
+
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         my $current_save = $trial_create->save_trial();
 
@@ -1307,6 +1309,25 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         $c->stash->{rest} = {success => "1",};
         return;
     }
+
+        my $basepath = $c->config->{basepath};
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $infile = $c->config->{infile};
+        my $breeding_program_name = $c->config->{breeding_program_name};
+        my $username = $c->config->{username};
+        my $trial_metadata_file = $c->config->{trial_metadata_file};
+        my $test = $c->config->{test};
+        my $dbuser = $c->config->{dbuser};
+        my $email_address = $c->config->{email_address};
+        my $logged_in_user = $c->config->{logged_in_name};
+        my $dbpass = $c->config->{dbpass};  
+
+        # Run the upload_multiple.pl script asynchronously
+        my $async_upload = CXGN::Tools::Run->new();
+        $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -i $infile -b $breeding_program_name -u $username -m $trial_metadata_file -t -u $dbuser -e $email_address -l $logged_in_user");
+
+        $c->stash->{rest} = { success => 1 };
 
 }
 
