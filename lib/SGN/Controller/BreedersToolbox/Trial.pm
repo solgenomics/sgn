@@ -323,6 +323,17 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $activity_type = $activity_type_rs->value();
         }
 
+        my $types_string;
+        my @input_types = ();
+        if ($activity_type eq 'trial_treatments') {
+            $types_string = $c->config->{tracking_trial_treatments_header};
+            @input_types = split ',',$types_string;
+        } else {
+            $types_string = $c->config->{tracking_activities_header};
+            @input_types = split ',',$types_string;
+        }
+
+        $c->stash->{input_types} = \@input_types;
         $c->stash->{activity_type} = $activity_type;
         $c->stash->{vendor_id} = $vendor_id;
         $c->stash->{template} = '/tracking_activities/activity_project.mas';

@@ -422,8 +422,15 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
         $activity_type = $activity_type_rs->value();
     }
 
-    my $tracking_activities = $c->config->{tracking_activities};
-    my @activity_types = split ',',$tracking_activities;
+    my $types_string;
+    my @input_types = ();
+    if ($activity_type eq 'trial_treatments') {
+        $types_string = $c->config->{tracking_trial_treatments};
+        @input_types = split ',',$types_string;
+    } else {
+        $types_string = $c->config->{tracking_activities};
+        @input_types = split ',',$types_string;
+    }
 
     my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id, activity_type => $activity_type);
     my $all_identifier_info = $activity_project->get_project_active_identifiers();
@@ -446,7 +453,7 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
         if ($progress) {
             my $progress_ref = JSON::Any->jsonToObj($progress);
             my %progress_hash = %{$progress_ref};
-            foreach my $type (@activity_types){
+            foreach my $type (@input_types){
                 if ($progress_hash{$type}) {
                     my $details = {};
                     my %details_hash = ();
@@ -462,7 +469,7 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
                 }
             }
         } else {
-            foreach my $type (@activity_types) {
+            foreach my $type (@input_types) {
                 push @row, $input;
             }
         }

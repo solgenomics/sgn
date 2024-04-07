@@ -135,6 +135,7 @@ $analytics_protocol_result_summary => {}
 #Specific to activity page
 $vendor_id => undef
 $activity_type => undef
+$input_types => ()
 
 </%args>
 
@@ -562,7 +563,7 @@ $activity_type => undef
                                 <& /tracking_activities/activity_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner, vendor_id => $vendor_id, activity_type => $activity_type &>
 % } #End activity_project_details
 % if ($info_section_id eq 'active_tracking_identifiers_section'){
-                                <& /tracking_activities/active_tracking_identifiers.mas, trial_id=>$trial_id &>
+                                <& /tracking_activities/active_tracking_identifiers.mas, trial_id=>$trial_id, input_types=>$input_types &>
 % } #End active_tracking_identifiers_section
 
 % if ($info_section_id eq 'transformation_project_details'){
