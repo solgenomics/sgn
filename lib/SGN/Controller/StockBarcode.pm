@@ -1403,7 +1403,7 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
 
     my $item_names = $c->req->param("identifier_names");
     my $order_id = $c->req->param("order_id");
-    my $trial_id = $c->req->param("trial_id");
+    my $project_id = $c->req->param("trial_id");
     my $user_id = $c->req->param("user_id");
     my $labels_per_page = $c->req->param("label_rows") || 10;
     my $labels_per_row  = $c->req->param("label_cols") || 1;
@@ -1458,6 +1458,16 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
     my @tracking_list;
     my @id_list;
 
+    my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+    my $activity_type_rs = $schema->resultset("Project::Projectprop")->find ({
+        project_id => $project_id,
+        type_id => $activity_type_cvterm_id
+    });
+    my $activity_type;
+    if ($activity_type_rs) {
+        $activity_type = $activity_type_rs->value();
+    }
+
     if ($order_id || $order_id ne '') {
         my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
         $tracking_info = $order_obj->get_tracking_info();
@@ -1465,8 +1475,8 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
         foreach my $item_info (@tracking_list) {
             push @id_list, $item_info->[0];
         }
-    } elsif ($trial_id || $trial_id ne '') {
-        my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $trial_id);
+    } elsif ($project_id || $project_id ne '') {
+        my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id, activity_type => $activity_type);
         $tracking_info = $activity_project->get_project_active_identifiers();
         @tracking_list = @$tracking_info;
         foreach my $item_info (@tracking_list) {

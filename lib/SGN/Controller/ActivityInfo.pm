@@ -105,7 +105,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
 
         $activity_type_header = $c->config->{tracking_trial_treatments_header};
         @activity_headers = split ',',$activity_type_header;
-    } else {
+    } elsif ($identifier_name && !$data_type){
         $types = $c->config->{tracking_activities};
         @type_select_options = split ',',$types;
 
