@@ -213,6 +213,7 @@ sub activity_info_save : Path('/ajax/tracking_activity/save') : ActionClass('RES
 sub activity_info_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if (!$c->user()) {
         $c->stash->{rest} = { error => "You must be logged in to add new information." };
@@ -231,7 +232,10 @@ sub activity_info_save_POST : Args(0) {
     my $notes = $c->req->param("notes");
     my $record_timestamp = $c->req->param("record_timestamp");
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
+    my $identifier_id = $schema->resultset("Stock::Stock")->find( { uniquename => $tracking_identifier, type_id => $tracking_identifier_cvterm_id  })->stock_id();
+    my $tracking_identifier_obj = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier_id);
+    my $data_type = $tracking_identifier_obj->data_type;
 
     my $add_activity_info = CXGN::Stock::TrackingActivity::ActivityInfo->new({
         schema => $schema,
@@ -241,6 +245,7 @@ sub activity_info_save_POST : Args(0) {
         timestamp => $record_timestamp,
         operator_id => $user_id,
         notes => $notes,
+        data_type => $data_type
     });
     my $return = $add_activity_info->add_info();
 #    print STDERR "ADD INFO =".Dumper ($add_activity_info->add_info())."\n";
@@ -309,7 +314,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
 
                     push @each_timestamp_details, "operator".":"."".$operator_name;
                     my $input = $details_hash{$timestamp}{'input'};
-                    push @each_timestamp_details, "count".":"."".$input;
+                    push @each_timestamp_details, "input".":"."".$input;
                     my $notes = $details_hash{$timestamp}{'notes'};
                     push @each_timestamp_details, "notes".":"."".$notes;
 

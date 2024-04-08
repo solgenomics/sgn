@@ -67,10 +67,17 @@ has 'notes' => (
     is => 'rw',
 );
 
+has 'data_type' => (
+    isa =>'Str',
+    is => 'rw',
+);
+
+
 sub add_info {
     my $self = shift;
     my $schema = $self->get_schema();
     my $tracking_identifier = $self->get_tracking_identifier();
+    my $data_type = $self->get_data_type();
     my $selected_type = $self->get_selected_type();
     my $input = $self->get_input();
     my $operator_id = $self->get_operator_id();
@@ -80,8 +87,14 @@ sub add_info {
 
     my $coderef = sub {
 
-        my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
-        my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property');
+        my $tracking_tissue_culture_json_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property');
+        my $tracking_trial_treatment_json_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_trial_treatments_json', 'stock_property');
+        my $tracking_info_json_cvterm;
+        if ($data_type eq 'trial_treatments') {
+            $tracking_info_json_cvterm = $tracking_trial_treatment_json_cvterm;
+        } else {
+            $tracking_info_json_cvterm = $tracking_tissue_culture_json_cvterm;
+        }
 
         my $tracking_identifier_stock = $self->_get_tracking_identifier($tracking_identifier);
         if (!$tracking_identifier_stock) {
