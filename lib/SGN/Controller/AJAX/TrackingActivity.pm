@@ -518,5 +518,64 @@ sub get_project_active_identifier_names :Path('/ajax/tracking_activity/project_a
 }
 
 
+sub get_all_project_tracking_identifiers :Path('/ajax/tracking_activity/all_project_tracking_identifiers') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+    my $activity_type_rs = $schema->resultset("Project::Projectprop")->find ({
+        project_id => $project_id,
+        type_id => $activity_type_cvterm_id
+    });
+    my $activity_type;
+    if ($activity_type_rs) {
+        $activity_type = $activity_type_rs->value();
+    }
+
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id, activity_type => $activity_type);
+    my $all_identifier_info = $activity_project->get_project_active_identifiers();
+    my @identifiers;
+    foreach my $identifier_info (@$all_identifier_info) {
+        push @identifiers, {
+            identifier_stock_id => $identifier_info->[0],
+            identifier_name => $identifier_info->[1]
+        };
+    }
+
+    $c->stash->{rest} = { data => \@identifiers };
+
+}
+
+
+sub delete_identifier : Path('/ajax/tracking_activity/delete_identifier') : ActionClass('REST'){ }
+
+sub delete_identifier_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to delete identifier." };
+        return;
+    }
+    if (!($c->user()->has_role('curator'))) {
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to delete tracking identifier." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $identifier_stock_id = $c->req->param("identifier_stock_id");
+    my $tracking_identifier_obj = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier_stock_id);
+    my $data_type = $tracking_identifier_obj->data_type;
+
+    
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
 
 1;
