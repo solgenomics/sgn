@@ -60,7 +60,6 @@ my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search(
 my $date = DateTime->now();
 
 my $obo_header = "format-version: 1.2
-date: $date
 default-namespace: $dbname" . "_traits
 ontology: $prefix\n\n";
 
@@ -73,10 +72,19 @@ while(my $cvterm = $cvterm_rs->next() ) {
 	my $def = $cvterm->definition();
 	my $is_obsolete = $cvterm->is_obsolete();
 	my $is_relationshiptype = $cvterm->is_relationshiptype();
+	my $is_obsolete = $cvterm->is_obsolete();
 
 	my $term_details = "\n[Term]\nid: $prefix:$accession\nname: $cvterm_name\nnamespace: $namespace\n";
 	$term_details .="def: \"$def\"\n" if $def;
+	$term_details .="is_obsolete: true\n" if $is_obsolete;
 
+	if ($is_relationshiptype) {
+			$term_details = "
+[Typedef]
+id: $cvterm_name
+name: $cvterm_name
+"
+}
 	write_file( $obo_file,  {append => 1 }, "$term_details" );
 
 	my $syn_rs = $cvterm->cvtermsynonyms();
@@ -93,7 +101,7 @@ while(my $cvterm = $cvterm_rs->next() ) {
 	while( my $xref = $xref_rs->next() ) {
 			my $xref_acc  =  $xref->dbxref->accession();
 			my $xref_prefix = $xref->dbxref->db->name();
-			write_file( $obo_file,  {append => 1 }, "xref: "  . $xref_prefix . ":"  . $xref_acc . "\n" );
+			write_file( $obo_file,  {append => 1 }, "xref: "  . $xref_prefix . ":"  . $xref_acc . "\n" ) if ( $xref->is_for_definition == 0 );
 	}
 
 	while( my $rel = $relationships_rs->next() ) {
