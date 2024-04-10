@@ -49,7 +49,6 @@ jQuery(document).ready(function(){
 });
 
 function deleteIdentifier(identifier_stock_id){
-
     var confirmation = confirm('Are you sure you want to delete this tracking identifier? The deletion cannot be undone.');
 
     if (confirmation) {

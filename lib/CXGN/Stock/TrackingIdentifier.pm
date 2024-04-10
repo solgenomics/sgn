@@ -147,6 +147,111 @@ sub _retrieve_material {
 
 }
 
+
+=head2 delete
+
+ Usage:        $tracking_identifier->delete();
+ Desc:         Deletes a tracking identifier
+ Ret:          error string if error, undef otherwise
+ Args:         none
+ Side Effects: deletes stock entry and nd_experiment entry.
+
+ Example:
+
+=cut
+
+
+sub delete {
+    my $self = shift;
+    my $dbh = $self->schema()->storage()->dbh();
+    my $schema = $self->schema();
+    my $identifier_stock_id = $self->stock_id();
+    my $data_type = $self->data_type();
+
+    eval {
+        $dbh->begin_work();
+
+        my $identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", "stock_type")->cvterm_id();
+        my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_activity", "experiment_type")->cvterm_id();
+        my $project_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "project_tracking_identifier", "experiment_type")->cvterm_id();
+        my $material_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
+        my $tracking_tissue_culture_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
+        my $tracking_trial_treatments_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_trial_treatments_json', 'stock_property')->cvterm_id();
+
+        my $identifier_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $identifier_stock_id, type_id => $identifier_type_id});
+        if (!$identifier_rs) {
+            print STDERR "This stock id is not a tracking identifier. Cannot delete.\n";
+            die "This stock id is not a tracking identifier. Cannot delete.\n";
+        }
+
+        my $experiment_id;
+        my $experiment_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+            JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+            WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+        my $experiment_h = $schema->storage->dbh()->prepare($experiment_q);
+        $experiment_h->execute($experiment_type_id, $identifier_stock_id);
+        my @nd_experiment_ids= $experiment_h->fetchrow_array();
+        if (scalar @nd_experiment_ids == 1) {
+            $experiment_id = $nd_experiment_ids[0];
+        } else {
+            print STDERR "Error retrieving experiment id"."\n";
+            die "Error retrieving experiment id";
+        }
+
+        # delete the nd_experiment entry
+        print STDERR "Deleting nd_experiment entry for tracking identifier...\n";
+        my $q1= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
+        my $h1 = $dbh->prepare($q1);
+        $h1->execute($experiment_id, $experiment_type_id);
+
+        #delete nd_experiment_entry for trial material
+        if ($data_type eq 'trial_treatments') {
+            my $trial_experiment_id;
+            my $trial_experiment_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+                JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+                WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+            my $trial_experiment_h = $schema->storage->dbh()->prepare($trial_experiment_q);
+            $trial_experiment_h->execute($project_identifier_type_id, $identifier_stock_id);
+            my @trial_experiment_ids= $trial_experiment_h->fetchrow_array();
+            if (scalar @trial_experiment_ids == 1) {
+                $trial_experiment_id = $trial_experiment_ids[0];
+            } else {
+                print STDERR "Error retrieving experiment id"."\n";
+                die "Error retrieving experiment id";
+            }
+
+            # delete the trial nd_experiment entry
+            my $q2 = "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
+            my $h2 = $dbh->prepare($q2);
+            $h2->execute($trial_experiment_id, $project_identifier_type_id);
+        }
+
+        # delete stock owner entries
+        print STDERR "Deleting associated stock_owners...\n";
+        my $q3 = "delete from phenome.stock_owner where stock_id=?";
+        my $h3 = $dbh->prepare($q3);
+        $h3->execute($identifier_stock_id);
+
+        # delete the stock entries
+        print STDERR "Deleting the stock entry...\n";
+        my $q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
+        my $h4 = $dbh->prepare($q4);
+        $h4->execute($identifier_stock_id, $identifier_type_id);
+    };
+
+    if ($@) {
+        print STDERR "An error occurred while deleting tracking identifier".$identifier_stock_id."$@\n";
+        $dbh->rollback();
+        return $@;
+    } else {
+        $dbh->commit();
+        return 0;
+    }
+}
+
+
 1;
 
 no Moose;

@@ -17,6 +17,7 @@ use CXGN::TrackingActivity::ActivityProject;
 use SGN::Model::Cvterm;
 use CXGN::Location::LocationLookup;
 use CXGN::List;
+use CXGN::Stock::TrackingIdentifier;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -569,9 +570,12 @@ sub delete_identifier_POST : Args(0) {
 
     my $identifier_stock_id = $c->req->param("identifier_stock_id");
     my $tracking_identifier_obj = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier_stock_id);
-    my $data_type = $tracking_identifier_obj->data_type;
 
-    
+    my $error = $tracking_identifier_obj->delete();
+    if ($error) {
+        $c->stash->{rest} = { error => "An error occurred attempting to delete the tracking identifier. ($@)" };
+        return;
+    }
 
     $c->stash->{rest} = { success => 1 };
 
