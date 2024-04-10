@@ -64,9 +64,10 @@ default-namespace: $dbname" . "_traits
 ontology: $prefix\n\n";
 
 write_file( $obo_file,  {append => 0 }, $obo_header  ) ;
-
+my $count=0;
 while(my $cvterm = $cvterm_rs->next() ) {
 	my $accession = $cvterm->dbxref->accession();
+	print STDERR "Looking at Accession $accession\n";
 	my $cvterm_name = $cvterm->name();
 	my $namespace = $cvterm->cv->name();
 	my $def = $cvterm->definition();
@@ -77,14 +78,14 @@ while(my $cvterm = $cvterm_rs->next() ) {
 	my $term_details = "\n[Term]\nid: $prefix:$accession\nname: $cvterm_name\nnamespace: $namespace\n";
 	$term_details .="def: \"$def\"\n" if $def;
 	$term_details .="is_obsolete: true\n" if $is_obsolete;
-
+	$count++;
 	if ($is_relationshiptype) {
 			$term_details = "
 [Typedef]
 id: $cvterm_name
 name: $cvterm_name
 "
-}
+	}
 	write_file( $obo_file,  {append => 1 }, "$term_details" );
 
 	my $syn_rs = $cvterm->cvtermsynonyms();
@@ -93,14 +94,20 @@ name: $cvterm_name
 
 	while( my $synonym = $syn_rs->next() ) {
 			my $syn_name  =  $synonym->synonym();
+			print STDERR "synonym = $syn_name\n";
 			my $type = $synonym->type;
 			my $type_name ;
-			$type_name = $type->name() if defined $type;
+
+			defined $type ? $type_name = $type->name : "[]";
+
+			#synonyms need to be quoted. Somtimes they are already quoted if loaded properly from the obo loader
+			unless ($syn_name =~ /^\"/) { $syn_name = '"' . $syn_name . '"' ; }
 			write_file( $obo_file,  {append => 1 }, "synonym: "  . $syn_name  . $type_name . "\n" );
 	}
 	while( my $xref = $xref_rs->next() ) {
 			my $xref_acc  =  $xref->dbxref->accession();
 			my $xref_prefix = $xref->dbxref->db->name();
+			print STDERR "xref = $xref_prefix:$xref_acc\n";
 			write_file( $obo_file,  {append => 1 }, "xref: "  . $xref_prefix . ":"  . $xref_acc . "\n" ) if ( $xref->is_for_definition == 0 );
 	}
 
@@ -117,10 +124,12 @@ name: $cvterm_name
 			if ($type_name ne "is_a") {
 					$relationship_format = "relationship: $type_name";
 			}
+			print STDERR "$relationship_format $object_acc_prefix:$object_acc\n";
 			write_file( $obo_file,  {append => 1 }, "$relationship_format $object_acc_prefix:$object_acc " . "! ". $object_name . "\n" );
 	}
 
 }
+print STDERR "wrote $count terms to file $obo_file\n";
 
 #			 [Term]
 #			 id: CO_334:0000009
