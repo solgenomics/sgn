@@ -16,20 +16,22 @@ __PACKAGE__->config(
    );
 
 
-sub ann_search :Path('/ajax/search/annotation') Args(0) {
+sub annotation_search :Path('/ajax/search/annotation') Args(0) {
     my ($self, $c ) = @_;
 
-    my $text = read_file($c->get_conf('basepath') . '/static/documents/annotation2.tsv');
-    
     my @lines;
     my $number_lines=0;
-    
-    while ($text =~ /\G([^\n]*\n|[^\n]+)/g) {
-        push @lines, [split /\t/, $1];
-        $number_lines++;
+    my $annotation_file = $c->get_conf('basepath') . '/static/documents/annotation.tsv';
 
+    if(-e $annotation_file){
+        my $text = read_file($annotation_file);
+    
+        while ($text && $text =~ /\G([^\n]*\n|[^\n]+)/g) {
+            push @lines, [split /\t/, $1];
+            $number_lines++;
+        }
     }
-     print STDERR Dumper \@lines;
+
 
     $c->stash->{rest} = { data => [ @lines], draw => '1', recordsTotal => $number_lines,  recordsFiltered => $number_lines };
 
