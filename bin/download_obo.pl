@@ -102,6 +102,8 @@ name: $cvterm_name
 
 			#synonyms need to be quoted. Somtimes they are already quoted if loaded properly from the obo loader
 			unless ($syn_name =~ /^\"/) { $syn_name = '"' . $syn_name . '"' ; }
+			#xref list for synonyms
+			unless ($syn_name =~ /$\]/) { $syn_name .= " []" ; }
 			write_file( $obo_file,  {append => 1 }, "synonym: "  . $syn_name  . $type_name . "\n" );
 	}
 	while( my $xref = $xref_rs->next() ) {
