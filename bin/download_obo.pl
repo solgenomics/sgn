@@ -60,7 +60,6 @@ my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search(
 my $date = DateTime->now();
 
 my $obo_header = "format-version: 1.2
-default-namespace: $dbname" . "_traits
 ontology: $prefix\n\n";
 
 write_file( $obo_file,  {append => 0 }, $obo_header  ) ;
