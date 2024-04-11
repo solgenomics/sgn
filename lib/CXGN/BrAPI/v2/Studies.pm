@@ -558,13 +558,13 @@ sub _search {
 	my $sort_order = shift;
 
 	if($sort_order){
-		if(lc $sort_order eq "ascending"){
+		if(lc $sort_order eq "asc"){
 			$sort_order = ' ASC'
-		} elsif (lc $sort_order eq "descending"){
+		} elsif (lc $sort_order eq "desc"){
 			$sort_order = ' DESC';
 		} else{
 			$sort_order = undef;
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortOrder valid values are: Ascending or Descending", 400);
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortOrder valid values are: asc or desc", 400);
 		}
 	}
 
