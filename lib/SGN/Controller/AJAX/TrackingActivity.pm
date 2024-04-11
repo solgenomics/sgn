@@ -582,4 +582,52 @@ sub delete_identifier_POST : Args(0) {
 }
 
 
+sub delete_all_project_identifiers : Path('/ajax/tracking_activity/delete_all_project_identifiers') : ActionClass('REST'){ }
+
+sub delete_all_project_identifiers_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to delete tracking identifiers." };
+        return;
+    }
+    if (!($c->user()->has_role('curator'))) {
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to delete tracking identifiers." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $project_id = $c->req->param("project_id");
+
+    my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+    my $activity_type_rs = $schema->resultset("Project::Projectprop")->find ({
+        project_id => $project_id,
+        type_id => $activity_type_cvterm_id
+    });
+    my $activity_type;
+    if ($activity_type_rs) {
+        $activity_type = $activity_type_rs->value();
+    }
+
+    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id, activity_type => $activity_type);
+    my $all_identifiers = $tracking_project->get_project_active_identifiers();
+
+    foreach my $identifier (@$all_identifiers){
+        my $tracking_identifier_obj = CXGN::Stock::TrackingIdentifier->new(schema=>$schema, tracking_identifier_id=>$identifier->[0]);
+        my $error = $tracking_identifier_obj->delete();
+        if ($error) {
+            $c->stash->{rest} = { error => "An error occurred attempting to delete the tracking identifier. ($@)" };
+            return;
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
+
 1;

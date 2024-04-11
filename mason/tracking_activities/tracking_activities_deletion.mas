@@ -13,7 +13,7 @@ $trial_id
                 </table>
             </div>
         </div>
-        <button class="btn btn-default" id="delete_all_tracking_identifiers" role="button">Delete all tracking identifiers in this project</button><br/><br/>
+        <button class="btn btn-default" id="delete_all_identifiers" role="button">Delete all tracking identifiers in this project</button><br/><br/>
     </div>
 </&>
 
@@ -44,6 +44,35 @@ jQuery(document).ready(function(){
                 { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteIdentifier("+row.identifier_stock_id+")'>Delete</a>"; } },
             ]
         });
+    });
+
+    jQuery('#delete_all_identifiers').click(function() {
+
+        var confirmation = confirm("Are you sure you want to delete all tracking identifiers in this project? The deletion cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/tracking_activity/delete_all_project_identifiers',
+                data: {'project_id' : project_id},
+                method: 'POST',
+                beforeSend: function(response) {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Deletion was successful');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
     });
 
 });
