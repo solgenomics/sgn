@@ -70,6 +70,8 @@ while(my $cvterm = $cvterm_rs->next() ) {
 	my $cvterm_name = $cvterm->name();
 	my $namespace = $cvterm->cv->name();
 	my $def = $cvterm->definition();
+	#remove quotes from definition sting
+	$def =~ s/"//g;
 	my $is_obsolete = $cvterm->is_obsolete();
 	my $is_relationshiptype = $cvterm->is_relationshiptype();
 	my $is_obsolete = $cvterm->is_obsolete();
