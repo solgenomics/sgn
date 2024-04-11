@@ -1337,7 +1337,7 @@ sub get_transplanting_date {
     if ($row){
         my $harvest_date = $calendar_funcs->display_start_date($row->value());
         return $harvest_date;
-    } 
+    }
     else {
         return;
     }
@@ -1356,7 +1356,7 @@ sub set_transplanting_date {
         });
         $row->value($transplanting_event);
         $row->update();
-    } 
+    }
     else{
         print STDERR "date format did not pass check while preparing to set transplanting date: $transplanting_date \n";
     }
@@ -1370,14 +1370,14 @@ sub remove_transplanting_date {
         my $transplanting_date_cvterm_id = $self->get_transplanting_date_cvterm_id();
         my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
             project_id => $self->get_trial_id(),
-            type_id => $transplanting_date_cvterm_id,  
+            type_id => $transplanting_date_cvterm_id,
             value => $transplanting_event,
         });
         if ($row){
             print STDERR "Removing transplanting date $transplanting_event from trial ".$self->get_trial_id()."\n";
             $row->delete();
-        }   
-    } 
+        }
+    }
     else {
         print STDERR "date format did not pass check while preparing to delete transplanting date: $transplanting_date  \n";
     }
@@ -5378,6 +5378,71 @@ sub genotyping_protocol_count {
 }
 
 
+=head2 function tracking_identifier_count()
+
+ Usage:
+ Desc: The number of tracking identifiers associated with this tracking project
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub tracking_identifier_count {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $project_id = $self->get_trial_id();
+    my $tracking_activity_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_activity", "experiment_type")->cvterm_id();
+
+    my $q = "SELECT count(nd_experiment_project.nd_experiment_id)
+        FROM nd_experiment_project
+        JOIN nd_experiment on (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+        WHERE nd_experiment.type_id = $tracking_activity_type_id
+        AND nd_experiment_project.project_id = ?";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($project_id);
+    my ($count) = $h->fetchrow_array();
+    return $count;
+}
+
+
+=head2 function delete_empty_tracking_project()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_empty_tracking_project {
+    my $self = shift;
+    my $project_id = $self->get_trial_id();
+
+    if ($self->tracking_identifier_count() > 0) {
+        return 'Cannot delete tracking project with associated tracking identifiers.';
+    }
+
+    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {$self->bcs_schema->storage->dbh()},{on_connect_do => ['SET search_path TO public,phenome;']});
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $project_id});
+    if ($project_owner_row) {
+        $project_owner_row->delete();
+    }
+
+    eval {
+        my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $project_id });
+        $row->delete();
+        print STDERR "deleted project ".$project_id."\n";
+    };
+
+    if ($@) {
+        print STDERR "An error occurred during deletion: $@\n";
+        return $@;
+    }
+}
 
 
 1;

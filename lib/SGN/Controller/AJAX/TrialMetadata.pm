@@ -153,6 +153,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     elsif ($datatype eq 'genotyping_project') {
         $error = $c->stash->{trial}->delete_empty_genotyping_project();
     }
+    elsif ($datatype eq 'tracking_project') {
+        $error = $c->stash->{trial}->delete_empty_tracking_project();
+    }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
         return;
@@ -321,7 +324,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $start_date = shift;
     my $end_date = shift;
     my $include_dateless_items = shift;
-    
+
     #get userinfo from db
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user = $c->user();
@@ -465,11 +468,11 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my @phenotype_data;
 
     my @numeric_trait_ids;
-    
+
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
 	push @numeric_trait_ids, $trait_id;
-	
+
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -498,18 +501,18 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     # get data from the non-numeric trait ids
     #
-    
+
     # prevent sql statement from failing if there are no numeric traits
     #
     my $exclude_numeric_trait_ids = "";
     if (@numeric_trait_ids) {
 	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
     }
-	
+
     my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value)
-	$select_clause_additional	
+	$select_clause_additional
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
             JOIN nd_experiment_phenotype USING(phenotype_id)
@@ -529,7 +532,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional ";
 
     my $h = $dbh->prepare($q);
-    
+
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
@@ -537,7 +540,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
-    
+
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
