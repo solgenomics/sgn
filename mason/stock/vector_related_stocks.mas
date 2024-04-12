@@ -9,7 +9,7 @@ $stock_type => undef
     <table class="table table-hover table-bordered" id="vector_related_stocks_table">
         <thead>
             <tr>
-                <th>Transformant (Accession)</th>
+                <th>Accession (Transformant)</th>
                 <th>Vector Construct</th>
                 <th>Plant Material</th>
                 <th>Transformation ID</th>
@@ -20,7 +20,7 @@ $stock_type => undef
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Copy Transformants to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the transformant names showing in table to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, title => 'Copy Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession (transformant) names showing in table to a new or exisiting list</i>'&>
         <br>
         <div id="transformant_names" style="display:none"></div>
         <div id="transformants_to_list_menu"></div>
