@@ -895,6 +895,7 @@ displayClusterPopsTable: function(tableId, data) {
     'processing': true,
     'paging'    : true,
     'info'      : false,
+    'pageLength' : 5,
     });
 
     table.rows.add(data).draw();
