@@ -5,6 +5,8 @@ $activity_select => undef
 $type_select_options => undef
 $timestamp => undef
 $activity_headers
+$activity_type => undef
+$material_name => undef
 
 </%args>
 
@@ -27,7 +29,19 @@ $activity_headers
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-3 control-label">Type: </label>
+            <label class="col-sm-3 control-label">Material: </label>
+            <div class="col-sm-5">
+                <input class="form-control" id="material_info_record_page" name="material_info_record_page" type="text" disabled value="<%$material_name%>">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Activity Type: </label>
+            <div class="col-sm-5">
+                <input class="form-control" id="activity_type_record_page" name="activity_type_record_page" type="text" disabled value="<%$activity_type%>">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Input Type: </label>
             <div class="col-sm-5">
 % if ($type_select_options) {
                 <select id="record_page_type_select">
