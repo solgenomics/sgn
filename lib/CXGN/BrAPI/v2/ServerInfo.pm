@@ -149,7 +149,7 @@ sub search {
 		[['application/json'],['GET','POST'], 'crossingprojects',['2.0']],
 		[['application/json'],['GET','PUT'], 'crossingprojects/{crossingProjectDbId}',['2.0']],
 		[['application/json'],['GET','POST'], 'crosses',['2.0']],
-		[['application/json'],['GET','POST'], 'seedlots',['2.0']],
+		[['application/json'],['GET','POST'], 'seedlots',['2.0','2.1']],
 		[['application/json'],['GET','POST'], 'seedlots/transactions',['2.0']],
 		[['application/json'],['GET','PUT'], 'seedlots/{seedLotDbId}',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
