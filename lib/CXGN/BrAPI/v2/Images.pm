@@ -409,7 +409,7 @@ sub image_metadata_store {
                     if (!$image_tag_id) {
                         my $image_tag = CXGN::Tag->new($self->bcs_schema()->storage->dbh);
                         $image_tag->set_name($_);
-                        $image_tag->set_description('Image analysis result image: '.$_);
+                        $image_tag->set_description('Image: '.$_);
                         $image_tag->set_sp_person_id($user_id);
                         $image_tag_id = $image_tag->store();
                     }
@@ -461,11 +461,20 @@ sub image_metadata_store {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id}{name};
+        }
+
         push @data, {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
+                tags =>  \@sorted_tags,
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
@@ -571,10 +580,20 @@ sub image_data_store {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id}{name};
+        }
+
      %result = (
          additionalInfo => {
              observationLevel => $_->{'stock_type_name'},
              observationUnitName => $_->{'stock_uniquename'},
+             tags =>  \@sorted_tags,
          },
          copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
          description => $_->{'image_description'},
