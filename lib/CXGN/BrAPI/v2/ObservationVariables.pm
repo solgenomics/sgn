@@ -537,6 +537,14 @@ sub _construct_variable_response {
     my $variable_id = $variable->cvterm_id;
     my $variable_db_id = $variable->db_id ;
 
+    my $documentation_links;
+    if($variable->uri){
+        push @$documentation_links, {
+            "URL" => $variable->uri, 
+            "type" => "OBO"
+        };
+    }
+
     return {
         additionalInfo => $variable->additional_info || {},
         commonCropName => $c->config->{'supportedCrop'},
@@ -552,10 +560,7 @@ sub _construct_variable_response {
         observationVariableName => $variable->name."|".$variable->db.":".$variable->accession,
         observationVariablePUI => $variable->db.":".$variable->accession,
         ontologyReference => {
-            documentationLinks => [{
-                    "URL" => $variable->uri ? $variable->uri : undef,
-                    "type" => "OBO"
-                }],
+            documentationLinks => $documentation_links,
             ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
             ontologyName => $variable->db ? $variable->db : undef,
             version => undef,
@@ -575,7 +580,7 @@ sub _construct_variable_response {
             externalReferences => $external_references_json,
             mainAbbreviation => undef,
             ontologyReference => {
-                documentationLinks => $variable->uri ? $variable->uri : undef,
+                documentationLinks => $documentation_links,
                 ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
                 ontologyName => $variable->db ? $variable->db : undef,
                 version => undef,

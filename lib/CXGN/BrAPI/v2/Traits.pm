@@ -64,9 +64,9 @@ sub list {
 			};
 		}
 
-		my @documentation_links;
+		my $documentation_links;
 		if($trait->uri){
-			push @documentation_links, {
+			push @$documentation_links, {
 				"URL" => $trait->uri ? $trait->uri : undef,
 				"type" => undef
 			};
@@ -82,7 +82,7 @@ sub list {
 			externalReferences => $external_references_json,
 			mainAbbreviation => undef,
 			ontologyReference => {
-				documentationLinks => \@documentation_links,
+				documentationLinks => $documentation_links,
 				ontologyDbId => $trait->db_id ? $trait->db_id : undef,
 				ontologyName => $trait->db ? $trait->db : undef,
 				version => undef,
@@ -133,9 +133,9 @@ sub detail {
 		};
 	}
 
-	my @documentation_links;
+	my $documentation_links;
 	if($trait->uri){
-		push @documentation_links, {
+		push @$documentation_links, {
 			"URL" => $trait->uri ? $trait->uri : undef,
 			"type" => undef
 		};
@@ -151,7 +151,7 @@ sub detail {
                 externalReferences => $external_references_json,
                 mainAbbreviation => undef,
                 ontologyReference => {
-						documentationLinks => \@documentation_links,
+						documentationLinks => $documentation_links,
                         ontologyDbId => $trait->db_id ? $trait->db_id : undef,
                         ontologyName => $trait->db ? $trait->db : undef,
                         version => undef,
