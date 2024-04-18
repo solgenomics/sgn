@@ -90,7 +90,7 @@ $stock_type => undef
 
 % }
 
-% if ($stock_type eq 'accession'){
+% if ($stock_type eq 'accession' || $stock_type eq 'vector_construct'){
 
     <&| /page/info_section.mas, id=>'related_stock_progenies', title => 'Progenies of this Accession (as female or male parent)', collapsible=>1, collapsed=>1 &>
         <div class="well well-sm">
@@ -100,6 +100,7 @@ $stock_type => undef
                         <thead>
                         <tr>
                             <th>As female or male parent</th>
+			    <th>Cross type</th>
                             <th>Progeny name</th>
                         </tr>
                         </thead>
@@ -115,6 +116,29 @@ $stock_type => undef
             </&>
         </div>
     </&>
+
+
+<&| /page/info_section.mas, id=>'related_stock_parents', title => 'Parents of this Accession', collapsible=>1, collapsed=>1 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table id = "parents" class="table table-hover table-striped">
+                        <thead>
+                        <tr>
+                            <th>Female Parent</th>
+                            <th>Male Parent</th>
+                            <th>Cross Type</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </&>
+
+
+
 
     <&| /page/info_section.mas, id=>'related_stock_siblings', title => 'Siblings of this Accession', collapsible=>1, collapsed=>1 &>
         <div class="well well-sm">
@@ -235,7 +259,7 @@ jQuery(document).ready(function(){
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){
-                        html += json.data[i][2]+"\n";
+                        html += json.data[i][3]+"\n";
                     }
                     jQuery("#progeny_names").html(html);
                     addToListMenu("progenies_to_list_menu", "progeny_names", {
@@ -314,6 +338,30 @@ jQuery(document).ready(function(){
             }
         });
     });
+
+        jQuery('#related_stock_parents_onswitch').one("click", function(){
+        var siblings_table = jQuery('#parents').DataTable({
+            'ordering': false,
+            'ajax':'/stock/'+ <% $stock_id %> + '/datatables/parents',
+            // "fnInitComplete": function(oSettings, json) {
+            //     //console.log(json);
+            //     if (!isLoggedIn()) {
+            //         jQuery('#siblings_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            //     } else {
+            //         var html = "";
+            //         for(var i=0; i<json.data.length; i++){
+            //             html += json.data[i][4]+"\n";
+            //         }
+            //         jQuery("#sibling_names").html(html);
+            //         addToListMenu("siblings_to_list_menu", "sibling_names", {
+            //             selectText: true,
+            //             listType:'accessions'
+            //         });
+            //     }
+            // }
+        });
+    });
+
 
 });
 

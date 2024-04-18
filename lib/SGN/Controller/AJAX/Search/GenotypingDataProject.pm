@@ -15,6 +15,8 @@ package SGN::Controller::AJAX::Search::GenotypingDataProject;
 use Moose;
 use Data::Dumper;
 use JSON;
+use File::Slurp qw | read_file |;
+use File::Basename;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
 use CXGN::Genotype::GenotypingProject;
@@ -172,5 +174,185 @@ sub genotyping_project_protocols_GET : Args(0) {
 }
 
 
+sub genotyping_project_has_archived_vcf : Path('/ajax/genotyping_project/has_archived_vcf') : ActionClass('REST') { }
+
+sub genotyping_project_has_archived_vcf_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my @project_ids = split(',', $c->req->param('genotyping_project_id'));
+    my @protocol_ids = split(',', $c->req->param('genotyping_protocol_id'));
+    my $limit = defined $c->req->param('limit');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    # Get projects that match the provided protocol(s)
+    if ( scalar(@protocol_ids) > 0 ) {
+        my $ph = join ( ',', ('?') x @protocol_ids );
+        my $q = "SELECT genotyping_project_id FROM genotyping_projectsxgenotyping_protocols WHERE genotyping_project_id IS NOT NULL AND genotyping_protocol_id IN ($ph);";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute(@protocol_ids);
+        while (my ($project_id) = $h->fetchrow_array()) {
+            push(@project_ids, $project_id);
+        }
+    }
+
+    # Initiate the return hash (key = project id, value = array of vcf file data)
+    my %rtn;
+    foreach my $project_id (@project_ids) {
+        $rtn{$project_id} = [];
+    }
+
+    # Make sure there is at least 1 matching project
+    if ( scalar(@project_ids) < 1 ) {
+        $c->stash->{rest} = { error => "No genotyping projects selected!" };
+        return;
+    }
+
+    # Get metadata about the archived vcf files for all of the requested projects 
+    my $ph = join ( ',', ('?') x @project_ids );
+    my $q = "SELECT genotyping_protocol_id, genotyping_protocol_name, genotyping_project_id, genotyping_project_name,
+                dirname, basename, create_date, uploader_id, uploader_name, uploader_username
+            FROM (
+                SELECT genotyping_protocols.genotyping_protocol_id, genotyping_protocols.genotyping_protocol_name, 
+                    genotyping_projects.genotyping_project_id, genotyping_projects.genotyping_project_name,
+                    md_files.dirname, md_files.basename, md_metadata.create_date,
+                    sp_person.sp_person_id AS uploader_id,
+                    CONCAT(sp_person.first_name, ' ', sp_person.last_name) AS uploader_name,
+                    sp_person.username AS uploader_username
+                FROM public.nd_experiment_project
+                LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
+                LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
+                LEFT JOIN metadata.md_metadata ON (md_files.metadata_id = md_metadata.metadata_id)
+                LEFT JOIN sgn_people.sp_person ON (md_metadata.create_person_id = sp_person.sp_person_id)
+                LEFT JOIN public.genotyping_projects ON (nd_experiment_project.project_id = genotyping_projects.genotyping_project_id)
+                LEFT JOIN public.genotyping_projectsxgenotyping_protocols ON (genotyping_projects.genotyping_project_id = genotyping_projectsxgenotyping_protocols.genotyping_project_id)
+                LEFT JOIN public.genotyping_protocols ON (genotyping_projectsxgenotyping_protocols.genotyping_protocol_id = genotyping_protocols.genotyping_protocol_id)
+                WHERE nd_experiment_project.project_id IN ($ph)
+                GROUP BY genotyping_projects.genotyping_project_id, genotyping_project_name, 
+                    genotyping_protocols.genotyping_protocol_id, genotyping_protocol_name, 
+                    dirname, basename, create_date, sp_person_id, first_name, last_name, username
+            ) AS t
+            WHERE t.create_date IS NOT NULL
+            ORDER BY t.genotyping_protocol_name, t.genotyping_project_name, t.create_date DESC";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute(@project_ids);
+
+    # Parse the results for all of the archived files
+    my %seen_projects;
+    while (my ($geno_proto_id, $geno_proto_name, $geno_proj_id, $geno_proj_name, $dirname, $basename, $create_date, $uploader_id, $uploader_name, $uploader_username) = $h->fetchrow_array()) {
+        
+        # When limit is defined (to only return the most recent file for each project),
+        # skip processing the file if one was already found (newer files are processed first since the query is sorted by date DESC)
+        # This should really be implemented in the query, but not sure of the best way to do that - maybe a lateral join?
+        if ( $limit && exists($seen_projects{$geno_proj_id}) ) {
+            next;
+        }
+        $seen_projects{$geno_proj_id} = 1;
+
+        # Check if the file actually exists
+        my $exists = "false";
+        if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
+            $exists = "true";
+        }
+
+        # Set return properties
+        my %props = (
+            genotyping_protocol_id => $geno_proto_id,
+            genotyping_protocol_name => $geno_proto_name,
+            genotyping_project_id => $geno_proj_id,
+            genotyping_project_name => $geno_proj_name,
+            dirname => $dirname,
+            basename => $basename,
+            create_date => $create_date,
+            uploader_id => $uploader_id,
+            uploader_name => $uploader_name,
+            uploader_username => $uploader_username,
+            exists => $exists
+        );
+
+        # Add to existing project props
+        push(@{$rtn{$geno_proj_id}}, \%props);
+
+    }
+
+    $c->stash->{rest} = \%rtn;
+}
+
+
+sub genotyping_project_download_archived_vcf : Path('/ajax/genotyping_project/download_archived_vcf') : ActionClass('REST') { }
+
+sub genotyping_project_download_archived_vcf_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = $c->req->param('genotyping_project_id');
+    my $requested_basename = $c->req->param('basename');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    # Get the file information
+    my $q = "SELECT md_files.dirname, md_files.basename
+            FROM public.nd_experiment_project
+            LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
+            LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
+            WHERE nd_experiment_project.project_id = ? AND md_files.basename = ?
+            GROUP BY dirname, basename;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($project_id, $requested_basename);
+    my ($dirname, $basename) = $h->fetchrow_array();
+
+    # Return the file, if it exists
+    if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
+        my $filepath = "$dirname/$basename";
+
+        # Check if the file is a vcf (.vcf extension of ##filformat=VCF header on first line)
+        open my $FH, '<', $filepath;
+        my $firstline = <$FH>;
+        close $FH;
+        my $is_a_vcf = rindex($firstline, "##fileformat=VCF", 0) == 0 || $filepath =~ m/\.vcf$/;
+
+        # Transpose the VCF file (to a temp file)
+        if ($is_a_vcf) {
+            my $dir = $c->tempfiles_subdir('download');
+            my ($Fout, $temp_file_transposed) = $c->tempfile(TEMPLATE=>"download/download_vcf_XXXXX", SUFFIX=>".vcf", UNLINK=>0);
+            open (my $F, "< :encoding(UTF-8)", $filepath) or die "Can't open file $filepath \n";
+            my @outline;
+            my $lastcol;
+            while (<$F>) {
+                $_ =~ s/\r//g;
+                if ($_ =~ m/^\##/) {
+                    print $Fout $_;
+                } else {
+                    chomp;
+                    my @line = split /\t/;
+                    my $oldlastcol = $lastcol;
+                    $lastcol = $#line if $#line > $lastcol;
+                    for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                        if ($oldlastcol) {
+                            $outline[$i] = "\t" x $oldlastcol;
+                        }
+                    }
+                    for (my $i=0; $i <=$lastcol; $i++) {
+                        $outline[$i] .= "$line[$i]\t"
+                    }
+                }
+            }
+            for (my $i=0; $i <= $lastcol; $i++) {
+                $outline[$i] =~ s/\s*$//g;
+                print $Fout $outline[$i]."\n";
+            }
+
+            close($F);
+            close($Fout);
+            $filepath = $c->config->{basepath} . '/' . $temp_file_transposed;
+            my ($name,$path,$suffix) = fileparse($basename,qr"\..[^.]*$");
+            if ( $suffix ne '.vcf' ) {
+                $basename = "$basename.vcf";
+            }
+        }
+
+        my $contents = read_file($filepath);
+        $c->res->content_type('text/plain');
+        $c->res->header('Content-Disposition', qq[attachment; filename="$basename"]);
+        $c->res->body($contents);
+    }
+}
 
 1;
