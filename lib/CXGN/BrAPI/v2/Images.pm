@@ -218,11 +218,20 @@ sub detail {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id}{name};
+        }
+
         %result = (
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
+                tags =>  \@sorted_tags,
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
