@@ -30,7 +30,7 @@ sub search {
     my $stock_ids_arrayref = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     my $phenotype_ids_arrayref = $params->{observationDbId} || ($params->{observationDbIds} || ());
     my $descriptors_arrayref = $params->{descriptiveOntologyTerm} || ($params->{descriptiveOntologyTerms} || ());
-    my $reference_ids_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $reference_ids_arrayref = $params->{externalReferenceId} || ($params->{externalReferenceIds} || ());
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
     my $imagefile_names_arrayref = $params->{imageFileNames} || ($params->{imageFileNames} || ());
     my $imagefile_size_max = $params->{imageFileSizeMax}->[0] || undef;
@@ -402,7 +402,7 @@ sub image_metadata_store {
 
         if ($additionalInfo_hashref) {
             my $tag_list = $additionalInfo_hashref->{tags};
-            if(scalar @$tag_list > 0){
+            if($tag_list && scalar(@$tag_list) > 0){
                 foreach(@$tag_list){
                     my $image_tag_id = CXGN::Tag::exists_tag_named($self->bcs_schema()->storage->dbh, $_);
 
@@ -589,6 +589,13 @@ sub image_data_store {
             push @sorted_tags, $unique_tags{$tag_id}{name};
         }
 
+        my @cvterms = $sgn_image->get_cvterms();
+        # Process cvterms
+        my @cvterm_names;
+        foreach (@cvterms) {
+            push(@cvterm_names, $_->name);
+        }
+
      %result = (
          additionalInfo => {
              observationLevel => $_->{'stock_type_name'},
@@ -597,6 +604,8 @@ sub image_data_store {
          },
          copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
          description => $_->{'image_description'},
+         descriptiveOntologyTerms => \@cvterm_names,
+         externalReferences => [],
          imageDbId => $_->{'image_id'},
          imageFileName => $_->{'image_original_filename'},
          imageFileSize => $size,
