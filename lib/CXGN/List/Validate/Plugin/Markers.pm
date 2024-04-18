@@ -19,7 +19,7 @@ sub validate {
     my $str;
     my $key;
     my @missing = ();
-    my $q = "SELECT alias from marker_alias where alias = ?";
+    my $q = "SELECT nd_protocol_id from materialized_markerview where marker_name = ?";
     my $h = $schema->storage->dbh()->prepare($q);
     foreach my $term (@$list) {
 	eval {$str = decode_json $term;};
