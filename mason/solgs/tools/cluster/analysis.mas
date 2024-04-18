@@ -55,8 +55,8 @@ if ($url !~ /cluster\/analysis/) {
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
-my $login_msg = "To view your datasets and use this tool, you need to login. "
-      . "please <a href=\"/user/login?goto_url=$cluster_url\">login</a>.";
+my $login_msg = "To view your datasets and use this tool " .  
+"you need to <a href=\"/user/login?goto_url=$cluster_url\">login</a>.";
 
 </%perl>
 
@@ -101,7 +101,11 @@ my $login_msg = "To view your datasets and use this tool, you need to login. "
     <& /solgs/tools/datatable_display.mas,
     analysis_type => 'cluster' &>
 %} else {
+    <div class="row">
+    <div class="col-md-8 col-md-offset-2">
     <& /generic_message.mas, message => $login_msg &>
+    </div>
+    </div>
 %}
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
