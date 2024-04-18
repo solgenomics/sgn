@@ -134,7 +134,7 @@ sub search {
         }
         my @sorted_tags;
         foreach my $tag_id (sort keys %unique_tags) {
-            push @sorted_tags, $unique_tags{$tag_id};
+            push @sorted_tags, $unique_tags{$tag_id}{name};
         }
 
         if ($counter >= $start_index && $counter <= $end_index) {
@@ -388,6 +388,27 @@ sub image_metadata_store {
                 $image->associate_phenotype(\%image_hash);
             } else {
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Cannot find experiment associated with observation with id of %s, does not exist', $_));
+            }
+        }
+
+        if ($additionalInfo_hashref) {
+            my $tag_list = $additionalInfo_hashref->{tags};
+            if(scalar @$tag_list > 0){
+                foreach(@$tag_list){
+                    my $image_tag_id = CXGN::Tag::exists_tag_named($self->bcs_schema()->storage->dbh, $_);
+
+                    if (!$image_tag_id) {
+                        my $image_tag = CXGN::Tag->new($self->bcs_schema()->storage->dbh);
+                        $image_tag->set_name($_);
+                        $image_tag->set_description('Image analysis result image: '.$_);
+                        $image_tag->set_sp_person_id($user_id);
+                        $image_tag_id = $image_tag->store();
+                    }
+                    my $image_tag = CXGN::Tag->new($self->bcs_schema()->storage->dbh, $image_tag_id);
+
+
+                    $image->add_tag($image_tag);
+                }
             }
         }
 
