@@ -32,6 +32,11 @@ use CXGN::Genotype::Protocol;
 use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
 use JSON;
+use Email::Sender::Simple qw /sendmail/;
+use DateTime;
+use Email::Simple;
+use Email::Simple::Creator;
+use CXGN::Tools::Run;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 

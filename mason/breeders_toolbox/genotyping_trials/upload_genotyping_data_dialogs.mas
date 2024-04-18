@@ -1,6 +1,17 @@
+<style>
+  .control-label {
+    width: 200px;
+    text-align: right;
+  }
+</style>
+
+
 <%args>
 $facilities
+$email_address => ""
 </%args>
+
+
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
@@ -242,7 +253,6 @@ $facilities
                                         </select>
                                     </div>
                                 </div>
-
                                 <div class="well well-sm" id="upload_genotype_data_format_vcf">
                                     <div class="row">
                                         <div class="col-sm-4">
@@ -264,12 +274,25 @@ $facilities
                                                             <input type="file" name="upload_genotype_vcf_file_input" id="upload_genotype_vcf_file_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
+                                                    <div class="form-group" style="margin-top: 20px;">
+                                                        <label class="col-sm-6 control-label"> Email Report: </label>
+                                                        <div class="col-sm-6">
+                                                            <input id="email_option_for_genotyping_upload" name="email_option_for_genotyping_upload" type="checkbox" data-toggle="toggle">
+                                                        </div>
+                                                    </div>
+                                                    <div id="email_field" style="display: none;">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Email: </label>
+                                                            <div class="col-sm-6">
+                                                                <input id="email_address" name="email_address" type="email" value="<% $email_address %>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="well well-sm" id="upload_genotype_data_format_tassel_hdf5" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
@@ -1321,6 +1344,21 @@ jQuery(document).ready(function(){
     });
 
 
+        jQuery(document).ready(function() {
+        function toggleEmailField() {
+            var checkbox = jQuery('#email_option_for_genotyping_upload');
+            var emailField = jQuery('#email_field');
+            if (checkbox.prop('checked')) {
+                emailField.show();
+            } else {
+                emailField.hide();
+            }
+        }
+
+        jQuery('#email_option_for_genotyping_upload').on('change', toggleEmailField);
+        // Call the function initially in case the checkbox is already checked
+        toggleEmailField();
+    });
 
 });
 </script>
