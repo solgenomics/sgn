@@ -461,18 +461,22 @@ sub retrieve_plot_phenotype_POST : Args(0) {
       }
   }
 
-  my $h = $dbh->prepare("SELECT phenotype.value FROM stock
-    JOIN nd_experiment_stock USING(stock_id)
-    JOIN nd_experiment_phenotype USING(nd_experiment_id)
-    JOIN phenotype USING(phenotype_id)
-    WHERE cvalue_id =? and stock_id=?;"
-    );
-  $h->execute($trait_id,$stock_id);
-  while (my ($plot_value) = $h->fetchrow_array()) {
-    $trait_value = $plot_value;
-  }
+    if ($trait_id) {
+        my $q = "SELECT phenotype.value FROM stock
+            JOIN nd_experiment_stock USING(stock_id)
+            JOIN nd_experiment_phenotype USING(nd_experiment_id)
+            JOIN phenotype USING(phenotype_id)
+            WHERE cvalue_id =? and stock_id=?";
 
-  $c->stash->{rest} = {trait_value => $trait_value};
+        my $h = $dbh->prepare ($q);
+        $h->execute($trait_id,$stock_id);
+
+        while (my ($plot_value) = $h->fetchrow_array()) {
+            $trait_value = $plot_value;
+        }
+    }
+
+    $c->stash->{rest} = {trait_value => $trait_value};
 
 }
 
