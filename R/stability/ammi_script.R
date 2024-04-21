@@ -179,7 +179,7 @@ if(nReps == 1 && stability_method == "ammi"){
   dat2$Rep <- as.numeric(dat2$Rep)
   dat2 <- rbind(dat2,dat2.1)
   dat2$Rep <- as.factor(dat2$Rep)
-}else{
+}else if (nReps == 1 && stability_method == "gge"){
 	errorMessages <- append(errorMessages, "The number of replication must be greater than 1 for gge.")
 }
 
