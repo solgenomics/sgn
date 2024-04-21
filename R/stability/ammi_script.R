@@ -31,7 +31,6 @@ colnames(pheno) <- new_names
 ## Function for pheno imputation
 pheno_imputation <- function(inData){
   library(mice)
-  inData <- dat1
   
   dat_imput <- spread(inData, Env, Yield)
   colnames(dat_imput) <- gsub(" ", "", colnames(dat_imput))
@@ -50,6 +49,7 @@ imputation_accuracy <- function(checkDF, fMissing){
   
   realData <- pheno_imputation(checkDF)
   
+  # Subseting to check imputation accuracy
   realData <- realData[order(realData$Gen, realData$Env), ]
   data_missing <- sample(rownames(realData), nrow(realData)*fMissing)
   testindDF <- realData
@@ -71,7 +71,7 @@ imputation_accuracy <- function(checkDF, fMissing){
 
 
 # Setting dataframe to required format
-pheno <- pheno[,colnames(pheno) %in% c("locationName", "germplasmName", "replicate", study_trait[1])]
+pheno <- pheno[,colnames(pheno) %in% c("locationName", "germplasmName", "replicate", "entryType", study_trait[1])]
 
 
 
@@ -81,14 +81,26 @@ pheno <- pheno[,colnames(pheno) %in% c("locationName", "germplasmName", "replica
 #                                      #
 ########################################
 
+# Getting locations, accessions and reps
 accessions_sel <- unique(pheno$germplasmName)
-nLoc <- length(unique(pheno$locationName))
-nReps <- max(pheno$replicate)
+# Some breeding programs are using accession named Filler
+accessions_sel <- accessions_sel[!accessions_sel == "Filler" | !accessions_sel == "filler"]
 
-# Preparing dataset for gge
+# Taking test accessions 
+dat <- pheno %>% dplyr::select(germplasmName, locationName, replicate, entryType, trait=study_trait[1])
+dat <- dat[dat$entryType == "test",]
+nLoc <- length(unique(dat$locationName))
+nReps <- max(dat$replicate)
+
+# Number of reps mat be different for checks
+# Fixing here
+pheno <- pheno[pheno$replicate <= nReps & pheno$germplasmName %in% accessions_sel,]
+
+# Preparing dataset for for analysis
 dat1 <- pheno %>% dplyr::select(germplasmName, locationName, replicate, trait=study_trait[1])
 
 fMissing <- nrow(dat1[is.na(dat1$trait),])/nrow(dat1)
+message2 <- paste0("The frequency of missing data is too high. Please, check the dataset.")
 
 summaryData <- data.frame(mean = mean(dat1[,4], na.rm=TRUE),
 													min = min(dat1[,4], na.rm=TRUE),
@@ -97,63 +109,32 @@ summaryData <- data.frame(mean = mean(dat1[,4], na.rm=TRUE),
 													missing = fMissing
 													)
 
-cat("The json summary is: ", jsonSummary,"\n")
 myJson <- jsonlite::toJSON(summaryData)
 jsonlite::write_json(myJson, jsonSummary)
 
 
-message0 <- paste0("There are too many missing data ", fMissing*100, "%")
-
-
-
-
-missingData <- data.frame(tapply(dat1$trait, list(dat1$germplasmName, dat1$locationName), function(x){
-  return(length(which(is.na(x))))
-}))
-
-wrong_replicates <- c()
-oneLocGenotypes <- c()
-
-
-if(imputPheno == "imput_no"){
-
-	# 1 - Counting missing data per accession
-	countMissing <- as.data.frame(tapply(dat1[,4], dat1$germplasmName, function(x){length(which(is.na(x)))}))
-	countMissing$germplasmName <- rownames(countMissing)
-	colnames(countMissing)[1] <- "count"
-	countMissing <- countMissing %>% select(germplasmName, count)
-
-
-	# 2 - testing if all accessions have the same number of reps
-	replicate_df <- data.frame(replicate = tapply(dat1$replicate, list(dat1$germplasmName, dat1$locationName), length))
-	replicate_df$germplasmName <- rownames(replicate_df)
-
-	gathered_df <- gather(replicate_df, key = "replicate_locations", value = "value", -germplasmName)
-
-	nReps <- max(dat1$replicate)
-	all_included <- all(accessions_sel %in% unique(gathered_df$germplasmName))
-	missing_acc <- accessions_sel[!accessions_sel%in%unique(gathered_df$germplasmName)]
-	missing_acc_df <- data.frame(germplasmName = missing_acc, replicate_locations = rep("missing", length(missing_acc)), value = rep(0,length(missing_acc)))
-	gathered_df <- rbind(gathered_df, missing_acc_df)
-	wrong_replicates <- gathered_df[gathered_df$value != nReps, "germplasmName"]
-
-	message1 <- paste0("Please, check your dataset! There are accessions:", wrong_replicates," with different number of replication.")
-
-	# 3 Testing if all accessions are in the same locations
-	test2 <- data.frame(count = tapply(dat1$location, dat1$germplasmName, function(x) length(x)))
-	test2 <- tibble::rownames_to_column(test2, "GEN")
-	oneLocGenotypes <- test2[test2$count == 1, "GEN"]
-
-	message2<- c("Please, check your dataset! There are accessions present in only one location.")
-
-
-  missingData <- tibble::rownames_to_column(missingData, "germplasmName")
-  missingData <- missingData %>% tidyr::pivot_longer(cols = 2:ncol(missingData), names_to ="location", values_to = "count")
-  removeGermplasm <- missingData[missingData$count == nReps[1],"germplasmName"]
-  dat1 <- dat1[!dat1$germplasmName %in% removeGermplasm$germplasmName, ]
-  dat1 <- na.omit(dat1)
+find_duplications <- function(inData){
+  # Step 1: Identify duplicate rows based on the combination of four columns
+  duplicated_rows <- duplicated(inData[, c("Gen", "Env", "Rep")])
   
+  # Step 2: Calculate the average of 'Yield' for each unique combination of the four columns
+  averages <- aggregate(Yield ~ Gen + Env + Rep, data = dat1, FUN = mean)
+  
+  # Step 3: Replace the duplicated rows with the calculated average
+  pheno_unique <- inData[!duplicated_rows, ]  # Keep only unique rows
+  pheno_unique <- merge(pheno_unique, averages, by = c("Gen", "Env", "Rep"), all.x = TRUE)
+  
+  # If there are any missing values (for rows that were not duplicated), fill them with the original 'Yield'
+  pheno_unique$Yield <- ifelse(is.na(pheno_unique$Yield.y), pheno_unique$Yield.x, pheno_unique$Yield.y)
+  
+  # Remove unnecessary columns (if needed)
+  pheno_unique <- pheno_unique[, !(names(pheno_unique) %in% c("Yield.x", "Yield.y"))]
+
+  return(pheno_unique)
+  
+  # View the resulting data frame
 }
+
 
 dat1$germplasmName <- as.factor(dat1$germplasmName)
 dat1$locationName <- as.factor(dat1$locationName)
@@ -165,30 +146,57 @@ dat1$trait <- as.double(dat1$trait)
 dat1 <- dat1[order(dat1$germplasmName, dat1$locationName), ]
 colnames(dat1) <- c("Gen", "Env", "Rep", "Yield")
 
+
+dat2 <- find_duplications(dat1)
+
 if(imputPheno == "imput_yes"){
-  testCor <- imputation_accuracy(dat1, fMissing)
-  dat2 <- pheno_imputation(dat1)
-  dat1 <- dat2
+  testCor <- imputation_accuracy(dat2, fMissing)
+  dat2 <- pheno_imputation(dat2)
   cat("The imputation accuracy is: ", sprintf("%.3f",testCor), "\n")
 }
+
+# testing if all accessions have the same number of reps in all locations
+dat <- na.omit(dat2)
+replicate_df <- data.frame(replicate = tapply(dat$Yield, list(dat$Gen, dat$Env), length))
+replicate_df$germplasmName <- rownames(replicate_df)
+gathered_df <- gather(replicate_df, key = "replicate_locations", value = "value", -germplasmName)
+repAcc <- unique(gathered_df$value)
+message1 <- paste0("Please, check dataset for accessions per locations and reps.")
 
 # Saving error message
 errorMessages <- c()
 if(fMissing >= 0.4){
-	append(errorMessages, message0)
-}else if(length(wrong_replicates) > 0){
-  append(errorMessages, message1)
-}else if(length(oneLocGenotypes) != 0){
-  append(errorMessages, message2)		
-}else {
-  message3 <- "No error"
-  append(errorMessages, message3)
+	errorMessages <- append(errorMessages, message2)
+}else if(length(repAcc)>1){
+  errorMessages <- append(errorMessages, message1)
 }
 
-if(stability_method=="ammi"){
+# Setting second rep to compare augmented design with 1 rep per location
+if(nReps == 1 && stability_method == "ammi"){
+  dat2.1 <- dat2
+  dat2.1$Rep <- as.numeric(dat2.1$Rep)
+  dat2.1$Rep <- 2
+  dat2$Rep <- as.numeric(dat2$Rep)
+  dat2 <- rbind(dat2,dat2.1)
+  dat2$Rep <- as.factor(dat2$Rep)
+}else{
+	errorMessages <- append(errorMessages, "The number of replication must be greater than 1 for gge.")
+}
 
+
+if(stability_method=="ammi" && length(errorMessages) == 0 ){
 	library("agricolae")
-	model<- with(dat1,AMMI(Env, Gen, Rep, Yield, console=FALSE))
+
+	model <- NULL
+  # Running AMMI model
+	tryCatch({
+	  # Attempt to execute the code
+	  model<- with(dat2,AMMI(Env, Gen, Rep, Yield, console=FALSE))
+	}, error = function(e) {
+	  # Handle the error by printing a message
+	  cat("An error occurred:", conditionMessage(e), "\n")
+	  append(errorMessages, paste0("An error occurred:", conditionMessage(e)))
+	})
 
 	index<-index.AMMI(model)
 	index <- tibble::rownames_to_column(index, "Accession")
@@ -235,6 +243,9 @@ if(stability_method=="ammi"){
 	  }
 	}
 
+	scaled_values <- (meanDFF$value - min(meanDFF$value)) / (max(meanDFF$value) - min(meanDFF$value))
+	meanDFF$value <- scaled_values
+
 	myData <- data.frame(pivot_longer(dataGraphic, 2:ncol(dataGraphic), names_to = "location", values_to = "Effect"))
 	myData$location <- gsub("\\."," ", myData$location)
 
@@ -262,11 +273,25 @@ if(stability_method=="ammi"){
 	myJson <- jsonlite::toJSON(finalDF)
 	jsonlite::write_json(myJson, jsonFile)
 
-	}else if( stability_method=="gge"){
+	}else if( stability_method=="gge" && length(errorMessages) == 0){
 		library("stability")
 		cat("running gge", "\n")
+		# dat2 <- pheno_imputation(dat2)
+    
+    dat2$Env <- as.character(dat2$Env)
+		effectsDF <- NULL
+		# Use tryCatch to handle potential errors
+		tryCatch({
+		    # Attempt to execute the code
+		    effectsDF <- stability::ge_means(.data = dat2, .y = Yield, .gen = Gen, .env = Env)
+		}, error = function(e) {
+		    # Handle the error by printing a message
+		    cat("An error occurred:", conditionMessage(e), "\n")
+		    append(errorMessages, paste0("An error occurred:", conditionMessage(e)))
+		})
 		
-		effectsDF <-  stability::ge_means(.data=dat1, .y= Yield, .gen=Gen, .env=Env)
+		effectsDF <-  stability::ge_means(.data=dat2, .y= Yield, .gen=Gen, .env=Env)
+
 		test <- data.frame(effectsDF$ge_ranks)
 		test$location <- rownames(test)
 		gathered_df <- gather(test, key = "rank", value = "genotypes", -location)
@@ -287,7 +312,7 @@ if(stability_method=="ammi"){
 		gathered_mean$track <- gsub("\\.","",gathered_mean$track)
 
 
-		finalDF <- left_join(gathered_df, gathered_mean, by = "track") %>% select(
+		finalDF <- left_join(gathered_df, gathered_mean, by = "track") %>% dplyr::select(
 		  genotypes, locations, means, rank
 		)
 		finalDF$locations <- gsub("\\."," ",finalDF$locations)
@@ -295,7 +320,7 @@ if(stability_method=="ammi"){
 		rankDF <- data.frame(sumRank=tapply(finalDF$rank, finalDF$genotypes, sum))
 		rankDF$genotypes <- rownames(rankDF)
 		rankDF$genotypesRank <- rank(rankDF$sumRank, ties.method = "min")
-		finalDF <- left_join(finalDF, rankDF, by = "genotypes") %>% select(genotypes, locations, means, rank, genotypesRank) 
+		finalDF <- left_join(finalDF, rankDF, by = "genotypes") %>% dplyr::select(genotypes, locations, means, rank, genotypesRank) 
 		colnames(finalDF) <- c("genotypes","locations", "means", "locationRank","genotypeRank")
 		finalDF$means <- sprintf("%.2f", finalDF$means)
 
@@ -306,16 +331,24 @@ if(stability_method=="ammi"){
 		jsonlite::write_json(myJson, jsonFile)
 
 
-		myGraphic <- finalDF[, colnames(finalDF) %in% c("Accession", "location", "locationRank")]
+		## Preparing Graphic dataset
+		prepGraph <- as.data.frame(tapply(dat2$Yield, list(dat2$Gen, dat2$Env), mean))
+		prepGraph <- tibble::rownames_to_column(prepGraph, var="Accession")
+		meanGraph <- gather(prepGraph, key = "location", value = "mean", -Accession)
+		prepGraph2 <- as.data.frame(tapply(dat2$Yield, list(dat2$Gen, dat2$Env), sd))
+		prepGraph2 <- tibble::rownames_to_column(prepGraph2, var="Accession")
+		sdGraph <- gather(prepGraph2, key = "location", value = "sd", -Accession)
+		finalGraph <- left_join(meanGraph, sdGraph, by=c("Accession","location"))
 
-		graphicJson <- jsonlite::toJSON(myGraphic)
+		graphicJson <- jsonlite::toJSON(finalGraph)
 		jsonlite::write_json(graphicJson, graphFile)
 
 	}
 
-if ( length(errorMessages) > 0 ) {
+if ( is.null(errorMessages) == F ) {
   print(sprintf("Writing Error Messages to file: %s", messageFile))
   print(errorMessages)
   write(errorMessages, messageFile)
 }
 
+ 
