@@ -305,16 +305,18 @@ var trial_info_object = [];
             },
             success: function (response) {
                 var value = response.trait_value;
-                var black = {'color': 'red'};
+                var red = {'color': 'red'};
                 if (response.error){
                     alert("Error Retrieving Trait Value: "+response.error);
                 } else if (value) {
                     jQuery('#new_pheno_input').hide();
-                    jQuery("#stored_pheno_value").css(black);
+                    jQuery("#stored_pheno_value").css(red);
                     jQuery('#stored_pheno_input').show();
                     jQuery("#stored_pheno_value").val(value);
                 } else {
                     jQuery('#stored_pheno_input').hide();
+                    jQuery("#select_pheno_value").val(null_trait_value);
+                    jQuery('#select_pheno_value').empty();
                     jQuery('#new_pheno_input').show();
                 }
             },
