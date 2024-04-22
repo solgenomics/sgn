@@ -274,20 +274,6 @@ $email_address => ""
                                                             <input type="file" name="upload_genotype_vcf_file_input" id="upload_genotype_vcf_file_input" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
-                                                    <div class="form-group" style="margin-top: 20px;">
-                                                        <label class="col-sm-6 control-label"> Email Report: </label>
-                                                        <div class="col-sm-6">
-                                                            <input id="email_option_for_genotyping_upload" name="email_option_for_genotyping_upload" type="checkbox" data-toggle="toggle">
-                                                        </div>
-                                                    </div>
-                                                    <div id="email_field" style="display: none;">
-                                                        <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Email: </label>
-                                                            <div class="col-sm-6">
-                                                                <input id="email_address" name="email_address" type="email" value="<% $email_address %>">
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -429,7 +415,20 @@ $email_address => ""
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
                                 <& /page/page_title.mas, title=>"Finalize and submit your genotyping data" &>
-
+                                <div class="form-group" style="margin-top: 20px;">
+                                    <label class="col-sm-6 control-label">Email Notification:</label>
+                                    <div class="col-sm-6">
+                                        <input id="email_notification_for_genotyping_upload" name="email_notification_for_genotyping_upload" type="checkbox" data-toggle="toggle" onchange="toggleEmailField()">
+                                    </div>
+                                </div>
+                                <div id="email_field" style="display: none;">
+                                    <div class="form-group">
+                                        <label class="col-sm-6 control-label">Email:</label>
+                                        <div class="col-sm-6">
+                                            <input id="email_address" name="email_address" type="email" value="<% $email_address %>">
+                                        </div>
+                                    </div>
+                                </div>
                                 <div id="upload_genotypes_missing_stocks_div" style="display:none">
                                     <div id="upload_genotypes_add_missing_stocks_html">
                                     </div>
@@ -1346,7 +1345,7 @@ jQuery(document).ready(function(){
 
         jQuery(document).ready(function() {
         function toggleEmailField() {
-            var checkbox = jQuery('#email_option_for_genotyping_upload');
+            var checkbox = jQuery('#email_notification_for_genotyping_upload');
             var emailField = jQuery('#email_field');
             if (checkbox.prop('checked')) {
                 emailField.show();
@@ -1355,7 +1354,7 @@ jQuery(document).ready(function(){
             }
         }
 
-        jQuery('#email_option_for_genotyping_upload').on('change', toggleEmailField);
+        jQuery('#email_notification_for_genotyping_upload').on('change', toggleEmailField);
         // Call the function initially in case the checkbox is already checked
         toggleEmailField();
     });

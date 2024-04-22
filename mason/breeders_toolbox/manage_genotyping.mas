@@ -4,6 +4,7 @@ $genotyping_trials_by_breeding_project
 $locations
 $breeding_programs
 $facilities => ();
+$email_address => ""
 </%args>
 
 <& /page/page_title.mas, title=>"Manage Genotyping Plates" &>
@@ -25,7 +26,7 @@ $facilities => ();
     </&>
 
     <&| /page/info_section.mas, title=>'Genotyping Plates', collapsible=>1, collapsed=>0, subtitle => ' ' &>
-        <& /breeders_toolbox/genotyping_trials/trials.mas, trials_by_breeding_project=>$genotyping_trials_by_breeding_project, locations=>$locations,  breeding_programs=>$breeding_programs, facilities=>$facilities &>
+        <& /breeders_toolbox/genotyping_trials/trials.mas, trials_by_breeding_project=>$genotyping_trials_by_breeding_project, locations=>$locations,  breeding_programs=>$breeding_programs, facilities=>$facilities, email_address => $email_address &>
     </&>
 
 </div>

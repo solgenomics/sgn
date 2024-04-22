@@ -33,10 +33,9 @@ use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
 use JSON;
 use Email::Sender::Simple qw /sendmail/;
-use DateTime;
 use Email::Simple;
 use Email::Simple::Creator;
-use CXGN::Tools::Run;
+#use CXGN::Contact;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -63,6 +62,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $user_id;
     my $user_role;
     my $user_name;
+    my $email_address;
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
@@ -762,6 +762,7 @@ sub upload_genotype_verify_POST : Args(0) {
             }
             $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
             $c->detach();
+
         }
 
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
@@ -797,6 +798,40 @@ sub upload_genotype_verify_POST : Args(0) {
     $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
 
     $c->stash->{rest} = $return;
+
+    my ($email_address, $user_name, $file_type, $status, $message) = @_;
+
+    my $email_subject = "Genotyping file upload status - $status";
+    my $email_body = "Dear $user_name,\n\n$message\n\nRegards,\n";
+
+    my $email = Email::Simple->create(
+        header => [
+            From    => 'noreply@breedbase.org',
+            To      => $email_address,
+            Subject => $email_subject,
+        ],
+        body => $email_body,
+    );
+
+    eval {
+        sendmail($email);
+        print "Notification email sent to $email_address.\n";
+    } or do {
+        my $error = $@ || 'Unknown error';
+        warn "Failed to send email: $error\n";
+    };
+
+    my ($parse_errors, $verified_errors,);
+    # Check for errors and send notification email
+    if ($parse_errors || $verified_errors) {
+        my $error_message = "There were errors during the file upload process.\n\n Thank you\n\n.";
+        send_notification_email($email_address, $user_name, $parser_plugin, 'Error', $error_message);
+    } elsif ($return) {
+        # File uploaded successfully
+        my $success_message = "Congratulations, your genotyping file has been successfully processed and uploaded.\n\n Thank you\n\n.";
+        send_notification_email($email_address, $user_name, $parser_plugin, 'Success', $success_message);
+    }
+
 }
 
 1;
