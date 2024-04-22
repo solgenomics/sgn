@@ -313,7 +313,7 @@ var trial_info_object = [];
                     jQuery("#stored_pheno_value").css(red);
                     jQuery('#stored_pheno_input').show();
                     jQuery("#stored_pheno_value").val(value);
-                } else {
+                } else if ((trait || trait_list_option) && !value) {
                     jQuery('#stored_pheno_input').hide();
                     jQuery("#select_pheno_value").val(null_trait_value);
                     jQuery('#select_pheno_value').empty();
