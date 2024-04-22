@@ -36,26 +36,23 @@ my $dbpass = $opt_P;
 my $prefix = $opt_i;
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
-				      dbname=>$dbname,
-				      dbargs => {AutoCommit => 0,
-				      RaiseError => 1}
-				    }
-    );
+        dbname=>$dbname,
+        dbargs => {AutoCommit => 0,
+        RaiseError => 1}
+    } );
 
 print STDERR "Connecting to database...\n";
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
-
 
 my $obo_file = $prefix . ".breedbase.obo";
 
 #resultset of all cvterms
 my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search(
-				 { 'db.name' => $prefix },
-				 { join => [ 'cv', { dbxref => 'db' } ]  ,
-				  '+select' => ['cv.name', 'dbxref.accession'],
-				  '+as' => [ 'cv_name', 'dbxref_accession' ]
-				}
-			 );
+    { 'db.name' => $prefix },
+    { join => [ 'cv', { dbxref => 'db' } ]  ,
+    '+select' => ['cv.name', 'dbxref.accession'],
+    '+as' => [ 'cv_name', 'dbxref_accession' ]
+} );
 
 my $date = DateTime->now();
 
@@ -65,72 +62,71 @@ ontology: $prefix\n\n";
 write_file( $obo_file,  {append => 0 }, $obo_header  ) ;
 my $count=0;
 while(my $cvterm = $cvterm_rs->next() ) {
-	my $accession = $cvterm->dbxref->accession();
-	print STDERR "Looking at Accession $accession\n";
-	my $cvterm_name = $cvterm->name();
-	my $namespace = $cvterm->cv->name();
-	my $def = $cvterm->definition();
-	#remove quotes from definition sting
-	$def =~ s/"//g;
-	my $is_obsolete = $cvterm->is_obsolete();
-	my $is_relationshiptype = $cvterm->is_relationshiptype();
-	my $is_obsolete = $cvterm->is_obsolete();
+    my $accession = $cvterm->dbxref->accession();
+    print STDERR "Looking at Accession $accession\n";
+    my $cvterm_name = $cvterm->name();
+    my $namespace = $cvterm->cv->name();
+    my $def = $cvterm->definition();
+    #remove quotes from definition sting
+    $def =~ s/"//g;
+    my $is_obsolete = $cvterm->is_obsolete();
+    my $is_relationshiptype = $cvterm->is_relationshiptype();
+    my $is_obsolete = $cvterm->is_obsolete();
 
-	my $term_details = "\n[Term]\nid: $prefix:$accession\nname: $cvterm_name\nnamespace: $namespace\n";
-	$term_details .="def: \"$def\"\n" if $def;
-	$term_details .="is_obsolete: true\n" if $is_obsolete;
-	$count++;
-	if ($is_relationshiptype) {
-			$term_details = "
+    my $term_details = "\n[Term]\nid: $prefix:$accession\nname: $cvterm_name\nnamespace: $namespace\n";
+    $term_details .="def: \"$def\"\n" if $def;
+    $term_details .="is_obsolete: true\n" if $is_obsolete;
+    $count++;
+    if ($is_relationshiptype) {
+        $term_details = "
 [Typedef]
 id: $cvterm_name
 name: $cvterm_name
 "
-	}
-	write_file( $obo_file,  {append => 1 }, "$term_details" );
+    }
+    write_file( $obo_file,  {append => 1 }, "$term_details" );
 
-	my $syn_rs = $cvterm->cvtermsynonyms();
-	my $xref_rs = $cvterm->cvterm_dbxrefs();
-	my $relationships_rs = $cvterm->cvterm_relationship_subjects();
+    my $syn_rs = $cvterm->cvtermsynonyms();
+    my $xref_rs = $cvterm->cvterm_dbxrefs();
+    my $relationships_rs = $cvterm->cvterm_relationship_subjects();
 
-	while( my $synonym = $syn_rs->next() ) {
-			my $syn_name  =  $synonym->synonym();
-			print STDERR "synonym = $syn_name\n";
-			my $type = $synonym->type;
-			my $type_name ;
+    while( my $synonym = $syn_rs->next() ) {
+        my $syn_name  =  $synonym->synonym();
+        print STDERR "synonym = $syn_name\n";
+        my $type = $synonym->type;
+        my $type_name ;
 
-			defined $type ? $type_name = $type->name : "[]";
+        defined $type ? $type_name = $type->name : "[]";
 
-			#synonyms need to be quoted. Somtimes they are already quoted if loaded properly from the obo loader
-			unless ($syn_name =~ /^\"/) { $syn_name = '"' . $syn_name . '"' ; }
-			#xref list for synonyms
-			unless ($syn_name =~ /$\]/) { $syn_name .= " []" ; }
-			write_file( $obo_file,  {append => 1 }, "synonym: "  . $syn_name  . $type_name . "\n" );
-	}
-	while( my $xref = $xref_rs->next() ) {
-			my $xref_acc  =  $xref->dbxref->accession();
-			my $xref_prefix = $xref->dbxref->db->name();
-			print STDERR "xref = $xref_prefix:$xref_acc\n";
-			write_file( $obo_file,  {append => 1 }, "xref: "  . $xref_prefix . ":"  . $xref_acc . "\n" ) if ( $xref->is_for_definition == 0 );
-	}
+        #synonyms need to be quoted. Somtimes they are already quoted if loaded properly from the obo loader
+        unless ($syn_name =~ /^\"/) { $syn_name = '"' . $syn_name . '"' ; }
+        #xref list for synonyms
+        unless ($syn_name =~ /$\]/) { $syn_name .= " []" ; }
+        write_file( $obo_file,  {append => 1 }, "synonym: "  . $syn_name  . $type_name . "\n" );
+    }
+    while( my $xref = $xref_rs->next() ) {
+        my $xref_acc  =  $xref->dbxref->accession();
+        my $xref_prefix = $xref->dbxref->db->name();
+        print STDERR "xref = $xref_prefix:$xref_acc\n";
+        write_file( $obo_file,  {append => 1 }, "xref: "  . $xref_prefix . ":"  . $xref_acc . "\n" ) if ( $xref->is_for_definition == 0 );
+    }
 
-	while( my $rel = $relationships_rs->next() ) {
-			my $object = $rel->object();
-			my $type = $rel->type();
-			my $object_name = $object->name();
-			my $object_acc = $object->dbxref->accession();
-			my $object_acc_prefix = $object->dbxref->db->name();
+    while( my $rel = $relationships_rs->next() ) {
+        my $object = $rel->object();
+        my $type = $rel->type();
+        my $object_name = $object->name();
+        my $object_acc = $object->dbxref->accession();
+        my $object_acc_prefix = $object->dbxref->db->name();
 
-			my $type_name = $type->name();
+        my $type_name = $type->name();
 
-			my $relationship_format = "is_a:";
-			if ($type_name ne "is_a") {
-					$relationship_format = "relationship: $type_name";
-			}
-			print STDERR "$relationship_format $object_acc_prefix:$object_acc\n";
-			write_file( $obo_file,  {append => 1 }, "$relationship_format $object_acc_prefix:$object_acc " . "! ". $object_name . "\n" );
-	}
-
+        my $relationship_format = "is_a:";
+        if ($type_name ne "is_a") {
+            $relationship_format = "relationship: $type_name";
+        }
+        print STDERR "$relationship_format $object_acc_prefix:$object_acc\n";
+        write_file( $obo_file,  {append => 1 }, "$relationship_format $object_acc_prefix:$object_acc " . "! ". $object_name . "\n" );
+    }
 }
 print STDERR "wrote $count terms to file $obo_file\n";
 
