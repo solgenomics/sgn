@@ -282,7 +282,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
         @input_types = split ',',$types_string;
         $tracking_cvterm_id = $tracking_trial_treatment_json_cvterm_id;
     } else {
-        $types_string = $c->config->{tracking_activities};
+        $types_string = $c->config->{tracking_tissue_culture};
         @input_types = split ',',$types_string;
         $tracking_cvterm_id = $tracking_tissue_culture_json_cvterm_id;
     }
@@ -369,7 +369,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
         @input_types = split ',',$types_string;
         $tracking_cvterm_id = $tracking_trial_treatment_json_cvterm_id;
     } else {
-        $types_string = $c->config->{tracking_activities};
+        $types_string = $c->config->{tracking_tissue_culture};
         @input_types = split ',',$types_string;
         $tracking_cvterm_id = $tracking_tissue_culture_json_cvterm_id;
     }
@@ -434,7 +434,7 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
         $types_string = $c->config->{tracking_trial_treatments};
         @input_types = split ',',$types_string;
     } else {
-        $types_string = $c->config->{tracking_activities};
+        $types_string = $c->config->{tracking_tissue_culture};
         @input_types = split ',',$types_string;
     }
 

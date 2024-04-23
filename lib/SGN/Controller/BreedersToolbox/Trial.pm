@@ -329,7 +329,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $types_string = $c->config->{tracking_trial_treatments_header};
             @input_types = split ',',$types_string;
         } else {
-            $types_string = $c->config->{tracking_activities_header};
+            $types_string = $c->config->{tracking_tissue_culture_header};
             @input_types = split ',',$types_string;
         }
 

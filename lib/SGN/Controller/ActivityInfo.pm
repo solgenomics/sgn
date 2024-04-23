@@ -43,10 +43,10 @@ sub activity_details :Path('/activity/details') : Args(1) {
         @activity_headers = split ',',$activity_type_header;
     } else {
         $activity_type = 'Tissue Culture';
-        $types = $c->config->{tracking_activities};
+        $types = $c->config->{tracking_tissue_culture};
         @type_select_options = split ',',$types;
 
-        $activity_type_header = $c->config->{tracking_activities_header};
+        $activity_type_header = $c->config->{tracking_tissue_culture_header};
         @activity_headers = split ',',$activity_type_header;
     }
 
@@ -126,10 +126,10 @@ sub record_activity :Path('/activity/record') :Args(0) {
         @activity_headers = split ',',$activity_type_header;
     } elsif ($identifier_id && !$data_type){
         $activity_type = 'Tissue Culture';
-        $types = $c->config->{tracking_activities};
+        $types = $c->config->{tracking_tissue_culture};
         @type_select_options = split ',',$types;
 
-        $activity_type_header = $c->config->{tracking_activities_header};
+        $activity_type_header = $c->config->{tracking_tissue_culture_header};
         @activity_headers = split ',',$activity_type_header;
     }
 

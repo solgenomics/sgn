@@ -186,7 +186,7 @@ $user_id
                                 <th>Order Details</th>
                                 <th>Tracking ID</th>
                                 <th>Material</th>
-% my $activity_types = $c->config->{tracking_activities_header};
+% my $activity_types = $c->config->{tracking_tissue_culture_header};
 % my @column_header = split ',',$activity_types;
 % foreach my $column_header(@column_header){
                                 <th><%$column_header%></th>
