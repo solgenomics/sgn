@@ -4,7 +4,7 @@
  *
  */
 
-var solGS = solGS || function solGS() {};
+var solGS = solGS || function solGS() { };
 
 solGS.cluster = {
   canvas: "#cluster_canvas",
@@ -125,12 +125,8 @@ solGS.cluster = {
   },
 
   getClusterPopId: function (selectedId, dataStr) {
-    
-    console.log(`getClusterPopId: ${selectedId} -- ${dataStr}`)
 
-    if (!dataStr) {dataStr = 'list'}
     var clusterPopId;
-    console.log(`getClusterPopId: ${selectedId} -- ${dataStr}`)
     if (dataStr) {
       clusterPopId = `${dataStr}_${selectedId}`;
     } else {
@@ -186,7 +182,6 @@ solGS.cluster = {
   },
 
   clusterRunClusterId: function (rowId) {
-    console.log(`clusterRunClusterId rowid: ${rowId}`)
     if (location.pathname.match(/cluster\/analysis/) && rowId) {
       return `run_cluster_${rowId}`;
     } else {
@@ -213,7 +208,6 @@ solGS.cluster = {
       var popType = args.type;
     }
 
-    console.log(`getDataTypeOpts: args -- ${JSON.stringify(args)}`)
     var dataTypeOpts = [];
     var page = location.pathname;
 
@@ -222,7 +216,6 @@ solGS.cluster = {
     }
 
     if (page.match(/cluster\/analysis/)) {
-      console.log(`getDataTypeOpts: datastr: ${dataStr}`)
       if (dataStr.match(/list/)) {
         list = this.getListMetaData(selectedId);
 
@@ -266,17 +259,12 @@ solGS.cluster = {
     return dataTypeOpts;
   },
 
-  createRowElements: function(clusterPop) {
+  createRowElements: function (clusterPop) {
     var popId = clusterPop.id;
     var popName = clusterPop.name;
     var dataStr = clusterPop.data_str;
 
-    // if (!dataStr) {dataStr = 'list'}
-
-    console.log(`createRowElements: ${popName} -- ${dataStr}`)
     var clusterPopId = solGS.cluster.getClusterPopId(popId, dataStr);
-    console.log(`createRowElements: ${popName} -- ${dataStr} -- ${clusterPopId} -- popId: ${popId}`)
-
     var clusterTypeOpts = solGS.cluster.createClusterTypeSelect(clusterPopId);
 
     var dataTypeOpts = solGS.cluster.getDataTypeOpts({
@@ -292,7 +280,6 @@ solGS.cluster = {
     var kNum = '<input class="form-control" type="text" placeholder="3" id="' + kNumId + '"/>';
 
     var clusterArgs = JSON.stringify(clusterPop);
-    console.log(`createRowElements clusterargs: ${clusterArgs} --str ${dataStr} -- popId: ${popId}`)
 
     var runClusterBtn =
       `<button type="button" id=${runClusterBtnId}` +
@@ -300,12 +287,12 @@ solGS.cluster = {
 
     var tdId = `cluster_${clusterPopId}`;
 
-    if (dataStr.match(/dataset/)){
+    if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
     }
-    var rowData = [popName, 
-      dataStr,clusterTypeOpts, 
-      dataTypeOpts, kNum, runClusterBtn];
+    var rowData = [popName,
+      dataStr, clusterTypeOpts,
+      dataTypeOpts, kNum, runClusterBtn, `${dataStr}_${popId}`];
 
     return rowData;
   },
@@ -414,24 +401,24 @@ solGS.cluster = {
     var popName;
 
     var page = location.pathname;
-    if (
-      page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\/|breeders\//)
-    ) {
-      popId = popDetails.training_pop_id;
-      popName = popDetails.training_pop_name;
-      popType = "training";
-    } else if (page.match(/solgs\/selection\/|solgs\/model\/combined\/trials\//)) {
-      popId = popDetails.selection_pop_id;
-      popName = popDetails.selection_pop_name;
-      popType = "selection";
-    } else {
-      popId = jQuery("#cluster_selected_pop_id").val();
-      popType = jQuery("#cluster_selected_pop_type").val();
-      popName = jQuery("#cluster_selected_pop_name").val();
-      console.log(`POPTYPE : ${popType}`)
-      popType = dataStr;
+    if (!page.match(/cluster\/analysis/)) {
+      if (
+        page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\/|breeders\//)
+      ) {
+        popId = popDetails.training_pop_id;
+        popName = popDetails.training_pop_name;
+        popType = "training";
+      } else if (page.match(/solgs\/selection\/|solgs\/model\/combined\/trials\//)) {
+        popId = popDetails.selection_pop_id;
+        popName = popDetails.selection_pop_name;
+        popType = "selection";
+      } else {
+        popId = jQuery("#cluster_selected_pop_id").val();
+        popType = jQuery("#cluster_selected_pop_type").val();
+        popName = jQuery("#cluster_selected_pop_name").val();
+
+      }
     }
-    console.log(`POPTYPE : ${popType}`)
 
     if (!selectedName) {
       selectedName = popName;
@@ -613,7 +600,7 @@ solGS.cluster = {
 
   },
 
-    runClusterAnalysis: function (clusterArgs) {
+  runClusterAnalysis: function (clusterArgs) {
     var clusterPopId;
     if (typeof clusterArgs == "string") {
       clusterArgs = JSON.parse(clusterArgs);
@@ -630,8 +617,6 @@ solGS.cluster = {
       clusterArgs = JSON.stringify(clusterArgs);
     }
 
-    console.log(`RUNAANALYSIS clusterArgs : ${clusterArgs}`)
-   
     var runAnalysis = jQuery.ajax({
       type: "POST",
       dataType: "json",
@@ -642,7 +627,7 @@ solGS.cluster = {
     });
 
     return runAnalysis;
-  
+
   },
 
   validateClusterParams: function (valArgs) {
@@ -778,7 +763,7 @@ solGS.cluster = {
   },
 
   plotClusterOutput: function (res) {
-  
+
     var imageId = res.plot_name;
     imageId = 'id="' + imageId + '"';
     var plot = "<img " + imageId + ' src="' + res.cluster_plot + '">';
@@ -886,75 +871,95 @@ solGS.cluster = {
     this.displaySelectedClusterPopsTable()
   },
 
-displayClusterPopsTable: function(tableId, data) {
+  displayClusterPopsTable: function (tableId, data) {
 
-    console.log(`displayClusterPopsTable: ${JSON.stringify(data)}`)
     var table = jQuery(`#${tableId}`).DataTable({
-    'searching' : true,
-    'ordering'  : true,
-    'processing': true,
-    'paging'    : true,
-    'info'      : false,
-    'pageLength' : 5,
+      'searching': true,
+      'ordering': true,
+      'processing': true,
+      'paging': true,
+      'info': false,
+      'pageLength': 5,
+      'rowId': function (a) {
+        return a[6]
+      }
     });
 
     table.rows.add(data).draw();
 
-},
+  },
 
-getClusterLists: function() {
-  var list = new CXGN.List();
-  var lists = list.getLists(["accessions", "plots", "trials"]);
-  var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
-  var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
-  lists = [clusterPrivatePops, clusterPublicLists]
-  
-  return lists.flat();
-
-},
-
-
-
-displaySelectedClusterPopsTable: function () {
+  getClusterLists: function () {
     var list = new CXGN.List();
     var lists = list.getLists(["accessions", "plots", "trials"]);
-    console.log(`cluster lists: ${JSON.stringify(lists.private_lists)}`)
+    var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
+    var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
+    lists = [clusterPrivatePops, clusterPublicLists]
+
+    return lists.flat();
+
+  },
+
+  getClusterPops: function () {
+
+    var lists = this.getClusterLists();
+    var formattedLists = [];
+
+    for (var i = 0; i < lists.length; i++) {
+      if (lists[i]) {
+        lists[i]["data_str"] = 'list';
+        var formattedList = this.createRowElements(lists[i]);
+        formattedLists.push(formattedList);
+      }
+    }
+
+    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    var formattedDatasets = [];
+
+    for (var i = 0; i < datasets.length; i++) {
+      if (datasets[i]) {
+        var formattedDataset = this.createRowElements(datasets[i]);
+        formattedDatasets.push(formattedDataset);
+      }
+    }
+
+    clusterPops = [formattedDatasets, formattedLists];
+
+    return clusterPops.flat();
+
+  },
+
+
+  displaySelectedClusterPopsTable: function () {
+    var list = new CXGN.List();
+    var lists = list.getLists(["accessions", "plots", "trials"]);
 
     var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
-
-    console.log(`cluster lists json: ${JSON.stringify(clusterPrivatePops)}`)
 
     var menuId = this.clusterPopsSelectMenuId;
     var menu = new SelectMenu(menuId);
     clusterPrivatePops = clusterPrivatePops.flat();
-    console.log(`cluster lists flattened json: ${JSON.stringify(clusterPrivatePops)}`)
 
     var menuElem = menu.addOptions(clusterPrivatePops);
 
     if (lists.public_lists[0]) {
       var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
-    console.log(`cluster pub lists json: ${JSON.stringify(clusterPublicLists)}`)
 
       menu.addOptionsSeparator("public lists");
       menuElem = menu.addOptions(clusterPublicLists);
     }
 
     var datasetPops = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    console.log(`cluster datasets: ${JSON.stringify(datasetPops)}`)
 
     if (datasetPops) {
       menu.addOptionsSeparator("datasets");
       menuElem = menu.addOptions(datasetPops);
     }
-
-    // var clusterPopsDiv = this.clusterPopsDiv;
-    // jQuery(clusterPopsDiv).append(menuElem).show();
   },
 
   getSelectedPopClusterArgs: function (runClusterElemId) {
     var clusterArgs;
 
-    // var runclusterElemId = this.getRunclusterId(clusterPopId);
     var selectedPopDiv = document.getElementById(runClusterElemId);
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
@@ -963,7 +968,6 @@ displaySelectedClusterPopsTable: function () {
       var clusterPopId = clusterArgs.data_str + "_" + clusterArgs.id;
 
       var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
-      // var page = `/cluster/analysis/${clusterPopId}/gp/${protocolId}`;
 
       clusterArgs["analysis_type"] = "cluster analysis";
       clusterArgs["genotyping_protocol_id"] = protocolId;
@@ -1060,7 +1064,7 @@ jQuery(document).ready(function () {
 });
 
 jQuery(document).ready(function () {
-  
+
   jQuery("#cluster_div").on("change", "#cluster_selected_pop", function () {
     var rowId = jQuery(this).closest("tr").attr("id");
 
@@ -1090,8 +1094,8 @@ jQuery(document).ready(function () {
         var clusterArgs = solGS.cluster.getSelectedPopClusterArgs(runClusterBtnId);
         selectedId = clusterArgs.id;
         selectedName = clusterArgs.name;
-        dataStr = clusterArgs.data_str;// || 'list';
-        
+        dataStr = clusterArgs.data_str;
+
       } else if (page.match(/breeders\/trial\//)) {
         selectedId = jQuery("#trial_id").val();
         selectedName = jQuery("#trial_name").val();
@@ -1216,7 +1220,7 @@ jQuery(document).ready(function () {
             });
           }
         })
-        .fail(function () {});
+        .fail(function () { });
     }
   });
 });
@@ -1259,18 +1263,18 @@ jQuery(document).ready(function () {
 });
 
 jQuery(document).ready(function () {
-  
-    if (!location.pathname.match(/cluster\/analysis/)) {
-      var clusterPopsDiv = solGS.cluster.clusterPopsDiv;
 
-      jQuery(clusterPopsDiv).on("change", function () {
+  if (!location.pathname.match(/cluster\/analysis/)) {
+    var clusterPopsDiv = solGS.cluster.clusterPopsDiv;
+
+    jQuery(clusterPopsDiv).on("change", function () {
       var selectedPop = jQuery("option:selected", this).data("pop");
-    
+
       var selectedPopId = selectedPop.id;
       var selectedPopName = selectedPop.name;
       var selectedPopType = selectedPop.type || selectedPop.pop_type;
 
-    
+
       var dataTypeId = solGS.cluster.clusterDataTypeSelectId(selectedPopId);
       var dataType = jQuery("#" + dataTypeId).val();
 
@@ -1290,45 +1294,20 @@ jQuery(document).ready(function () {
       }
 
     });
-    }  
+  }
 });
 
 
-
 jQuery(document).ready(function () {
-    if (location.pathname.match(/cluster\/analysis/)) {
+  if (location.pathname.match(/cluster\/analysis/)) {
 
-      clusterPopsDataDiv = solGS.cluster.clusterPopsDataDiv;
-      var tableId = 'cluster_pops_table';
-      var clusterPopsTable = solGS.cluster.createTable(tableId)
-      jQuery(clusterPopsDataDiv).append(clusterPopsTable).show();
-     
-      var lists = solGS.cluster.getClusterLists();
+    clusterPopsDataDiv = solGS.cluster.clusterPopsDataDiv;
+    var tableId = 'cluster_pops_table';
+    var clusterPopsTable = solGS.cluster.createTable(tableId)
+    jQuery(clusterPopsDataDiv).append(clusterPopsTable).show();
 
-      var formattedLists = [];
+    var clusterPops = solGS.cluster.getClusterPops();
 
-      for (var i=0;  i < lists.length; i++) {
-        console.log(`i : ${JSON.stringify(lists[i])}`)
-      
-        if (lists[i]) {
-          lists[i]["data_str"] = 'list';
-          var formattedList = solGS.cluster.createRowElements(lists[i]);
-          formattedLists.push(formattedList);
-        }
-      }      
-
-      var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-      var formattedDatasets = [];
-
-      for (var i=0;  i < datasets.length; i++) {
-
-        if (datasets[i]) {
-        var formattedDataset = solGS.cluster.createRowElements(datasets[i]);
-        formattedDatasets.push(formattedDataset);
-        }
-      }
-
-      clusterPops = [formattedDatasets, formattedLists];
-      solGS.cluster.displayClusterPopsTable(tableId, clusterPops.flat())
-    }
+    solGS.cluster.displayClusterPopsTable(tableId, clusterPops)
+  }
 });
