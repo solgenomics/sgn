@@ -3,10 +3,64 @@
 
 download_obo.pl - script to download obo file of an ontology
 
+=head1 SYNOPSIS
+
+perl download_obo.pl -i prefix -H host -D dbname
+
 =head1 DESCRIPTION
 
-perl download_obo.pl -i prefix -H host -D dbname -U dbuser -P dbpass
+Download an obo file from your database. The file will contain all terms listed under the provided ontology prefix (db.name).
+The obo filename is $prefix_breedbase.obo.
+After downloading the file it is recommended to test it in the Protege program to make sure it is a valid obo,
+and loading back into the database with gmod_load_cvterms.pl  <see the solgenomics/chado_tools repo>
 
+
+This script currently prints the following fields:
+
+    [Term]
+    id: $prefix:$accession
+    name: $cvterm_name
+    namespace: $namespace
+    def: "$def" #if the cvterm 'definition' field is populated
+    is_obsolete: true #if cvterm is_obsolete field is 'true'
+    synonym: $synonym_name []  # one row for each synonym
+    xref: $xref_cvterm [] # one row for each cvterm xref that is not for the cvterm is_for_definition
+    is_a: $cvterm # one row for each is_a relationship object
+    relationship: $typedef $cvterm # one row for each relationship type that is not is_a (e.g. variable_of, method_of, scale_of)
+
+    --------------------------------------------
+
+    Example:
+
+    [Term]
+    id: CO_334:0000009
+    name: initial vigor assessment 1-7
+    namespace: cassava_trait
+    def: "Visual assessment of plant vigor during establishment scored one month after planting. 3 = Not vigorous, 5 = Medium vigor, 7 = highly vigorous." [CO:curators]
+    synonym: "Can't fall when there is strong wind" EXACT []
+    synonym: "IVig_IITAVisScg_1to7" EXACT []
+    synonym: "vigor" EXACT []
+    xref: TO:0000250
+    is_a: CO_334:0001000 ! Variables
+    is_a: CO_334:0002010 ! Farmer trait
+    relationship: variable_of CO_334:0000386 ! Initial vigor
+    relationship: variable_of CO_334:0010228 ! Visual Rating: Initial vigor_method
+    relationship: variable_of CO_334:0100434 ! 7pt scale
+
+    ------------------------------------------
+
+If there are any cvterm.is_relationshiptype for this ontology they will be printed as
+    [Typedef]
+    id: $cvterm_name
+    name: $cvterm_name
+
+
+=head1 COMMAND-LINE OPTIONS
+
+    -H host name
+    -D database name
+    -i prefix for the ontology (e.g. CO_334)
+    -t Test run. Rolls back at the end.
 
 =head1 AUTHOR
 
@@ -27,7 +81,7 @@ use File::Slurp;
 
 our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_i);
 
-getopts('H:D:U:P:b:i:t:r:n');
+getopts('H:D:U:P:i:');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
@@ -35,7 +89,6 @@ my $dbuser = $opt_U;
 my $dbpass = $opt_P;
 my $prefix = $opt_i;
 
-my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
         dbname=>$dbname,
         dbargs => {AutoCommit => 0,
         RaiseError => 1}
@@ -63,6 +116,7 @@ write_file( $obo_file,  {append => 0 }, $obo_header  ) ;
 my $count=0;
 while(my $cvterm = $cvterm_rs->next() ) {
     my $accession = $cvterm->dbxref->accession();
+    my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
     print STDERR "Looking at Accession $accession\n";
     my $cvterm_name = $cvterm->name();
     my $namespace = $cvterm->cv->name();
@@ -129,18 +183,3 @@ name: $cvterm_name
     }
 }
 print STDERR "wrote $count terms to file $obo_file\n";
-
-#			 [Term]
-#			 id: CO_334:0000009
-#			 name: initial vigor assessment 1-7
-#			 namespace: cassava_trait
-#			 def: "Visual assessment of plant vigor during establishment scored one month after planting. 3 = Not vigorous, 5 = Medium vigor, 7 = highly vigorous." [CO:curators]
-#			 synonym: "Can't fall when there is strong wind" EXACT []
-#			 synonym: "IVig_IITAVisScg_1to7" EXACT []
-#			 synonym: "vigor" EXACT []
-#			 xref: TO:0000250
-#			 is_a: CO_334:0001000 ! Variables
-#			 is_a: CO_334:0002010 ! Farmer trait
-#			 relationship: variable_of CO_334:0000386 ! Initial vigor
-#			 relationship: variable_of CO_334:0010228 ! Visual Rating: Initial vigor_method
-#			 relationship: variable_of CO_334:0100434 ! 7pt scale
