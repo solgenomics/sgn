@@ -351,6 +351,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                   <li>Return to the “Manage Markersets” screen. Select <b>Add Markers to Markerset</b>. Select the markerset that was just created. Then add the marker name and allele values that you are searching for. The easiest way of getting the name and allele values is to use the “Search Wizard” and download the genotype data from step 1. Note that you should not use markers that have missing genotype data.
                   <li>From the “Manage Markersets” screen find “<b>Search for accessions</b> with specific genotype” and select “GO”. In the “Select a list of accessions” select the list created in step 1. Then find “Select a set of markers” and select the markerset created in 2. Then select “Search Accessions”. The list of accessions will appear in the “Search Results” at the bottom of the screen.
                   </ol>
+                </div>
             </div>
         </div>
     </div>
