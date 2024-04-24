@@ -112,6 +112,15 @@ $trial_stock_type => undef
             <div class="col-sm-3">
                 <input type="number" class="form-control" id="select_pheno_value" name="select_pheno_value"></input>
             </div>
+            <div class="col-sm-5">
+              <div id="loading-trial-phenotype" style="display: none"></div>
+              <div id="success-trial-phenotype" style="display: none">
+                <span class="glyphicon glyphicon-ok" style="color: #A9AE00; font-size: 150%"></span>
+              </div>
+              <div id="error-trial-phenotype" style="display: none">
+                <span class="glyphicon glyphicon-remove-sign" style="color: #AE1000; font-size: 150%"></span>
+              </div>
+            </div>
         </div>
         <div class="form-group form-group-sm" id = "stored_pheno_input" style="display: none">
             <label class="col-sm-4 control-label">Stored trait value: </label>
@@ -237,6 +246,9 @@ var trial_info_object = [];
     var trait_focusin;
     var trait_list_option_focusin;
     jQuery( "#select_pheno_value" ).focusin(function() {
+        jQuery("#success-trial-phenotype").hide();
+        jQuery("#error-trial-phenotype").hide();
+        jQuery("#loading-trial-phenotype").hide();
         plot_focusin = jQuery("#plot_name").val();
         trait_focusin = jQuery("#select_traits_for_trait_file").val();
         //var trait_list_option = '';
@@ -257,6 +269,9 @@ var trial_info_object = [];
       var trait = trait_focusin;
       var trait_list_option = trait_list_option_focusin;
 
+      jQuery("#success-trial-phenotype").hide();
+      jQuery("#error-trial-phenotype").hide();
+      jQuery("#loading-trial-phenotype").show();
       new jQuery.ajax ( {
         type: 'POST',
         url : '/ajax/phenotype/plot_phenotype_upload',
@@ -269,13 +284,20 @@ var trial_info_object = [];
         },
 
         success: function (response) {
+          jQuery("#loading-trial-phenotype").hide();
           if (response.error){
             alert("Error Saving Trait Value: "+response.error);
+            jQuery("#error-trial-phenotype").show();
+          }
+          else {
+            jQuery("#success-trial-phenotype").show();
           }
         },
           error: function() {
             alert('An error occurred saving trait value');
-          }
+            jQuery("#loading-trial-phenotype").hide();
+            jQuery("#error-trial-phenotype").show();
+          },
 
       });
 
@@ -389,3 +411,37 @@ var trial_info_object = [];
 
 });
 </script>
+
+<style>
+  #loading-trial-phenotype {
+    color: #A9AE00
+  }
+  #loading-trial-phenotype,
+  #loading-trial-phenotype:after {
+    box-sizing: border-box;
+  }
+  #loading-trial-phenotype {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+  }
+  #loading-trial-phenotype:after {
+    content: " ";
+    display: block;
+    width: 28px;
+    height: 28px;
+    margin: 0px;
+    border-radius: 50%;
+    border: 3.2px solid currentColor;
+    border-color: currentColor transparent currentColor transparent;
+    animation: loading-trial-phenotype 1.2s linear infinite;
+  }
+  @keyframes loading-trial-phenotype {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
