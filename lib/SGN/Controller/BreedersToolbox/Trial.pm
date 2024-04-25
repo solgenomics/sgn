@@ -21,6 +21,7 @@ use SGN::Model::Cvterm;
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Stock::TissueSample::Search;
 use CXGN::Genotype::Protocol;
+use CXGN::TrackingActivity::ActivityProject;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -145,6 +146,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
     $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
+
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
 
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
@@ -298,6 +301,36 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $locations_by_program_json = encode_json(\@locations_by_program);
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
+    } elsif ($trial_type_name eq 'activity_record') {
+        my $project_id = $c->stash->{trial_id};
+        my $project_vendor_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_vendor', 'project_property')->cvterm_id();
+        my $project_vendor_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id => $project_id,
+            type_id => $project_vendor_cvterm_id
+        });
+        my $vendor_id;
+        if ($project_vendor_rs) {
+            $vendor_id = $project_vendor_rs->value();
+        }
+
+        $c->stash->{vendor_id} = $vendor_id;
+        $c->stash->{template} = '/tracking_activities/activity_project.mas';
+    }
+    elsif ($trial_type_name eq "transformation_project"){
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = $program_object->get_all_locations_by_breeding_program();
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
+        $c->stash->{template} = '/transformation/transformation_project.mas';
     }
     else {
         my $field_management_factors = $c->config->{management_factor_types};

@@ -1309,8 +1309,13 @@ $timestamp => localtime()
         
         let count = 0;
         let total = TRAITS.length;
-        for ( let i = 0; i < TRAITS.length; i++ ) {
-            _getTraitData(TRAITS[i].id, TRAITS[i].name);
+        if ( total > 0 ) {
+            for ( let i = 0; i < TRAITS.length; i++ ) {
+                _getTraitData(TRAITS[i].id, TRAITS[i].name);
+            }
+        }
+        else {
+            _finish();
         }
 
         function _getTraitData(trait_id, trait_name) {

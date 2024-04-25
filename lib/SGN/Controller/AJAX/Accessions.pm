@@ -236,6 +236,7 @@ sub verify_accessions_file_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $upload = $c->req->upload('new_accessions_upload_file');
     my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_accessions') ? 0 : 1;
+    my $append_synonyms = !$c->req->param('append_synonyms') ? 0 : 1;
 
     if ($user_role ne 'curator' && !$do_fuzzy_search) {
         $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
@@ -273,7 +274,7 @@ sub verify_accessions_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search);
+    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search, append_synonyms=>$append_synonyms);
     $parser->load_plugin('AccessionsXLS');
     my $parsed_data = $parser->parse();
 
