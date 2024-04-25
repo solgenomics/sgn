@@ -2067,8 +2067,8 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
 	my ($cvterm_name, $stock_id, $stock_name, $cross_type) = @$r;
 
 	if (! $cross_type) { $cross_type = 'unspecified'; }
-	
-	push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name ];	
+
+	push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name ];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -2115,18 +2115,18 @@ sub get_parents :Chained('/stock/get_stock') PathPart('datatables/parents') Args
     my $female_parent_id = $parents->{'mother_id'};
     my $male_parent = $parents->{'father'};
     my $male_parent_id = $parents->{'father_id'};
-    
+
     my $female_parent_link = qq { <a href="/stock/$female_parent_id/view">$female_parent</a> };
 
     my $male_parent_link = qq { <a href="/stock/$male_parent_id/view">$male_parent</a> };
 
     my $cross_type = $parents->{'cross_type'};
-    
+
     print STDERR "PARENTS: ".Dumper($parents);
     $c->stash->{rest}= { data => [ [ $female_parent_link, $male_parent_link, $cross_type ] ] };
 
 }
-    
+
 
 sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
     my $self = shift;
@@ -2540,5 +2540,25 @@ sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Arg
 
     $c->stash->{rest} = \@response_list;
 }
+
+
+sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/vector_related_stocks') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_vector_related_stocks();
+    my @related_stocks;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        push @related_stocks, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $vector_name, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+    }
+
+    $c->stash->{rest}={data=>\@related_stocks};
+}
+
 
 1;
