@@ -90,7 +90,7 @@ $stock_type => undef
 
 % }
 
-% if ($stock_type eq 'accession' || $stock_type eq 'vector_construct'){
+% if ($stock_type eq 'accession'){
 
     <&| /page/info_section.mas, id=>'related_stock_progenies', title => 'Progenies of this Accession (as female or male parent)', collapsible=>1, collapsed=>1 &>
         <div class="well well-sm">
