@@ -107,12 +107,13 @@ if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost ) 
 }
 
 
-my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
-				      dbname=>$dbname,
-				      dbargs => {AutoCommit => 1,
-						 RaiseError => 1}
-				  }
-				    );
+my $dbh = CXGN::DB::InsertDBH->new( {
+    dbhost=>$dbhost,
+    dbname=>$dbname,
+    dbargs => {AutoCommit => 1,
+    RaiseError => 1}
+});
+
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] } );
 
 
@@ -158,14 +159,10 @@ my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh(
 #Breeding program for associating the trial/s ##
 ###############
 
-my $breeding_program = $schema->resultset("Project::Project")->find( 
-            {
-                'me.name'   => $breeding_program_name,
-		'type.name' => 'breeding_program',
-	    }, 
-    {
-    join =>  { projectprops => 'type' } , 
-    } ) ;
+my $breeding_program = $schema->resultset("Project::Project")->find(
+    {'me.name'   => $breeding_program_name, 'type.name' => 'breeding_program'},
+    { join       =>  { projectprops => 'type' }}
+);
 
 if (!$breeding_program) { die "Breeding program $breeding_program_name does not exist in the database. Check your input \n"; }
 print "Found breeding program $breeding_program_name " . $breeding_program->project_id . "\n";
@@ -197,7 +194,6 @@ if ($infile =~ /\.xlsx$/i) {
     @trial_rows = map { $_ ? $_->value : '' } map { $xlsx_worksheet->get_cell($_, 0) } (0 .. $xlsx_worksheet->row_range);
     @trial_columns = map { $_ ? $_->value : '' } map { $xlsx_worksheet->get_cell(0, $_) } (0 .. $xlsx_worksheet->col_range);
 }
-# reading the XLS files
 elsif ($infile =~ /\.xls$/i) {
     my $xls_parser = Spreadsheet::ParseExcel->new;
     my $xls_workbook = $xls_parser->parse($infile);
@@ -206,8 +202,10 @@ elsif ($infile =~ /\.xls$/i) {
     # Populate trial rows and columns
     @trial_rows = map { $_ ? $_->value : '' } map { $xls_worksheet->get_cell($_, 0) } (0 .. $xls_worksheet->row_range);
     @trial_columns = map { $_ ? $_->value : '' } map { $xls_worksheet->get_cell(0, $_) } (0 .. $xls_worksheet->col_range);
-} 
-# print "Trial design columns = " . Dumper(\@trial_columns);
+}
+
+print STDERR "Trial design rows    = " . Dumper(\@trial_rows);
+print "Trial design columns = " . Dumper(\@trial_columns);
 
 
 my %multi_trial_data;
@@ -223,7 +221,8 @@ if ($metadata_file =~ /\.xlsx$/i) {
     # Populate metadata rows and columns
     @metadata_rows = map { $xlsx_worksheet->get_cell($_, 0)->value } 1..$xlsx_worksheet->row_range;
     @metadata_columns = map { $xlsx_worksheet->get_cell(0, $_)->value } $xlsx_worksheet->col_range;
-} elsif ($metadata_file =~ /\.xls$/i) {
+}
+elsif ($metadata_file =~ /\.xls$/i) {
     my $xls_parser    = Spreadsheet::ParseExcel->new;
     my $xls_workbook  = $xls_parser->parse($metadata_file);
     my $xls_worksheet = $xls_workbook->worksheet(0);
@@ -231,13 +230,13 @@ if ($metadata_file =~ /\.xlsx$/i) {
     # Populate metadata rows and columns
     @metadata_rows    = map { $xls_worksheet->get_cell($_, 0)->value } 1..$xls_worksheet->row_range;
     @metadata_columns = map { $xls_worksheet->get_cell(0, $_)->value } $xls_worksheet->col_range;
-} else {
-#     $trial_metadata   = CXGN::Tools::File::Spreadsheet->new( $metadata_file ) ;
-#     @metadata_rows    = $trial_metadata->row_labels();
-#     @metadata_columns = $trial_metadata->column_labels();
-#     print "Trial metadata column labels = " . Dumper(\@metadata_columns);
 }
-
+# else {
+# #     $trial_metadata   = CXGN::Tools::File::Spreadsheet->new( $metadata_file ) ;
+# #     @metadata_rows    = $trial_metadata->row_labels();
+# #     @metadata_columns = $trial_metadata->column_labels();
+# #     print "Trial metadata column labels = " . Dumper(\@metadata_columns);
+# }
 
 print "Trial metadata rows: @metadata_rows\n";
 print "Trial metadata columns: @metadata_columns\n";
@@ -276,11 +275,11 @@ foreach my $trial_name (@metadata_rows) {
     ########
     #check that the location exists in the database
     ########
-    my $location_rs =  $schema->resultset("NaturalDiversity::NdGeolocation")->search( 
-	{ description => { ilike => '%' . $trial_location . '%' }, }
-	);
-    if (scalar($location_rs) == 0 ) { 
-	die "ERROR: location must be pre-loaded in the database. Location name = '" . $trial_location . "'\n";
+    my $location_rs =  $schema->resultset("NaturalDiversity::NdGeolocation")->search({
+        description => { ilike => '%' . $trial_location . '%' },
+    });
+    if (scalar($location_rs) == 0 ) {
+        die "ERROR: location must be pre-loaded in the database. Location name = '" . $trial_location . "'\n";
     }
     my $location_id = $location_rs->first->nd_geolocation_id;
     #########
@@ -292,33 +291,33 @@ foreach my $trial_name (@metadata_rows) {
     #trial_description defaults to $trial_name
     my $trial_description = $trial_name;
     my $properties_hash;
-    if(exists($trial_params{trial_description} )) { 
-	$trial_description = $trial_metadata->value_at($trial_name, "trial_description");
+    if(exists($trial_params{trial_description} )) {
+        $trial_description = $trial_metadata->value_at($trial_name, "trial_description");
     }
     
     if(exists($trial_params{planting_date} )) { 
-	$planting_date = $trial_metadata->value_at($trial_name, "planting_date");
-	$properties_hash->{"project planting date"} = $planting_date;
+        $planting_date = $trial_metadata->value_at($trial_name, "planting_date");
+        $properties_hash->{"project planting date"} = $planting_date;
     }
 
-    if(exists($trial_params{fertilizer_date} )) { 
-	$fertilizer_date = $trial_metadata->value_at($trial_name, "fertilizer_date");
-	$properties_hash->{"project fertilizer date"} = $fertilizer_date;
+    if(exists($trial_params{fertilizer_date} )) {
+        $fertilizer_date = $trial_metadata->value_at($trial_name, "fertilizer_date");
+        $properties_hash->{"project fertilizer date"} = $fertilizer_date;
     }
 
-    if(exists($trial_params{harvest_date} )) { 
-	$harvest_date = $trial_metadata->value_at($trial_name, "harvest_date");
-	$properties_hash->{"project harvest date"} = $harvest_date;
+    if(exists($trial_params{harvest_date} )) {
+        $harvest_date = $trial_metadata->value_at($trial_name, "harvest_date");
+        $properties_hash->{"project harvest date"} = $harvest_date;
     }
     
-    if(exists($trial_params{sown_plants} )) { 
-	$sown_plants = $trial_metadata->value_at($trial_name, "sown_plants");
-	$properties_hash->{"project sown plants"} = $sown_plants;
+    if(exists($trial_params{sown_plants} )) {
+        $sown_plants = $trial_metadata->value_at($trial_name, "sown_plants");
+        $properties_hash->{"project sown plants"} = $sown_plants;
     }
 
-    if(exists($trial_params{harvested_plants} )) { 
-	$harvested_plants = $trial_metadata->value_at($trial_name, "harvested_plants");
-	$properties_hash->{"project harvested plants"} = $harvested_plants ;
+    if(exists($trial_params{harvested_plants} )) {
+        $harvested_plants = $trial_metadata->value_at($trial_name, "harvested_plants");
+        $properties_hash->{"project harvested plants"} = $harvested_plants ;
     }
     #####################################################
 
@@ -334,8 +333,9 @@ foreach my $trial_name (@metadata_rows) {
 
 ## Now read the design + phenotypes file 
 print "Reading phenotyping file:\n";
-my %phen_params = map { if ($_ =~ m/^\w+\|(\w+:\d{7})$/ ) { $_ => $1 } } @trial_columns  ;
-delete $phen_params{''};
+my %phen_params = map { $_ => 1 } @trial_columns;
+# my %phen_params = map { if ($_ =~ m/^\w+\|(\w+:\d{7})$/ ) { $_ => $1 } } @trial_columns  ;
+# delete $phen_params{''};
 
 my @traits = (keys %phen_params) ;
 print "Found traits " . Dumper(\%phen_params) . "\n" ; 
@@ -344,64 +344,79 @@ print "Found traits " . Dumper(\%phen_params) . "\n" ;
 #    my ($db_name, $dbxref_accession) = split ":" , $trait_accession ;
 #}
 
-
 my %trial_design_hash; #multi-level hash of hashes of hashrefs 
 my %phen_data_by_trial; # 
 
 #plot_name	accession_name	plot_number	block_number	trial_name	trial_description	trial_location	year	trial_type	is_a_control	rep_number	range_number	row_number	col_number
 
+my %column_index = (
+    'accession_name' => 0,
+    'plot_number'    => 1,
+    'block_number'   => 2,
+    'trial_name'     => 3,
+    'is_a_control'   => 4,
+    'rep_number'     => 5,
+    'range_number'   => 6,
+    'row_number'     => 7,
+    'col_number'     => 8,
+);
 
 foreach my $plot_name (@trial_rows) {
-    my ($accession, $plot_number, $block_number, $trial_name, $is_a_control, $rep_number, $range_number, $row_number, $col_number);
-    my ($file_extension);
+    my ($accession, $plot_number, $block_number, $trial_name, $is_a_control,  $rep_number , $range_number,  $row_number , $col_number);
+    my ($parser, $workbook, $worksheet);
 
-    if ($file_extension eq 'XLSX' || $file_extension eq 'XLS') {
-        my $parser = ($file_extension eq 'XLSX') ? Spreadsheet::XLSX->new('file.xlsx') : Spreadsheet::ParseExcel->new()->parse('file.xls');
-        my $worksheet = ($file_extension eq 'XLSX') ? $parser->worksheet(0) : $parser->worksheet(0);
+    if ($infile =~ /\.xlsx$/i) {
+        $parser = Spreadsheet::ParseXLSX->new;
+        $workbook = $parser->parse($infile);
+        $worksheet = $workbook->worksheet(0);
+    }
+    elsif ($infile =~ /\.xls$/i) {
+        $parser = Spreadsheet::ParseExcel->new;
+        $workbook = $parser->parse($infile);
+        $worksheet = $workbook->worksheet(0);
+    }
+    # else {
+    #     print STDERR "check file extension: $infile\n";
+    #     next;
+    # }
 
-        # Access data from XLSX or XLS file
-        $accession    = $worksheet->value_at($plot_name, "accession_name");
-        $plot_number  = $worksheet->value_at($plot_name, "plot_number");
-        $block_number = $worksheet->value_at($plot_name, "block_number");
-        $trial_name   = $worksheet->value_at($plot_name, "trial_name");
-        $is_a_control = $worksheet->value_at($plot_name, "is_a_control");
-        $rep_number   = $worksheet->value_at($plot_name, "rep_number");
-        $range_number = $worksheet->value_at($plot_name, "range_number");
-        $row_number   = $worksheet->value_at($plot_name, "row_number");
-        $col_number   = $worksheet->value_at($plot_name, "col_number");
+    # populate trial rows and columns
+    @trial_rows = map { $_ ? $_->value : '' } map { $worksheet->get_cell($_, 0) } (0 .. $worksheet->row_range);
+    @trial_columns = map { $_ ? $_->value : '' } map { $worksheet->get_cell(0, $_) } (0 .. $worksheet->col_range);
 
-        if (!$plot_number) {
-            $plot_number = 1;
-            use List::Util qw(max);
-            my @keys = (keys %{ $trial_design_hash{$trial_name} });
-            my $max = max(@keys);
-            if ($max) {
-                $max++;
-                $plot_number = $max;
+    # find the plot data
+    for my $row (0 .. $worksheet->row_range) {
+        for my $col (0 .. $worksheet->col_range) {
+            my $cell = $worksheet->get_cell($row, $col);
+            next unless $cell;
+            my $cell_value = $cell->value();
+            if ($cell_value eq $plot_name) {
+                $accession    = $worksheet->get_cell($row, $column_index{'accession_name'})->value;
+                $plot_number  = $worksheet->get_cell($row, $column_index{'plot_number'})->value;
+                $block_number = $worksheet->get_cell($row, $column_index{'block_number'})->value;
+                $trial_name   = $worksheet->get_cell($row, $column_index{'trial_name'})->value;
+                $is_a_control = $worksheet->get_cell($row, $column_index{'is_a_control'})->value;
+                $rep_number   = $worksheet->get_cell($row, $column_index{'rep_number'})->value;
+                $range_number = $worksheet->get_cell($row, $column_index{'range_number'})->value;
+                $row_number   = $worksheet->get_cell($row, $column_index{'row_number'})->value;
+                $col_number   = $worksheet->get_cell($row, $column_index{'col_number'})->value;
             }
         }
-
-        $trial_design_hash{$trial_name}{$plot_number}->{plot_number}    = $plot_number;
-        $trial_design_hash{$trial_name}{$plot_number}->{stock_name}     = $accession;
-        $trial_design_hash{$trial_name}{$plot_number}->{plot_name}      = $plot_name;
-        $trial_design_hash{$trial_name}{$plot_number}->{block_number}   = $block_number;
-        $trial_design_hash{$trial_name}{$plot_number}->{rep_number}     = $rep_number;
-        $trial_design_hash{$trial_name}{$plot_number}->{is_a_control}   = $is_a_control;
-        $trial_design_hash{$trial_name}{$plot_number}->{range_number}   = $range_number;
-        $trial_design_hash{$trial_name}{$plot_number}->{row_number}     = $row_number;
-        $trial_design_hash{$trial_name}{$plot_number}->{col_number}     = $col_number;
-
-        ###add the plot name into the multi trial data hashref of hashes ###
-        push(@{ $multi_trial_data{$trial_name}->{plots}}, $plot_name);
-
-        ###parse the phenotype data 
-        my $timestamp; ## add here timestamp value if storing those ##
-        foreach my $trait_string (keys %phen_params) {
-            my $phen_value = $parser->value_at($plot_name, $trait_string);
-            $phen_data_by_trial{$trial_name}{$plot_name}{$trait_string} = [$phen_value, $timestamp];
-        }
     }
-};
+
+    # process the plot data as needed
+    $trial_design_hash{$trial_name}{$plot_number}->{stock_name}     = $accession;
+    $trial_design_hash{$trial_name}{$plot_number}->{plot_number}    = $plot_number;
+    $trial_design_hash{$trial_name}{$plot_number}->{block_number}   = $block_number;
+    $trial_design_hash{$trial_name}{$plot_number}->{plot_name}      = $plot_name;
+    $trial_design_hash{$trial_name}{$plot_number}->{is_a_control}   = $is_a_control;
+    $trial_design_hash{$trial_name}{$plot_number}->{rep_number}     = $rep_number;
+    $trial_design_hash{$trial_name}{$plot_number}->{range_number}   = $range_number;
+    $trial_design_hash{$trial_name}{$plot_number}->{row_number}     = $row_number;
+    $trial_design_hash{$trial_name}{$plot_number}->{col_number}     = $col_number;
+}
+
+print STDERR "trial design " . Dumper(\%trial_design_hash);
 
 # #####create the design hash#####
 # #print Dumper(\%trial_design_hash);
@@ -427,68 +442,66 @@ my $coderef= sub  {
         # print "Inspecting \$multi_trial_data{\$trial_name} before attempting to use it as a hash reference:\n"; 
         # print Dumper($multi_trial_data{$trial_name});
 	
-	my $trial_create = CXGN::Trial::TrialCreate->new({
-	    chado_schema      => $schema,
-	    dbh               => $dbh,
-	    design_type       => $multi_trial_data{$trial_name}->{design_type} ||  'RCBD',
-	    design            => $trial_design_hash{$trial_name}, #$multi_trial_data{$trial_name}->{design},
-	    program           => $breeding_program->name(),
-	    trial_year        => $multi_trial_data{$trial_name}->{trial_year} ,
-	    trial_description => $multi_trial_data{$trial_name}->{trial_description},
-	    trial_location    => $multi_trial_data{$trial_name}->{trial_location},
-	    trial_name        => $trial_name,
-    });
-	
-	try {
-	    my $trial_create->save_trial();
-	} catch {
-	    print STDERR "ERROR SAVING TRIAL!\n";
-	};
-	
-	my @plots = @{ $multi_trial_data{$trial_name}->{plots} };
-	print "TRIAL NAME = $trial_name\n";
-	my %parsed_data = $phen_data_by_trial{$trial_name} ; #hash of keys = plot name, values = hash of trait strings as keys
-	foreach my $pname (keys %parsed_data) {
-	    print "PLOT = $pname\n";
-	    my %trait_string_hash = $parsed_data{$pname};
-	  
-	    foreach my $trait_string (keys %trait_string_hash ) { 
-		print "trait = $trait_string\n";
-		print "value =  " . $trait_string_hash{$trait_string}[0] . "\n";
-	    }
-	}
-	
-	#my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
-	
-	#my $trait_value = $value_array->[0];
-	#$phen_data_by_trial{$trial_name}{$plot_name}->{$trait_string} = [ $phen_value, $timestamp ] ;
+	    my $trial_create = CXGN::Trial::TrialCreate->new({
+	        chado_schema      => $schema,
+	        dbh               => $dbh,
+	        design_type       => $multi_trial_data{$trial_name}->{design_type} ||  'RCBD',
+	        design            => $trial_design_hash{$trial_name}, #$multi_trial_data{$trial_name}->{design},
+	        program           => $breeding_program->name(),
+	        trial_year        => $multi_trial_data{$trial_name}->{trial_year} ,
+	        trial_description => $multi_trial_data{$trial_name}->{trial_description},
+	        trial_location    => $multi_trial_data{$trial_name}->{trial_location},
+	        trial_name        => $trial_name,
+        });
 
-	
-	#print Dumper(\%parsed_data);
-	# after storing the trial desgin store the phenotypes 
-	my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-	    bcs_schema=>$schema,
-	    metadata_schema=>$metadata_schema,
-	    phenome_schema=>$phenome_schema,
-	    user_id=>$sp_person_id,
-	    stock_list=>\@plots,
-	    trait_list=>\@traits,
-	    values_hash=>\%parsed_data,
-	    has_timestamps=>0,
-	    overwrite_values=>0,
-	    metadata_hash=>\%phenotype_metadata
-	    );
-	
-	
-	#validate, store, add project_properties from %properties_hash
-	
-	#store the phenotypes
-	my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-	print "Verified phenotypes. warning = $verified_warning, error = $verified_error\n";
-	my $stored_phenotype_error = $store_phenotypes->store();
-	print "Stored phenotypes. Error = $stored_phenotype_error \n";
-	
-}
+	    try {
+	        my $trial_create->save_trial();
+	    } catch {
+	        print STDERR "ERROR SAVING TRIAL!\n";
+	    };
+
+	    my @plots = @{ $multi_trial_data{$trial_name}->{plots} };
+	    print "TRIAL NAME = $trial_name\n";
+	    my %parsed_data = $phen_data_by_trial{$trial_name} ; #hash of keys = plot name, values = hash of trait strings as keys
+	    foreach my $pname (keys %parsed_data) {
+            print "PLOT = $pname\n";
+	        my %trait_string_hash = $parsed_data{$pname};
+
+	        foreach my $trait_string (keys %trait_string_hash ) {
+                print "trait = $trait_string\n";
+                print "value =  " . $trait_string_hash{$trait_string}[0] . "\n";
+	        }
+	    }
+
+	    #my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
+
+	    #my $trait_value = $value_array->[0];
+	    #$phen_data_by_trial{$trial_name}{$plot_name}->{$trait_string} = [ $phen_value, $timestamp ] ;
+
+	    #print Dumper(\%parsed_data);
+	    # after storing the trial desgin store the phenotypes
+	    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+	        bcs_schema=>$schema,
+	        metadata_schema=>$metadata_schema,
+	        phenome_schema=>$phenome_schema,
+	        user_id=>$sp_person_id,
+	        stock_list=>\@plots,
+	        trait_list=>\@traits,
+	        values_hash=>\%parsed_data,
+	        has_timestamps=>0,
+	        overwrite_values=>0,
+	        metadata_hash=>\%phenotype_metadata
+	        );
+
+
+	    #validate, store, add project_properties from %properties_hash
+
+	    #store the phenotypes
+	    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+	    print "Verified phenotypes. warning = $verified_warning, error = $verified_error\n";
+	    my $stored_phenotype_error = $store_phenotypes->store();
+	    print "Stored phenotypes. Error = $stored_phenotype_error \n";
+    }
 };
 
 
@@ -508,7 +521,7 @@ try {
                 Subject => $email_subject,
             ],
             attributes => {
-                charset  => 'UTF-8',  
+                charset  => 'UTF-8',
                 encoding => 'quoted-printable',  
             },
             body_str => $email_body,
@@ -533,8 +546,8 @@ try {
             Subject => $email_subject,
         ],
         attributes => {
-            charset  => 'UTF-8',  
-            encoding => 'quoted-printable',  
+            charset  => 'UTF-8',
+            encoding => 'quoted-printable',
         },
         body_str => $email_body,
     );
