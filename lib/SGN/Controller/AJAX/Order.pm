@@ -250,6 +250,9 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+
     my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $all_orders_ref = $orders->get_orders_from_person_id();
 
@@ -300,6 +303,8 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
     my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $all_orders_ref = $orders->get_orders_from_person_id();
     my @completed_orders;
@@ -353,6 +358,8 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
     my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
@@ -408,6 +415,8 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
     my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
