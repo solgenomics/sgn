@@ -27,8 +27,7 @@ $assay_type
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ ] &>
-
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial', 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min'] &>
 
 <br/>
 

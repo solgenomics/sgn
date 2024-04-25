@@ -85,7 +85,7 @@ sub genotyping_protocol_delete_GET : Args(1) {
     ";
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute();
-    
+
     my %genotype_ids_and_nd_experiment_ids_to_delete;
     while (my ($nd_experiment_id, $genotype_id) = $h->fetchrow_array()) {
         push @{$genotype_ids_and_nd_experiment_ids_to_delete{genotype_ids}}, $genotype_id;
@@ -114,7 +114,7 @@ sub genotyping_protocol_delete_GET : Args(1) {
         my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
         my $h3 = $bcs_schema->storage->dbh()->prepare($q_nd_exp_files_delete);
         $h3->execute();
-        
+
 
         # Delete from nd_experiment asynchronously because it takes long
         my $dir = $c->tempfiles_subdir('/genotype_data_delete_nd_experiment_ids');
@@ -134,5 +134,52 @@ sub genotyping_protocol_delete_GET : Args(1) {
     $c->stash->{rest} = { success => 1 };
 }
 
-1;
 
+sub genotyping_protocol_details : Path('/ajax/genotyping_protocol/details') : ActionClass('REST') { }
+
+sub genotyping_protocol_details_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $session_id = $c->req->param("sgn_session_id");
+    my $protocol_id = $c->req->param("protocol_id");
+    my @categories = $c->req->param("categories[]");
+    my $details = {};
+    foreach my $category (@categories) {
+      $details->{$category} = $c->req->param("details[$category]");
+    }
+    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+    print STDERR "CATEGORIES =".Dumper(\@categories)."\n";
+    print STDERR "DETAILS =".Dumper($details)."\n";
+
+    my $user_id;
+    my $user_role;
+    my $user_name;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to edit genotyping protocol'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to edit genotyping protocol'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'submitter' && $user_role ne 'curator') {
+        $c->stash->{rest} = { error => 'Must have correct permissions to edit genotyping protocol! Please contact us.' };
+        $c->detach();
+    }
+}
+
+1;
