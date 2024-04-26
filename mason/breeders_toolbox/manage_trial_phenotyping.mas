@@ -281,6 +281,7 @@ var trial_info_object = [];
                 'trait' : trait,
                 'trait_value' : trait_value,
                 'trait_list_option' : trait_list_option,
+                'trial_id' : trial_id
         },
 
         success: function (response) {

@@ -30,6 +30,7 @@ use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
+use CXGN::BreedersToolbox::Projects;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -355,6 +356,7 @@ sub update_plot_phenotype_POST : Args(0) {
   my $trait_id = $c->req->param("trait");
   my $trait_value = $c->req->param("trait_value");
   my $trait_list_option = $c->req->param("trait_list_option");
+  my $trial_id = $c->req->param("trial_id");
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $dbh = $c->dbc->dbh();
@@ -368,12 +370,26 @@ sub update_plot_phenotype_POST : Args(0) {
   my $plot_type_id = $plot->type_id();
 
   if (!$c->user()) {
-    print STDERR "User not logged in... not uploading phenotype.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to upload phenotype." };
+    print STDERR "User not logged in... not recording phenotype.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to record phenotype." };
     return;
   }
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload phenotype." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to record phenotype." };
+    return;
+  }
+
+  my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+  my $program_ref = $program_object->get_breeding_programs_by_trial($trial_id);
+
+  my $program_array = @$program_ref[0];
+  my $breeding_program_name = @$program_array[1];
+  my @user_roles = $c->user->roles();
+  my %has_roles = ();
+  map { $has_roles{$_} = 1; } @user_roles;
+
+  if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+    $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to record phenotype." };
     return;
   }
 
