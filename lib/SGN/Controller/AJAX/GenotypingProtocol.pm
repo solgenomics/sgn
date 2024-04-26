@@ -140,7 +140,7 @@ sub genotyping_protocol_details : Path('/ajax/genotyping_protocol/details') : Ac
 sub genotyping_protocol_details_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $session_id = $c->req->param("sgn_session_id");
     my $protocol_id = $c->req->param("protocol_id");
     my @categories = $c->req->param("categories[]");
@@ -180,6 +180,56 @@ sub genotyping_protocol_details_POST : Args(0) {
         $c->stash->{rest} = { error => 'Must have correct permissions to edit genotyping protocol! Please contact us.' };
         $c->detach();
     }
+
+    my $new_protocol_name;
+    my $new_protocolprop = {};
+    if ($details->{name}) {
+        $new_protocol_name = $details->{name};
+        my $existing_protocol_name = $schema->resultset("NaturalDiversity::NdProtocol")->find({
+            name => $new_protocol_name
+        });
+        if ($existing_protocol_name) {
+            print STDERR "Can't use this new protocol name: Protocol name already exists\n";
+            $c->stash->{rest} = {error => "New protocol name not saved: Protocol name already exists"};
+        }
+    }
+
+    if ($details->{reference_genome_name}) {
+        $new_protocolprop->{reference_genome_name} = $details->{reference_genome_name};
+    }
+
+    if ($details->{species_name}) {
+        $new_protocolprop->{species_name} = $details->{species_name};
+    }
+
+    if ($details->{assay_type}) {
+        $new_protocolprop->{assay_type} = $details->{assay_type};
+    }
+
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $schema,
+        nd_protocol_id => $protocol_id
+    });
+    print STDERR "NEW PROTOCOLPROP =".Dumper($new_protocolprop)."\n";
+    eval {
+        if ($details->{name}) {
+            $protocol->set_name($details->{name});
+        }
+         if ($details->{description}) {
+            $protocol->set_description($details->{description});
+        }
+#        if ($new_protocolprop) {
+#            $protocol->set_protocolprop($new_protocolprop);
+#        }
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred setting the new protocol details: $@" };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
+
 }
 
 1;

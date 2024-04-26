@@ -116,9 +116,7 @@ jQuery(document).ready(function(){
 
     jQuery('#save_protocol_details').click(function(){
         var protocol_id = "<% $protocol_id %>";
-        alert(protocol_id);
         var changed_elements = document.getElementsByName("changed");
-        alert(changed_elements.length);
         var categories = [];
         var new_details = {};
         var success_message = '';

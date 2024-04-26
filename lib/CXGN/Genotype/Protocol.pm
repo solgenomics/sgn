@@ -392,7 +392,7 @@ sub list_simple {
         FROM nd_protocol
         LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id IN (?,?))
         AND nd_protocol.type_id IN (?,?)
-	$where_clause 
+	$where_clause
         ORDER BY nd_protocol.nd_protocol_id ASC;";
 
     my $h = $schema->storage->dbh()->prepare($q);
@@ -425,5 +425,39 @@ sub list_simple {
     #print STDERR "SIMPLE LIST =".Dumper \@results."\n";
     return \@results;
 }
+
+
+sub set_name {
+    my $self = shift;
+    my $name = shift;
+    my $protocol_id = $self->nd_protocol_id;
+    my $protocol_row = $self->bcs_schema->resultset("NaturalDiversity::NdProtocol")->find({
+        nd_protocol_id => $protocol_id,
+    });
+
+    if ($protocol_row) {
+        $protocol_row->name($name);
+        $protocol_row->update();
+    }
+}
+
+
+sub set_description {
+    my $self = shift;
+    my $description = shift;
+    my $protocol_id = $self->nd_protocol_id;
+    my $protocol_row = $self->bcs_schema->resultset("NaturalDiversity::NdProtocol")->find({
+        nd_protocol_id => $protocol_id,
+    });
+
+    if ($protocol_row) {
+        $protocol_row->description($description);
+        $protocol_row->update();
+    }
+}
+
+
+
+
 
 1;
