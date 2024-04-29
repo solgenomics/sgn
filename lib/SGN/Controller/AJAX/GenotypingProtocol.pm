@@ -20,6 +20,7 @@ use CXGN::Genotype::Protocol;
 use CXGN::Genotype::MarkersSearch;
 use JSON;
 use CXGN::Tools::Run;
+use CXGN::Genotype::ProtocolProp;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -182,7 +183,9 @@ sub genotyping_protocol_details_POST : Args(0) {
     }
 
     my $new_protocol_name;
-    my $new_protocolprop = {};
+    my $new_reference_genome_name;
+    my $new_species_name;
+    my $new_assay_type;
     if ($details->{name}) {
         $new_protocol_name = $details->{name};
         my $existing_protocol_name = $schema->resultset("NaturalDiversity::NdProtocol")->find({
@@ -191,26 +194,65 @@ sub genotyping_protocol_details_POST : Args(0) {
         if ($existing_protocol_name) {
             print STDERR "Can't use this new protocol name: Protocol name already exists\n";
             $c->stash->{rest} = {error => "New protocol name not saved: Protocol name already exists"};
+            $c->detach();
         }
     }
 
     if ($details->{reference_genome_name}) {
-        $new_protocolprop->{reference_genome_name} = $details->{reference_genome_name};
+        $new_reference_genome_name = $details->{reference_genome_name};
     }
 
     if ($details->{species_name}) {
-        $new_protocolprop->{species_name} = $details->{species_name};
+        $new_species_name = $details->{species_name};
+
+        my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
+        my @found_organisms;
+        my $h = $schema->storage->dbh()->prepare($organism_q);
+        $h->execute($new_species_name);
+        while (my ($organism_id) = $h->fetchrow_array()){
+            push @found_organisms, $organism_id;
+        }
+        if (scalar(@found_organisms) == 0){
+            $c->stash->{rest} = { error => 'The species name you provided is not in the database! Please contact us.' };
+            $c->detach();
+        }
+        if (scalar(@found_organisms) > 1){
+            $c->stash->{rest} = { error => 'The species name you provided is not unique in the database! Please contact us.' };
+            $c->detach();
+        }
+
     }
 
     if ($details->{assay_type}) {
-        $new_protocolprop->{assay_type} = $details->{assay_type};
+        $new_assay_type = $details->{assay_type};
     }
+
+    my $protocol_vcf_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $protocolprop_rs = $schema->resultset('NaturalDiversity::NdProtocolprop')->find({'nd_protocol_id' => $protocol_id, 'type_id' => $protocol_vcf_details_cvterm_id});
+    my $protocolprop_id = $protocolprop_rs->nd_protocolprop_id();
+    print STDERR "PROP ID =".Dumper($protocolprop_id)."\n";
 
     my $protocol = CXGN::Genotype::Protocol->new({
         bcs_schema => $schema,
         nd_protocol_id => $protocol_id
     });
-    print STDERR "NEW PROTOCOLPROP =".Dumper($new_protocolprop)."\n";
+
+    my $protocolprop = CXGN::Genotype::ProtocolProp->new({
+        bcs_schema => $schema,
+        parent_id => $protocol_id,
+        prop_id => $protocolprop_id
+    });
+
+    if ($new_assay_type) {
+        $protocolprop->assay_type($new_assay_type);
+    }
+    if ($new_reference_genome_name) {
+        $protocolprop->reference_genome_name($new_reference_genome_name);
+    }
+    if ($new_species_name) {
+        $protocolprop->species_name($new_species_name);
+    }
+
     eval {
         if ($details->{name}) {
             $protocol->set_name($details->{name});
@@ -218,9 +260,9 @@ sub genotyping_protocol_details_POST : Args(0) {
          if ($details->{description}) {
             $protocol->set_description($details->{description});
         }
-#        if ($new_protocolprop) {
-#            $protocol->set_protocolprop($new_protocolprop);
-#        }
+        if ($new_assay_type || $new_reference_genome_name || $new_species_name) {
+            $protocolprop->store();
+        }
     };
 
     if ($@) {
@@ -231,5 +273,7 @@ sub genotyping_protocol_details_POST : Args(0) {
     }
 
 }
+
+
 
 1;

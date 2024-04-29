@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-CXGN::Genotype::ProtocolProp.pm
+CXGN::Genotype::ProtocolProp
 
 =head1 DESCRIPTION
 
