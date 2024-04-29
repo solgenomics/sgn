@@ -55,7 +55,8 @@ $trial_id
 
 	return jQuery.ajax( {
 	       'url': "/brapi/v2/search/variables/"+searchResultsDbId,
-	       'method': "GET"
+	       'method': "GET",
+	       'data': { pageSize: 10000 }
 	       });
        
 	       
