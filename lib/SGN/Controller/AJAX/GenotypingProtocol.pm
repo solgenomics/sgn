@@ -149,9 +149,6 @@ sub genotyping_protocol_details_POST : Args(0) {
     foreach my $category (@categories) {
       $details->{$category} = $c->req->param("details[$category]");
     }
-    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
-    print STDERR "CATEGORIES =".Dumper(\@categories)."\n";
-    print STDERR "DETAILS =".Dumper($details)."\n";
 
     my $user_id;
     my $user_role;

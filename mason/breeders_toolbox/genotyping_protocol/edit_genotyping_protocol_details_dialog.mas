@@ -35,6 +35,7 @@ $assay_type
                                 </div>
                             </div>
                         </div>
+                        <!--
                         <div class="form-group">
                             <label class="col-sm-4 control-label" for="edit_protocol_assay_type">Assay Type: </label>
                             <div class="col-sm-7">
@@ -43,6 +44,7 @@ $assay_type
                                 </div>
                             </div>
                         </div>
+                        -->
                         <div class="form-group">
                             <label class="col-sm-4 control-label" for="edit_protocol_reference_genome_name">Reference Genome Name: </label>
                             <div class="col-sm-7">
