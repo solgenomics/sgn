@@ -182,7 +182,6 @@ sub genotyping_protocol_details_POST : Args(0) {
     my $new_protocol_name;
     my $new_reference_genome_name;
     my $new_species_name;
-    my $new_assay_type;
     if ($details->{name}) {
         $new_protocol_name = $details->{name};
         my $existing_protocol_name = $schema->resultset("NaturalDiversity::NdProtocol")->find({
@@ -220,14 +219,9 @@ sub genotyping_protocol_details_POST : Args(0) {
 
     }
 
-    if ($details->{assay_type}) {
-        $new_assay_type = $details->{assay_type};
-    }
-
     my $protocol_vcf_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     my $protocolprop_rs = $schema->resultset('NaturalDiversity::NdProtocolprop')->find({'nd_protocol_id' => $protocol_id, 'type_id' => $protocol_vcf_details_cvterm_id});
     my $protocolprop_id = $protocolprop_rs->nd_protocolprop_id();
-    print STDERR "PROP ID =".Dumper($protocolprop_id)."\n";
 
     my $protocol = CXGN::Genotype::Protocol->new({
         bcs_schema => $schema,
@@ -240,9 +234,6 @@ sub genotyping_protocol_details_POST : Args(0) {
         prop_id => $protocolprop_id
     });
 
-    if ($new_assay_type) {
-        $protocolprop->assay_type($new_assay_type);
-    }
     if ($new_reference_genome_name) {
         $protocolprop->reference_genome_name($new_reference_genome_name);
     }
@@ -257,7 +248,7 @@ sub genotyping_protocol_details_POST : Args(0) {
          if ($details->{description}) {
             $protocol->set_description($details->{description});
         }
-        if ($new_assay_type || $new_reference_genome_name || $new_species_name) {
+        if ($new_reference_genome_name || $new_species_name) {
             $protocolprop->store();
         }
     };
