@@ -2144,12 +2144,12 @@
 	};
 
 	class Fieldmap {
-	  constructor(map_container, brapi_endpoint, opts) {
+	  constructor(map_container, brapi_endpoint, opts = {}) {
 	    this.map_container = d3.select(map_container).style("background-color", "#888");
 	    this.brapi_endpoint = brapi_endpoint;
 
 	    // Parse Options
-	    this.opts = Object.assign(Object.create(DEFAULT_OPTS), opts || {});
+	    this.opts = Object.assign(Object.create(DEFAULT_OPTS), opts);
 	    this.map = L.map(this.map_container.node(), {editable: true}).setView(this.opts.defaultPos, 2);
 	    this.map.on('preclick', ()=>{
 	      if (this.editablePolygon) this.finishTranslate();
@@ -2213,25 +2213,28 @@
 	        }
 	      });
 
-	    this.map.addControl(new L.Control.Search({
-	      url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
-	      jsonpParam: 'json_callback',
-	      propertyName: 'display_name',
-	      propertyLoc: ['lat', 'lon'],
-	      autoCollapse: true,
-	      autoType: false,
-	      minLength: 2,
-	      marker: false,
-	      zoom: this.opts.normalZoom
-	    }));
+	    // Add additional map controls if NOT view only
+	    if ( !this.opts.viewOnly ) {
+	      this.map.addControl(new L.Control.Search({
+	        url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+	        jsonpParam: 'json_callback',
+	        propertyName: 'display_name',
+	        propertyLoc: ['lat', 'lon'],
+	        autoCollapse: true,
+	        autoType: false,
+	        minLength: 2,
+	        marker: false,
+	        zoom: this.opts.normalZoom
+	      }));
 
-	    this.polygonControl = new L.NewPolygonControl();
-	    this.rectangleControl = new L.NewRectangleControl();
-	    this.clearPolygonsControl = new L.NewClearControl();
+	      this.polygonControl = new L.NewPolygonControl();
+	      this.rectangleControl = new L.NewRectangleControl();
+	      this.clearPolygonsControl = new L.NewClearControl();
 
-	    this.map.addControl(this.polygonControl);
-	    this.map.addControl(this.rectangleControl);
-	    this.map.addControl(this.clearPolygonsControl);
+	      this.map.addControl(this.polygonControl);
+	      this.map.addControl(this.rectangleControl);
+	      this.map.addControl(this.clearPolygonsControl);
+			}
 
 	    this.info = this.map_container.append("div")
 	      .style("bottom","5px")
@@ -2279,7 +2282,7 @@
 	      }
 	      this.enableEdition(e.sourceTarget);
 	    }).on('click', (e)=>{
-	      this.enableTransform(e.target);
+	      if ( !this.opts.viewOnly ) this.enableTransform(e.target);
 	    }).on('mousemove', (e)=>{
 	      let sourceTarget = e.sourceTarget;
 	      let ou = this.plot_map[sourceTarget.feature.properties.observationUnitDbId];
