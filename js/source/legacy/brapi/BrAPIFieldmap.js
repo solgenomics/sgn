@@ -2251,10 +2251,25 @@
 	      .style("position","absolute")
 	      .style("z-index", 2000)
 	      .style("background", "#DC3545")
-	      .style("color", "#000")
+	      .style("color", "#fff")
 	      .style("border-radius", "5px")
 	      .style("padding", "10px")
+	      .style("font-weight", "bold")
 	      .style("display", "none");
+
+	    this.loading = this.map_container.append("div")
+	      .style("top", 0)
+	      .style("left", 0)
+	      .style("position","absolute")
+	      .style("z-index", 500)
+	      .style("width", "100%")
+	      .style("background", "#FFC107")
+	      .style("display", "none")
+	      .html("<p style='margin: 10px; text-align: center; font-weight: bold'>Loading Plots...</p>");
+
+	    this.onLoading = (loading) => {
+	      this.loading.style("display", loading ? 'block' : 'none');
+	    }
 	  }
 
 	  removeControls() {
@@ -2264,11 +2279,15 @@
 	  }
 
 	  load(studyDbId) {
+	    this.onLoading(true);
 	    this.generatePlots(studyDbId);
 	    return this.data.then(()=>{
-	      this.drawPlots(); return true;
+	      this.drawPlots();
+	      this.onLoading(false);
+	      return true;
 	    }).catch(resp=>{
 	      console.log(resp);
+	      this.onLoading(false);
 	    });
 	  }
 
