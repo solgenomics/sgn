@@ -143,7 +143,7 @@ $has_col_and_row_numbers => undef
 </div>
 
 <div id="container_heatmap" ></div>
-<div>
+<div id="container_legend">
     <ul class="legend">
         <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
         <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
@@ -1186,6 +1186,7 @@ jQuery(document).ready( function() {
         jQuery("#container_heatmap").css("display", "none");
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
+        jQuery("#container_legend").css("display", "none");
         jQuery("#trial_no_phenoMSG").css("display", "none");
         jQuery("#d3legend").css("display", "none");
     });
@@ -1197,6 +1198,7 @@ jQuery(document).ready( function() {
             d3.select("svg").remove();
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
+            jQuery("#container_legend").css("display", "block");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#include_linked_trials").css("display", "block");
             d3.select("#container_heatmap_geo_div").remove();
@@ -1210,6 +1212,7 @@ jQuery(document).ready( function() {
             jQuery("#container_heatmap").css("display", "none");
             jQuery("#d3legend").css("display", "none");
             jQuery("#container_fm").css("display", "none");
+            jQuery("#container_legend").css("display", "none");
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
