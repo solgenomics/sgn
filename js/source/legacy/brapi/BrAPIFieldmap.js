@@ -2237,10 +2237,21 @@
 	      .style("bottom","5px")
 	      .style("left","5px")
 	      .style("position","absolute")
-	      .style("z-index",999)
+	      .style("z-index",2000)
 	      .style("pointer-events","none")
 	      .style("background", "white")
 	      .style("border-radius", "5px");
+
+	    this.missing_plots = this.map_container.append("div")
+	      .style("bottom","5px")
+	      .style("right","5px")
+	      .style("position","absolute")
+	      .style("z-index", 2000)
+	      .style("background", "#DC3545")
+	      .style("color", "#000")
+	      .style("border-radius", "5px")
+	      .style("padding", "10px")
+	      .style("display", "none");
 	  }
 
 	  removeControls() {
@@ -2503,9 +2514,31 @@
 	        }
 	      }
 	      if(ou._geoJSON){
-	        ou._type = turf.getType(ou._geoJSON);
+	        try {
+	          ou._type = turf.getType(ou._geoJSON);
+	        }
+	        catch (err) {
+	          ou._type = "invalid";
+	        }
+	      }
+	      else {
+	        ou._type = "missing";
 	      }
 	    });
+
+	    // Separate out plots with invalid / missing geojson
+	    const plots_invalid = data.plots.filter((e) => e._type === 'invalid' || e._type === 'missing');
+	    const plots_valid = data.plots.filter((e) => e._type !== 'invalid' && e._type !== 'missing');
+	    if ( plots_invalid.length > 0 ) {
+	      let html = "Plots with no geo coordinates:";
+	      html += "<ul style='padding-left: 25px; margin-bottom: 0'>";
+	      plots_invalid.forEach((p) => html += `<li>${p.observationUnitName}</li>`);
+	      html += "</ul>";
+	      this.missing_plots.style("display", "block");
+	      this.missing_plots.html(html);
+	    }
+	    if ( plots_valid.length === 0 ) throw NO_POLYGON_ERROR;
+	    data.plots = plots_valid;
 
 	    // Generate a reasonable plot layout if there is missing row/col data
 	    if( data.plots.some(plot=>isNaN(plot._row)||isNaN(plot._col)) ){
