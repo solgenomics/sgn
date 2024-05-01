@@ -21,6 +21,8 @@ use CXGN::Genotype::MarkersSearch;
 use JSON;
 use CXGN::Tools::Run;
 use CXGN::Genotype::ProtocolProp;
+use CXGN::BreedersToolbox::Projects;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -141,7 +143,6 @@ sub genotyping_protocol_details : Path('/ajax/genotyping_protocol/details') : Ac
 sub genotyping_protocol_details_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $session_id = $c->req->param("sgn_session_id");
     my $protocol_id = $c->req->param("protocol_id");
     my @categories = $c->req->param("categories[]");
@@ -177,6 +178,24 @@ sub genotyping_protocol_details_POST : Args(0) {
     if ($user_role ne 'submitter' && $user_role ne 'curator') {
         $c->stash->{rest} = { error => 'Must have correct permissions to edit genotyping protocol! Please contact us.' };
         $c->detach();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my @protocol_list = ($protocol_id);
+    my $protocol_info = CXGN::Genotype::Protocol::list($schema, \@protocol_list, , , , , );
+    my $project_id = $protocol_info->[0]->{'project_id'};
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $program_ref = $program_object->get_breeding_programs_by_trial($project_id);
+
+    my $program_array = @$program_ref[0];
+    my $breeding_program_name = @$program_array[1];
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to change the details of this protocol." };
+      $c->detach();
     }
 
     my $new_protocol_name;

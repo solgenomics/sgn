@@ -27,14 +27,6 @@ $assay_type
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label" for="edit_protocol_description">Description: </label>
-                            <div class="col-sm-7">
-                                <div class="input-group">
-                                    <textarea class="form-control" id="edit_protocol_description" title="description" rows="3" maxlength="250"><% $protocol_description %></textarea>
-                                </div>
-                            </div>
-                        </div>
                         <!--
                         <div class="form-group">
                             <label class="col-sm-4 control-label" for="edit_protocol_assay_type">Assay Type: </label>
@@ -58,6 +50,14 @@ $assay_type
                             <div class="col-sm-7">
                                 <div class="input-group">
                                     <input class="form-control" id="edit_protocol_species_name" title="species_name" value="<%$species_name%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" for="edit_protocol_description">Description: </label>
+                            <div class="col-sm-7">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="edit_protocol_description" title="description" rows="3" maxlength="250"><% $protocol_description %></textarea>
                                 </div>
                             </div>
                         </div>
