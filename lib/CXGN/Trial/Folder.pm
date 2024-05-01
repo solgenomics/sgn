@@ -129,6 +129,7 @@ sub BUILD {
 			$self->is_folder(1);
 		} elsif ($folder_type_row->type_id() == $self->breeding_program_cvterm_id()) {
 			$self->folder_type("breeding_program");
+			$self->breeding_program($row);
 		} elsif ($folder_type_row->type_id() == $folder_for_trials_cvterm_id) {
 			$self->folder_for_trials(1);
 		} elsif ($folder_type_row->type_id() == $folder_for_crosses_cvterm_id) {
