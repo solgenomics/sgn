@@ -34,24 +34,24 @@ is_deeply($response, {'data'=> [
 
 $mech->get_ok("http://localhost:3010/stock/$accession_1_id/datatables/progenies");
 $response = decode_json $mech->content;
-#print STDERR Dumper $response;
+print STDERR "PROGENIES RESPONSE: ".Dumper $response;
 
 is_deeply($response, {'data'=> [
-['female_parent', '<a href = "/stock/38846/view">new_test_crossP001</a>', 'new_test_crossP001'],
-['female_parent', '<a href = "/stock/38847/view">new_test_crossP002</a>', 'new_test_crossP002'],
-['female_parent', '<a href = "/stock/38848/view">new_test_crossP003</a>', 'new_test_crossP003'],
-['female_parent', '<a href = "/stock/38849/view">new_test_crossP004</a>', 'new_test_crossP004'],
-['female_parent', '<a href = "/stock/38850/view">new_test_crossP005</a>', 'new_test_crossP005'],
-['female_parent', '<a href = "/stock/38851/view">new_test_crossP006</a>', 'new_test_crossP006'],
-['female_parent', '<a href = "/stock/38852/view">new_test_crossP007</a>', 'new_test_crossP007'],
-['female_parent', '<a href = "/stock/38853/view">new_test_crossP008</a>', 'new_test_crossP008'],
-['female_parent', '<a href = "/stock/38854/view">new_test_crossP009</a>', 'new_test_crossP009'],
-['female_parent', '<a href = "/stock/38855/view">new_test_crossP010</a>', 'new_test_crossP010'],
-['female_parent', '<a href = "/stock/38873/view">test5P001</a>', 'test5P001'],
-['female_parent', '<a href = "/stock/38874/view">test5P002</a>', 'test5P002'],
-['female_parent', '<a href = "/stock/38875/view">test5P003</a>', 'test5P003'],
-['female_parent', '<a href = "/stock/38876/view">test5P004</a>', 'test5P004'],
-['female_parent', '<a href = "/stock/38877/view">test5P005</a>', 'test5P005']
+['female_parent', 'unspecified', '<a href = "/stock/38846/view">new_test_crossP001</a>',  'new_test_crossP001'],
+['female_parent', 'unspecified', '<a href = "/stock/38847/view">new_test_crossP002</a>', 'new_test_crossP002'],
+['female_parent', 'unspecified', '<a href = "/stock/38848/view">new_test_crossP003</a>', 'new_test_crossP003'],
+['female_parent', 'unspecified', '<a href = "/stock/38849/view">new_test_crossP004</a>', 'new_test_crossP004'],
+['female_parent', 'unspecified', '<a href = "/stock/38850/view">new_test_crossP005</a>', 'new_test_crossP005'],
+['female_parent', 'unspecified', '<a href = "/stock/38851/view">new_test_crossP006</a>', 'new_test_crossP006'],
+['female_parent', 'unspecified', '<a href = "/stock/38852/view">new_test_crossP007</a>', 'new_test_crossP007'],
+['female_parent', 'unspecified', '<a href = "/stock/38853/view">new_test_crossP008</a>', 'new_test_crossP008'],
+['female_parent', 'unspecified', '<a href = "/stock/38854/view">new_test_crossP009</a>', 'new_test_crossP009'],
+['female_parent', 'unspecified', '<a href = "/stock/38855/view">new_test_crossP010</a>', 'new_test_crossP010'],
+['female_parent', 'unspecified', '<a href = "/stock/38873/view">test5P001</a>', 'test5P001'],
+['female_parent', 'unspecified', '<a href = "/stock/38874/view">test5P002</a>', 'test5P002'],
+['female_parent', 'unspecified', '<a href = "/stock/38875/view">test5P003</a>', 'test5P003'],
+['female_parent', 'unspecified', '<a href = "/stock/38876/view">test5P004</a>', 'test5P004'],
+['female_parent', 'unspecified', '<a href = "/stock/38877/view">test5P005</a>', 'test5P005']
 ]}, 'progenies');
 
 $mech->get_ok("http://localhost:3010/stock/$accession_2_id/datatables/group_and_member");

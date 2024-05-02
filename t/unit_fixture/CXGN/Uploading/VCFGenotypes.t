@@ -110,6 +110,37 @@ ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
 
 my $protocol_id = $message_hash->{nd_protocol_id};
+my $project_id = $message_hash->{project_id};
+
+
+# Test download of archived vcf file of uploaded project
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/has_archived_vcf?genotyping_project_id=$project_id");
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+is($message_hash->{$project_id}->[0]->{exists}, 'true');
+is($message_hash->{$project_id}->[0]->{genotyping_project_id}, $project_id);
+
+my $vcf_basename = $message_hash->{$project_id}->[0]->{basename};
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&basename=$vcf_basename");
+ok($response->is_success);
+$message = $response->decoded_content;
+my @lines = split "\n", $message;
+my $first_lines = join "\n", @lines[0 .. 12];
+is($first_lines, '##fileformat=VCFv4.0
+##Tassel=<ID=GenotypeTable,Version=5,Description="Reference allele is not known. The major allele was used as reference allele">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the reference and alternate alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth (only filtered reads used for calling)">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=3,Type=Float,Description="Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic">
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency">
+##FORMAT=<ID=DS,Number=1,Type=Float,Description="estimated ALT dose [P(RA) + P(AA)]">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SRLI1_90:CARK7ANXX:7:529022	SRLI1_66:CARK7ANXX:7:528998	SRLI1_52:CARK7ANXX:7:528984	KBH2015_383:CA8RLANXX:7:526263	KBH2015_BULK:CA8RLANXX:7:526284	KBH2014_076:CA93YANXX:4:525971	SRLI2_33:CAAC5ANXX:8:526949	SRLI1_78:CARK7ANXX:7:529010	KBH2014_1241:CA8RLANXX:5:526107	KBH2014_968:CA8RLANXX:6:526205	KBH2014_1155:CA8RLANXX:5:526114	UKG1503_004:CAAC5ANXX:6:526683	KBH2014_740:CA8RLANXX:6:526202	KBH2015_080:CA8RLANXX:7:526297	KBH2014_1463:CA8RLANXX:5:526133	UKG1502_022:CAAC5ANXX:6:526702	KBH2014_124:CA93YANXX:4:526028	SRLI2_70:CAAC5ANXX:8:526986	SRLI1_26:CARK7ANXX:7:528958	UKG15OP07_038:CAAC5ANXX:6:526685	KBH2014_286:CA8RLANXX:5:526090
+1	21594	S1_21594	G	A	.	PASS	AR2=0.29;DR2=0.342;AF=0.375	GT:AD:DP:GQ:DS:PL	./.:0,0:0:.:0.897:.	./.:0,0:0:.:0.481:.	./.:0,0:0:.:0.901:.	./.:0,0:0:.:0.475:.	./.:0,0:0:.:0.913:.	./.:0,0:0:.:0.889:.	./.:0,0:0:.:0.892:.	./.:0,0:0:.:0.928:.	./.:0,0:0:.:0.048:.	0/0:1,0:1:66:0.305:0,3,36	0/0:1,0:1:66:0.484:0,3,36	./.:0,0:0:.:1.104:.	./.:0,0:0:.:0.692:.	0/0:1,0:1:66:0.032:0,3,36	0/0:2,0:2:79:0.019:0,6,72	./.:0,0:0:.:0.679:.	./.:0,0:0:.:0.891:.	0/0:1,0:1:66:0.286:0,3,36	./.:0,0:0:.:0.559:.	./.:0,0:0:.:0.466:.	./.:0,0:0:.:0.985:.');
+
 
 #adding genotype data using same protocol as before to different project
 $ua = LWP::UserAgent->new;

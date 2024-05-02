@@ -13,10 +13,12 @@ $breeding_program_name => undef
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;
 % my $folder_for_genotyping_projects;
+% my $folder_for_tracking_activities;
 % if ($project_type eq 'field_trial') { $folder_for_trials = 1; $dialog_type = 'trials' }
 % if ($project_type eq 'genotyping_plate') { $folder_for_genotyping_trials = 1; $dialog_type = 'genotyping plates' }
 % if ($project_type eq 'crossing_experiment') { $folder_for_crosses = 1; $dialog_type = 'crossing experiments' }
 % if ($project_type eq 'genotyping_project') { $folder_for_genotyping_projects = 1; $dialog_type = 'genotyping projects' }
+% if ($project_type eq 'activity_record') { $folder_for_tracking_activities = 1; $dialog_type = 'tracking activities' }
 
 <div class="modal fade" id="new_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="newFolderDialog">
     <div class="modal-dialog" role="document">
@@ -109,6 +111,7 @@ jQuery(document).ready(function() {
             var folder_for_crosses;
             var folder_for_genotyping_trials;
             var folder_for_genotyping_projects;
+            var folder_for_tracking_activities;
 % if ($folder_for_trials){
             folder_for_trials = true;
 % }
@@ -121,7 +124,11 @@ jQuery(document).ready(function() {
 % if ($folder_for_genotyping_projects){
             folder_for_genotyping_projects = true;
 % }
-            get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'breeding_program_id' : jQuery('#new_folder_breeding_program_id').val(), 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials, 'folder_for_genotyping_projects': folder_for_genotyping_projects });
+% if ($folder_for_tracking_activities){
+            folder_for_tracking_activities = true;
+% }
+
+            get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'breeding_program_id' : jQuery('#new_folder_breeding_program_id').val(), 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials, 'folder_for_genotyping_projects': folder_for_genotyping_projects, 'folder_for_tracking_activities': folder_for_tracking_activities });
         }
 
     });
@@ -131,6 +138,7 @@ jQuery(document).ready(function() {
         var folder_for_crosses;
         var folder_for_genotyping_trials;
         var folder_for_genotyping_projects;
+        var folder_for_tracking_activities;
 % if ($folder_for_trials){
         folder_for_trials = true;
 % }
@@ -143,7 +151,11 @@ jQuery(document).ready(function() {
 % if ($folder_for_genotyping_projects){
         folder_for_genotyping_projects = true;
 % }
-        get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'breeding_program_id' : jQuery("#new_folder_breeding_program_id").val(), 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials, 'folder_for_genotyping_projects': folder_for_genotyping_projects  });
+% if ($folder_for_tracking_activities){
+        folder_for_tracking_activities = true;
+% }
+
+        get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'breeding_program_id' : jQuery("#new_folder_breeding_program_id").val(), 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials, 'folder_for_genotyping_projects': folder_for_genotyping_projects, 'folder_for_tracking_activities': folder_for_tracking_activities  });
     });
 
     jQuery('#new_folder_submit').click( function() {
