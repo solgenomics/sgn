@@ -55,8 +55,6 @@ sub _validate_with_plugin {
     }
 
     my $inventory_id_head;
-    my $crop_module_id_head;
-    my $type_of_breeding_head;
     my $template_file_id_head;
     my $crossing_plan_id_head;
     my $female_order_head;
@@ -69,19 +67,12 @@ sub _validate_with_plugin {
     my $male_attributes_head;
     my $number_of_flowers_head;
     my $crossing_date_head;
-    my $cross_user_head;
     my $number_of_fruits_head;
     my $fruit_harvest_date_head;
-    my $fruit_size_head;
-    my $harvest_user_head;
     my $fruit_maceration_date_head;
-    my $maceration_user_head;
     my $population_head;
     my $type_of_pollination_head;
-    my $genetic_designs_head;
     my $crossing_location_head;
-    my $plan_number_head;
-    my $plan_name_head;
     my $cip_region_crossing_head;
     my $country_crossing_head;
     my $adm_1_crossing_head;
@@ -93,20 +84,11 @@ sub _validate_with_plugin {
     my $total_number_of_seeds_head;
     my $seed_stock_head;
     my $seed_count_date_head;
-    my $seed_count_user_head;
 
 
     if ($worksheet->get_cell(0,0)) {
         $inventory_id_head  = $worksheet->get_cell(0,0)->value();
         $inventory_id_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,1)) {
-        $crop_module_id_head  = $worksheet->get_cell(0,1)->value();
-        $crop_module_id_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,2)) {
-        $type_of_breeding_head  = $worksheet->get_cell(0,2)->value();
-        $type_of_breeding_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,3)) {
         $template_file_id_head  = $worksheet->get_cell(0,3)->value();
@@ -156,10 +138,6 @@ sub _validate_with_plugin {
         $crossing_date_head  = $worksheet->get_cell(0,14)->value();
         $crossing_date_head =~ s/^\s+|\s+$//g;
     }
-    if ($worksheet->get_cell(0,15)) {
-        $cross_user_head  = $worksheet->get_cell(0,15)->value();
-        $cross_user_head =~ s/^\s+|\s+$//g;
-    }
     if ($worksheet->get_cell(0,16)) {
         $number_of_fruits_head  = $worksheet->get_cell(0,16)->value();
         $number_of_fruits_head =~ s/^\s+|\s+$//g;
@@ -168,21 +146,9 @@ sub _validate_with_plugin {
         $fruit_harvest_date_head  = $worksheet->get_cell(0,17)->value();
         $fruit_harvest_date_head =~ s/^\s+|\s+$//g;
     }
-    if ($worksheet->get_cell(0,18)) {
-        $fruit_size_head  = $worksheet->get_cell(0,18)->value();
-        $fruit_size_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,19)) {
-        $harvest_user_head  = $worksheet->get_cell(0,19)->value();
-        $harvest_user_head =~ s/^\s+|\s+$//g;
-    }
     if ($worksheet->get_cell(0,20)) {
         $fruit_maceration_date_head  = $worksheet->get_cell(0,20)->value();
         $fruit_maceration_date_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,21)) {
-        $maceration_user_head  = $worksheet->get_cell(0,21)->value();
-        $maceration_user_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,22)) {
         $population_head  = $worksheet->get_cell(0,22)->value();
@@ -192,21 +158,9 @@ sub _validate_with_plugin {
         $type_of_pollination_head  = $worksheet->get_cell(0,23)->value();
         $type_of_pollination_head =~ s/^\s+|\s+$//g;
     }
-    if ($worksheet->get_cell(0,24)) {
-        $genetic_designs_head  = $worksheet->get_cell(0,24)->value();
-        $genetic_designs_head =~ s/^\s+|\s+$//g;
-    }
     if ($worksheet->get_cell(0,25)) {
         $crossing_location_head  = $worksheet->get_cell(0,25)->value();
         $crossing_location_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,26)) {
-        $plan_number_head  = $worksheet->get_cell(0,26)->value();
-        $plan_number_head =~ s/^\s+|\s+$//g;
-    }
-    if ($worksheet->get_cell(0,27)) {
-        $plan_name_head  = $worksheet->get_cell(0,27)->value();
-        $plan_name_head =~ s/^\s+|\s+$//g;
     }
     if ($worksheet->get_cell(0,28)) {
         $cip_region_crossing_head  = $worksheet->get_cell(0,28)->value();
@@ -252,19 +206,9 @@ sub _validate_with_plugin {
         $seed_count_date_head  = $worksheet->get_cell(0,43)->value();
         $seed_count_date_head =~ s/^\s+|\s+$//g;
     }
-    if ($worksheet->get_cell(0,44)) {
-        $seed_count_user_head  = $worksheet->get_cell(0,44)->value();
-        $seed_count_user_head =~ s/^\s+|\s+$//g;
-    }
 
     if (!$inventory_id_head || $inventory_id_head ne 'Inventory ID' ) {
         push @error_messages, "Cell A1: Inventory ID is missing from the header";
-    }
-    if (!$crop_module_id_head || $crop_module_id_head ne 'Crop Module ID' ) {
-        push @error_messages, "Cell B1: Crop Module ID is missing from the header";
-    }
-    if (!$type_of_breeding_head || $type_of_breeding_head ne 'Type of Breeding' ) {
-        push @error_messages, "Cell C1: Type of Breeding is missing from the header";
     }
     if (!$template_file_id_head || $template_file_id_head ne 'Template File ID' ) {
         push @error_messages, "Cell D1: Template File ID is missing from the header";
@@ -302,26 +246,14 @@ sub _validate_with_plugin {
     if (!$crossing_date_head || $crossing_date_head ne 'Crossing Date' ) {
         push @error_messages, "Cell O1: Crossing Date is missing from the header";
     }
-    if (!$cross_user_head || $cross_user_head ne 'Cross User' ) {
-        push @error_messages, "Cell P1: Cross User is missing from the header";
-    }
     if (!$number_of_fruits_head || $number_of_fruits_head ne 'Number of Fruits' ) {
         push @error_messages, "Cell Q1: Number of Fruits is missing from the header";
     }
     if (!$fruit_harvest_date_head || $fruit_harvest_date_head ne 'Fruit Harvest Date' ) {
         push @error_messages, "Cell R1: Fruit Harvest Date is missing from the header";
     }
-    if (!$fruit_size_head || $fruit_size_head ne 'Fruit Size' ) {
-        push @error_messages, "Cell S1: Fruit Size is missing from the header";
-    }
-    if (!$harvest_user_head || $harvest_user_head ne 'Harvest User' ) {
-        push @error_messages, "Cell T1: Harvest User is missing from the header";
-    }
     if (!$fruit_maceration_date_head || $fruit_maceration_date_head ne 'Fruit Maceration Date' ) {
         push @error_messages, "Cell U1: Fruit Maceration Date is missing from the header";
-    }
-    if (!$maceration_user_head || $maceration_user_head ne 'Maceration User' ) {
-        push @error_messages, "Cell V1: Maceration User is missing from the header";
     }
     if (!$population_head || $population_head ne 'Population' ) {
         push @error_messages, "Cell W1: Population is missing from the header";
@@ -329,17 +261,8 @@ sub _validate_with_plugin {
     if (!$type_of_pollination_head || $type_of_pollination_head ne 'Type of Pollination' ) {
         push @error_messages, "Cell X1: Type of Pollination is missing from the header";
     }
-    if (!$genetic_designs_head || $genetic_designs_head ne 'Genetic Designs' ) {
-        push @error_messages, "Cell Y1: Genetic Designs is missing from the header";
-    }
     if (!$crossing_location_head || $crossing_location_head ne 'Crossing Location' ) {
         push @error_messages, "Cell Z1: Crossing Location is missing from the header";
-    }
-    if (!$plan_number_head || $plan_number_head ne 'Plan Number' ) {
-        push @error_messages, "Cell AA1: Plan Number is missing from the header";
-    }
-    if (!$plan_name_head || $plan_name_head ne 'Plan Name' ) {
-        push @error_messages, "Cell AB1: Plan Name is missing from the header";
     }
     if (!$cip_region_crossing_head || $cip_region_crossing_head ne 'CIP Region Crossing' ) {
         push @error_messages, "Cell AC1: CIP Region Crossing is missing from the header";
@@ -373,9 +296,6 @@ sub _validate_with_plugin {
     }
     if (!$seed_count_date_head || $seed_count_date_head ne 'Seed Count Date' ) {
         push @error_messages, "Cell AR1: Seed Count Date is missing from the header";
-    }
-    if (!$seed_count_user_head || $seed_count_user_head ne 'Seed Count User' ) {
-        push @error_messages, "Cell AS1: Seed Count User is missing from the header";
     }
 
 
@@ -493,8 +413,6 @@ sub _parse_with_plugin {
 
     for my $row ( 1 .. $row_max ) {
         my $inventory_id;
-        my $crop_module_id;
-        my $type_of_breeding;
         my $template_file_id;
         my $crossing_plan_id;
         my $female_order;
@@ -507,19 +425,12 @@ sub _parse_with_plugin {
         my $male_attributes;
         my $number_of_flowers;
         my $crossing_date;
-        my $cross_user;
         my $number_of_fruits;
         my $fruit_harvest_date;
-        my $fruit_size;
-        my $harvest_user;
         my $fruit_maceration_date;
-        my $maceration_user;
         my $population;
         my $type_of_pollination;
-        my $genetic_designs;
         my $crossing_location;
-        my $plan_number;
-        my $plan_name;
         my $cip_region_crossing;
         my $country_crossing;
         my $adm_1_crossing;
@@ -531,7 +442,6 @@ sub _parse_with_plugin {
         my $total_number_of_seeds;
         my $seed_stock;
         my $seed_count_date;
-        my $seed_count_user;
 
 
         if ($worksheet->get_cell($row,0)) {
@@ -543,16 +453,6 @@ sub _parse_with_plugin {
             last;
         }
 
-        if ($worksheet->get_cell($row,1)) {
-            $crop_module_id = $worksheet->get_cell($row,1)->value();
-            $crop_module_id =~ s/^\s+|\s+$//g;
-            $project_info{'Crop Module ID'}{$crop_module_id}++;
-        }
-        if ($worksheet->get_cell($row,2)) {
-            $type_of_breeding = $worksheet->get_cell($row,2)->value();
-            $type_of_breeding =~ s/^\s+|\s+$//g;
-            $project_info{'Type of Breeding'}{$type_of_breeding}++;
-        }
         if ($worksheet->get_cell($row,3)) {
             $template_file_id = $worksheet->get_cell($row,3)->value();
             $template_file_id =~ s/^\s+|\s+$//g;
@@ -613,11 +513,6 @@ sub _parse_with_plugin {
             $crossing_date =~ s/^\s+|\s+$//g;
             $cross_info{$inventory_id}{'Crossing Date'} = $crossing_date;
         }
-        if ($worksheet->get_cell($row,15)) {
-            $cross_user  = $worksheet->get_cell($row,15)->value();
-            $cross_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'Cross User'} = $cross_user;
-        }
         if ($worksheet->get_cell($row,16)) {
             $number_of_fruits  = $worksheet->get_cell($row,16)->value();
             $number_of_fruits =~ s/^\s+|\s+$//g;
@@ -628,25 +523,10 @@ sub _parse_with_plugin {
             $fruit_harvest_date =~ s/^\s+|\s+$//g;
             $cross_info{$inventory_id}{'Fruit Harvest Date'} = $fruit_harvest_date;
         }
-        if ($worksheet->get_cell($row,18)) {
-            $fruit_size  = $worksheet->get_cell($row,18)->value();
-            $fruit_size =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'Fruit Size'} = $fruit_size;
-        }
-        if ($worksheet->get_cell($row,19)) {
-            $harvest_user  = $worksheet->get_cell($row,19)->value();
-            $harvest_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'Harvest User'} = $harvest_user;
-        }
         if ($worksheet->get_cell($row,20)) {
             $fruit_maceration_date  = $worksheet->get_cell($row,20)->value();
             $fruit_maceration_date =~ s/^\s+|\s+$//g;
             $cross_info{$inventory_id}{'Fruit Maceration Date'} = $fruit_maceration_date;
-        }
-        if ($worksheet->get_cell($row,21)) {
-            $maceration_user  = $worksheet->get_cell($row,21)->value();
-            $maceration_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'Maceration User'} = $maceration_user;
         }
         if ($worksheet->get_cell($row,22)) {
             $population = $worksheet->get_cell($row,22)->value();
@@ -658,26 +538,11 @@ sub _parse_with_plugin {
             $type_of_pollination =~ s/^\s+|\s+$//g;
             $project_info{'Type of Pollination'}{$type_of_pollination}++;
         }
-        if ($worksheet->get_cell($row,24)) {
-            $genetic_designs = $worksheet->get_cell($row,24)->value();
-            $genetic_designs =~ s/^\s+|\s+$//g;
-            $project_info{'Genetic Designs'}{$genetic_designs}++;
-        }
 #        if ($worksheet->get_cell($row,25)) {
 #            $crossing_location = $worksheet->get_cell($row,25)->value();
 #            $crossing_location =~ s/^\s+|\s+$//g;
 #            $project_info{'Crossing Location'}{$crossing_location}++;
 #        }
-        if ($worksheet->get_cell($row,26)) {
-            $plan_number = $worksheet->get_cell($row,26)->value();
-            $plan_number =~ s/^\s+|\s+$//g;
-            $project_info{'Plan Number'}{$plan_number}++;
-        }
-        if ($worksheet->get_cell($row,27)) {
-            $plan_name = $worksheet->get_cell($row,27)->value();
-            $plan_name =~ s/^\s+|\s+$//g;
-            $project_info{'Plan Name'}{$plan_name}++;
-        }
         if ($worksheet->get_cell($row,28)) {
             $cip_region_crossing = $worksheet->get_cell($row,28)->value();
             $cip_region_crossing =~ s/^\s+|\s+$//g;
@@ -732,11 +597,6 @@ sub _parse_with_plugin {
             $seed_count_date  = $worksheet->get_cell($row,43)->value();
             $seed_count_date =~ s/^\s+|\s+$//g;
             $cross_info{$inventory_id}{'Seed Count Date'} = $seed_count_date;
-        }
-        if ($worksheet->get_cell($row,44)) {
-            $seed_count_user  = $worksheet->get_cell($row,44)->value();
-            $seed_count_user =~ s/^\s+|\s+$//g;
-            $cross_info{$inventory_id}{'Seed Count User'} = $seed_count_user;
         }
 
         my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$inventory_id, cross_type=>'biparental');
