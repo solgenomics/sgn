@@ -82,7 +82,7 @@ my $after_adding_transformation_id_relationship = $schema->resultset("Stock::Sto
 is($after_adding_transformation_id_relationship, $before_adding_transformation_id_relationship + 2);
 
 #test adding transformants (accessions)
-$mech->post_ok('http://localhost:3010/ajax/transformation/add_transformants', [ 'transformation_stock_id' => $transformation_stock_id, 'new_name_count' => 2, 'last_number' => 0 ]);
+$mech->post_ok('http://localhost:3010/ajax/transformation/add_transformants', [ 'transformation_name' => 'UG1TT1', 'transformation_stock_id' => $transformation_stock_id, 'new_name_count' => 2, 'last_number' => 0 ]);
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
@@ -102,6 +102,13 @@ my $transformants = $response->{'data'};
 my $transformant_count = scalar(@$transformants);
 is($transformant_count, '2');
 
+#retrieving related stocks for vector page
+$mech->get_ok("http://localhost:3010/stock/$vector_stock_id/datatables/vector_related_stocks");
+$response = decode_json $mech->content;
+my $related_stocks = $response->{'data'};
+my $related_stock_count = scalar(@$related_stocks);
+is($related_stock_count, '2');
+
 #deleting project, transformation_id, vector_construct, transformants
 my $project_owner = $phenome_schema->resultset('ProjectOwner')->find({ project_id => $project_id });
 $project_owner->delete();
@@ -112,7 +119,7 @@ my $result = $transformation_obj->get_transformants();
 foreach my $transformant (@$result) {
     push @all_new_stocks, $transformant->[0];
 }
-print STDERR "ALL NEW STOCKS =".Dumper(\@all_new_stocks)."\n";
+#print STDERR "ALL NEW STOCKS =".Dumper(\@all_new_stocks)."\n";
 my $dbh = $schema->storage->dbh;
 my $q = "delete from phenome.stock_owner where stock_id=?";
 my $h = $dbh->prepare($q);

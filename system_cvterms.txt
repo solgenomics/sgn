@@ -31,6 +31,7 @@ experiment_type	pedigree experiment
 experiment_type	phenotyping_experiment				00052
 experiment_type	sampling_layout	For saving sampling trials	11/25/2020	nm529	00132
 experiment_type	seedlot_experiment				00077
+experiment_type tracking_activity  tt15  00185
 experiment_type transformation_experiment  tt15  00184
 experiment_type	treatment_experiment				00081
 genotype_property	igd number
@@ -74,6 +75,7 @@ list_types	populations				00067
 list_types	seedlots		07/20/2017	nm529	00081
 list_types	subplots		08/23/2017	nm529	00084
 list_types	tissue_samples		02/15/2018	nm529	00091
+list_types  tracking_identifiers tt15  00185
 list_types	traits
 list_types	trials
 list_types	unigene_ids
@@ -551,6 +553,7 @@ project_md_image	threshold_background_removed_temporary_stitched_drone_imagery	S
 project_md_image	threshold_background_removed_tgi_stitched_drone_imagery	Vegetative index TGI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_vari_stitched_drone_imagery	Vegetative index VARI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_property	active	From BrAPI	03/27/2017	nm529	00076
+project_property    activity_type  tt15  00185
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	breeding_program				00051
 project_property	breeding_program_abbreviation	From BrAPI	03/27/2017	nm529	00076
@@ -605,6 +608,7 @@ project_property	file_metadata_json For recording metadata of intercross files (
 project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071
 project_property	folder_for_genotyping_projects	For determining if a folder appears on manage genotyping projects page		tt15	00164
 project_property	folder_for_genotyping_trials	For determining if a folder appears on manage genotyping plate page	6/20/18	nm529	00098
+project_property    folder_for_tracking_activities  tt15  00185
 project_property    folder_for_transformations  tt15  00184
 project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071
 project_property	genomic selection
@@ -637,6 +641,7 @@ project_property	project sown plants
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	project_start_date	A project's start date in MM/DD/YYYY format	9/18/18	nm529	00103
 project_property	project transplanting date					sgn database
+project_property    project_vendor  tt15  00185
 project_property	project year
 project_property	sampling_facility	For saving the sampling facility of a sampling trial	11/25/2020	nm529	00132
 project_property	sampling_trial_sample_type	For saving the sample type of a sampling trial	11/25/2020	nm529	00132
@@ -654,6 +659,7 @@ project_relationship	genotyping_project_and_plate_relationship For linking genot
 project_relationship	genotyping_trial_from_field_trial	For linking genotyping plates to the source field trials 	4/6/18	nm529	00093
 project_relationship	sampling_trial_from_field_trial	For linking sampling trial to field trials 	11/25/20	nm529	00132
 project_relationship	trial_treatment_relationship		 00081
+project_type    activity_record  tt15  00185
 project_type	Advanced Yield Trial
 project_type	Clonal Evaluation
 project_type		crossing_block_trial		00098
@@ -701,7 +707,8 @@ protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras c
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 protocol_type	uploaded_generic_analysis_model	An nd_protocol for analysis for uploaded user results	8/19/2020	nm529	00128
 protocol_type	waves_nirs_spectral_predictions	A protocol type for NIRs spectral prediction models using the R waves (Jenna Hershberger) package	7/29/2020	nm529	00127
-sp_order_property	order_batch_json For storing ordering details		tt15	00143
+sp_order_property  order_batch_json For storing ordering details		tt15	00143
+sp_order_property  order_tracking_identifiers tt15  00185  
 stock_property	accession number	From BrAPI	03/27/2017	nm529	00076
 stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076
 stock_property	Backbone	Vector property	1/19/2023	mrf252	00164
@@ -767,9 +774,12 @@ stock_property	strain	Vector property	1/19/2023	mrf252	00164
 stock_property	subplot_index_number				00084
 stock_property	T1				00052
 stock_property	T2				00052
+stock_property  terminated_metadata  tt15  00185
 stock_property	Terminators	Vector property	1/19/2023	mrf252	00164
+stock_property  tissue_culture_data_json  tt15  00125
 stock_property	tissue_sample_index_number				00089
 stock_property	tissue_type	For indicating tissue type in genotype plate well	2/15/2018	nm529	00091
+stock_property  tracking_tissue_culture_json  tt15  00185
 stock_property  transformation_notes  tt15  00184
 stock_property	transgenic				00052
 stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076
@@ -786,6 +796,7 @@ stock_relationship	female_plot_of		00086
 stock_relationship	male_parent				00052
 stock_relationship	male_plant_of			00094
 stock_relationship	male_plot_of		00086
+stock_relationship  material_of  tt15  00185
 stock_relationship	member_of				00052
 stock_relationship	offspring_of				00052
 stock_relationship  plant_material_of  tt15  00184
@@ -814,6 +825,7 @@ stock_type	population				00052
 stock_type	seedlot				00077
 stock_type	subplot				00084
 stock_type	tissue_sample				00052
+stock_type  tracking_identifier  tt15  00185
 stock_type	training population				00052
 stock_type  transformation  tt15  00184
 stock_type	vector_construct				00052
