@@ -2280,6 +2280,7 @@
 
 	  load(studyDbId) {
 	    this.onLoading(true);
+	    this.loadStudy(studyDbId);
 	    this.generatePlots(studyDbId);
 	    return this.data.then(()=>{
 	      this.drawPlots();
@@ -2289,6 +2290,21 @@
 	      console.log(resp);
 	      this.onLoading(false);
 	    });
+	  }
+
+	  loadStudy(studyDbId) {
+	    const brapi = BrAPI(this.brapi_endpoint, "2.0", this.opts.brapi_auth);
+	    brapi.studies_detail({ studyDbId }).map((study) => {
+	      if ( study ) this.enableOrthomosaics(study);
+	    });
+	  }
+
+	  enableOrthomosaics(study) {
+	    if ( study && study.additionalInfo && study.additionalInfo.orthomosaics ) {
+	      const orthos = study.additionalInfo.orthomosaics;
+	      console.log("ENABLE ORTHOMOSAICS");
+	      console.log(orthos);
+	    }
 	  }
 
 	  drawPlots() {
