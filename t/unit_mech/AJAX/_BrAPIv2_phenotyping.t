@@ -209,7 +209,7 @@ is_deeply($response, {'result' => {'data' => [ { 'commonCropName' => 'Cassava', 
 
 
 ####### Traits
-$mech->get_ok('http://localhost:3010/brapi/v2/traits?pageSize=2');
+$mech->get_ok('http://localhost:3010/brapi/v2/traits?pageSize=1&page=1');
 $response = decode_json $mech->content;
 print STDERR "\n\n" . Dumper$response;
 is_deeply($response,  {
@@ -218,7 +218,7 @@ is_deeply($response,  {
     'status' => [
       {
         'messageType' => 'INFO',
-        'message' => 'BrAPI base call found with page=0, pageSize=2'
+        'message' => 'BrAPI base call found with page=1, pageSize=1'
       },
       {
         'messageType' => 'INFO',
@@ -230,50 +230,14 @@ is_deeply($response,  {
       }
     ],
     'pagination' => {
-      'pageSize' => 2,
-      'currentPage' => 0,
-      'totalPages' => 3512,
+      'pageSize' => 1,
+      'currentPage' => 1,
+      'totalPages' => 7024,
       'totalCount' => 7024
     }
   },
   'result' => {
     'data' => [
-      {
-        'traitName' => '0 germination',
-        'ontologyReference' => {
-          'version' => undef,
-          'ontologyDbId' => 102,
-          'ontologyName' => 'PO',
-          'documentationLinks' => undef
-        },
-        'traitDbId' => '70403',
-        'traitPUI' => undef,
-        'entity' => undef,
-        'entityPUI'=> undef,
-        'attributePUI'=> undef,
-        'status' => 'active',
-        'attribute' => undef,
-        'traitClass' => undef,
-        'externalReferences' => [
-          {
-            'referenceSource' => 'GR',
-            'referenceId' => 'ap'
-          },
-          {
-            'referenceId' => '047124529',
-            'referenceSource' => 'ISBN'
-          },
-          {
-            'referenceId' => 'http://www.cropontology.org/terms/PO:0007057/',
-            'referenceSource' => 'Crop Ontology'
-          }
-        ],
-        'traitDescription' => 'The resumption of growth by the embryo in a seed.',
-        'additionalInfo' => {},
-        'mainAbbreviation' => undef,
-        'synonyms' => [],
-        'alternativeAbbreviations' => undef
-      },
       {
         'status' => 'active',
         'attribute' => undef,
