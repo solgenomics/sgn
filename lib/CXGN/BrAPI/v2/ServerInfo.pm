@@ -68,7 +68,7 @@ sub search {
 		[['application/json'],['GET','PUT'], 'images/{imageDbId}',['2.0','2.1']],
 		[['application/json'],['PUT'], 'images/{imageDbId}/imagecontent',['2.0','2.1']],
 		[['application/json'],['POST'],'search/images',['2.0','2.1']],
-		[['application/json'],['GET'], 'search/images/{searchResultsDbId}',['2.0']],
+		[['application/json'],['GET'], 'search/images/{searchResultsDbId}',['2.0','2.1']],
 		[['application/json'],['GET','POST','PUT'], 'observations',['2.0']],
 		[['application/json'],['GET','PUT'], 'observations/{observationDbId}',['2.0']],
 		[['application/json'],['GET'], 'observations/table',['2.0']],
