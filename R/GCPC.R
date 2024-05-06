@@ -582,8 +582,12 @@ if (userSexes != "") { # "plant sex estimation 0-4"
 
 
   # subset the number of crosses the user wishes to output
-  crossPlan[1:userNCrosses, ]
-  finalcrosses <- crossPlan[1:userNCrosses, ]
+  if (nrow(crossPlan)<100) {
+    finalcrosses = crossPlan
+  } else {
+    crossPlan[1:userNCrosses, ]
+    finalcrosses=crossPlan[1:userNCrosses, ]
+  }
   outputFile <- paste(phenotypeFile, ".out", sep = "")
 
   write.csv(finalcrosses, outputFile)
@@ -615,8 +619,12 @@ if (userSexes != "") { # "plant sex estimation 0-4"
   dev.off()
 
   ## save the best 100 predictions
-  crossPlan[1:userNCrosses, ]
-  finalcrosses <- crossPlan[1:userNCrosses, ]
+  if (nrow(crossPlan)<100) {
+    finalcrosses = crossPlan
+  } else {
+    crossPlan[1:userNCrosses, ]
+    finalcrosses=crossPlan[1:userNCrosses, ]
+  }
   outputFile <- paste(phenotypeFile, ".out", sep = "")
 
   write.csv(finalcrosses, outputFile)
