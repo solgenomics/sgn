@@ -298,6 +298,8 @@ rect.bordered {
 %        $method = 'RCBD';
 %    } elsif ($type eq 'Resolvable Row-Column'){
 %        $method = 'RRC';
+%    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
+%        $method = 'DRRC';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
@@ -525,6 +527,18 @@ rect.bordered {
                                         <label class="col-sm-7 control-label">Number of field rows (Required): </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="row_number" name="row_number" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="col_number_section" style="display: none">
+                                        <label class="col-sm-7 control-label">Number of Columns (Required): </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="col_number" name="col_number" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="col_number_per_block_section" style="display: none">
+                                        <label class="col-sm-7 control-label">Number of Columns per Block (2 or 4): </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="fieldMap_col_number" name="fieldMap_col_number" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="row_number_per_block_section" style="display: none">
@@ -797,6 +811,7 @@ rect.bordered {
                                               <select class="form-control" id="start_number" name="start_number">
                                                   <option value=1 >1</option>
                                                   <option value=101 >101</option>
+                                                  <option value=00101 >00101</option>
                                                   <option value=1001 >1001</option>
                                                </select>
                                             <!--<input type="text" class="form-control" id="start_number" name="start_number" />-->
