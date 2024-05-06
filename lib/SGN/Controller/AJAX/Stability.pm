@@ -62,6 +62,14 @@ sub get_method: Path('/ajax/Stability/get_method') : {
     print "The vairable method_id is $method_id \n";
 }
 
+my $imput_id;
+sub get_imput: Path('/ajax/Stability/get_imput') : {
+    my $self = shift;
+    my $c = shift;
+    $imput_id = $c->req->param('imput_id');
+    print STDERR Dumper($imput_id);
+    print "Will the data be imputed? $imput_id \n";
+}
 
 sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     my $self = shift;
@@ -110,10 +118,12 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
+
 sub generate_results: Path('/ajax/stability/generate_results') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $imput_id = $c->req->param('imput_id');
     my $method = $c->req->param('method_id');
     my $trait_id = $c->req->param('trait_id');
     my $exclude_outliers = $c->req->param('dataset_trait_outliers');
@@ -125,7 +135,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
     mkdir $stability_tmp_output if ! -d $stability_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
-      "stability_download_XXXXX",
+      "stability_XXXXX",
       DIR=> $stability_tmp_output,
     );
 
@@ -148,9 +158,10 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
-    my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
-    my $figure1file = $tempfile . "_" . "figure1.png";
-    my $figure2file = $tempfile . "_" . "figure2.png";
+    my $jsonFile = $tempfile . "_" . "json";
+    my $graphFile = $tempfile . "_" . "graph.json";
+    my $messageFile = $tempfile . "_" . "message.txt";
+    my $jsonSummary = $tempfile . "_" . "summary.json";
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
@@ -170,10 +181,12 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $c->config->{basepath} . "/R/stability/ammi_script.R",
             $pheno_filepath,
             $trait_id,
-            $figure1file,
-            $figure2file,
-            $AMMIFile,
-            $method
+            $imput_id,
+            $method,
+            $jsonFile,
+            $graphFile,
+            $messageFile,
+            $jsonSummary
     );
 
     while ($cmd->alive) { 
@@ -182,31 +195,35 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
     my $error;
 
-    if (! -e $AMMIFile) { 
-	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
-    }
+
 
     my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
 
-    copy($AMMIFile, $figure_path);
-    copy($figure1file, $figure_path);
-    copy($figure2file, $figure_path);
+    copy($messageFile, $figure_path);
+    copy($jsonFile, $figure_path);
+    copy($graphFile, $figure_path);
+    copy($jsonSummary, $figure_path);
 
-    my $AMMIFilebasename = basename($AMMIFile);
-    my $AMMIFile_response = "/documents/tempfiles/stability_files/" . $AMMIFilebasename;
+
+    my $messageFileBasename = basename($messageFile);
+    my $messageFile_response = "/documents/tempfiles/stability_files/" . $messageFileBasename;
+
+    my $graphFileBasename = basename($graphFile);
+    my $graphFile_response = "/documents/tempfiles/stability_files/" . $graphFileBasename;
+
+    my $jsonFileBasename = basename($jsonFile);
+    my $jsonFile_response = "/documents/tempfiles/stability_files/" . $jsonFileBasename;
+
+    my $jsonSummaryBasename = basename($jsonSummary);
+    my $jsonSummary_response = "/documents/tempfiles/stability_files/" . $jsonSummaryBasename;
     
-    my $figure1basename = basename($figure1file);
-    my $figure1_response = "/documents/tempfiles/stability_files/" . $figure1basename;
-    
-    my $figure2basename = basename($figure2file);
-    my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
 
     $c->stash->{rest} = {
-        AMMITable => $AMMIFile_response,
-        figure1 => $figure1_response,
-        figure2 => $figure2_response,
+        myMessage => $messageFile_response,
+        myGraph => $graphFile_response,
+        JSONfile => $jsonFile_response,
+        JSONsummary => $jsonSummary_response,
         dummy_response => $dataset_id
-        # dummy_response2 => $trait_id,
     };
 }
 
