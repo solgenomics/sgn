@@ -64,7 +64,7 @@ design <- transform(design, is_a_control = ifelse(design$accession_name %in% con
 
 ## Fixing Block Number
 blcNumber = 1
-for(i in 1:n.tiers){
+for(i in 1:n.rows){
   design[design$col_number == i, "block_number"] <- blcNumber
   if(i%%col.per.block == 0){blcNumber = blcNumber+1}
 }
@@ -86,7 +86,7 @@ cat("plot type is ", plotType,"\n")
 
 ## Plot number format
 if(plotType == "serpentine"){
-  for(i in 1:n.tiers){
+  for(i in 1:n.rows){
     if(i%%2==0){
       design[design$row_number == i, "plot_number"] <- rev(design[design$row_number==i,"plot_number"])
     }
