@@ -40,8 +40,8 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
-   );
+    map       => { 'application/json' => 'JSON' },
+);
 
 sub verify_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
 
@@ -62,7 +62,7 @@ sub verify_accession_list_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this info!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -71,7 +71,7 @@ sub verify_accession_list_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this info!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -234,6 +234,7 @@ sub verify_accessions_file_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $upload = $c->req->upload('new_accessions_upload_file');
     my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_accessions') ? 0 : 1;
+    my $append_synonyms = !$c->req->param('append_synonyms') ? 0 : 1;
 
     if ($user_role ne 'curator' && !$do_fuzzy_search) {
         $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
@@ -271,7 +272,7 @@ sub verify_accessions_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search);
+    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search, append_synonyms=>$append_synonyms);
     $parser->load_plugin('AccessionsXLS');
     my $parsed_data = $parser->parse();
 

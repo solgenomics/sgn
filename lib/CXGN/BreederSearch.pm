@@ -340,6 +340,12 @@ sub refresh_matviews {
     my $materialized_view = shift || 'fullview'; #Can be 'fullview' or 'stockprop'
     my $refresh_type = shift || 'concurrent';
     my $basepath = shift;
+    my $async = shift;
+
+    if (!defined($async)) {
+        $async = 1;
+    }
+
     my $refresh_finished = 0;
     my $async_refresh;
 
@@ -354,14 +360,22 @@ sub refresh_matviews {
     }
     else {
         try {
+            my $refresh_command = "perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view";
+            $async_refresh = CXGN::Tools::Run->new();
             if ($refresh_type eq 'concurrent') {
-                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
-                $async_refresh = CXGN::Tools::Run->new();
-                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
+                print STDERR "Using CXGN::Tools::Run to ".($async ? "asynchronously" : "synchronously")." run $refresh_command -c\n";
+                if ($async) {
+                    $async_refresh->run_async($refresh_command." -c");
+                } else {
+                    $async_refresh->run($refresh_command." -c");
+                }
             } else {
-                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
-                $async_refresh = CXGN::Tools::Run->new();
-                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view");
+                print STDERR "Using CXGN::Tools::Run to ".($async ? "asynchronously" : "synchronously")." run $refresh_command\n";
+                if ($async) {
+                    $async_refresh->run_async($refresh_command);
+                } else {
+                    $async_refresh->run($refresh_command);
+                }
             }
 
             for (my $i = 1; $i < 10; $i++) {
@@ -374,9 +388,9 @@ sub refresh_matviews {
             }
 
             if ($refresh_finished) {
-                return { message => $materialized_view.' update completed!' };
+                return { message => $materialized_view . ' update completed!', connection => $async_refresh };
             } else {
-                return { message => $materialized_view.' update initiated.' };
+                return { message => $materialized_view.' update initiated.', connection => $async_refresh  };
             }
         } catch {
             print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";

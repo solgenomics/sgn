@@ -83,6 +83,32 @@ sub genotyping_protocol_search_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
+sub genotyping_protocol_number : Path('/ajax/genotyping_protocol/num_markers') : ActionClass('REST') { }
+
+sub genotyping_protocol_number_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @protocol_list = $c->req->param('protocol_ids') ? split ',', $c->req->param('protocol_ids') : ();
+    my @accession_list = $c->req->param('accession_ids') ? split ',', $c->req->param('accession_ids') : ();
+
+    my $protocol_search_result;
+    if (@protocol_list) {
+        $protocol_search_result = CXGN::Genotype::Protocol::list_simple($bcs_schema, \@protocol_list);
+    }
+
+    my @result;
+    my $num_markers;
+    foreach (@$protocol_search_result){
+        $num_markers = $_->{marker_count};
+        push @result,[$num_markers];
+	#print STDERR "PROTOCOL number of markers $num_markers\n";
+    }
+
+    $c->stash->{rest} = { data => $num_markers };
+
+}
+
 sub genotyping_protocol_markers_search : Path('/ajax/genotyping_protocol/markers_search') : ActionClass('REST') { }
 
 sub genotyping_protocol_markers_search_GET : Args(0) {
@@ -97,6 +123,12 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
     my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
     my @result;
 
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $bcs_schema,
+        nd_protocol_id => $protocol_id
+    });
+    my $marker_info_keys = $protocol->marker_info_keys;
+
     my $marker_search = CXGN::Genotype::MarkersSearch->new({
         bcs_schema => $bcs_schema,
         protocol_id_list => [$protocol_id],
@@ -109,17 +141,25 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
     my ($search_result, $total_count) = $marker_search->search();
 
     foreach (@$search_result) {
-        push @result, [
-            $_->{marker_name},
-            $_->{chrom},
-            $_->{pos},
-            $_->{alt},
-            $_->{ref},
-            $_->{qual},
-            $_->{filter},
-            $_->{info},
-            $_->{format}
-        ];
+        if (defined $marker_info_keys) {
+            my @each_row = ();
+            foreach my $info_key (@$marker_info_keys) {
+                push @each_row, $_->{$info_key};
+            }
+            push @result, [@each_row];
+        } else {
+            push @result, [
+                $_->{marker_name},
+                $_->{chrom},
+                $_->{pos},
+                $_->{alt},
+                $_->{ref},
+                $_->{qual},
+                $_->{filter},
+                $_->{info},
+                $_->{format}
+            ];
+        }
     }
 
     $c->stash->{rest} = { data => \@result, recordsTotal => $total_count, recordsFiltered => $total_count };
@@ -156,8 +196,9 @@ sub genotyping_protocol_pcr_markers_GET : Args(0) {
         my $linkage_group = $marker_details{$marker_name}{'linkage_group'};
         push @results, [$marker_name, $product_sizes, $forward_primer, $reverse_primer, $annealing_temperature, $sequence_motif, $sequence_source, $linkage_group];
     }
-    print STDERR "MARKER INFO =".Dumper(\@results)."\n";
+
     $c->stash->{rest} = {data => \@results};
+    
 }
 
 

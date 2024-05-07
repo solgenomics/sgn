@@ -6,11 +6,33 @@ $trial_id => undef
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
 
 <& '/util/import_javascript.mas', 
- classes => ['jquery','d3.d3v4Min', 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap']
+ classes => ['jquery', 'd3.d3v4Min', 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap']
 &>
 
 
 <& '/page/page_title.mas', title => "Fieldmap app" &>
+
+<&| /page/info_section.mas, title=>'Instructions', subtitle=>'Steps for saving plot boundaries', collapsible=>1, collapsed=>1 &>
+
+    <div class="well well-sm">
+        <p>This tool can be used to add the geo coordinates of individual plot boundaries to plots in a trial.</p>
+        <p><strong>To create and save the plot boundaries:</strong></p>
+        <ol>
+            <li>Move and zoom the map to the location of the trial</li>
+            <li>Use the <img src="data:image/png;base64,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" /> or <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAsCAYAAAATmipGAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAAtdEVYdENyZWF0aW9uIFRpbWUARnJpIDA4IE1hciAyMDI0IDAzOjQwOjQ5IFBNIEVTVA21fEgAAAUBSURBVFiFzZk7qyRFFMd/51TN3Mfeva5whVUMNxPEZENNBFnBwMRABA3EwI9gJvgdjEQUESNBQVgMXEGQTQwMBREMBF0Q2WW83nl01TGorprqnp7r3NWd8UDPo6vr1L//p86jT8sH77xhBpgZZgbtd4wx/a/EqrE8Xl8jIohIOW9m5Vz/GNI7tF4WXy+YB9YB7U8eOtcH3r+JIaDr9NXX+aZpOkD7xzrl/7TYELhNgebxbB0AH5qAWWIv9kDmi1X13IVqhUOLDc3N35mMvqhq+W1m2fQRi0ugs/mcu5MzposGAUQVpwq9xeqtch4r5fdysHtxO39/b8Tx0QH74xHOOUSEGGNiFDMsLh1pPl9w548JMRpIdef1Qj0m122LFYBDIPM5M6azBWezBY8+coVD74s1zQxfKwSYnM0RhKefe4HnX3qdg6PjVcUPQM5OJ3z12YfcvnWTe5MzDvf3OuPa99LZvEFVtwoS4ODSZZ598bUEejbvhEIzw6+Egtbc2wRZgzVAWoDAco929p6kjw0izwOTvqPm34lRlcKkqKw4zTbFe4+ZFSeChMtnVJsG4wcua+Kx7wfzXUvTNMBqGtUhkEMBfFsSYiyJp8ai/yeQ6yTGiB8CuUuwQ+m5E0frk/0NvU1REXJ9XJegfoW9HZu+BtkBmiP/MjPt1vNDCGBGXScDidGVaucCYBc/vM933/7IejsoB0++yVPXH98okdRsxhhLROoAhW7BuoFaFj9/w/Ta21x/YjR8xa/vcfv7O9iGQDOj2ewF6FAlfjFx+OPHODoZDwOdHnORW8+SsagqqtrNTJnNXe5S5xxmVir8jKsD9P5A3uWXT17ly5vDvNnZT5xee2ZjbRnYaDQq/0UE75y7MLRKLYc3PuXlG/9CRU+ccwgUoNnztZ+ZDM7x4C1JDvrV4fvP8Tmu7kpyQTJvFuWciKx2SmKMO3WmbE1rHz1EBNYB3aXtnSoGON/z+mzqTodkl9WTKiLgnYOqS7MCNHXzdoaz7ciAtnG0AM0ga9llXaJtuFRR6ue5TqckPYXeT8L778R5h8WU46Mla4cQuhV+oXpXKBMKEMPodhV9vyWYc+z0dML+pctbhTj9608isbRB60NzdZKPSwd7iAi3Pv+I6elkiyAnfP3Fx4QmMB75le63vPvWK1YzOm8Cv/1+r6Qx2sfXaAY55lYLqAioorVlVBFXFTuVU2RJEQZiZq9tfRrG1ZMrHO6lsjEX0CvV097Ic/XkIe5OzlJXjSr+9yqsnDWkD7JqD1HNLXpycjHDYmoiB4vsjz3HR/t41zYdKsf2NcgsY+84efhoeecMhbDh1jeAqGBOU0+LbumYiLSKxVgAx5xsKgKccykzndfmtqrjXJgiK2GtRCMxZd2bWtFPAiWAOIe0Y06WPlMYzZP773lM++YUVLTt9i33XZlbtWIMI5UMq69hakusFO15PUAtkVKaZCkUpPtbPjEr4l36rnqmS4V1b18wIoHEYggh6VNFVFGVZPxCRkzzXeuAWGJUBFVKHC/vFTKjTdO0FwnSUu6cYzQaI22Psjy+huVLshLSJJmaGAmLhvl8Dgje7+FHjrEfISqE0BBCQxMCYCighZzWZVXx47RusEjIhbwZvt23nViaN7CqprKv9Vip91j2WCDEwGK+YD6bMZ1OiRFGLhLGBhGcU2IMxBiwEBAVFMGLIlUWUiJKRBBCCz4RZfwNm4qZSrAzroUAAAAASUVORK5CYII=" /> buttons to draw a polygon on the map outlining the entire trial</li>
+            <li>If necessary, reshape or move the polygon by clicking and dragging the white boxes along the edge of the polygon</li>
+            <li>Click the <strong>Load plots</strong> button to load the individual plots into the trial polygon</li>
+            <li>You can check the orientation of the trial by hovering over one of the plots and checking the plot number displayed in the bottom left corner of the map</li>
+            <li>If necessary, make any final rotations or adjustments to the trial polygon.</li>
+            <li><strong>Save the plot coordinates by clicking the "Save Geo coordinates" button</strong></li>
+        </ol>
+
+        <&| /page/info_section.mas, title=>'Demonstration', collapsible=>1, collapsed=>1 &>
+            <img src="https://raw.githubusercontent.com/solgenomics/brapi-fieldmap/704a1f55cdafc3ad1a17f403cbf4ba2654fcdc70/images/preview.gif" />
+        </&>
+    </div>
+
+</&>
 
 <div class="row">
   <center class = "col-md-offset-2 col-md-8">
@@ -21,10 +43,10 @@ $trial_id => undef
   </center>
 </div>
 <br>
-<form id="formOptions" class="form-inline" style="padding:10px;">
-    <a class="btn btn-default" onclick="load()">Load plots</a>
-    <a class="btn btn-default" onclick="update()">Save Geo coordinates</a>
-</form>
+<div id="formOptions" class="form-inline" style="padding:10px;">
+    <button id="btn-load-plots" class="btn btn-default" onclick="load()">Load plots</button>
+    <button id="btn-save-geo-coordinates" class="btn btn-default" onclick="update()">Save Geo coordinates</button>
+</div>
 
 
 <div id="map" style="width: 780px; height: 600px"></div>
@@ -45,15 +67,15 @@ $trial_id => undef
  
     var brapi_endpoint = "/brapi/v2";
     var auth_token;
-    var require_login = "<%  $c->get_conf('brapi_require_login') %>";
-    if (require_login === '1'){
-        auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-        if (!auth_token){
-            alert("Login required to display field map");
-        }
-    }
 
-    function setupBrAPI() {
+    function setupBrAPI(update=false) {
+        var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+        if (require_login === '1' || update){
+            auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+            if (!auth_token){
+                alert("Login required to display and/or update field map");
+            }
+        }
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
         fieldMap.opts.brapi_auth = auth_token;
@@ -65,10 +87,16 @@ $trial_id => undef
         setupBrAPI();
 
         if (studyDbId){
+            jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", true);
+            jQuery("#btn-load-plots").html("Loading...");
             fieldMap.load(studyDbId)
                 .then((value)=>{
                   if (!value) return setLocation(studyDbId); 
                   else { jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }
+                })
+                .finally(() => {
+                    jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", false);
+                    jQuery("#btn-load-plots").html("Load plots");
                 }); 
             document.getElementById("formOptions").style.display="block";
         } else alert("Invalid trial!");
@@ -80,8 +108,15 @@ $trial_id => undef
     }
     
     function update() {
-        setupBrAPI();
-        fieldMap.update().then((resp)=>alert(resp), (resp)=>alert(resp));
+        setupBrAPI(true);
+        jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", true);
+        jQuery("#btn-save-geo-coordinates").html("Saving...");
+        fieldMap.update()
+            .then((resp)=>alert(resp), (resp)=>alert(resp))
+            .finally(() => {
+                jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", false);
+                jQuery("#btn-save-geo-coordinates").html("Save Geo coordinates");
+            });
     }
 
     var fieldMap = new BrAPIFieldmap("#map",brapi_endpoint);

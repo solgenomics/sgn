@@ -1,14 +1,23 @@
-
 <%args>
+
 $role => "stock_orderer"
-$check_vendor_role
+$check_vendor_role => undef
+$tracking_order_activity => undef
+$user_id
+
 </%args>
+
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
 
-<&| /page/page_title.mas, title => "Your Orders" &>
+% if ($check_vendor_role == 1) {
+    <&| /page/page_title.mas, title => "Manage Orders for Vendor" &>
+    </&>
+% } else {
+    <&| /page/page_title.mas, title => "Your Orders" &>
+    </&>
+%}
 
-</&>
 <td>
     <a href="/catalog/view"><p>Go to Catalog Page</p></a>
 </td>
@@ -28,7 +37,7 @@ $check_vendor_role
         </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Completed Orders', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => 'Completed Orders', collapsible=>1, collapsed=>1 &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
@@ -56,7 +65,7 @@ $check_vendor_role
                                     <th>Order Details</th>
                                     <th>Status</th>
                                     <th>Send Order to</th>
-                                    <th>Comments from Vendor</th>
+                                    <th>Comments</th>
                                 </tr>
                             </thead>
                         </table>
@@ -80,7 +89,7 @@ $check_vendor_role
                                     <th>Status</th>
                                     <th>Completed Date</th>
                                     <th>Processed by</th>
-                                    <th>Comments from Vendor</th>
+                                    <th>Comments</th>
                                 </tr>
                             </thead>
                         </table>
@@ -134,6 +143,67 @@ $check_vendor_role
     </div>
 </div>
 
+<div class="modal fade" id="re_open_order_dialog" name="re_open_order_dialog" tabindex="-1" role="dialog" aria-labelledby="reOpenOrderDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOpenOrderDialog">Re-Open Order</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="re_open_order_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="re_open_order_button" type="button" class="btn btn-primary" >Re-Open</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+% if (($check_vendor_role == 1) && $tracking_order_activity) {
+    <&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <!--
+                    <button id="download_active_item_file_button" class="btn btn-primary">Download Item File</button>
+                    <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
+                    -->
+                    <button id="generate_active_item_barcode_button" class="btn btn-primary">Generate Item Barcodes</button>
+                    <a href="/activity/record" class="btn btn-default">Go to Record Page</a>
+                </div>
+                <div class = "panel-body">
+
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="order_progress_table">
+                        <thead>
+                            <tr>
+                                <th>Order Number</th>
+                                <th>Order Details</th>
+                                <th>Tracking ID</th>
+                                <th>Material</th>
+% my $activity_types = $c->config->{tracking_activities_header};
+% my @column_header = split ',',$activity_types;
+% foreach my $column_header(@column_header){
+                                <th><%$column_header%></th>
+%}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </&>
+% }
+
+<& /order/create_item_file_dialog.mas&>
+<& /order/create_ontology_file_dialog.mas &>
+<& /order/generate_identifier_barcode_dialog.mas, identifier => "", user_id => $user_id &>
 
 <script>
 
@@ -174,6 +244,7 @@ $(window).ready( function() {
             { title: "Status", "data": "order_status" },
             { title: "Completion Date", "data": "completion_date" },
             { title: "Comments", "data": "contact_person_comments" },
+            { title: "Update", "data": "null", "render": function ( data, type, row ) { return "<a onclick='reOpenOrder(\""+row.order_id+"\", \""+row.order_from_name+"\")' >Re-Open</a>"; } },
         ]
     });
 
@@ -188,6 +259,8 @@ $(window).ready( function() {
 
         jQuery.ajax({
             url: '/ajax/order/update',
+            dataType: "json",
+            type: 'POST',
             data : {
                 'order_id' : order_id,
                 'new_status': new_order_status,
@@ -217,6 +290,48 @@ $(window).ready( function() {
         location.reload();
     });
 
+    jQuery('#re_open_order_button').click( function() {
+        var order_id = jQuery('#re_open_order_id').val();
+        var re_open_status = jQuery('#re_open_status').val();
+        var re_open_comments = jQuery('#re_open_comments').val();
+        if (!re_open_comments) {
+            alert ("Please add comments for re-opening the order");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/order/update',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'order_id' : order_id,
+                'new_status': re_open_status,
+                'contact_person_comments': re_open_comments
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#update_saved_dialog').modal('show');
+                    jQuery('#re_open_order_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating the order');
+            }
+        });
+    });
+
+    jQuery('#order_progress_table').DataTable({
+        'autoWidth': false,
+        'ajax': '/ajax/order/progress',
+    });
 
 });
 
@@ -236,5 +351,19 @@ function updateOrder(order_id, order_from_name){
     jQuery('#update_order_dialog').modal('show');
 
 }
+
+function reOpenOrder(order_id, order_from_name){
+    var re_open = "re-opened"
+    var html = '';
+    html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="re_open_order_id" name="re_open_order_id" value="'+order_id+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Ordered by: </label><div class="col-sm-9" ><input class="form-control" id="re_open_ordered_by" name="re_open_ordered_by" value="'+order_from_name+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><input class="form-control" id="re_open_status" name="re_open_status" value="'+re_open+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="re_open_comments" placeholder="Required"></div></div></form>'
+
+    jQuery('#re_open_order_div').html(html);
+    jQuery('#re_open_order_dialog').modal('show');
+
+}
+
 
 </script>

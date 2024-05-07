@@ -134,6 +134,8 @@ sub observations_store {
         has_timestamps=>1,
         metadata_hash=>\%phenotype_metadata,
         #image_zipfile_path=>$image_zip,
+        composable_validation_check_name=>$params->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
 
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();

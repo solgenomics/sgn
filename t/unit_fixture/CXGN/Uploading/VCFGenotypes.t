@@ -30,10 +30,10 @@ my $mech = Test::WWW::Mechanize->new;
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
-print STDERR $sgn_session_id."\n";
+#print STDERR $sgn_session_id."\n";
 
 my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
 my $location_id = $location_rs->first->nd_geolocation_id;
@@ -68,12 +68,12 @@ $response = $ua->post(
         ]
     );
 
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
 
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'missing_stocks' => ['KBH2014_076','KBH2014_1155','KBH2014_124','KBH2014_1241','KBH2014_1463','KBH2014_286','KBH2014_740','KBH2014_968','KBH2015_080','KBH2015_383','KBH2015_BULK','SRLI1_26','SRLI1_52','SRLI1_66','SRLI1_78','SRLI1_90','SRLI2_33','SRLI2_70','UKG1502_022','UKG1503_004','UKG15OP07_038'],'error_string' => 'The following stocks are not in the database: KBH2014_076,KBH2014_1155,KBH2014_124,KBH2014_1241,KBH2014_1463,KBH2014_286,KBH2014_740,KBH2014_968,KBH2015_080,KBH2015_383,KBH2015_BULK,SRLI1_26,SRLI1_52,SRLI1_66,SRLI1_78,SRLI1_90,SRLI2_33,SRLI2_70,UKG1502_022,UKG1503_004,UKG15OP07_038<br>'});
 
 #test upload with file where sample names are added as accessions automatically
@@ -102,14 +102,45 @@ $response = $ua->post(
 #print STDERR Dumper $response;
 ok($response->is_success);
 $message = $response->decoded_content;
-print STDERR "MESSAGE: ".$message;
+#print STDERR "MESSAGE: ".$message;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
 
 my $protocol_id = $message_hash->{nd_protocol_id};
+my $project_id = $message_hash->{project_id};
+
+
+# Test download of archived vcf file of uploaded project
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/has_archived_vcf?genotyping_project_id=$project_id");
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+is($message_hash->{$project_id}->[0]->{exists}, 'true');
+is($message_hash->{$project_id}->[0]->{genotyping_project_id}, $project_id);
+
+my $vcf_basename = $message_hash->{$project_id}->[0]->{basename};
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&basename=$vcf_basename");
+ok($response->is_success);
+$message = $response->decoded_content;
+my @lines = split "\n", $message;
+my $first_lines = join "\n", @lines[0 .. 12];
+is($first_lines, '##fileformat=VCFv4.0
+##Tassel=<ID=GenotypeTable,Version=5,Description="Reference allele is not known. The major allele was used as reference allele">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the reference and alternate alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth (only filtered reads used for calling)">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=3,Type=Float,Description="Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic">
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency">
+##FORMAT=<ID=DS,Number=1,Type=Float,Description="estimated ALT dose [P(RA) + P(AA)]">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SRLI1_90:CARK7ANXX:7:529022	SRLI1_66:CARK7ANXX:7:528998	SRLI1_52:CARK7ANXX:7:528984	KBH2015_383:CA8RLANXX:7:526263	KBH2015_BULK:CA8RLANXX:7:526284	KBH2014_076:CA93YANXX:4:525971	SRLI2_33:CAAC5ANXX:8:526949	SRLI1_78:CARK7ANXX:7:529010	KBH2014_1241:CA8RLANXX:5:526107	KBH2014_968:CA8RLANXX:6:526205	KBH2014_1155:CA8RLANXX:5:526114	UKG1503_004:CAAC5ANXX:6:526683	KBH2014_740:CA8RLANXX:6:526202	KBH2015_080:CA8RLANXX:7:526297	KBH2014_1463:CA8RLANXX:5:526133	UKG1502_022:CAAC5ANXX:6:526702	KBH2014_124:CA93YANXX:4:526028	SRLI2_70:CAAC5ANXX:8:526986	SRLI1_26:CARK7ANXX:7:528958	UKG15OP07_038:CAAC5ANXX:6:526685	KBH2014_286:CA8RLANXX:5:526090
+1	21594	S1_21594	G	A	.	PASS	AR2=0.29;DR2=0.342;AF=0.375	GT:AD:DP:GQ:DS:PL	./.:0,0:0:.:0.897:.	./.:0,0:0:.:0.481:.	./.:0,0:0:.:0.901:.	./.:0,0:0:.:0.475:.	./.:0,0:0:.:0.913:.	./.:0,0:0:.:0.889:.	./.:0,0:0:.:0.892:.	./.:0,0:0:.:0.928:.	./.:0,0:0:.:0.048:.	0/0:1,0:1:66:0.305:0,3,36	0/0:1,0:1:66:0.484:0,3,36	./.:0,0:0:.:1.104:.	./.:0,0:0:.:0.692:.	0/0:1,0:1:66:0.032:0,3,36	0/0:2,0:2:79:0.019:0,6,72	./.:0,0:0:.:0.679:.	./.:0,0:0:.:0.891:.	0/0:1,0:1:66:0.286:0,3,36	./.:0,0:0:.:0.559:.	./.:0,0:0:.:0.466:.	./.:0,0:0:.:0.985:.');
+
 
 #adding genotype data using same protocol as before to different project
 $ua = LWP::UserAgent->new;
@@ -135,8 +166,8 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
-is_deeply($message_hash, {'previous_genotypes_exist' => 1,'warning' => 'SRLI1_90 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., SRLI1_66 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., SRLI1_52 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2015_383 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2015_BULK in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_076 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., SRLI2_33 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., SRLI1_78 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_1241 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_968 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_1155 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., UKG1503_004 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_740 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2015_080 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_1463 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., UKG1502_022 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_124 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., SRLI2_70 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., SRLI1_26 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., UKG15OP07_038 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project., KBH2014_286 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.'} );
+#print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'previous_genotypes_exist' => 1,'warning' => 'SRLI1_90 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_66 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_52 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2015_383 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2015_BULK in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_076 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI2_33 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_78 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_1241 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_968 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_1155 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>UKG1503_004 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_740 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2015_080 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_1463 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>UKG1502_022 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_124 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI2_70 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>SRLI1_26 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>UKG15OP07_038 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>KBH2014_286 in your file has already has genotype stored using the protocol Cassava GBS v7 2018 in the project Test genotype project.<br>'} );
 
 #adding genotype data using same protocol as before to different project
 $ua = LWP::UserAgent->new;
@@ -163,7 +194,7 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 is($protocol_id, $message_hash->{nd_protocol_id});
 my $project_id = $message_hash->{project_id};
@@ -190,9 +221,7 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
-is($message_hash->{success}, 1);
-is($project_id, $message_hash->{project_id});
+is($message_hash->{'error'}, 'The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol');
 
 #adding genotype data using same project to same protocol
 $ua = LWP::UserAgent->new;
@@ -215,7 +244,6 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 is($project_id, $message_hash->{project_id});
 is($protocol_id, $message_hash->{nd_protocol_id});
@@ -228,9 +256,9 @@ my $genotypes_search = CXGN::Genotype::Search->new({
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
 is($total_count, 63);
-print STDERR Dumper "VCF GENOTYPE SEARCH";
-print STDERR Dumper $data->[0];
-print STDERR Dumper $data->[0]->{germplasmName};
+#print STDERR Dumper "VCF GENOTYPE SEARCH";
+#print STDERR Dumper $data->[0];
+#print STDERR Dumper $data->[0]->{germplasmName};
 my $accession_name_1 = $data->[0]->{germplasmName};
 my $accession_name_2 = $data->[3]->{germplasmName};
 #print STDERR "SELECTED GENOTYPE HASH =".Dumper($data->[0]->{selected_genotype_hash})."\n";
@@ -240,14 +268,14 @@ is_deeply($data->[0]->{selected_protocol_hash}->{markers_array}, [{'format' => '
 
 $mech->get_ok('http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id='.$protocol_id.'&marker_names=S1_27861,S1_75644');
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 is_deeply($response, {'recordsFiltered' => 18,'recordsTotal' => 18,'data' => [['S1_27861','1','27861','T','C','.','PASS','AR2=0.876;DR2=0.897;AF=0.003','GT:AD:DP:GQ:DS:PL'],['S1_75644','1','75644','T','C','.','PASS','AR2=0.816;DR2=0.834;AF=0.023','GT:AD:DP:GQ:DS:PL']]});
 
 my $stock_id = $schema->resultset("Stock::Stock")->find({uniquename => 'SRLI1_90'})->stock_id();
 $mech->get_ok('http://localhost:3010/stock/'.$stock_id.'/datatables/genotype_data');
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
-is(scalar(@{$response->{data}}), 4);
+#print STDERR Dumper $response;
+is(scalar(@{$response->{data}}), 3);
 
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";
@@ -277,7 +305,7 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
@@ -320,10 +348,41 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
+
+my $intertek_project_id = $message_hash->{project_id};
+my $intertek_protocol_id = $message_hash->{nd_protocol_id};
+
+#test upload genotyping data using previously stored protocol but having mismatched markers
+my $snp_info_file_2 = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_info_2.csv";
+my $ua = LWP::UserAgent->new;
+
+$response = $ua->post(
+    'http://localhost:3010/ajax/genotype/upload',
+    Content_Type => 'form-data',
+    Content => [
+        upload_genotype_intertek_file_input => [ $file, 'genotype_intertek_grid_data_upload' ],
+        upload_genotype_intertek_snp_file_input => [ $snp_info_file_2, 'genotype_intertek_snp_info_data_upload' ],
+        "sgn_session_id"=>$sgn_session_id,
+        "upload_genotype_project_id"=>$intertek_project_id,
+        "upload_genotype_protocol_id"=>$intertek_protocol_id,
+        "upload_genotypes_species_name_input"=>"Manihot esculenta",
+        "upload_genotype_location_select"=>$location_id,
+        "upload_genotype_vcf_observation_type"=>"accession",
+        "upload_genotype_vcf_include_igd_numbers"=>1,
+        "upload_genotype_add_new_accessions"=>0,
+        "upload_genotype_accept_warnings"=>0
+    ]
+);
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+my $error_string = $message_hash->{'error_string'};
+is($error_string, 'Marker S12_792613200 in the marker info file is not found in the selected protocol.<br>Marker S12_7926132 in the SNP grid file is not found in the marker info file.<br>');
+
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/testset_GT-AD-DP-GQ-DS-PL.h5";
 
@@ -361,10 +420,10 @@ $response = $ua->post(
 
 $message = $response->decoded_content;
 
-print STDERR "ANOTHER MESSAGE: ".Dumper($message);
+#print STDERR "ANOTHER MESSAGE: ".Dumper($message);
 
 my $message_hash_tassel = decode_json $message;
-print STDERR Dumper $message_hash_tassel;
+#print STDERR Dumper $message_hash_tassel;
 is($message_hash_tassel->{success}, 1);
 ok($message_hash_tassel->{project_id});
 ok($message_hash_tassel->{nd_protocol_id});
@@ -376,8 +435,8 @@ my $genotypes_search = CXGN::Genotype::Search->new({
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
 is($total_count, 21);
-print STDERR Dumper $data->[0];
-print STDERR Dumper $data->[0]->{germplasmName};
+#print STDERR Dumper $data->[0];
+#print STDERR Dumper $data->[0]->{germplasmName};
 is_deeply($data->[0]->{selected_genotype_hash}, {'S1_27874' => {'GQ' => undef,'DS' => 'NA','PL' => undef,'NT' => '','GT' => './.','AD' => '0','DP' => '0'},'S1_84628' => {'DS' => 'NA','PL' => undef,'NT' => '','GQ' => undef,'AD' => '0','DP' => '0','GT' => './.'},'S1_27720' => {'GT' => '0/0','AD' => '1','DP' => '1','GQ' => '66','DS' => '2','NT' => 'C,C','PL' => '0'},'S1_26646' => {'AD' => '4,0','DP' => '4','GT' => '0/0','DS' => '2','NT' => 'A,A','PL' => '0,12,144','GQ' => '94'},'S1_27746' => {'GT' => '0/0','DP' => '8','AD' => '8','GQ' => '99','NT' => 'A,A','PL' => '0','DS' => '2'},'S1_75644' => {'GQ' => undef,'DS' => 'NA','NT' => '','PL' => undef,'GT' => './.','AD' => '0','DP' => '0'},'S1_75629' => {'PL' => undef,'NT' => '','DS' => 'NA','GQ' => undef,'DP' => '0','AD' => '0','GT' => './.'},'S1_27724' => {'GQ' => '88','DS' => '2','PL' => '0','NT' => 'T,T','GT' => '0/0','AD' => '3','DP' => '3'},'S1_26576' => {'DP' => '4','AD' => '4,0','GT' => '0/0','NT' => 'A,A','PL' => '0,12,144','DS' => '2','GQ' => '94'},'S1_27739' => {'AD' => '3','DP' => '3','GT' => '0/0','DS' => '2','PL' => '0','NT' => 'A,A','GQ' => '88'},'S1_26674' => {'AD' => '1','DP' => '1','GT' => '0/0','DS' => '2','NT' => 'A,A','PL' => '0','GQ' => '66'},'S1_26659' => {'AD' => '4,0','DP' => '4','GT' => '0/0','DS' => '2','PL' => '0,12,144','NT' => 'C,C','GQ' => '94'},'S1_21597' => {'GQ' => '98','NT' => 'G,G','PL' => '0','DS' => '2','GT' => '0/0','DP' => '6','AD' => '6'},'S1_27861' => {'GT' => '0/0','AD' => '8','DP' => '8','GQ' => '99','DS' => '2','PL' => '0','NT' => 'C,C'},'S1_75465' => {'PL' => undef,'NT' => '','DS' => 'NA','GQ' => undef,'DP' => '0','AD' => '0','GT' => './.'},'S1_26662' => {'PL' => '0','NT' => 'C,C','DS' => '2','GQ' => '94','DP' => '4','AD' => '4','GT' => '0/0'},'S1_21594' => {'DP' => '0','AD' => '0','GT' => './.','PL' => undef,'NT' => '','DS' => 'NA','GQ' => undef},'S1_26624' => {'DS' => '2','PL' => '0','NT' => 'T,T','GQ' => '94','AD' => '4','DP' => '4','GT' => '0/0'}});
 
 
@@ -388,8 +447,8 @@ my $genotypes_search = CXGN::Genotype::Search->new({
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
 is($total_count, 17);
-print STDERR Dumper $data->[0];
-print STDERR Dumper $data->[0]->{germplasmName};
+#print STDERR Dumper $data->[0];
+#print STDERR Dumper $data->[0]->{germplasmName};
 is_deeply($data->[0]->{selected_genotype_hash}, {'S1_2142358' => {'DP' => undef,'DS' => '2','GQ' => undef,'PL' => undef,'AD' => undef,'GT' => '0/0','NT' => 'C,C'},'S12_7926132' => {'PL' => undef,'GQ' => undef,'DS' => '1','DP' => undef,'AD' => undef,'NT' => 'T,G','GT' => '0/1'},'S14_4626854' => {'PL' => undef,'DP' => undef,'DS' => '0','GQ' => undef,'AD' => undef,'NT' => 'G,G','GT' => '1/1'},'S1_24197219' => {'DS' => '0','DP' => undef,'GQ' => undef,'PL' => undef,'AD' => undef,'GT' => '1/1','NT' => 'C,C'},'S1_24155522' => {'PL' => undef,'DS' => '0','GQ' => undef,'DP' => undef,'AD' => undef,'NT' => 'C,C','GT' => '1/1'}});
 
 my $vcf_response_string_expected = '##INFO=<ID=VCFDownload, Description=\'VCFv4.2 FILE GENERATED BY BREEDBASE AT 2020-02-28_19:35:42\'>
@@ -432,12 +491,12 @@ my $accession_id2 = $schema->resultset("Stock::Stock")->find({uniquename=>$acces
 my $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $vcf_response_string_expected;
 my @vcf_response = split "\n", $message;
 my $header_ts = shift @vcf_response_expected;
 my $header_ts = shift @vcf_response;
-print STDERR Dumper \@vcf_response;
+#print STDERR Dumper \@vcf_response;
 is_deeply(\@vcf_response, \@vcf_response_expected);
 
 my $dosage_matrix_string = 'Marker	KBH2014_076	KBH2014_1155
@@ -464,9 +523,13 @@ S1_84628	0	0
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=0");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 is($message, $dosage_matrix_string);
 
+#testing genotype data download from project page
+my $project_response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?genotyping_project_id=$project_id&download_format=VCF&format=accession_ids&forbid_cache=1");
+my $project_message = $project_response->decoded_content;
+is($project_message, $dosage_matrix_string);
 
 #Testing genotype search with marker names filter from marker set list object
 my $marker_names_filtered = ["S1_21594", "S1_21597", "S1_75465"];
@@ -507,18 +570,18 @@ my $vcf_response_string_expected = '##INFO=<ID=VCFDownload, Description=\'VCFv4.
 my $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0&marker_set_list_id=$new_marker_set_list_id");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $vcf_response_string_expected;
 my @vcf_response = split "\n", $message;
 my $header_ts = shift @vcf_response_expected;
 my $header_ts = shift @vcf_response;
-print STDERR Dumper \@vcf_response;
+#print STDERR Dumper \@vcf_response;
 is_deeply(\@vcf_response, \@vcf_response_expected);
 
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=0&marker_set_list_id=$new_marker_set_list_id");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 is($message, $dosage_matrix_string_filtered);
 
 
@@ -603,7 +666,7 @@ my $computed_from_parents_vcf_string_marker_set_expected = '##INFO=<ID=VCFDownlo
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=true");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $computed_from_parents_vcf_string_expected;
 my @vcf_response = split "\n", $message;
 my $header_ts = shift @vcf_response_expected;
@@ -613,7 +676,7 @@ is_deeply(\@vcf_response, \@vcf_response_expected);
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=true&marker_set_list_id=$new_marker_set_list_id");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $computed_from_parents_vcf_string_marker_set_expected;
 my @vcf_response = split "\n", $message;
 my $header_ts = shift @vcf_response_expected;
@@ -650,13 +713,13 @@ S1_75465	1
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=true");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_string);
 
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=true&marker_set_list_id=$new_marker_set_list_id");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_marker_set_string);
 
 ## CHECK WIZARD SEARCH GRM
@@ -664,7 +727,7 @@ is($message, $computed_from_parents_dosage_matrix_marker_set_string);
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=matrix&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 my @grm1_split = split "\n", $message;
 my @grm1_vals;
 my $header1 = shift @grm1_split;
@@ -677,7 +740,7 @@ is_deeply(\@grm1_vals, [1.63636363636364,-1.63636363636364,-1.63636363636364,1.6
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=three_column&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 my @grm2_split = split "\n", $message;
 my @grm2_vals;
 foreach (@grm2_split) {
@@ -689,7 +752,7 @@ is_deeply(\@grm2_vals, [1.63636363636364,-1.63636363636364,1.63636363636364]);
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=three_column&minor_allele_frequency=0.001&marker_filter=1&individuals_filter=1");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+#print STDERR Dumper $message;
 my @grm3_split = split "\n", $message;
 my @grm3_vals;
 foreach (@grm3_split) {
@@ -732,14 +795,14 @@ is($after_deleting_genotyping_project, $before_deleting_genotyping_project);
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $access_token = $response->{access_token};
 
 $ua = LWP::UserAgent->new;
 $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$protocol_id?sgn_session_id=$access_token");
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 is_deeply($response, {success=>1});
 
 #test deleting empty genotyping project

@@ -295,6 +295,7 @@ $user_id => undef
       	      <div class="col-sm-10">
                   <select class="form-control" id="location_type" name="location_type">
                       <option value=""></option>
+                      <option value="Town">Town</option>
                       <option value="Farm">Farm</option>
                       <option value="Field">Field</option>
                       <option value="Greenhouse">Greenhouse</option>
@@ -324,7 +325,7 @@ $user_id => undef
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-6 control-label">Nearest NOAA Weather Station ID: (<a href="https://www.ncdc.noaa.gov/cdo-web/datatools/findstation" target="_blank">Search Here</a>)</label>
+            <label class="col-sm-6 control-label"><i>Optional:</i> Nearest NOAA Weather Station ID (<a href="https://www.ncdc.noaa.gov/cdo-web/datatools/findstation" target="_blank">Search Here</a>)</label>
             <div class="col-sm-6">
                 <input class="form-control" name="location_noaa_station_id" id="location_noaa_station_id" type="text" placeholder="e.g. GHCND:USC00300331"/>
             </div>
@@ -383,6 +384,12 @@ jQuery(document).ready(function() {
         //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
         if (name == '') { alert('A location name is required.');  return; }
+        if (abbreviation == '') { alert('A location abbreviation is required.');  return; }
+        if ($('#location_country').val() == '') { alert('A location country is required.');  return; }
+        if (type == '') { alert('A location type is required.');  return; }
+        if (latitude == '') { alert('A location latitude is required.');  return; }
+        if (longitude == '') { alert('A location longitude is required.');  return; }
+        if (altitude == '') { alert('A location altitude is required.');  return; }
 
         $.ajax({
             type: 'POST',
@@ -560,6 +567,15 @@ function style(feature) {
     //console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
 
     var label = feature.properties.Abbreviation || feature.properties.Id;
+
+    var townMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        markerColor: 'purple',
+        shape: 'circle',
+        prefix: ''
+    });
+
     var farmMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
@@ -633,6 +649,7 @@ function style(feature) {
     });
 
     switch (feature.properties.Type) {
+        case 'Town':   return { icon: townMarker };
         case 'Farm':   return { icon: farmMarker };
         case 'Field': return { icon: fieldMarker };
         case 'Greenhouse':   return { icon: greenhouseMarker };

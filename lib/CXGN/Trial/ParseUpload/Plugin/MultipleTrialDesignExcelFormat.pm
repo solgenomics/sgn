@@ -94,6 +94,7 @@ sub _validate_with_plugin {
   my $breeding_program;
   my $location;
   my $year;
+  my $transplanting_date;
   my $design_type;
   my $description;
   my $trial_type;
@@ -148,49 +149,55 @@ sub _validate_with_plugin {
       }
 
       if ($worksheet->get_cell($row,4)) {
-        $design_type = $worksheet->get_cell($row,4)->value();
+        $transplanting_date = $worksheet->get_cell($row,4)->value();
+      } else {
+        $transplanting_date = undef;
+      }
+
+      if ($worksheet->get_cell($row,5)) {
+        $design_type = $worksheet->get_cell($row,5)->value();
       } else {
         $design_type = undef;
       }
 
-      if ($worksheet->get_cell($row,5)) {
-        $description = $worksheet->get_cell($row,5)->value();
+      if ($worksheet->get_cell($row,6)) {
+        $description = $worksheet->get_cell($row,6)->value();
       } else {
         $description = undef;
       }
 
-      if ($worksheet->get_cell($row,6)) {
-        $trial_type = $worksheet->get_cell($row,6)->value();
+      if ($worksheet->get_cell($row,7)) {
+        $trial_type = $worksheet->get_cell($row,7)->value();
       } else {
         $trial_type = undef;
       }
 
-      if ($worksheet->get_cell($row,7)) {
-        $plot_width = $worksheet->get_cell($row,7)->value();
+      if ($worksheet->get_cell($row,8)) {
+        $plot_width = $worksheet->get_cell($row,8)->value();
       } else {
         $plot_width = undef;
       }
 
-      if ($worksheet->get_cell($row,8)) {
-        $plot_length = $worksheet->get_cell($row,8)->value();
+      if ($worksheet->get_cell($row,9)) {
+        $plot_length = $worksheet->get_cell($row,9)->value();
       } else {
         $plot_length = undef;
       }
 
-      if ($worksheet->get_cell($row,9)) {
-        $field_size = $worksheet->get_cell($row,9)->value();
+      if ($worksheet->get_cell($row,10)) {
+        $field_size = $worksheet->get_cell($row,10)->value();
       } else {
         $field_size = undef;
       }
 
-      if ($worksheet->get_cell($row,10)) {
-        $planting_date = $worksheet->get_cell($row,10)->value();
+      if ($worksheet->get_cell($row,11)) {
+        $planting_date = $worksheet->get_cell($row,11)->value();
       } else {
         $planting_date = undef;
       }
 
-      if ($worksheet->get_cell($row,11)) {
-        $harvest_date = $worksheet->get_cell($row,11)->value();
+      if ($worksheet->get_cell($row,12)) {
+        $harvest_date = $worksheet->get_cell($row,12)->value();
       } else {
         $harvest_date = undef;
       }
@@ -212,41 +219,41 @@ sub _validate_with_plugin {
       next;
     }
 
-    if ($worksheet->get_cell($row,12)) {
-      $plot_name = $worksheet->get_cell($row,12)->value();
-    }
     if ($worksheet->get_cell($row,13)) {
-      $accession_name = $worksheet->get_cell($row,13)->value();
+      $plot_name = $worksheet->get_cell($row,13)->value();
     }
     if ($worksheet->get_cell($row,14)) {
-      $plot_number =  $worksheet->get_cell($row,14)->value();
+      $accession_name = $worksheet->get_cell($row,14)->value();
     }
     if ($worksheet->get_cell($row,15)) {
-      $block_number =  $worksheet->get_cell($row,15)->value();
+      $plot_number =  $worksheet->get_cell($row,15)->value();
     }
     if ($worksheet->get_cell($row,16)) {
-      $is_a_control =  $worksheet->get_cell($row,16)->value();
+      $block_number =  $worksheet->get_cell($row,16)->value();
     }
     if ($worksheet->get_cell($row,17)) {
-      $rep_number =  $worksheet->get_cell($row,17)->value();
+      $is_a_control =  $worksheet->get_cell($row,17)->value();
     }
     if ($worksheet->get_cell($row,18)) {
-      $range_number =  $worksheet->get_cell($row,18)->value();
+      $rep_number =  $worksheet->get_cell($row,18)->value();
     }
     if ($worksheet->get_cell($row,19)) {
-	     $row_number = $worksheet->get_cell($row,19)->value();
+      $range_number =  $worksheet->get_cell($row,19)->value();
     }
     if ($worksheet->get_cell($row,20)) {
-	     $col_number = $worksheet->get_cell($row,20)->value();
+	     $row_number = $worksheet->get_cell($row,20)->value();
     }
     if ($worksheet->get_cell($row,21)) {
-      $seedlot_name = $worksheet->get_cell($row,21)->value();
+	     $col_number = $worksheet->get_cell($row,21)->value();
     }
     if ($worksheet->get_cell($row,22)) {
-      $num_seed_per_plot = $worksheet->get_cell($row,22)->value();
+      $seedlot_name = $worksheet->get_cell($row,22)->value();
     }
     if ($worksheet->get_cell($row,23)) {
-      $weight_gram_seed_per_plot = $worksheet->get_cell($row,23)->value();
+      $num_seed_per_plot = $worksheet->get_cell($row,23)->value();
+    }
+    if ($worksheet->get_cell($row,24)) {
+      $weight_gram_seed_per_plot = $worksheet->get_cell($row,24)->value();
     }
 
     if ( $row_number && $col_number ) {
@@ -313,9 +320,16 @@ sub _validate_with_plugin {
           push @error_messages, "Cell D$row_name: <b>$year</b> is not a valid year, must be a 4 digit positive integer.";
       }
 
+      ## TRANSPLANTING DATE CHECK
+      if ($transplanting_date) {
+        unless ($calendar_funcs->check_value_format($transplanting_date)) {
+          push @error_messages, "Cell E$row_name: transplanting_date <b>$transplanting_date</b> must be in the format YYYY-MM-DD.";
+        }
+      }
+
       ## DESIGN TYPE CHECK
       if (!$design_type || $design_type eq '' ) {
-          push @error_messages, "Cell E$row_name: design_type missing.";
+          push @error_messages, "Cell F$row_name: design_type missing.";
       }
       else {
         $design_type =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -324,7 +338,7 @@ sub _validate_with_plugin {
 
       ## DESCRIPTION CHECK
       if (!$description || $description eq '' ) {
-          push @error_messages, "Cell F$row_name: description missing.";
+          push @error_messages, "Cell G$row_name: description missing.";
       }
 
       ## TRIAL TYPE CHECK
@@ -335,30 +349,30 @@ sub _validate_with_plugin {
 
       ## PLOT WIDTH CHECK
       if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell H$row_name: plot_width <b>$plot_width</b> must be a positive number.";
+          push @error_messages, "Cell I$row_name: plot_width <b>$plot_width</b> must be a positive number.";
       }
 
       ## PLOT LENGTH CHECK
       if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell I$row_name: plot_length <b>$plot_length</b> must be a positive number.";
+          push @error_messages, "Cell J$row_name: plot_length <b>$plot_length</b> must be a positive number.";
       }
 
       ## FIELD SIZE CHECK
       if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell J$row_name: field_size <b>$field_size</b> must be a positive number.";
+          push @error_messages, "Cell K$row_name: field_size <b>$field_size</b> must be a positive number.";
       }
 
       ## PLANTING DATE CHECK
       if ($planting_date) {
         unless ($calendar_funcs->check_value_format($planting_date)) {
-          push @error_messages, "Cell K$row_name: planting_date <b>$planting_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, "Cell L$row_name: planting_date <b>$planting_date</b> must be in the format YYYY-MM-DD.";
         }
       }
 
       ## HARVEST DATE CHECK
       if ($harvest_date) {
         unless ($calendar_funcs->check_value_format($harvest_date)) {
-          push @error_messages, "Cell L$row_name: harvest_date <b>$harvest_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, "Cell M$row_name: harvest_date <b>$harvest_date</b> must be in the format YYYY-MM-DD.";
         }
       }
 
@@ -367,25 +381,25 @@ sub _validate_with_plugin {
 
     ## PLOT NAME CHECK
     if (!$plot_name || $plot_name eq '' ) {
-        push @error_messages, "Cell M$row_name: plot name missing.";
+        push @error_messages, "Cell N$row_name: plot name missing.";
     }
     elsif ($plot_name =~ /\s/ ) {
-        push @error_messages, "Cell M$row_name: plot name <b>$plot_name</b> must not contain spaces.";
+        push @error_messages, "Cell N$row_name: plot name <b>$plot_name</b> must not contain spaces.";
     }
     elsif ($plot_name =~ /\// || $plot_name =~ /\\/) {
-        push @warning_messages, "Cell M$row_name: plot name <b>$plot_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+        push @warning_messages, "Cell N$row_name: plot name <b>$plot_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
     }
     else {
         $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         if ($seen_plot_names{$plot_name}) {
-            push @error_messages, "Cell M$row_name: duplicate plot name <b>$plot_name</b> seen before at cell M".$seen_plot_names{$plot_name}.".";
+            push @error_messages, "Cell N$row_name: duplicate plot name <b>$plot_name</b> seen before at cell M".$seen_plot_names{$plot_name}.".";
         }
         $seen_plot_names{$plot_name}=$row_name;
     }
 
     ## ACCESSSION NAME CHECK
     if (!$accession_name || $accession_name eq '') {
-      push @error_messages, "Cell N$row_name: accession name missing";
+      push @error_messages, "Cell O$row_name: accession name missing";
     } else {
       $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_accession_names{$accession_name}++;
@@ -393,40 +407,40 @@ sub _validate_with_plugin {
 
     ## PLOT NUMBER CHECK
     if (!$plot_number || $plot_number eq '') {
-        push @error_messages, "Cell O$row_name: plot number missing";
+        push @error_messages, "Cell P$row_name: plot number missing";
     }
     if (!($plot_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell O$row_name: plot number <b>$plot_number</b> is not a positive integer.";
+        push @error_messages, "Cell P$row_name: plot number <b>$plot_number</b> is not a positive integer.";
     }
     $seen_plot_numbers{$plot_number}++;
 
     ## BLOCK NUMBER CHECK
     if (!$block_number || $block_number eq '') {
-        push @error_messages, "Cell P$row_name: block number missing";
+        push @error_messages, "Cell Q$row_name: block number missing";
     }
     if (!($block_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell P$row_name: block number <b>$block_number</b> is not a positive integer.";
+        push @error_messages, "Cell Q$row_name: block number <b>$block_number</b> is not a positive integer.";
     }
 
     ## IS A CONTROL CHECK
     if ($is_a_control) {
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-          push @error_messages, "Cell Q$row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
+          push @error_messages, "Cell R$row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
       }
     }
 
     ## REP, ROW, RANGE AND COLUMN CHECKS
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
-        push @error_messages, "Cell R$row_name: rep_number <b>$rep_number</b> must be a positive integer.";
+        push @error_messages, "Cell S$row_name: rep_number <b>$rep_number</b> must be a positive integer.";
     }
     if ($range_number && !($range_number =~ /^\d+?$/)){
-        push @error_messages, "Cell S$row_name: range_number <b>$range_number</b> must be a positive integer.";
+        push @error_messages, "Cell T$row_name: range_number <b>$range_number</b> must be a positive integer.";
     }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-        push @error_messages, "Cell T$row_name: row_number <b>$row_number</b> must be a positive integer.";
+        push @error_messages, "Cell U$row_name: row_number <b>$row_number</b> must be a positive integer.";
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-        push @error_messages, "Cell U$row_name: col_number <b>$col_number</b> must be a positive integer.";
+        push @error_messages, "Cell V$row_name: col_number <b>$col_number</b> must be a positive integer.";
     }
 
     ## SEEDLOT CHECKS
@@ -436,14 +450,14 @@ sub _validate_with_plugin {
         push @pairs, [$seedlot_name, $accession_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell W$row_name: num_seed_per_plot <b>$num_seed_per_plot</b> must be a positive integer.";
+        push @error_messages, "Cell X$row_name: num_seed_per_plot <b>$num_seed_per_plot</b> must be a positive integer.";
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell X$row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
+        push @error_messages, "Cell Y$row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
     }
 
     ## TREATMENT CHECKS
-    my $treatment_col = 24;
+    my $treatment_col = 25;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
@@ -484,10 +498,24 @@ sub _validate_with_plugin {
 
   ## LOCATIONS OVERALL VALIDATION
   my @locations = keys %seen_locations;
-  my @locations_missing = @{$validator->validate($schema,'locations',\@locations)->{'missing'}};
-  if (scalar(@locations_missing) > 0) {
-      # $errors{'missing_locations'} = \@locations_missing;
-      push @error_messages, "Location(s) <b>".join(',',@locations_missing)."</b> are not in the database.";
+  my $locations_hashref = $validator->validate($schema,'locations',\@locations);
+
+  # Find valid location codes
+  my @codes = @{$locations_hashref->{'codes'}};
+  my %location_code_map;
+  foreach my $code (@codes) {
+    my $location_code = $code->[0];
+    my $found_location_name = $code->[1];
+    $location_code_map{$location_code} = $found_location_name;
+    push @warning_messages, "File Location '$location_code' matches the code for the location named '$found_location_name' and will be substituted if you ignore warnings.";
+  }
+  $self->_set_location_code_map(\%location_code_map);
+
+  # Check the missing locations, ignoring matched codes
+  my @locations_missing = @{$locations_hashref->{'missing'}};
+  my @locations_missing_no_codes = grep { !exists $location_code_map{$_} } @locations_missing;
+  if (scalar(@locations_missing_no_codes) > 0) {
+      push @error_messages, "Location(s) <b>".join(',',@locations_missing_no_codes)."</b> are not in the database.";
   }
 
   ## DESIGN TYPES OVERALL VALIDATION
@@ -544,7 +572,7 @@ sub _validate_with_plugin {
 
       push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
 
-      @accessions = grep !/$matched_synonym/, @accessions;
+      @accessions = grep !/\Q$matched_synonym/, @accessions;
       push @accessions, $found_acc_name_from_synonym;
   }
 
@@ -738,30 +766,48 @@ sub _parse_with_plugin {
         %single_design = ();
         $all_designs{$trial_name} = \%final_single_design;
       }
-      $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
-      $single_design{'location'} = $worksheet->get_cell($row,2)->value();
-      $single_design{'year'} = $worksheet->get_cell($row,3)->value();
-      $single_design{'design_type'} = $worksheet->get_cell($row,4)->value();
-      $single_design{'description'} = $worksheet->get_cell($row,5)->value();
 
-      if ($worksheet->get_cell($row,6)) { # get and save trial type cvterm_id using trial type name
-        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,6)->value()};
+      # Get location and replace codes with names
+      my $location = $worksheet->get_cell($row,2)->value();
+      if ( $self->_has_location_code_map() ) {
+        my $location_code_map = $self->_get_location_code_map();
+        if ( exists $location_code_map->{$location} ) {
+          $location = $location_code_map->{$location};
+        }
+      }
+
+      $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
+      $single_design{'location'} = $location;
+      $single_design{'year'} = $worksheet->get_cell($row,3)->value();
+      # $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
+      $single_design{'design_type'} = $worksheet->get_cell($row,5)->value();
+      $single_design{'description'} = $worksheet->get_cell($row,6)->value();
+
+
+      # for a moment transplanting_date is moves as not required but whole design of that features must be redone
+      # including use cases
+      if ($worksheet->get_cell($row,4)) {
+        $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
+      }
+
+      if ($worksheet->get_cell($row,7)) { # get and save trial type cvterm_id using trial type name
+        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,7)->value()};
         $single_design{'trial_type'} = $trial_type_id;
       }
-      if ($worksheet->get_cell($row,7)) {
-        $single_design{'plot_width'} = $worksheet->get_cell($row,7)->value();
-      }
       if ($worksheet->get_cell($row,8)) {
-        $single_design{'plot_length'} = $worksheet->get_cell($row,8)->value();
+        $single_design{'plot_width'} = $worksheet->get_cell($row,8)->value();
       }
       if ($worksheet->get_cell($row,9)) {
-        $single_design{'field_size'} = $worksheet->get_cell($row,9)->value();
+        $single_design{'plot_length'} = $worksheet->get_cell($row,9)->value();
       }
       if ($worksheet->get_cell($row,10)) {
-        $single_design{'planting_date'} = $worksheet->get_cell($row,10)->value();
+        $single_design{'field_size'} = $worksheet->get_cell($row,10)->value();
       }
       if ($worksheet->get_cell($row,11)) {
-        $single_design{'harvest_date'} = $worksheet->get_cell($row,11)->value();
+        $single_design{'planting_date'} = $worksheet->get_cell($row,11)->value();
+      }
+      if ($worksheet->get_cell($row,12)) {
+        $single_design{'harvest_date'} = $worksheet->get_cell($row,12)->value();
       }
       ## Update trial name
       $trial_name = $current_trial_name;
@@ -783,49 +829,50 @@ sub _parse_with_plugin {
       next;
     }
 
-    if ($worksheet->get_cell($row,12)) {
-      $plot_name = $worksheet->get_cell($row,12)->value();
+    if ($worksheet->get_cell($row,13)) {
+      $plot_name = $worksheet->get_cell($row,13)->value();
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,13)) {
-      $accession_name = $worksheet->get_cell($row,13)->value();
+    if ($worksheet->get_cell($row,14)) {
+      $accession_name = $worksheet->get_cell($row,14)->value();
     }
     $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,14)) {
-      $plot_number =  $worksheet->get_cell($row,14)->value();
-    }
     if ($worksheet->get_cell($row,15)) {
-      $block_number =  $worksheet->get_cell($row,15)->value();
+      $plot_number =  $worksheet->get_cell($row,15)->value();
     }
     if ($worksheet->get_cell($row,16)) {
-      $is_a_control =  $worksheet->get_cell($row,16)->value();
+      $block_number =  $worksheet->get_cell($row,16)->value();
     }
     if ($worksheet->get_cell($row,17)) {
-      $rep_number =  $worksheet->get_cell($row,17)->value();
+      $is_a_control =  $worksheet->get_cell($row,17)->value();
     }
     if ($worksheet->get_cell($row,18)) {
-      $range_number =  $worksheet->get_cell($row,18)->value();
+      $rep_number =  $worksheet->get_cell($row,18)->value();
     }
     if ($worksheet->get_cell($row,19)) {
-	     $row_number = $worksheet->get_cell($row, 19)->value();
+      $range_number =  $worksheet->get_cell($row,19)->value();
     }
     if ($worksheet->get_cell($row,20)) {
-	     $col_number = $worksheet->get_cell($row, 20)->value();
+	     $row_number = $worksheet->get_cell($row, 20)->value();
     }
     if ($worksheet->get_cell($row,21)) {
-        $seedlot_name = $worksheet->get_cell($row, 21)->value();
+	     $col_number = $worksheet->get_cell($row, 21)->value();
     }
+    if ($worksheet->get_cell($row,22)) {
+        $seedlot_name = $worksheet->get_cell($row, 22)->value();
+    }
+
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     }
-    if ($worksheet->get_cell($row,22)) {
-        $num_seed_per_plot = $worksheet->get_cell($row, 22)->value();
-    }
     if ($worksheet->get_cell($row,23)) {
-        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 23)->value();
+        $num_seed_per_plot = $worksheet->get_cell($row, 23)->value();
+    }
+    if ($worksheet->get_cell($row,24)) {
+        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 24)->value();
     }
 
-    my $treatment_col = 24;
+    my $treatment_col = 25;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
@@ -898,6 +945,7 @@ sub _parse_header {
   my $breeding_program_head;
   my $location_head;
   my $year_head;
+  my $transplanting_date_head;
   my $design_type_head;
   my $description_head;
   my $trial_type_head;
@@ -932,64 +980,67 @@ sub _parse_header {
     $year_head= $worksheet->get_cell(0,3)->value();
   }
   if ($worksheet->get_cell(0,4)) {
-    $design_type_head= $worksheet->get_cell(0,4)->value();
+    $transplanting_date_head= $worksheet->get_cell(0,4)->value();
   }
   if ($worksheet->get_cell(0,5)) {
-    $description_head= $worksheet->get_cell(0,5)->value();
+    $design_type_head= $worksheet->get_cell(0,5)->value();
   }
   if ($worksheet->get_cell(0,6)) {
-    $trial_type_head= $worksheet->get_cell(0,6)->value();
+    $description_head= $worksheet->get_cell(0,6)->value();
   }
   if ($worksheet->get_cell(0,7)) {
-    $plot_width_head= $worksheet->get_cell(0,7)->value();
+    $trial_type_head= $worksheet->get_cell(0,7)->value();
   }
   if ($worksheet->get_cell(0,8)) {
-    $plot_length_head= $worksheet->get_cell(0,8)->value();
+    $plot_width_head= $worksheet->get_cell(0,8)->value();
   }
   if ($worksheet->get_cell(0,9)) {
-    $field_size_head= $worksheet->get_cell(0,9)->value();
+    $plot_length_head= $worksheet->get_cell(0,9)->value();
   }
   if ($worksheet->get_cell(0,10)) {
-    $planting_date_head= $worksheet->get_cell(0,10)->value();
+    $field_size_head= $worksheet->get_cell(0,10)->value();
   }
   if ($worksheet->get_cell(0,11)) {
-    $harvest_date_head= $worksheet->get_cell(0,11)->value();
+    $planting_date_head= $worksheet->get_cell(0,11)->value();
   }
   if ($worksheet->get_cell(0,12)) {
-    $plot_name_head  = $worksheet->get_cell(0,12)->value();
+    $harvest_date_head= $worksheet->get_cell(0,12)->value();
   }
   if ($worksheet->get_cell(0,13)) {
-    $accession_name_head  = $worksheet->get_cell(0,13)->value();
+    $plot_name_head  = $worksheet->get_cell(0,13)->value();
   }
   if ($worksheet->get_cell(0,14)) {
-    $plot_number_head  = $worksheet->get_cell(0,14)->value();
+    $accession_name_head  = $worksheet->get_cell(0,14)->value();
   }
   if ($worksheet->get_cell(0,15)) {
-    $block_number_head  = $worksheet->get_cell(0,15)->value();
+    $plot_number_head  = $worksheet->get_cell(0,15)->value();
   }
-  if ($worksheet->get_cell(0,16)) {
-    $is_a_control_head  = $worksheet->get_cell(0,16)->value();
+  if ($worksheet->get_cell(0,15)) {
+    $block_number_head  = $worksheet->get_cell(0,16)->value();
   }
   if ($worksheet->get_cell(0,17)) {
-    $rep_number_head  = $worksheet->get_cell(0,17)->value();
+    $is_a_control_head  = $worksheet->get_cell(0,17)->value();
   }
   if ($worksheet->get_cell(0,18)) {
-    $range_number_head  = $worksheet->get_cell(0,18)->value();
+    $rep_number_head  = $worksheet->get_cell(0,18)->value();
   }
   if ($worksheet->get_cell(0,19)) {
-      $row_number_head  = $worksheet->get_cell(0,19)->value();
+    $range_number_head  = $worksheet->get_cell(0,19)->value();
   }
   if ($worksheet->get_cell(0,20)) {
-      $col_number_head  = $worksheet->get_cell(0,20)->value();
+      $row_number_head  = $worksheet->get_cell(0,20)->value();
   }
   if ($worksheet->get_cell(0,21)) {
-    $seedlot_name_head  = $worksheet->get_cell(0,21)->value();
+      $col_number_head  = $worksheet->get_cell(0,21)->value();
   }
   if ($worksheet->get_cell(0,22)) {
-    $num_seed_per_plot_head = $worksheet->get_cell(0,22)->value();
+    $seedlot_name_head  = $worksheet->get_cell(0,22)->value();
   }
   if ($worksheet->get_cell(0,23)) {
-    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,23)->value();
+    $num_seed_per_plot_head = $worksheet->get_cell(0,23)->value();
+  }
+  if ($worksheet->get_cell(0,24)) {
+    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,24)->value();
   }
 
   my @error_messages;
@@ -1006,65 +1057,68 @@ sub _parse_header {
   if (!$year_head || $year_head ne 'year' ) {
     push @error_messages, "Cell D1: year is missing from the header";
   }
+  if (!$transplanting_date_head || $transplanting_date_head ne 'transplanting_date' ) {
+    push @error_messages, "Cell E1: year is missing from the header";
+  }
   if (!$design_type_head || $design_type_head ne 'design_type' ) {
-    push @error_messages, "Cell E1: design_type is missing from the header";
+    push @error_messages, "Cell F1: design_type is missing from the header";
   }
   if (!$description_head || $description_head ne 'description' ) {
-    push @error_messages, "Cell F1: description is missing from the header";
+    push @error_messages, "Cell G1: description is missing from the header";
   }
   if (!$trial_type_head || $trial_type_head ne 'trial_type' ) {
-    push @error_messages, "Cell G1: trial_type is missing from the header";
+    push @error_messages, "Cell H1: trial_type is missing from the header";
   }
   if (!$plot_width_head || $plot_width_head ne 'plot_width' ) {
-    push @error_messages, "Cell H1: plot_width is missing from the header";
+    push @error_messages, "Cell I1: plot_width is missing from the header";
   }
   if (!$plot_length_head || $plot_length_head ne 'plot_length' ) {
-    push @error_messages, "Cell I1: plot_length is missing from the header";
+    push @error_messages, "Cell J1: plot_length is missing from the header";
   }
   if (!$field_size_head || $field_size_head ne 'field_size' ) {
-    push @error_messages, "Cell J1: field_size is missing from the header";
+    push @error_messages, "Cell K1: field_size is missing from the header";
   }
   if (!$planting_date_head || $planting_date_head ne 'planting_date' ) {
-    push @error_messages, "Cell K1: planting_date is missing from the header";
+    push @error_messages, "Cell L1: planting_date is missing from the header";
   }
   if (!$harvest_date_head || $harvest_date_head ne 'harvest_date' ) {
-    push @error_messages, "Cell L1: harvest_date is missing from the header";
+    push @error_messages, "Cell M1: harvest_date is missing from the header";
   }
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
-    push @error_messages, "Cell M1: plot_name is missing from the header";
+    push @error_messages, "Cell N1: plot_name is missing from the header";
   }
   if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-    push @error_messages, "Cell N1: accession_name is missing from the header";
+    push @error_messages, "Cell O1: accession_name is missing from the header";
   }
   if (!$plot_number_head || $plot_number_head ne 'plot_number') {
-    push @error_messages, "Cell O1: plot_number is missing from the header";
+    push @error_messages, "Cell P1: plot_number is missing from the header";
   }
   if (!$block_number_head || $block_number_head ne 'block_number') {
-    push @error_messages, "Cell P1: block_number is missing from the header";
+    push @error_messages, "Cell Q1: block_number is missing from the header";
   }
   if (!$is_a_control_head || $is_a_control_head ne 'is_a_control') {
-    push @error_messages, "Cell Q1: is_a_control is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell R1: is_a_control is missing from the header. (Header is required, but values are optional)";
   }
   if (!$rep_number_head || $rep_number_head ne 'rep_number') {
-    push @error_messages, "Cell R1: rep_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell S1: rep_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$range_number_head || $range_number_head ne 'range_number') {
-    push @error_messages, "Cell S1: range_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell T1: range_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$row_number_head || $row_number_head ne 'row_number') {
-    push @error_messages, "Cell T1: row_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell U1: row_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$col_number_head || $col_number_head ne 'col_number') {
-    push @error_messages, "Cell U1: col_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell V1: col_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name') {
-    push @error_messages, "Cell V1: seedlot_name is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell W1: seedlot_name is missing from the header. (Header is required, but values are optional)";
   }
   if (!$num_seed_per_plot_head || $num_seed_per_plot_head ne 'num_seed_per_plot') {
-    push @error_messages, "Cell W1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell X1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
   if (!$weight_gram_seed_per_plot_head || $weight_gram_seed_per_plot_head ne 'weight_gram_seed_per_plot') {
-    push @error_messages, "Cell X1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell Y1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
 
   return \@error_messages;

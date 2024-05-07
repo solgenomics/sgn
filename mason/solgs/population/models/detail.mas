@@ -22,6 +22,7 @@ $training_pop_name
 $training_pop_desc
 $training_pop_url
 $training_traits_code => undef
+$data_set_type => undef
 
 $model_data
 $selection_prediction_download => undef
@@ -31,6 +32,7 @@ $list_of_prediction_pops => undef
 $selection_pop_analyzed_traits => undef
 $selection_pop_analyzed_traits_ids => undef
 $genotyping_protocol_id
+$analysis_type =>''
 
 </%args>
 
@@ -48,7 +50,8 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
-<& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation", "solGS.genotypingProtocol"] &>
+<& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation",
+"solGS.genotypingProtocol", "save-svg-as-png.saveSvgAsPng", "solGS.selectMenu"] &>
 
 <& /page/page_title.mas,
    title => "Prediction models from $training_pop_name"
@@ -66,7 +69,9 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
     genotyping_protocol_id => $genotyping_protocol_id,
     training_traits_ids    => $training_traits_ids,
     selection_traits_ids   => $selection_traits_ids,
-    training_traits_code => $training_traits_code
+    training_traits_code => $training_traits_code,
+    analysis_type => $analysis_type,
+    data_set_type => $data_set_type
    &>
 
 <& /solgs/search/selection_populations.mas,

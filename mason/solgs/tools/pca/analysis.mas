@@ -54,8 +54,8 @@ $collapsed = 1;
 
 </%perl>
 
-
-
+<& /solgs/tools/base.mas &>
+<& /util/import_javascript.mas, classes => ["solGS.pca"] &>
 
 % if ($url =~ /pca\/analysis/) {
 
@@ -77,19 +77,17 @@ $collapsed = 1;
   <& /solgs/genotyping_protocol/index.mas &>
 
 %}
-<!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
-<!-- /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\// -->
-% if ($url !~ /pca\/analysis/ ) {
-<& pca_options.mas &>
 
+% if ($url !~ /pca\/analysis/ ) {
+  <& pca_options.mas &>
 %} else {
 
-   <& select_menu.mas &>
-
+  <& /solgs/tools/select_menu.mas,
+  analysis_type => 'pca', &>
 %}
 
   <& plot.mas,
-     pop_id => $pop_id,
+    pop_id => $pop_id,
     list_id => $list_id,
     dataset_id => $dataset_id,
     data_structure => $data_structure,

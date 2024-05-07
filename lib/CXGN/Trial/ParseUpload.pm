@@ -49,6 +49,15 @@ has '_parsed_data' => (
     predicate => '_has_parsed_data'
 );
 
+has '_location_code_map' => (
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_location_code_map',
+    reader => '_get_location_code_map',
+    predicate => '_has_location_code_map',
+    required => 0
+);
+
 has 'trial_stock_type' => (
     isa => 'Str',
     is => 'rw',

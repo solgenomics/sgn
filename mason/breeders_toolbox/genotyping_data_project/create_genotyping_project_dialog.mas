@@ -186,6 +186,7 @@ jQuery(document).ready(function(){
     jQuery("#add_new_genotyping_project_close_modal").click(function(){
         jQuery('#create_genotyping_project_dialog').modal('hide');
         jQuery(".modal-backdrop").remove();
+        location.reload();
     });
 
 });

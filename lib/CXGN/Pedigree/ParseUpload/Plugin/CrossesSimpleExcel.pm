@@ -37,9 +37,11 @@ sub _validate_with_plugin {
     $supported_cross_types{'self'} = 1; #only female parent required
     $supported_cross_types{'open'} = 1; #only female parent required
     $supported_cross_types{'sib'} = 1; #both parents required but can be the same.
-    $supported_cross_types{'bulk_self'} = 1; #only female parent required
-    $supported_cross_types{'bulk_open'} = 1; #only female parent required
+    $supported_cross_types{'bulk_self'} = 1; #only female population required
+    $supported_cross_types{'bulk_open'} = 1; #only female population required
+    $supported_cross_types{'bulk'} = 1; #both female population and male accession required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
+    $supported_cross_types{'dihaploid_induction'} = 1; # only female parent required
     $supported_cross_types{'polycross'} = 1; #both parents required
     $supported_cross_types{'backcross'} = 1; #both parents required, parents can be cross or accession stock type
 
@@ -133,6 +135,7 @@ sub _validate_with_plugin {
     my %seen_cross_names;
     my %seen_accession_names;
     my %seen_backcross_parents;
+    my %seen_population_names;
 
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
@@ -156,14 +159,18 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,3)) {
             $female_parent =  $worksheet->get_cell($row,3)->value();
         }
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
+
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
         }
+
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
         }
 
+	$female_parent =~ s/^\s+|\s+$//g;
+	$male_parent =~ s/^\s+|\s+$//g;
+	
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross unique id missing";
@@ -176,6 +183,14 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: duplicate cross unique id: $cross_name";
         }
 
+	if (($cross_type eq 'double_haploid') || ($cross_type eq 'dihaploid_induction') || ($cross_type eq 'self')) {
+	    if ($female_parent ne $male_parent) {
+		push @error_messages, "For double haploid, dihaploid_induction, and self, female parent needs to be identical to male parent in row $row_name";
+	    }
+	}
+		
+
+	
         #cross type must not be blank
         if (!$cross_type || $cross_type eq '') {
             push @error_messages, "Cell C$row_name: cross type missing";
@@ -199,18 +214,38 @@ sub _validate_with_plugin {
             $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
+	
 
-        if ($cross_type eq 'backcross') {
-            $female_parent =~ s/^\s+|\s+$//g;
+        if (($cross_type eq 'bulk') || ($cross_type eq 'bulk_self') || ($cross_type eq 'bulk_open')) {
+            #$female_parent =~ s/^\s+|\s+$//g;
+            $seen_population_names{$female_parent}++;
+            if ($cross_type eq 'bulk_open') {
+                if ($male_parent) {
+                    #$male_parent =~ s/^\s+|\s+$//g;
+                    $seen_population_names{$male_parent}++;
+                }
+            } elsif ($cross_type eq 'bulk') {
+                $male_parent =~ s/^\s+|\s+$//g;
+                $seen_accession_names{$male_parent}++;
+            }
+        } elsif (($cross_type eq 'polycross') || ($cross_type eq 'open')) {
+            #$female_parent =~ s/^\s+|\s+$//g;
+            $seen_accession_names{$female_parent}++;
+            if ($male_parent) {
+             #   $male_parent =~ s/^\s+|\s+$//g;
+                $seen_population_names{$male_parent}++;
+            }
+        } elsif ($cross_type eq 'backcross') {
+            #$female_parent =~ s/^\s+|\s+$//g;
             $seen_backcross_parents{$female_parent}++;
-            $male_parent =~ s/^\s+|\s+$//g;
+            #$male_parent =~ s/^\s+|\s+$//g;
             $seen_backcross_parents{$male_parent}++;
         } else {
-            $female_parent =~ s/^\s+|\s+$//g;
+            #$female_parent =~ s/^\s+|\s+$//g;
             $seen_accession_names{$female_parent}++;
 
             if ($male_parent){
-                $male_parent =~ s/^\s+|\s+$//g;
+             #   $male_parent =~ s/^\s+|\s+$//g;
                 $seen_accession_names{$male_parent}++;
             }
         }
@@ -220,12 +255,17 @@ sub _validate_with_plugin {
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames',\@accessions)->{'missing'}};
 
-    my $population_validator = CXGN::List::Validate->new();
-    my @parents_missing = @{$population_validator->validate($schema,'populations',\@accessions_missing)->{'missing'}};
+    if (scalar(@accessions_missing) > 0) {
+        push @error_messages, "The following parents are not in the database, or are not in the database as accession uniquenames: ".join(',',@accessions_missing);
+        $errors{'missing_accessions'} = \@accessions_missing;
+    }
 
-    if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
-        $errors{'missing_accessions'} = \@parents_missing;
+    my @populations = keys %seen_population_names;
+    my $population_validator = CXGN::List::Validate->new();
+    my @populations_missing = @{$population_validator->validate($schema,'populations',\@populations)->{'missing'}};
+
+    if (scalar(@populations_missing) > 0) {
+        push @error_messages, "The following parents are not in the database, or are not in the database as population uniquenames: ".join(',',@populations_missing);
     }
 
     my @backcross_parents = keys %seen_backcross_parents;
@@ -313,9 +353,8 @@ sub _parse_with_plugin {
             $female_parent =~ s/^\s+|\s+$//g;
         }
 
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
         }
 
         if ($worksheet->get_cell($row,4)) {

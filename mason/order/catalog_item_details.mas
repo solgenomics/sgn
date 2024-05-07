@@ -10,6 +10,7 @@ $material_type
 $additional_info
 $breeding_program
 $program_id
+$availability => undef
 $contact_person_username
 $item_prop_id
 $check_vendor_role
@@ -38,6 +39,7 @@ $main_page
                         <tr><td><b>Additional Info</b></td><td><% $additional_info %></td></tr>
                         <tr><td><b>Material Source</b><td><% $material_source %></td></tr>
                         <tr><td><b>Breeding Program</b></td><td><% $breeding_program %></td></tr>
+                        <tr><td><b>Availability</b></td><td><% $availability %></td></tr>
                         <tr><td><b>Contact Person Username</b></td><td><% $contact_person_username %></td></tr>
                         <tr><td><b>Main Detail Page</b></td><td><% $main_page %></td></tr>
                     </table>
@@ -50,6 +52,7 @@ $main_page
                     <br /><br />
                 </div>
             </div>
+            <td><a href="/catalog/view"><p>Go to Catalog Page</p></a></td>
         </div>
     </div>
 </&>
@@ -60,7 +63,9 @@ $main_page
             <div class="panel panel-default">
                 <div class="panel-body">
                     <button id="edit_catalog_item_link" class="btn btn-primary btn-sm">Edit Catalog Item</button>
+                    <!--
                     <button id="delete_catalog_item_button" class="btn btn-primary btn-sm">Delete Catalog Item</button>
+                    -->
                 </div>
             </div>
         </div>
@@ -145,7 +150,7 @@ $main_page
     </div>
 </div>
 
-<& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, variety => $variety, item_type => $item_type, category => $category, material_type => $material_type, material_source => $material_source, breeding_program => $breeding_program, program_id => $program_id, additional_info => $additional_info, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
+<& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, variety => $variety, item_type => $item_type, category => $category, material_type => $material_type, material_source => $material_source, breeding_program => $breeding_program, program_id => $program_id, additional_info => $additional_info, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id, availability => $availability &>
 
 
 <script>

@@ -297,6 +297,7 @@ project.project_id=? ) );");
         has_timestamps=>1,
         overwrite_values=>0,
         metadata_hash=>\%phenotype_metadata,
+				composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
 
     my ($store_error, $store_success) = $store_phenotypes->store();
@@ -424,6 +425,7 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
             has_timestamps=>0,
             overwrite_values=>$overwrite,
             metadata_hash=>\%phenotype_metadata,
+						composable_validation_check_name=>$c->config->{composable_validation_check_name}
         );
         my ($store_error, $store_success) = $store_phenotypes->store();
         if ($store_error) {

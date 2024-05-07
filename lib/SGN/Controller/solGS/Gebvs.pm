@@ -24,42 +24,34 @@ BEGIN { extends 'Catalyst::Controller' }
 sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     my ($self, $c) = @_;
 
-    my $training_pop_id  = $c->req->param('training_pop_id');
-    my $trait_id         = $c->req->param('trait_id');
-    my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $protocol_id      = $c->req->param('genotyping_protocol_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-
-    if ($combo_pops_id)
-    {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-	$c->stash->{data_set_type} = 'combined_populations';
-	$training_pop_id = $combo_pops_id;
-	$c->stash->{combo_pops_id} = $combo_pops_id;
-    }
-
-    $c->stash->{pop_id} = $training_pop_id;
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{selectiion_pop_id} = $selection_pop_id;
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    my $trait_id = $c->stash->{'trait_id'};
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     my $gebvs_file;
     my $page = $c->req->referer();
 
+    my $training_pop_id = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+
+    my $type;
     if ($page =~ /solgs\/selection\//)
     {
+        $type = 'selection';
         $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
         $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
     }
     else
     {
+        $type = 'training';
         $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
         $gebvs_file = $c->stash->{rrblup_training_gebvs_file};
     }
 
     my $gebvs_data = $c->controller("solGS::Utils")->read_file_data($gebvs_file);
+    my $gebvs_file_id = $c->controller('solGS::Files')->gebvs_file_id($c, $type);
 
     my $ret->{status} = 'failed';
 
@@ -67,6 +59,7 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     {
         $ret->{status} = 'success';
         $ret->{gebvs_data} = $gebvs_data;
+        $ret->{gebvs_file_id} = $gebvs_file_id;
     }
 
     $ret = to_json($ret);
@@ -124,13 +117,11 @@ sub combine_gebvs_jobs_args {
         }
 
 	my $identifier = $self->combined_gebvs_file_id($c);
-    print STDERR "\ncombined_gebvs_file_id: $identifier\n";
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
         #my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}");
         $self->combined_gebvs_file($c);
         my  $combined_gebvs_file = $c->stash->{combined_gebvs_file};
-        print STDERR "\ncombined_gebvs_file --  $combined_gebvs_file\n";
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
@@ -369,7 +360,6 @@ sub training_pop_analyzed_traits {
 
     @traits = uniq(@traits);
     @si_traits = uniq(@si_traits);
-print STDERR "\nanalyzed_traits_files -- @analyzed_traits_files\n";
     $c->stash->{training_pop_analyzed_traits}        = \@traits;
     $c->stash->{training_pop_analyzed_traits_ids}    = \@selected_analyzed_traits;
     $c->stash->{training_pop_analyzed_traits_files}  = \@analyzed_traits_files;

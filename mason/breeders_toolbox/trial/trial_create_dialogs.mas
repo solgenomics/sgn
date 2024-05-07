@@ -139,6 +139,12 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Planting Date: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_project_planting_date" name="add_project_planting_date" title="planting_date" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Width (m): </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_project_plot_width" name="add_project_plot_width" type="text" />
@@ -764,7 +770,7 @@ rect.bordered {
 				    <span class="col-sm-1 text-right">
 				      <input type="radio" name="plot_numbering_scheme"  id="block_based" value="block_based" checked="checked" />
 				    </span>
-				  
+
                                     <span class="col-sm-6 text-left">block based plot numbers (increment leading digit for every block)</span>
 				  </div>
 				  <div class="form-group form-group-sm">
@@ -778,7 +784,7 @@ rect.bordered {
 				      consecutive plot numbers throughout the blocks
 				    </span>
 				  </div>
-				
+
                                      <div class="form-group form-group-sm" >
                                          <label class="col-sm-7 control-label">Plot prefix: </label>
                                          <div class="col-sm-5" >
@@ -997,5 +1003,16 @@ jQuery(document).ready(function(){
         }
     });
 
-})
+    var planting_date_element = jQuery("#add_project_planting_date");
+    jQuery('input[title="planting_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            planting_date_element.val(start.format('MM/DD/YYYY'));
+        }
+    );
+});
 </script>

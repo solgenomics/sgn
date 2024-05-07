@@ -65,16 +65,22 @@ sub download_gebvs :Path('/solgs/download/gebvs/pop') Args(0) {
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
 	my $gebvs_file;
+	my $type;
 	if ($c->stash->{selection_pop_id})
 	{
+		$type = 'selection';
 		$gebvs_file = $self->download_selection_gebvs_file($c);
 	}
 	else
 	{
+		$type = 'training';
 		$gebvs_file = $self->download_training_gebvs_file($c);
 	}
 
+	my $file_id = $c->controller('solGS::Files')->gebvs_file_id($c, $type);
+
 	$c->stash->{rest}{gebvs_file} = $gebvs_file;
+	$c->stash->{rest}{gebvs_file_id} = $file_id;
 
 }
 
@@ -138,6 +144,7 @@ sub selection_prediction_download_urls {
     {
 		foreach my $trait_id (@selection_traits_ids)
 		{
+
 			$url_args->{trait_id} = $trait_id;
 
 		    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);

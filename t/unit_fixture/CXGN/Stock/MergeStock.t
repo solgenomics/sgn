@@ -28,7 +28,7 @@ eval {
     my $initial_counts_other = get_counts($other_stock_id);
     
     $error = $stock->merge(38844);
-    is($error, 1, "merge stock should give no error");
+    is($error, undef, "merge stock should give no error");
     
     # all data should be transferred, so these need to add up
     my $combined_counts = get_counts($this_stock_id);

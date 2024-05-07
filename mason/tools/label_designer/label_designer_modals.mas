@@ -116,16 +116,15 @@
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
-                        <br><label>Sort Labels by:</label>
-                            <select class="form-control" id="sort_order" name="sort_by" style="max-width: 100%">
+                        <br><label>Limit by Rep:</label>
+                            <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
                             </select>
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
-                        <br><label>Limit by Rep:</label>
-                            <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
-                            </select>
+                            <br><label>Copies per label:</label>
+                            <input class="form-control" id="copies_per_plot" name="copies_per_plot" type="number" value="1" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -134,16 +133,11 @@
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
-                            <br><label>Copies per label:</label>
-                            <input class="form-control" id="copies_per_plot" name="copies_per_plot" type="number" value="1" style="max-width: 100%;">
-                        </center>
-                    </div>
-                    <div class="col-md-5">
-                        <center>
                             <br><label>Total # to download:</label>
                             <input class="form-control" id="label_designer_labels_to_download" name="label_designer_labels_to_download" type="number" placeholder="10" style="max-width: 100%;">
                         </center>
                     </div>
+                    <div class="col-md-5"></div>
                     <div class="col-md-1"></div>
                 </div>
                 <div class="col-md-12">

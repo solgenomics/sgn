@@ -110,7 +110,7 @@ sub store :Path('/image/store') {
 
     $image->set_sp_person_id( $c->stash->{person_id} );
 
-    if ((my $err = $image->process_image($temp_image_dir."/".$tempfile, $type, $type_id))<=0) {
+    if ((my $err = $image->process_image($temp_image_dir."/".$tempfile, $type, $type_id, 1))<=0) {
         die "An error occurred during the upload. Is the file you are uploading an image file? [$err] ";
 
     }

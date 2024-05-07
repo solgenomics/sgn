@@ -44,10 +44,10 @@ has 'stock_name' => (isa => 'Str', is => 'rw', predicate => 'has_stock_name', cl
  Usage: $self-> get_stock($stock_type_id, $stock_organism_id)
  Desc:  check if the uniquename exists in the stock table
  Ret:   stock object_row
- Args: optional: stock_type_id (cvterm_id) , $stock_organism_id (organism_id)  
- Side Effects: calls _get_stock_resultset, returns only one object row even if multiple stocks are found (would happen only if there are multiple stocks with the same uniquename of different letter case or different type_id or different organism_id) 
+ Args: optional: stock_type_id (cvterm_id) , $stock_organism_id (organism_id)
+ Side Effects: calls _get_stock_resultset, returns only one object row even if multiple stocks are found (would happen only if there are multiple stocks with the same uniquename of different letter case or different type_id or different organism_id)
  Example: $self->get_stock(undef, $manihot_esculenta_organism_id)
- 
+
 =cut
 
 sub get_stock {
@@ -178,7 +178,7 @@ sub _get_stock_resultset {
   if ($stock_type_id){
       $search_hash->{'me.type_id'} = $stock_type_id;
   }
-  if ($stock_organism_id) { 
+  if ($stock_organism_id) {
       $search_hash->{'me.organism_id'} = $stock_organism_id;
   }
   my $stock_rs = $schema->resultset("Stock::Stock")
@@ -294,6 +294,47 @@ sub get_accession_exact {
 	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession','stock_type')->cvterm_id;
 
 	my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'me.is_obsolete' => { '!=' => 't' }, 'uniquename' => $stock_name, 'type_id' => $accession_type_id });
+    my $stock;
+    if ($stock_rs->count == 1) {
+        $stock = $stock_rs->first;
+    } else {
+        return;
+    }
+    return $stock;
+}
+
+sub get_stock_variety {
+    my $self = shift;
+    my $schema = $self->get_schema();
+    my $stock_name = $self->get_stock_name();
+    my $variety_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+
+    my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $stock_name});
+    my $stock_id = $stock_rs->stock_id();
+
+    my $stock_variety;
+    my $variety_stockprop = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $variety_type_id});
+    if (defined $variety_stockprop) {
+        $stock_variety = $variety_stockprop->value();
+    }
+
+    return $stock_variety;
+
+}
+
+=head2 function get_tracking_identifier_exact()
+
+retrieves the stock row with tracking_identifier stock type and with an exact match to the stock name
+
+=cut
+
+sub get_tracking_identifier_exact {
+    my $self = shift;
+    my $schema = $self->get_schema();
+    my $stock_name = $self->get_stock_name();
+    my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,'tracking_identifier','stock_type')->cvterm_id;
+
+    my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'me.is_obsolete' => { '!=' => 't' }, 'uniquename' => $stock_name, 'type_id' => $tracking_identifier_type_id });
     my $stock;
     if ($stock_rs->count == 1) {
         $stock = $stock_rs->first;

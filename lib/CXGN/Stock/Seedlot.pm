@@ -67,6 +67,7 @@ my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
     $offset,
     $limit,
     $seedlot_name,
+    $description,
     $breeding_program,
     $location,
     $minimum_count,
@@ -318,6 +319,7 @@ sub list_seedlots {
     my $offset = shift;
     my $limit = shift;
     my $seedlot_name = shift;
+    my $description = shift;
     my $breeding_program = shift;
     my $location = shift;
     my $minimum_count = shift;
@@ -359,7 +361,7 @@ sub list_seedlots {
         $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
     }
     if ($breeding_program) {
-	print STDERR "Addint breeding_program $breeding_program to query...\n";
+	print STDERR "Adding breeding_program $breeding_program to query...\n";
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
     if ($location) {
@@ -367,7 +369,7 @@ sub list_seedlots {
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
     if ($contents_accession && scalar(@$contents_accession)>0) {
-	print STDERR "Adding $contents_accession ...\n";
+	print STDERR "Adding contents accession: $contents_accession ...\n";
         $search_criteria{'subject.type_id'} = $accession_type_id;
         if ($exact_match_uniquenames){
             $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
@@ -378,6 +380,7 @@ sub list_seedlots {
         }
     }
     if ($accession_id && ref($accession_id) && scalar(@$accession_id)>0) {
+        print STDERR "Accession ID is ";
         print Dumper $accession_id;
         $search_criteria{'subject.type_id'} = $accession_type_id;
         $search_criteria{'subject.stock_id'} = { -in => $accession_id };
@@ -721,6 +724,167 @@ sub verify_seedlot_accessions_crosses {
     }
     return \%return;
 }
+
+
+=head2 Class method: verify_seedlot_seedlot_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, [[$seedlot_name_1, $seedlot_name_2]]);
+ Desc:         Class method that verifies if a given list of pairs of seedlot_names have the same content.
+ Ret:          success or error
+ Args:         $schema, $seedlot_name_1, $seedlot_name_2
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_seedlot_seedlot_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift;
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    foreach (@pairs){
+        my $seedlot_name_1 = $_->[0];
+        my $seedlot_name_2 = $_->[1];
+
+        my $seedlot_rs_1 = $schema->resultset("Stock::Stock")->find({'uniquename' => $seedlot_name_1,'type_id' => $seedlot_cvterm_id});
+        my $seedlot_id_1 = $seedlot_rs_1->stock_id();
+        my $seedlot_1_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id_1, type_id => $collection_of_cvterm_id});
+        my $content_1_id = $seedlot_1_content->subject_id();
+
+        my $seedlot_rs_2 = $schema->resultset("Stock::Stock")->find({'uniquename' => $seedlot_name_2,'type_id' => $seedlot_cvterm_id});
+        my $seedlot_id_2 = $seedlot_rs_2->stock_id();
+        my $seedlot_2_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id_2, type_id => $collection_of_cvterm_id});
+        my $content_2_id = $seedlot_2_content->subject_id();
+
+        if ($content_1_id ne $content_2_id){
+            $error .= "The seedlots: $seedlot_name_1 and $seedlot_name_2 have different contents.";
+        }
+
+    }
+
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
+=head2 Class method: verify_all_seedlots_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_all_seedlots_compatibility($schema, [$new_seedlot_name, \%seedlot_names]);
+ Desc:         Class method that verifies if a new seedlot name is associated with only one content.
+ Ret:          success or error
+ Args:         $schema, \@new_seedlot_and_associated_seedlots
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_all_seedlots_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $new_seedlot_and_associated_seedlots = shift;
+    my $error = '';
+    my %return;
+
+    if (!$new_seedlot_and_associated_seedlots){
+        $error .= "No seedlot names passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $new_seedlot_name = $new_seedlot_and_associated_seedlots->[0];
+    my $associated_seedlots = $new_seedlot_and_associated_seedlots->[1];
+    my @seedlot_names = keys %{$associated_seedlots};
+
+    if (scalar(@seedlot_names)<1){
+        $error .= "No associated seedlot!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my %seen_content;
+    foreach my $each_seedlot(@seedlot_names){
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $each_seedlot,'type_id' => $seedlot_cvterm_id});
+        my $seedlot_id = $seedlot_rs->stock_id();
+        my $seedlot_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id, type_id => $collection_of_cvterm_id});
+        my $content_id = $seedlot_content->subject_id();
+        $seen_content{$content_id}++;
+    }
+
+    my $content_count = keys %seen_content;
+    if ($content_count > 1) {
+        $error = "You assigned more than one content to this new seedlot name: $new_seedlot_name "
+    }
+
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
+=head2 Class method: get_content_id()
+
+=cut
+
+sub get_content_id {
+    my $class = shift;
+    my $schema = shift;
+    my $seedlot_id = shift;
+    my $accession_stock_id;
+    my $cross_stock_id;
+    my @return_content_id = ();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+
+    my $seedlot_content = $schema->resultset("Stock::StockRelationship")->find({ object_id => $seedlot_id, type_id => $collection_of_cvterm_id});
+    my $content_id = $seedlot_content->subject_id();
+
+    my $check_content_type = $schema->resultset("Stock::Stock")->find({'stock_id' => $content_id});
+    my $type_id = $check_content_type->type_id();
+    if ($type_id eq $accession_cvterm_id) {
+        $accession_stock_id = $content_id;
+    } elsif ($type_id eq $cross_cvterm_id) {
+        $cross_stock_id = $content_id;
+    }
+    @return_content_id = ($accession_stock_id, $cross_stock_id);
+
+    return \@return_content_id;
+}
+
 
 sub BUILDARGS {
     my $orig = shift;
@@ -1530,6 +1694,42 @@ sub remove_event {
 
     $m->delete();
 }
+
+
+=head2 get_seedlot_species()
+
+ Usage:         $seedlot->get_seedlot_species($id)
+ Desc:          retrieve species of seedlot content
+ Ret:
+
+=cut
+
+sub get_seedlot_species {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $seedlot_id = $self->seedlot_id();
+
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT organism.species FROM stock_relationship
+    JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ?
+    JOIN organism ON (stock.organism_id = organism.organism_id)
+    WHERE stock_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($collection_of_type_id, $seedlot_id);
+
+    my @data = ();
+    while(my($species) = $h->fetchrow_array()){
+        push @data, [$species];
+    }
+
+    my $species_info = $data[0][0];
+
+    return $species_info
+}
+
+
 
 1;
 

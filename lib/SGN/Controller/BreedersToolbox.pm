@@ -879,4 +879,130 @@ sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_drone_imagery.mas';
 }
 
+
+sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $projects->get_breeding_programs();
+
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = $projects->get_all_locations_by_breeding_program();
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    $c->stash->{facilities} = \@facilities;
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+
+    $c->stash->{template} = '/breeders_toolbox/genotyping_data_project/manage_genotyping_projects.mas';
+
+}
+
+sub manage_transformations : Path("/breeders/transformations") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+
+	# redirect to login page
+	#
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    my $transformation = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
+
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = $transformation->get_all_locations_by_breeding_program();
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{template} = '/transformation/manage_transformation.mas';
+
+}
+
+
+
+sub manage_activities : Path("/breeders/activities") Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    my $activity_project = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $activity_project->get_breeding_programs();
+    my @breeding_programs = @$breeding_programs;
+    my $locations = $activity_project->get_all_locations_by_breeding_program();
+
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    $c->stash->{locations} = $locations;
+    $c->stash->{programs} = \@breeding_programs;
+    $c->stash->{roles} = $c->user()->roles();
+    $c->stash->{template} = '/tracking_activities/manage_activities.mas';
+
+}
+
+
+
 1;

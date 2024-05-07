@@ -1,0 +1,49 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/select_menu.mas -  analysis select menu of datasets or lists of trials or plots or accessions with phenotype data or genotype data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+$analysis_type
+$wizard_link_txt => ''
+$breeder_search_params =>''
+</%args>
+<%perl>
+my $label = $analysis_type =~ s/_/ /gr;
+my $analysis_abbr = $analysis_type =~ /correlation/ ? 'corr' : $analysis_type;
+$wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
+</%perl>
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+<& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List", "solGS.selectMenu"] &>
+
+<div id="select_menu" style="padding-top: 20px;">
+  <div class="select_menu_block" id="<% $analysis_type %>_pops_label">
+    <label for="<% $analysis_abbr %>_pops_label">Select a population</label>
+  </div>
+  <div class="select_menu_block" id="<% $analysis_abbr %>_pops_select_div"></div>
+  <div class="select_menu_block go_btn" id="<% $analysis_abbr %>_pop_go_btn">
+    <input type="button" value="View" />
+  </div>
+  <div class="select_menu_block" >
+    <i class="glyphicon-plus"></i>
+    <a href="/solgs/breeder_search/<% $breeder_search_params %>" style="color:#ffffff"><%
+    $wizard_link_txt %></a>
+    </div>
+
+  <br>
+  <br>
+    <!-- The container for the list of populations selected for analysis -->
+    <div class="sub_infosectioncontent" id="<% $analysis_abbr %>_pops_selected" style="display:none"></div>
+    <br>
+
+</div>

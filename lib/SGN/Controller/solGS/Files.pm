@@ -231,12 +231,10 @@ sub formatted_phenotype_file {
 
 
 sub phenotype_file_name {
-    my ($self, $c, $pop_id, $trait_id) = @_;
-
-    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
-    # my $trait_id = $c-stash->{trait_id} if !$trait_id;
-
-    # if
+    my ($self, $c, $pop_id) = @_;
+    
+    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+ 
     my $dir;
     if ($pop_id =~ /list/)
     {
@@ -359,12 +357,7 @@ sub genotype_file_name {
 sub relationship_matrix_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $data_set_type = $c->stash->{data_set_type};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    my $file_id = $pop_id . '_GP_' . $protocol_id;
-
+    my $file_id = $self->kinship_file_id($c);
     no warnings 'uninitialized';
 
     my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
@@ -389,23 +382,8 @@ sub relationship_matrix_file {
 sub relationship_matrix_adjusted_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $data_set_type = $c->stash->{data_set_type};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    my $file_id;
-    if ($trait_abbr)
-    {
-        $file_id = "${pop_id}_${trait_abbr}_GP_${protocol_id}";
-    }
-    else
-    {
-        $file_id = "${pop_id}_GP_${protocol_id}";
-    }
-
-    no warnings 'uninitialized';
-
+    my $file_id = $self->kinship_file_id($c);
+    
     my $cache_data = {key    => 'relationship_matrix_adjusted_table_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_table_' . $file_id,
 		      stash_key => 'relationship_matrix_adjusted_table_file',
@@ -424,17 +402,24 @@ sub relationship_matrix_adjusted_file {
 
 }
 
+sub kinship_file_id {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{kinship_pop_id} || $c->stash->{training_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $trait_abbr = $c->stash->{trait_abbr};
+
+    my $file_id =  $trait_abbr ? 
+        "${pop_id}_${trait_abbr}_GP_${protocol_id}" : 
+        "${pop_id}_GP_${protocol_id}";
+
+    return $file_id;
+}
 
 sub average_kinship_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $trait_abbr = $c->stash->{trait_abbr} || $pop_id;
-
-    my $file_id =  $trait_abbr ? "${pop_id}_${trait_abbr}_GP_${protocol_id}" : "${pop_id}_GP_${protocol_id}";
-
-    no warnings 'uninitialized';
+    my $file_id = $self->kinship_file_id($c);
 
     my $cache_data = {key    => 'average_kinship_file' . $file_id ,
 		      file      => 'average_kinship_file_' . $file_id,
@@ -450,10 +435,7 @@ sub average_kinship_file {
 sub inbreeding_coefficients_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    my $file_id = "${pop_id}_GP_${protocol_id}";
+    my $file_id = $self->kinship_file_id($c);
 
     no warnings 'uninitialized';
 
@@ -606,16 +588,10 @@ sub phenotype_metadata_file {
 
 
 sub rrblup_training_gebvs_file {
-    my ($self, $c, $identifier, $trait_id, $protocol_id) = @_;
+    my ($self, $c, $training_pop_id, $trait_id, $protocol_id) = @_;
 
-    $identifier = $c->stash->{pop_id} || $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} if !$identifier;
-    $trait_id  = $c->stash->{trait_id} if !$trait_id;
-
-    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
-    my $trait_abbr  = $c->stash->{trait_abbr};
-
-    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
-    my $file_id = "$identifier-${trait_abbr}-GP-${protocol_id}";
+    my $type = 'training';
+    my $file_id = $self->gebvs_file_id($c, $type);
 
     my $cache_data = {key       => 'rrblup_training_gebvs_' . $file_id,
                       file      => 'rrblup_training_gebvs_' . $file_id,
@@ -628,14 +604,37 @@ sub rrblup_training_gebvs_file {
 }
 
 
-sub rrblup_selection_gebvs_file {
-    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
+sub gebvs_file_id {
+    my ($self, $c, $type) = @_;
+
+    my $training_pop_id = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $trait_id  = $c->stash->{trait_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+    my $identifier = $training_pop_id;
+
+    if ($type =~ /selection/) 
+    {
+        $identifier = "${identifier}-${selection_pop_id}";
+    }
 
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr  = $c->stash->{trait_abbr};
 
-    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
-    my $file_id = "${training_pop_id}_${selection_pop_id}-${trait_abbr}-GP-${protocol_id}";
+    my $file_id = "${identifier}-${trait_abbr}-GP-${protocol_id}";
+
+    return $file_id;
+}
+
+sub rrblup_selection_gebvs_file {
+    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
+
+    my $type = 'selection';
+    $c->stash->{selection_pop_id} = $selection_pop_id if $selection_pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
+
+    my $file_id = $self->gebvs_file_id($c, $type);
 
     my $cache_data = {key  => 'rrblup_selection_gebvs_' . $file_id,
                       file      => 'rrblup_selection_gebvs_' . $file_id,
@@ -911,7 +910,10 @@ sub create_file_id {
     }
 
     $file_id = $data_type ? $file_id . '-' . lc($data_type) : $file_id;
-    $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
+    if ($cluster_type !~ /hierarchical/i) 
+    {
+        $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
+    }
     $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-gp-' . $protocol_id : $file_id;
 
     if ($sindex_name)

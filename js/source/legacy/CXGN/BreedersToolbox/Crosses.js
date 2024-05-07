@@ -92,6 +92,7 @@ jQuery(document).ready(function($) {
             $("#get_bulk_open_maternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_bulk_open_paternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_doubled_haploid_parent").toggle($("#cross_type").val() == "doubled_haploid");
+	    $("#get_dihaploid_induction_parent").toggle($("#cross_type").val() == "dihaploid_induction");
             $("#polycross_accessions").toggle($("#cross_type").val() == "polycross");
             $("#reciprocal_accessions").toggle($("#cross_type").val() == "reciprocal");
             $("#maternal_accessions").toggle($("#cross_type").val() == "multicross");
@@ -192,16 +193,48 @@ jQuery(document).ready(function($) {
         get_select_box('projects', 'upload_crosses_crossing_experiment_select_div', { 'name' : 'upload_crosses_crossing_experiment_id', 'id' : 'upload_crosses_crossing_experiment_id', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
     });
 
-    $("#cross_accession_info_format").click(function() {
-        $("#cross_accession_info_dialog").modal("show");
+    jQuery("#cross_accession_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").show();
+        jQuery("#cross_plot_parents_header").hide();
+        jQuery("#cross_plant_parents_header").hide();
+        jQuery("#accession_parent_info").show();
+        jQuery("#plot_parent_info").hide();
+        jQuery("#plant_parent_info").hide();
+        jQuery("#any_parent_info").hide();
     });
 
-    $("#cross_plot_info_format").click(function() {
-        $("#cross_plot_info_dialog").modal("show");
+    jQuery("#cross_plot_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").hide();
+        jQuery("#cross_plot_parents_header").show();
+        jQuery("#cross_plant_parents_header").hide();
+        jQuery("#accession_parent_info").hide();
+        jQuery("#plot_parent_info").show();
+        jQuery("#plant_parent_info").hide();
+        jQuery("#any_parent_info").hide();
     });
 
-    $("#cross_plant_info_format").click(function() {
-        $("#cross_plant_info_dialog").modal("show");
+    jQuery("#cross_plant_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").hide();
+        jQuery("#cross_plot_parents_header").hide();
+        jQuery("#cross_plant_parents_header").show();
+        jQuery("#accession_parent_info").hide();
+        jQuery("#plot_parent_info").hide();
+        jQuery("#plant_parent_info").show();
+        jQuery("#any_parent_info").hide();
+    });
+
+    jQuery("#cross_simplified_parent_info_format").click(function() {
+        jQuery("#cross_spreadsheet_info_dialog").modal("show");
+        jQuery("#cross_parents_header").show();
+        jQuery("#cross_plot_parents_header").hide();
+        jQuery("#cross_plant_parents_header").hide();
+        jQuery("#accession_parent_info").hide();
+        jQuery("#plot_parent_info").hide();
+        jQuery("#plant_parent_info").hide();
+        jQuery("#any_parent_info").show();
     });
 
     jQuery("#cross_file_format_option").change(function(){
@@ -209,22 +242,33 @@ jQuery(document).ready(function($) {
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
             jQuery("#submit_button_section").hide();
       }
         if (jQuery(this).val() == "xls_cross_accession"){
             jQuery("#xls_cross_accession_section").show();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
             jQuery("#submit_button_section").show();
         }
         if(jQuery(this).val() == "xls_cross_plot"){
             jQuery("#xls_cross_plot_section").show();
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
             jQuery("#submit_button_section").show();
         }
         if (jQuery(this).val() == "xls_cross_plant" ){
             jQuery("#xls_cross_plant_section").show();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_accession_section").hide();
+            jQuery("#xls_cross_simplified_section").hide();
+            jQuery("#submit_button_section").show();
+        }
+        if (jQuery(this).val() == "xls_cross_simplified" ){
+            jQuery("#xls_cross_simplified_section").show();
+            jQuery("#xls_cross_plant_section").hide();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#submit_button_section").show();
@@ -324,6 +368,12 @@ jQuery(document).ready(function($) {
                 maternal = doubledHaploidParent;
                 paternal = doubledHaploidParent;
                 break;
+	    case 'dihaploid_induction':
+                var dihaploidInductionParent = $("#dihaploid_induction_parent").val();
+                maternal = dihaploidInductionParent;
+                paternal = dihaploidInductionParent;
+                break;
+
             case 'polycross':
                 maternal_parents = get_accession_names('polycross_accessions_list_select');
                 if (!Array.isArray(maternal_parents)) { alert(maternal_parents); return; }
@@ -410,8 +460,11 @@ jQuery(document).ready(function($) {
             if (uploadFileXlsPlots === ''){
                 var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
                 if (uploadFileXlsPlants === '') {
-                    alert("Please select a file");
-                    return;
+                    var uploadFileXlsSimplifiedParents = $("#xls_crosses_simplified_parents_file").val();
+                    if (uploadFileXlsSimplifiedParents === ''){
+                        alert("Please select a file");
+                        return;
+                    }
                 }
             }
         }

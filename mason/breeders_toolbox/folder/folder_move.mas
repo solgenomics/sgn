@@ -14,9 +14,13 @@ $breeding_program_name => undef
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;
+% my $folder_for_genotyping_projects;
+% my $folder_for_tracking_activities;
 % if ($project_type eq 'field_trial') { $folder_for_trials = 1;  $dialog_type = 'trial'}
 % if ($project_type eq 'genotyping_plate') { $folder_for_genotyping_trials = 1; $dialog_type = 'genotyping plate' }
 % if ($project_type eq 'crossing_experiment') { $folder_for_crosses = 1; $dialog_type = 'crossing experiment' }
+% if ($project_type eq 'genotyping_project') { $folder_for_genotyping_projects = 1; $dialog_type = 'genotyping project' }
+% if ($project_type eq 'activity_record') { $folder_for_tracking_activities = 1; $dialog_type = 'tracking activities' }
 
 <div class="modal fade" id="move_folder_dialog" name="move_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="moveFolderDialog">
   <div class="modal-dialog" role="document">
@@ -134,12 +138,15 @@ jQuery(document).ready(function() {
 });
 
 function breeding_program_change_move_parent_folders() {
-  var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
-  var folder_for_trials;
-  var folder_for_crosses;
-  var folder_for_genotyping_trials;
+    var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
+    var folder_for_trials;
+    var folder_for_crosses;
+    var folder_for_genotyping_trials;
+    var folder_for_genotyping_projects;
+    var folder_for_tracking_activities;
+
 % if ($folder_for_trials){
-  folder_for_trials = true;
+    folder_for_trials = true;
 % }
 % if ($folder_for_crosses){
     folder_for_crosses = true;
@@ -147,16 +154,26 @@ function breeding_program_change_move_parent_folders() {
 % if ($folder_for_genotyping_trials){
     folder_for_genotyping_trials = true;
 % }
-  get_select_box('folders', 'move_folder_parent_folder_select_div', { 'name' : 'move_folder_parent_folder_id', 'id' : 'move_folder_parent_folder_id', 'breeding_program_id' : breeding_program_id, 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials });
+% if ($folder_for_genotyping_projects){
+    folder_for_genotyping_projects = true;
+% }
+% if ($folder_for_tracking_activities){
+    folder_for_tracking_activities = true;
+% }
+
+  get_select_box('folders', 'move_folder_parent_folder_select_div', { 'name' : 'move_folder_parent_folder_id', 'id' : 'move_folder_parent_folder_id', 'breeding_program_id' : breeding_program_id, 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials, 'folder_for_genotyping_projects': folder_for_genotyping_projects , 'folder_for_tracking_activities': folder_for_tracking_activities});
 }
 
 function breeding_program_change_move_folders() {
-  var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
-  var folder_for_trials;
-  var folder_for_crosses;
-  var folder_for_genotyping_trials;
+    var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
+    var folder_for_trials;
+    var folder_for_crosses;
+    var folder_for_genotyping_trials;
+    var folder_for_genotyping_projects;
+    var folder_for_tracking_activities;
+
 % if ($folder_for_trials){
-  folder_for_trials = true;
+    folder_for_trials = true;
 % }
 % if ($folder_for_crosses){
     folder_for_crosses = true;
@@ -164,7 +181,14 @@ function breeding_program_change_move_folders() {
 % if ($folder_for_genotyping_trials){
     folder_for_genotyping_trials = true;
 % }
-  get_select_box('folders', 'move_folder_select_div', { 'name' : 'move_folder_id', 'id' : 'move_folder_id', 'breeding_program_id' : breeding_program_id, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials });
+% if ($folder_for_genotyping_projects){
+    folder_for_genotyping_projects = true;
+% }
+% if ($folder_for_tracking_activities){
+    folder_for_tracking_activities = true;
+% }
+
+  get_select_box('folders', 'move_folder_select_div', { 'name' : 'move_folder_id', 'id' : 'move_folder_id', 'breeding_program_id' : breeding_program_id, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials, 'folder_for_genotyping_projects': folder_for_genotyping_projects , 'folder_for_tracking_activities': folder_for_tracking_activities});
 }
 
 function move_folder() {

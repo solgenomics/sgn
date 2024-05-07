@@ -47,16 +47,16 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-     var trainingTraitsIds = solGS.getTrainingTraitsIds();
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
-     if (trainingTraitsIds) {
+    if (trainingTraitsIds) {
       if (!args) {
         args = { training_traits_ids: trainingTraitsIds };
       } else {
         args["training_traits_ids"] = trainingTraitsIds;
       }
     }
-    
+
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
 
@@ -364,6 +364,9 @@ solGS.submitJob = {
     args["analysis_name"] = analysisName;
     args["analysis_page"] = page;
 
+    var hostname = `${location.protocol}//${location.hostname}`;
+    args['hostname'] = hostname;
+
     args = JSON.stringify(args);
 
     var analysisProfile = {
@@ -382,11 +385,8 @@ solGS.submitJob = {
     var analysisName = jQuery("#analysis_name").val();
 
     if (!analysisName) {
-      jQuery("#form-feedback-analysis-name").text(
-        "Analysis name is blank. Please give a name."
-      );
+      jQuery("#form-feedback-analysis-name").text("Analysis name is blank. Please give a name.");
     } else {
-
       var checkName = solGS.submitJob.checkAnalysisName(analysisName);
 
       checkName.done(function (res) {
@@ -406,7 +406,7 @@ solGS.submitJob = {
           }
         }
       });
-  }
+    }
 
     checkName.fail(function (res) {
       var message =
@@ -706,7 +706,7 @@ jQuery(document).ready(function () {
           page = "/solgs/trait/" + traitIds[0] + "/population/" + popId + "/gp/" + protocolId;
         }
       } else {
-        analysisType = "multiple models";
+        analysisType = "multiple_models";
 
         if (referer.match(/solgs\/populations\/combined\//)) {
           page = "/solgs/models/combined/trials/" + popId;
@@ -784,10 +784,12 @@ solGS.getTraitDetails = function (traitId) {
 
 solGS.getTrainingTraitsIds = function () {
   var trainingTraitsIds = jQuery("#training_traits_ids").val();
+  var trainingTraitsCode = jQuery("#training_traits_code").val();
   var traitId = jQuery("#trait_id").val();
 
   if (trainingTraitsIds) {
     trainingTraitsIds = trainingTraitsIds.split(",");
+
   } else if (traitId) {
     trainingTraitsIds = [traitId];
   }
@@ -799,19 +801,23 @@ solGS.getModelArgs = function () {
   var args = this.getTrainingPopArgs();
   var trainingTraitsIds = this.getTrainingTraitsIds();
   if (trainingTraitsIds) {
+    args["training_traits_code"] = jQuery("#training_traits_code").val();
     args["training_traits_ids"] = trainingTraitsIds;
   }
 
+  if (trainingTraitsIds.length == 1) {
+    args["trait_id"] = trainingTraitsIds[0];
+  }
   return args;
 };
 
 solGS.getSelectionPopArgs = function () {
   var args = this.getModelArgs();
-  var selPopGenoProtocolId = jQuery('#selection_pop_genotyping_protocol_id').val();
-  var selPopId =  jQuery('#selection_pop_id').val();
+  var selPopGenoProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+  var selPopId = jQuery("#selection_pop_id").val();
 
-  if (!selPopGenoProtocolId ) {
-    selPopGenoProtocolId = jQuery('#genotyping_protocol_id').val();
+  if (!selPopGenoProtocolId) {
+    selPopGenoProtocolId = jQuery("#genotyping_protocol_id").val();
   }
   if (selPopGenoProtocolId) {
     args["selection_pop_genotyping_protocol_id"] = selPopGenoProtocolId;
@@ -824,8 +830,10 @@ solGS.getSelectionPopArgs = function () {
 solGS.getTrainingPopArgs = function () {
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
+    training_pop_name: jQuery("#training_pop_name").val(),
     genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
-    data_set_type: jQuery("#data_set_type").val()
+    data_set_type: jQuery("#data_set_type").val(),
+    analysis_type: jQuery("#analysis_type").val(),
   };
 
   return args;
@@ -875,11 +883,7 @@ solGS.getPopulationDetails = function () {
 solGS.showMessage = function (divId, msg) {
   divId = divId.match(/#/) ? divId : "#" + divId;
 
-  jQuery(divId)
-    .html(msg)
-    .show()
-    .delay(4000)
-    .fadeOut('slow');
+  jQuery(divId).html(msg).show().delay(4000).fadeOut("slow");
 };
 
 solGS.checkPageType = function () {
