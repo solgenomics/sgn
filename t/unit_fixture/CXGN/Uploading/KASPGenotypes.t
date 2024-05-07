@@ -305,6 +305,7 @@ my $protocolprop = CXGN::Genotype::ProtocolProp->new({
 });
 
 ok($protocol->set_name('kasp_protocol_1_edited'));
+ok($protocol->set_description('test editing description'));
 
 $protocolprop->reference_genome_name('Mesculenta_511_v8');
 ok($protocolprop->store());
@@ -316,6 +317,7 @@ my $protocol_edited = CXGN::Genotype::Protocol->new({
 });
 
 is($protocol_edited->protocol_name, 'kasp_protocol_1_edited');
+is($protocol_edited->protocol_description, 'test editing description');
 is($protocol_edited->reference_genome_name, 'Mesculenta_511_v8');
 
 ## DELETE genotyping protocols, data, plate and projects
