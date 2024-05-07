@@ -186,13 +186,14 @@ sub generate_model {
 #
 #    }
  #   else {
-	foreach my $rf (@$random_factors) {
-      if ($rf) {
-        $formatted_random_factors .= " + (1|$rf)" ;
-	      push @addends, $formatted_random_factors;
-      }
+    foreach my $rf (@$random_factors) {
+	if ($rf) {
+	    $formatted_random_factors .= "(1|$rf)" ;
+	    print STDERR " formatted random factor now $formatted_random_factors\n";
+	    push @addends, $formatted_random_factors;
 	}
-
+    }
+    
     #}
     $model .= join(" + ", @addends);
 
