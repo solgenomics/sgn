@@ -399,8 +399,10 @@ sub _parse_with_plugin {
     my %parent_info;
     my @pedigrees;
     my %cross_info;
+    my %cross_additional_info;
     my %project_info;
     my %parsed_result;
+
 
     $excel_obj = $parser->parse($filename);
     if ( !$excel_obj ) {
@@ -481,7 +483,8 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,8)) {
             $female_attributes = $worksheet->get_cell($row,8)->value();
             $female_attributes =~ s/^\s+|\s+$//g;
-            $parent_info{'female'}{$female_accession_number}{'Female Attributes'} = $female_attributes;
+            $cross_additional_info{$inventory_id}{'female_focus_trait'} = $female_attributes
+#            $parent_info{'female'}{$female_accession_number}{'Female Attributes'} = $female_attributes;
         }
         if ($worksheet->get_cell($row,9)) {
             $male_order = $worksheet->get_cell($row,9)->value();
@@ -501,7 +504,8 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,12)) {
             $male_attributes = $worksheet->get_cell($row,12)->value();
             $male_attributes =~ s/^\s+|\s+$//g;
-            $parent_info{'male'}{$male_accession_number}{'Male Attributes'} = $male_attributes;
+            $cross_additional_info{$inventory_id}{'male_focus_trait'} = $male_attributes
+#            $parent_info{'male'}{$male_accession_number}{'Male Attributes'} = $male_attributes;
         }
         if ($worksheet->get_cell($row,13)) {
             $number_of_flowers  = $worksheet->get_cell($row,13)->value();
@@ -620,6 +624,7 @@ sub _parse_with_plugin {
     $parsed_result{'parent_info'} = \%parent_info;
     $parsed_result{'crosses'} = \@pedigrees;
     $parsed_result{'cross_info'} = \%cross_info;
+    $parsed_result{'cross_additional_info'} = \%cross_additional_info;    
 
     $self->_set_parsed_data(\%parsed_result);
 

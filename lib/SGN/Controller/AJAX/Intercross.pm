@@ -826,8 +826,7 @@ sub upload_cip_cross_file_POST : Args(0) {
 
         my $cross_info = $parsed_data->{cross_info};
         my %cip_cross_info = %{$cross_info};
-#        print STDERR "CIP CROSS ONFO =".Dumper($parsed_data->{cross_info})."\n";
-
+#        print STDERR "CIP CROSS INFO =".Dumper(\%cip_cross_info)."\n";
         my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'crossing_metadata_json', 'stock_property');
 
         my $cross_json_string;
@@ -860,6 +859,46 @@ sub upload_cip_cross_file_POST : Args(0) {
                 } else {
                     my $new_cross_info_string = encode_json \%info_hash;
                     $valid_cross_name->create_stockprops({$cross_info_cvterm->name() => $new_cross_info_string});
+                }
+            }
+        }
+
+        my $cross_additional_info = $parsed_data->{cross_additional_info};
+        my %cip_cross_additional_info = %{$cross_additional_info};
+        my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'cross_additional_info', 'stock_property');
+        print STDERR "CIP CROSS ADDITIONAL INFO =".Dumper(\%cip_cross_additional_info)."\n";
+
+        my $cross_additional_info_string;
+        my $cross_additional_info_hash_ref = {};
+        my %cross_additional_info_hash;
+        my %all_cross_additional_info;
+
+        foreach my $name_key (keys %cip_cross_additional_info){
+            %cross_additional_info_hash = ();
+            %all_cross_additional_info = ();
+            %{$cross_additional_info_hash_ref} =();
+
+            my $valid_name_key = $schema->resultset("Stock::Stock")->find({uniquename => $name_key});
+            if ($valid_name_key){
+                my %additional_info_hash = %{$cip_cross_additional_info{$name_key}};
+                print STDERR "NAME KEY =".Dumper($name_key)."\n";
+                print STDERR "NEW ADDITIONAL INFO HASH =".Dumper(\%additional_info_hash)."\n";
+                my $previous_additional_stockprop_rs = $valid_name_key->stockprops({type_id=>$cross_additional_info_cvterm->cvterm_id});
+                if ($previous_additional_stockprop_rs->count == 1){
+                    $cross_additional_info_string = $previous_additional_stockprop_rs->first->value();
+                    $cross_additional_info_hash_ref = decode_json $cross_additional_info_string;
+                    %cross_additional_info_hash = %{$cross_additional_info_hash_ref};
+                    %all_cross_additional_info = (%cross_additional_info_hash, %additional_info_hash);
+                    print STDERR "PREVIOUS CROSS ADDITIONAL INFO =".Dumper(\%cross_additional_info_hash);
+                    print STDERR "ALL CROSS ADDITIONAL INFO =".Dumper(\%all_cross_additional_info);
+                    my $all_additional_info_string = encode_json \%all_cross_additional_info;
+                    $previous_additional_stockprop_rs->first->update({value=>$all_additional_info_string});
+                } elsif ($previous_additional_stockprop_rs->count > 1) {
+                    print STDERR "More than one found!\n";
+                    return;
+                } else {
+                    my $new_additional_info_string = encode_json \%additional_info_hash;
+                    $valid_name_key->create_stockprops({$cross_additional_info_cvterm->name() => $new_additional_info_string});
                 }
             }
         }
