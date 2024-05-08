@@ -295,9 +295,9 @@ sub result_file_to_hash {
 
     my $html = qq | <style> th, td {padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
 
-    $html .= "<br><tr>";
+    $html .= "<br><tr><th>accession name</th>";
     for (my $m=0; $m<@value_cols; $m++) {
-      $html .= "<th>accession name</th><th scope=\"col\">".($value_cols[$m])."</th>";
+      $html .= "<th scope=\"col\">".($value_cols[$m])."</th>";
     }
     $html .= "</tr><tr>";
     foreach my $line (@lines) {
