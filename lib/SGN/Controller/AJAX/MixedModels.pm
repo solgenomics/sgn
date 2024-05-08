@@ -257,8 +257,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	error => $error,
 	accession_names => $accession_names,
 	adjusted_blups_data => $adjusted_blups_data,
-  adjusted_blups_html => $adjusted_blups_html,
-  adjusted_blues_data => $adjusted_blues_data,
+	adjusted_blups_html => $adjusted_blups_html,
+	adjusted_blues_data => $adjusted_blues_data,
 	adjusted_blues_html => $adjusted_blues_html,
 	blups_data => $blups_data,
 	blups_html => $blups_html,
@@ -297,30 +297,27 @@ sub result_file_to_hash {
 
     $html .= "<br><tr>";
     for (my $m=0; $m<@value_cols; $m++) {
-      $html .= "<th scope=\"col\">".($value_cols[$m])."</th>";
+      $html .= "<th>accession name</th><th scope=\"col\">".($value_cols[$m])."</th>";
     }
     $html .= "</tr><tr>";
     foreach my $line (@lines) {
-	      my ($accession_name, @values) = split /\t/, $line;
-	      push @accession_names, $accession_name;
-
-        #$html .= "<tr><td>".join("</td><td>", $accession_name)."</td>";
-
+	my ($accession_name, @values) = split /\t/, $line;
+	push @accession_names, $accession_name;
+	$html .= "<tr><td>$accession_name</td>";
+	
         for (my $k=0; $k<@value_cols; $k++) {
-          #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
-          $html .= "<td>".($values[$k])."</td>";
+	    #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
+	    $html .= "<td>".($values[$k])."</td>";
         }
-
-	      for(my $n=0; $n<@values; $n++) {
-	         #print STDERR "Building hash for trait $accession_name and value $value_cols[$n]\n";
-	          $analysis_data{$accession_name}->{$value_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
-
-
-
-	      }
+	
+	for(my $n=0; $n<@values; $n++) {
+	    #print STDERR "Building hash for trait $accession_name and value $value_cols[$n]\n";
+	    $analysis_data{$accession_name}->{$value_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
+	    
+	    
+	    
+	}
         $html .= "</tr>"
-
-
     }
     $html .= "</table>";
 
