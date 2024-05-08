@@ -23,7 +23,7 @@ jobs:
       image: bienkowskid/fedora40-r-bookdown
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:          
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}        
