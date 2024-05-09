@@ -805,7 +805,14 @@ jQuery(document).ready( function() {
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
         fieldMap.opts.brapi_auth = auth_token;
-        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert("No geo reference data in this trial!"); } ); 
+        fieldMap.load('<% $trial_id %>').then((value)=>{
+            if (!value) alert("No geo reference data in this trial!");
+            else {
+                jQuery('#container_heatmap_geo_div .leaflet-map-container').height(
+                    jQuery('#container_heatmap_geo_div').height() - jQuery("#container_heatmap_geo_div .ortho-selection-container").height()
+                );
+            }
+        });
 
     }
 

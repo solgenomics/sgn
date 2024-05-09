@@ -2145,7 +2145,22 @@
 
 	class Fieldmap {
 	  constructor(map_container, brapi_endpoint, opts = {}) {
-	    this.map_container = d3.select(map_container).style("background-color", "#888");
+
+	    // Container for the leaflet map
+	    var leaflet_map_container = document.createElement('div');
+	    leaflet_map_container.setAttribute('class', 'leaflet-map-container');
+	    leaflet_map_container.setAttribute('style', 'height: 90%; background-color: #888');
+
+	    // Container for the orthomosaic selection
+	    var ortho_selection_container = document.createElement('div');
+	    ortho_selection_container.setAttribute('class', 'ortho-selection-container');
+
+	    // Add containers to the parent map container
+	    d3.select(map_container).node().appendChild(ortho_selection_container);
+	    d3.select(map_container).node().appendChild(leaflet_map_container);
+
+	    this.map_container = d3.select(leaflet_map_container);
+	    this.ortho_selection_container = d3.select(ortho_selection_container);
 	    this.brapi_endpoint = brapi_endpoint;
 
 	    // Parse Options
@@ -2270,6 +2285,47 @@
 	    this.onLoading = (loading) => {
 	      this.loading.style("display", loading ? 'block' : 'none');
 	    }
+
+	    this.displayOrthoSelection = (orthos) => {
+	      orthos.sort((a, b) => b.date > a.date ? -1 : 1);
+	      let html = '';
+	      if ( orthos && orthos.length > 0 ) {
+	        html = "<div style='display: flex; align-items: baseline; gap: 25px; padding: 15px'>";
+	        html += "<p><strong>View Orthomosaic Imagery</strong></p>";
+	        html += `<select class='ortho-select form-control' style='width: 200px'>`;
+	        html += "<option value=''>Select a Date</option>";
+	        orthos.forEach((o) => {
+	          html += `<option value='${o.url}'>${o.date}</option>`;
+	        });
+	        html += "</select>";
+	        html += "</div>";
+	      }
+	      this.ortho_selection_container.html(html);
+	      var map = this.map;
+	      jQuery(".ortho-select").on('change', function() { window.onOrthoSelection(this, map) });
+	    }
+
+	    // TODO: set dynamic tile server in the config file
+	    window.onOrthoSelection = (e, map) => {
+	      var select = jQuery(e);
+	      var url = select.find(":selected").val();
+
+	      // Remove any previous layer
+	      if ( window.orthoMapLayer ) {
+	        map.removeLayer(window.orthoMapLayer);
+	      }
+
+	      // Add new layer
+	      if ( url && url !== '' ) {
+	        window.orthoMapLayer = L.tileLayer(`https://tt.d2s.orgXXXXX/cog/tiles/WebMercatorQuad/{z}/{x}/{y}@2x?url=${url}`, {
+	          minZoom: 16,
+	          maxZoom: 30,
+	          attribution: 'UASHub'
+	        });
+	        window.orthoMapLayer.addTo(map);
+	      }
+
+	    }
 	  }
 
 	  removeControls() {
@@ -2294,17 +2350,12 @@
 
 	  loadStudy(studyDbId) {
 	    const brapi = BrAPI(this.brapi_endpoint, "2.0", this.opts.brapi_auth);
-	    brapi.studies_detail({ studyDbId }).map((study) => {
-	      if ( study ) this.enableOrthomosaics(study);
-	    });
+	    brapi.studies_detail({ studyDbId }).map((study) => this.enableOrthomosaics(study));
 	  }
 
 	  enableOrthomosaics(study) {
-	    if ( study && study.additionalInfo && study.additionalInfo.orthomosaics ) {
-	      const orthos = study.additionalInfo.orthomosaics;
-	      console.log("ENABLE ORTHOMOSAICS");
-	      console.log(orthos);
-	    }
+	    const orthos = study && study.additionalInfo && study.additionalInfo.orthomosaics ? study.additionalInfo.orthomosaics : [];
+	    this.displayOrthoSelection(orthos);
 	  }
 
 	  drawPlots() {
