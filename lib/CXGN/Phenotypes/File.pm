@@ -81,7 +81,7 @@ sub distinct_levels_for_factor {
     my $self = shift;
     my $factor = shift;
 
-    print STDERR "LEVELS: ".Dumper($self->levels());
+    #print STDERR "LEVELS: ".Dumper($self->levels());
     return $self->levels()->{$factor}->{distinct};
 }
 

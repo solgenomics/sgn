@@ -76,7 +76,7 @@ for(i in 1:length(trait)){
     if (genotypeEffectType=="random") {
 
         mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ units, data=pd)
-
+        print(paste("MIXED MODEL: ", mixmodel))
 	      varcomp<- summary(mixmodel)$varcomp
         print(varcomp)
 
@@ -86,7 +86,7 @@ for(i in 1:length(trait)){
 
         ##BLUPS
         res <- randef(mixmodel) ##obtain the blups
-        BLUP <- as.data.frame(res)
+        BLUP <- as.data.frame(res)<
         #print(BLUP)
 
         ##ajusted means
@@ -99,10 +99,15 @@ for(i in 1:length(trait)){
 
 
     } else {
-
+        if (random_model!="") {
         mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ units, data=pd)
-        varcomp<-summary(mixmodel)$varcomp
+        } else {
+        mixmodel = mmer(as.formula(fixed_model),  rcov = ~ units, data=pd)
 
+        }
+
+        varcomp<-summary(mixmodel)$varcomp
+        print(paste("MIXED MODEL: ", mixmodel))
 
         #Computing fixed effects
         blue = summary(mixmodel)$beta
