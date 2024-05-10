@@ -8,6 +8,7 @@ use Cwd qw(cwd);
 use CXGN::List;
 use CXGN::BreederSearch;
 use CXGN::Phenotypes::PhenotypeMatrix;
+our $VERSION = '0.01';
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
