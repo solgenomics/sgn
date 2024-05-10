@@ -247,6 +247,7 @@ sub generate_model_sommer {
 		
 		
 		if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
+
 		
 		else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
 	    }
@@ -271,34 +272,35 @@ sub generate_model_sommer {
 	$mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction." ".$mmer_variable_slope_intersects;
     }
 
-    if (scalar(@$variable_slope_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
-    
-    else {
-	
-        foreach my $intersects(@$variable_slope_intersects){
-	    
-	    
-	    if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
-	    #if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
-	    
-	    else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
-	}
-    }
-    
-    if ($mmer_random_factors){
-	$formula = " ~ ".$mmer_random_factors ;
-    }
-    if ($mmer_fixed_factors_interaction) {
-	$formula.=" ".$mmer_fixed_factors_interaction;
-    }
-    if ($mmer_variable_slope_intersects) {
-	$formula.=" ".$mmer_variable_slope_intersects;
-    }
-}
+# <<<<<<< HEAD
+# =======
+#   if (scalar(@$variable_slope_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
+
+#   else {
+
+#         foreach my $intersects(@$variable_slope_intersects){
 
 
-#location:genotype
-    
+#   	       if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
+#   	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
+
+#   	       else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
+#          }
+#       }
+
+#       if ($mmer_random_factors){
+# 	         $formula = " ~ ".$mmer_random_factors ;
+#       }
+#       if ($mmer_fixed_factors_interaction) {
+#           $formula.=" ".$mmer_fixed_factors_interaction;
+#       }
+#       if ($mmer_variable_slope_intersects) {
+#           $formula.=" ".$mmer_variable_slope_intersects;
+#       }
+#    }
+# >>>>>>> master
+    #location:genotype
+
     print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
     print STDERR "mmer_random_factors = $formula\n";
 
