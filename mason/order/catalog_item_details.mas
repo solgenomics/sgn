@@ -63,7 +63,9 @@ $main_page
             <div class="panel panel-default">
                 <div class="panel-body">
                     <button id="edit_catalog_item_link" class="btn btn-primary btn-sm">Edit Catalog Item</button>
+                    <!--
                     <button id="delete_catalog_item_button" class="btn btn-primary btn-sm">Delete Catalog Item</button>
+                    -->
                 </div>
             </div>
         </div>
