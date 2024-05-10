@@ -28,6 +28,7 @@ use LWP::UserAgent;
 use CXGN::ZipFile;
 use Text::CSV;
 use SGN::Controller::AJAX::DroneImagery::DroneImagery;
+our $VERSION = '0.01';
 
 BEGIN { extends 'Catalyst::Controller'; }
 
