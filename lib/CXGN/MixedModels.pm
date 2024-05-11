@@ -213,83 +213,116 @@ sub generate_model_sommer {
     my $random_factors = $self->random_factors();
     my $formula = "";
     print STDERR "FIXED FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors);
-    print STDERR "FIXED InteractionFACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors_interaction);
-    print STDERR "RANDOM InteractionFACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($random_factors_interaction);
+    print STDERR "FIXED Interaction FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors_interaction);
+    print STDERR "RANDOM Interaction FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($random_factors_interaction);
 
     my $error;
-
+    
     ## generate the fixed factor formula
     #
     my $mmer_fixed_factors = "";
     my $mmer_random_factors = "";
     my $mmer_fixed_factors_interaction = "";
     my $mmer_variable_slope_intersects ="";
-
-    if (scalar(@$dependent_variables) > 1) { die "Works only with one trait for now! :-("; }
+    
+    if (scalar(@$dependent_variables) > 1) { return ("", "For Sommer, only one trait can be analyzed at one time. Please go back and select only one trait or select lme4.") }
+    
     if (scalar(@$dependent_variables) > 0) {
+	print STDERR "preparing fixed factors...\n";
 	if (scalar(@$fixed_factors) == 0) { $mmer_fixed_factors = "1"; }
 	else { $mmer_fixed_factors = join(" + ", @$fixed_factors); }
-
+	
 	print STDERR "DEPENDENT VARIABLES: ".Dumper($dependent_variables);
-
+	
 	$mmer_fixed_factors = make_R_variable_name($dependent_variables->[0]) ." ~ ". $mmer_fixed_factors;
+	
+	if (scalar(@$random_factors)== 0) {$mmer_random_factors = 1; }
 
-
-	if (scalar(@$random_factors)== 0) {$mmer_random_factors = ""; }
-	else { $mmer_random_factors = join("+", @$random_factors);}
-
+	else {
+	    print STDERR "Preparing random factors...\n";
+	    $mmer_random_factors = join("+", @$random_factors);
+	}
+	
 	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = ""; }
+	
+	else {
+	    
+	    foreach my $interaction(@$fixed_factors_interaction){
+		
+		
+		if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
 
-  else {
-
-      foreach my $interaction(@$fixed_factors_interaction){
-
-
-	       if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
-	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
-
-	       else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
-       }
-    }
-
-  if (scalar(@$variable_slope_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
-
-  else {
-
-        foreach my $intersects(@$variable_slope_intersects){
+		
+		else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
+	    }
+	}
 
 
-  	       if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
-  	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
+	#####
+	# if (scalar(@$variable_slope_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
+	
+	# else {
+	    
+	#     foreach my $intersects(@$variable_slope_intersects){
+		
+		
+	# 	if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
+	# 	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
+		
+	# 	else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
+	#     }
+	# }
+	
+	
+	
+	# $mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction." ".$mmer_variable_slope_intersects;
+    
 
-  	       else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
-         }
-      }
-
-      if ($mmer_random_factors){
-	         $formula = " ~ ".$mmer_random_factors ;
-      }
-      if ($mmer_fixed_factors_interaction) {
-          $formula.=" ".$mmer_fixed_factors_interaction;
-      }
-      if ($mmer_variable_slope_intersects) {
-          $formula.=" ".$mmer_variable_slope_intersects;
-      }
-   }
-    #location:genotype
-
-    print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
-    print STDERR "mmer_random_factors = $formula\n";
-
-    #my $data = { fixed_factors => $mmer_fixed_factors,
+# <<<<<<< HEAD
+# =======
+	if (scalar(@$variable_slope_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
+	
+	else {
+	    
+	    foreach my $intersects(@$variable_slope_intersects){
+		
+		
+		if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
+		#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
+		
+		else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
+	    }
+	}
+	
+	if ($mmer_random_factors){
+	    $formula = " ~ ".$mmer_random_factors ;
+	}
+	if ($mmer_fixed_factors_interaction) {
+	    $formula.=" ".$mmer_fixed_factors_interaction;
+	}
+	if ($mmer_variable_slope_intersects) {
+	    $formula.=" ".$mmer_variable_slope_intersects;
+	}
+    
+	# >>>>>>> master
+	#location:genotype
+	
+	print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
+	print STDERR "mmer_random_factors = $formula\n";
+	
+	#my $data = { fixed_factors => $mmer_fixed_factors,
 	#	 random_factors => $mmer_random_factors,
-    #};
-
-    my $model = [ $mmer_fixed_factors, $formula ];
-
-    print STDERR "Data returned from generate_model_sommer: ".Dumper($model);
-
-    return ($model, $error);
+	#};
+	
+	my $model = [ $mmer_fixed_factors, $formula ];
+	
+	print STDERR "Data returned from generate_model_sommer: ".Dumper($model);
+	
+	return ($model, $error);
+    }
+    else {
+	return ("", $error);
+    }
 }
 
 
@@ -327,81 +360,88 @@ sub run_model {
     my $model;
     my $error;
     my $executable;
-    if ($self->engine() eq "lme4") {
-	($model, $error) = $self->generate_model();
-	$executable = " R/mixed_models.R ";
-    }
 
-    elsif ($self->engine() eq "sommer") {
-	($model, $error) = $self->generate_model_sommer();
-	$executable = " R/mixed_models_sommer.R ";
-    }
-
-    my $dependent_variables_R = make_R_variable_name($dependent_variables);
-
-    
-
-    # generate params_file
-    #
-    my $param_file = $self->tempfile().".params";
-    open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
-    print $F "dependent_variables <- c($dependent_variables_R)\n";
-    print $F "random_factors <- c($random_factors)\n";
-    print $F "fixed_factors <- c($fixed_factors)\n";
-
-    if ($self->engine() eq "lme4") {
-	print $F "model <- \"$model\"\n";
-    }
-    elsif ($self->engine() eq "sommer") {
-	print $F "fixed_model <- \"$model->[0]\"\n";
-	print $F "random_model <- \"$model->[1]\"\n";
-    }
-    close($F);
-
-    # clean phenotype file so that trait names are R compatible
-    #
-    my $clean_tempfile = $self->clean_file($self->tempfile());
-
-    # run r script to create model
-    #
-    my $cmd = "R CMD BATCH  '--args datafile=\"".$clean_tempfile."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
-    print STDERR "running R command $cmd...\n";
-
-    print STDERR "running R command $clean_tempfile...\n";
-
-    my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
-
-
-    $ctr->run_cluster($cmd);
-
-    while ($ctr->alive()) {
-	sleep(1);
-    }
-
-    # replace the R-compatible traits with original trait names
-    #
-    print STDERR "Converting files back to non-R headers...\n";
-    foreach my $f (
-	$self->tempfile().".adjustedBLUPs",
-	$self->tempfile().".BLUPs",
-	$self->tempfile().".BLUEs",
-	$self->tempfile().".adjustedBLUEs",
-	$self->tempfile().".anova",
-	$self->tempfile().".varcomp",
-	) {
-
-	my $conversion_matrix = $self->read_conversion_matrix($self->tempfile().".traits");
-
-	if (-e $f) { 
-	    $self->convert_file_headers_back_to_breedbase_traits($f, $conversion_matrix);
+    eval { 
+	
+	if ($self->engine() eq "lme4") {
+	    ($model, $error) = $self->generate_model();
+	    $executable = " R/mixed_models.R ";
 	}
-	else {
-	    print STDERR "File $f does not exist, not converting. This may be normal.\n";
+	
+	elsif ($self->engine() eq "sommer") {
+	    ($model, $error) = $self->generate_model_sommer();
+	    $executable = " R/mixed_models_sommer.R ";
 	}
+
+	if ($error) { die "$error"; }
+	
+	my $dependent_variables_R = make_R_variable_name($dependent_variables);
+	
+	# generate params_file
+	#
+	my $param_file = $self->tempfile().".params";
+	open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
+	print $F "dependent_variables <- c($dependent_variables_R)\n";
+	print $F "random_factors <- c($random_factors)\n";
+	print $F "fixed_factors <- c($fixed_factors)\n";
+	
+	if ($self->engine() eq "lme4") {
+	    print $F "model <- \"$model\"\n";
+	}
+	elsif ($self->engine() eq "sommer") {
+	    print $F "fixed_model <- \"$model->[0]\"\n";
+	    print $F "random_model <- \"$model->[1]\"\n";
+	}
+	close($F);
+	
+	# clean phenotype file so that trait names are R compatible
+	#
+	my $clean_tempfile = $self->clean_file($self->tempfile());
+	
+	# run r script to create model
+	#
+	my $cmd = "R CMD BATCH  '--args datafile=\"".$clean_tempfile."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
+	print STDERR "running R command $cmd...\n";
+	
+	print STDERR "running R command $clean_tempfile...\n";
+	
+	my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
+	
+	
+	$ctr->run_cluster($cmd);
+	
+	while ($ctr->alive()) {
+	    sleep(1);
+	}
+	
+	# replace the R-compatible traits with original trait names
+	#
+	print STDERR "Converting files back to non-R headers...\n";
+	foreach my $f (
+	    $self->tempfile().".adjustedBLUPs",
+	    $self->tempfile().".BLUPs",
+	    $self->tempfile().".BLUEs",
+	    $self->tempfile().".adjustedBLUEs",
+	    $self->tempfile().".anova",
+	    $self->tempfile().".varcomp",
+	    ) {
+	    
+	    my $conversion_matrix = $self->read_conversion_matrix($self->tempfile().".traits");
+	    
+	    if (-e $f) { 
+		$self->convert_file_headers_back_to_breedbase_traits($f, $conversion_matrix);
+	    }
+	    else {
+		print STDERR "File $f does not exist, not converting. This may be normal.\n";
+	    }
+	}
+    };
+
+    if ($@) {
+	$error = $@;
     }
 
-    
-    
+    return $error;    
 }
 
 =head2 make_R_variable_name
@@ -534,6 +574,7 @@ sub read_conversion_matrix {
 	$conversion_matrix{$new} = $old;
     }
     return \%conversion_matrix;
-}
+    }
+
 
 1;

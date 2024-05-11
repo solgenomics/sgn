@@ -90,7 +90,7 @@ for(i in 1:length(trait)){
         #print(BLUP)
 
         ##ajusted means
-        p0 = predict.mmer(mixmodel, classify="germplasmName") ##runs the prediction
+        p0 = predict.mmer(mixmodel, D="germplasmName") ##runs the prediction
         summary(p0)
         adj = p0$pvals                                        ##obtains the predictions
         adjusted_means = as.data.frame(adj)
@@ -116,7 +116,7 @@ for(i in 1:length(trait)){
         #BLUE = merge(x = BLUE, y = fixedeff, by="germplasmName", all=TRUE)
 
         # compute adjusted blues
-        p0 = predict.mmer(mixmodel, classify="germplasmName") ##runs the prediction
+        p0 = predict.mmer(mixmodel, D="germplasmName") ##runs the prediction
         summary(p0)
         adj = p0$pvals                                        ##obtains the predictions
         adjustedBLUE = as.data.frame(adj)
