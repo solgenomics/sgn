@@ -528,7 +528,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         ORDER BY cvterm.name ASC
         $order_by_additional ";
 
-    my $h = $dbh->prepare($q);
+    $h = $dbh->prepare($q);
     
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
@@ -5029,7 +5029,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     my $filename;
     my @data;
     if ( $type eq 'planting' || $type eq 'harvest' ) {
-        $filename = $type . "_order_" . join("-", @trial_ids) . ".csv";
+        $filename = $type . "_order.csv";
         my $col = $type . "_order";
 
         # Add CSV headers
@@ -5079,7 +5079,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     }
 
     elsif ( $type eq 'harvestmaster' ) {
-        $filename = "harvestmaster_" . join("-", @trial_ids) . ".csv";
+        $filename = "harvest_master.csv";
 
         # Add CSV headers
         my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "rep_number", "block_number", "is_a_control");
@@ -5130,7 +5130,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
 
     # Return the generated file
     $c->res->content_type('text/csv');
-    $c->res->headers->push_header("Content-disposition", "attachment; filename=\"$filename\"");
+    $c->res->headers->push_header("Content-disposition', 'attachment; filename=\"$filename\"");
     $c->res->body( join("\n", map { $_ = join(",", @{$_}) } @data) );
     return;
 }
