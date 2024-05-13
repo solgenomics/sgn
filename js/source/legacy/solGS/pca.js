@@ -231,7 +231,6 @@ solGS.pca = {
   getSelectedPopPcaArgs: function (runPcaElemId) {
     var pcaArgs;
 
-    // var runPcaElemId = this.getRunPcaId(pcaPopId);
     var selectedPopDiv = document.getElementById(runPcaElemId);
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
@@ -275,54 +274,6 @@ solGS.pca = {
 
     return checkCache;
   },
-
-  // optJobSubmission: function (page, args) {
-  //   var title =
-  //     "<p>This analysis may take a long time. " +
-  //     "Do you want to submit the analysis and get an email when it completes?</p>";
-
-  //   var jobSubmit = '<div id= "pca_submit">' + title + "</div>";
-
-  //   jQuery(jobSubmit).appendTo("body");
-
-  //   jQuery("#pca_submit").dialog({
-  //     height: 200,
-  //     width: 400,
-  //     modal: true,
-  //     title: "pca job submission",
-  //     buttons: {
-  //       OK: {
-  //         text: "Yes",
-  //         class: "btn btn-success",
-  //         id: "queue_job",
-  //         //   click: function () {
-  //         //     jQuery(this).dialog("close");
-  //         //     solGS.submitJob.checkUserLogin(page, args);
-  //         //   },
-  //       },
-
-  //       No: {
-  //         text: "No, I will wait till it completes.",
-  //         class: "btn btn-warning",
-  //         id: "no_queue",
-  //         // click: function () {
-  //         //   jQuery(this).dialog("close");
-
-  //         //   solGS.pca.runPcaAnalysis(args);
-  //         // },
-  //       },
-
-  //       Cancel: {
-  //         text: "Cancel",
-  //         class: "btn btn-info",
-  //         id: "cancel_queue_info",
-  //         click: function () {
-  //           jQuery(this).dialog("close");
-  //         },
-  //       },
-  //     },
-  //   });
-  // },
 
   pcaDataTypeSelectId: function (pcaPopId) {
     if (location.pathname.match(/pca\/analysis/) && pcaPopId) {
