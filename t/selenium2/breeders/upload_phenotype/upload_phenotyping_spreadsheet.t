@@ -215,10 +215,6 @@ $t->while_logged_in_as("submitter", sub {
             "upload_phenotype_spreadsheet_verify_status",
             "id", "verify the verification")->get_attribute('innerHTML');
 
-        use Data::Dumper;
-        print STDERR "\n\n\n\n=====> VERIFY STATUS #1\n";
-        print STDERR Dumper $verify_status;
-
         ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
         ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
         ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
@@ -234,10 +230,6 @@ $t->while_logged_in_as("submitter", sub {
         $verify_status = $t->find_element_ok(
             "upload_phenotype_spreadsheet_verify_status",
             "id", "verify the verification")->get_attribute('innerHTML');
-
-        use Data::Dumper;
-        print STDERR "\n\n\n\n=====> VERIFY STATUS #1\n";
-        print STDERR Dumper $verify_status;
 
         ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation");
         ok($verify_status =~ /57 previously stored values skipped/, "Verify warnings after store validation");
