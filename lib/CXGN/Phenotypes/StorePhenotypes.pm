@@ -387,7 +387,7 @@ sub verify {
                 if (exists($check_trait_format{$trait_cvterm_id})) {
                     if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
                         my $trait_format_checked = looks_like_number($trait_value);
-                        if (!$trait_format_checked) {
+                        if (!$trait_format_checked && $trait_value ne '') {
                             $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                         }
                     }
