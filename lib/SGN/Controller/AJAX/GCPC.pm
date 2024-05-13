@@ -268,9 +268,10 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
 	print STDERR "ACCESSIONS: ".Dumper($accessions);
 
-	my @accession_ids = map { $_->[0] } @$accessions;
+	my @accession_ids = map { $_->[0] } $accessions;
 	$accession_sex_scores = $self->get_trait_for_accessions($c, $plant_sex_cvterm_id, \@accession_ids);
-	$plant_sex_variable_name_R = make_R_trait_name($plant_sex_variable_name);
+	$plant_sex_variable_name_R = make_R_trait_name($plant_sex_variable_name);   
+    
     }
     else {
 	print STDERR "NOT RETRIEVING sEX DATA with $plant_sex_variable_name, $plant_sex_cvterm_id\n";
@@ -408,20 +409,40 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 #    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
 
     my @data;
-
-    open(my $F, "<", $pheno_filepath.".clean.out") || die "Can't open result file $pheno_filepath".".clean.out";
-    my $header = <$F>;
-    my @h = split(',', $header);
     my @spl;
-    foreach my $item (@h) {
-    push  @spl, {title => $item};
-  }
-    print STDERR "Header: ".Dumper(\@spl);
-    while (<$F>) {
-	chomp;
-	my @fields = split /\,/;
-	foreach my $f (@fields) { $f =~ s/\"//g; }
-	push @data, \@fields;
+    my $basename;
+    my $imagename;
+    eval {
+        open(my $F, "<", $pheno_filepath.".clean.out") || die "Can't open result file $pheno_filepath".".clean.out";
+        my $header = <$F>;
+        my @h = split(',', $header);
+        foreach my $item (@h) {
+            push  @spl, {title => $item};
+        }
+        print STDERR "Header: ".Dumper(\@spl);
+        while (<$F>) {
+	        chomp;
+	        my @fields = split /\,/;
+	        foreach my $f (@fields) { $f =~ s/\"//g; }
+	        push @data, \@fields;
+        }
+
+        print STDERR "FORMATTED DATA: ".Dumper(\@data);
+
+        $basename = basename($pheno_filepath.".clean.out");
+        $imagename = basename($pheno_filepath.".clean.png");
+
+        my $statsfile = $pheno_filepath.".clean.summary";
+    
+        copy($pheno_filepath.".clean.out", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$basename);
+
+        copy($pheno_filepath.".clean.png", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$imagename);
+    };
+    if ($@){
+        $c->stash->{rest} = { 
+            error=> $@
+        };
+        return;
     }
 
     print STDERR "FORMATTED DATA: ".Dumper(\@data);
@@ -438,7 +459,6 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $download_url = '/documents/tempfiles/gcpc_files/'.$basename;
     my $histogram_image = '/documents/tempfiles/gcpc_files/'.$imagename;
     my $download_link = "<a href=\"$download_url\" download>Download Results</a>";
-
 
     $c->stash->{rest} = {
 	data => \@data,

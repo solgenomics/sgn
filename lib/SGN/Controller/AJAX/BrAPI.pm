@@ -3525,7 +3525,7 @@ sub observationvariable_list_GET {
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		traitClasses => $clean_inputs->{traitClass},
 		studyDbIds => $clean_inputs->{studyDbId},
-		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceIds => $clean_inputs->{externalReferenceId},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		supportedCrop =>$supported_crop,
 	}, $c);

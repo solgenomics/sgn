@@ -132,6 +132,9 @@ $analytics_protocol_create_date => undef
 $analytics_protocol_properties => {}
 $analytics_protocol_result_summary => {}
 
+#Specific to activity page
+$vendor_id => undef
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -296,6 +299,10 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'stock_related_stock_section'){
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
+% if ($info_section_id eq 'vector_related_stocks_section'){
+                                <& /stock/vector_related_stocks.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_related_stocks_section
+
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
 
@@ -373,6 +380,9 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_project_plates'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_plates.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_plates
+% if ($info_section_id eq 'genotyping_data_archived_vcf') {
+                                <& /breeders_toolbox/genotyping_data_project/genotype_archived_vcf.mas, trial_id=>$trial_id &>
+% } #End genotyping_data_archived_vcf
 % if ($info_section_id eq 'genotyping_project_deletion_section'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_deletion_section
@@ -550,6 +560,20 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'program_product_profile_section'){
                                 <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
 % } #End program_product_profile_section
+
+% if ($info_section_id eq 'activity_project_details'){
+                                <& /tracking_activities/activity_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner, vendor_id => $vendor_id &>
+% } #End activity_project_details
+% if ($info_section_id eq 'active_tracking_identifiers_section'){
+                                <& /tracking_activities/active_tracking_identifiers.mas, trial_id=>$trial_id &>
+% } #End active_tracking_identifiers_section
+
+% if ($info_section_id eq 'transformation_project_details'){
+                                <& /transformation/transformation_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner &>
+% } #End transformation_project_details
+% if ($info_section_id eq 'transformations_in_project_section'){
+                                <& /transformation/transformations_in_project.mas, trial_id=>$trial_id &>
+% } #End transformations_in_project_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

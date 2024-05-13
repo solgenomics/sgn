@@ -1,0 +1,115 @@
+<%args>
+
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
+
+<div class="container-fluid">
+
+<& /page/page_title.mas, title=>'Gene annotation and families' &>
+
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
+
+</%perl>
+
+<!-- <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+
+  <div id="stock_search_form" class="well well-sm"> -->
+
+    <!-- <&| /page/info_section.mas, title => 'Name Search', collapsible=>1, collapsed=>0 &> -->
+
+    <!-- <div class="row">
+      <div class="col-sm-11">
+        <div class="form-group form-group-sm">
+      	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
+          <div class="col-sm-9" >
+            <div class="form-group form-group-sm">
+              <div class="input-group">
+                <span class="input-group-btn" width="20%">
+                  <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
+                    <option title="starts_with" value="starts_with" selected="selected">starts with</option>
+                    <option title="contains" value="contains">contains</option>
+                    <option title="ends with" value="ends_with">ends with</option>
+                    <option title="exactly" value="exactly">exactly</option>
+                  </select>
+                </span>
+                  <span class="input-group-btn">
+                  <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="Type search here..."/>
+                </span>
+              </div>
+            </div>
+            <div class="form-group form-group-sm">
+              <label class="col-sm-3 control-label">Stock Type: </label>
+              <div class="col-sm-9" >
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+    <!-- </&> -->
+
+
+
+    <!-- <center>
+    <button class="btn btn-primary" id="submit_stock_search" />Search</button>
+    </center>
+    <br/><br/>
+  </div>
+</&> -->
+
+<br />
+
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+
+<div class="well well-sm">
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div id="stock_search_results_div" style="overflow:scroll" >
+                <table id="stock_search_results" width="100%" class="table table-hover table-striped">
+                <thead>
+                  <tr>
+                    <th>Stock Name</th>
+                    <!-- <th>seed_ortholog</th> -->
+                    <th>Description</th>
+                    <!-- <th>Preferred_name</th> -->
+                    <th>GOs</th>
+                    <!-- <th>KEGG_Pathway</th> -->
+                    <th>PFAMs</th>
+                </tr>
+                </thead>
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</&>
+
+
+
+
+</div>
+
+<script>
+
+
+
+jQuery(document).ready(function () {
+
+  var stock_table = jQuery('#stock_search_results').DataTable({
+        'columnDefs': [{ 'width': 50, 'targets': 0 }],
+    // 'fixedColumns': true,
+        'ajax': { 'url':  '/ajax/search/annotation'}
+    });
+  });
+</script>

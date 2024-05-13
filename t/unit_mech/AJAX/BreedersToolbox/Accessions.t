@@ -152,6 +152,36 @@ is(scalar @{$response->{'added'}}, 5);
 my $list_id = $message_hash->{list_id};
 CXGN::List::delete_list($schema->storage->dbh, $list_id);
 
+# test upload of synonym append / replace function
+my $synonyms_file = $f->config->{basepath}."/t/data/stock/test_accession_upload_synonyms.xls";
+$response = $ua->post(
+    'http://localhost:3010/ajax/accessions/verify_accessions_file',
+    Content_Type => 'form-data',
+    Content => [
+        new_accessions_upload_file => [ $synonyms_file, 'test_accession_upload', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id"=>$sgn_session_id,
+        "fuzzy_check_upload_accessions"=>1,
+        "append_synonyms"=>1
+    ]
+);
+ok($response->is_success);
+my $resp_append = decode_json $response->decoded_content;
+is_deeply($resp_append->{'full_data'}->{'new_test_accession03'}->{'synonyms'}, ['new_test_accession3_synonym1','new_test_accession3_synonym2']);
+
+$response = $ua->post(
+    'http://localhost:3010/ajax/accessions/verify_accessions_file',
+    Content_Type => 'form-data',
+    Content => [
+        new_accessions_upload_file => [ $synonyms_file, 'test_accession_upload', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id"=>$sgn_session_id,
+        "fuzzy_check_upload_accessions"=>1,
+        "append_synonyms"=>0
+    ]
+);
+ok($response->is_success);
+my $resp_replace = decode_json $response->decoded_content;
+is_deeply($resp_replace->{'full_data'}->{'new_test_accession03'}->{'synonyms'}, ['new_test_accession3_synonym2']);
+
 #Remove added stocks so tests downstream do not fail, but also test if for attributes
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession01'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
