@@ -10,6 +10,9 @@ use CXGN::Genotype::Search;
 use Data::Dumper;
 use JSON;
 use CXGN::Genotype::StoreGenotypingProject;
+use CXGN::Genotype::Protocol;
+use CXGN::Genotype::ProtocolProp;
+use SGN::Model::Cvterm;
 
 local $Data::Dumper::Indent = 0;
 
@@ -121,6 +124,7 @@ ok($message_hash->{nd_protocol_id});
 
 my $kasp_project_id_1 = $message_hash->{project_id};
 my $kasp_protocol_id_1 = $message_hash->{nd_protocol_id};
+
 
 $mech->get_ok('http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id='.$kasp_protocol_id_1.'&marker_names=S01_0001');
 $response = decode_json $mech->content;
@@ -278,6 +282,43 @@ $response = $ua3->post(
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
 ok($message_hash->{warning});
+
+#checking protocol metadata
+my $protocol = CXGN::Genotype::Protocol->new({
+    bcs_schema => $schema,
+    nd_protocol_id => $kasp_protocol_id_1
+});
+
+is($protocol->protocol_name, 'kasp_protocol_1');
+is($protocol->assay_type, 'KASP');
+is($protocol->reference_genome_name, 'Mesculenta_511_v7');
+is($protocol->species_name, 'Manihot esculenta');
+
+#editing protocol metadata
+my $protocol_vcf_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+my $protocolprop_rs = $schema->resultset('NaturalDiversity::NdProtocolprop')->find({'nd_protocol_id' => $kasp_protocol_id_1, 'type_id' => $protocol_vcf_details_cvterm_id});
+my $protocolprop_id = $protocolprop_rs->nd_protocolprop_id();
+my $protocolprop = CXGN::Genotype::ProtocolProp->new({
+    bcs_schema => $schema,
+    parent_id => $kasp_protocol_id_1,
+    prop_id => $protocolprop_id
+});
+
+ok($protocol->set_name('kasp_protocol_1_edited'));
+ok($protocol->set_description('test editing description'));
+
+$protocolprop->reference_genome_name('Mesculenta_511_v8');
+ok($protocolprop->store());
+
+#after editing
+my $protocol_edited = CXGN::Genotype::Protocol->new({
+    bcs_schema => $schema,
+    nd_protocol_id => $kasp_protocol_id_1
+});
+
+is($protocol_edited->protocol_name, 'kasp_protocol_1_edited');
+is($protocol_edited->protocol_description, 'test editing description');
+is($protocol_edited->reference_genome_name, 'Mesculenta_511_v8');
 
 ## DELETE genotyping protocols, data, plate and projects
 $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_1?sgn_session_id=$sgn_session_id");

@@ -6,7 +6,7 @@ use Test::More;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
 use CXGN::List;
-use SimulateC;
+#use SimulateC;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 
