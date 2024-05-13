@@ -896,34 +896,46 @@ solGS.cluster = {
     var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
     lists = [clusterPrivatePops, clusterPublicLists]
 
-    return lists.flat();
+    lists = lists.flat();
+    lists = this.addDataStrAttr(lists);
+
+    return lists;
+
+  },
+
+  addDataStrAttr: function(lists) {
+
+    for (var i = 0; i < lists.length; i++) {
+      if (lists[i]) {
+        lists[i]["data_str"] = 'list';
+      }
+    }
+
+    return lists;
+  },
+
+
+  getClusterPopsRows: function(clusterPops) {
+
+    var clusterPopsRows = [];
+
+    for (var i = 0; i < clusterPops.length; i++) {
+      if (clusterPops[i]) {
+        var clusterPopRow = this.createRowElements(clusterPops[i]);
+        clusterPopsRows.push(clusterPopRow);
+      }
+    }
+
+    return clusterPopsRows;
 
   },
 
   getClusterPops: function () {
 
     var lists = this.getClusterLists();
-    var formattedLists = [];
-
-    for (var i = 0; i < lists.length; i++) {
-      if (lists[i]) {
-        lists[i]["data_str"] = 'list';
-        var formattedList = this.createRowElements(lists[i]);
-        formattedLists.push(formattedList);
-      }
-    }
-
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    var formattedDatasets = [];
-
-    for (var i = 0; i < datasets.length; i++) {
-      if (datasets[i]) {
-        var formattedDataset = this.createRowElements(datasets[i]);
-        formattedDatasets.push(formattedDataset);
-      }
-    }
-
-    clusterPops = [formattedDatasets, formattedLists];
+    
+    clusterPops = [lists, datasets];
 
     return clusterPops.flat();
 
@@ -1306,8 +1318,9 @@ jQuery(document).ready(function () {
     var clusterPopsTable = solGS.cluster.createTable(tableId)
     jQuery(clusterPopsDataDiv).append(clusterPopsTable).show();
 
-    var clusterPops = solGS.cluster.getClusterPops();
+    var clusterPops = solGS.cluster.getClusterPops()
+    var clusterPopsRows = solGS.cluster.getClusterPopsRows(clusterPops);
 
-    solGS.cluster.displayClusterPopsTable(tableId, clusterPops)
+    solGS.cluster.displayClusterPopsTable(tableId, clusterPopsRows)
   }
 });
