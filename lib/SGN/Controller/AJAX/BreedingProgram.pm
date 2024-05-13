@@ -664,8 +664,8 @@ sub upload_profile_POST : Args(0) {
         my $stored_profile_name = $profile_info[1];
         push @db_profile_names, $stored_profile_name;
     }
-    if (grep { $_ eq $new_profile_name } @db_profile_names) {
-        $c->stash->{rest} = {error => 'Please use a different product profile name. This name is already used for another product profile!'};
+    if ($new_profile_name ~~ @db_profile_names){
+        $c->stash->{rest} = {error=>'Please use different product profile name. This name is already used for another product profile!'};
         return;
     }
 

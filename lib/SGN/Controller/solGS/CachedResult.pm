@@ -268,11 +268,12 @@ sub _check_selection_pop_all_traits_output {
     $c->stash->{rest}{cached} = 0;
     if ( $sel_traits_ids->[0] ) {
         if ( scalar(@$sel_traits_ids) == scalar(@$training_models_traits) ) {
-	    if (join(',', sort(@$sel_traits_ids)) eq join(',', sort(@$training_models_traits))) {
+            if ( sort(@$sel_traits_ids) ~~ sort(@$training_models_traits) ) {
                 $c->stash->{rest}{cached} = 1;
             }
         }
     }
+
 }
 
 sub _check_selection_pop_output {
