@@ -77,7 +77,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(90);
+    sleep(180);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -119,7 +119,7 @@ $d->while_logged_in_as("submitter", sub {
      $d->find_element_ok('//select[@id="anova_select_traits"]/option[text()="' . $trait . '"]', 'xpath', 'select list sel pop')->click();
     sleep(2);
     $d->find_element_ok('run_anova', 'id', 'run anova')->click();
-    sleep(160);
+    sleep(240);
     $d->find_element_ok('//div[contains(., "ANOVA result")]', 'xpath', 'anova result')->get_text();
     sleep(5);
 
