@@ -12,7 +12,7 @@ solGS.cluster = {
   clusterMsgDiv: "#cluster_message",
   clusterPopsDiv: "#cluster_pops_select_div",
   clusterPopsSelectMenuId: "#cluster_pops_select",
-  clusterPopsDataDiv: "#cluster_pops_selected",
+  clusterPopsDataDiv: "#cluster_pops_data_div",
 
   getClusterArgsFromUrl: function () {
     var page = location.pathname;
@@ -889,9 +889,9 @@ solGS.cluster = {
 
   },
 
-  getClusterLists: function () {
+  getClusterLists: function (listTypes) {
     var list = new CXGN.List();
-    var lists = list.getLists(["accessions", "plots", "trials"]);
+    var lists = list.getLists(listTypes);
     var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
     var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
     lists = [clusterPrivatePops, clusterPublicLists]
@@ -932,7 +932,7 @@ solGS.cluster = {
 
   getClusterPops: function () {
 
-    var lists = this.getClusterLists();
+    var lists = this.getClusterLists(["accessions", "plots", "trials"]);
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
     
     clusterPops = [lists, datasets];
@@ -943,9 +943,10 @@ solGS.cluster = {
 
 
   displaySelectedClusterPopsTable: function () {
-    var list = new CXGN.List();
-    var lists = list.getLists(["accessions", "plots", "trials"]);
+   
+    var lists = this.getClusterLists(["accessions", "plots", "trials"]);
 
+    var list = new CXGN.List();
     var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
 
     var menuId = this.clusterPopsSelectMenuId;
