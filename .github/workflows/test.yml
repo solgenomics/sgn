@@ -6,7 +6,7 @@ on:
 
 jobs:
   test_breedbase:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
       image: breedbase/breedbase:latest
       env:
@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout sgn
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
     
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
