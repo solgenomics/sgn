@@ -270,6 +270,7 @@ sub add_cross : Local : ActionClass('REST') { }
 sub add_cross_POST :Args(0) {
     my ($self, $c) = @_;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
@@ -279,7 +280,7 @@ sub add_cross_POST :Args(0) {
     $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
     print STDERR "CROSS COMBINATION=".Dumper($cross_combination)."\n";
-
+    my $user_id;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a cross.\n";
         $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
@@ -290,6 +291,8 @@ sub add_cross_POST :Args(0) {
         print STDERR "User does not have sufficient privileges.\n";
         $c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
         return;
+    } else {
+        $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
     if ($cross_type eq "polycross") {
@@ -297,7 +300,7 @@ sub add_cross_POST :Args(0) {
         my @maternal_parents = split (',', $c->req->param('maternal_parents'));
         print STDERR "Maternal parents array:" . @maternal_parents . "\n Maternal parents with ref:" . \@maternal_parents . "\n Maternal parents with dumper:". Dumper(@maternal_parents) . "\n";
         my $paternal = $cross_name . '_population';
-        my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, name => $paternal, members =>  \@maternal_parents} );
+        my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, phenome_schema => $phenome_schema, user_id => $user_id, name => $paternal, members =>  \@maternal_parents} );
         $population_add->add_population();
         $cross_type = 'polycross';
         print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;

@@ -25,6 +25,7 @@ sub create_population :Path('/ajax/population/new') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $session_id = $c->req->param("sgn_session_id");
     my $user_role;
     my $user_id;
@@ -64,7 +65,7 @@ sub create_population :Path('/ajax/population/new') Args(0) {
         $members = \@input_members;
     }
 
-    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, name => $population_name, members => $members} );
+    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, phenome_schema => $phenome_schema, user_id => $user_id, name => $population_name, members => $members} );
     my $return = $population_add->add_population();
 
     $c->stash->{rest} = $return;
@@ -189,7 +190,7 @@ sub remove_population_member :Path('/ajax/population/remove_member') Args(0) {
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
-    } else { 
+    } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to remove an accession from population!'};
             $c->detach();
