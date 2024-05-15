@@ -26,6 +26,8 @@ sub create_population :Path('/ajax/population/new') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $session_id = $c->req->param("sgn_session_id");
+    my $user_role;
+    my $user_id;
 
     if ($session_id) {
         my $dbh = $c->dbc->dbh;
@@ -36,15 +38,12 @@ sub create_population :Path('/ajax/population/new') Args(0) {
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
     } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to create a population!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
 
@@ -75,6 +74,8 @@ sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0
     my $self = shift;
     my $c = shift;
     my $session_id = $c->req->param("sgn_session_id");
+    my $user_role;
+    my $user_id;
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -85,15 +86,12 @@ sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
+    } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to add population members!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
 
@@ -120,6 +118,8 @@ sub delete_population :Path('/ajax/population/delete') Args(0) {
     my $c = shift;
 
     my $session_id = $c->req->param("sgn_session_id");
+    my $user_role;
+    my $user_id;
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -130,15 +130,12 @@ sub delete_population :Path('/ajax/population/delete') Args(0) {
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
+    } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to delete a population!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
 
@@ -180,6 +177,8 @@ sub remove_population_member :Path('/ajax/population/remove_member') Args(0) {
     my $self = shift;
     my $c = shift;
     my $session_id = $c->req->param("sgn_session_id");
+    my $user_role;
+    my $user_id;
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -190,15 +189,12 @@ sub remove_population_member :Path('/ajax/population/remove_member') Args(0) {
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
+    } else { 
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to remove an accession from population!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
 
