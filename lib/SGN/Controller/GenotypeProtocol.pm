@@ -28,6 +28,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     my $self = shift;
     my $c = shift;
     my $protocol_id = shift;
+    my $schema = $self->schema;
 
     if (!$c->user()) {
 
@@ -37,7 +38,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     } else {
 
 	my $protocol = CXGN::Genotype::Protocol->new({
-	    bcs_schema => $self->schema,
+	    bcs_schema => $schema,
 	    nd_protocol_id => $protocol_id
 	});
 
@@ -90,6 +91,13 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
         @marker_info_headers = ('Marker Name','Chromosome','Position','Alternate','Reference','Quality','Filter','Info','Format');
     }
 
+    my $protocol_vcf_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $protocolprop_rs = $schema->resultset('NaturalDiversity::NdProtocolprop')->find({'nd_protocol_id' => $protocol_id, 'type_id' => $protocol_vcf_details_cvterm_id});
+    my $map_details_protocolprop_id;
+    if ($protocolprop_rs) {
+        $map_details_protocolprop_id = $protocolprop_rs->nd_protocolprop_id();
+    }
+
 	$c->stash->{protocol_id} = $protocol_id;
 	$c->stash->{protocol_name} = $protocol->protocol_name;
 	$c->stash->{protocol_description} = $protocol->protocol_description;
@@ -103,6 +111,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     $c->stash->{marker_type} = $protocol->marker_type;
     $c->stash->{marker_info_headers} = \@marker_info_headers;
     $c->stash->{assay_type} = $protocol->assay_type;
+    $c->stash->{map_details_protocolprop_id} = $map_details_protocolprop_id;
     $c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
     }
 }
@@ -112,7 +121,8 @@ sub pcr_protocol_genotype_data_download : Path('/protocol_genotype_data/pcr_down
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
     my $contents = read_file($file_destination);

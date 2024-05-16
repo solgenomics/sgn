@@ -57,7 +57,8 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
         return;
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
     #print STDERR Dumper \@trial_ids;
     my $format = $c->req->param('format') || "ExcelBasic";
@@ -73,9 +74,9 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
    
     my $trial_name = "";
     foreach (@trial_ids){
-        my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
-	$trial_name = $trial->get_name();
-	$trial_name =~ s/ /\_/g;
+        my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), trial_id => $_ });
+	      $trial_name = $trial->get_name();
+	      $trial_name =~ s/ /\_/g;
 
         if ($data_level eq 'plants') {
             if (!$trial->has_plant_entries()) {

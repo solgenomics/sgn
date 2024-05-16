@@ -30,7 +30,8 @@ sub search : Path('/ajax/search/trials') Args(0) {
     my $field_trials_only = $c->req->param('field_trials_only') || 1;
     my $trial_design_list = $c->req->param('trial_design') ? [$c->req->param('trial_design')] : [];
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,

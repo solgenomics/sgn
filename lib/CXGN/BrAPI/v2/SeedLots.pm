@@ -61,22 +61,34 @@ sub search {
     foreach (@$list){
         my $accession_id;
         my $cross_id;
+        my $accession_name;
+        my $cross_name;
+
         if ($_->{source_stocks}->[0][2] eq 'accession'){
             $accession_id = $_->{source_stocks}->[0][0];
+            $accession_name = $_->{source_stocks}->[0][1];
         } else {
             $cross_id = $_->{source_stocks}->[0][0];
+            $cross_name = $_->{source_stocks}->[0][1];
         }
 
         push @data, {
             additionalInfo=>{},
             amount=>$_->{current_count},
+            contentMixture => [{
+                crossDbId=>$cross_id ? qq|$cross_id| : undef,
+                crossName=>$cross_name,
+                germplasmDbId =>$accession_id ? qq|$accession_id| : undef,
+                germplasmName => $accession_name,
+                mixturePercentage=> 100 #since are passing 1 germplasm
+            }],
             createdDate=>undef,
             externalReferences=>[],
-            germplasmDbId=>$accession_id ? qq|$accession_id| : undef,
-            crossDbId=>$cross_id ? qq|$cross_id| : undef,
             lastUpdated=>undef,
             locationDbId=>qq|$_->{location_id}|,
+            locationName=>$_->{location},
             programDbId=>qq|$_->{breeding_program_id}|,
+            programName=>$_->{breeding_program_name},
             seedLotDbId=>qq|$_->{seedlot_stock_id}|,
             seedLotDescription=>$_->{seedlot_stock_description},
             seedLotName=>$_->{seedlot_stock_uniquename},
@@ -112,21 +124,32 @@ sub detail {
     );};
 
     if ($seedlot){
-        my $accession = $seedlot->accession() ? $seedlot->accession()->[0] : undef;
-        my $location = $seedlot->nd_geolocation_id();
-        my $program = $seedlot->breeding_program_id();
-        my $cross = $seedlot->cross() ? qq|$seedlot->cross()->[0]| : undef;
+        my $accession_id = $seedlot->accession() ? $seedlot->accession()->[0] : undef;
+        my $accession_name = $seedlot->accession() ? $seedlot->accession()->[1] : undef;
+        my $location_id = $seedlot->nd_geolocation_id();
+        my $location_name = $seedlot->location_code();
+        my $program_id = $seedlot->breeding_program_id();
+        my $program_name = $seedlot->breeding_program_name();
+        my $cross_id = $seedlot->cross() ? qq|$seedlot->cross()->[0]| : undef;
+        my $cross_name = $seedlot->cross() ? qq|$seedlot->cross()->[1]| : undef;
 
         %result = (
                 additionalInfo=>{},
                 amount=>$seedlot->current_count(),
+                contentMixture => [{
+                    crossDbId=>$cross_id,
+                    crossName=>$cross_name,
+                    germplasmDbId =>qq|$accession_id|,
+                    germplasmName => $accession_name,
+                    mixturePercentage=> 100 #since are passing 1 germplasm
+                }],
                 createdDate=>undef,
                 externalReferences=>[],
-                germplasmDbId=>qq|$accession|,
-                crossDbId=>$cross,
                 lastUpdated=>undef,
-                locationDbId=>qq|$location|,
-                programDbId=>qq|$program|,
+                locationDbId=>qq|$location_id|,
+                locationName=>$location_name,
+                programDbId=>qq|$program_id|,
+                programName=>$program_name,
                 seedLotDbId=>qq|$seedlot_id|,
                 seedLotDescription=>$seedlot->description(),
                 seedLotName=>$seedlot->uniquename(),
