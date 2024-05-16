@@ -131,14 +131,13 @@ sub add_population {
         return { error => "Error creating population $population_name: $error" };
     } else {
         print STDERR "population $population_name added successfully\n";
-        $phenome_schema->resultset("StockOwner")->find_or_create({
+        $phenome_schema->resultset("StockOwner")->find_or_create ({
             stock_id => $population_id,
             sp_person_id => $user_id,
         });
-      }
-
-        return { success => "Success! Population $population_name created", population_id=>$population_id };
     }
+
+    return { success => "Success! Population $population_name created", population_id=>$population_id };
 }
 
 sub add_accessions {
