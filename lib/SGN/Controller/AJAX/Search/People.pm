@@ -79,14 +79,15 @@ sub people_search :Path('/ajax/search/people') Args(0) {
 
     # get the count first
     #
-    my $rs = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search( { %query, disabled => undef, censor => 0 } );
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $rs = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)->resultset("SpPerson")->search( { %query, disabled => undef, censor => 0 } );
     
     my $records_total = $rs->count();
 
     print STDERR "RECORDS TOTAL: $records_total\n";
     # then get the data
     #
-    my $rs2 = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { page => $page, rows => $rows, order_by => 'last_name' } );
+    my $rs2 = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { page => $page, rows => $rows, order_by => 'last_name' } );
 	
 
     my @result;
