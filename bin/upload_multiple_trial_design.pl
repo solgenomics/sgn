@@ -4,8 +4,7 @@ upload_multiple_trial_design.pl
 
 =head1 SYNOPSIS
 
-    #upload_multiple_trial_design.pl  -H [dbhost] -D [dbname] -i infile -b [breeding program name] -u [username] -m [trial metadata file] [-t] -e [email address] -l [logged in user]
-    upload_multiple_trial_design.pl  -H [dbhost] -D [dbname] -i infile -b [breeding program name] -u [username] -e [email address] -l [logged in user]
+    upload_multiple_trial_design.pl  -h [dbhost] -d [dbname] -p [dbpass] -w [basepath] -u [dbuser] -i infile -b [breeding program name] --user [username] -e [email address] -l [logged in user]
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -83,28 +82,25 @@ use Email::MIME;
 use Email::Sender::Simple;
 use Email::Sender::Simple qw /sendmail/;
 
-my ( $help, $dbhost, $dbname, $infile, $sites, $types, $test, $username, $breeding_program_name, $metadata_file, $email_address, $logged_in_name);
+my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $infile, $sites, $types, $username, $breeding_program_name, $email_address, $logged_in_name);
 GetOptions(
-    'i=s'        => \$infile,
-    'b=s'        => \$breeding_program_name,
-    #'m=s'        => \$metadata_file,
-    #'t'          => \$test,
-    'user|u=s'   => \$username,
-    'dbname|D=s' => \$dbname,
-    'dbhost|H=s' => \$dbhost,
-    'help'       => \$help,
-    'email|e=s'  => \$email_address,
-    # 'results_url|r=s' => \$results_url,
+    'dbhost|h=s'         => \$dbhost,
+    'dbname|d=s'         => \$dbname,
+    'dbpass|p=s'         => \$dbpass,
+    'basepath|w=s'       => \$basepath,
+    'dbuser|u=s'         => \$dbuser,
+    'i=s'                => \$infile,
+    'b=s'                => \$breeding_program_name,
+    'user|n=s'           => \$username,
+    'help'               => \$help,
+    'email|e=s'          => \$email_address,
     'logged_in_user|l=s' => \$logged_in_name,
 );
-
-
 
 pod2usage(1) if $help;
 if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost ) {
     pod2usage( { -msg => 'Error. Missing options!'  , -verbose => 1, -exitval => 1 } ) ;
 }
-
 
 my $dbh = CXGN::DB::InsertDBH->new( {
     dbhost=>$dbhost,
@@ -454,6 +450,12 @@ my $coderef= sub  {
 	    #print Dumper(\%parsed_data);
 	    # after storing the trial desgin store the phenotypes
 	    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+            basepath                    => $basepath,
+            dbhost                      => $dbhost,
+            dbname                      => $dbname,
+            dbuser                      => $dbuser,
+            dbpass                      => $dbpass,
+            temp_file_nd_experiment_id  => $temp_file_nd_experiment_id,
 	        bcs_schema                  => $schema,
 	        metadata_schema             => $metadata_schema,
 	        phenome_schema              => $phenome_schema,
@@ -464,9 +466,7 @@ my $coderef= sub  {
 	        has_timestamps              => 0,
 	        overwrite_values            => 0,
 	        metadata_hash               => \%phenotype_metadata,
-            temp_file_nd_experiment_id  => $temp_file_nd_experiment_id,
-            # dbpass                     => $dbpass ### what attribute should i set 
-	    );
+        );
 
 	    #validate, store, add project_properties from %properties_hash
 	    #store the phenotypes
