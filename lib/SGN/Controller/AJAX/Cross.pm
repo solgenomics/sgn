@@ -1027,6 +1027,11 @@ sub upload_progenies_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload progenies'};
+        $c->detach();
+    }
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -1159,7 +1164,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
-    } else{
+    } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
             $c->detach();
@@ -1168,6 +1173,12 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload progenies'};
+        $c->detach();
+    }
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -1348,7 +1359,7 @@ sub upload_info_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
-    } else{
+    } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
             $c->detach();
@@ -1356,6 +1367,11 @@ sub upload_info_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload cross info'};
+        $c->detach();
     }
 
     my $uploader = CXGN::UploadFile->new({
@@ -1529,6 +1545,11 @@ sub upload_family_names_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload family names'};
+        $c->detach();
     }
 
     my $uploader = CXGN::UploadFile->new({
