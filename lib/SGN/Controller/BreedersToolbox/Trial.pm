@@ -58,7 +58,7 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #print STDERR "Check 1: ".localtime()."\n";
-    print STDERR "TRIAL INIT...\n\n";
+    #print STDERR "TRIAL INIT...\n\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
@@ -406,8 +406,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
-    print STDERR "trial_download: WHAT =".Dumper($what)."\n";
-    print STDERR Dumper $c->req->params();
+    #print STDERR "trial_download: WHAT =".Dumper($what)."\n";
+    #print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -594,7 +594,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEST2::TEMPFILE : $tempfile\n";
+    #print STDERR "TEMPFILE : $tempfile\n";
 
     my $trial_download_args = {
         bcs_schema => $schema,
