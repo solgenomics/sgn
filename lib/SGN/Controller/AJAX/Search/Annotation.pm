@@ -32,7 +32,6 @@ sub annotation_search :Path('/ajax/search/annotation') Args(0) {
         }
     }
 
-
     $c->stash->{rest} = { data => [ @lines], draw => '1', recordsTotal => $number_lines,  recordsFiltered => $number_lines };
 
 }
