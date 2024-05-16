@@ -60,7 +60,8 @@ sub logout :Path('/ajax/user/logout') Args(0) {
 sub new_account :Path('/ajax/user/new') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     print STDERR "Adding new account...\n";
     if ($c->config->{is_mirror}) {
@@ -589,7 +590,7 @@ HTML
 
 } elsif ( $c->user_exists ) {
     print STDERR "Generate login button for logged in user...\n";
-    my $sp_person_id = $c->user->get_object->get_sp_person_id;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $username = $c->user->get_username();
     $html = <<HTML;
       <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
