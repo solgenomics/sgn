@@ -6,6 +6,7 @@ use CXGN::Pedigree::AddPopulations;
 use List::MoreUtils qw | any |;
 use Data::Dumper;
 use Try::Tiny;
+use CXGN::Population;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -117,7 +118,7 @@ sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0
 sub delete_population :Path('/ajax/population/delete') Args(0) {
     my $self = shift;
     my $c = shift;
-
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $session_id = $c->req->param("sgn_session_id");
     my $user_role;
     my $user_id;
@@ -150,18 +151,27 @@ sub delete_population :Path('/ajax/population/delete') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
 
-    my $error;
-    try {
-        my $population = $schema->resultset("Stock::Stock")->find({
-            stock_id => $population_id,
-            type_id => $population_cvterm_id,
-        });
-        $population->delete;
-        #On cascade should delete all relationships to population
+    my $population = CXGN::Population->new( { schema => $schema, , population_stock_id => $population_id });
+
+    if (!$population->population_stock_id()) {
+	$c->stash->{rest} = { error => "No such population exists. Cannot delete." };
+	return;
     }
-    catch {
-        $error =  $_;
-    };
+
+    my $error = $population->delete();
+
+#    my $error;
+#    try {
+#        my $population = $schema->resultset("Stock::Stock")->find({
+#            stock_id => $population_id,
+#            type_id => $population_cvterm_id,
+#        });
+#        $population->delete;
+        #On cascade should delete all relationships to population
+#    }
+#    catch {
+#        $error =  $_;
+#    };
     my $return;
     if ($error) {
         print STDERR "Error deleting population $population_name: $error\n";

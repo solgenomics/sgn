@@ -49,6 +49,7 @@ sub BUILD {
     if ($accession_members) {
         $self->accession_members($accession_members);
     }
+
 }
 
 
@@ -70,10 +71,56 @@ sub get_accession_members {
      $h->execute($member_of_type_id, $accession_type_id, $population_id);
      my @accession_members = ();
      while (my ($stock_id, $stock_name) = $h->fetchrow_array()){
-         push @membership_info, [$stock_id, $stock_name]
+         push @accession_members, [$stock_id, $stock_name]
      }
 
      return \@accession_members;
+}
+
+
+sub delete {
+    my $self = shift;
+    my $dbh = $self->schema()->storage()->dbh();
+    my $schema = $self->schema();
+    my $population_id = $self->population_stock_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $population_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "population", "stock_type")->cvterm_id();
+        my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+
+        my $male_parent_rs = $schema->resultset("Stock::StockRelationship")->search({subject_id => $population_id, type_id => $male_parent_type_id});
+        if ($male_parent_rs->count > 0){
+            print STDERR "Population has associated cross or pedigree. Cannot delete.\n";
+            die "Population has associated cross or pedigree: Cannot delete.\n";
+        }
+
+        #checking if the stock id has population stock type
+        my $population_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $population_id, type_id => $population_type_id});
+        if (!$population_rs) {
+            print STDERR "This stock id is not a population. Cannot delete.\n";
+	        die "This stock id is not a population. Cannot delete.\n";
+        }
+
+        my $q = "delete from phenome.stock_owner where stock_id = ?";
+	    my $h = $dbh->prepare($q);
+	    $h->execute($population_id);
+
+	    my $q2 = "delete from stock where stock.stock_id = ? and stock.type_id = ?";
+	    my $h2 = $dbh->prepare($q2);
+	    $h2->execute($population_id, $population_type_id);
+    };
+
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting population id ".$population_id."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
 }
 
 
