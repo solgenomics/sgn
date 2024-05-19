@@ -28,7 +28,7 @@ has 'parse_errors' => (
     predicate => 'has_parse_errors',
 );
 
-has 'info_messages' => {
+has 'info_messages' => (
     is => 'rw',
     isa => 'ListRef',
     writer => '_set_info_messages',

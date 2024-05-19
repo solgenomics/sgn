@@ -40,6 +40,7 @@
                                             <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
                                             <option value="seedlots_to_plots">From existing seedlots to plots</option>
                                             <option value="seedlots_to_unspecified_names">From existing seedlots to unpecified seedlots/plots</option>
+					    <option value="accessions_from_new_seedlots">New seedlots - create accessions</option>
                                         </select>
                                     </div>
                                 </div>
@@ -160,6 +161,41 @@
                                         </div>
                                     </div>
                                 </div>
+
+				<div id="accessions_from_new_seedlots">
+				  <br />
+				  <center>
+				    <h4>Upload new seedlots and create accessions</h4>
+				  </center>
+				  <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="accessions_from_new_seedlots_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="accessions_from_new_seedlots_file" id="accessions_from_new_seedlots_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+				  
+				</div>
+
                                 <div id="seedlots_to_unspecified_names_section" style="display:none">
                                     <br/>
                                     <hr class ="solid">
