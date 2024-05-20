@@ -252,6 +252,8 @@ sub get_phenotype_matrix {
 
             my $entry_type;
             my $is_a_filler = $obs_unit -> {obsunit_is_a_filler} ? 'filler' : 'test';
+            my $is_a_test = $obs_unit -> {obsunit_is_a_filler};
+            print "My test is: $is_a_test \n";
             if ($is_a_filler eq 'test'){
                 $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             }else{
@@ -367,6 +369,8 @@ sub get_phenotype_matrix {
 
                 my $entry_type;
                 my $is_a_filler = $d->{obsunit_is_a_filler} ? 'filler' : 'test';
+                my $is_a_test = $d->{obsunit_is_a_filler};
+                print "My test is: $is_a_test \n";
                 if ($is_a_filler eq 'test'){
                     $entry_type = $d->{obsunit_is_a_control} ? 'check' : 'test';
                 }else{

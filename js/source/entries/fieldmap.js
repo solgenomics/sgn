@@ -498,15 +498,20 @@ export function init() {
 
             var get_fieldmap_plot_color = function(plot) {
                 var color;
+                console.log("Plot is overlapping!");
+
                 if (plot.observationUnitPosition.observationLevelRelationships) {
+                    console.log(plot.observationUnitPosition.entryType);
                     if ( is_plot_overlapping(plot) ) {
                         color = "#000";
                     }
                     else if (plot.observationUnitPosition.entryType == "check") {
                         color = "#6a5acd";
+                    } else if (plot.observationUnitPosition.entryType == "filler") {
+                        color = "#ff3377";
                     } else if (plot.observationUnitPosition.observationLevelRelationships[1].levelCode % 2 == 0) {
                         color = "#c7e9b4";
-                    } else if (plot.observationUnitName.includes(local_this.trial_id + " filler")) {
+                    } else if (plot.observationUnitName.includes(local_this.trial_id + "check")) {
                         color = "lightgrey";    
                     } else {
                         color = "#41b6c4";
