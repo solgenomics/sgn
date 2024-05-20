@@ -2549,18 +2549,25 @@
 	    });
 
 	    // Separate out plots with invalid / missing geojson
-	    const plots_invalid = data.plots.filter((e) => e._type === 'invalid' || e._type === 'missing');
-	    const plots_valid = data.plots.filter((e) => e._type !== 'invalid' && e._type !== 'missing');
-	    if ( plots_invalid.length > 0 ) {
-	      let html = "Plots with no geo coordinates:";
-	      html += "<ul style='padding-left: 25px; margin-bottom: 0'>";
-	      plots_invalid.forEach((p) => html += `<li>${p.observationUnitName}</li>`);
-	      html += "</ul>";
-	      this.missing_plots.style("display", "block");
-	      this.missing_plots.html(html);
+	    if ( this.opts.viewOnly ) {
+	      const plots_invalid = data.plots.filter((e) => e._type === 'invalid' || e._type === 'missing');
+	      const plots_valid = data.plots.filter((e) => e._type !== 'invalid' && e._type !== 'missing');
+	      if ( plots_valid.length === 0 ) {
+	        let html = "This trial does not have any plots with geo coordinates assigned."
+	        this.missing_plots.style("display", "block");
+	        this.missing_plots.html(html);
+	        throw NO_POLYGON_ERROR;
+	      }
+	      else if ( plots_invalid.length > 0 ) {
+	        let html = "Plots with no geo coordinates:";
+	        html += "<ul style='padding-left: 25px; margin-bottom: 0'>";
+	        plots_invalid.forEach((p) => html += `<li>${p.observationUnitName}</li>`);
+	        html += "</ul>";
+	        this.missing_plots.style("display", "block");
+	        this.missing_plots.html(html);
+	      }
+	      data.plots = plots_valid;
 	    }
-	    if ( plots_valid.length === 0 ) throw NO_POLYGON_ERROR;
-	    data.plots = plots_valid;
 
 	    // Generate a reasonable plot layout if there is missing row/col data
 	    if( data.plots.some(plot=>isNaN(plot._row)||isNaN(plot._col)) ){
