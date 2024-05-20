@@ -6,7 +6,7 @@ on:
 
 jobs:
   test_breedbase:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container:
       image: breedbase/breedbase:latest
       env:
