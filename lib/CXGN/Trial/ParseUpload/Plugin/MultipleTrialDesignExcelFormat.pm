@@ -455,15 +455,14 @@ sub _validate_with_plugin {
     }
 
     ## TREATMENT CHECKS
-    my $treatment_col = 25;
     foreach my $treatment_name (@treatment_names){
+        my $treatment_col = $columns{$treatment_name}->{index};
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
             if ( ($apply_treatment ne '') && defined($apply_treatment) && $apply_treatment ne '1'){
                 push @error_messages, "Treatment value for treatment <b>$treatment_name</b> in row $row_name should be either 1 or empty";
             }
         }
-        $treatment_col++;
     }
 
   }
@@ -676,20 +675,16 @@ sub _parse_with_plugin {
 
   $worksheet = ( $excel_obj->worksheets() )[0];
   my ( $row_min, $row_max ) = $worksheet->row_range();
-  my ( $col_min, $col_max ) = $worksheet->col_range();
 
-  my @treatment_names;
-  for (24 .. $col_max){
-      if ($worksheet->get_cell(0,$_)){
-          push @treatment_names, $worksheet->get_cell(0,$_)->value();
-      }
-  }
+  my $headers = _parse_headers($worksheet);
+  my %columns = %{$headers->{columns}};
+  my @treatment_names = @{$headers->{treatments}};
 
   my %seen_accession_names;
   for my $row ( 1 .. $row_max ) {
       my $accession_name;
-      if ($worksheet->get_cell($row,13)) {
-          $accession_name = $worksheet->get_cell($row,13)->value();
+      if ($worksheet->get_cell($row,$columns{accession_name}->{index})) {
+          $accession_name = $worksheet->get_cell($row,$columns{accession_name}->{index})->value();
           $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
           $seen_accession_names{$accession_name}++;
       }
@@ -743,8 +738,8 @@ sub _parse_with_plugin {
     my $num_seed_per_plot = 0;
     my $weight_gram_seed_per_plot = 0;
 
-    if ($worksheet->get_cell($row,0)) {
-      $current_trial_name = $worksheet->get_cell($row,0)->value();
+    if ($worksheet->get_cell($row,$columns{trial_name}->{index})) {
+      $current_trial_name = $worksheet->get_cell($row,$columns{trial_name}->{index})->value();
     }
 
     if ($current_trial_name && $current_trial_name ne $trial_name) {
@@ -766,7 +761,7 @@ sub _parse_with_plugin {
       }
 
       # Get location and replace codes with names
-      my $location = $worksheet->get_cell($row,2)->value();
+      my $location = $worksheet->get_cell($row,$columns{location}->{index})->value();
       if ( $self->_has_location_code_map() ) {
         my $location_code_map = $self->_get_location_code_map();
         if ( exists $location_code_map->{$location} ) {
@@ -774,110 +769,106 @@ sub _parse_with_plugin {
         }
       }
 
-      $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
+      $single_design{'breeding_program'} = $worksheet->get_cell($row,$columns{breeding_program}->{index})->value();
       $single_design{'location'} = $location;
-      $single_design{'year'} = $worksheet->get_cell($row,3)->value();
-      # $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
-      $single_design{'design_type'} = $worksheet->get_cell($row,5)->value();
-      $single_design{'description'} = $worksheet->get_cell($row,6)->value();
+      $single_design{'year'} = $worksheet->get_cell($row,$columns{year}->{index})->value();
+      # $single_design{'transplanting_date'} = $worksheet->get_cell($row,$columns{transplanting_date}->{index})->value();
+      $single_design{'design_type'} = $worksheet->get_cell($row,$columns{design_type}->{index})->value();
+      $single_design{'description'} = $worksheet->get_cell($row,$columns{description}->{index})->value();
 
 
       # for a moment transplanting_date is moves as not required but whole design of that features must be redone
       # including use cases
-      if ($worksheet->get_cell($row,4)) {
-        $single_design{'transplanting_date'} = $worksheet->get_cell($row,4)->value();
+      if ($worksheet->get_cell($row,$columns{transplanting_date}->{index})) {
+        $single_design{'transplanting_date'} = $worksheet->get_cell($row,$columns{transplanting_date}->{index})->value();
       }
 
-      if ($worksheet->get_cell($row,7)) { # get and save trial type cvterm_id using trial type name
-        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,7)->value()};
+      if ($worksheet->get_cell($row,$columns{trial_type}->{index})) { # get and save trial type cvterm_id using trial type name
+        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,$columns{trial_type}->{index})->value()};
         $single_design{'trial_type'} = $trial_type_id;
       }
-      if ($worksheet->get_cell($row,8)) {
-        $single_design{'plot_width'} = $worksheet->get_cell($row,8)->value();
+      if ($worksheet->get_cell($row,$columns{plot_width}->{index})) {
+        $single_design{'plot_width'} = $worksheet->get_cell($row,$columns{plot_width}->{index})->value();
       }
-      if ($worksheet->get_cell($row,9)) {
-        $single_design{'plot_length'} = $worksheet->get_cell($row,9)->value();
+      if ($worksheet->get_cell($row,$columns{plot_length}->{index})) {
+        $single_design{'plot_length'} = $worksheet->get_cell($row,$columns{plot_length}->{index})->value();
       }
-      if ($worksheet->get_cell($row,10)) {
-        $single_design{'field_size'} = $worksheet->get_cell($row,10)->value();
+      if ($worksheet->get_cell($row,$columns{field_size}->{index})) {
+        $single_design{'field_size'} = $worksheet->get_cell($row,$columns{field_size}->{index})->value();
       }
-      if ($worksheet->get_cell($row,11)) {
-        $single_design{'planting_date'} = $worksheet->get_cell($row,11)->value();
+      if ($worksheet->get_cell($row,$columns{planting_date}->{index})) {
+        $single_design{'planting_date'} = $worksheet->get_cell($row,$columns{planting_date}->{index})->value();
       }
-      if ($worksheet->get_cell($row,12)) {
-        $single_design{'harvest_date'} = $worksheet->get_cell($row,12)->value();
+      if ($worksheet->get_cell($row,$columns{harvest_date}->{index})) {
+        $single_design{'harvest_date'} = $worksheet->get_cell($row,$columns{harvest_date}->{index})->value();
       }
       ## Update trial name
       $trial_name = $current_trial_name;
     }
 
     #skip blank rows
-    if (
-      !$worksheet->get_cell($row,0)
-      && !$worksheet->get_cell($row,1)
-      && !$worksheet->get_cell($row,2)
-      && !$worksheet->get_cell($row,3)
-      && !$worksheet->get_cell($row,4)
-      && !$worksheet->get_cell($row,5)
-      && !$worksheet->get_cell($row,12)
-      && !$worksheet->get_cell($row,13)
-      && !$worksheet->get_cell($row,14)
-      && !$worksheet->get_cell($row,15)
-    ) {
+    my $has_row_value;
+    foreach (keys %columns) {
+      if ( $worksheet->get_cell($row,$columns{$_}->{index})) {
+        if ( $worksheet->get_cell($row,$columns{$_}->{index})->value() ) {
+          $has_row_value = 1;
+        }
+      }
+    }
+    if ( !$has_row_value ) {
       next;
     }
 
-    if ($worksheet->get_cell($row,13)) {
-      $plot_name = $worksheet->get_cell($row,13)->value();
+    if ($worksheet->get_cell($row,$columns{plot_name}->{index})) {
+      $plot_name = $worksheet->get_cell($row,$columns{plot_name}->{index})->value();
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,14)) {
-      $accession_name = $worksheet->get_cell($row,14)->value();
+    if ($worksheet->get_cell($row,$columns{accession_name}->{index})) {
+      $accession_name = $worksheet->get_cell($row,$columns{accession_name}->{index})->value();
     }
     $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,15)) {
-      $plot_number =  $worksheet->get_cell($row,15)->value();
+    if ($worksheet->get_cell($row,$columns{plot_number}->{index})) {
+      $plot_number =  $worksheet->get_cell($row,$columns{plot_number}->{index})->value();
     }
-    if ($worksheet->get_cell($row,16)) {
-      $block_number =  $worksheet->get_cell($row,16)->value();
+    if ($worksheet->get_cell($row,$columns{block_number}->{index})) {
+      $block_number =  $worksheet->get_cell($row,$columns{block_number}->{index})->value();
     }
-    if ($worksheet->get_cell($row,17)) {
-      $is_a_control =  $worksheet->get_cell($row,17)->value();
+    if ($worksheet->get_cell($row,$columns{is_a_control}->{index})) {
+      $is_a_control =  $worksheet->get_cell($row,$columns{is_a_control}->{index})->value();
     }
-    if ($worksheet->get_cell($row,18)) {
-      $rep_number =  $worksheet->get_cell($row,18)->value();
+    if ($worksheet->get_cell($row,$columns{rep_number}->{index})) {
+      $rep_number =  $worksheet->get_cell($row,$columns{rep_number}->{index})->value();
     }
-    if ($worksheet->get_cell($row,19)) {
-      $range_number =  $worksheet->get_cell($row,19)->value();
+    if ($worksheet->get_cell($row,$columns{range_number}->{index})) {
+      $range_number =  $worksheet->get_cell($row,$columns{range_number}->{index})->value();
     }
-    if ($worksheet->get_cell($row,20)) {
-	     $row_number = $worksheet->get_cell($row, 20)->value();
+    if ($worksheet->get_cell($row,$columns{row_number}->{index})) {
+	     $row_number = $worksheet->get_cell($row, $columns{row_number}->{index})->value();
     }
-    if ($worksheet->get_cell($row,21)) {
-	     $col_number = $worksheet->get_cell($row, 21)->value();
+    if ($worksheet->get_cell($row,$columns{col_number}->{index})) {
+	     $col_number = $worksheet->get_cell($row, $columns{col_number}->{index})->value();
     }
-    if ($worksheet->get_cell($row,22)) {
-        $seedlot_name = $worksheet->get_cell($row, 22)->value();
+    if ($worksheet->get_cell($row,$columns{seedlot_name}->{index})) {
+        $seedlot_name = $worksheet->get_cell($row, $columns{seedlot_name}->{index})->value();
     }
 
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     }
-    if ($worksheet->get_cell($row,23)) {
-        $num_seed_per_plot = $worksheet->get_cell($row, 23)->value();
+    if ($worksheet->get_cell($row,$columns{num_seed_per_plot}->{index})) {
+        $num_seed_per_plot = $worksheet->get_cell($row, $columns{num_seed_per_plot}->{index})->value();
     }
-    if ($worksheet->get_cell($row,24)) {
-        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 24)->value();
+    if ($worksheet->get_cell($row,$columns{weight_gram_seed_per_plot}->{index})) {
+        $weight_gram_seed_per_plot = $worksheet->get_cell($row, $columns{weight_gram_seed_per_plot}->{index})->value();
     }
 
-    my $treatment_col = 25;
     foreach my $treatment_name (@treatment_names){
+        my $treatment_col = $columns{$treatment_name}->{index};
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
                 push @{$design_details{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
             }
         }
-        $treatment_col++;
     }
 
     if ($acc_synonyms_lookup{$accession_name}){
@@ -943,19 +934,22 @@ sub _parse_headers {
   my @errors;
 
   for ( $col_min .. $col_max ) {
-    my $header = $worksheet->get_cell(0,$_)->value();
-    my $is_required = !!grep( /^$header$/, @REQUIRED_COLUMNS );
-    my $is_optional = !!grep( /^$header$/, @OPTIONAL_COLUMNS );
-    my $is_treatment = !grep( /^$header$/, @REQUIRED_COLUMNS ) && !grep( /^$header$/, @OPTIONAL_COLUMNS );
-    $columns{$header} = {
-      header => $header,
-      index => $_,
-      is_required => $is_required,
-      is_optional => $is_optional,
-      is_treatment => $is_treatment
-    };
-    if ( $is_treatment ) {
-      push(@treatments, $header);
+    if ( $worksheet->get_cell(0,$_) ) {
+      my $header = $worksheet->get_cell(0,$_)->value();
+      $header =~ s/^\s+|\s+$//g;
+      my $is_required = !!grep( /^$header$/, @REQUIRED_COLUMNS );
+      my $is_optional = !!grep( /^$header$/, @OPTIONAL_COLUMNS );
+      my $is_treatment = !grep( /^$header$/, @REQUIRED_COLUMNS ) && !grep( /^$header$/, @OPTIONAL_COLUMNS );
+      $columns{$header} = {
+        header => $header,
+        index => $_,
+        is_required => $is_required,
+        is_optional => $is_optional,
+        is_treatment => $is_treatment
+      };
+      if ( $is_treatment ) {
+        push(@treatments, $header);
+      }
     }
   }
 
