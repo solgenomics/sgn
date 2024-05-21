@@ -270,7 +270,8 @@ for my $extension ("xls", "xlsx") {
 	#parse uploaded file with wrong plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $file_name);
 	$parser->load_plugin('TrialExcelFormat');
-	$parsed_data = $parser->parse()->{'design'};
+	my $rtn = $parser->parse();
+	$parsed_data = $rtn->{'design'};
 	ok(!$parsed_data, "Check if parse validate excel fails for igd parser");
 	ok($parser->has_parse_errors(), "Check that parser errors occur");
 
@@ -549,7 +550,8 @@ for my $extension ("xls", "xlsx") {
 	#parse uploaded file with appropriate plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
 	$parser->load_plugin('TrialExcelFormat');
-	$parsed_data = $parser->parse()->{'design'};
+	$rtn = $parser->parse();
+	$parsed_data = $rtn->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
 	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
@@ -1247,7 +1249,8 @@ for my $extension ("xls", "xlsx") {
 
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $management_factor_archived_filename_with_path);
 	$parser->load_plugin('TrialExcelFormat');
-	$parsed_data = $parser->parse()->{'design'};
+	$rtn = $parser->parse();
+	$parsed_data = $rtn->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
 	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
