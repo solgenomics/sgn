@@ -659,6 +659,7 @@ $design_types => ()
                     <li>seedlot_name (the seedlot from where the planted seed originated. Must exist in the database)</li>
                     <li>num_seed_per_plot (number seeds per plot. Seed is transferred from seedlot mentioned in seedlot_name. Numeric)</li>
                     <li>weight_gram_seed_per_plot (weight in gram of seeds in plot. seed is transferred from seedlot mentioned in seedlot name. Numeric)</li>
+                    <li>entry_number (a trial-level entry number assigned to the stock. Numeric)</li>
                     </ul>
 
                     <b>Treatments:</b>
@@ -761,6 +762,7 @@ $design_types => ()
                     <li>seedlot_name (the seedlot from where the planted seed originated. must exist in the database)</li>
                     <li>num_seed_per_plot (number seeds per plot. seed is transferred from seedlot mentioned in seedlot_name. numeric)</li>
                     <li>weight_gram_seed_per_plot (weight in gram of seeds in plot. seed is transferred from seedlot mentioned in seedlot name. numeric)</li>
+                    <li>entry_number (a trial-level entry number assigned to the stock. Numeric)</li>
                     </ul>
 
                     <b>Treatments:</b>
