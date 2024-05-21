@@ -154,24 +154,12 @@ sub delete_population :Path('/ajax/population/delete') Args(0) {
     my $population = CXGN::Population->new( { schema => $schema, , population_stock_id => $population_id });
 
     if (!$population->population_stock_id()) {
-	$c->stash->{rest} = { error => "No such population exists. Cannot delete." };
-	return;
+        $c->stash->{rest} = { error => "No such population exists. Cannot delete." };
+        return;
     }
 
-    my $error = $population->delete();
+    my $error = $population->delete_population();
 
-#    my $error;
-#    try {
-#        my $population = $schema->resultset("Stock::Stock")->find({
-#            stock_id => $population_id,
-#            type_id => $population_cvterm_id,
-#        });
-#        $population->delete;
-        #On cascade should delete all relationships to population
-#    }
-#    catch {
-#        $error =  $_;
-#    };
     my $return;
     if ($error) {
         print STDERR "Error deleting population $population_name: $error\n";
@@ -217,17 +205,9 @@ sub remove_population_member :Path('/ajax/population/remove_member') Args(0) {
     my $stock_relationship_id = $c->req->param('stock_relationship_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $error;
-    try {
-        my $stock_relationship = $schema->resultset("Stock::StockRelationship")->find({
-            stock_relationship_id => $stock_relationship_id,
-        });
-        $stock_relationship->delete;
-        #On cascade should delete all relationships to population
-    }
-    catch {
-        $error =  $_;
-    };
+    my $member_relationship = CXGN::Population->new( { schema => $schema, , stock_relationship_id => $stock_relationship_id });
+    my $error = $member_relationship->delete_population_member();
+
     my $return;
     if ($error) {
         print STDERR "Error removing member from population: $error\n";
@@ -239,5 +219,7 @@ sub remove_population_member :Path('/ajax/population/remove_member') Args(0) {
 
     $c->stash->{rest} = $return;
 }
+
+
 
 1;

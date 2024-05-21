@@ -8,7 +8,7 @@ use JSON;
 
 extends 'CXGN::Stock';
 
-has 'population_stock_id' => (isa => "Maybe[Int]",
+has 'population_stock_id' => (isa => 'Maybe[Int]',
     is => 'rw',
 );
 
@@ -19,6 +19,11 @@ has 'population_name' => (isa => 'Maybe[Str]',
 has 'accession_members' => (isa => 'ArrayRef',
     is => 'rw',
 );
+
+has 'stock_relationship_id' => (isa => 'Maybe[Int]',
+    is => 'rw',
+);
+
 
 
 sub BUILD {
@@ -78,7 +83,7 @@ sub get_accession_members {
 }
 
 
-sub delete {
+sub delete_population {
     my $self = shift;
     my $dbh = $self->schema()->storage()->dbh();
     my $schema = $self->schema();
@@ -122,6 +127,54 @@ sub delete {
 	    return 0;
     }
 }
+
+
+sub delete_population_member {
+    my $self = shift;
+    my $dbh = $self->schema()->storage()->dbh();
+    my $schema = $self->schema();
+    my $stock_relationship_id = $self->stock_relationship_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $population_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "population", "stock_type")->cvterm_id();
+        my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+        my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+
+        my $population_id;
+        my $population_member_rs = $schema->resultset("Stock::StockRelationship")->find({stock_relationship_id => $stock_relationship_id, type_id => $member_of_type_id});
+        if (!$population_member_rs) {
+            print STDERR "This accession is not a population member. Cannot delete.\n";
+	        die "This accession is not a population memeber. Cannot delete.\n";
+        } else {
+            $population_id = $population_member_rs->object_id();
+            my $population_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $population_id, type_id => $population_type_id});
+            if (!$population_rs) {
+                print STDERR "This stock id is not a population. Cannot delete.\n";
+    	        die "This stock is not a population. Cannot delete.\n";
+            } else {
+                my $male_parent_rs = $schema->resultset("Stock::StockRelationship")->search({subject_id => $population_id, type_id => $male_parent_type_id});
+                if ($male_parent_rs->count > 0){
+                    print STDERR "Population has associated cross or pedigree. Cannot delete.\n";
+                    die "Population has associated cross or pedigree: Cannot delete.\n";
+                }
+            }
+        }
+
+        $population_member_rs->delete;
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting accession member "."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
+}
+
 
 
 
