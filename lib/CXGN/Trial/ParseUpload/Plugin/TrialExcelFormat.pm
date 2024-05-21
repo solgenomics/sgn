@@ -284,7 +284,6 @@ sub _validate_with_plugin {
           push @error_messages, "Treatment value in row $row_name should be either 1 or empty";
         }
       }
-      $treatment_col++;
     }
 
   }
@@ -497,7 +496,6 @@ sub _parse_with_plugin {
           push @{$design{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
         }
       }
-      $treatment_col++;
     }
 
     if ($stock_synonyms_lookup{$stock_name}){
