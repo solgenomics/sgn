@@ -94,6 +94,10 @@ sub _validate_with_plugin {
 
   my @pairs;
   my %seen_plot_numbers;
+  my %seen_entry_numbers = (
+    by_num => {},
+    by_acc => {}
+  );
   for my $row ( 1 .. $row_max ) {
     #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
@@ -109,6 +113,7 @@ sub _validate_with_plugin {
     my $range_number;
     my $row_number;
     my $col_number;
+    my $entry_number;
 
     if ($worksheet->get_cell($row,$columns{plot_name}->{index})) {
       $plot_name = $worksheet->get_cell($row,$columns{plot_name}->{index})->value();
@@ -146,6 +151,9 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,$columns{weight_gram_seed_per_plot}->{index})) {
       $weight_gram_seed_per_plot = $worksheet->get_cell($row,$columns{weight_gram_seed_per_plot}->{index})->value();
     }
+    if ($worksheet->get_cell($row,$columns{entry_number}->{index})) {
+      $entry_number = $worksheet->get_cell($row,$columns{entry_number}->{index})->value();
+    }
 
     #skip blank lines
     if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
@@ -156,19 +164,19 @@ sub _validate_with_plugin {
 
     #plot_name must not be blank
     if (!$plot_name || $plot_name eq '' ) {
-      push @error_messages, "Cell A$row_name: plot name missing.";
+      push @error_messages, "Row $row_name: plot name missing.";
     }
     elsif ($plot_name =~ /\s/ ) {
-      push @error_messages, "Cell A$row_name: plot name must not contain spaces.";
+      push @error_messages, "Row $row_name: plot name must not contain spaces.";
     }
     elsif ($plot_name =~ /\// || $plot_name =~ /\\/) {
-      push @warning_messages, "Cell A$row_name: plot name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+      push @warning_messages, "Row $row_name: plot name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
     }
     else {
       $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       #file must not contain duplicate plot names
       if ($seen_plot_names{$plot_name}) {
-        push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+        push @error_messages, "Row $row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
       }
       $seen_plot_names{$plot_name}=$row_name;
     }
@@ -177,7 +185,7 @@ sub _validate_with_plugin {
 
     #stock_name must not be blank and must exist in the database
     if (!$stock_name || $stock_name eq '') {
-      push @error_messages, "Cell B$row_name: entry name missing";
+      push @error_messages, "Row $row_name: entry name missing";
     } else {
       $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_entry_names{$stock_name}++;
@@ -187,44 +195,44 @@ sub _validate_with_plugin {
 
     #plot number must not be blank
     if (!$plot_number || $plot_number eq '') {
-      push @error_messages, "Cell C$row_name: plot number missing";
+      push @error_messages, "Row $row_name: plot number missing";
     }
     #plot number must be a positive integer
     if (!($plot_number =~ /^\d+?$/)) {
-      push @error_messages, "Cell C$row_name: plot number is not a positive integer: $plot_number";
+      push @error_messages, "Row $row_name: plot number is not a positive integer: $plot_number";
     }
     #plot number must be unique in file
     if (exists($seen_plot_numbers{$plot_number})){
-      push @error_messages, "Cell C$row_name: plot number must be unique in your file. You already used this plot number in C".$seen_plot_numbers{$plot_number};
+      push @error_messages, "Row $row_name: plot number must be unique in your file. You already used this plot number in C".$seen_plot_numbers{$plot_number};
     } else {
       $seen_plot_numbers{$plot_number} = $row_name;
     }
 
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
-      push @error_messages, "Cell D$row_name: block number missing";
+      push @error_messages, "Row $row_name: block number missing";
     }
     #block number must be a positive integer
     if (!($block_number =~ /^\d+?$/)) {
-      push @error_messages, "Cell D$row_name: block number is not a positive integer: $block_number";
+      push @error_messages, "Row $row_name: block number is not a positive integer: $block_number";
     }
     if ($is_a_control) {
       #is_a_control must be either yes, no 1, 0, or blank
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-        push @error_messages, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+        push @error_messages, "Row $row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
       }
     }
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
-      push @error_messages, "Cell F$row_name: rep_number must be a positive integer: $rep_number";
+      push @error_messages, "Row $row_name: rep_number must be a positive integer: $rep_number";
     }
     if ($range_number && !($range_number =~ /^\d+?$/)){
-      push @error_messages, "Cell G$row_name: range_number must be a positive integer: $range_number";
+      push @error_messages, "Row $row_name: range_number must be a positive integer: $range_number";
     }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-      push @error_messages, "Cell H$row_name: row_number must be a positive integer: $row_number";
+      push @error_messages, "Row $row_name: row_number must be a positive integer: $row_number";
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-      push @error_messages, "Cell I$row_name: col_number must be a positive integer: $col_number";
+      push @error_messages, "Row $row_name: col_number must be a positive integer: $col_number";
     }
     if ($row_number && $col_number) {
       my $k = "$row_number-$col_number";
@@ -242,10 +250,30 @@ sub _validate_with_plugin {
       push @pairs, [$seedlot_name, $stock_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
-      push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
+      push @error_messages, "Row $row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-      push @error_messages, "Cell L$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
+      push @error_messages, "Row $row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
+    }
+
+    ## ENTRY NUMBER CHECK
+    if ($entry_number) {
+      my $ex_acc = $seen_entry_numbers{by_num}->{$entry_number};
+      my $ex_en = $seen_entry_numbers{by_acc}->{$stock_name};
+      if ( $ex_acc ) {
+        if ( $ex_acc ne $stock_name ) {
+          push @error_messages, "Row $row_name: entry number $entry_number has already been assigned to a different stock ($ex_acc).";
+        }
+      }
+      elsif ( $ex_en ) {
+        if ( $ex_en ne $entry_number ) {
+          push @error_messages, "Row $row_name: stock $stock_name has already been assigned a different entry number ($ex_en).";
+        }
+      }
+      else {
+        $seen_entry_numbers{by_num}->{$entry_number} = $stock_name;
+        $seen_entry_numbers{by_acc}->{$stock_name} = $entry_number;
+      }
     }
 
     foreach my $treatment_name (@treatment_names){
@@ -295,7 +323,7 @@ sub _validate_with_plugin {
     'uniquename' => { -in => \@plots }
   });
   while (my $r=$rs->next){
-    push @error_messages, "Cell A".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
+    push @error_messages, "Row ".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
   }
 
   # check for multiple plots at the same position
@@ -395,6 +423,8 @@ sub _parse_with_plugin {
     $stock_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
   }
 
+  my %seen_entry_numbers;
+
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
     my $stock_name;
@@ -408,6 +438,7 @@ sub _parse_with_plugin {
     my $seedlot_name;
     my $num_seed_per_plot = 0;
     my $weight_gram_seed_per_plot = 0;
+    my $entry_number;
 
     if ($worksheet->get_cell($row,$columns{plot_name}->{index})) {
       $plot_name = $worksheet->get_cell($row,$columns{plot_name}->{index})->value();
@@ -450,6 +481,9 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,$columns{weight_gram_seed_per_plot}->{index})) {
       $weight_gram_seed_per_plot = $worksheet->get_cell($row, $columns{weight_gram_seed_per_plot}->{index})->value();
     }
+    if ($worksheet->get_cell($row,$columns{entry_number}->{index})) {
+      $entry_number = $worksheet->get_cell($row, $columns{entry_number}->{index})->value();
+    }
 
     #skip blank lines
     if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
@@ -472,6 +506,10 @@ sub _parse_with_plugin {
         print STDERR "There is more than one uniquename for this synonym $stock_name. this should not happen!\n";
       }
       $stock_name = $stock_names[0];
+    }
+
+    if ($entry_number) {
+      $seen_entry_numbers{$stock_name} = $entry_number;
     }
 
     my $key = $row;
@@ -504,7 +542,11 @@ sub _parse_with_plugin {
 
   }
   #print STDERR Dumper \%design;
-  $self->_set_parsed_data(\%design);
+  my %parsed_data = (
+    design => \%design,
+    entry_numbers => \%seen_entry_numbers
+  );
+  $self->_set_parsed_data(\%parsed_data);
 
   return 1;
 
