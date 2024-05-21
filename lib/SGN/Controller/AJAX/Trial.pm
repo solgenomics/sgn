@@ -1236,6 +1236,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             operator => $user_name,
             owner_id => $user_id
         );
+        my $entry_numbers = $trial_design->{'entry_numbers'};
 
         if ($trial_design->{'trial_type'}){
             $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
@@ -1279,6 +1280,40 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             $trial_activity_obj->trial_activities(\%trial_activity);
             $trial_activity_obj->parent_id($trial_id);
             my $activity_prop_id = $trial_activity_obj->store();
+        }
+
+        # save entry numbers, if provided
+        if ( $entry_numbers && scalar(keys %$entry_numbers) > 0 && $current_save->{'trial_id'} ) {
+            my %entry_numbers_prop;
+            my @stock_names = keys %$entry_numbers;
+
+            # Convert stock names from parsed trial template to stock ids for data storage
+            my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+            my $stocks = $chado_schema->resultset('Stock::Stock')->search({
+                type_id=>$accession_cvterm_id,
+                uniquename=>{-in=>\@stock_names}
+            });
+            while (my $s = $stocks->next()) {
+                $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
+            }
+
+            # Lookup synonyms of accession names
+            my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_synonym', 'stock_property')->cvterm_id();
+            my $acc_synonym_rs = $chado_schema->resultset("Stock::Stock")->search({
+                'me.is_obsolete' => { '!=' => 't' },
+                'stockprops.value' => { -in => \@stock_names},
+                'me.type_id' => $accession_cvterm_id,
+                'stockprops.type_id' => $synonym_cvterm_id
+            },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+            while (my $r=$acc_synonym_rs->next) {
+                if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
+                    $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
+                }
+            }
+
+            # store entry numbers
+            my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $current_save->{'trial_id'} });
+            $trial->set_entry_numbers(\%entry_numbers_prop);
         }
       }
 
