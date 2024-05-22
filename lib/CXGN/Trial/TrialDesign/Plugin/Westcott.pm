@@ -55,7 +55,6 @@ sub create_design {
 
     $r_block = $rbase->create_block('r_block');
     $stock_data_matrix->send_rbase($rbase, 'r_block');
-    $r_block->add_command('library(devtools)');
     $r_block->add_command('library(st4gi)');
     $r_block->add_command('geno <-  stock_data_matrix[1,]');
     $r_block->add_command('ch1 <- "'.$westcott_check_1.'"');

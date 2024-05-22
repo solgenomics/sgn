@@ -203,23 +203,23 @@ jQuery(document).ready(function () {
                 jQuery(solGS.anova.msgDiv).empty();
                 jQuery(runDiv).show();
 
-                var anovaTable = analysisRes.anova_html_table;
-                if (anovaTable) {
-                  var anovaFile = analysisRes.anova_table_file;
-                  var modelFile = analysisRes.anova_model_file;
-                  var meansFile = analysisRes.adj_means_file;
+                var anovaHtmlTable = analysisRes.anova_table_html_file;
+                if (anovaHtmlTable) {
+                  var anovaTxtFile = analysisRes.anova_table_txt_file;
+                  var modelSummaryFile = analysisRes.anova_model_file;
+                  var AdjMeansFile = analysisRes.adj_means_file;
                   var diagnosticsFile = analysisRes.anova_diagnostics_file;
 
-                  var fileNameAnova = anovaFile.split("/").pop();
-                  var fileNameModel = modelFile.split("/").pop();
-                  var fileNameMeans = meansFile.split("/").pop();
+                  var AnovaTxtFileName = anovaTxtFile.split("/").pop();
+                  var modelSummaryFileName = modelSummaryFile.split("/").pop();
+                  var AdjMeansFileName = AdjMeansFile.split("/").pop();
                   var fileNameDiagnostics = diagnosticsFile.split("/").pop();
-                  anovaFile =
-                    '<a href="' + anovaFile + '" download=' + fileNameAnova + ">Anova table</a>";
-                  modelFile =
-                    '<a href="' + modelFile + '" download=' + fileNameModel + ">Model summary</a>";
-                  meansFile =
-                    '<a href="' + meansFile + '" download=' + fileNameMeans + ">Adjusted means</a>";
+                  anovaTxtFile =
+                    '<a href="' + anovaTxtFile + '" download=' + AnovaTxtFileName + ">Anova table</a>";
+                  modelSummaryFile =
+                    '<a href="' + modelSummaryFile + '" download=' + modelSummaryFileName + ">Model summary</a>";
+                  AdjMeansFile =
+                    '<a href="' + AdjMeansFile + '" download=' + AdjMeansFileName + ">Adjusted means</a>";
 
                   diagnosticsFile =
                     '<a href="' +
@@ -231,16 +231,16 @@ jQuery(document).ready(function () {
                   jQuery("#anova_table")
                     .prepend(
                       '<div style="margin-top: 20px">' +
-                        anovaTable +
+                        anovaHtmlTable +
                         "</div>" +
                         "<br /> <strong>Download:</strong> " +
-                        anovaFile +
+                        anovaTxtFile +
                         " | " +
-                        modelFile +
+                        modelSummaryFile +
                         " | " +
                         diagnosticsFile +
                         " | " +
-                        meansFile
+                        AdjMeansFile
                     )
                     .show();
                 } else {
