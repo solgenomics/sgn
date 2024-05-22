@@ -349,6 +349,9 @@ $vendor_id => undef
 % if ($info_section_id eq 'stock_delete_section'){
                                 <& /stock/delete.mas, stock_id=>$stock_id &>
 % } #End stock_delete_section
+% if ($info_section_id eq 'population_delete_section'){
+                                <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>
+% } #End population_delete_section
 % if ($info_section_id eq 'population_members_section'){
                                 <& /stock/population_members.mas, stock_id=>$stock_id &>
 % } #End population_members_section
