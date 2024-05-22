@@ -43,9 +43,10 @@ sub upload_ssr_protocol : Path('/ajax/genotype/upload_ssr_protocol') : ActionCla
 sub upload_ssr_protocol_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $upload = $c->req->upload('xls_ssr_protocol_file');
     my $upload_type = 'SSRProtocolExcel';

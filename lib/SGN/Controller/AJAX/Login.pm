@@ -21,7 +21,10 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
-    my $dbh = $c->dbic_schema("CXGN::People::Schema")->storage->dbh;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $dbh = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)->storage->dbh();
+
     my $login = CXGN::Login->new($dbh);
 
     if (my ($person_id, $user_type) = $login->has_session()) {
