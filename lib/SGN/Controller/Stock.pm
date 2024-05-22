@@ -397,6 +397,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
     my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     if (!$genotype_id) {
 
@@ -408,8 +409,9 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	$c->stash->{template} = "/generic_message.mas";
 
     } else {
-	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+	my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+
 	my $dl_token = $c->req->param("gbs_download_token") || "no_token";
 	my $dl_cookie = "download".$dl_token;
 
