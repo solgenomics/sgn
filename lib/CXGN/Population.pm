@@ -156,8 +156,8 @@ sub delete_population_member {
             } else {
                 my $male_parent_rs = $schema->resultset("Stock::StockRelationship")->search({subject_id => $population_id, type_id => $male_parent_type_id});
                 if ($male_parent_rs->count > 0){
-                    print STDERR "Population has associated cross or pedigree. Cannot delete.\n";
-                    die "Population has associated cross or pedigree: Cannot delete.\n";
+                    print STDERR "Population has associated cross or pedigree. Cannot delete population member.\n";
+                    die "Population has associated cross or pedigree: Cannot delete population member.\n";
                 }
             }
         }

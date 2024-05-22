@@ -212,7 +212,9 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 }
                 if (response.success){
-                    alert(response.success);
+                    if (confirm(response.success)) {
+                        location.reload();
+                    }
                 }
             },
             error: function () {
@@ -236,7 +238,9 @@ jQuery(document).ready(function ($) {
                         alert(response.error);
                     }
                     if (response.success){
-                        alert(response.success);
+                        if (confirm(response.success)) {
+                            location.reload();
+                        }
                     }
                 },
                 error: function () {
