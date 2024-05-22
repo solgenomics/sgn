@@ -55,12 +55,13 @@ if ($url !~ /cluster\/analysis/) {
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
-my $login_msg = "To view your datasets and use this tool " .  
-"you need to <a href=\"/user/login?goto_url=$cluster_url\">login</a>.";
+#my $login_msg = "To view your datasets and use this tool " .  
+#"you need to <a href=\"/user/login?goto_url=$cluster_url\">login</a>.";
 
 </%perl>
 
 <& /solgs/tools/base.mas &>
+ 
 <& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>
 
 % if ($url =~ /cluster\/analysis/) {
@@ -97,16 +98,10 @@ my $login_msg = "To view your datasets and use this tool " .
     <& cluster_options.mas &>
 
 %} elsif ($url =~ /cluster\/analysis/) {
-% if ($c->user) {
-    <& /solgs/tools/datatable_display.mas,
-    analysis_type => 'cluster' &>
-%} else {
-    <div class="row">
-    <div class="col-md-8 col-md-offset-2">
-    <& /generic_message.mas, message => $login_msg &>
-    </div>
-    </div>
-%}
+<& /solgs/tools/login.mas,
+ tool_url => $cluster_url,
+ analysis_type => 'cluster' 
+ &>
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
 %}
