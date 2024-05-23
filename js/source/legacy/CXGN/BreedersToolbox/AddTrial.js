@@ -1309,7 +1309,7 @@ jQuery(document).ready(function ($) {
             $("#max_block_size_section").hide();
             $("#row_number_section").hide();
             $("#row_number_per_block_section").hide();
-            $("#col_number_per_block_section").show();
+            $("#col_number_per_block_section").hide();
             $("#col_number_section").show();
             $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();

@@ -61,18 +61,18 @@ sub create_design {
     die "Number of cols not specified\n";
   }
 
-  if ($self->has_fieldmap_col_number()) {
-    $blockColNumber = $self->get_fieldmap_col_number();
-  } else {
-    die "Number of cols per block not specified\n";
-  }
+  # if ($self->has_fieldmap_col_number()) {
+  #   $blockColNumber = $self->get_fieldmap_col_number();
+  # } else {
+  #   die "Number of cols per block not specified\n";
+  # }
 
-  if (!(($blockColNumber ~~ [2, 4]))) {
-    die "Number of cols per block must be 2 or 4\n";
-  }
+  # if (!(($blockColNumber ~~ [2, 4]))) {
+  #   die "Number of cols per block must be 2 or 4\n";
+  # }
 
 
-  print "The number of cols per block is $blockColNumber \n";
+  # print "The number of cols per block is $blockColNumber \n";
 
   ## change here to calculate the row number!!
 
@@ -98,7 +98,7 @@ sub create_design {
   print $F "nCol <- ".$colNumber."\n";
   print $F "plot_start <- \"$plot_start\"\n";
   print $F "plot_type <- \"$plot_layout_format\"\n";
-  print $F "col_per_block <- ".$blockColNumber."\n";
+  # print $F "col_per_block <- ".$blockColNumber."\n";
   close($F);
 
   print "The plot type is $plot_layout_format \n";
