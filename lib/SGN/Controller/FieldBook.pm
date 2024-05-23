@@ -128,7 +128,7 @@ sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) {
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;
     $c->res->content_type('Application/xls');
-    $c->res->header('Content-Disposition', qq[attachment; filename="fieldbook_layout_$file_name"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
     $c->res->body($contents);
 }
 
