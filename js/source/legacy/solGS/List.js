@@ -45,9 +45,9 @@ class solGSList {
 
   getLists(listTypes) {
     var lists = this.CxgnList.getLists(listTypes);
-    var pcaPrivatePops = this.CxgnList.convertArrayToJson(lists.private_lists);
-    var pcaPublicLists = this.CxgnList.convertArrayToJson(lists.public_lists);
-    lists = [pcaPrivatePops, pcaPublicLists]
+    var privateLists = this.CxgnList.convertArrayToJson(lists.private_lists);
+    var publicLists = this.CxgnList.convertArrayToJson(lists.public_lists);
+    lists = [privateLists, publicLists]
 
     lists = lists.flat();
     lists = this.addDataStrAttr(lists);
