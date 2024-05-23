@@ -217,13 +217,14 @@ solGS.cluster = {
 
     if (page.match(/cluster\/analysis/)) {
       if (dataStr.match(/list/)) {
-        list = this.getListMetaData(selectedId);
+        var list = new solGSList(selectedId)
+        listDetail = list.getListDetail(selectedId);
 
-        if (list.list_type.match(/accessions/)) {
+        if (listDetail.type.match(/accessions/)) {
           dataTypeOpts = ["Genotype"];
-        } else if (list.list_type.match(/plots/)) {
+        } else if (listDetail.type.match(/plots/)) {
           dataTypeOpts = ["Phenotype"];
-        } else if (list.list_type.match(/trials/)) {
+        } else if (listDetail.type.match(/trials/)) {
           dataTypeOpts = ["Genotype", "Phenotype"];
         }
       } else if (dataStr.match(/dataset/)) {
@@ -827,22 +828,7 @@ solGS.cluster = {
     };
   },
 
-  getListMetaData: function (listId) {
-    var list = new CXGN.List();
-
-    if (listId) {
-      var listName = list.listNameById(listId);
-      var listType = list.getListType(listId);
-
-      return {
-        name: listName,
-        list_type: listType,
-      };
-    } else {
-      return;
-    }
-  },
-
+  
   populateClusterPopsMenu: function () {
     var list = new CXGN.List();
     var lists = list.getLists(["accessions", "plots", "trials"]);
@@ -889,30 +875,30 @@ solGS.cluster = {
 
   },
 
-  getClusterLists: function (listTypes) {
-    var list = new CXGN.List();
-    var lists = list.getLists(listTypes);
-    var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
-    var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
-    lists = [clusterPrivatePops, clusterPublicLists]
+  // getClusterLists: function (listTypes) {
+  //   var list = new CXGN.List();
+  //   var lists = list.getLists(listTypes);
+  //   var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
+  //   var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
+  //   lists = [clusterPrivatePops, clusterPublicLists]
 
-    lists = lists.flat();
-    lists = this.addDataStrAttr(lists);
+  //   lists = lists.flat();
+  //   lists = this.addDataStrAttr(lists);
 
-    return lists;
+  //   return lists;
 
-  },
+  // },
 
-  addDataStrAttr: function(lists) {
+  // addDataStrAttr: function(lists) {
 
-    for (var i = 0; i < lists.length; i++) {
-      if (lists[i]) {
-        lists[i]["data_str"] = 'list';
-      }
-    }
+  //   for (var i = 0; i < lists.length; i++) {
+  //     if (lists[i]) {
+  //       lists[i]["data_str"] = 'list';
+  //     }
+  //   }
 
-    return lists;
-  },
+  //   return lists;
+  // },
 
 
   getClusterPopsRows: function(clusterPops) {
@@ -931,8 +917,9 @@ solGS.cluster = {
   },
 
   getClusterPops: function () {
-
-    var lists = this.getClusterLists(["accessions", "plots", "trials"]);
+    var list = new solGSList();
+    var lists = list.getLists(["accessions", "plots", "trials"]);
+    // var lists = this.getClusterLists(["accessions", "plots", "trials"]);
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
     
     clusterPops = [lists, datasets];
