@@ -875,31 +875,6 @@ solGS.cluster = {
 
   },
 
-  // getClusterLists: function (listTypes) {
-  //   var list = new CXGN.List();
-  //   var lists = list.getLists(listTypes);
-  //   var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
-  //   var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
-  //   lists = [clusterPrivatePops, clusterPublicLists]
-
-  //   lists = lists.flat();
-  //   lists = this.addDataStrAttr(lists);
-
-  //   return lists;
-
-  // },
-
-  // addDataStrAttr: function(lists) {
-
-  //   for (var i = 0; i < lists.length; i++) {
-  //     if (lists[i]) {
-  //       lists[i]["data_str"] = 'list';
-  //     }
-  //   }
-
-  //   return lists;
-  // },
-
 
   getClusterPopsRows: function(clusterPops) {
 
@@ -919,7 +894,6 @@ solGS.cluster = {
   getClusterPops: function () {
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
-    // var lists = this.getClusterLists(["accessions", "plots", "trials"]);
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
     
     clusterPops = [lists, datasets];
