@@ -1543,10 +1543,9 @@ jQuery(document).ready(function ($) {
             $("#block_size_section").hide();
             $("#max_block_size_section").show();
             $("#row_number_section").hide();
-            $("#row_number_per_block_section").hide();
+            $("#row_number_per_block_section").show();
             $("#col_number_per_block_section").hide();
             $("#col_number_section").hide();
-            $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
