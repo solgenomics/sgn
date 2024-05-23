@@ -21,82 +21,86 @@ library(dplyr)
 library(blocksdesign)
 
 source(paramfile)
-n.reps <- nRep
-n.tiers <- nCol
-n.rows <- nRow
-plotType <- plot_type 
-plotStart <- plot_start
-col.per.block <- as.numeric(col_per_block)
-
-all.clones <- treatments
-
-
-bed.number <- data.frame(accession_name = all.clones,
-                         bed_number=c(1:length(all.clones)))
-
-
 ## 1) Preparing dataframe
-treatmentdf = data.frame(treatment=all.clones)
-list.bed = merge(treatmentdf,bed.number, by.x="treatment", by.y = "accession_name", all.x=TRUE)
-list.bed.order = list.bed#[order(list.bed$bed_number),]
-colnames(list.bed.order) = c("accession_name","bed_number")
-list.bed.order$num = 1:length(all.clones)
-list.bed.order = subset(list.bed.order, select = c("num","accession_name","bed_number"))
+all.clones <- treatments
+nTrt <- length(all.clones)
+nRep <- nRep
+nRows <- nRow
+nCols <- nCol
+# nCols <- nTrt*nRep/nRows
+rowsPerBlock <- nTrt/nCols
+colsPerBlock <- nTrt/nRows
+superCols <- nCols/colsPerBlock
+totalPlots <- nTrt*nRep
 
-## 2) create design
-blocks <- data.frame(
-  rep_number = gl(n.reps,length(all.clones)),
-  block_number = gl(n.reps,1),
-  dummy_tier = gl(n.tiers*2,n.rows/2)
-) 
+plot_type <- plot_type 
+plot_start <- plot_start
 
-design <- design(all.clones, blocks)$Design
-
-design$row_number = rep(rep(1:n.rows,each=n.tiers/n.reps),times=n.reps)
-design <- design[order(design$row_number),]
-design$col_number = rep(1:n.tiers,times=n.rows)
+blocks = data.frame(block_number = gl(nRep,nTrt),
+                    Cols = gl(superCols,colsPerBlock,totalPlots),
+                    row_number = gl(nRows,nCols,totalPlots),
+                    col_number = gl(nCols,1,totalPlots))
 
 
-names(design)[names(design) == "treatments"] <- "accession_name"
+# treatments = data.frame(treatments =gl(nTrt,1,totalPlots))
+Z=design(all.clones,blocks, searches = 50, weighting=0.5)
+fieldBook <- Z$Design
 
-#### create is_a_control
-design <- transform(design, is_a_control = ifelse(design$accession_name %in% controls, 1, 0))
+trialMatrix <- matrix(0,nRows,nCols)
 
-## Fixing Block Number
-blcNumber = 1
-for(i in 1:n.rows){
-  design[design$col_number == i, "block_number"] <- blcNumber
-  if(i%%col.per.block == 0){blcNumber = blcNumber+1}
+for(i in 1:nrow(fieldBook)){
+  trialMatrix[fieldBook$subRows[i],fieldBook$subCols[i]]<-fieldBook$treatments[i]
 }
+trialMatrix
+
+## Adding plot number
+colnames(fieldBook)[5] <- "plot_number"
+
+fieldBook$block_number <- as.integer(fieldBook$block_number)
+fieldBook$row_number <- as.integer(fieldBook$row_number)
+fieldBook$col_number <- as.integer(fieldBook$col_number)
+
+# Load dplyr
+library(dplyr)
+
+# Arrange fieldBook by row_number and col_number
+fieldBook <- fieldBook %>% arrange(row_number, col_number)
+fieldBook$plot_number <- c(1:totalPlots)
+fieldBook$plot_id <- c(1:nTrt)
+
+
 
 ## Number start
-if(plotStart == "00101"){
-  design$plot_number = paste0(formatC(design$row_number,width=3,flag="0"),
-                              formatC(design$col_number,width=2,flag="0"))
+if(plot_start == "00101"){
+  fieldBook$plot_number = paste0(formatC(fieldBook$block_number,width=3,flag="0"),
+                              formatC(fieldBook$plot_id,width=2,flag="0"))
 }else if (plot_start == 1001){
-  design$plot_number <- (1000*design$row_number)+design$col_number
+  fieldBook$plot_number <- (1000*fieldBook$block_number)+fieldBook$plot_id
 }else if (plot_start == 101) {
-  design$plot_number <- (100*design$row_number)+design$col_number
-}else{
-  design$plot_number <- (design$row_number)+design$col_number
+  fieldBook$plot_number <- (100*fieldBook$block_number)+fieldBook$plot_id
 }
 
-cat("plot start is ", plotStart,"\n")
-cat("plot type is ", plotType,"\n")
+cat("plot start is ", plot_start,"\n")
+cat("plot type is ", plot_type,"\n")
 
+plot_type = "serpentine"
 ## Plot number format
-if(plotType == "serpentine"){
-  for(i in 1:n.rows){
+if(plot_type == "serpentine"){
+  for(i in 1:nRows){
     if(i%%2==0){
-      design[design$row_number == i, "plot_number"] <- rev(design[design$row_number==i,"plot_number"])
+      fieldBook[fieldBook$row_number == i, "plot_number"] <- rev(fieldBook[fieldBook$row_number==i,"plot_number"])
     }
   }
 }
-    
-design <- design %>% dplyr::select(block_number, row_number, col_number, plot_number, accession_name, is_a_control)
+
+
+#### create is_a_control
+names(fieldBook)[names(fieldBook) == "treatments"] <- "accession_name"
+fieldBook <- transform(fieldBook, is_a_control = ifelse(fieldBook$accession_name %in% controls, 1, 0))
+
+design <- fieldBook %>% dplyr::select(block_number, row_number, col_number, plot_number, accession_name, is_a_control)
 
 head(design)
-
 
 # save result files
 basefile <- tools::file_path_sans_ext(paramfile)
