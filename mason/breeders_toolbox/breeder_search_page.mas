@@ -6,6 +6,9 @@ $dataset_id => undef
 <& /util/import_javascript.mas, entries => ["wizard"] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
 <div class="row">
@@ -420,7 +423,7 @@ $dataset_id => undef
 	      <td style="border-top: none; padding-top: 0">
 		Repetitive measurements: <br />
 
-		<select class="form-control" id="repetitive_measurements_treatment_option">
+		<select class="wizard-download-repetitive-measurements-type" >
                   <option>first value</option>
                   <option>last value</option>
                   <option selected>averaged value</option>
@@ -431,6 +434,17 @@ $dataset_id => undef
 		&nbsp;
 	      </td>
             </tr>
+	    <tr>
+		<td>
+		    From:  <input type="text" class="wizard-download-start-date" id="phenotype_start_date" title="phenotype_start_date"  />
+		</td>
+		<td>
+		    To: <input type="text" class="wizard-download-end-date" id="phenotype_end_date" title="phenotype_end_date" />	
+		</td>
+		<td>
+		    <input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
+		</td>
+		</tr>	
             <tr>
               <td>
                 <span>Trait Name Contains</span>
@@ -786,5 +800,39 @@ $dataset_id => undef
     }
     $(".wizard-download-genotypes-chromosome-number").html(html);
   }
+
+  jQuery('input[title="phenotype_start_date"]').daterangepicker(
+   {
+       "singleDatePicker": true,
+       "showDropdowns": true,
+       "autoUpdateInput": true,
+       "startDate": "1960-01-01",
+       "yearSelect" : true,
+       "minDate": "1960-01-01",
+       "maxDate": "2030-12-31",
+       locale: { 
+        format: 'YYYY-MM-DD'
+      }
+   },
+
+);
+
+
+jQuery('input[title="phenotype_end_date"]').daterangepicker(
+   {
+       "singleDatePicker": true,
+       "showDropdowns": true,
+       "autoUpdateInput": true,
+       "startDate": "1960-01-01",
+       "yearSelect" : true,
+       "minDate": "1960-01-01",
+       "maxDate": "2030-12-31",
+       locale: { 
+        format: 'YYYY-MM-DD'
+      }
+   },
+
+);
+
 
 </script>
