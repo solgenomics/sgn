@@ -286,23 +286,22 @@ function jqueryStuff() {
 % my $props_subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_props\" >Add Additional Info</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Additional Info</button>";
 
 % if ($type_name eq 'plot' || $type_name eq 'plant' || $type_name eq 'subplot' || $type_name eq 'tissue_sample') {
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Experiment Usage</h4>", info_section_subtitle => 'View experiments that this stock has been used in.', icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any accession, plot, plant, and/or tissue_sample that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
+%   my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link";
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Traits Assayed</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
 % }
 
 % if ($type_name ne 'vector_construct' ){
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_stock_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
 % } else {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_vector_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View accessions (transformants) and transformation ids that are linked to this vector construct.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "vector_related_stocks_section", stock_uniquename => $uniquename, type_name => $type_name &>
 % }
 
-% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
+% if ($type_name eq 'accession'){
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Experiment Usage</h4>", info_section_subtitle => 'View experiments that this stock has been used in.', icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
-% }
-
-% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
-
 %    my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link";
-
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Traits Assayed</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
 % }
 
@@ -339,8 +338,8 @@ function jqueryStuff() {
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Pedigree</h4>", info_section_subtitle => 'View and edit pedigree information.', icon_class => "glyphicon glyphicon-random", info_section_id => "stock_pedigree_section", buttons_html => $add_parent_link.$remove_parent_link, has_pedigree => $has_pedigree, info_section_collapsed => 1 &>
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any plots, plants, tissue_sample, and/or accessions that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
-% }
 
+% }
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Images</h4>", info_section_subtitle => 'View and add images of this stock and of related stocks.', icon_class => "glyphicon glyphicon-camera", info_section_id => "stock_images_section", image_ids => $image_ids, related_image_ids => $related_image_ids, dbh => $dbh, buttons_html => qq|<a id="add_new_image_button" class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">Add new image</a><a class="btn btn-sm btn-default" style="margin:3px" id="stock_images_section_compare_images_button">Compare Images</a>| &>
 
@@ -352,7 +351,9 @@ function jqueryStuff() {
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Comments</h4>", info_section_subtitle => 'View and add comments to this stock.', icon_class => "glyphicon glyphicon-pencil", info_section_id => "stock_comments_section", referer => $this_page &>
 
-      <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Audit Table</h4>", info_section_subtitle => 'Track audit information for this stock.', icon_class => "glyphicon glyphicon-time", info_section_id => "audit_table_section", stock_uniquename => $uniquename, referer => $this_page &>
+       
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 
 </&>
 
@@ -443,5 +444,10 @@ function jqueryStuff() {
                 jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
             }
         });
+        
+        
   });
+
+
+
 </script>

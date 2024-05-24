@@ -73,10 +73,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $statistics_select_original = $c->req->param('statistics_select');

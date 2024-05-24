@@ -14,6 +14,11 @@ $info_section_subtitle => "A subtitle"
 $buttons_html => undef
 $locations_by_program_json => undef
 
+#Trying to find the right one
+$project_id => undef
+$name => undef
+
+
 #Specific to trial detail page
 $has_plant_entries => undef
 $has_subplot_entries => undef
@@ -278,7 +283,7 @@ $vendor_id => undef
                                 <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
 % } #End stock_additional_info_section
 % if ($info_section_id eq 'stock_trials_section'){
-                                <& /stock/trials.mas, stock_id => $stock_id &>
+                                <& /stock/trials.mas, stock_id => $stock_id, trial_id => $trial_id, trial_name => $trial_name, name => $name, project_id => $project_id&>
 % } #End stock_trials_section
 % if ($info_section_id eq 'stock_upload_files'){
                                 <& /stock/accession_files.mas, stock_id => $stock_id &>
@@ -299,6 +304,10 @@ $vendor_id => undef
 % if ($info_section_id eq 'stock_related_stock_section'){
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
+% if ($info_section_id eq 'vector_related_stocks_section'){
+                                <& /stock/vector_related_stocks.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_related_stocks_section
+
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
 
@@ -312,6 +321,12 @@ $vendor_id => undef
 % } #End stock_images_section
 % if ($info_section_id eq 'stock_sequencing_status_section'){
                                 <& /stock/sequencing_status.mas, stock_id => $stock_id &>
+% } #End stock audit section
+% if($info_section_id eq 'audit_table_section'){
+        <& /stock/audit.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename&>
+% } #End TRIALS audit section
+% if($info_section_id eq 'trial_audit_table_section'){
+        <& /breeders_toolbox/trial/trial_audit.mas, trial_id => $trial_id, project_id => $project_id&>
 % } #End stock requencing status section
 % if ($info_section_id eq 'stock_literature_annotation_section'){
                                 <&| /page/info_section.mas, title=>"Literature annotation (".scalar( @$pubs ).")" , id=>"publications" , collapsible=>1, collapsed=>1 &>

@@ -526,6 +526,7 @@ function parse_random_factors() {
 
 function get_model_string() {
     var params = extract_model_parameters();
+
     //alert("PARAMS: "+JSON.stringify(params));
     $.ajax({
         url: '/ajax/mixedmodels/modelstring',
@@ -536,7 +537,7 @@ function get_model_string() {
         },
         success: function (r) {
             if (r.error) {
-                alert(error);
+                alert(r.error);
             }
             else {
 
