@@ -236,6 +236,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
+    my $phenotype_start_date = $c->req->param("phenotype_start_date");
+    my $phenotype_end_date = $c->req->param("phenotype_end_date");
+    my $repetitive_measurements_type = $c->req->param("repetitive_measurements_type");
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -410,7 +413,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         phenotype_max_value => $phenotype_max_value,
         has_header => $has_header,
         search_type => $search_type,
-	repetitive_measurements => $repetitive_measurements,
+	repetitive_measurements_type => $repetitive_measurements_type,
+	phenotype_start_date => $phenotype_start_date,
+	phenotype_end_date => $phenotype_end_date,
     });
 
     my $error = $download->download();

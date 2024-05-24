@@ -192,12 +192,6 @@ has 'offset' => (
     is => 'rw'
 );
 
-#has 'multiple_observations_treatment' =>  (
-#    isa => 'Str|Undef',
-#    is => 'rw',
-#   default => 'average',  # can be first, last, average, all
-#    );
-
 has 'repetitive_measurements' => (
     isa => 'Str',
     is => 'rw',
