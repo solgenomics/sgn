@@ -96,7 +96,7 @@ sub download {
     my $search_type = $self->search_type();
     my $phenotype_start_date = $self->phenotype_start_date();
     my $phenotype_end_date = $self->phenotype_end_date();
-    my $repetitive_measurements_type = $self->repetitive_measurements_type();
+    my $repetitive_measurements = $self->repetitive_measurements();
 
 
     $self->trial_download_log($trial_id, "trial phenotypes");
@@ -129,9 +129,9 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
-	    phenotype_start_date => $phenotype_start_date,
-	    phenotype_end_date => $phenotype_end_date,
-	    repetitive_measurements_type => $repetitive_measurements_type,
+	    start_date => $phenotype_start_date,
+	    end_date => $phenotype_end_date,
+	    repetitive_measurements => $repetitive_measurements,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }
