@@ -1442,5 +1442,26 @@ sub upload_soil_data_POST : Args(0) {
 
 }
 
+sub geo_fieldmap_tileserver : Path('/ajax/trial/geo_fieldmap_tileserver') : ActionClass('REST') { }
+
+sub geo_fieldmap_tileserver_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my ($attr, $url) = split(',', $c->config->{geo_fieldmap_tileserver});
+
+    if ( $attr && $url ) { 
+        $c->stash->{rest} = {
+            success => "1",
+            attribution => $attr,
+            url => $url
+        };
+    }
+    else {
+        $c->stash->{rest} = {
+            success => "0",
+        };
+    }
+}
+
 
 1;

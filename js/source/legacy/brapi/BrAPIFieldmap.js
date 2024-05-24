@@ -2305,7 +2305,7 @@
 	      jQuery(".ortho-select").on('change', function() { window.onOrthoSelection(this, map) });
 	    }
 
-	    // TODO: set dynamic tile server in the config file
+	    // Handle the selection of an orthomosaic to display
 	    window.onOrthoSelection = (e, map) => {
 	      var select = jQuery(e);
 	      var url = select.find(":selected").val();
@@ -2315,14 +2315,27 @@
 	        map.removeLayer(window.orthoMapLayer);
 	      }
 
-	      // Add new layer
+	      // Add a new map layer
 	      if ( url && url !== '' ) {
-	        window.orthoMapLayer = L.tileLayer(`https://tt.d2s.orgXXXXX/cog/tiles/WebMercatorQuad/{z}/{x}/{y}@2x?url=${url}`, {
-	          minZoom: 16,
-	          maxZoom: 30,
-	          attribution: 'UASHub'
+
+	        // Get the server-defined tile server
+	        jQuery.ajax( {
+	          url: '/ajax/trial/geo_fieldmap_tileserver',
+	          async: false,
+	          success: function(response) {
+
+	            // add map layer if tile server is defined
+	            if ( response && response.success && response.success === "1" ) {
+	              window.orthoMapLayer = L.tileLayer(response.url.replaceAll("{url}", url), {
+	                minZoom: 16,
+	                maxZoom: 30,
+	                attribution: response.attribution
+	              });
+	              window.orthoMapLayer.addTo(map);
+	            }
+	          }
+
 	        });
-	        window.orthoMapLayer.addTo(map);
 	      }
 
 	    }
