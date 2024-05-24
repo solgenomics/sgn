@@ -9,7 +9,7 @@ CXGN::Trial::Download::Plugin::TrialPhenotypeCSV
 
 This plugin module is loaded from CXGN::Trial::Download
 
-------------------------------------------------------------------
+=head1 DESCRIPTION
 
 For downloading phenotypes in a matrix where columns contain the phenotypes
 and rows contain the observation unit (as used from
@@ -22,12 +22,16 @@ There a number of optional keys for filtering down the phenotypes
 if you don't need to filter by them.
 
 As a CSV:
-my $plugin = 'TrialPhenotypeCSV';
+
+ my $plugin = 'TrialPhenotypeCSV';
 
 As a xls:
-my $plugin = 'TrialPhenotypeExcel';
 
-my $download = CXGN::Trial::Download->new({
+ my $plugin = 'TrialPhenotypeExcel';
+
+Then:
+
+ my $download = CXGN::Trial::Download->new({
     bcs_schema => $schema,
     trait_list => \@trait_list_int,
     year_list => \@year_list,
@@ -45,17 +49,22 @@ my $download = CXGN::Trial::Download->new({
     phenotype_max_value => $phenotype_max_value,
     has_header=>$has_header,
     exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-    include_pedigree_parents=>$include_pedigree_parents
-});
-my $error = $download->download();
-my $file_name = "phenotype.$format";
-$c->res->content_type('Application/'.$format);
-$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-my $output = read_file($tempfile);
-$c->res->body($output);
+    include_pedigree_parents=>$include_pedigree_parents,
+    start_date => $start_date,
+    end_date => $end_date,
+    repetitive_measurements => $type, # either first, last, average, all
+ });
+ my $error = $download->download();
+ my $file_name = "phenotype.$format";
+ $c->res->content_type('Application/'.$format);
+ $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+ my $output = read_file($tempfile);
+ $c->res->body($output);
 
 
 =head1 AUTHORS
+
+Nick Morales
 
 =cut
 
