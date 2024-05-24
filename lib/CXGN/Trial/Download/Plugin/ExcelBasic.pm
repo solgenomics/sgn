@@ -8,28 +8,30 @@ CXGN::Trial::Download::Plugin::ExcelBasic
 
 This plugin module is loaded from CXGN::Trial::Download
 
-------------------------------------------------------------------
+=head1 DESCRIPTION
 
 For downloading a trial's xls spreadsheet for collecting phenotypes (as used
 from SGN::Controller::AJAX::PhenotypesDownload->create_phenotype_spreadsheet):
 
-my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
-my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
-my $create_spreadsheet = CXGN::Trial::Download->new({
-    bcs_schema => $schema,
-    trial_list => \@trial_ids,
-    trait_list => \@trait_list,
-    filename => $tempfile,
-    format => "ExcelBasic",
-    data_level => $data_level,
-    sample_number => $sample_number,
-    predefined_columns => $predefined_columns,
-});
-$create_spreadsheet->download();
-$c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
+ my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+ my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
+ my $create_spreadsheet = CXGN::Trial::Download->new({
+     bcs_schema => $schema,
+     trial_list => \@trial_ids,
+     trait_list => \@trait_list,
+     filename => $tempfile,
+     format => "ExcelBasic",
+     data_level => $data_level,
+     sample_number => $sample_number,
+     predefined_columns => $predefined_columns,
+ });
+ $create_spreadsheet->download();
+ $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
 
 
 =head1 AUTHORS
+
+Nick Morales
 
 =cut
 
