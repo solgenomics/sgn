@@ -8,28 +8,30 @@ CXGN::Trial::Download::Plugin::CrossingExperimentXLS
 
 This plugin module is loaded from CXGN::Trial::Download
 
-------------------------------------------------------------------
+=head1 DESCRIPTION
 
 For downloading crosses in a crossing EXPERIMENT (as used from CXGN::Trial::Download->trial_download):
 
-my $plugin = "CrossingExperimentXLS";
+ my $plugin = "CrossingExperimentXLS";
 
-my $download = CXGN::Trial::Download->new({
-    bcs_schema => $schema,
-    trial_id => $c->stash->{trial_id},
-    filename => $tempfile,
-    format => $plugin,
-    field_crossing_data_order => \@field_crossing_data_order
-});
-my $error = $download->download();
-my $file_name = $trial_id . "_" . "$what" . ".$format";
-$c->res->content_type('Application/'.$format);
-$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-my $output = read_file($tempfile);
-$c->res->body($output);
+ my $download = CXGN::Trial::Download->new({
+     bcs_schema => $schema,
+     trial_id => $c->stash->{trial_id},
+     filename => $tempfile,
+     format => $plugin,
+     field_crossing_data_order => \@field_crossing_data_order
+ });
+ my $error = $download->download();
+ my $file_name = $trial_id . "_" . "$what" . ".$format";
+ $c->res->content_type('Application/'.$format);
+ $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+ my $output = read_file($tempfile);
+ $c->res->body($output);
 
 
 =head1 AUTHORS
+
+Titima Tantikanjana, Dariusz Bienkowski
 
 =cut
 

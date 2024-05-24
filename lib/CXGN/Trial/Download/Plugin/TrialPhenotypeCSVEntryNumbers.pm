@@ -52,6 +52,9 @@ Then:
         has_header=>$has_header,
         exclude_phenotype_outlier=>$exclude_phenotype_outlier,
         include_pedigree_parents=>$include_pedigree_parents
+        start_date => $start_date,
+        end_date => $end_date,
+        repetitive_measurements => $type,
     });
     my $error = $download->download();
     my $file_name = "phenotype.$format";
@@ -109,6 +112,8 @@ sub download {
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $search_type = $self->search_type();
     my $repetitive_measurements = $self->repetitive_measurements();
+    my $start_date => $self->start_date();
+    my $end_date => $self->end_date();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -143,6 +148,8 @@ sub download {
             phenotype_max_value=>$phenotype_max_value,
             include_pedigree_parents=>$include_pedigree_parents,
 	    repetitive_measurements => $repetitive_measurements,
+	    start_date => $start_date,
+	    end_date => $end_date,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }
