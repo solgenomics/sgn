@@ -50,8 +50,7 @@ class solGSList {
     lists = [privateLists, publicLists]
 
     lists = lists.flat();
-    lists = this.addDataStrAttr(lists);
-
+  
     return lists;
 
   }

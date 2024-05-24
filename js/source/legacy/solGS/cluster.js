@@ -894,6 +894,7 @@ solGS.cluster = {
   getClusterPops: function () {
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
+    lists = list.addDataStrAttr(lists);
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
     
     clusterPops = [lists, datasets];
