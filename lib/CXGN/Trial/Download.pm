@@ -66,6 +66,9 @@ As a xls:
      phenotype_max_value => $phenotype_max_value,
      has_header=>$has_header,
      include_pedigree_parents=>$include_pedigree_parents
+     start_date => $start_date,
+     end_date => $end_date,
+     reptitive_measurements => $type, # all, first, last, or average
  }); 
  my $error = $download->download();
  my $file_name = "phenotype.$format";
@@ -237,30 +240,6 @@ sub BUILD {
     my $self = shift;
     $self->load_plugin($self->format());
 }
-
-# sub verify {
-#     my $self = shift;
-
-#     $self->load_plugin($self->format());
-
-#     return $self->plugin_verify();
-# }
-
-# sub download {
-#     my $self = shift;
-
-#     print STDERR "Format: ".$self->format()."\n";
-#     eval {
-# 	$self->load_plugin($self->format());
-#     };
-#     if ($@) {
-# 	die "The plugin specified (".$self->format().") for the download does not exist";
-#     }
-
-#     my $error = $self->plugin_download();
-
-#     return $error;
-# }
 
 sub trial_download_log {
     my $self = shift;
