@@ -14,7 +14,7 @@ my $login_msg = "To view your datasets and use this tool " .
 
 % if ($c->user) {
     <& /solgs/tools/datatable_display.mas,
-    analysis_type => 'cluster' &>
+    analysis_type => $analysis_type &>
 %} else {
     <div class="row">
     <div class="col-md-8 col-md-offset-2">
