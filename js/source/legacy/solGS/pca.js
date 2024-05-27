@@ -165,9 +165,6 @@ solGS.pca = {
   },
 
 
-
-  //////////
-
   getPcaPopId: function (selectedId, dataStr) {
 
     var pcaPopId;
@@ -248,8 +245,6 @@ solGS.pca = {
         return a[4]
       }
     });
-
-    console.log(`table: ${table}`)
 
     table.rows.add(data).draw();
 
@@ -336,8 +331,6 @@ solGS.pca = {
     return dataTypeOpts;
   },
 
-
-  /////////
 
   checkCachedPca: function (pcaArgs) {
     if (document.URL.match(/pca\/analysis/)) {
