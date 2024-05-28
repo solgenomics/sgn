@@ -646,7 +646,6 @@ $design_types => ()
 
                     <b>Required fields:</b>
                     <ul>
-                    <li>plot_name (must be unique across entire database. This is often a concatenation of the trial name and the plot number.)</li>
                     <li>accession_name or cross_unique_id or family_name (must exist in the database. This is the accession or cross unique id or family name being tested in the plot.)</li>
                     <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). These numbers should be unique for the trial.)</li>
                     <li>block_number (a design parameter indicating which block the plot is in)</li>
@@ -654,6 +653,7 @@ $design_types => ()
 
                     <b>Optional fields:</b>
                     <ul>
+                    <li>plot_name (must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>.)</li>
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions/cross unique ids/family names that are controls, so you should indicate the plots of those accessions/cross unique ids/family names as a control.)</li>
                     <li>rep_number (replicate number, numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, numeric)</li>
