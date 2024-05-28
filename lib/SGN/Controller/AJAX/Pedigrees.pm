@@ -8,6 +8,7 @@ use Data::Dumper;
 use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
+use CXGN::Pedigree::ParseUpload;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use utf8;
@@ -37,6 +38,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 	return;
     }
 
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
 	return;
@@ -48,19 +51,27 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'pedigree_upload';
 
-    my $upload = $c->req->upload('pedigrees_uploaded_file');
-    my $upload_tempfile  = $upload->tempname;
+    my $upload;
+    my $upload_type;
+    my $xlsx_pedigrees_upload = $c->req->upload('xlsx_pedigrees_uploaded_file');
+    my $text_pedigrees_upload = $c->req->upload('text_pedigrees_uploaded_file');
 
-    my $upload_original_name  = $upload->filename();
-
-    # check file type by file name extension
-    #
-    if ($upload_original_name =~ /\.xls$|\.xlsx/) {
-	$c->stash->{rest} = { error => "Pedigree upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
-	return;
+    if ($xlsx_pedigrees_upload) {
+        $upload = $xlsx_pedigrees_upload;
+        $upload_type = 'PedigreesExcel'
     }
 
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $archived_filename_with_path;
     my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my $session_id = $c->req->param("sgn_session_id");
 
     my @user_roles = $c->user()->roles();
     my $user_role = shift @user_roles;
@@ -87,6 +98,16 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
+
+    if ($xlsx_pedigrees_upload) {
+
+        $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+        $parser->load_plugin($upload_type);
+        $parsed_data = $parser->parse();
+        print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+
+    } else {
 
     # check if all accessions exist
     #
@@ -187,6 +208,11 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     } else {
         $c->stash->{rest} = {archived_file_name => $archived_filename_with_path};
     }
+
+
+   }
+
+
 }
 
 sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
@@ -323,7 +349,7 @@ sub _get_pedigrees_from_file {
         }
 
 	print STDERR "PEDIGREE NOW: ".Dumper($opts);
-	
+
         my $p = Bio::GeneticRelationships::Pedigree->new($opts);
         push @pedigrees, $p;
         $line_num++;
