@@ -36,6 +36,32 @@ jQuery(document).ready(function ($) {
         $("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
+
+    jQuery("#pedigree_file_format_option").change(function(){
+        if (jQuery(this).val() == ""){
+            jQuery("#xlsx_pedigrees_upload_section").hide();
+            jQuery("#text_pedigrees_upload_section").hide();
+            jQuery("#submit_pedigrees_upload_button_section").hide();
+      }
+        if (jQuery(this).val() == "xlsx_pedigrees"){
+            jQuery("#xlsx_pedigrees_upload_section").show();
+            jQuery("#text_pedigrees_upload_section").hide();
+            jQuery("#submit_pedigrees_upload_button_section").show();
+        }
+        if(jQuery(this).val() == "text_pedigrees"){
+            jQuery("#xlsx_pedigrees_upload_section").hide();
+            jQuery("#text_pedigrees_upload_section").show();
+            jQuery("#submit_pedigrees_upload_button_section").show();
+
+        }
+    });
+
+
+
+
+
+
+
     var archived_file_name;
     $('#upload_pedigrees_form').iframePostForm({
         json: false,

@@ -45,36 +45,109 @@
 </div>
 
 
-<div class="modal fade" id="upload_pedigrees_dialog" name="upload_pedigrees_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesDialog">Upload Pedigrees</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <&| /page/explanation.mas, title=>'Template Information' &>
-    	  <p>
-      	  <b>File format information</b>
-      	  <br>
-      	  <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet Format</a>
-    	  </p>
-  	  </&>
 
-  	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_pedigrees_form" name="upload_pedigrees_form">
-    	    <label for="pedigrees_uploaded_file" style="display: inline-block; width: 100px;">Upload Pedigree File:</label>
-    	    <input type="file" name="pedigrees_uploaded_file" id="pedigrees_uploaded_file" encoding="multipart/form-data" />
-    	  </form>
+
+
+
+<div class="modal fade" id="upload_pedigrees_dialog" name="upload_pedigrees_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPedigreesDialog">Upload Pedigrees</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">File Format: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="pedigree_file_format_option">
+                                    <option value="">Select a file format that you want to upload</option>
+                                    <option value="xlsx_pedigrees">Excel (.xlsx) file</option>
+                                    <option value="text_pedigrees">Tab-delimited text</option>
+                                </select>
+                            </div>
+                        </div>
+                        <br>
+                        <div id="xlsx_pedigrees_upload_section" style="display:none">
+                            <center>
+                                <h4>You want to upload pedigrees in an .xlsx file</h4>
+                            </center>
+                            <div class="well well-sm">
+                            <br/>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <&| /page/explanation.mas, title=>'Template information' &>
+                                            <p>
+                                                <b>File format information</b>
+                                                <br>
+                                                <a id="xlsx_pedigree_upload_info_format">Spreadsheet format</a>
+                                            </p>
+                                        </&>
+                                    </div>
+                                    <div class="col-sm-8">
+                                    <br/>
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label">Select an .xlsx File: </label>
+                                                    <div class="col-sm-6">
+                                                        <input type="file" name="xlsx_pedigrees_upload_file" id="xlsx_pedigrees_upload_file" encoding="multipart/form-data" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="text_pedigrees_upload_section" style="display:none">
+                            <center>
+                                <h4>You want to upload pedigrees in a tab-delimited text file</h4>
+                            </center>
+                            <div class="well well-sm">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <&| /page/explanation.mas, title=>'Template information' &>
+                                            <p>
+                                                <b>File format information</b>
+                                                <br>
+                                                <a id="text_pedigree_upload_info_format">Spreadsheet format</a>
+                                            </p>
+                                        </&>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <br/>
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label">Select a tab-delimited text File: </label>
+                                                    <div class="col-sm-6">
+                                                        <input type="file" name="text_pedigrees_upload_file" id="text_pedigrees_upload_file" encoding="multipart/form-data" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div id="submit_pedigrees_upload_button_section" style="display:none">
+                    <center>
+                        <button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Upload File</button>
+                    </center>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="upload_pedigrees_dismiss_button" name="upload_pedigrees_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Validate</button>
-      </div>
     </div>
-  </div>
 </div>
+
 
 <div class="modal fade" id="pedigrees_upload_spreadsheet_info_dialog" name="pedigrees_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="pedigreeUploadInfoDialog">
   <div class="modal-dialog" role="document">
