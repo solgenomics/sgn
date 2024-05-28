@@ -11,8 +11,8 @@ use CXGN::Stock::Seedlot;
 use CXGN::Calendar;
 use CXGN::Trial;
 
-my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description plot_name accession_name plot_number block_number|;
-my @OPTIONAL_COLUMNS = qw|trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
+my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 sub _validate_with_plugin {
@@ -388,7 +388,7 @@ sub _validate_with_plugin {
 
     ## PLOT NAME CHECK
     if (!$plot_name || $plot_name eq '' ) {
-      push @error_messages, "Row $row_name: plot name missing.";
+      $plot_name = $current_trial_name . "-PLOT_" . $plot_number;
     }
     elsif ($plot_name =~ /\s/ ) {
       push @error_messages, "Row $row_name: plot name <b>$plot_name</b> must not contain spaces.";
@@ -399,7 +399,7 @@ sub _validate_with_plugin {
     else {
       $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       if ($seen_plot_names{$plot_name}) {
-        push @error_messages, "Row $row_name: duplicate plot name <b>$plot_name</b> seen before at cell M".$seen_plot_names{$plot_name}.".";
+        push @error_messages, "Row $row_name: duplicate plot name <b>$plot_name</b> seen before at row ".$seen_plot_names{$plot_name}.".";
       }
       $seen_plot_names{$plot_name}=$row_name;
     }
@@ -851,17 +851,20 @@ sub _parse_with_plugin {
       next;
     }
 
+    if ($worksheet->get_cell($row,$columns{plot_number}->{index})) {
+      $plot_number = $worksheet->get_cell($row,$columns{plot_number}->{index})->value();
+    }
     if ($worksheet->get_cell($row,$columns{plot_name}->{index})) {
       $plot_name = $worksheet->get_cell($row,$columns{plot_name}->{index})->value();
+    }
+    if (!$plot_name || $plot_name eq '') {
+      $plot_name = $current_trial_name . "-PLOT_" . $plot_number;
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,$columns{accession_name}->{index})) {
       $accession_name = $worksheet->get_cell($row,$columns{accession_name}->{index})->value();
     }
     $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,$columns{plot_number}->{index})) {
-      $plot_number =  $worksheet->get_cell($row,$columns{plot_number}->{index})->value();
-    }
     if ($worksheet->get_cell($row,$columns{block_number}->{index})) {
       $block_number =  $worksheet->get_cell($row,$columns{block_number}->{index})->value();
     }
