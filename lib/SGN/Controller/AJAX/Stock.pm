@@ -2547,7 +2547,8 @@ sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/v
     my $c = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
     my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
     my $result = $progenies->get_vector_related_stocks();
     my @related_stocks;

@@ -151,7 +151,8 @@ sub transform_genotypes_unqiueids {
     my ( $self, $c, $genotypes ) = @_;
 
     my $transform = CXGN::List::Transform->new();
-    my $schema    = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema    = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $genotypes_t =
       $transform->can_transform( "accessions", "accession_ids" );
     my $genotypes_id_hash =
@@ -166,7 +167,8 @@ sub transform_uniqueids_genotypes {
     my ( $self, $c, $genotypes_ids ) = @_;
 
     my $transform   = CXGN::List::Transform->new();
-    my $schema      = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema      = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $genotypes_t = $transform->can_transform( "stock_ids", "stocks" );
     my $genotypes_hash =
       $transform->transform( $schema, $genotypes_t, $genotypes_ids );
@@ -470,7 +472,8 @@ sub get_plots_list_elements_ids {
     }
 
     my $transform     = CXGN::List::Transform->new();
-    my $schema        = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema        = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $plots_t       = $transform->can_transform( "plots", "plot_ids" );
     my $plots_id_hash = $transform->transform( $schema, $plots_t, $plots );
     my @plots_ids     = @{ $plots_id_hash->{transform} };

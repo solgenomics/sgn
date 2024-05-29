@@ -38,7 +38,6 @@ sub genotyping_protocol_delete_GET : Args(1) {
     my $self = shift;
     my $c = shift;
     my $protocol_id = shift;
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     #print STDERR Dumper $c->req->params();
     my $session_id = $c->req->param("sgn_session_id");
@@ -71,6 +70,7 @@ sub genotyping_protocol_delete_GET : Args(1) {
         $c->detach();
     }
 
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $basepath = $c->config->{basepath};
     my $dbhost = $c->config->{dbhost};
     my $dbname = $c->config->{dbname};

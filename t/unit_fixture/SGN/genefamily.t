@@ -8,13 +8,14 @@ use File::Spec::Functions;
 use_ok('SGN::Genefamily');
 
 my $test_dir = 't/data/genefamily_data';
+
 my $gf = SGN::Genefamily->new( files_dir => $test_dir,
-			       dataset   => 'test',
+			       build   => 'test',
 			       name      => 'family_0'
     );
 
 is($gf->name(), "family_0", "name test");
-is($gf->dataset(), "test", "dataset test");
+is($gf->build(), "test", "dataset test");
 is($gf->files_dir(), $test_dir, "files_dir test");
 is($gf->get_path(), catdir($test_dir,'test'), "get_path test");
 my $aln = $gf->get_alignment();
