@@ -388,7 +388,7 @@ sub _validate_with_plugin {
 
     ## PLOT NAME CHECK
     if (!$plot_name || $plot_name eq '' ) {
-      $plot_name = $current_trial_name . "-PLOT_" . $plot_number;
+      $plot_name = _create_plot_name($current_trial_name, $plot_number);
     }
     elsif ($plot_name =~ /\s/ ) {
       push @error_messages, "Row $row_name: plot name <b>$plot_name</b> must not contain spaces.";
@@ -858,7 +858,7 @@ sub _parse_with_plugin {
       $plot_name = $worksheet->get_cell($row,$columns{plot_name}->{index})->value();
     }
     if (!$plot_name || $plot_name eq '') {
-      $plot_name = $current_trial_name . "-PLOT_" . $plot_number;
+      $plot_name = _create_plot_name($current_trial_name, $plot_number);
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,$columns{accession_name}->{index})) {
@@ -1007,6 +1007,12 @@ sub _parse_headers {
     treatments => \@treatments,
     errors => \@errors
   }
+}
+
+sub _create_plot_name {
+  my $trial_name = shift;
+  my $plot_number = shift;
+  return $trial_name . "-PLOT_" . $plot_number;
 }
 
 1;
