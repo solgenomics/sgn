@@ -231,16 +231,13 @@ solGS.pca = {
 
   displayPcaPopsTable: function (tableId, data) {
 
-    console.log(`data: ${data}`)
-    console.log(`table id: ${tableId}`)
-
     var table = jQuery(`#${tableId}`).DataTable({
       'searching': true,
       'ordering': true,
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 25,
+      'pageLength': 5,
       'rowId': function (a) {
         return a[4]
       }
@@ -952,12 +949,10 @@ jQuery(document).ready(function () {
       pcaPopId = pcaArgs.pca_pop_id;
       var canvas = solGS.pca.canvas;
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
-      runPcaBtnId = `#${runPcaBtnId}`;
       var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
       pcaArgs["analysis_page"] = pcaUrl;
 
-      jQuery(runPcaBtnId).hide();
-     
+
       solGS.pca
         .checkCachedPca(pcaArgs)
         .done(function (res) {
@@ -972,6 +967,8 @@ jQuery(document).ready(function () {
             var pcaUrl = solGS.pca.generatePcaUrl(pcaArgs.pca_pop_id);
             pcaArgs["analysis_page"] = pcaUrl;
 
+            runPcaBtnId = `#${runPcaBtnId}`;
+            
             var title =
               "<p>This analysis may take a long time. " +
               "Do you want to submit the analysis and get an email when it completes?</p>";
@@ -1003,6 +1000,8 @@ jQuery(document).ready(function () {
                   click: function () {
                     jQuery(this).dialog("close");
 
+                    jQuery(runPcaBtnId).hide();
+
                     jQuery(`${canvas} .multi-spinner-container`).show();
                     jQuery(pcaMsgDiv).html("Running pca... please wait...").show();
 
@@ -1019,10 +1018,13 @@ jQuery(document).ready(function () {
                           var msg = "There is no PCA output for this dataset.";
                           solGS.pca.feedBackOnFailure(pcaPopId, msg);
                         }
+                      jQuery(runPcaBtnId).show();
+
                       })
                       .fail(function (res) {
                         var msg = "Error occured running the PCA.";
                         solGS.pca.feedBackOnFailure(pcaPopId, msg);
+                        jQuery(runPcaBtnId).show();
                       });
                   },
                 },
@@ -1062,6 +1064,8 @@ jQuery(document).ready(function () {
                   var msg = "Error occured running the PCA.";
                         solGS.pca.feedBackOnFailure(pcaPopId,msg);
                 });
+
+                jQuery(runPcaBtnId).show();
             });
           }
         })

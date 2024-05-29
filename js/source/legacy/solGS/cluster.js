@@ -1057,7 +1057,6 @@ jQuery(document).ready(function () {
       jQuery(clusterMsgDiv).text("Running cluster... please wait...it may take minutes.").show();
 
       jQuery(`${canvas} .multi-spinner-container`).show();
-      jQuery("#" + runClusterId).hide();
 
       var canvas = solGS.cluster.canvas;
       var clusterMsgDiv = solGS.cluster.clusterMsgDiv;
@@ -1118,8 +1117,12 @@ jQuery(document).ready(function () {
             jQuery(clusterMsgDiv).empty();
             jQuery("#" + runClusterId).show();
           } else {
+
+
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(clusterMsgDiv).empty();
+
+            runClusterId = `#${runClusterId}`;
 
             var title =
               "<p>This analysis may take a long time. " +
@@ -1152,6 +1155,7 @@ jQuery(document).ready(function () {
                   click: function () {
                     jQuery(this).dialog("close");
 
+                    jQuery(runClusterId).hide();
                     jQuery(clusterMsgDiv)
                       .text("Running cluster... please wait...it may take minutes.")
                       .show();
@@ -1166,19 +1170,19 @@ jQuery(document).ready(function () {
                           solGS.cluster.plotClusterOutput(res);
 
                           jQuery(clusterMsgDiv).empty();
-                          jQuery("#" + runClusterId).show();
+                          jQuery(runClusterId).show();
                         } else {
                           jQuery(clusterMsgDiv).html(
                             "Error occured running the clustering. Possibly the R script failed."
                           );
                           jQuery(`${canvas} .multi-spinner-container`).hide();
-                          jQuery("#" + runClusterId).show();
+                          jQuery(runClusterId).show();
                         }
                       })
                       .fail(function () {
                         jQuery(clusterMsgDiv).html("Error occured running the clustering");
                         jQuery(`${canvas} .multi-spinner-container`).hide();
-                        jQuery("#" + runClusterId).show();
+                        jQuery(runClusterId).show();
                       });
                   },
                 },
