@@ -13,7 +13,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%doc>
 
 <%args>
-$analysis_type
+$analysis_type => $analysis_type
 $wizard_link_txt => ''
 $breeder_search_params =>''
 </%args>
@@ -27,7 +27,7 @@ $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
 
 <div>
     <!-- The container for the list of populations selected for analysis -->
-    <div class="sub_infosectioncontent" id="<% $analysis_abbr %>_pops_selected" style="display:none"></div>
+    <div class="sub_infosectioncontent" id="<% $analysis_abbr %>_pops_data_div" style="display:none"></div>
     <br>
 
 </div>

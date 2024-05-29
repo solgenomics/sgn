@@ -55,9 +55,6 @@ if ($url !~ /cluster\/analysis/) {
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
-#my $login_msg = "To view your datasets and use this tool " .  
-#"you need to <a href=\"/user/login?goto_url=$cluster_url\">login</a>.";
-
 </%perl>
 
 <& /solgs/tools/base.mas &>
@@ -98,10 +95,10 @@ if ($url !~ /cluster\/analysis/) {
     <& cluster_options.mas &>
 
 %} elsif ($url =~ /cluster\/analysis/) {
-<& /solgs/tools/login.mas,
- tool_url => $cluster_url,
- analysis_type => 'cluster' 
- &>
+    <& /solgs/tools/login.mas,
+    tool_url => $cluster_url,
+    analysis_type => 'cluster' 
+    &>
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
 %}
