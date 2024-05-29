@@ -2269,7 +2269,7 @@ $d->while_logged_in_as(
             $solgs_data->delete_list($list_id);
         }
 
-        forewhichach my $dataset_id ( $trials_dt_id, $accessions_dt_id, $plots_dt_id ) {
+        foreach my $dataset_id ( $trials_dt_id, $accessions_dt_id, $plots_dt_id ) {
             $dataset_id =~ s/\w+_//g;
             $solgs_data->delete_dataset($dataset_id);
         }

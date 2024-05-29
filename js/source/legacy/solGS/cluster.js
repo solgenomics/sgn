@@ -93,37 +93,6 @@ solGS.cluster = {
     }
   },
 
-  displaySelectedClusterPop: function (selectedPop) {
-    var selectedId = selectedPop.id;
-    var selectedName = selectedPop.name;
-    var dataStr = selectedPop.data_str;
-    var clusterPopId = this.getClusterPopId(selectedId, dataStr);
-    var clusterPopsDataDiv = solGS.cluster.clusterPopsDataDiv;
-    if (selectedId.length === 0) {
-      alert("The list is empty. Please select a list with content.");
-    } else {
-      var tableId = "cluster_pops_list_table";
-      var clusterTable = jQuery("#" + tableId).doesExist();
-      if (!clusterTable) {
-        clusterTable = this.getClusterPopsTable(tableId);
-        jQuery(clusterPopsDataDiv).append(clusterTable).show();
-      }
-
-      var newRow = this.selectRow(selectedPop);
-      var tdId = "cluster_" + clusterPopId;
-      var rowExists = jQuery(`#${tdId}`).doesExist();
-
-      if (!rowExists) {
-        jQuery("#" + tableId + " tr:last").after(newRow);
-      }
-    }
-  },
-
-  selectRowId: function (selectedId) {
-    var rowId = "row_" + selectedId;
-    return rowId;
-  },
-
   getClusterPopId: function (selectedId, dataStr) {
 
     var clusterPopId;
@@ -296,48 +265,6 @@ solGS.cluster = {
       dataTypeOpts, kNum, runClusterBtn, `${dataStr}_${popId}`];
 
     return rowData;
-  },
-
-
-  selectRow: function (selectedPop) {
-    let selectedId = selectedPop.id;
-    let selectedName = selectedPop.name;
-    let dataStr = selectedPop.data_str;
-
-    var clusterPopId = this.getClusterPopId(selectedId, dataStr);
-    var clusterTypeOpts = this.createClusterTypeSelect(clusterPopId);
-
-    var dataTypeOpts = this.getDataTypeOpts({
-      id: selectedId,
-      name: selectedName,
-      data_str: dataStr,
-    });
-
-    dataTypeOpts = this.createDataTypeSelect(dataTypeOpts, clusterPopId);
-    var kNumId = this.clusterKnumSelectId(clusterPopId);
-    var runClusterBtnId = this.clusterRunClusterId(clusterPopId);
-
-    var kNum = '<input class="form-control" type="text" placeholder="3" id="' + kNumId + '"/>';
-
-    var clusterArgs = JSON.stringify(selectedPop);
-    var runClusterBtn =
-      `<button type="button" id=${runClusterBtnId}` +
-      ` class="btn btn-success" data-selected-pop='${clusterArgs}'>Run cluster</button>`;
-
-    var tdId = `cluster_${clusterPopId}`;
-    var row =
-      `<tr  name="${clusterPopId}" id="${clusterPopId}">` +
-      ` <td>${selectedName}</td>` +
-      ` <td>${dataStr}</td>` +
-      ` <td>${clusterTypeOpts}</td>` +
-      ` <td>${dataTypeOpts}</td>` +
-      ` <td>${kNum}</td>` +
-      `<td id="${tdId}">` +
-      runClusterBtn +
-      "</td>" +
-      "<tr>";
-
-    return row;
   },
 
   createTable: function (tableId) {
@@ -829,34 +756,6 @@ solGS.cluster = {
   },
 
   
-  populateClusterPopsMenu: function () {
-    var list = new CXGN.List();
-    var lists = list.getLists(["accessions", "plots", "trials"]);
-    var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
-
-    var menuId = this.clusterPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    clusterPrivatePops = clusterPrivatePops.flat();
-    var menuElem = menu.addOptions(clusterPrivatePops);
-
-    if (lists.public_lists[0]) {
-      var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
-      menu.addOptionsSeparator("public lists");
-      menuElem = menu.addOptions(clusterPublicLists);
-    }
-
-    var datasetPops = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    if (datasetPops) {
-      menu.addOptionsSeparator("datasets");
-      menuElem = menu.addOptions(datasetPops);
-    }
-
-    var clusterPopsDiv = this.clusterPopsDiv;
-    jQuery(clusterPopsDiv).append(menuElem).show();
-
-    this.displaySelectedClusterPopsTable()
-  },
-
   displayClusterPopsTable: function (tableId, data) {
 
     var table = jQuery(`#${tableId}`).DataTable({
@@ -903,34 +802,6 @@ solGS.cluster = {
 
   },
 
-
-  displaySelectedClusterPopsTable: function () {
-   
-    var lists = this.getClusterLists(["accessions", "plots", "trials"]);
-
-    var list = new CXGN.List();
-    var clusterPrivatePops = list.convertArrayToJson(lists.private_lists);
-
-    var menuId = this.clusterPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    clusterPrivatePops = clusterPrivatePops.flat();
-
-    var menuElem = menu.addOptions(clusterPrivatePops);
-
-    if (lists.public_lists[0]) {
-      var clusterPublicLists = list.convertArrayToJson(lists.public_lists);
-
-      menu.addOptionsSeparator("public lists");
-      menuElem = menu.addOptions(clusterPublicLists);
-    }
-
-    var datasetPops = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-
-    if (datasetPops) {
-      menu.addOptionsSeparator("datasets");
-      menuElem = menu.addOptions(datasetPops);
-    }
-  },
 
   getSelectedPopClusterArgs: function (runClusterElemId) {
     var clusterArgs;
