@@ -59,11 +59,11 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     if ($xlsx_pedigrees_upload) {
         $upload = $xlsx_pedigrees_upload;
-        $upload_type = 'PedigreesExcel';
-        $pedigrees_file_type = 'pedigreesExcel'
+        $upload_type = 'ValidatePedigreesExcel';
+        $pedigrees_file_type = 'excel'
     } elsif ($text_pedigrees_upload){
         $upload = $text_pedigrees_upload;
-        $pedigrees_file_type = 'pedigreesText';
+        $pedigrees_file_type = 'text';
     }
 
     my $parser;
@@ -254,7 +254,28 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    my $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
+    my $parser;
+    my $parsed_data;
+    my $pedigrees;
+    if ($pedigrees_file_type eq 'excel') {
+        $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_file_name);
+        $parser->load_plugin('PedigreesExcel');
+        $parsed_data = $parser->parse();
+        print STDERR "PARSED DATA =".Dumper($parsed_data) . "\n";
+        if (!$parsed_data){
+            my $return_error = '';
+            my $parse_errors;
+            if (!$parser->has_parse_errors() ){
+                $c->stash->{rest} = {error => "Could not get parsing errors"};
+            }
+        } else {
+            $pedigrees = $parsed_data->{pedigrees};
+            print STDERR "PEDIGREES =".Dumper($pedigrees)."\n";
+        }
+
+    } else {
+        $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
+    }
 
     my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
     my $error;

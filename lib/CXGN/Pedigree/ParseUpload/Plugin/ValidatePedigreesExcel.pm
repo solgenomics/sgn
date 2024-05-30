@@ -1,4 +1,4 @@
-package CXGN::Pedigree::ParseUpload::Plugin::PedigreesExcel;
+package CXGN::Pedigree::ParseUpload::Plugin::ValidatePedigreesExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
