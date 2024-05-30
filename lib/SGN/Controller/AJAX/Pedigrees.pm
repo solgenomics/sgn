@@ -99,6 +99,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
 
+    my $pedigree_check;
+    my $error;
     if ($xlsx_pedigrees_upload) {
 
         $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
@@ -121,6 +123,13 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
             }
             $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_accessions_or_crosses => $parse_errors->{'missing_accessions_or_crosses'}};
             $c->detach();
+        } else {
+            my $pedigrees = $parsed_data->{pedigrees};
+            my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
+            my $error;
+
+            $pedigree_check = $add->validate_pedigrees();
+            print STDERR "PEDIGREE CHECK =".Dumper($pedigree_check)."\n";
         }
 
     } else {
@@ -216,6 +225,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $pedigree_check = $add->validate_pedigrees();
     print STDERR "UploadPedigreeCheck3".localtime()."Complete\n";
     #print STDERR Dumper $pedigree_check;
+
+}
     if (!$pedigree_check){
         $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
     }
@@ -224,9 +235,6 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     } else {
         $c->stash->{rest} = {archived_file_name => $archived_filename_with_path};
     }
-
-
-   }
 
 
 }
