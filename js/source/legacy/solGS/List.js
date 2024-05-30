@@ -46,7 +46,10 @@ class solGSList {
   getLists(listTypes) {
     var lists = this.CxgnList.getLists(listTypes);
     var privateLists = this.CxgnList.convertArrayToJson(lists.private_lists);
+    privateLists = this.addDataOwnerAttr(privateLists, 'private')
     var publicLists = this.CxgnList.convertArrayToJson(lists.public_lists);
+    publicLists = this.addDataOwnerAttr(publicLists, 'public')
+
     lists = [privateLists, publicLists]
 
     lists = lists.flat();
@@ -61,6 +64,17 @@ class solGSList {
     for (var i = 0; i < lists.length; i++) {
       if (lists[i]) {
         lists[i]["data_str"] = 'list';
+      }
+    }
+
+    return lists;
+  }
+
+  addDataOwnerAttr(lists, owner) {
+
+    for (var i = 0; i < lists.length; i++) {
+      if (lists[i]) {
+        lists[i]["owner"] = owner;
       }
     }
 
