@@ -72,7 +72,7 @@ sub validate_design {
             next;
         }
         if (!exists($design{$stock}->{plot_number})) {
-            $error .= "Property: plot_number is required for stock" . $stock;
+            $error .= "Property: plot_number is required for stock " . $stock;
         }
 
         foreach my $property (keys %{$design{$stock}}){
