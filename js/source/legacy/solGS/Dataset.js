@@ -73,11 +73,6 @@ solGS.dataset = {
     publicDatasets = this.converDatasetArrayToJson(publicDatasets, datasetTypes);
     publicDatasets = this.addDataOwnerAttr(publicDatasets, 'public')
 
-    console.log(`publicDatasets: ${JSON.stringify(publicDatasets)}`)
-
-    console.log(`allDatasets: ${JSON.stringify(allDatasets)}`)
-    publicDatasets = this.addDataOwnerAttr(publicDatasets, 'public')
-    console.log(`publicDatasets: ${JSON.stringify(publicDatasets)}`)
 
     var privateDatasets = dataset.getDatasets();
     privateDatasets = this.converDatasetArrayToJson(privateDatasets, datasetTypes);
@@ -85,6 +80,7 @@ solGS.dataset = {
     
     var allDatasets = [privateDatasets, publicDatasets];
     return allDatasets.flat();
+    
   },
 
   datasetTrainingPop: function (datasetId) {
