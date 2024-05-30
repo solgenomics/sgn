@@ -224,7 +224,7 @@ solGS.pca = {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
     }
     var rowData = [popName,
-      dataStr, dataTypeOpts, runPcaBtn, `${dataStr}_${popId}`];
+      dataStr, pcaPop.owner, dataTypeOpts, runPcaBtn, `${dataStr}_${popId}`];
 
     return rowData;
   },
@@ -239,7 +239,7 @@ solGS.pca = {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[4]
+        return a[5]
       }
     });
 
@@ -267,10 +267,11 @@ solGS.pca = {
 
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
+    console.log(`${JSON.stringify(lists)}`)
     lists = list.addDataStrAttr(lists);
 
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    
+    console.log(`datasets: ${JSON.stringify(datasets)}`)
     var pcaPops = [lists, datasets];
 
     return pcaPops.flat();
@@ -417,6 +418,7 @@ solGS.pca = {
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Population</th>" +
       "<th>Data structure type</th>" +
+      "<th>Ownership</th>" +
       "<th>Data type</th>" +
       "<th>Run PCA</th>" +
       "</tr></thead></table>";

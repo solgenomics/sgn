@@ -261,7 +261,7 @@ solGS.cluster = {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
     }
     var rowData = [popName,
-      dataStr, clusterTypeOpts,
+      dataStr, clusterPop.owner, clusterTypeOpts,
       dataTypeOpts, kNum, runClusterBtn, `${dataStr}_${popId}`];
 
     return rowData;
@@ -276,6 +276,7 @@ solGS.cluster = {
       "<tr>" +
       "<th>Name</th>" +
       "<th>Data structure</th>" +
+      "<th>Ownership</th>" +
       "<th>Clustering method</th>" +
       "<th>Data type</th>" +
       "<th>No. of  clusters (K)</th>" +
@@ -766,7 +767,7 @@ solGS.cluster = {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[6]
+        return a[7]
       }
     });
 
