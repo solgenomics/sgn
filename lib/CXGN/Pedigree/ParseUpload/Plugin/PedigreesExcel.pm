@@ -165,7 +165,7 @@ sub _validate_with_plugin {
             $seen_accession_names{$progeny_name}++;
         }
 
-        if (($type eq 'bulk') || ($cross_type eq 'bulk_self') || ($cross_type eq 'bulk_open')) {
+        if (($type eq 'bulk') || ($type eq 'bulk_self') || ($type eq 'bulk_open')) {
             $female_parent =~ s/^\s+|\s+$//g;
             $seen_population_names{$female_parent}++;
             if ($type eq 'bulk_open') {
@@ -224,6 +224,8 @@ sub _validate_with_plugin {
         $errors{'missing_accessions_or_crosses'} = \@backcross_parents_missing;
     }
 
+    print STDERR "ERROR MESSAGES =".Dumper(\@error_messages)."\n";
+
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -269,6 +271,8 @@ sub _parse_with_plugin {
         my $female_parent;
         my $male_parent;
         my $type;
+        my $female_parent_individual;
+        my $male_parent_individual;
 
         if ($worksheet->get_cell($row,0)) {
             $progeny_name = $worksheet->get_cell($row,0)->value();
@@ -294,24 +298,21 @@ sub _parse_with_plugin {
             last;
         }
 
-        if ($progeny_name) {
-            my $progeny_name_individual = Bio::GeneticRelationships::Individual->new(name => $progeny_name);
-        }
         if ($female_parent) {
-            my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
+            $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
         }
         if ($male_parent) {
-            my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
+            $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
         }
 
         my $pedigree_info = {
             cross_type => $type,
-            female_parent => $female_parent,
-            name => $progeny_name
+            female_parent => $female_parent_individual,
+            name => $progeny_name,
         };
 
         if ($male_parent) {
-            $pedigree_info->{male_parent} = $male_parent;
+            $pedigree_info->{male_parent} = $male_parent_individual;
         }
 
         my $pedigree = Bio::GeneticRelationships::Pedigree->new($pedigree_info);

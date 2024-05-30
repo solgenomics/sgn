@@ -104,8 +104,24 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
         $parser->load_plugin($upload_type);
         $parsed_data = $parser->parse();
-        print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+        print STDERR "PARSED DATA =".Dumper($parsed_data) . "\n";
 
+        if (!$parsed_data){
+            my $return_error = '';
+            my $parse_errors;
+            if (!$parser->has_parse_errors() ){
+                $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            } else {
+                $parse_errors = $parser->get_parse_errors();
+                #print STDERR Dumper $parse_errors;
+
+                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                    $return_error .= $error_string."<br>";
+                }
+            }
+            $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_accessions_or_crosses => $parse_errors->{'missing_accessions_or_crosses'}};
+            $c->detach();
+        }
 
     } else {
 

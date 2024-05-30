@@ -93,7 +93,7 @@
                                                 <div class="form-group">
                                                     <label class="col-sm-6 control-label">Select an .xlsx File: </label>
                                                     <div class="col-sm-6">
-                                                        <input type="file" name="xlsx_pedigrees_upload_file" id="xlsx_pedigrees_upload_file" encoding="multipart/form-data" />
+                                                        <input type="file" name="xlsx_pedigrees_uploaded_file" id="xlsx_pedigrees_uploaded_file" encoding="multipart/form-data" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -124,7 +124,7 @@
                                                 <div class="form-group">
                                                     <label class="col-sm-6 control-label">Select a tab-delimited text File: </label>
                                                     <div class="col-sm-6">
-                                                        <input type="file" name="text_pedigrees_upload_file" id="text_pedigrees_upload_file" encoding="multipart/form-data" />
+                                                        <input type="file" name="text_pedigrees_uploaded_file" id="text_pedigrees_uploaded_file" encoding="multipart/form-data" />
                                                     </div>
                                                 </div>
                                             </div>
