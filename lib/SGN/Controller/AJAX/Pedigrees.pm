@@ -53,12 +53,17 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     my $upload;
     my $upload_type;
+    my $pedigrees_file_type;
     my $xlsx_pedigrees_upload = $c->req->upload('xlsx_pedigrees_uploaded_file');
     my $text_pedigrees_upload = $c->req->upload('text_pedigrees_uploaded_file');
 
     if ($xlsx_pedigrees_upload) {
         $upload = $xlsx_pedigrees_upload;
-        $upload_type = 'PedigreesExcel'
+        $upload_type = 'PedigreesExcel';
+        $pedigrees_file_type = 'pedigreesExcel'
+    } elsif ($text_pedigrees_upload){
+        $upload = $text_pedigrees_upload;
+        $pedigrees_file_type = 'pedigreesText';
     }
 
     my $parser;
@@ -231,9 +236,9 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
     }
     if ($pedigree_check->{error}){
-        $c->stash->{rest} = {error => $pedigree_check->{error}, archived_file_name => $archived_filename_with_path};
+        $c->stash->{rest} = {error => $pedigree_check->{error}, archived_file_name => $archived_filename_with_path, pedigrees_file_type => $pedigrees_file_type};
     } else {
-        $c->stash->{rest} = {archived_file_name => $archived_filename_with_path};
+        $c->stash->{rest} = {archived_file_name => $archived_filename_with_path, pedigrees_file_type => $pedigrees_file_type};
     }
 
 
@@ -244,6 +249,8 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $c = shift;
     my $archived_file_name = $c->req->param('archived_file_name');
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
+    my $pedigrees_file_type = $c->req->param('pedigrees_file_type');
+    print STDERR "FILE TYPE =".Dumper($pedigrees_file_type)."\n";
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
