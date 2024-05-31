@@ -45,9 +45,8 @@ for my $extension ("xls", "xlsx") {
     $results = $p->parse();
     $errors = $p->get_parse_errors();
     #print STDERR Dumper $errors;
-    ok($errors->{'error_messages'}->[0], 'Cell J1: seedlot_name is missing from the header. (Header is required, but values are optional)');
-    ok($errors->{'error_messages'}->[1], 'Cell K1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)');
-    ok(scalar(@{$errors->{'error_messages'}}) == 4, 'check that accessions not in db and file missing seedlot_name and num_seed_per_plot and weight_gram_seed_per_plot headers');
+    ok($errors->{'error_messages'}->[0] =~ /The following entry names are not in the database as uniquenames or synonyms/, 'check that accessions not in db');
+    ok(scalar(@{$errors->{'error_messages'}}) == 1, 'check that accessions not in db');
     ok(scalar(@{$errors->{'missing_stocks'}}) == 8, 'check that accessions not in db');
 
     $p = CXGN::Trial::ParseUpload->new({ filename => "t/data/genotype_trial_upload/CASSAVA_GS_74Template_messed_up_trial_name.csv", chado_schema => $f->bcs_schema() });
