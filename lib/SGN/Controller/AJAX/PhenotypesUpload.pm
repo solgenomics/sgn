@@ -48,7 +48,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -104,7 +104,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -112,6 +112,10 @@ sub upload_phenotype_store_POST : Args(1) {
     my $overwrite = 0;
     if ($overwrite_values) {
         $overwrite = 1;
+    }
+    my $remove = 0;
+    if ($remove_values) {
+        $remove = 1;
     }
     my $timestamp = 0;
     if ($timestamp_included) {
@@ -137,6 +141,7 @@ sub upload_phenotype_store_POST : Args(1) {
         values_hash=>$parsed_data,
         has_timestamps=>$timestamp,
         overwrite_values=>$overwrite,
+        remove_values=>$remove,
         metadata_hash=>$phenotype_metadata,
         image_zipfile_path=>$image_zip,
         composable_validation_check_name=>$c->config->{composable_validation_check_name},
@@ -250,6 +255,13 @@ sub _prep_upload {
             return (\@success_status, \@error_status);
         }
     }
+    my $remove_values = $overwrite_values && $c->req->param('phenotype_upload_remove_values');
+    if ( $remove_values ) {
+        if ($user_type ne 'curator') {
+            push @error_status, 'Must be a curator to remove values! Please contact us!';
+            return (\@success_status, \@error_status);
+        }
+    }
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -344,7 +356,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
