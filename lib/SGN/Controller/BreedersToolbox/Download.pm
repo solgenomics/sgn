@@ -345,10 +345,15 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         }
     }
     my @trial_list_int;
+    my $trial_name = "";
     foreach (@trial_list) {
         if ($_ =~ m/^\d+$/) {
             push @trial_list_int, $_;
+	    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $_ });
+	    $trial_name = $trial->get_name();
+	    $trial_name =~ s/ /\_/g;
         } else {
+	    $trial_name = $_;
             my $trial_lookup = CXGN::Trial::TrialLookup->new({ schema => $schema, trial_name=>$_ });
             my $trial_id = $trial_lookup->get_trial()->project_id();
             push @trial_list_int, $trial_id;
@@ -382,7 +387,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         $download_file_name = "metadata.$format";
     }else{
         $temp_file_name = "phenotype" . "XXXX";
-        $download_file_name = "phenotype.$format";
+        $download_file_name = $trial_name."_phenotypes.$format";
     }
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
