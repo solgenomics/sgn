@@ -51,8 +51,8 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     $dataset->name($dataset_name);
     $dataset->description($dataset_description);
 
-    foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols trial_types trial_designs category_order |) {
-#	print STDERR "Storing data: $type. $data{$type}\n";
+    foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols genotyping_projects trial_types trial_designs category_order |) {
+	#print STDERR "Storing data: $type\n";
 
 	my $json = $c->req->param($type);
 	if ($json) {
