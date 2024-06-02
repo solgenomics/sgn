@@ -451,6 +451,9 @@ sub verify {
 		    if (!defined($timestamp)) {
 			$error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
 		    }
+		    if (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
+			$error_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time";
+		    }
 		}
 		
                 #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
@@ -473,9 +476,7 @@ sub verify {
 			    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
 			}
 		    }
-		    
-		    
-		    
+		        
 		    #check if the plot_name, trait_name combination already exists in same file.
 		    if (exists($check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id})) {
 			$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
