@@ -988,7 +988,7 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "RRC") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.</p></div>');
         } else if (design_method == "DRRC") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Doubly Resolvable Row-Column design (DRRC), using the blocksdesign package in R.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Doubly-Resolvable Row-Column design (DRRC), using the blocksdesign package in R. It creates complete blocks in columns and rows. The number of accessions must be divisible by the number of columns and rows.</p></div>');
         } else if (design_method == "Alpha") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Lattice") {

@@ -71,6 +71,7 @@ fieldBook$plot_id <- c(1:nTrt)
 
 
 ## Number start
+## 00101 will be added for NCSU
 if(plot_start == "00101"){
   fieldBook$plot_number = paste0(formatC(fieldBook$block_number,width=3,flag="0"),
                               formatC(fieldBook$plot_id,width=2,flag="0"))

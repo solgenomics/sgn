@@ -811,7 +811,6 @@ rect.bordered {
                                               <select class="form-control" id="start_number" name="start_number">
                                                   <option value=1 >1</option>
                                                   <option value=101 >101</option>
-                                                  <option value=00101 >00101</option>
                                                   <option value=1001 >1001</option>
                                                </select>
                                             <!--<input type="text" class="form-control" id="start_number" name="start_number" />-->

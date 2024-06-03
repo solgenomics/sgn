@@ -61,22 +61,19 @@ sub create_design {
     die "Number of cols not specified\n";
   }
 
-  # if ($self->has_fieldmap_col_number()) {
-  #   $blockColNumber = $self->get_fieldmap_col_number();
-  # } else {
-  #   die "Number of cols per block not specified\n";
-  # }
-
-  # if (!(($blockColNumber ~~ [2, 4]))) {
-  #   die "Number of cols per block must be 2 or 4\n";
-  # }
-
-
-  # print "The number of cols per block is $blockColNumber \n";
-
-  ## change here to calculate the row number!!
-
   my $rowNumber = scalar(@stock_list) / ($colNumber/$repNumber);
+
+  ## It checks if number of stocks is divisible by number of columns and rows.
+  if (scalar(@stock_list) % $colNumber == 0) {
+    print "Correct entries and col number proportion.\n";
+  } else {
+    die "The number of entries must be divisible by the number of cols.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n";
+  }
+  if (scalar(@stock_list) % $rowNumber == 0)  {
+    print "Correct entries and row number proportion.\n "
+    } else {
+    die "Total number of treatments must be divisible by the number of rows.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n";
+  }
 
   print STDERR "Stock number is ".scalar(@stock_list)." and the number of rep is $repNumber and row number is $rowNumber and the number of col is $colNumber\n";
 
