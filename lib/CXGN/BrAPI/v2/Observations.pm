@@ -233,7 +233,7 @@ sub _search {
     my $page = $self->page;
     my $status = $self->status;
     
-
+    print STDERR "PARAMS: ".Dumper($params);
     # my $observation_db_ids = $params->{observationDbId};
     my $observation_db_ids = $params->{observationDbId} || ($params->{observationDbIds} || ());
 
@@ -279,7 +279,8 @@ sub _search {
             limit=>$limit,
             offset=>$offset,
             order_by=>"plot_number",
-            include_timestamp=>1
+	    start_date => $start_time,
+	    end_date => $end_time,
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
