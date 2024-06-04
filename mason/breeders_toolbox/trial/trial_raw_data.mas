@@ -67,7 +67,7 @@ jQuery(window).ready( function() {
 	var start_date = jQuery('#raw_data_start_date').val();
 	var end_date = jQuery('#raw_data_end_date').val();
 	alert("now fetching trait_id "+trait_id+" observation_level "+observation_level+" start date = "+start_date+" end date: "+end_date);
-        get_trait_data(<% $trial_id %>, trait_id)
+        get_trait_data(<% $trial_id %>, trait_id, start_date, end_date, observation_level)
 	    .then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
 	    .then( (result) => displayRawObservations(result.result) )
 	    .then( (final) => {
@@ -139,7 +139,7 @@ jQuery(window).ready( function() {
 	
 	return jQuery.ajax( {
        	    url: "/brapi/v2/search/observations/",
-	    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationTimeStampRange: start_date, EndobservationTimeStampRangeStart: end_date, observationLevels: observation_level },
+	    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationTimeStampRangeStart: start_date, observationTimeStampRangeEnd: end_date, observationLevels: observation_level },
 	    method: "POST"
 	});
 	
