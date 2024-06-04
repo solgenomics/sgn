@@ -67,7 +67,7 @@ sub create_design {
     $fieldmap_row_number = 2;
   }
 
-  if ($fieldmap_row_numbers == 1){
+  if ($fieldmap_row_number == 1){
     die "For 1 row per block, please select Augmented design\n";
   }
 
