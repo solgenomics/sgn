@@ -64,7 +64,11 @@ sub create_design {
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
   }else{
-    $fieldmap_row_number = 1;
+    $fieldmap_row_number = 2;
+  }
+
+  if ($fieldmap_row_numbers == 1){
+    die "For 1 row per block, please select Augmented design\n";
   }
 
   print STDERR "Stock number is ".scalar(@stock_list)." and block number is $number_of_blocks and row number is $fieldmap_row_number\n";
