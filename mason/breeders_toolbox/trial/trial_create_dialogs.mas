@@ -302,6 +302,8 @@ rect.bordered {
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
 %        $method = 'MAD';
+%    } elsif ($type eq 'Augmented Row-Column'){
+%        $method = 'ARC';
 %    } elsif ($type eq 'Nursery/Greenhouse'){
 %        $method = 'greenhouse';
 %    } elsif ($type eq 'Split Plot'){
@@ -527,10 +529,16 @@ rect.bordered {
                                             <input class="form-control" id="row_number" name="row_number" />
                                         </div>
                                     </div>
+                                    <div class="form-group form-group-sm" id="col_number_section" style="display: none">
+                                        <label class="col-sm-7 control-label">Number of field Cols (Required): </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="col_number" name="col_number" />
+                                        </div>
+                                    </div>
                                     <div class="form-group form-group-sm" id="row_number_per_block_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of Rows Per Block (Optional): </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="row_number_per_block" name="row_number_per_block" />
+                                            <input class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" />
                                         </div>
                                     </div>
 

@@ -132,7 +132,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RRC" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RRC" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "ARC" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -303,6 +303,10 @@ sub _build_plot_names {
       my $plot_num_per_block = $design{$key}->{plot_num_per_block};
 	    $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-block".$block_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
+    elsif ($self->get_design_type() eq "ARC") {
+      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+        $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-block".$block_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
+    }
     elsif ($self->get_design_type() eq "greenhouse") {
         $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;
     }

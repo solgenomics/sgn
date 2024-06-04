@@ -993,6 +993,8 @@ jQuery(document).ready(function ($) {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates SIMPLE and TRIPLE lattice designs using the design.lattice function from the agricolae R package. Randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Augmented") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Augmented design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "ARC") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Augmented Row-Column design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database.</p></div>');
         } else if (design_method == "MAD") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Adjustments are calculated using data from all checks. Creates plot entities in the database.</p></div>');
         } else if (design_method == "greenhouse") {
@@ -1477,6 +1479,85 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+        } else if (design_method == "ARC") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").show();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").show();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").show();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
+            $("#field_map_row_aug").hide();
+            $("#FieldMap").show();
+            $("#prephelp").hide();
+            $("#trial_multi-design_more_info").show();
+            $("#show_no_of_row_in_design").hide();
+            $("#show_no_of_col_in_design").hide();
+            $("#show_no_of_rep_times").hide();
+            $("#show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
+            $("#rep_count_section").hide();
+            $("#block_number_section").show();
+            $("#block_size_section").hide();
+            $("#max_block_size_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").show();
+            $("#other_parameter_section").hide();
+            $("#design_info").show();
+            $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         } else if (design_method == "") {
             $("#FieldMap").hide();
             $("#prephelp").hide();
@@ -1521,8 +1602,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-        }
-        else if (design_method == "MAD") {
+        } else if (design_method == "MAD") {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
@@ -1591,7 +1671,6 @@ jQuery(document).ready(function ($) {
             $("#row_number_per_block_section").show();
             $("#other_parameter_section").show();
             $("#design_info").show();
-
             $("#show_other_parameter_options").click(function () {
                 if ($('#show_other_parameter_options').is(':checked')) {
                     $("#other_parameter_options").show();
@@ -1609,8 +1688,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-        }
-        else if (design_method == 'greenhouse') {
+        } else if (design_method == 'greenhouse') {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
@@ -1689,8 +1767,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-        }
-        else if (design_method == 'splitplot') {
+        } else if (design_method == 'splitplot') {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
@@ -1769,8 +1846,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-        }
-        else if (design_method == 'p-rep') {
+        } else if (design_method == 'p-rep') {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").hide();
                 $("#show_list_of_cross_section").hide();
@@ -1849,8 +1925,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-        }
-        else if (design_method == 'Westcott') {
+        } else if (design_method == 'Westcott') {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
@@ -1930,9 +2005,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").show();
             $("#FieldMap_westcott").show();
             $("#field_map_options").hide();
-        }
-
-        else {
+        }else {
             alert("Unsupported design method");
         }
     });
