@@ -333,10 +333,11 @@ sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
 sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $start_date = shift;
-    my $end_date = shift;
-    my $include_dateless_items = shift;
-    
+    my $start_date = $c->req()->param('start_date');
+    my $end_date = $c->req()->param('end_date');
+    my $include_dateless_items = $c->req->param('include_timeless_items');
+
+    print STDERR "trait_phenotypes START DATE $start_date END DATE $end_date\n";
     #get userinfo from db
     my $user = $c->user();
     if (! $c->user) {
@@ -376,12 +377,17 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $display = $c->req->param('display');
     my $trial_stock_type = $c->req->param('trial_stock_type');
+    my $start_date = $c->req->param('start_date');
+    my $end_date = $c->req->param('end_date');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
     my $stock_type_id;
     my $rel_type_id;
     my $total_complete_number;
+
+    print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date\n";
+    
     if ($display eq 'plots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
@@ -449,6 +455,13 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $trial_stock_type_id = $accesion_type_id;
     }
 
+    my $date_params = "";
+    my @date_placeholders = ();
+    if ($start_date && $end_date) {
+	$date_params = "  AND ( collect_date > ? and collect_date < ?) ";
+	@date_placeholders = ($start_date, $end_date);
+    }
+    
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value),
@@ -471,12 +484,13 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
+	    $date_params
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional;");
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     my @phenotype_data;
 
@@ -539,14 +553,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
-	     	$exclude_numeric_trait_ids
+	    $date_params
+	    $exclude_numeric_trait_ids
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional ";
 
     my $h = $dbh->prepare($q);
     
-    $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+    $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
 	my @return_array;
@@ -562,8 +577,10 @@ sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
     my $c = shift;
     my $trait_id = shift;
     my $stock_type = $c->req->param('stock_type') || 'plot';
+    my $start_date = $c->req->param('start_date');
+    my $end_date = $c->req->param('end_date');
 
-    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, $stock_type);
+    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, $stock_type, $start_date, $end_date);
 
     $c->stash->{rest} = { data => \@data };
 }
