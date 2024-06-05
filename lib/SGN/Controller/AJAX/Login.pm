@@ -60,6 +60,7 @@ sub login_with_cookie :Path('/user/cookie_login') Args(1) {
 	    last_name => $p->get_last_name,
         username => $p->get_username,
         user_id => $user_id,
+        email_address => $p->get_contact_email,
     };
 }
 
