@@ -55,6 +55,7 @@ use DateTime;
 use Email::Simple;
 use Email::Simple::Creator;
 use CXGN::Tools::Run;
+use CXGN::People::Person;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -895,7 +896,7 @@ sub upload_trial_file_POST : Args(0) {
     print STDERR "Check 1: ".localtime()."\n";
 
 
-    #print STDERR Dumper $c->req->params();
+    print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -940,8 +941,7 @@ sub upload_trial_file_POST : Args(0) {
     my $error;
     my $save;
 
-    print STDERR "Check 2: ".localtime()."\n";
-
+    # print STDERR "Check 2: ".localtime()."\n";
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
         print STDERR "File name must not have spaces or slashes.\n";
         $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
@@ -1019,7 +1019,7 @@ sub upload_trial_file_POST : Args(0) {
         }
     }
 
-    print STDERR "Check 4: ".localtime()."\n";
+    #print STDERR "Check 4: ".localtime()."\n";
 
     #print STDERR Dumper $parsed_data;
 
@@ -1117,29 +1117,45 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     # print STDERR "Check 1: ".localtime()."\n";
 
     # print STDERR Dumper $c->req->params();
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $chado_schema    = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('multiple_trial_designs_upload_file');
+    my $phenome_schema  = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh             = $c->dbc->dbh;
     my $ignore_warnings = $c->req->param('upload_multiple_trials_ignore_warnings');
+    my $dir             = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $dbhost          = $c->config->{dbhost};
+    my $dbname          = $c->config->{dbname};
+    my $dbpass          = $c->config->{dbpass};
+    my $basepath        = $c->config->{basepath};
+    my $dbuser          = $c->config->{dbuser};
+    my $upload          = $c->req->upload('multiple_trial_designs_upload_file');
+    my $subdirectory    = "trial_upload";
+    my $time            = DateTime->now();
+    my $timestamp       = $time->ymd()."_".$time->hms();
+    my $upload_tempfile = $upload->tempname;
+    my $breeding_program_name= $c->req->param('breeding_program');
+    my $upload_original_name = $upload->filename();
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    my $infile_tempfile            = $c->req->upload('multiple_trial_designs_upload_file');
+    my $infile                     = $infile_tempfile->tempname();
     my $parser;
     my $parsed_data;
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "trial_upload";
     my $archived_filename_with_path;
     my $md5;
     my $validate_file;
-    my $parsed_file;
-    my $parse_errors;
-    my %parsed_data;
-    my %upload_metadata;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
+    # my $parsed_file;
+    # my $parse_errors;
+    # my %parsed_data;
+    # my %upload_metadata;
     my $user_id;
-    my $user_name;
     my $error;
+    my $email_address;
+    my $save;
+    my $username;
+
+    # my $schema = $self->bcs_schema();
+    # my $breeding_program_name = $schema->resultset("Project::Project")->find({project_id=>$self->breeding_program_id()})->name();
+    # $self->set_breeding_program($self->breeding_program_id());
 
     # print STDERR "Check 2: ".localtime()."\n";
     print STDERR "Ignore warnings is $ignore_warnings\n";
@@ -1160,17 +1176,18 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     }
 
     $user_id = $c->user()->get_object()->get_sp_person_id();
-    $user_name = $c->user()->get_object()->get_username();
+    $username = $c->user()->get_object()->get_username();
+    $email_address = $c->user()->get_contact_email();
 
-    ## Store uploaded temporary file in archive
+    #Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
+        tempfile         => $upload_tempfile,
+        subdirectory     => $subdirectory,
+        archive_path     => $c->config->{archive_path},
         archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $c->user->get_object->get_user_type()
+        timestamp        => $timestamp,
+        user_id          => $user_id,
+        user_role        => $c->user->get_object->get_user_type()
     });
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -1178,35 +1195,34 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
         return;
     }
-    unlink $upload_tempfile;
+    unlink $infile_tempfile; #$upload_tempfile;
 
     # print STDERR "Check 3: ".localtime()."\n";
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="trial upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
+    # $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    # $upload_metadata{'archived_file_type'}="trial upload file";
+    # $upload_metadata{'user_id'}=$user_id;
+    # $upload_metadata{'date'}="$timestamp";
 
+    # #parse uploaded file with appropriate plugin
+    # $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    # $parser->load_plugin('MultipleTrialDesignExcelFormat');
+    # $parsed_data = $parser->parse();
 
-    #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('MultipleTrialDesignExcelFormat');
-    $parsed_data = $parser->parse();
+    # if (!$parsed_data) {
+    #     my $return_error = '';
 
-    if (!$parsed_data) {
-        my $return_error = '';
-
-        if (! $parser->has_parse_errors() ){
-            $c->stash->{rest} = {errors => "Could not get parsing errors"};
-            return;
-        }
-        else {
-            print STDERR "Parse errors are:\n";
-            print STDERR Dumper $parse_errors;
-            $parse_errors = $parser->get_parse_errors();
-            $c->stash->{rest} = {errors => $parse_errors->{'error_messages'}};
-            return;
-        }
-    }
+    #     if (! $parser->has_parse_errors() ){
+    #         $c->stash->{rest} = {errors => "Could not get parsing errors"};
+    #         return;
+    #     }
+    #     else {
+    #         print STDERR "Parse errors are:\n";
+    #         print STDERR Dumper $parse_errors;
+    #         $parse_errors = $parser->get_parse_errors();
+    #         $c->stash->{rest} = {errors => $parse_errors->{'error_messages'}};
+    #         return;
+    #     }
+    # }
 
     if ($parser->has_parse_warnings()) {
         unless ($ignore_warnings) {
@@ -1216,91 +1232,94 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         }
     }
 
-    # print STDERR "Check 4: ".localtime()."\n";
-    my %all_designs = %{$parsed_data};
+    #print STDERR "Check 4: ".localtime()."\n";
+    # my %all_designs = %{$parsed_data};
     my %save;
     $save{'errors'} = [];
 
-    my $coderef = sub {
+    #add a statement to check in the backend with slurm 
 
-      for my $trial_name ( keys %all_designs ) {
-        my $trial_design = $all_designs{$trial_name};
-        # print STDERR "\nSaving trial $trial_name:\n";
-        my %trial_info_hash = (
-            chado_schema => $chado_schema,
-            dbh => $dbh,
-            owner_id => $user_id,
-            trial_year => $trial_design->{'year'},
-            trial_description => $trial_design->{'description'},
-            trial_location => $trial_design->{'location'},
-            trial_name => $trial_name,
-            design_type => $trial_design->{'design_type'},
-            design => $trial_design->{'design_details'},
-            program => $trial_design->{'breeding_program'},
-            upload_trial_file => $upload,
-            operator => $user_name,
-            owner_id => $user_id
-        );
+    # };
 
-        if ($trial_design->{'trial_type'}){
-            $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
-        }
-        if ($trial_design->{'plot_width'}){
-            $trial_info_hash{plot_width} = $trial_design->{'plot_width'};
-        }
-        if ($trial_design->{'plot_length'}){
-            $trial_info_hash{plot_length} = $trial_design->{'plot_length'};
-        }
-        if ($trial_design->{'field_size'}){
-            $trial_info_hash{field_size} = $trial_design->{'field_size'};
-        }
-        if ($trial_design->{'planting_date'}){
-            $trial_info_hash{planting_date} = $trial_design->{'planting_date'};
-        }
-        if ($trial_design->{'harvest_date'}){
-            $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
-        }
+    # my $coderef = sub {
 
+    #     for my $trial_name ( keys %all_designs ) {
+    #         my $trial_design = $all_designs{$trial_name};
+    #         # print STDERR "\nSaving trial $trial_name:\n";
+    #         my %trial_info_hash = (
+    #             chado_schema => $chado_schema,
+    #             dbh => $dbh,
+    #             owner_id => $user_id,
+    #             trial_year => $trial_design->{'year'},
+    #             trial_description => $trial_design->{'description'},
+    #             trial_location => $trial_design->{'location'},
+    #             trial_name => $trial_name,
+    #             design_type => $trial_design->{'design_type'},
+    #             design => $trial_design->{'design_details'},
+    #             program => $trial_design->{'breeding_program'},
+    #             upload_trial_file => $upload,
+    #             operator => $user_name,
+    #             owner_id => $user_id
+    #         );
 
-        my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
-        my $current_save = $trial_create->save_trial();
+    #         if ($trial_design->{'trial_type'}){
+    #             $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
+    #         }
+    #         if ($trial_design->{'plot_width'}){
+    #             $trial_info_hash{plot_width} = $trial_design->{'plot_width'};
+    #         }
+    #         if ($trial_design->{'plot_length'}){
+    #             $trial_info_hash{plot_length} = $trial_design->{'plot_length'};
+    #         }
+    #         if ($trial_design->{'field_size'}){
+    #             $trial_info_hash{field_size} = $trial_design->{'field_size'};
+    #         }
+    #         if ($trial_design->{'planting_date'}){
+    #             $trial_info_hash{planting_date} = $trial_design->{'planting_date'};
+    #         }
+    #         if ($trial_design->{'harvest_date'}){
+    #             $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
+    #         }
 
-        if ($current_save->{error}){
-            $chado_schema->txn_rollback();
-            push @{$save{'errors'}}, $current_save->{'error'};
-        } elsif ($current_save->{'trial_id'}) {
-            my $trial_id = $current_save->{'trial_id'};
-            my $timestamp = $time->ymd();
-            my $calendar_funcs = CXGN::Calendar->new({});
-            my $formatted_date = $calendar_funcs->check_value_format($timestamp);
-            my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+    #         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
+    #         my $current_save = $trial_create->save_trial();
 
-            my %trial_activity;
-            $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
-            $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+    #         if ($current_save->{error}){
+    #             $chado_schema->txn_rollback();
+    #             push @{$save{'errors'}}, $current_save->{'error'};
+    #         } elsif ($current_save->{'trial_id'}) {
+    #             my $trial_id = $current_save->{'trial_id'};
+    #             my $timestamp = $time->ymd();
+    #             my $calendar_funcs = CXGN::Calendar->new({});
+    #             my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+    #             my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+    #             my %trial_activity;
+    #             $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
+    #             $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+    #             my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
+    #             $trial_activity_obj->trial_activities(\%trial_activity);
+    #             $trial_activity_obj->parent_id($trial_id);
+    #             my $activity_prop_id = $trial_activity_obj->store();
+    #         }
+    #     }   
+    # };
 
-            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
-            $trial_activity_obj->trial_activities(\%trial_activity);
-            $trial_activity_obj->parent_id($trial_id);
-            my $activity_prop_id = $trial_activity_obj->store();
-        }
-      }
+    # Run the upload_multiple.pl script asynchronously
+    my $async_upload = CXGN::Tools::Run->new();
+    $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -P $dbpass -w $basepath -U $dbuser -b test -i $infile -un $username -e $email_address -r $temp_file_nd_experiment_id");
 
-    };
-
-    try {
-        $chado_schema->txn_do($coderef);
-    } catch {
-        print STDERR "Transaction Error: $_\n";
-        push @{$save{'errors'}}, $_;
-    };
-
+    # try {
+    #     $chado_schema->txn_do($coderef);
+    # } catch {
+    #     print STDERR "Transaction Error: $_\n";
+    #     push @{$save{'errors'}}, $_;
+    # };  
+    
     #print STDERR "Check 5: ".localtime()."\n";
     if (scalar @{$save{'errors'}} > 0) {
         print STDERR "Errors saving trials: ".@{$save{'errors'}};
         $c->stash->{rest} = {errors => $save{'errors'}};
         return;
-    # } elsif ($save->{'trial_id'}) {
     } else {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -1309,28 +1328,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         $c->stash->{rest} = {success => "1",};
         return;
     }
-
-        my $basepath = $c->config->{basepath};
-        my $dbhost = $c->config->{dbhost};
-        my $dbname = $c->config->{dbname};
-        my $infile = $c->config->{infile};
-        my $breeding_program_name = $c->config->{breeding_program_name};
-        my $username = $c->config->{username};
-        my $trial_metadata_file = $c->config->{trial_metadata_file};
-        my $test = $c->config->{test};
-        my $dbuser = $c->config->{dbuser};
-        my $email_address = $c->config->{email_address};
-        my $logged_in_user = $c->config->{logged_in_name};
-        my $dbpass = $c->config->{dbpass};  
-
-        # Run the upload_multiple.pl script asynchronously
-        my $async_upload = CXGN::Tools::Run->new();
-        $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -i $infile -b $breeding_program_name -u $username -m $trial_metadata_file -t -u $dbuser -e $email_address -l $logged_in_user");
-
-        $c->stash->{rest} = { success => 1 };
-
+    
 }
-
 
 sub upload_soil_data : Path('/ajax/trial/upload_soil_data') : ActionClass('REST') { }
 
@@ -1464,41 +1463,5 @@ sub upload_soil_data_POST : Args(0) {
     $c->stash->{rest} = {success => "1"};
 
 }
-
-# sub get_user_details {
-#     my ( $slef, $c ) = @_;
-
-#     my $user = $c-> user();
-
-#     my $contact;
-#     if ($user) {
-#         my $private_email = $user-> get_private_email();
-#         my $public_email  = $user->get_contact_email();
-
-#         my $email =
-#             $public_email
-#           ? $public_email
-#           : $private_email;
-
-#         my $salutation = $user->get_salutation();
-#         my $first_name = $user->get_first_name();
-#         my $last_name  = $user->get_last_name();
-#         my $user_role  = $user->get_object->get_user_role();
-#         my $user_id    = $user->get_object()->get_sp_person_id();
-#         my $user_name  = $user->get_object->get_username();
-
-#         $contact = {
-#             'first_name' => $first_name,
-#             'email'      => $email,
-#             'user_role'  => $user_role,
-#             'user_id'    => $user_id,
-#             'user_name'  => $user_name,
-#         };
-
-#     }
-
-#     return $contact;
-
-# }
 
 1;

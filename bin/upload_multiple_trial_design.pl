@@ -1,63 +1,66 @@
+#!/usr/bin/perl
+
 =head1
 
 upload_multiple_trial_design.pl
 
 =head1 SYNOPSIS
 
-    upload_multiple_trial_design.pl  -h [dbhost] -d [dbname] -p [dbpass] -w [basepath] -u [dbuser] -i infile -b [breeding program name] --user [username] -e [email address] -l [logged in user]
+    upload_multiple_trial_design.pl  -H [dbhost] -D [dbname] -P [dbpass] -w [basepath] -U [dbuser] -b [breeding program name]  -i infile -un [username] -e [email address] -r [temp_file_nd_experiment_id]
 
 =head1 COMMAND-LINE OPTIONS
-
- -H  host name
- -D  database name
- -i infile 
- -u username  (must be in the database) 
- -b breeding program name (must be in the database)  
- #-t  Test run . Rolling back at the end.
- #-m trial metadata file - if loading metadata from separate file
+ARGUMENTS
+ -H host name (required) Ex: "breedbase_db"
+ -D database name (required) Ex: "breedbase"
+ -P database userpass (required) Ex: "postgres"
+ -w basepath (required) Ex: /home/production/cxgn/sgn
+ -i path to infile (required)
+ -U username  (required) Ex: "postgres"
+ -b breeding program name (required)  Ex: test
+ -t test run . Rolling back at the end
  -e email address of the user
  -l name of the user
+ -r temp_file_nd_experiment_id (required) Ex: /temp/delete_nd_experiment_ids.txt
 if loading trial data from metadata file, phenotypes + layout from infile 
-
 
 =head2 DESCRIPTION
 
-    # Load multi-trial data - trial layout + minimal metadata + phenotype data for each trial
-    load multi-trial data - trial design file only
+perl bin/upload_multiple_trial_design.pl -h breedbase_db -d breedbase -p postgres -w /home/cxgn/sgn/ -u postgres -i ~/Desktop/test_multi.xlsx -b test -n janedoe -e 'sk2783@cornell.edu' -l 'sri' -r /tmp/delete_nd_experiment_ids.txt
 
-##CHECK cvterms for trial metadata!! 
+This script will parse and validate the input file. If there are any warnings or errors during validation it will send a error message to the provided email.
+If there are no warnings(or errors) during validation it will then store the data.
+The input file should be either .xlsx or .xls format.
 
+CHECK cvterms for trial metadata!!
 
 ################################################
-# Minimal metadata requirements are
-#     trial_name
-#     trial_description (can also be built from the trial name, type, year, location)
-#     trial_type (read from an input file)
-#     trial_location geo_description ( must be in the database - nd_geolocation.description - can  be read from metadata file) 
-#     year (can be read from the metadata file )
-#     design (defaults to 'RCBD' )
-#     breeding_program (provide with option -b )
+Minimal metadata requirements are
+    trial_name
+    trial_description (can also be built from the trial name, type, year, location)
+    trial_type (read from an input file)
+    trial_location geo_description ( must be in the database - nd_geolocation.description - can  be read from metadata file)
+    year (can be read from the metadata file )
+    design (defaults to 'RCBD' )
+    breeding_program (provide with option -b )
 
 
-# Other OPTIONAL trial metadata (projectprops)
- 
-#  project planting date
-#  project fertilizer date
-#  project harvest date
-#  project sown plants
-#  project harvested plants
+Other OPTIONAL trial metadata (projectprops)
 
+project planting date
+project fertilizer date
+project harvest date
+project sown plants
+project harvested plants
+
+=head1 AUTHOR
 
 Srikanth (sk2783@cornell.edu)
 
 =cut
 
-
-#!/usr/bin/perl
 use strict;
 use Getopt::Long;
 use CXGN::Tools::File::Spreadsheet;
-use Text::CSV; #this module si for handling the csv files
 use Spreadsheet::ParseXLSX;
 use Spreadsheet::ParseExcel;
 use Bio::Chado::Schema;
@@ -81,44 +84,73 @@ use CXGN::Tools::Run;
 use Email::MIME;
 use Email::Sender::Simple;
 use Email::Sender::Simple qw /sendmail/;
+use CXGN::Trial::ParseUpload;
+use CXGN::TrialStatus;
+use CXGN::Calendar;
+use CXGN::UploadFile;
+use File::Path qw(make_path);
+use File::Spec;
 
-my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $infile, $sites, $types, $username, $breeding_program_name, $email_address, $logged_in_name);
+my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $infile, $sites, $types, $username, $breeding_program_name, $email_address, $logged_in_name, $temp_file_nd_experiment_id);
 GetOptions(
-    'dbhost|h=s'         => \$dbhost,
-    'dbname|d=s'         => \$dbname,
-    'dbpass|p=s'         => \$dbpass,
+    'dbhost|H=s'         => \$dbhost,
+    'dbname|D=s'         => \$dbname,
+    'dbpass|P=s'         => \$dbpass,
     'basepath|w=s'       => \$basepath,
-    'dbuser|u=s'         => \$dbuser,
+    'dbuser|U=s'         => \$dbuser,
     'i=s'                => \$infile,
     'b=s'                => \$breeding_program_name,
-    'user|n=s'           => \$username,
+    'user|un=s'          => \$username,
     'help'               => \$help,
     'email|e=s'          => \$email_address,
-    'logged_in_user|l=s' => \$logged_in_name,
+    # 'logged_in_user|l=s' => \$logged_in_name,
+    'temp_file|r=s'      => \$temp_file_nd_experiment_id,
 );
 
+#Ensure the parent directory exists before creating the temporary file
+my $parent_dir = File::Spec->catdir($basepath, 'static', 'documents', 'tempfiles', 'delete_nd_experiment_ids');
+unless (-d $parent_dir) {
+    make_path($parent_dir) or die "Failed to create directory $parent_dir: $!";
+}
+
+# Create the temporary file in the parent directory
+my $temp_file_nd_experiment_id = File::Spec->catfile($parent_dir, 'fileXXXX');
+
+
 pod2usage(1) if $help;
-if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost ) {
+if (!$infile || !$breeding_program_name || !$username || !$dbname || !$dbhost ) { 
     pod2usage( { -msg => 'Error. Missing options!'  , -verbose => 1, -exitval => 1 } ) ;
 }
 
-my $dbh = CXGN::DB::InsertDBH->new( {
-    dbhost=>$dbhost,
-    dbname=>$dbname,
-    dbargs => {AutoCommit => 1,
-    RaiseError => 1}
-});
+my $dbh;
 
-my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] } );
+if ($dbpass) {
+    $dbh = CXGN::DB::Connection->new( {
+        dbhost=>$dbhost,
+        dbname=>$dbname,
+        dbuser=>$dbuser,
+        dbpass=>$dbpass,
+        dbargs => {AutoCommit => 1,
+        RaiseError => 1}
+    });
+} else {
+    $dbh = CXGN::DB::InsertDBH->new( {
+        dbhost=>$dbhost,
+        dbname=>$dbname,
+        # dbuser=>$dbuser,
+        # dbpass=>$dbpass,
+        dbargs => {AutoCommit => 1,
+        RaiseError => 1}
+    });
+}
 
+print STDERR "Database connection ok!\n";
 
-my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_dbh() } , {on_connect_do => ['SET search_path TO metadata;'] } );
+my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public, sgn, metadata, phenome;'] } );
 
-my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() } , {on_connect_do => ['SET search_path TO phenome;'] } );
-
-#################
-#getting the last database ids for resetting at the end in case of rolling back
-################
+# ################
+# getting the last database ids for resetting at the end in case of rolling back
+# ###############
 
 # my $last_nd_experiment_id = $schema->resultset('NaturalDiversity::NdExperiment')->get_column('nd_experiment_id')->max;
 # my $last_cvterm_id = $schema->resultset('Cv::Cvterm')->get_column('cvterm_id')->max;
@@ -150,9 +182,9 @@ my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh(
 #     );
 
 
-###############
-#Breeding program for associating the trial/s ##
-###############
+# ##############
+# Breeding program for associating the trial/s ##
+# ##############
 
 my $breeding_program = $schema->resultset("Project::Project")->find(
     {'me.name'   => $breeding_program_name, 'type.name' => 'breeding_program'},
@@ -160,23 +192,19 @@ my $breeding_program = $schema->resultset("Project::Project")->find(
 );
 
 if (!$breeding_program) { die "Breeding program $breeding_program_name does not exist in the database. Check your input \n"; }
-print "Found breeding program $breeding_program_name " . $breeding_program->project_id . "\n";
+# print STDERR "Found breeding program $breeding_program_name " . $breeding_program->project_id . "\n";
 
 my $sp_person_id= CXGN::People::Person->get_person_by_username($dbh, $username);
-my $operator_username = CXGN::People::Person->get_person_by_username($dbh, $username);
-my $temp_file_nd_experiment_id = 0;
+die "Need to have a user pre-loaded in the database! " if !$sp_person_id;
 
-##Column headers for trial design/s
+#Column headers for trial design/s
 #plot_name	accession_name	plot_number	block_number	trial_name	trial_description	trial_location	year	trial_type	is_a_control	rep_number	range_number	row_number	col_number
 
-###################
-#trial metadata can be loaded from a separate data sheet
-###################
+#Parse the trials + designs first, then upload the phenotypes 
 
-##Parse the trials + designs first, then upload the phenotypes 
-
-##new spreadsheet for design + phenotyping data ###
+#new spreadsheet for design + phenotyping data ###
 my $spreadsheet = CXGN::Tools::File::Spreadsheet->new($infile);
+
 #Determine the type of file and setup workbook and worksheet
 my ($xlsx_parser, $xls_parser, $workbook, $worksheet);
 if ($infile =~ /\.xlsx$/i) {
@@ -207,9 +235,6 @@ my (@trial_rows, @trial_columns);
 @trial_rows = map { my $cell = $worksheet->get_cell($_, 0); $cell ? $cell->value : '' } ($row_min .. $row_max);
 @trial_columns = map { my $cell = $worksheet->get_cell(0, $_); $cell ? $cell->value : ''} (0 .. $worksheet->col_range);
 
-# print STDERR "Trial design rows    = " . Dumper(\@trial_rows);
-# print "Trial design columns = " . Dumper(\@trial_columns);
-
 # Map trial columns to parameters
 
 my %trial_params = map { $_ => 1 } @trial_columns;
@@ -228,11 +253,7 @@ for my $row ($row_min .. $row_max) {
     $year = $worksheet->get_cell($row, $trial_year) ? $worksheet->get_cell($row, $trial_year)->value : undef;
     $trial_location = $worksheet->get_cell($row, $location) ? $worksheet->get_cell($row, $location)->value : undef;
     
-    print STDERR "Row: $row, Trial Name: $trial_name, Location: $trial_location, Design Type: $design_type, Year: $year\n";
-
-    # print "Trial = $trial_name, design = $design_type, year = $year, location = $trial_location\n";
-    # print STDERR "Trial name: $trial_name\n";
-    # print STDERR "Trial locations: $trial_location\n";
+    # print STDERR "Trial Name: $trial_name, Location: $trial_location, Design Type: $design_type, Year: $year\n";
 
     # Check if the location exists in the database
     my $location_rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search({
@@ -243,64 +264,36 @@ for my $row ($row_min .. $row_max) {
     }
     my $location_id = $location_rs->first->nd_geolocation_id;
     ######################################################
+
     #### optional params ######
-    my ($planting_date, $fertilizer_date, $harvest_date, $sown_plants, $harvested_plants);
+    my ($planting_date, $fertilizer_date, $harvest_date, $sown_plants, $harvested_plants, $trial_type, $plot_width, $plot_length, $field_size);
     my $trial_description = $trial_name;
-    my %properties_hash;
-    foreach my $param (qw(planting_date fertilizer_date harvest_date sown_plants harvested_plants trial_description)) {
-        if (exists($trial_params{$param})) {
-            my $param_index = first { $trial_columns[$_] eq $param } 0..@trial_columns;
-            next unless defined $param_index;
-            my $cell_value = $worksheet->get_cell($row, $param_index);
-            if ($cell_value) {
-                $properties_hash{"project $param"} = $cell_value->value;
-            }
-        }
+    # my %properties_hash;
+    my $properties_hash;
+
+    if (exists($trial_params{trial_description})) {
+        $trial_description = $worksheet->get_cell($row, first { $trial_columns[$_] eq 'trial_description' } 0..$#trial_columns)->value;
     }
 
     # Store all data for the current trial
-    $multi_trial_data{$trial_name} = {
-        design_type       => $design_type,
-        program           => $breeding_program->name,
-        trial_year        => $year,
-        trial_location    => $trial_location,
-        trial_description => $trial_description, #$properties_hash{'trial_description'} // $trial_name,
-        trial_properties  => \%properties_hash,
-    };
-
-    if (exists $multi_trial_data{$trial_name}) {
-        print STDERR "Warning: Key 'trial_name' exists in %multi_trial_data hash.\n";
-    }
-};
-
-# Print all trial location names to check if they are stored correctly
-print STDERR "All trial location names:\n";
-foreach my $trial_name (keys %multi_trial_data) {
-    my $trial_location = $multi_trial_data{$trial_name}->{trial_location};
-    if (defined $trial_location) {
-        print STDERR "Trial Name: $trial_name, Location: $trial_location\n";
-    } else {
-        print STDERR "Trial Name: $trial_name, Location is undef\n";
-    }
+    $multi_trial_data{$trial_name}->{design_type}       = $design_type;
+    $multi_trial_data{$trial_name}->{program}           = $breeding_program->name;
+    $multi_trial_data{$trial_name}->{trial_year}        = $year;
+    $multi_trial_data{$trial_name}->{trial_description} = $trial_description;
+    $multi_trial_data{$trial_name}->{trial_location}    = $trial_location;
 }
 
-# print STDERR "Trial design rows     = " . Dumper(\@trial_rows); #print the array of trial rows from the infile
-# print STDERR "Trial design columns  = " . Dumper(\@trial_columns); #print the array of trial columns from the infile
-# print STDERR "Processed trials      : " . scalar(keys %multi_trial_data) . "\n"; #print the number of unique trials
-# print STDERR "Trial data details    : " . Dumper(\%multi_trial_data) . "\n";
+print STDERR "unique trial names:\n";
+foreach my $name(keys %multi_trial_data) {
+    print"$name\n";
+}
 
-# print STDERR "unique trial names:\n";
-# foreach my $name(keys %multi_trial_data) {
-#     print"$name\n";
-# }
-
-# Now read the design + phenotypes file
 print STDERR "Reading phenotyping file:\n";
 my %phen_params = map { if ($_ =~ m/^\w+\|(\w+:\d{7})$/ ) { $_ => $1 } } @trial_columns;
 delete $phen_params{''};
 
 my @traits = keys %phen_params;
-# print STDERR "Found traits: " . Dumper(\%phen_params) . "\n";
+print STDERR "Found traits: " . Dumper(\%phen_params) . "\n";
 
 my %trial_design_hash;
 my %phen_data_by_trial;
@@ -348,22 +341,27 @@ foreach my $plot_name (1 .. @trial_rows) {
         my $phen_value = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq $trait_string } 0..@trial_columns);
         $phen_data_by_trial{$trial_name}{$plot_name}{$trait_string} = [$phen_value, $timestamp];
     }
-    ###########
 }
 
 print STDERR "multi trial hash:" . Dumper(\%multi_trial_data);
-# print STDERR "trial design " . Dumper(\%trial_design_hash);
-# print STDERR "Processed trials: " . scalar(keys %trial_design_hash) . "\n";
-# print STDERR "Trial design hash: " . Dumper(\%trial_design_hash) . "\n";
-# print STDERR "Phen data by trial: " . Dumper(\%phen_data_by_trial) . "\n";
+print STDERR "trial design " . Dumper(\%trial_design_hash);
+print STDERR "Processed trials: " . scalar(keys %trial_design_hash) . "\n";
+print STDERR "Phen data by trial: " . Dumper(\%phen_data_by_trial) . "\n";
 
 #####create the design hash#####
-#print Dumper(\%trial_design_hash);
-#foreach my $trial_name (keys %trial_design_hash) {
-#    $multi_trial_data{$trial_name}->{design} = $trial_design_hash{$trial_name} ;
-#}
+print Dumper(\%trial_design_hash);
+foreach my $trial_name (keys %trial_design_hash) {
+   $multi_trial_data{$trial_name}->{design} = $trial_design_hash{$trial_name} ;
+}
 
 my $date = localtime();
+my $parser;
+my %parsed_data;
+my $parse_errors;
+my $parsed_data;
+my $ignore_warnings;
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
 
 ####required phenotypeprops###
 my %phenotype_metadata ;
@@ -372,66 +370,114 @@ $phenotype_metadata{'archived_file_type'} = "spreadsheet phenotype file";
 $phenotype_metadata{'operator'} = $username;
 $phenotype_metadata{'date'} = $date;
 
+#parse uploaded file with appropriate plugin
+$parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $infile);
+$parser->load_plugin('MultipleTrialDesignExcelFormat');
+$parsed_data = $parser->parse();
+
+
+if (!$parsed_data) {
+    my $return_error = '';
+    if (! $parser->has_parse_errors() ){
+        die "could not get parsing erros\n";
+    }else {
+        $parse_errors = $parser->get_parse_errors();
+        die $parse_errors->{'error_messages'};        
+    }
+}
+
+# print STDERR "please check errors from here \n";
+
+
+my %all_desings = %{$parsed_data};
+my %save;
+$save{'errors'} = [];
+
 my $coderef= sub  {
-    my $hash_undefined_locations = 0;
     foreach my $trial_name (keys %multi_trial_data) {
         my $trial_location = $multi_trial_data{$trial_name}->{trial_location};
-        # if (!defined $trial_location) {
-        #     $hash_undefined_locations = 1;
-        #     print STDERR "Trial location is undefined for these trials: $trial_name. Skipping this trial creation.\n";
-        #     next;
-        # }
-
-        # # Printing all the trial names from the multi_trial_data hash
-        # print STDERR "All trial names:\n";
-        # foreach my $trial_name (keys %multi_trial_data) {
-        #     print STDERR "$trial_name\n";
-        # }
-
-        # # Printing all the trial locations in the multi_trial_data hash
-        # print STDERR "All trial location names:\n";
-        # foreach my $trial_name (keys %multi_trial_data) {
-        #     my $location = $multi_trial_data{$trial_name}->{trial_location};
-        #     if (defined $location) {
-        #         print STDERR "Trial Name: $trial_name, Location: $location\n";
-        #     } else {
-        #         $hash_undefined_locations = 1;
-        #         print STDERR "Trial location is undefined: $trial_name\n";
-        #     }
-        # }
-
-
-        # print STDERR "Creating trial: $trial_name\n";  # Debug statement
-        # print STDERR "Trial details:\n";
-        # print STDERR "Design Type: " . ($multi_trial_data{$trial_name}->{design_type} || 'RCBD') . "\n";
-        # print STDERR "Program: " . $breeding_program->name() . "\n";
-        # print STDERR "Year: " . $multi_trial_data{$trial_name}->{trial_year} . "\n";
-        # print STDERR "Description: " . $multi_trial_data{$trial_name}->{trial_description} . "\n";
-        # print STDERR "Location: " . $trial_location . "\n";
-
-        my $trial_create = CXGN::Trial::TrialCreate->new({
+        my $trial_design_info = $all_desings{$trial_name};
+        
+        my %trial_info_hash = (
             chado_schema      => $schema,
             dbh               => $dbh,
-            design_type       => $multi_trial_data{$trial_name}->{design_type} || 'RCBD',
-            design            => $trial_design_hash{$trial_name},
-            program           => $breeding_program->name(),
-            trial_year        => $multi_trial_data{$trial_name}->{trial_year},
-            trial_description => $multi_trial_data{$trial_name}->{trial_description},
-            trial_location    => $trial_location,
+            trial_year        => $trial_design_info->{'year'},
+            trial_description => $trial_design_info->{'description'},
+            trial_location    => $trial_design_info->{'location'},
             trial_name        => $trial_name,
-            operator          => $operator_username,
+            design_type       => $trial_design_info->{'design_type'},
+            design            => $trial_design_info->{'design_details'},
+            program           => $trial_design_info->{'breeding_program'},
+            # upload_trial_file => $upload,
+            operator          => $username,
             owner_id          => $sp_person_id,
-        });
+        );
 
-        print STDERR "TrialCreate object created for trial: $trial_name\n";  # Debug statement
+        if ($trial_design_info->{'trial_type'}){
+            $trial_info_hash{trial_type} = $trial_design_info->{'trial_type'};
+        }
+        if ($trial_design_info->{'plot_width'}){
+            $trial_info_hash{plot_width} = $trial_design_info->{'plot_width'};
+        }
+        if ($trial_design_info->{'plot_length'}){
+            $trial_info_hash{plot_length} = $trial_design_info->{'plot_length'};
+        }
+        if ($trial_design_info->{'field_size'}){
+            $trial_info_hash{field_size} = $trial_design_info->{'field_size'};
+        }
+        if ($trial_design_info->{'planting_date'}){
+            $trial_info_hash{planting_date} = $trial_design_info->{'planting_date'};
+        }
+        if ($trial_design_info->{'harvest_date'}){
+            $trial_info_hash{harvest_date} = $trial_design_info->{'harvest_date'};
+        }
+        my $trial_create = CXGN::Trial::TrialCreate->new(%trial_info_hash);
+        my $current_save = $trial_create->save_trial();
 
-        try {
-            $trial_create->save_trial();
-            print STDERR "Trial '$trial_name' saved successfully.\n";
-        } catch {
-            print STDERR "ERROR SAVING TRIAL!: $_\n";
-            print STDERR "Error details: Trial Name = $trial_name, Location = $trial_location\n";  # Debug statement
-        };
+        if ($current_save->{error}){
+            # $schema->txn_rollback();
+            push @{$save{'errors'}}, $current_save->{'error'};
+        } elsif ($current_save->{'trial_id'}) {
+            my $trial_id = $current_save->{'trial_id'};
+            my $timestamp = $time->ymd();
+            my $calendar_funcs = CXGN::Calendar->new({});
+            my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+            my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+
+            my %trial_activity;
+            $trial_activity{'Trial Uploaded'}{'user_id'} = $sp_person_id;
+            $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+
+            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+            $trial_activity_obj->trial_activities(\%trial_activity);
+            $trial_activity_obj->parent_id($trial_id);
+            my $activity_prop_id = $trial_activity_obj->store();
+        }
+
+        print STDERR "TrialCreate object created for trial: $trial_name\n";
+
+        # my $trial_create = CXGN::Trial::TrialCreate->new({
+        #     chado_schema      => $schema,
+        #     dbh               => $dbh,
+        #     design_type       => $multi_trial_data{$trial_name}->{design_type} || 'RCBD',
+        #     design            => $trial_design_hash{$trial_name},
+        #     program           => $breeding_program->name(),
+        #     trial_year        => $multi_trial_data{$trial_name}->{trial_year},
+        #     trial_description => $multi_trial_data{$trial_name}->{trial_description},
+        #     trial_location    => $trial_location,
+        #     trial_name        => $trial_name,
+        #     operator          => $username,
+        #     owner_id          => $sp_person_id,
+        # });
+
+        # try {
+        #     $trial_create->save_trial();
+        #     print STDERR "Trial '$trial_name' saved successfully.\n";
+        #     # push @{$save{'errors'}}, $current_save->{'error'};
+        # } catch {
+        #     print STDERR "ERROR SAVING TRIAL!: $_\n";
+        #     print STDERR "Error details: Trial Name = $trial_name, Location = $trial_location\n";
+        # };
  
         my @plots = @{ $multi_trial_data{$trial_name}->{plots} };
         print STDERR "Trial Name = $trial_name\n";
@@ -446,10 +492,12 @@ my $coderef= sub  {
 		        print STDERR "value =  " . $trait_string_hash{$trait_string}[0] . "\n";
 	        }
  	    }
-
+        
 	    #print Dumper(\%parsed_data);
-	    # after storing the trial desgin store the phenotypes
-	    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+	    # # after storing the trial desgin store the phenotypes
+        my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_dbh() }, {on_connect_do => ['SET search_path TO metadata;'] } );
+        my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() } , {on_connect_do => ['SET search_path TO phenome, sgn, public;'] } );
+        my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
             basepath                    => $basepath,
             dbhost                      => $dbhost,
             dbname                      => $dbname,
@@ -468,12 +516,11 @@ my $coderef= sub  {
 	        metadata_hash               => \%phenotype_metadata,
         );
 
-	    #validate, store, add project_properties from %properties_hash
 	    #store the phenotypes
 	    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-	    print STDERR "Verified phenotypes. warning = $verified_warning, error = $verified_error\n";
+	    # print STDERR "Verified phenotypes. warning = $verified_warning, error = $verified_error\n";
 	    my $stored_phenotype_error = $store_phenotypes->store();
-	    print STDERR "Stored phenotypes. Error = $stored_phenotype_error \n";
+	    # print STDERR "Stored phenotypes Error:" . Dumper($stored_phenotype_error). "\n";
     }
 };
 
@@ -481,7 +528,7 @@ my ($email_subject, $email_body);
 
 try {
     $schema->txn_do($coderef);
-    if (!$test) {
+    if ($email_address) {
         print "Transaction succeeded! Committing project and its metadata \n\n";
 
         $email_subject = "Multiple Trial Designs upload status";
@@ -508,7 +555,7 @@ try {
     my $error_message = "An error occurred! Rolling back! $_\n";
 
     $email_subject = 'Error in Trial Upload';
-    $email_body    = "Dear $logged_in_name,\n\n$error_message\nPlease correct these errors and try uploading again\n\nThank You\nHave a nice day\n";
+    $email_body    = "Dear $logged_in_name,\n\n$error_message\nPlease correct these errors and upload again\n\nThank You\nHave a nice day\n";
 
     print STDERR $error_message;
 
