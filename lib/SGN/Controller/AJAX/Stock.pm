@@ -837,7 +837,7 @@ sub stockproperty_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
     my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, 'stock_property')->cvterm_id();
     my @response_list;
-    my $q = "SELECT distinct value FROM stockprop WHERE type_id=? and value ilike ?";
+    my $q = "SELECT distinct value FROM stockprop WHERE type_id=? and value ilike ? LIMIT 100";
     my $sth = $schema->storage->dbh->prepare($q);
     $sth->execute( $cvterm_id, '%'.$term.'%');
     while  (my ($val) = $sth->fetchrow_array ) {

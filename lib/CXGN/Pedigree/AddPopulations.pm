@@ -25,18 +25,46 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 
 has 'schema' => (
-    is       => 'rw',
-    isa      => 'DBIx::Class::Schema',
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
     predicate => 'has_schema',
     required => 1,
 );
-has 'name' => (isa => 'Str', is => 'rw', predicate => 'has_name', required => 1,);
-has 'members' => (isa =>'ArrayRef[Str]', is => 'rw', predicate => 'has_members', required => 1,);
+
+has 'phenome_schema' => (
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+    predicate => 'has_phenome_schema',
+    required => 1,
+);
+
+has 'user_id' => (
+    isa => 'Int',
+    is => 'rw',
+    predicate => 'has_user_id',
+    required => 1,
+);
+
+has 'name' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_name',
+    required => 1,
+);
+
+has 'members' => (
+    isa =>'ArrayRef[Str]',
+    is => 'rw',
+    predicate => 'has_members',
+    required => 1,
+);
 
 sub add_population {
     my $self = shift;
     my $schema = $self->get_schema();
     my $population_name = $self->get_name();
+    my $phenome_schema = $self->get_phenome_schema();
+    my $user_id = $self->get_user_id();
     my @members = @{$self->get_members()};
     my $error;
 
@@ -103,8 +131,13 @@ sub add_population {
         return { error => "Error creating population $population_name: $error" };
     } else {
         print STDERR "population $population_name added successfully\n";
-        return { success => "Success! Population $population_name created", population_id=>$population_id };
+        $phenome_schema->resultset("StockOwner")->find_or_create ({
+            stock_id => $population_id,
+            sp_person_id => $user_id,
+        });
     }
+
+    return { success => "Success! Population $population_name created", population_id=>$population_id };
 }
 
 sub add_accessions {
