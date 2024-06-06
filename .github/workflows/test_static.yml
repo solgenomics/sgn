@@ -18,12 +18,12 @@ permissions:
 jobs:
   # Single deploy job since we're just deploying
   build_and_deploy_static_pages_for_manual:          
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     container: 
       image: bienkowskid/fedora40-r-bookdown
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:          
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}        

@@ -427,6 +427,7 @@ sub _format_data_type {
     my $self = shift;
     my $value = shift;
     my $dataType = "Text"; #Text is the default trait_format for phenotypes in breedbase
+    $value =~ s/^\s+|\s+$//g;
 
     if ($value) {
         my %formats = (
