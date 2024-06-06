@@ -220,12 +220,15 @@ sub download {
 
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $trial_name = $selected_trial->get_name();
+    $trial_name =~ s/ /\_/g;
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_name = $self->user_name();
     my $subdirectory_name = "tablet_field_layout";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trial_name.($extension eq '.xlsx' ? ".xlsx" : ".xls"));
+    #my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trial_name.($extension eq '.xlsx' ? ".xlsx" : ".xls"));
+    my $archived_file_name = catfile($user_id, $subdirectory_name, $trial_name.'_fieldbook_layout'.($extension eq '.xlsx' ? ".xlsx" : ".xls"));
+    # print STDERR "archived_file_name=$user_id|$subdirectory_name|$trial_name|\n";
     my $archive_path = $self->archive_path();
     my $file_destination =  catfile($archive_path, $archived_file_name);
 
@@ -279,7 +282,7 @@ sub download {
     unlink $tempfile;
 
     my $result = $file_row->file_id;
-    print STDERR "FIeldbook file generated $file_destination ".localtime()."\n";
+    # print STDERR "FIeldbook file generated $file_destination ".localtime()."\n";
     return {result => $result, file => $file_destination, file_id=>$file_row->file_id() };
 }
 

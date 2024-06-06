@@ -3,10 +3,9 @@ package SGN::Controller::BreedersToolbox::Trial::TrialComparison;
 
 use Moose;
 use URI::FromHash 'uri';
-
+our $VERSION = '0.01';
 
 BEGIN { extends 'Catalyst::Controller'; }
-
 
 sub trial_comparison_input :Path('/tools/trial/comparison/list') Args(0) {
     my $self = shift;
