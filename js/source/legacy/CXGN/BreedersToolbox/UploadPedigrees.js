@@ -31,11 +31,16 @@ jQuery(document).ready(function ($) {
         upload_pedigrees_file();
     });
 
-    $("#pedigrees_upload_spreadsheet_format_info").click( function () {
-        $('#upload_pedigrees_dialog').modal("hide");
+    $("[name='pedigrees_upload_spreadsheet_format_info']").click( function () {
         $("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
+    $("[name='upload_pedigrees_dismiss_button']").click( function () {
+        $('#pedigree_file_format_option').val("");
+        $('#xlsx_pedigrees_uploaded_file').val("");
+        $('#text_pedigrees_uploaded_file').val("");        
+        location.reload();
+    });
 
     jQuery("#pedigree_file_format_option").change(function(){
         if (jQuery(this).val() == ""){
