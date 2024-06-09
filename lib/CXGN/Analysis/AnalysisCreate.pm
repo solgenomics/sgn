@@ -558,6 +558,8 @@ sub store {
 
         my @analysis_instance_names = keys %$analysis_result_values_save;
 
+	print STDERR "COMPOSED TRAIT NAMES: ".Dumper(\@composed_trait_names);
+	
         eval {
             $a->store_analysis_values(
                 $metadata_schema,

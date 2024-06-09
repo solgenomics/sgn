@@ -486,6 +486,7 @@ my $trial_design = $td->get_design();
 
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
 my $trial_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
+my $trait_repeat_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'trait_repeat_type', 'trait_property')->cvterm_id();
 
 my $new_trial = CXGN::Trial::TrialCreate->new(
   {
@@ -557,11 +558,31 @@ my $plotlist_ref = [ $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ];
 
-my %plot_trait_value = ( $trial_design->{7}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
-			   $trial_design->{8}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
-			   $trial_design->{9}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
+my %plot_trait_value = (
+    $trial_design->{7}->{plot_name} => {
+	'root number|CO_334:0000011' => [0,''],
+	    'dry yield|CO_334:0000014' => [30,''],
+    },
+    
+    $trial_design->{8}->{plot_name} => {
+	'root number|CO_334:0000011'  => [10,''],
+	    'dry yield|CO_334:0000014' => [40,'']
+    },
+
+    $trial_design->{9}->{plot_name} => {
+	'root number|CO_334:0000011'  => [20,''],
+	    'dry yield|CO_334:0000014' => [50,'']
+    },
     );
 
+# add multiple repeat type to root number, dry yield and harvest index
+#
+my $q = "insert into cvtermprop (cvterm_id, type_id, value) select cvterm_id, $trait_repeat_type_cvterm_id, 'multiple' from cvterm where cvterm_id in (70668,70706,70727) returning cvtermprop_id";
+
+my $h = $f->dbh()->prepare($q);
+my @results = $h->execute();
+
+print STDERR "CVTERMPROP_ID = ".Dumper(\@results);
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
@@ -593,8 +614,8 @@ my $total_phenotypes = $trial->total_phenotypes();
 
 my $trial_phenotype_count = $trial->phenotype_count();
 
-#print STDERR "Total phentoypes: $total_phenotypes\n";
-#print STDERR "Trial phentoypes: $trial_phenotype_count\n";
+print STDERR "Total phentoypes: $total_phenotypes\n";
+print STDERR "Trial phentoypes: $trial_phenotype_count\n";
 is($total_phenotypes, $total_phenotypes_before_store + 6, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
