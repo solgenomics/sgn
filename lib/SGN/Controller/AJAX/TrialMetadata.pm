@@ -5125,6 +5125,22 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         return;
     }
 
+    # Add entry numbers
+    foreach my $trial_id (@trial_ids) {
+        my $project = CXGN::Project->new({bcs_schema => $schema, trial_id => $trial_id});
+        my $entry_numbers = $project->get_entry_numbers();
+        my $trial_name = $project->name();
+        if ( $entry_numbers ) {
+            foreach my $accession_id (keys %$entry_numbers) {
+                foreach my $plot (@{$results->{plots}}) {
+                    if ( $plot->{trial_name} eq $trial_name && $plot->{accession_id} eq $accession_id ) {
+                        $plot->{entry_number} = $entry_numbers->{$accession_id};
+                    }
+                }
+            }
+        }
+    };
+
     # Generate CSV file
     my $filename;
     my @data;
@@ -5133,7 +5149,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         my $col = $type . "_order";
 
         # Add CSV headers
-        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control");
+        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control");
         push(@data, \@headers);
 
         # Add plot rows
@@ -5148,6 +5164,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     $_->{plot_number},
                     $_->{plot_name},
                     $_->{accession_name},
+                    $_->{entry_number},
                     $_->{seedlot_name},
                     $_->{row_number},
                     $_->{col_number},
@@ -5166,6 +5183,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     "", # plot number
                     "", # plot name
                     "", # accession
+                    "", # entry number
                     "", # seedlot
                     $_->{row_number},
                     $_->{col_number},
@@ -5182,7 +5200,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         $filename = "harvestmaster_" . join("-", @trial_ids) . ".csv";
 
         # Add CSV headers
-        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "seedlot_name", "rep_number", "block_number", "is_a_control");
+        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "rep_number", "block_number", "is_a_control");
         push(@data, \@headers);
 
         # Add plot rows
@@ -5199,6 +5217,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     $_->{plot_number},
                     $_->{plot_name},
                     $_->{accession_name},
+                    $_->{entry_number},
                     $_->{seedlot_name},
                     $_->{rep_number},
                     $_->{block_number},
@@ -5217,6 +5236,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     "", # plot number
                     "", # plot name
                     "", # accession
+                    "", # entry number
                     "", # seedlot
                     "", # rep
                     "", # block
