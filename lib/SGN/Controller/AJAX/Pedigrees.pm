@@ -63,6 +63,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $pedigrees_file_type = 'excel'
     } elsif ($text_pedigrees_upload){
         $upload = $text_pedigrees_upload;
+        $upload_type = 'ValidatePedigreesText';        
         $pedigrees_file_type = 'text';
     }
 
@@ -106,7 +107,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     my $pedigree_check;
     my $error;
-    if ($xlsx_pedigrees_upload) {
+#    if ($xlsx_pedigrees_upload) {
 
         $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
         $parser->load_plugin($upload_type);
@@ -137,101 +138,101 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
             print STDERR "PEDIGREE CHECK =".Dumper($pedigree_check)."\n";
         }
 
-    } else {
+#    } else {
 
     # check if all accessions exist
     #
-    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-    my %stocks;
+#    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+#    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+#    my %stocks;
 
-    my $header = <$F>;
-    $header =~ s/\r//g;
-    chomp($header);
-    my ($progeny_name, $female_parent_accession, $male_parent_accession, $type) =split /\t/, $header;
+#    my $header = <$F>;
+#    $header =~ s/\r//g;
+#    chomp($header);
+#    my ($progeny_name, $female_parent_accession, $male_parent_accession, $type) =split /\t/, $header;
 
-    my %header_errors;
+#    my %header_errors;
 
-    if ($progeny_name ne 'progeny name') {
-	$header_errors{'progeny name'} = "First column must have header 'progeny name' (not '$progeny_name'); ";
-    }
+#    if ($progeny_name ne 'progeny name') {
+#	$header_errors{'progeny name'} = "First column must have header 'progeny name' (not '$progeny_name'); ";
+#    }
 
-    if ($female_parent_accession ne 'female parent accession') {
-	$header_errors{'female parent accession'} = "Second column must have header 'female parent accession' (not '$female_parent_accession'); ";
-    }
+#    if ($female_parent_accession ne 'female parent accession') {
+#	$header_errors{'female parent accession'} = "Second column must have header 'female parent accession' (not '$female_parent_accession'); ";
+#    }
 
-    if ($male_parent_accession ne 'male parent accession') {
-	$header_errors{'male parent accession'} = "Third column must have header 'male parent accession' (not '$male_parent_accession'); ";
-    }
+#    if ($male_parent_accession ne 'male parent accession') {
+#	$header_errors{'male parent accession'} = "Third column must have header 'male parent accession' (not '$male_parent_accession'); ";
+#    }
 
-    if ($type ne 'type') {
-	$header_errors{'type'} = "Fourth column must have header 'type' (not '$type');";
-    }
+#    if ($type ne 'type') {
+#	$header_errors{'type'} = "Fourth column must have header 'type' (not '$type');";
+#    }
 
-    if (%header_errors) {
-	my $error = join "<br />", values %header_errors;
-	$c->stash->{rest} = { error => $error, archived_filename_with_path => $archived_filename_with_path };
-	return;
-    }
+#    if (%header_errors) {
+#	my $error = join "<br />", values %header_errors;
+#	$c->stash->{rest} = { error => $error, archived_filename_with_path => $archived_filename_with_path };
+#	return;
+#    }
 
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1, doubled_haploid => 1, dihaploid_induction => 1 );
-    my %errors;
+#    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1, doubled_haploid => 1, dihaploid_induction => 1 );
+#    my %errors;
 
-    while (<$F>) {
-        chomp;
-        $_ =~ s/\r//g;
-        my @acc = split /\t/;
-        for(my $i=0; $i<3; $i++) {
-            if ($acc[$i] =~ /\,/) {
-                my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
-                foreach (@a) {
-                    if ($_){
-                        $_ =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-                        $stocks{$_}++;
-                    }
-                };
-            }
-            else {
-                if ($acc[$i]){
-                    $acc[$i] =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-                    $stocks{$acc[$i]}++;
-                }
-            }
-        }
+#    while (<$F>) {
+#        chomp;
+#        $_ =~ s/\r//g;
+#        my @acc = split /\t/;
+#        for(my $i=0; $i<3; $i++) {
+#            if ($acc[$i] =~ /\,/) {
+#                my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
+#                foreach (@a) {
+#                    if ($_){
+#                        $_ =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+#                        $stocks{$_}++;
+#                    }
+#                };
+#            }
+#            else {
+#                if ($acc[$i]){
+#                    $acc[$i] =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+#                    $stocks{$acc[$i]}++;
+#                }
+#            }
+#        }
 
         # check if the cross types are recognized...
 	#
-        if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
-            $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib, backcross, reselected or polycross)"}=1;
-        }
-    }
-    close($F);
-    my @unique_stocks = keys(%stocks);
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations_or_vector_constructs',\@unique_stocks)->{'missing'}};
-    my $cross_validator = CXGN::List::Validate->new();
-    my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
-    if (scalar(@stocks_missing)>0){
-        $errors{"The following parents or progenies are not in the database: ".(join ",", @stocks_missing)} = 1;
-    }
+#        if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
+#            $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib, backcross, reselected or polycross)"}=1;
+#        }
+#    }
+#    close($F);
+#    my @unique_stocks = keys(%stocks);
+#    my $accession_validator = CXGN::List::Validate->new();
+#    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations_or_vector_constructs',\@unique_stocks)->{'missing'}};
+#    my $cross_validator = CXGN::List::Validate->new();
+#    my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
+#    if (scalar(@stocks_missing)>0){
+#        $errors{"The following parents or progenies are not in the database: ".(join ",", @stocks_missing)} = 1;
+#    }
 
-    if (%errors) {
-        $c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions or populations: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
-        return;
-    }
+#    if (%errors) {
+#        $c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions or populations: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
+#        return;
+#    }
 
-    print STDERR "UploadPedigreeCheck1".localtime()."\n";
-    my $pedigrees = _get_pedigrees_from_file($c, $archived_filename_with_path);
-    print STDERR "UploadPedigreeCheck2".localtime()."\n";
+#    print STDERR "UploadPedigreeCheck1".localtime()."\n";
+#    my $pedigrees = _get_pedigrees_from_file($c, $archived_filename_with_path);
+#    print STDERR "UploadPedigreeCheck2".localtime()."\n";
 
-    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
-    my $error;
+#    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
+#    my $error;
 
-    my $pedigree_check = $add->validate_pedigrees();
-    print STDERR "UploadPedigreeCheck3".localtime()."Complete\n";
+#    my $pedigree_check = $add->validate_pedigrees();
+#    print STDERR "UploadPedigreeCheck3".localtime()."Complete\n";
     #print STDERR Dumper $pedigree_check;
 
-}
+#}
     if (!$pedigree_check){
         $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
     }
