@@ -30,34 +30,40 @@ sub parse {
   my $worksheet = ( $workbook->worksheets() )[0];
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
+  my %values_map;
 
   # Get column / header information
   for my $col ( 0 .. $col_max ) {
     my $c = $worksheet->get_cell(0, $col);
     my $v = $c->value() if $c;
-    push @{$rtn{columns}}, $v;
-    $values_map{$v} = {};
+    if ( $v && $v ne '' ) {
+      push @{$rtn{columns}}, $v;
+      $values_map{$v} = {};
+    }
   }
 
   # Parse each row
-  my %values_map;
   for my $row ( 1 .. $row_max ) {
     my %row_info;
+    my $skip_row = 1;
     for my $col ( 0 .. $col_max ) {
       my $hc = $worksheet->get_cell(0, $col);
       my $hv = $hc->value() if $hc;
       my $c = $worksheet->get_cell($row, $col);
       my $v = $c->value() if $c;
 
-      $row_info{$hv} = $v;
-      $values_map{$hv}->{$v} = 1 if $v && $v ne '';
+      if ( $v && $v ne '' ) {
+        $row_info{$hv} = $v;
+        $values_map{$hv}->{$v} = 1;
+        $skip_row = 0;
+      }
     }
-    push @{$rtn{data}}, \%row_info;
+    push @{$rtn{data}}, \%row_info if !$skip_row;
   }
 
   # Parse the unique values
   foreach my $v (keys %values_map) {
-    my $vs = %values_map{$v};
+    my $vs = $values_map{$v};
     $rtn{values}->{$v} = [keys %$vs];
   }
 
