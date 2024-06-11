@@ -51,36 +51,85 @@ sub _validate_with_plugin {
     }
 
     my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1, doubled_haploid => 1, dihaploid_induction => 1 );
-
+    my %seen_stocks;
+    my $line_num = 2;
     while (<$F>) {
         chomp;
         $_ =~ s/\r//g;
-        my @acc = split /\t/;
-        for(my $i=0; $i<3; $i++) {
-            if ($acc[$i] =~ /\,/) {
-                my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
-                foreach (@a) {
-                    if ($_){
-                        $_ =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-                        $stocks{$_}++;
-                    }
-                };
+        my ($progeny, $female, $male, $cross_type) = split /\t/;
+        $progeny =~ s/^\s+|\s+$//g;
+        $female =~ s/^\s+|\s+$//g;
+        $male =~ s/^\s+|\s+$//g;
+        $cross_type =~ s/^\s+|\s+$//g;
+
+
+        if (!$female && !$male) {
+            push @error_messages, "No male parent and no female parent on line $line_num!";
+        }
+        if (!$progeny) {
+            push @error_messages, "No progeny specified on line $line_num!";
+        }
+        if (!$female) {
+            push @error_messages, "No female parent on line $line_num for $progeny!";
+        }
+        if (!$cross_type){
+            push @error_messages, "No cross type on line $line_num! Must be one of these: biparental, open, self, sib, backcross, reselected, polycross." ;
+        }
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
+            push @error_messages, "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross, sib, reselected, polycross." ;
+        }
+        if ($female eq $male) {
+            if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
+                push @error_messages, "Female parent and male parent are the same on line $line_num, but cross type is not self, sib, reselected, doubled_haploid or dihaploid_induction.";
             }
-            else {
-                if ($acc[$i]){
-                    $acc[$i] =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-                    $stocks{$acc[$i]}++;
-                }
+        }
+        if (($female && !$male) && ($cross_type ne 'open')) {
+            push @error_messages, "For $progeny on line number $line_num no male parent specified and cross_type is not open...";
+        }
+
+        elsif ($cross_type eq 'biparental') {
+            if (!$male){
+                push @error_messages, "For $progeny Cross Type is biparental, but no male parent given";
+            }
+        }
+        elsif ($cross_type eq 'backcross') {
+            if (!$male){
+                push @error_messages, "For $progeny Cross Type is backcross, but no male parent given" ;
+            }
+        }
+        elsif ($cross_type eq "sib") {
+            if (!$male){
+                push @error_messages, "For $progeny Cross Type is sib, but no male parent given" ;
+            }
+        }
+        elsif($cross_type eq "polycross") {
+            if (!$male){
+                push @error_messages, "For $progeny Cross Type is polycross, but no male parent given";
             }
         }
 
-            # check if the cross types are recognized...
-    	#
-        if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
-            $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib, backcross, reselected or polycross)"}=1;
+        if ($progeny) {
+            $stocks{$progeny}++;
+        }
+        if ($female) {
+            $stocks{$female}++;
+        }
+        if ($male) {
+            if ($cross_type eq 'open') {
+                my @a = split /\s*\,\s*/, $male;  # a comma separated list for an open pollination can be given
+                foreach (@a) {
+                    if ($_){
+                        $_ =~ s/^\s+|\s+$//g;
+                        $stocks{$_}++;
+                    }
+                };
+            } else {
+                $stocks{$male}++;
+            }
         }
     }
     close($F);
+
     my @unique_stocks = keys(%stocks);
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations_or_vector_constructs',\@unique_stocks)->{'missing'}};

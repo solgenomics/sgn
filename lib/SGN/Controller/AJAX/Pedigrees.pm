@@ -63,7 +63,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $pedigrees_file_type = 'excel'
     } elsif ($text_pedigrees_upload){
         $upload = $text_pedigrees_upload;
-        $upload_type = 'ValidatePedigreesText';        
+        $upload_type = 'ValidatePedigreesText';
         $pedigrees_file_type = 'text';
     }
 
@@ -127,7 +127,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
                     $return_error .= $error_string."<br>";
                 }
             }
-            $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_accessions_or_crosses => $parse_errors->{'missing_accessions_or_crosses'}};
+            $c->stash->{rest} = {error => $return_error};
             $c->detach();
         } else {
             my $pedigrees = $parsed_data->{pedigrees};
