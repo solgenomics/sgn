@@ -84,7 +84,7 @@ if ($url !~ /kinship\/analysis/) {
 %}
 
 % if ($url =~ /solgs\/|breeders\/trial\//) {
-    <input id="run_kinship" class="button" type="button" value="Run kinship" />
+    <input id="run_kinship" class="btn btn-success" type="button" value="Run kinship" />
 %}
 
   <& plot.mas,
