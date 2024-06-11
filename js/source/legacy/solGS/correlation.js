@@ -48,8 +48,6 @@ solGS.correlation = {
     return args;
   },
 
-/////////
-
 getCorrPopsRows: function(corrPops) {
 
   var corrPopsRows = [];
@@ -89,6 +87,7 @@ getSelectedDataType: function (corrPopId) {
   }
 
   return dataType;
+
 },
 
 getSelectedPopCorrArgs: function (runCorrElemId) {
@@ -114,6 +113,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
   }
 
   return corrArgs;
+
 },
 
 
@@ -126,10 +126,12 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     }
 
     return corrPopId;
+
   },
 
   getCorrPopsTable: function (tableId) {
     return this.createTable(tableId);
+
   },
 
   createTable: function (tableId) {
@@ -143,7 +145,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       "</tr>" +
       "</thead></table>";
 
-    console.log(`table: ${table}`)
     return table;
 
   },
@@ -207,7 +208,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 25,
+      'pageLength': 5,
       'rowId': function (a) {
         return a[5]
       }
@@ -229,6 +230,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     } else {
       return "corr_data_type_select";
     }
+
   },
 
   getRunCorrId: function (rowId) {
@@ -237,6 +239,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     } else {
       return "run_correlation";
     }
+
   },
 
   createDataTypeSelect: function (opts, rowId) {
@@ -249,6 +252,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     dataTypeGroup += "</select>";
 
     return dataTypeGroup;
+
   },
 
   populateGenCorrMenu: function () {
@@ -315,6 +319,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     };
 
     return genArgs;
+
   },
 
   runGeneticCorrelation: function (genArgs) {
@@ -328,6 +333,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     });
 
     return analysisReq;
+
   },
 
   runPhenoCorrelation: function (args) {
@@ -340,6 +346,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     });
 
     return analysisReq;
+
   },
 
   createCorrDownloadLink: function (corrArgs) {
@@ -403,7 +410,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
   },
 
 };
-////////
 
 jQuery(document).ready(function () {
   var page = document.URL;
@@ -520,29 +526,6 @@ jQuery(document).ready(function () {
     jQuery("#corr_selected_pop_type").val(selectedPopType);
   });
 });
-
-// jQuery(document).ready(function () {
-//   var corrPopsDiv = solGS.correlation.corrPopsDiv;
-//   jQuery(corrPopsDiv).change(function () {
-
-//     var selectedPop = jQuery("option:selected", this).data("pop");
-//     if (selectedPop.id) {
-//       jQuery("#corr_pop_go_btn").click(function () {
-//         if (!selectedPop.data_str) {
-//           selectedPop.data_str = "list";
-//         }
-//         solGS.correlation.displaySelectedCorrPop(selectedPop);
-//       });
-//     }
-//   });
-// });
-
-// jQuery(document).ready(function () {
-//   var url = location.pathname;
-//   if (url.match(/correlation\/analysis/)) {
-//     solGS.correlation.populateCorrPopsMenu();
-//   }
-// });
 
 
 jQuery(document).ready(function () {
