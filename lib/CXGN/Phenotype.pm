@@ -4,7 +4,7 @@ package CXGN::Phenotype;
 use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
-use JSON::Any;
+use JSON qw | encode_json decode_json |;
 
 has 'schema' => (
     isa => 'Ref',
@@ -47,7 +47,7 @@ has 'operator' => (
     is => 'rw',
     );
 
-has 'collect_timestamp' => (
+has 'collect_date' => (
     isa => 'Str|Undef',
     is => 'rw',
     );
@@ -63,14 +63,24 @@ has 'existing_trait_value' => (
     );
 
 has 'unique_time' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    );
+
+has 'uniquename' => (
     isa => 'Str',
     is => 'rw',
     );
 
-has 'plot_trait_uniquename' => (
-    isa => 'Str|Undef',
+has 'experiment' => (
+    isa => 'Bio::Chado::Schema::Result::NaturalDiversity::NdExperiment',
     is => 'rw',
     );
+
+#has 'plot_trait_uniquename' => (
+#    isa => 'Str|Undef',
+#    is => 'rw',
+#    );
 
 sub store {
     my $self = shift;
@@ -79,8 +89,15 @@ sub store {
     my %nd_experiment_md_images;
     my @overwritten_values;
 
-    my $phenotype_addtional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
-
+    if (! $self->cvterm_id()) {
+	my $row = $self->schema->resultset("Cv::Cvterm")->find( { name => $self->cvterm_name() });
+	if ($row) {
+	    $self->cvterm_id($row->cvterm_id);
+	}
+	else {
+	    die "The cvterm ".$self->cvterm_name()." does not exist. Exiting.\n";
+	}
+    }
     
     if ($self->phenotype_id) {   ### UPDATE
 	my $phenotype = $self->schema->resultset('Phenotype::Phenotype')->
@@ -95,7 +112,7 @@ sub store {
 		value      => $self->value(),
 		cvalue_id  => $self->cvterm_id(),
 		observable_id => $self->cvterm_id(),
-		uniquename => $self->plot_trait_uniquename(),
+		uniquename => $self->uniquename(),
 		collect_date => $self->collect_date(),
 		operator => $self->operator(),
 	    });
@@ -112,7 +129,7 @@ sub store {
                  WHERE stock.stock_id=?
                  AND phenotype.cvalue_id=?";
 
-	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+	my $h = $self->schema->storage->dbh()->prepare($q);
 	$h->execute($self->stock_id, $self->cvterm_id);
 
 	while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
@@ -126,12 +143,12 @@ sub store {
     }
     else {   # INSERT
 	
-	my $phenotype = $self->schema->resultset('Phenotype::Phenotype')->insert(
+	my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->create(
 	    {
 		cvalue_id     => $self->cvterm_id(),
 		observable_id => $self->cvterm_id(),
 		value         => $self->value(),
-		uniquename    => $self->plot_trait_uniquename(),
+		uniquename    => $self->uniquename(),
 		collect_date  => $self->collect_date(),
 		operator      => $self->operator(),
 	    });
@@ -139,26 +156,32 @@ sub store {
 	#$self->handle_timestamp($timestamp, $phenotype->phenotype_id);
 	#$self->handle_operator($operator, $phenotype->phenotype_id);
 	
-	my $experiment->create_related('nd_experiment_phenotypes', {
-	    phenotype_id => $phenotype->phenotype_id
-				    });
-	
-	$experiment->find_or_create_related({
-	     nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
-	 });
-	
-	$experiment_ids{$experiment->nd_experiment_id()} = 1;
+	$self->experiment->create_related('nd_experiment_phenotypes',{
+	    phenotype_id => $phenotype_row->phenotype_id });
+    	
+	$experiment_ids{$self->experiment->nd_experiment_id()} = 1;
 	if ($self->image_id) {
-	    $nd_experiment_md_images{$experiment->nd_experiment_id()} = $self->image_id;
+	    $nd_experiment_md_images{$self->experiment->nd_experiment_id()} = $self->image_id;
 	}
+
+	$self->phenotype_id($phenotype_row->phenotype_id());
     }
+    
+    return { success => 1 };
+}
+
+sub store_additional_info {
+    my $self = shift;
+    my $additional_info = shift;
+
+    my $phenotype_addtional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
     my $additional_info_stored;
     if($self->additional_info()){
 	my $pheno_additional_info = $self->schema()->resultset("Phenotype::Phenotypeprop")->find_or_create(
 	    {
 		phenotype_id => $self->phenotype_id,
 		type_id => $phenotype_addtional_info_type_id,
-
+		
 	    });
 	
 	$pheno_additional_info = $pheno_additional_info->update({
@@ -166,9 +189,10 @@ sub store {
 	    							});
 	    
         my $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+	return $additional_info_stored;
     }
-    return { success => 1, additional_info_stored => 1 };
 }
+
 
 sub store_external_references {
     my $self = shift;
@@ -187,6 +211,25 @@ sub store_external_references {
     $external_references_stored = $phenotype_external_references->value ? decode_json $phenotype_external_references->value : undef;
 
     return $external_references_stored;
+}
+
+sub store_additional_info {
+    my $self = shift;
+    my $additional_info = shift;
+
+    my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+    
+    my $pheno_additional_info = $self->schema()->resultset("Phenotype::Phenotypeprop")->find_or_create({
+	phenotype_id => $self->phenotype_id,
+	type_id       => $phenotype_additional_info_type_id,
+											       });
+    $pheno_additional_info = $pheno_additional_info->update(
+	{
+	    value => encode_json $additional_info,
+	});
+    
+    my $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+    return $additional_info_stored;
 }
 
 sub store_high_dimensional_data {
