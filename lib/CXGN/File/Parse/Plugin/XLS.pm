@@ -1,10 +1,10 @@
-package CXGN::File::Parse::Plugin::XLSX;
+package CXGN::File::Parse::Plugin::XLS;
 
 use Moose;
 use CXGN::File::Parse::Plugin::Excel;
 
 sub type {
-  return "xlsx";
+  return "xls";
 }
 
 sub parse {

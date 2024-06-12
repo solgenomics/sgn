@@ -10,29 +10,33 @@ BASIC USAGE:
   - Pass the path to the data file as the file argument when instantiating the class.
   - Then, call the parse function to read the file and parse its contents.
 
-my $parser = CXGN::File::Parse->new(
-  file => '/path/to/data.xlsx'
-);
-my $parsed = $parser->parse();
-my $errors = $parsed->{errors};
-my $columns = $parsed->{columns};
-my $data = $parsed->{data};
-my $values = $parsed->{values};
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx'
+  );
+  my $parsed = $parser->parse();
+  my $errors = $parsed->{errors};
+  my $columns = $parsed->{columns};
+  my $data = $parsed->{data};
+  my $values = $parsed->{values};
 
 OVERRIDE FILE TYPE:
   - The plugin used to read the data file is chosen based on the file's extension
   - This can be overridden by manually specifying the type in the class constructor
 
-my $parser = CXGN::File::Parse->new(
-  file => '/path/to/data.txt',
-  type => 'csv'
-);
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.txt',
+    type => 'csv'
+  );
 
 SUPPORTED FILE TYPES:
-  - xlsx = New MS Excel Format (.xlsx extension)
-  - xls = Old MS Excel Format (.xls extension)
-  - csv = Comma-separated file (.csv extension)
-  - tsv = Tab-separated file (.tsv or .txt extension)
+  - excel = MS Excel format, perl module based on type
+  - xlsx = New MS Excel Format, alias for excel
+  - xls = Old MS Excel Format, alias for excel
+  - plain = Plain text format, delimiter based on type
+  - csv = Comma-separated file, alias for plain
+  - tsv = Tab-separated file, alias for plain
+  - txt = Tab-separated file, alias for plain
+  - ssv = Semicolon-separated file, alias for plain
 
 REQUIRED COLUMNS:
   - You can include an array of required columns as required_columns
@@ -157,6 +161,7 @@ be treated as management factors / treatments.
 =cut
 
 use Moose;
+use Try::Tiny;
 use Module::Pluggable require => 1;
 
 # Path to the file that is being parsed
@@ -167,11 +172,6 @@ has 'file' => (
 );
 
 # File type, if not provided will use the file path extension to guess
-# csv = comma separated values
-# tsv = tab separated values
-# txt = (alias for tsv)
-# xls = Old MS Excel
-# xlsx = New MS Excel
 has 'type' => (
   isa => "Str",
   is => "ro"
@@ -202,15 +202,10 @@ sub parse {
     ($type) = $file =~ /\.([^.]+)$/;
   }
 
-  # Use tsv for txt files
-  $type = "tsv" if ($type eq "txt");
-
   # Check if the file exists
   if ( !-e $file ) {
     return {
-      errors => [
-        "The file $file does not exist"
-      ]
+      errors => [ "The file $file does not exist" ]
     };
   }
 
@@ -222,18 +217,31 @@ sub parse {
     }
   }
 
-  # Parse the file with the plugin
+  # Plugin found, use it to parse the file
   if ( $parser ) {
-    my $parsed = $parser->parse($file);
+
+    # Parse the file with plugin
+    my $parsed;
+    my $error;
+    try {
+      $parsed = $parser->parse($file, $type);
+    } catch {
+      $error = "Encountered error while reading and parsing file: $_";
+    };
+    if ( $error ) {
+      return {
+        errors => [ $error ]
+      };
+    }
+
+    # Get parsed columns and row data
     my $columns = $parsed->{columns};
     my $data = $parsed->{data};
 
     # Check for empty files with no data
     if ( scalar(@$columns) < 1 || scalar(@$data) < 1 ) {
       return {
-        errors => [
-          "The file has no data"
-        ]
+        errors => [ "The file has no data" ]
       };
     }
 
@@ -287,9 +295,7 @@ sub parse {
   # No parser plugin found for file type
   else {
     return {
-      errors => [
-        "No appropriate file parsing plugin for file: $file, type: $type"
-      ]
+      errors => [ "No appropriate file parsing plugin for file: $file, type: $type" ]
     };
   }
 }
