@@ -1,5 +1,161 @@
 package CXGN::File::Parse;
 
+=head1 NAME
+
+CXGN::File::Parse - a generic data file parser that can read csv, txt, xls and xlsx files (via matching plugin) into a uniform parsed data format
+
+=head1 USAGE
+
+BASIC USAGE:
+  - Pass the path to the data file as the file argument when instantiating the class.
+  - Then, call the parse function to read the file and parse its contents.
+
+my $parser = CXGN::File::Parse->new(
+  file => '/path/to/data.xlsx'
+);
+my $parsed = $parser->parse();
+my $errors = $parsed->{errors};
+my $columns = $parsed->{columns};
+my $data = $parsed->{data};
+my $values = $parsed->{values};
+
+OVERRIDE FILE TYPE:
+  - The plugin used to read the data file is chosen based on the file's extension
+  - This can be overridden by manually specifying the type in the class constructor
+
+my $parser = CXGN::File::Parse->new(
+  file => '/path/to/data.txt',
+  type => 'csv'
+);
+
+SUPPORTED FILE TYPES:
+  - xlsx = New MS Excel Format (.xlsx extension)
+  - xls = Old MS Excel Format (.xls extension)
+  - csv = Comma-separated file (.csv extension)
+  - tsv = Tab-separated file (.tsv or .txt extension)
+
+REQUIRED COLUMNS:
+  - You can include an array of required columns as required_columns
+  - The parser will check to make sure those columns are in the file
+  - The parser will check to make sure all rows have a value for the required columns
+  - The parser will return additional properties:
+      - required_columns: an array of columns that are in the data file and are specified as required
+      - optional_columns: an array of columns that are in the data file and are not specified as required
+
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx',
+    required_columns => ['accession_name', 'species_name']
+  );
+  my $parsed = $parser->parse();
+  my $errors = $parsed->{errors};
+  my $columns = $parsed->{columns};
+  my $data = $parsed->{data};
+  my $values = $parsed->{values};
+  my $required_columns = $parsed->{required_columns};
+  my $opional_columns = $parsed->{optional_columns};
+
+
+OPTIONAL COLUMNS:
+  - You can specify the optional columns by including an array as optional_columns
+  - When including just the required columns, all other columns are considered optional by default
+  - When including both required and optional columns, all other columns are considered 'additional'
+  - The parser will return additional properties:
+      - required_columns: an array of columns that are in the data file and are specified as required
+      - optional_columns: an array of columns that are in the data file and are specified as optional
+      - additional_columns: an array of columns that are in the data file and are not specified as required or optional
+
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx',
+    required_columns => ['accession_name', 'species_name'],
+    optional_columns => ['variety', 'organization']
+  );
+  my $parsed = $parser->parse();
+  my $errors = $parsed->{errors};
+  my $columns = $parsed->{columns};
+  my $data = $parsed->{data};
+  my $values = $parsed->{values};
+  my $required_columns = $parsed->{required_columns};
+  my $opional_columns = $parsed->{optional_columns};
+  my $additional_columns = $parsed->{additional_columns};
+
+=head1 DESCRIPTION
+
+The parse() function will return a hashref with the following properties:
+
+  - errors:
+    - an array of error messages, if any were encountered during the parsing
+    - this could include errors encountered when trying to read the file
+    - the parser will check for required columns and values and return error messages if any are missing
+
+  - columns:
+    - an array of all of the column headers in the file
+
+  - data:
+    - an array of hashrefs, where each hashref represents one row of data
+    - the key in the hashref will be the column header
+    - the value in the hashref will be the cell value for that row/column
+    - empty cell values will be included in the hashref as undef
+    - completely empty rows will be skipped (not included in `data`)
+    - a _row property is added to indicate the original row number in the data file, where 1 is the header row
+
+  - values:
+    - a hashref containing the unique values in the data file for each column
+    - the key of the hashref will be the column header
+    - the value of the hashref will be an arrayref of the unique values for that column
+    - For example, if you want to get the trial names in a trial upload:
+      - $trial_names = $parsed->{values}->{trial_name};
+
+When required_columns is included in the constructor, the parse() function will also return:
+
+  - required_columns:
+    - an array of the column headers in the file that are also specified as required
+
+  - optional_columns:
+    - an array of the column headers in the file that are not specified as required
+
+When both required_columns and optional_columns are included in the constructor, the parse() function will also return:
+
+  - required_columns:
+    - an array of the column headers in the file that are also specified as required
+
+  - optional_columns:
+    - an array of the column headers in the file that are also specified as optional
+
+  - additional_columns:
+    - an array of the column headers in the file that are neither required nor optional
+
+For example, the trial upload template can specify the required columns (such as trial_name, plot_number, etc),
+and the optional columns (such as planting_date, harvest_date, etc).  Any of the 'additional_columns' will
+be treated as management factors / treatments.
+
+=head1 PLUGINS
+
+  This Class uses a plugin structure, where a CXGN::File::Parse::Plugin will be used to read the file
+  and parse the data into a unified structure.  The plugin MUST provide two functions:
+
+    - type: which returns the file type that the plugin handles (xls, xlsx, csv, tsv, etc)
+
+    - parse(file): which reads the file and parses its contents.  The function should return a hashref with the keys:
+      - errors: an arrayref of error messages encountered while reading and parsing the file
+      - columns: an arrayref of the column header values
+      - data: an arrayref of hashrefs with the individual row data (see notes below)
+      - values: a hashref containing the unique values for each column (key = column header, value = arrayref of unique values)
+
+  Some notes on parsing the contents of the file:
+    - A `_row` property should be added to each item in `data`.  The value should be the original
+      row number from the data file, where row 1 is the header row and row 2 is the first row data.
+    - Completely blank rows should be skipped.
+    - An empty cell value should be added as undef to the `data` hash.
+    - Empty values should not be added to `values`.
+    - Required columns and values will be checked by the CXGN::File::Parse->parse() function, so they
+      don't need to be checked by the plugin.
+
+=head1 AUTHORS
+
+  David Waring <djw64@cornell.edu>
+
+=cut
+
 use Moose;
 use Module::Pluggable require => 1;
 
@@ -55,7 +211,7 @@ sub parse {
       errors => [
         "The file $file does not exist"
       ]
-    }
+    };
   }
 
   # Find the appropriate parser plugin
@@ -74,7 +230,11 @@ sub parse {
 
     # Check for empty files with no data
     if ( scalar(@$columns) < 1 || scalar(@$data) < 1 ) {
-      push @{$parsed->{errors}}, "The file has no data";
+      return {
+        errors => [
+          "The file has no data"
+        ]
+      };
     }
 
     # Handle required / optional columns
@@ -105,6 +265,17 @@ sub parse {
         }
         else {
           push @{$parsed->{optional_columns}}, $col;
+        }
+      }
+
+      # Check the data for missing required values
+      foreach my $d (@$data) {
+        foreach my $c ( @{$parsed->{required_columns}} ) {
+          my $v = $d->{$c};
+          if ( !$v || $v eq '' ) {
+            my $r = $d->{_row};
+            push @{$parsed->{errors}}, "Required column $c does not have a value in row $r";
+          }
         }
       }
 

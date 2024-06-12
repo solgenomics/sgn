@@ -23,7 +23,6 @@ sub parse {
   my $parser = Spreadsheet::ParseXLSX->new();
   my $workbook = $parser->parse($file);
   if ( !$workbook ) {
-    print STDERR "PARSE XLSX ERROR: " . $parser->error() . "\n";
     push @{$rtn{errors}}, $parser->error();
     return \%rtn;
   }
@@ -44,16 +43,18 @@ sub parse {
 
   # Parse each row
   for my $row ( 1 .. $row_max ) {
-    my %row_info;
+    my %row_info = (
+      _row => $row+1
+    );
     my $skip_row = 1;
     for my $col ( 0 .. $col_max ) {
       my $hc = $worksheet->get_cell(0, $col);
       my $hv = $hc->value() if $hc;
       my $c = $worksheet->get_cell($row, $col);
       my $v = $c->value() if $c;
+      $row_info{$hv} = $v;
 
       if ( $v && $v ne '' ) {
-        $row_info{$hv} = $v;
         $values_map{$hv}->{$v} = 1;
         $skip_row = 0;
       }
