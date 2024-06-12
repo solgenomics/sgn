@@ -33,16 +33,16 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $c = shift;
 
     if (!$c->user()) {
-	print STDERR "User not logged in... not uploading pedigrees.\n";
-	$c->stash->{rest} = {error => "You need to be logged in to upload pedigrees." };
-	return;
+        print STDERR "User not logged in... not uploading pedigrees.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to upload pedigrees." };
+        return;
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
-	return;
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
+        return;
     }
 
     my $time = DateTime->now();
@@ -83,13 +83,13 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $user_role = shift @user_roles;
 
     my $params = {
-	tempfile => $upload_tempfile,
-	subdirectory => $subdirectory,
-	archive_path => $c->config->{archive_path},
-	archive_filename => $upload_original_name,
-	timestamp => $timestamp,
-	user_id => $user_id,
-	user_role => $user_role,
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role,
     };
 
     my $uploader = CXGN::UploadFile->new( $params );
@@ -98,8 +98,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $archived_filename_with_path = $uploader->archive();
 
     if (!$archived_filename_with_path) {
-	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-	return;
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
     }
 
     $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -107,132 +107,38 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     my $pedigree_check;
     my $error;
-#    if ($xlsx_pedigrees_upload) {
 
-        $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-        $parser->load_plugin($upload_type);
-        $parsed_data = $parser->parse();
-        print STDERR "PARSED DATA =".Dumper($parsed_data) . "\n";
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin($upload_type);
+    $parsed_data = $parser->parse();
+    print STDERR "PARSED DATA =".Dumper($parsed_data) . "\n";
 
-        if (!$parsed_data){
-            my $return_error = '';
-            my $parse_errors;
-            if (!$parser->has_parse_errors() ){
-                $c->stash->{rest} = {error_string => "Could not get parsing errors"};
-            } else {
-                $parse_errors = $parser->get_parse_errors();
-                #print STDERR Dumper $parse_errors;
-
-                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                    $return_error .= $error_string."<br>";
-                }
-            }
-            $c->stash->{rest} = {error => $return_error};
-            $c->detach();
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
-            my $pedigrees = $parsed_data->{pedigrees};
-            my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
-            my $error;
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
 
-            $pedigree_check = $add->validate_pedigrees();
-            print STDERR "PEDIGREE CHECK =".Dumper($pedigree_check)."\n";
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
         }
 
-#    } else {
+        $c->stash->{rest} = {error => $return_error};
+        $c->detach();
 
-    # check if all accessions exist
-    #
-#    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
-#    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-#    my %stocks;
+    } else {
+        my $pedigrees = $parsed_data->{pedigrees};
+        my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
+        my $error;
 
-#    my $header = <$F>;
-#    $header =~ s/\r//g;
-#    chomp($header);
-#    my ($progeny_name, $female_parent_accession, $male_parent_accession, $type) =split /\t/, $header;
+        $pedigree_check = $add->validate_pedigrees();
+        print STDERR "PEDIGREE CHECK =".Dumper($pedigree_check)."\n";
+    }
 
-#    my %header_errors;
-
-#    if ($progeny_name ne 'progeny name') {
-#	$header_errors{'progeny name'} = "First column must have header 'progeny name' (not '$progeny_name'); ";
-#    }
-
-#    if ($female_parent_accession ne 'female parent accession') {
-#	$header_errors{'female parent accession'} = "Second column must have header 'female parent accession' (not '$female_parent_accession'); ";
-#    }
-
-#    if ($male_parent_accession ne 'male parent accession') {
-#	$header_errors{'male parent accession'} = "Third column must have header 'male parent accession' (not '$male_parent_accession'); ";
-#    }
-
-#    if ($type ne 'type') {
-#	$header_errors{'type'} = "Fourth column must have header 'type' (not '$type');";
-#    }
-
-#    if (%header_errors) {
-#	my $error = join "<br />", values %header_errors;
-#	$c->stash->{rest} = { error => $error, archived_filename_with_path => $archived_filename_with_path };
-#	return;
-#    }
-
-#    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1, doubled_haploid => 1, dihaploid_induction => 1 );
-#    my %errors;
-
-#    while (<$F>) {
-#        chomp;
-#        $_ =~ s/\r//g;
-#        my @acc = split /\t/;
-#        for(my $i=0; $i<3; $i++) {
-#            if ($acc[$i] =~ /\,/) {
-#                my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
-#                foreach (@a) {
-#                    if ($_){
-#                        $_ =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-#                        $stocks{$_}++;
-#                    }
-#                };
-#            }
-#            else {
-#                if ($acc[$i]){
-#                    $acc[$i] =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-#                    $stocks{$acc[$i]}++;
-#                }
-#            }
-#        }
-
-        # check if the cross types are recognized...
-	#
-#        if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
-#            $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib, backcross, reselected or polycross)"}=1;
-#        }
-#    }
-#    close($F);
-#    my @unique_stocks = keys(%stocks);
-#    my $accession_validator = CXGN::List::Validate->new();
-#    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations_or_vector_constructs',\@unique_stocks)->{'missing'}};
-#    my $cross_validator = CXGN::List::Validate->new();
-#    my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
-#    if (scalar(@stocks_missing)>0){
-#        $errors{"The following parents or progenies are not in the database: ".(join ",", @stocks_missing)} = 1;
-#    }
-
-#    if (%errors) {
-#        $c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions or populations: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
-#        return;
-#    }
-
-#    print STDERR "UploadPedigreeCheck1".localtime()."\n";
-#    my $pedigrees = _get_pedigrees_from_file($c, $archived_filename_with_path);
-#    print STDERR "UploadPedigreeCheck2".localtime()."\n";
-
-#    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
-#    my $error;
-
-#    my $pedigree_check = $add->validate_pedigrees();
-#    print STDERR "UploadPedigreeCheck3".localtime()."Complete\n";
-    #print STDERR Dumper $pedigree_check;
-
-#}
     if (!$pedigree_check){
         $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
     }
@@ -241,7 +147,6 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     } else {
         $c->stash->{rest} = {archived_file_name => $archived_filename_with_path, pedigrees_file_type => $pedigrees_file_type};
     }
-
 
 }
 
@@ -265,25 +170,21 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $parser;
     my $parsed_data;
     my $pedigrees;
-#    if ($pedigrees_file_type eq 'excel') {
-        $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_file_name);
-        $parser->load_plugin($upload_type);
-        $parsed_data = $parser->parse();
-        print STDERR "PARSED DATA =".Dumper($parsed_data) . "\n";
-        if (!$parsed_data){
-            my $return_error = '';
-            my $parse_errors;
-            if (!$parser->has_parse_errors() ){
-                $c->stash->{rest} = {error => "Could not get parsing errors"};
-            }
-        } else {
-            $pedigrees = $parsed_data->{pedigrees};
-            print STDERR "PEDIGREES =".Dumper($pedigrees)."\n";
-        }
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_file_name);
+    $parser->load_plugin($upload_type);
+    $parsed_data = $parser->parse();
+    print STDERR "PARSED DATA =".Dumper($parsed_data) . "\n";
 
-#    } else {
-#        $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
-#    }
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error => "Could not get parsing errors"};
+        }
+    } else {
+        $pedigrees = $parsed_data->{pedigrees};
+        print STDERR "PEDIGREES =".Dumper($pedigrees)."\n";
+    }
 
     my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
     my $error;
