@@ -837,7 +837,7 @@ sub stockproperty_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
     my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, 'stock_property')->cvterm_id();
     my @response_list;
-    my $q = "SELECT distinct value FROM stockprop WHERE type_id=? and value ilike ?";
+    my $q = "SELECT distinct value FROM stockprop WHERE type_id=? and value ilike ? LIMIT 100";
     my $sth = $schema->storage->dbh->prepare($q);
     $sth->execute( $cvterm_id, '%'.$term.'%');
     while  (my ($val) = $sth->fetchrow_array ) {
@@ -1150,7 +1150,7 @@ sub pedigree_female_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
-    WHERE pedigree_female_parent.uniquename ilike ? ORDER BY pedigree_female_parent.uniquename";
+    WHERE pedigree_female_parent.uniquename ilike ? ORDER BY pedigree_female_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
@@ -1188,7 +1188,7 @@ sub pedigree_male_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
-    WHERE pedigree_male_parent.uniquename ilike ? ORDER BY pedigree_male_parent.uniquename";
+    WHERE pedigree_male_parent.uniquename ilike ? ORDER BY pedigree_male_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
@@ -1225,7 +1225,7 @@ sub cross_female_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
-    WHERE cross_female_parent.uniquename ilike ? ORDER BY cross_female_parent.uniquename";
+    WHERE cross_female_parent.uniquename ilike ? ORDER BY cross_female_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
@@ -1263,7 +1263,7 @@ sub cross_male_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
-    WHERE cross_male_parent.uniquename ilike ? ORDER BY cross_male_parent.uniquename";
+    WHERE cross_male_parent.uniquename ilike ? ORDER BY cross_male_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
@@ -1273,6 +1273,72 @@ sub cross_male_parent_autocomplete_GET : Args(0){
 
     $c->stash->{rest} = \@response_list;
 
+}
+
+
+=head2 only_accession_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub only_accession_autocomplete : Local : ActionClass('REST') { }
+
+sub only_accession_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='accession' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 vector_construct_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub vector_construct_autocomplete : Local : ActionClass('REST') { }
+
+sub vector_construct_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='vector_construct' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
 }
 
 
@@ -1924,15 +1990,65 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my $trial_related_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
     my $result = $trial_related_stock->get_trial_related_stock();
     my @stocks;
+    my @accessions;
+    my @crosses;
+    my @family_names;
+    my @plots;
+    my @subplots;
+    my @plants;
+    my @tissue_samples;
+    my @seedlots;
+    my @others;
     foreach my $r (@$result){
-      my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      my $url;
-      if ($cvterm_name eq 'seedlot'){
-          $url = qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>};
-      } else {
-          $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
-      }
-      push @stocks, [$url, $cvterm_name, $stock_name];
+        my ($stock_id, $stock_name, $cvterm_name) = @$r;
+        my $url;
+
+        if ($cvterm_name eq 'cross') {
+            $url = qq{<a href = "/cross/$stock_id">$stock_name</a>};
+        } elsif ($cvterm_name eq 'family_name') {
+            $url = qq{<a href = "/family/$stock_id/">$stock_name</a>};
+        } else {
+            $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
+        }
+
+        if ($cvterm_name eq 'accession') {
+            push @accessions, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'cross') {
+            push @crosses, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'family_name') {
+            push @family_names, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'plot') {
+            push @plots, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'subplot') {
+            push @subplots, [$cvterm_name, $url, $stock_name];
+        } elsif ($cvterm_name eq 'plant') {
+            push @plants, [$cvterm_name, $url, $stock_name];
+        }
+    }
+
+    if (scalar(@accessions) > 0) {
+        push @stocks, @accessions;
+    }
+    if (scalar(@crosses) > 0) {
+        push @stocks, @crosses;
+    }
+    if (scalar(@family_names) > 0) {
+        push @stocks, @family_names;
+    }
+    if (scalar(@plots) > 0) {
+        push @stocks, @plots;
+    }
+    if (scalar(@subplots) > 0) {
+        push @stocks, @subplots;
+    }
+    if (scalar(@plants) > 0) {
+        push @stocks, @plants;
+    }
+    if (scalar(@seedlots) > 0) {
+        push @stocks, @seedlots;
+    }
+    if (scalar(@others) > 0) {
+        push @stocks, @others;
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1948,8 +2064,11 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my $result = $progenies->get_progenies();
     my @stocks;
     foreach my $r (@$result){
-      my ($cvterm_name, $stock_id, $stock_name) = @$r;
-      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
+	my ($cvterm_name, $stock_id, $stock_name, $cross_type) = @$r;
+
+	if (! $cross_type) { $cross_type = 'unspecified'; }
+
+	push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name ];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1972,14 +2091,42 @@ sub get_siblings:Chained('/stock/get_stock') PathPart('datatables/siblings') Arg
         foreach my $sib(@$family){
             my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $sibling_id, $sibling_name, $cross_type) = @$sib;
             if ($sibling_id != $stock_id) {
-                push @siblings, [ qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
-                qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
-                qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type, $sibling_name ];
+                push @siblings, [
+		    qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
+		    qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+		    qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
+		    $cross_type,
+		    $sibling_name ];
             }
         }
     }
     $c->stash->{rest}={data=>\@siblings};
 }
+
+sub get_parents :Chained('/stock/get_stock') PathPart('datatables/parents') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$stock_id});
+    my $parents = $stock->get_parents();
+    my $female_parent = $parents->{'mother'};
+    my $female_parent_id = $parents->{'mother_id'};
+    my $male_parent = $parents->{'father'};
+    my $male_parent_id = $parents->{'father_id'};
+
+    my $female_parent_link = qq { <a href="/stock/$female_parent_id/view">$female_parent</a> };
+
+    my $male_parent_link = qq { <a href="/stock/$male_parent_id/view">$male_parent</a> };
+
+    my $cross_type = $parents->{'cross_type'};
+
+    print STDERR "PARENTS: ".Dumper($parents);
+    $c->stash->{rest}= { data => [ [ $female_parent_link, $male_parent_link, $cross_type ] ] };
+
+}
+
 
 sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
     my $self = shift;
@@ -2019,12 +2166,31 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
 
 }
+
+
+sub get_plot_plant_related_seedlots:Chained('/stock/get_stock') PathPart('datatables/plot_plant_related_seedlots') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_plot_plant_related_seedlots();
+    my @stocks;
+    foreach my $r (@$result){
+        my ($transaction_type, $stock_type, $stock_id, $stock_name) = @$r;
+        push @stocks, [$transaction_type, $stock_type, qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>}, $stock_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+}
+
 
 sub get_stock_datatables_genotype_data : Chained('/stock/get_stock') :PathPart('datatables/genotype_data') : ActionClass('REST') { }
 
@@ -2277,7 +2443,7 @@ sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_a
         $c->stash->{rest} = {error=>$result->{error}};
         $c->detach();
     }
-    
+
     $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
 }
 
@@ -2294,11 +2460,11 @@ sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart
     my @file_array;
     my %file_info;
 
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype 
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
     FROM phenome.stock_file
-    JOIN metadata.md_files using(file_id) 
+    JOIN metadata.md_files using(file_id)
     LEFT JOIN metadata.md_metadata as m using(metadata_id)
-    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) 
+    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
     WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
 
     my $h = $c->dbc->dbh()->prepare($q);
@@ -2374,5 +2540,26 @@ sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Arg
 
     $c->stash->{rest} = \@response_list;
 }
+
+
+sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/vector_related_stocks') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_vector_related_stocks();
+    my @related_stocks;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        push @related_stocks, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $vector_name, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+    }
+
+    $c->stash->{rest}={data=>\@related_stocks};
+}
+
 
 1;

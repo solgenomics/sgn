@@ -5,9 +5,11 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
+use File::Temp qw| tempfile tempdir |;
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
+use Text::CSV ("csv");
 use strict;
 use warnings;
 
@@ -32,16 +34,16 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     my $dataset_name = $c->req->param("name");
     my $dataset_description = $c->req->param("description");
 
-    my $people_schema =  $c->dbic_schema("CXGN::People::Schema");
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $people_schema =  $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
     if (CXGN::Dataset->exists_dataset_name($people_schema, $dataset_name)) {
 	$c->stash->{rest} = { error => "The dataset with name $dataset_name already exists. Please choose another name." };
 	return;
     }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-
     my $dataset = CXGN::Dataset->new( {
-	schema => $c->dbic_schema("Bio::Chado::Schema"),
+	schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
 	people_schema => $people_schema,
 				      });
 
@@ -105,7 +107,75 @@ sub retrieve_outliers_from_dataset :Path('/ajax/dataset/retrieve_outliers') Args
     $c->stash->{rest} = { outliers => $outliers };
 }
 
-sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
+sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $dataset_trait = $c->req->param('dataset_trait');
+
+    print STDERR "dataset_trait: $dataset_trait";
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id,
+        include_phenotype_primary_key => 1,
+    });
+    #
+    my $phenotypes_data_ref = $dataset->retrieve_phenotypes();
+    my @columns = @{$phenotypes_data_ref->[0]};
+    # print STDERR "columns: ", join(", ", @columns);
+
+    my ($trait_index) = grep { @columns[$_] eq $dataset_trait } (0 ..  scalar @columns -1);
+    my ($trait_id_index) = grep { @columns[$_] eq "${dataset_trait}_phenotype_id" } (0 ..  scalar @columns -1);
+
+    $c->tempfiles_subdir("rosners_files");
+    my ($trait_file_path, $temp_file) = $c->tempfile(TEMPLATE=>"rosners_files/trait_XXXXX", SUFFIX => '.csv');
+    my ($stat_file_path, $stat_file) = $c->tempfile(TEMPLATE=>"rosners_files/stat_XXXXX", SUFFIX => '.csv');
+
+    my $csv = Text::CSV->new ({ binary => 1});
+
+    open my $fh, ">:encoding(utf8)", $trait_file_path or die "$trait_file_path: $!";
+    foreach my $row (@$phenotypes_data_ref) {
+        $csv->say ($fh, [$row->[$trait_index], $row->[$trait_id_index]]);
+    }
+    close $fh;
+
+    # run cluster with R
+    my $cmd = CXGN::Tools::Run->new({
+        backend => $c->config->{backend},
+        submit_host=>$c->config->{cluster_host},
+        temp_base => $c->config->{cluster_shared_tempdir} . "/rosners_files",
+        queue => $c->config->{'web_cluster_queue'},
+        do_cleanup => 0,
+        # don't block and wait if the cluster looks full
+        max_cluster_jobs => 1_000_000_000,
+    });
+
+    $cmd->run_cluster(
+        "Rscript ",
+        $c->config->{basepath} . "/R/dataset/rosner_test.R",
+        $trait_file_path,
+        $stat_file_path
+    );
+    $cmd->alive;
+    $cmd->is_cluster(1);
+    $cmd->wait;
+
+    # print STDERR Dumper $stat_file_path;
+    my $aoa = csv (in => $stat_file_path);   # as array of hash
+
+    $c->stash->{rest} = {
+        message            => "Rosners TEST Successfully!",
+        dataset_id         => $dataset_id,
+        dataset_trait      => $dataset_trait,
+        data               => \@columns,
+        index              => $trait_index,
+        phenotype_id_index => $trait_id_index,
+        file               => $aoa,
+    };
+}
+
+sub retrieve_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -115,9 +185,10 @@ sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
 	return;
     }
 
+    my $sp_person_id = $c->user() ? $c->user()->get_object->get_sp_person_id() : undef;
     my $datasets = CXGN::Dataset->get_datasets_by_user(
-	$c->dbic_schema("CXGN::People::Schema"),
-	$user->get_object()->get_sp_person_id()
+	$c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+	$sp_person_id
 	);
 
     $c->stash->{rest} = $datasets;
@@ -133,9 +204,11 @@ sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
         return;
     }
 
+    my $sp_person_id = $c->user() ? $c->user()->get_object->get_sp_person_id() : undef;
+
     my $datasets = CXGN::Dataset->get_datasets_by_user(
-        $c->dbic_schema("CXGN::People::Schema"),
-        $user->get_object()->get_sp_person_id()
+        $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+        $sp_person_id
         );
 
     my @result;
@@ -151,8 +224,10 @@ sub get_datasets_public :Path('/ajax/dataset/get_public') {
     my $self = shift;
     my $c = shift;
 
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
     my $datasets = CXGN::Dataset->get_datasets_public(
-        $c->dbic_schema("CXGN::People::Schema")
+        $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)
         );
 
     $c->stash->{rest} = $datasets;
@@ -173,8 +248,8 @@ sub set_datasets_public :Path('/ajax/dataset/set_public') Args(1) {
 
     my $dataset = CXGN::Dataset->new(
         {
-	    schema => $c->dbic_schema("Bio::Chado::Schema"),
-            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    schema => $c->dbic_schema("Bio::Chado::Schema", undef, $logged_in_user),
+            people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $logged_in_user),
             sp_dataset_id=> $dataset_id,
         });
     print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
@@ -197,10 +272,12 @@ sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     my $c = shift;
     my $dataset_id = shift;
 
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
     my $dataset = CXGN::Dataset->new(
 	{
-	    schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
 	    sp_dataset_id=> $dataset_id,
 	});
 
@@ -229,7 +306,7 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     my $dimension_data;
     my $function_name = 'retrieve_'.$dimension;
     if ($dataset->can($function_name)) {
-	
+
 	$dimension_data = $dataset->$function_name();
     }
     else {
@@ -256,8 +333,8 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
 
     my $dataset = CXGN::Dataset->new(
 	{
-	    schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    schema => $c->dbic_schema("Bio::Chado::Schema", undef, $logged_in_user),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $logged_in_user),
 	    sp_dataset_id=> $dataset_id,
 	});
 

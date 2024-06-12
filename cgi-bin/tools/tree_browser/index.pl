@@ -686,9 +686,10 @@ else {
                 splice @ops, $i, 1;
             }
         }
-
-        my $tooltip = $n->get_tooltip()
-          or "Node " . $n->get_node_key() . ": " . $n->get_label()->get_name();
+        my $tooltip = $n->get_tooltip();
+        if (!$tooltip) {
+	    $tooltip = "Node " . $n->get_node_key() . ": " . $n->get_label()->get_name();
+	}
 
         #    my $tooltip = "Node " . $n->get_node_key();
         my $model = $n->get_attribute("model");

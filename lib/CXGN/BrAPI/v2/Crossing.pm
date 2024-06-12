@@ -195,7 +195,7 @@ sub update_crossingproject {
     my $user_type = shift;
 
     my $schema = $self->bcs_schema;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
     my $phenome_schema = $self->phenome_schema();
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $status = $self->status;
@@ -359,7 +359,7 @@ sub store_crosses { #crosses must belong to same experiment
 
     my $chado_schema = $self->bcs_schema;
     my $phenome_schema = $self->phenome_schema();
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $status = $self->status;
     my $page_size = $self->page_size;
@@ -507,8 +507,9 @@ sub _format_cross {
     my $owner_name = shift;
     my $cross_combination = shift;
 
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
 
     if ($female_plot_id){

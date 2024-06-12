@@ -55,15 +55,14 @@ $collapsed = 1;
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.kinship"] &>
+<& /solgs/tools/base.mas &>
+<& /util/import_javascript.mas, classes => ["solGS.kinship", "solGS.heatMap"] &>
 
 % if ($url =~ /kinship\/analysis/) {
-
-<& /page/page_title.mas,
-   title => 'Kinship and Inbreeding Analysis',
-   collapsed => $collapsed
-  &>
-
+  <& /page/page_title.mas,
+    title => 'Kinship and Inbreeding Analysis',
+    collapsed => $collapsed
+    &>
 %}
 
 <&| /page/info_section.mas,
@@ -72,38 +71,26 @@ $collapsed = 1;
   title       => $title
 &>
 
-
 <div id='kinship_div'>
-
 % if ($url =~ /kinship\/analysis|breeders\/trial\//) {
-
-  <& /solgs/genotyping_protocol/index.mas &>
-
+    <& /solgs/genotyping_protocol/index.mas &>
 %}
-
 
 % if ($url =~ /kinship\/analysis/) {
-
-  <& /solgs/tools/select_menu.mas,
-  analysis_type => 'kinship' &>
-
+    <& /solgs/tools/select_menu.mas,
+    analysis_type => 'kinship' &>
 %}
-
-
 
 % if ($url =~ /solgs\/|breeders\/trial\//) {
-
     <input id="run_kinship" class="button" type="button" value="Run kinship" />
-
-
 %}
 
-<& plot.mas,
-     pop_id => $pop_id,
-    list_id => $list_id,
-    dataset_id => $dataset_id,
-    data_structure => $data_structure,
-&>
+  <& plot.mas,
+      pop_id => $pop_id,
+      list_id => $list_id,
+      dataset_id => $dataset_id,
+      data_structure => $data_structure,
+  &>
 
 </div>
 

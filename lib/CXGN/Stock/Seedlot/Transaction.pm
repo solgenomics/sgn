@@ -75,10 +75,15 @@ sub BUILD {
         $self->timestamp($data->{timestamp});
         $self->operator($data->{operator});
         $self->description($data->{description});
-        if ($row->subject_id == $seedlot_id){
-            $self->factor(1);
-        } elsif ($row->object_id == $seedlot_id){
-            $self->factor(-1);
+
+        if ($row->subject_id == $row->object_id) {
+            $self->factor($data->{factor});
+        } else {
+	        if ($row->subject_id == $seedlot_id){
+                $self->factor(1);
+            } elsif ($row->object_id == $seedlot_id){
+                $self->factor(-1);
+            }
         }
     }
 }

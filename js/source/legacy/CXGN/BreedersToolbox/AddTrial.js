@@ -75,9 +75,6 @@ jQuery(document).ready(function ($) {
         else if (trial_year === '') {
             alert("Please select a trial year");
         }
-        else if (planting_date === '') {
-            alert("Please select a trial planting date");
-        }
         else if (plot_width < 0 ){
             alert("Please check the plot width");
         }
@@ -645,7 +642,7 @@ jQuery(document).ready(function ($) {
         }
 
 	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
-	
+
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -935,8 +932,8 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
-        if(planting_date === '' || desc === '') {
-            alert('Planting date and description are required.');
+        if(desc === '') {
+            alert('Description is required.');
             return;
         }
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
@@ -2101,7 +2098,7 @@ jQuery(document).ready(function ($) {
         }
 
 	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-	
+
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,

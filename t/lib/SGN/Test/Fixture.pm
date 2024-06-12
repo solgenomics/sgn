@@ -87,6 +87,9 @@ sub BUILD {
     $self->username('janedoe');
 
     $self->dbstats_start($self->get_db_stats());
+
+    $self->auditstats_start($self->get_auditdb_stats());
+
 }
 
 has 'config' => ( isa => "Ref",
@@ -133,6 +136,10 @@ has 'username' => ( isa => 'Str',
 has 'dbstats_start' => (isa => 'HashRef', is => 'rw' );
 
 has 'dbstats_end' => (isa => 'HashRef', is => 'rw');
+
+has 'auditstats_start' => (isa => 'HashRef', is => 'rw' );
+
+has 'auditstats_end' => (isa => 'HashRef', is => 'rw');
 
 sub dbic_schema {
     my $self = shift;
@@ -263,6 +270,25 @@ sub get_db_stats {
 
     print STDERR "DONE WITH get_db_stats.\n";
     return $stats;
+}
+
+sub get_auditdb_stats {
+
+    my $self = shift;
+    my $query = "select relname, n_tup_ins from pg_stat_all_tables WHERE schemaname = 'audit' ORDER BY n_tup_ins;";
+    my $h = $self->dbh()->prepare($query);
+    $h->execute();
+
+    my $auditresults = {};
+
+    # return only audit tables that are not empty (that have non-zero values)
+    while (my ($audittable, $ntupins) = $h->fetchrow_array()) {
+	if ($ntupins > 0) {
+	    $auditresults->{$audittable} = $ntupins;
+	}
+    }
+
+    return $auditresults;
 }
 
 
@@ -426,6 +452,11 @@ sub DEMOLISH {
  		$self->dbstats_start()->{$table} ." TO ".$stats->{$table}.". PLEASE CLEAN UP THIS TEST!\n";
  	}
     }
+
+    $self->auditstats_end($self->get_auditdb_stats());
+
+    print STDERR "# MODIFIED AUDIT TABLES BEFORE TEST: " .Dumper($self->auditstats_start())."\n";
+    print STDERR "# MODIFIED AUDIT TABLES AFTER TEST: " .Dumper($self->auditstats_end())."\n";
 }
 
 1;

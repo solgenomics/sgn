@@ -39,7 +39,7 @@ errorFile   <- grep("error", outputFiles, value = TRUE)
 
 combinedDataFile <- grep("combined_cluster_data_file", outputFiles, value = TRUE)
 
-plotFile <- grep("plot", outputFiles, value = TRUE)
+plotFile <- grep("hierarchical_plot", outputFiles, value = TRUE)
 optionsFile    <- grep("options", inputFiles,  value = TRUE)
 
 clusterOptions <- read.table(optionsFile,
@@ -197,10 +197,8 @@ distMat <- clusterData %>%
                 dist(., method="euclidean")
 
 distMat <- round(distMat, 3)
-
 hClust <- distMat  %>%
-                hclust(., method="complete")
-
+            hclust(., method="complete")
 
 distTable <- data.frame(as.matrix(distMat))
 
@@ -212,13 +210,10 @@ xMax <- xMax + 0.02
 clustTree <- clustTree +
     geom_tiplab(size = 4, color = "blue")
 
-
 # geom_text(aes(x = branch, label = round(branch.length, 2)))
-
-png(plotFile, height = 950, width = 950)
+png(filename=plotFile, height = 950, width = 950)
    print(clustTree)
 dev.off()
-
 
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
@@ -238,15 +233,16 @@ if (length(genoFiles) > 1) {
 #        quote     = FALSE,
 #        )
 # }
-message('newick file ', newickFile)
+
 newickF <- as.phylo(hClust)
 write.tree(phy = newickF,
 file = newickFile
 )
 
-jsonHclust <- jsonHC(hClust)
+jsonHclust <- R2D3::jsonHC(hClust)
 write(jsonHclust$json, file = jsonFile)
 
+message("Done hierachical clustering.")
 ####
 q(save = "no", runLast = FALSE)
 ####
