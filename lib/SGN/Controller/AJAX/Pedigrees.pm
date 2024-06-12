@@ -255,12 +255,19 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
+    my $upload_type;
+    if ($pedigrees_file_type eq 'excel') {
+        $upload_type = 'PedigreesExcel';
+    } elsif ($pedigrees_file_type eq 'text'){
+        $upload_type = 'PedigreesText';
+    }
+
     my $parser;
     my $parsed_data;
     my $pedigrees;
-    if ($pedigrees_file_type eq 'excel') {
+#    if ($pedigrees_file_type eq 'excel') {
         $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_file_name);
-        $parser->load_plugin('PedigreesExcel');
+        $parser->load_plugin($upload_type);
         $parsed_data = $parser->parse();
         print STDERR "PARSED DATA =".Dumper($parsed_data) . "\n";
         if (!$parsed_data){
@@ -274,9 +281,9 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
             print STDERR "PEDIGREES =".Dumper($pedigrees)."\n";
         }
 
-    } else {
-        $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
-    }
+#    } else {
+#        $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
+#    }
 
     my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
     my $error;
