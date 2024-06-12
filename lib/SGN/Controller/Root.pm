@@ -223,7 +223,6 @@ sub auto : Private {
     CatalystX::GlobalContext->set_context( $c );
     $c->stash->{c} = $c;
     weaken $c->stash->{c};
-    
 
     # gluecode for logins
     #
