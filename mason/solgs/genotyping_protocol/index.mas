@@ -18,6 +18,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <& /util/import_javascript.mas, classes => ['solGS.genotypingProtocol'] &>
 
 
+<<<<<<< HEAD
 <div  class='row text-center'
       id='genotyping_protocol'
       style='margin-top:30px;margin-bottom:60px;'>
@@ -30,6 +31,31 @@ Isaak Y Tecle (iyt2@cornell.edu)
       type='button'
       id='genotyping_protocols_change'>Change
     </button>
+=======
+  <div  class='row text-center'
+       id='genotyping_protocol'
+       style='margin:40px 0 40px 0;'>
+    <div>
+      <button class='btn btn-light'
+	      type='button'
+	      id='genotyping_protocol_message'>
+      </button>
+      <button class='btn btn-success'
+	      type='button'
+	      id='genotyping_protocols_change'>Change
+      </button>
+    </div>
+    <div id='genotyping_protocols_list_div'
+	 style='text-align:center;width:40%;display:none;margin:0 auto;'>
+      <select class='form-control text-center'
+	      id='genotyping_protocols_list_select'>
+      </select>
+    </div>
+
+   <input type='hidden'
+	   id='genotyping_protocol_id'
+	   value=''/>
+>>>>>>> master
   </div>
 
   <div id='genotyping_protocols_list_div'
