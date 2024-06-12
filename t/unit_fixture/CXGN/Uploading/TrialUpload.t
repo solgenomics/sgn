@@ -1440,6 +1440,155 @@ for my $extension ("xls", "xlsx") {
 	#deleting 2 associated genotyping plates and genotyping project
 	is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project - 3);
 
+	#### test for multiple trial designs uplaod + email functionality #####
+	my %upload_metadata;
+	my $file_name 	= "t/data/trial/test_multiple_trial_design.$extension";
+	my $time 		= DateTime->now();
+	my $timestamp 	= $time->ymd() . "_" . $time->hms();
+	my $trial_name 	= "Trial_upload_test_flexible";
+	my $time        = DateTime->now();
+    my $timestamp   = $time->ymd()."_".$time->hms();
+
+	my $uploader = CXGN::UploadFile->new({
+		tempfile         => $file_name,
+		subdirectory     => 'temp_trial_upload',
+		archive_path     => '/tmp',
+		archive_filename => "test_multiple_trial_design.$extension",
+		timestamp        => $timestamp,
+		user_id          => 41,
+		user_role        => 'curator'
+	});
+
+	$archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+	ok($archived_filename_with_path, 'check if file was archeved successfully');
+	ok($md5, 'check if md5 checksum was generated');
+
+	####required phenotypeprops###
+	my %phenotype_metadata ;
+	$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+	$phenotype_metadata{'archived_file_type'} = "spreadsheet phenotype file";
+	$phenotype_metadata{'user_id'} = $c->sp_person_id();
+	$phenotype_metadata{'date'} = "2024-06-14_12:00:00";
+
+	#parse uploaded file with appropriate plugin
+	$parser = CXGN::Trial::ParseUpload->new(
+		chado_schema => $f->$bcs_schema, 
+		filename => $archived_filename_with_path, 
+		trial_name => $trial_name, 
+		user_id => $c->user()->get_object()->get_sp_person_id()
+		);
+	$parser->load_plugin('MultipleTrialDesignExcelFormat');
+	my $p = $parser->parse();
+	$parsed_data = $parser->parse();
+	ok($parsed_data, "Check if parse validate excel file works");
+	ok(!$parser->has_parse_errors(), "Check that parse returns no erros");
+	my $parsed_data_trial_info ={
+		'1' => {
+            'range_number' => undef,
+            'harvest_date' => '2000-10-19',
+            'trial_type' => 'Preliminary Yield Trial',
+            'rep_number' => undef,
+            'num_seed_per_plot' => undef,
+            'trial_name' => '199947HBEPR_mora',
+            'is_a_control' => '1',
+            'planting_date' => '1999-06-23',
+            'seedlot_name' => undef,
+            'weight_gram_seed_per_plot' => undef,
+            'col_number' => undef,
+            'row_number' => undef
+        },
+        '2' => {
+            'col_number' => undef,
+            'weight_gram_seed_per_plot' => undef,
+            'row_number' => undef,
+            'planting_date' => '1999-06-23',
+            'seedlot_name' => undef,
+            'trial_name' => '199947HBEPR_mora',
+            'num_seed_per_plot' => undef,
+            'rep_number' => undef,
+            'is_a_control' => '1',
+            'harvest_date' => '2000-10-19',
+            'range_number' => undef,
+            'trial_type' => 'Preliminary Yield Trial'
+        },
+        '3' => {
+            'weight_gram_seed_per_plot' => undef,
+            'col_number' => undef,
+            'row_number' => undef,
+            'range_number' => undef,
+            'harvest_date' => '2000-10-19',
+            'trial_type' => 'Preliminary Yield Trial',
+            'num_seed_per_plot' => undef,
+            'rep_number' => undef,
+            'trial_name' => '199947HBEPR_mora',
+            'is_a_control' => '1',
+            'planting_date' => '1999-06-23',
+            'seedlot_name' => undef
+        },
+        '4' => {
+            'trial_name' => '199947HBEPR_mora',
+            'num_seed_per_plot' => undef,
+            'rep_number' => undef,
+            'is_a_control' => '1',
+            'harvest_date' => '2000-10-19',
+            'range_number' => undef,
+            'trial_type' => 'Preliminary Yield Trial',
+            'planting_date' => '1999-06-23',
+            'seedlot_name' => undef,
+            'col_number' => undef,
+            'weight_gram_seed_per_plot' => undef,
+            'row_number' => undef
+        },
+        '5' => {
+            'weight_gram_seed_per_plot' => undef,
+            'col_number' => undef,
+            'row_number' => undef,
+            'range_number' => undef,
+            'harvest_date' => '2000-10-19',
+            'trial_type' => 'Preliminary Yield Trial',
+            'rep_number' => undef,
+            'num_seed_per_plot' => undef,
+            'trial_name' => '199947HBEPR_mora',
+            'is_a_control' => '1',
+            'planting_date' => '1999-06-23',
+            'seedlot_name' => undef
+        }
+    };
+
+	is_deeply($parsed_data, $parsed_data_trial_info, 'check parsed trial data');
+	is_deeply()
+
+	my $trial_create = CXGN::Trial::TrialCreate
+		->new({
+		chado_schema      => $c->bcs_schema(),
+		dbh               => $c->dbh(),
+		trial_year        => "2024",
+		trial_description => "Multi trial upload with email functionality",
+		trial_location    => "test_location",
+		trial_name        => $trial_name,
+		design_type       => "Augmented",
+		design            => $parsed_data,
+		program           => "test",
+		upload_trial_file => $archived_filename_with_path,
+		operator          => "janedoe",
+		owner_id          => 41
+	});
+
+	my $save = $trial_create->save_trial();
+
+	# Check if the trial was created successfully
+	my $trial = $chado_schema->resultset("NaturalDiversity::NdExperiment")->find({ nd_experiment_name => 'Trial_upload_test' });
+	ok($trial, "Trial 'Trial_upload_test' was created successfully");
+
+	# Check if the project name matches the expected value
+	my $project_name = $trial->nd_experiment_projects->first->project->name;
+	is($project_name, "Trial_upload_test", "Project name matches the expected value");
+
+	# Check if the project description matches the expected value
+	my $project_desc = $trial->nd_experiment_projects->first->project->description;
+	is($project_desc, "Trial Upload Test", "Project description matches the expected value");
+
 	$f->clean_up_db();
 }
 
