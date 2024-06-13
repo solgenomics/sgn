@@ -38,7 +38,7 @@ jQuery(document).ready(function ($) {
     $("[name='upload_pedigrees_dismiss_button']").click( function () {
         $('#pedigree_file_format_option').val("");
         $('#xlsx_pedigrees_uploaded_file').val("");
-        $('#text_pedigrees_uploaded_file').val("");        
+        $('#text_pedigrees_uploaded_file').val("");
         location.reload();
     });
 
@@ -67,11 +67,22 @@ jQuery(document).ready(function ($) {
     $('#upload_pedigrees_form').iframePostForm({
         json: false,
         post: function () {
-            var uploadedPedigreesFile = $("#pedigrees_uploaded_file").val();
             $('#working_modal').modal("show");
-            if (uploadedPedigreesFile === '') {
-                $('#working_modal').modal("hide");
-                alert("No file selected");
+            var fileFormatOption = $("#pedigree_file_format_option").val();
+            if (fileFormatOption === 'xlsx_pedigrees') {
+                var uploadedPedigreesXlsxFile = $("#xlsx_pedigrees_uploaded_file").val();
+                if ( uploadedPedigreesXlsxFile === ''){
+                    $('#working_modal').modal("hide");
+                    alert("Please select an Excel (.xlsx) file");
+                    return;
+                }
+            } else if (fileFormatOption === 'text_pedigrees') {
+                var uploadedPedigreesTextFile = $("#text_pedigrees_uploaded_file").val();
+                if ( uploadedPedigreesTextFile === ''){
+                    $('#working_modal').modal("hide");
+                    alert("Please select a tab-delimited text file");
+                    return;
+                }
             }
         },
         complete: function (r) {
