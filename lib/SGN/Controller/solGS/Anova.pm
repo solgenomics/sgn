@@ -298,9 +298,9 @@ sub prepare_response {
         $diagnostics_file = $c->controller('solGS::Files')
           ->copy_to_tempfiles_subdir( $c, $diagnostics_file, $dir );
 
-        $c->stash->{rest}{anova_html_table} =
+        $c->stash->{rest}{anova_table_html_file} =
           read_file( $anova_html_file, { binmode => ':utf8' } );
-        $c->stash->{rest}{anova_table_file}       = $anova_txt_file;
+        $c->stash->{rest}{anova_table_txt_file}       = $anova_txt_file;
         $c->stash->{rest}{anova_model_file}       = $model_file;
         $c->stash->{rest}{adj_means_file}         = $means_file;
         $c->stash->{rest}{anova_diagnostics_file} = $diagnostics_file;
@@ -551,8 +551,8 @@ sub anova_table_file {
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
 
     my $cache_data = {
-        key       => "anova_table_${trial_id}_${trait_id}_html",
-        file      => "anova_table_${trial_id}_${trait_id}",
+        key       => "anova_table_html_${trial_id}_${trait_id}",
+        file      => "anova_table_html_${trial_id}_${trait_id}",
         ext       => 'html',
         stash_key => "anova_table_html_file"
     };
@@ -562,8 +562,9 @@ sub anova_table_file {
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
 
     $cache_data = {
-        key       => "anova_table_${trial_id}_${trait_id}_txt",
-        file      => "anova_table_${trial_id}_${trait_id}",
+        key       => "anova_table_txt_${trial_id}_${trait_id}",
+        file      => "anova_table_txt_${trial_id}_${trait_id}",
+         ext      => 'txt',
         stash_key => "anova_table_txt_file"
     };
 

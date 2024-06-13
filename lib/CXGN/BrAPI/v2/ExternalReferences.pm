@@ -83,7 +83,7 @@ sub search {
         push @{$result{$r[3]}}, {
             # TODO change 'referenceID' to 'referenceId'. The field 'referenceID' was deprecated in v2.1 of the
             # brapi spec. Now 'referenceId' should be used.
-            referenceID => $reference_id,
+            referenceId => $reference_id,
             referenceSource => $reference_source
         };
     }

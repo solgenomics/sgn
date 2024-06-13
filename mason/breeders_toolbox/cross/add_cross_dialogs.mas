@@ -35,7 +35,7 @@ $locations
                             <ul>
                                 <li>The Cross Tool can track any pollinations in a breeding program.</li>
                                 <li>Each cross has a globally unique cross id.</li>
-                                <li>Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid</li>
+                                <li>Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, doubled_haploid, or dihaploid_induction</li>
                                 <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
                                 <li>For backcross cross type, cross unique id can be used as one of the parents.</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
@@ -112,6 +112,7 @@ $locations
                                             <option value="bulk_self">bulk selfed</option>
                                             <option value="bulk_open">bulk and open pollinated</option>
                                             <option value="doubled_haploid">doubled haploid</option>
+					    <option value="dihaploid_induction">dihaploid induction</option>
                                             <option value="polycross">polycross</option>
                                             <option value="reciprocal">reciprocal</option>
                                             <option value="multicross">multicross</option>
@@ -191,6 +192,12 @@ $locations
                                     <div class="col-sm-10">
                                         <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" placeholder="Enter parent name" />
                                     </div><br/><br/>
+                                </div>
+				<div class="form-group" id="get_dihaploid_induction_parent" style="display: none">
+                                  <label class="col-sm-2 control-label">Dihaploid induction Parent: </label>
+                                  <div class="col-sm-10">
+                                    <input class="form-control" id="dihaploid_induction_parent" type="text" name="dihaploid_induction" placeholder="Enter parent name" />
+                                  </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="polycross_accessions" style="display: none">
                                     <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
@@ -411,15 +418,16 @@ $locations
                         Individual Crosses:
                     </h2>
 
-                    <p><b>biparental:</b> An individual plant pollinated by another individual plant.<p>
-                    <p><b>self:</b> A self pollinated individual plant.<p>
-                    <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
-                    <p><b>backcross:</b> An individual plant pollinated by one of its parents.<p>
-                    <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.<p>
-                    <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.<p>
-                    <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).<p>
-                    <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
-                    <p><b>doubled haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.<p>
+                    <p><b>biparental:</b> An individual plant pollinated by another individual plant.</p>
+                    <p><b>self:</b> A self pollinated individual plant.</p>
+                    <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</p>
+                    <p><b>backcross:</b> An individual plant pollinated by one of its parents.</p>
+                    <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</p>
+                    <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</p>
+                    <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</p>
+                    <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</p>
+                    <p><b>doubled haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</p>
+		    <p><b>dihaploid induction:</b> Plants derived from a chromosome reduction from tetraploid to diploid</p>
                     <br>
 
                     <h2>

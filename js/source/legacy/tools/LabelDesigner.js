@@ -307,11 +307,7 @@ $(document).ready(function($) {
     });
 
     $('#design_label_button').click(function() {
-        $("#d3-draw-area").prependTo("#save_and_download");
-    });
-
-    $('#design_label_button').click(function() {
-        $("#d3-draw-area").prependTo("#save_and_download");
+        $("#d3-draw-area").prependTo("#save-labels-display");
         $(".workflow-complete").click(function() {
             var title = $(this).children().text();
             //console.log("workflow element with title "+title+" was just clicked\n");
@@ -319,7 +315,7 @@ $(document).ready(function($) {
             if (title == "Design Your Label") {
                 $("#d3-draw-area").prependTo("#d3-draw-div");
             } else if (title == "More Options, Save, And Download") {
-                $("#d3-draw-area").prependTo("#save_and_download");
+                $("#d3-draw-area").prependTo("#save-labels-display");
             }
 
         });
@@ -327,7 +323,7 @@ $(document).ready(function($) {
             var title = $(this).children().text();
             //console.log("workflow element with title "+title+" was just clicked\n");
             if (title == "More Options, Save, And Download") {
-                $("#d3-draw-area").prependTo("#save_and_download");
+                $("#d3-draw-area").prependTo("#save-labels-display");
             }
 
         });
@@ -704,7 +700,7 @@ function updateFields(data_type, source_id, data_level){
                 reps = response.reps;
                 num_units = response.num_units;
                 addPlotFilter(reps);
-                addSortOrders(add_fields);
+                addSortOrders(add_fields, data_type, data_level);
                 createAdders(add_fields);
                 initializeCustomModal(add_fields);
                 showLoadOption();
@@ -1299,10 +1295,27 @@ function addPlotFilter(reps) {
 
 }
 
-function addSortOrders(add_fields) {
+function addSortOrders(add_fields, data_type, data_level) {
+
+    // Set type-specific sorting options
+    let data_type_fields = [];
+    // Sort by trial layout for plot-level labels...
+    if ( ['Field Trials', 'Lists', 'Public Lists'].includes(data_type) && data_level === 'plots' ) {
+        data_type_fields = ['Trial Layout: Plot Order'];
+    }
+
     //load options
     d3.selectAll("#sort_order_1, #sort_order_2, #sort_order_3").selectAll("option").remove();
-    d3.selectAll("#sort_order_1, #sort_order_2, #sort_order_3").selectAll("option")
+    d3.selectAll("#sort_order_1").selectAll("option")
+        .data(["Select a field", ...data_type_fields, ...Object.keys(add_fields).sort()])
+        .enter().append("option")
+        .text(function(d) {
+            return d
+        })
+        .attr("value", function(d) {
+            return d
+        });
+    d3.selectAll("#sort_order_2, #sort_order_3").selectAll("option")
         .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
@@ -1315,9 +1328,15 @@ function addSortOrders(add_fields) {
         const sel = jQuery("#sort_order_1").val();
         if ( sel === 'Select a field' ) {
             jQuery("#sort_order_2_container, #sort_order_3_container").hide();
+            jQuery("#sort_order_layout_order_container, #sort_order_layout_start_container").hide();
+        }
+        else if ( sel === 'Trial Layout: Plot Order' ) {
+            jQuery("#sort_order_2_container, #sort_order_3_container").hide();
+            jQuery("#sort_order_layout_order_container, #sort_order_layout_start_container").show();
         }
         else {
             jQuery("#sort_order_2_container").show();
+            jQuery("#sort_order_layout_order_container, #sort_order_layout_start_container").hide();
         }
     });
     jQuery("#sort_order_2").off("change").on("change", () => {
@@ -1419,6 +1438,8 @@ function retrievePageParams() {
         sort_order_1: document.getElementById("sort_order_1").value,
         sort_order_2: document.getElementById("sort_order_2").value,
         sort_order_3: document.getElementById("sort_order_3").value,
+        sort_order_layout_order: document.getElementById("sort_order_layout_order").value,
+        sort_order_layout_start: document.getElementById("sort_order_layout_start").value,
         copies_per_plot: document.getElementById("copies_per_plot").value,
         labels_to_download: document.getElementById("label_designer_labels_to_download").value,
         start_number: document.getElementById("label_designer_start_number").value,

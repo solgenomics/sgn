@@ -413,13 +413,60 @@ __PACKAGE__->config(
        my $sort_order_1 = $design_params->{'sort_order_1'};
        my $sort_order_2 = $design_params->{'sort_order_2'};
        my $sort_order_3 = $design_params->{'sort_order_3'};
+       my @sorted_keys;
 
-       my @sorted_keys = sort { 
-            ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) || 
-            ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
-            ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) || 
-            ncmp($a, $b)
-       }  keys %design;
+       # Sort by Field Layout
+       if ( $sort_order_1 eq 'Trial Layout: Plot Order') {
+            my $layout_order = $design_params->{'sort_order_layout_order'};
+            my $layout_start = $design_params->{'sort_order_layout_start'};
+
+            # Set the Trial IDs
+            # - a single trial = the source id is the trial id
+            # - a list of trials = the source id is the list id
+            #       get the list contents and convert to database ids
+            my @trial_ids;
+            if ( $data_type eq 'Field Trials' ) {
+                push(@trial_ids, $source_id);
+            }
+            elsif ( $data_type eq 'Lists' ) {
+                my $list = CXGN::List->new({ dbh => $schema->storage->dbh(), list_id => $source_id });
+                my $list_elements = $list->retrieve_elements_with_ids($source_id);
+                my @trial_names = map { $_->[1] } @$list_elements;
+                my $lt = CXGN::List::Transform->new();
+                my $tr = $lt->transform($schema, "projects_2_project_ids", \@trial_names);
+                @trial_ids = @{$tr->{transform}};
+            }
+
+            # Get the sorted plots, individually by trial
+            # Add a _plot_order key to each plot in the label design
+            foreach my $trial_id (@trial_ids) {
+                my $results = CXGN::Trial->get_sorted_plots($schema, [$trial_id], $layout_order, $layout_start);
+                if ( $results->{plots} ) {
+                    foreach (@{$results->{plots}}) {
+                        $design->{$_->{plot_name}}{_plot_order} = $_->{order};
+                    }
+                }
+            }
+
+            # Sort the label design elements by trial, plot order, plot number
+            # (if the trial does not have a layout, it will default to sorting by plot number)
+            @sorted_keys = sort { 
+                    ncmp($design->{$a}{trial_name}, $design->{$b}{trial_name}) || 
+                    ncmp($design->{$a}{_plot_order}, $design->{$b}{_plot_order}) ||
+                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_numer}) || 
+                    ncmp($a, $b)
+            } keys %design;
+       }
+
+       # Sort by designated data property(s)
+       else {
+            @sorted_keys = sort { 
+                    ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) || 
+                    ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
+                    ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) || 
+                    ncmp($a, $b)
+            } keys %design;
+       }
 
        my $qrcode = Imager::QRCode->new(
            margin        => 0,
@@ -702,6 +749,7 @@ sub get_trial_design {
     foreach my $trial_id (@$trial_ids) {
         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
         my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
+        my $entry_numbers = $trial->get_entry_numbers();
 
         my $treatments = $trial->get_treatments();
         my @treatment_ids = map { $_->[0] } @{$treatments};
@@ -743,6 +791,7 @@ sub get_trial_design {
                     }
                 }
                 $detail_hash{'management_factor'} = join(",", @applied_treatments);
+                $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;
                 $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
 
             }

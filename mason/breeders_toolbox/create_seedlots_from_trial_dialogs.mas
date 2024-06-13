@@ -92,6 +92,7 @@ $timestamp => localtime()
                             <ul>
                                 <li><code>trial_name</code></li>
                                 <li><code>accession_name</code></li>
+                                <li class="plot_level_variable"><code>plot_name</code></li>
                                 <li class="plot_level_variable"><code>plot_number</code></li>
                                 <li class="plot_level_variable"><code>rep</code></li>
                                 <li class="plot_level_variable"><code>block</code></li>
@@ -664,6 +665,9 @@ $timestamp => localtime()
         let trial_name = jQuery("#create_seedlots_trial_name").val();
         let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
         let name_template = jQuery("#create_seedlots_trial_name_template").val();
+        if ( name_template === '{plot_name}' ) {
+            return alert("The seedlot name cannot be the same as the plot name, please add a prefix or suffix to make the name unique");
+        }
 
         let html = "<thead></tr>";
         if ( stock_type === 'accessions' ) html += "<th>Trial Name</th>";
@@ -682,6 +686,7 @@ $timestamp => localtime()
                 .replace("{index}", index);
             if ( stock_type === "plots" ) {
                 name = name
+                    .replace("{plot_name}", SEEDLOTS[i].plot.name)
                     .replace("{plot_number}", SEEDLOTS[i].plot.number)
                     .replace("{rep}", SEEDLOTS[i].plot.rep)
                     .replace("{block}", SEEDLOTS[i].plot.block);
@@ -1304,8 +1309,13 @@ $timestamp => localtime()
         
         let count = 0;
         let total = TRAITS.length;
-        for ( let i = 0; i < TRAITS.length; i++ ) {
-            _getTraitData(TRAITS[i].id, TRAITS[i].name);
+        if ( total > 0 ) {
+            for ( let i = 0; i < TRAITS.length; i++ ) {
+                _getTraitData(TRAITS[i].id, TRAITS[i].name);
+            }
+        }
+        else {
+            _finish();
         }
 
         function _getTraitData(trait_id, trait_name) {

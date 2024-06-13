@@ -183,7 +183,7 @@ is_deeply($response, {
                                         },
                                         {
                                           'messageType' => 'INFO',
-                                          'message' => 'All values in your file have been successfully processed!<br><br>2 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br><br>'
+                                          'message' => 'All values in your file have been successfully processed!<br><br>2 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br>0 previously stored values removed<br><br>'
                                         }
                                       ],
                           'pagination' => {

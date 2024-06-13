@@ -13,6 +13,8 @@ use CXGN::Genotype;
 
 my $f = SGN::Test::Fixture->new();
 
+$f->get_db_stats();
+
 my $schema = $f->bcs_schema();
 
 my $gt1 = CXGN::Genotype->new( { genotypeprop_id=> 1708, bcs_schema=>$schema});
@@ -135,5 +137,5 @@ is($gt->scores_are_equal(undef, undef), 0, "scores are equal test 4");
 is($gt->scores_are_equal('NA', 'NA'), 0, "scores are equal test 5");
 is($gt->scores_are_equal('?', '?'), 0, "scores are equal test 6");
 
-
+$f->clean_up_db();
 done_testing();

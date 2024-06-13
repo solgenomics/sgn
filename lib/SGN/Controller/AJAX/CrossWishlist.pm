@@ -62,7 +62,8 @@ sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionCl
 
 sub create_cross_wishlist_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
     my $female_trial_id = $c->req->param('female_trial_id');
@@ -186,10 +187,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
-    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $user_id);
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
 
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
@@ -905,7 +906,8 @@ sub list_cross_wishlists : Path('/ajax/cross/list_cross_wishlists') : ActionClas
 
 sub list_cross_wishlists_GET : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $q = "SELECT file_table.id, file_table.file_name, mdf.dirname, mdf.filetype, mdf.comment, mdmd.create_date, mdmd.create_person_id, p.first_name, p.last_name
         FROM
         (SELECT mf.file_id AS id,mf.basename AS file_name FROM metadata.md_files AS mf WHERE file_id IN (SELECT MAX(file_id) AS file_id FROM metadata.md_files
@@ -936,10 +938,6 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
         $c->detach();
     }
-
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
     my $female_trial_id = $c->req->param('cross_wishlist_upload_female_trial_id');
     my $male_trial_id = $c->req->param('cross_wishlist_upload_male_trial_id');
@@ -990,6 +988,10 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
+
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -1108,7 +1110,8 @@ sub check_wishlist_accessions : Path('/ajax/cross/check_wishlist_accessions') : 
 
 sub check_wishlist_accessions_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $female_trial_id = $c->req->param('female_trial_id');
     my $female_list_id = $c->req->param('female_list_id');

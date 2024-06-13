@@ -346,11 +346,19 @@ sub stash_json_args {
 
 }
 
+sub generic_message {
+    my ($self, $c, $msg) = @_;
+
+    $c->stash->{message} = $msg;
+    $c->stash->{template} = "/generic_message.mas";
+}
+
 sub require_login {
     my ($self, $c) = @_;
 
     my $page = "/" . $c->req->path;
     $c->res->redirect("/solgs/login/message?page=$page");
+
     $c->detach;
 
 }

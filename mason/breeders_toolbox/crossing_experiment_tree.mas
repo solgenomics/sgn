@@ -12,7 +12,7 @@ $odk_service => undef
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
 % if ($odk_service eq 'ONA') {
-    <& /breeders_toolbox/cross/cross_wishlist.mas &>;
+    <& /breeders_toolbox/cross/cross_wishlist.mas &>
 %}
 <& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>\@programs, locations=>\@locations &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations &>

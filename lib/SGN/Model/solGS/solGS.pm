@@ -2067,10 +2067,10 @@ sub get_genotypes_from_dataset {
     my ( $self, $dataset_id ) = @_;
 
     my $data = $self->get_dataset_data($dataset_id);
+    my @accessions_ids;
 
-    my $genotypes_ids;
     if ( $data->{categories}->{accessions}->[0] ) {
-        $genotypes_ids = $data->{categories}->{accessions};
+        @accessions_ids = @{$data->{categories}->{accessions}};
     }
     else {
         my $dataset = CXGN::Dataset->new(
@@ -2081,13 +2081,17 @@ sub get_genotypes_from_dataset {
             }
         );
 
-        $genotypes_ids = $dataset->retrieve_accessions();
-        my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
-        $genotypes_ids = \@genotypes_ids;
-
+        my $accessions = $dataset->retrieve_accessions();
+        if ($accessions->[0]) {
+            for (my $i=0; $i < scalar(@$accessions); $i++) {
+                push @accessions_ids, $accessions->[$i][0];
+            }
+        }
     }
+    
+    @accessions_ids = uniq(@accessions_ids) if @accessions_ids;
 
-    return $genotypes_ids;
+    return \@accessions_ids;
 }
 
 sub get_dataset_data {

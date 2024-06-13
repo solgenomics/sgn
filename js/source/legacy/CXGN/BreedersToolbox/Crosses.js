@@ -92,6 +92,7 @@ jQuery(document).ready(function($) {
             $("#get_bulk_open_maternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_bulk_open_paternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_doubled_haploid_parent").toggle($("#cross_type").val() == "doubled_haploid");
+	    $("#get_dihaploid_induction_parent").toggle($("#cross_type").val() == "dihaploid_induction");
             $("#polycross_accessions").toggle($("#cross_type").val() == "polycross");
             $("#reciprocal_accessions").toggle($("#cross_type").val() == "reciprocal");
             $("#maternal_accessions").toggle($("#cross_type").val() == "multicross");
@@ -367,6 +368,12 @@ jQuery(document).ready(function($) {
                 maternal = doubledHaploidParent;
                 paternal = doubledHaploidParent;
                 break;
+	    case 'dihaploid_induction':
+                var dihaploidInductionParent = $("#dihaploid_induction_parent").val();
+                maternal = dihaploidInductionParent;
+                paternal = dihaploidInductionParent;
+                break;
+
             case 'polycross':
                 maternal_parents = get_accession_names('polycross_accessions_list_select');
                 if (!Array.isArray(maternal_parents)) { alert(maternal_parents); return; }

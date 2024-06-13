@@ -2,10 +2,11 @@
 $trial_id
 $stockref => undef
 $data_level => 'plot'
+$has_col_and_row_numbers => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
-<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -47,7 +48,6 @@ $data_level => 'plot'
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
-        margin: 10px;
         transition: all 1s ease-in-out;
     }
 
@@ -143,7 +143,7 @@ $data_level => 'plot'
 </div>
 
 <div id="container_heatmap" ></div>
-<div>
+<div id="container_legend">
     <ul class="legend">
         <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
         <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
@@ -158,29 +158,6 @@ $data_level => 'plot'
 <br><br>
 <div id="container_fm">
     <div style="margin-top: 2%; position: relative">
-        <div style="display: flex; flex-wrap: wrap; gap: 25px" class="form-inline">
-            <div class="form-inline">
-                <label>Download Plot Order</label>
-                <select class="form-control form-inline" name="plot_download_type" id="plot_download_type">
-                    <option value="">--Select Type--</option>
-                    <option value="planting">Planting Order</option>
-                    <option value="harvest">Harvest Order</option>
-                </select>
-            </div>
-            <select class="form-control" name="plot_download_order" id="plot_download_order">
-                <option value="">--Select Plot Layout--</option>
-                <option value="by_col_serpentine">By Column: Serpentine</option>
-                <option value="by_col_zigzag">By Column: Zigzag</option>
-                <option value="by_row_serpentine">By Row: Serpentine</option>
-                <option value="by_row_zigzag">By Row: Zigzag</option>
-            </select>
-            <div clas="form-inline">
-                <label for="plot_download_borders">Include Borders</label>
-                <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
-            </div>
-            <button class="btn btn-primary" id="plot_download_button">Download</button>
-        </div>
-        <br />
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
                 <label>Plot Layout</label>
@@ -227,7 +204,82 @@ $data_level => 'plot'
     <div id="fieldmap_wrapper">
         <div id="fieldmap_chart"></div>
     </div>
+% if ( $has_col_and_row_numbers ) {
+    <div style="margin-top: 40px" class="well well-sm">
+        <h3 style="margin: 0 0 10px 0">Download Plot Order</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
+            <div>
+                <label>Download Type:</label>
+                <select class="form-control" name="plot_download_type" id="plot_download_type">
+                    <option value="">--Select Type--</option>
+                    <option value="planting">Planting Order</option>
+                    <option value="harvest">Harvest Order</option>
+                    <option value="harvestmaster">HarvestMaster</option>
+                </select>
+            </div>
+            <div>
+                <label>Plot Order:</label>
+                <select class="form-control" name="plot_download_order" id="plot_download_order" style="max-width: 300px">
+                    <option value="">--Select Plot Order--</option>
+                    <option value="by_col_serpentine">By Column: Serpentine</option>
+                    <option value="by_col_zigzag">By Column: Zigzag</option>
+                    <option value="by_row_serpentine">By Row: Serpentine</option>
+                    <option value="by_row_zigzag">By Row: Zigzag</option>
+                </select>
+            </div>
+            <div>
+                <label>Starting Plot:</label>
+                <select class="form-control" id="plot_download_start" name="plot_download_start" style="max-width: 300px">
+                    <option value="bottom_left">Bottom Left</option>
+                    <option value="top_left">Top Left</option>
+                    <option value="top_right">Top Right</option>
+                    <option value="bottom_right">Bottom Right</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: end; text-align: right">
+                <div>
+                    <label for="plot_download_borders">Include Borders</label>
+                    <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
+                </div>
+                <div>
+                    <label for="plot_download_gaps">Include Gaps</label>
+                    <input type="checkbox" id="plot_download_gaps" name="plot_download_gaps" value="no">
+                </div>
+            </div>
+        </div>
+        <div id="plot_download_harvestmaster_options" style="display: none; padding: 15px">
+            <p><strong>HarvestMaster Options:</strong></p>
+            <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
+                <div>
+                    <label>HarvestMaster PLTID:</label>
+                    <select class="form-control" id="hm_pltid" name="hm_pltid" style="max-width: 400px">
+                        <option value="plot_id" selected>Plot Database ID</option>
+                        <option value="plot_name">Plot Name</option>
+                        <option value="plot_number">Plot Number</option>
+                    </select>
+                </div>
+                <div>
+                    <label>HarvestMaster Range:</label>
+                    <select class="form-control" id="hm_range" name="hm_range" style="max-width: 400px">
+                        <option value="col_number">Breedbase Column</option>
+                        <option value="row_number" selected>Breedbase Row</option>
+                    </select>
+                </div>
+                <div>
+                    <label>HarvestMaster Row:</label>
+                    <select class="form-control" id="hm_row" name="hm_row" style="max-width: 400px">
+                        <option value="col_number" selected>Breedbase Column</option>
+                        <option value="row_number">Breedbase Row</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 15px 50px; text-align: center">
+            <button class="btn btn-primary" id="plot_download_button">Download</button>
+        </div>
+    </div>
 </div>
+% }
 
 
 <div id="trait_heatmap" >loading...</div>
@@ -704,7 +756,12 @@ jQuery(document).ready( function() {
             var observations;
             jQuery.ajax({
                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-                url: '/brapi/v2/observations?studyDbId='+trial_id+'&pageSize=10000',
+                method: 'GET',
+                url: '/brapi/v2/observations',
+                data: {
+                    studyDbId: trial_ids,
+                    pageSize: 10000
+                },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -743,7 +800,7 @@ jQuery(document).ready( function() {
             }
         }
       
-        var fieldMap = new BrAPIFieldmap("#container_heatmap_geo_div",brapi_endpoint);
+        var fieldMap = new BrAPIFieldmap("#container_heatmap_geo_div", brapi_endpoint, { viewOnly: true });
 
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
@@ -852,19 +909,49 @@ jQuery(document).ready( function() {
         FieldMap.load();
     });
 
+    jQuery("#plot_download_type").change(() => {
+        let type = jQuery("#plot_download_type").val();
+        if ( type === 'harvestmaster' ) {
+            jQuery("#plot_download_harvestmaster_options").show();
+        }
+        else {
+            jQuery("#plot_download_harvestmaster_options").hide();
+        }
+    });
+
+    jQuery("#hm_range").change(() => {
+        let range = jQuery("#hm_range").val();
+        jQuery("#hm_row").val(range === 'row_number' ? 'col_number' : 'row_number');
+    });
+    jQuery("#hm_row").change(() => {
+        let row = jQuery("#hm_row").val();
+        jQuery("#hm_range").val(row === 'row_number' ? 'col_number' : 'row_number');
+    });
+
     jQuery("#plot_download_button").click(() => {
         let type = jQuery("#plot_download_type").val();
         let order = jQuery("#plot_download_order").val();
+        let start = jQuery("#plot_download_start").val();
         let include_borders = jQuery("#plot_download_borders").is(":checked");
+        let include_gaps = jQuery("#plot_download_gaps").is(":checked");
         if ( !type || type === '' ) {
             alert("Please select a type");
             return;
         }
         if ( !order || order === '' ) {
-            alert("Please select a plot layout");
+            alert("Please select a plot order");
             return;
         }
-        FieldMap.get_plot_order(type, order, include_borders)
+        if ( !start || start === '' ) {
+            alert("Please select a starting plot");
+            return;
+        }
+        let additional_properties = {
+            hm_pltid: jQuery("#hm_pltid").val(),
+            hm_range: jQuery("#hm_range").val(),
+            hm_row: jQuery("#hm_row").val()
+        }
+        FieldMap.get_plot_order(type, order, start, include_borders, include_gaps, additional_properties);
     });
 
     jQuery("#invert_row_checkmark").change(function() {
@@ -1099,16 +1186,19 @@ jQuery(document).ready( function() {
         jQuery("#container_heatmap").css("display", "none");
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
+        jQuery("#container_legend").css("display", "none");
         jQuery("#trial_no_phenoMSG").css("display", "none");
         jQuery("#d3legend").css("display", "none");
     });
 
-    jQuery(document).on('change', '#trait_list_dropdown', function () {
+    jQuery(document).on('change', '#trait_list_dropdown', on_change_view);
+    function on_change_view() {
         selected = jQuery("#trait_list_dropdown").val();
         if (selected == 'fieldmap'){
             d3.select("svg").remove();
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
+            jQuery("#container_legend").css("display", "block");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#include_linked_trials").css("display", "block");
             d3.select("#container_heatmap_geo_div").remove();
@@ -1122,6 +1212,7 @@ jQuery(document).ready( function() {
             jQuery("#container_heatmap").css("display", "none");
             jQuery("#d3legend").css("display", "none");
             jQuery("#container_fm").css("display", "none");
+            jQuery("#container_legend").css("display", "none");
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
@@ -1134,12 +1225,12 @@ jQuery(document).ready( function() {
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#view_ctrl_button").show();
-            jQuery("#include_linked_trials").css("display", "none");
+            jQuery("#include_linked_trials").css("display", "block");
             FieldMap.heatmap_selected = true;
             FieldMap.heatmap_selection = selected;
             heatmap(selected);
         }
-    });
+    }
 
     jQuery(document).on('change', '#include_linked_trials_checkmark', () => {
         trial_ids = [trial_id];
@@ -1187,6 +1278,9 @@ jQuery(document).ready( function() {
             jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
             jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
             jQuery("#include_linked_trials_list_container").css("display", include_linked_trials ? 'block' : 'none');
+            jQuery("#trait_list_dropdown").val("fieldmap");
+            on_change_view();
+            FieldMap.heatmap_queried = false;
             field_map_view();
         }
     });
@@ -1196,7 +1290,7 @@ jQuery(document).ready( function() {
     for (let i = FieldMap.meta_data.min_col; i <= FieldMap.meta_data.max_col; i++) {
         cols_csv_header.push(i);
     }
-    let csv = '\n';
+    let csv = '';
     csv += ['Rows/Columns',cols_csv_header];
     csv += "\n";
     // if (FieldMap.meta_data.top_border_selection) {
@@ -1207,12 +1301,10 @@ jQuery(document).ready( function() {
     let col = "positionCoordinateX";
     let temp_plot_arr = [...FieldMap.plot_arr];
     for (let plot of temp_plot_arr.filter(plot => plot.type != "border")) {
-        if (!coord_matrix[plot.observationUnitPosition[row] - 1]) {
-            coord_matrix[plot.observationUnitPosition[row] - 1] = [];
-            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
-        } else {
-            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
+        if (!coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row]) {
+            coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row] = [];
         }
+        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = plot.germplasmName;
     }
     if (!FieldMap.meta_data.invert_row_checkmark) {
         coord_matrix.reverse();

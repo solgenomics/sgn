@@ -8,8 +8,7 @@ $dataset_contents => ''
 </%args>
 
 <& /page/page_title.mas, title => "Dataset $dataset_name" &>
-<& /util/import_javascript.mas, entries => ['dataset_scatterplot'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
-<& /util/import_javascript.mas, entries => ['dataset'] &>
+<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|jqueryui.js jquery.js d3.d3v4Min jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>
@@ -56,6 +55,15 @@ $dataset_contents => ''
         margin-left: 4px;
     } 
 
+    #rosner_table_wrapper {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    #rosner_table {
+        padding: 0px;
+    }
+
 </style>
 
 <head>
@@ -101,7 +109,7 @@ $dataset_contents => ''
         </div>
         <div class="col-md-12 well" style="margin-top: 10px;">
                         
-            <div class="col-md-9">
+            <div class="col-md-8">
                 <div id="outliers_range">
                     <div id="custom-handle" class="ui-slider-handle"></div>
                 </div>
@@ -111,20 +119,17 @@ $dataset_contents => ''
                     $("#outliers_range").slider({
                         orientation: "horizontal",
                         range: "min",
-                        max: 10,
+                        max: 12,
                         min: 0,                        
                         value: 3,
-                        step: 0.5,
+                        step: 0.1,
                     });
                     var handle = $( "#custom-handle" );
                     $("#outliers_range").slider({
-                        create: function(event, ui) {
-                            console.log("create slider jquery");
+                        create: function(event, ui) {                            
                             handle.text(ui.value);
                         },
-                        slide: function(event, ui) {
-                            console.log("slide slider jquery");
-                            console.log("slide slider jquery value", ui.value);
+                        slide: function(event, ui) {                            
                             handle.text(ui.value);
                         }
                     });
@@ -154,7 +159,11 @@ $dataset_contents => ''
                     <span class="input-group-addon">
                         <input type="radio" aria-label="mean" id="mean" value="mean" name="dataset_metric" >
                     </span>
-                    <label for="mean" class="form-control" aria-label="mean">Mean</label>                                                             
+                    <label for="mean" class="form-control" aria-label="mean">Mean</label>
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="IQR" id="iqr" value="iqr" name="dataset_metric" >
+                    </span>
+                    <label for="iqr" class="form-control" aria-label="iqr">IQR</label>                                                                 
                 </div>
             </div>
         </div>
@@ -179,15 +188,30 @@ $dataset_contents => ''
                 <span>
                     <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
                 </span>
+                <span>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="rosner_test">Make Rosner outlier test</button>
+                    <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
+                </span>
             </div>
         </div>
     </div>
-    
+    <div class="row well" style="margin: 5px 10px;">
+      Rosner's test is calculated by the R function rosnerTest{EnvStats} from package EnvStats.<br>
+        <a href="https://cran.r-project.org/web/packages/EnvStats/index.html">https://cran.r-project.org/web/packages/EnvStats/index.html</a>
+    </div>
+
+    <div id="statistic_tests">
+        <!-- 
+        <table id="rosner_table">
+        </table> 
+        -->
+    </div>
+
     <script>
 
     jQuery(document).ready( function() {
         
-        console.log('dataset id', '<% $dataset_id %>');
+        // console.log('dataset id', '<% $dataset_id %>');
         var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
         DataSet.render();
 

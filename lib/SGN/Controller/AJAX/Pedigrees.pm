@@ -91,7 +91,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     # check if all accessions exist
     #
     open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my %stocks;
 
     my $header = <$F>;
@@ -123,7 +123,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 	return;
     }
 
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1 );
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1, doubled_haploid => 1, dihaploid_induction => 1 );
     my %errors;
 
     while (<$F>) {
@@ -194,7 +194,8 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $c = shift;
     my $archived_file_name = $c->req->param('archived_file_name');
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
 
@@ -251,12 +252,12 @@ sub _get_pedigrees_from_file {
             $c->stash->{rest} = { error => "No cross type on line $line_num! Must be one of these: biparental, open, self, sib, backcross, reselected, polycross." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected'){
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
             $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross, sib, reselected, polycross." };
             $c->detach();
         }
         if ($female eq $male) {
-            if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected'){
+            if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
                 $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self, sib or reselected." };
                 $c->detach();
             }
@@ -266,7 +267,7 @@ sub _get_pedigrees_from_file {
             $c->detach();
         }
 
-        if(($cross_type eq "self") || ($cross_type eq "reselected")) {
+        if(($cross_type eq "self") || ($cross_type eq "reselected") || ($cross_type eq "dihaploid_induction") || ($cross_type eq "doubled_haploid") ) {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
         }
@@ -321,6 +322,8 @@ sub _get_pedigrees_from_file {
             $opts->{male_parent} = $male_parent;
         }
 
+	print STDERR "PEDIGREE NOW: ".Dumper($opts);
+	
         my $p = Bio::GeneticRelationships::Pedigree->new($opts);
         push @pedigrees, $p;
         $line_num++;
@@ -343,7 +346,8 @@ sub get_full_pedigree_GET {
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -381,7 +385,8 @@ sub get_relationships_POST {
     my $stock_ids = [];
     my $s_ids = $c->req->body_params->{stock_id};
     push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();

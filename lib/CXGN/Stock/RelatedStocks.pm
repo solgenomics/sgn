@@ -24,14 +24,14 @@ sub get_trial_related_stock {
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
     my $plant_of_subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of_subplot', 'stock_relationship')->cvterm_id();
-    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
+#    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 
     my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship
             INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
             INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
             WHERE stock_relationship.object_id = ? AND (stock_relationship.type_id = ?
-            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ?)
+            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? )
 
             UNION ALL
 
@@ -39,11 +39,11 @@ sub get_trial_related_stock {
             INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
             INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
             WHERE stock_relationship.subject_id = ? AND (stock_relationship.type_id = ?
-            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ?) ";
+            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? ) ";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($stock_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $plant_of_subplot_type_id, $seed_transaction_type_id, $tissue_sample_of_type_id, $stock_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $plant_of_subplot_type_id, $seed_transaction_type_id, $tissue_sample_of_type_id);
+    $h->execute($stock_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $plant_of_subplot_type_id, $tissue_sample_of_type_id, $stock_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $plant_of_subplot_type_id, $tissue_sample_of_type_id);
 
     my @trial_related_stock =();
     while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
@@ -63,7 +63,7 @@ sub get_progenies {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename FROM stock_relationship
+    my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename, stock_relationship.value FROM stock_relationship
              INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
              INNER JOIN cvterm ON (stock_relationship.type_id =cvterm.cvterm_id)
              WHERE stock_relationship.subject_id = ? AND(stock_relationship.type_id =?
@@ -73,8 +73,8 @@ sub get_progenies {
     $h->execute($stock_id, $female_parent_type_id, $male_parent_type_id, $accession_type_id);
 
     my @progenies =();
-        while(my($cvterm_name, $stock_id, $stock_name) = $h->fetchrow_array()){
-        push @progenies, [$cvterm_name, $stock_id, $stock_name]
+        while(my($cvterm_name, $stock_id, $stock_name, $cross_type) = $h->fetchrow_array()){
+        push @progenies, [$cvterm_name, $stock_id, $stock_name, $cross_type]
         }
 
         return\@progenies;
@@ -173,6 +173,82 @@ sub get_cross_of_progeny {
 
             return\@cross;
 }
+
+
+sub get_plot_plant_related_seedlots {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
+
+    my @related_seedlots;
+
+    my $q1 = "SELECT distinct(stock.stock_id), stock.uniquename, cvterm.name FROM stock_relationship
+            INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
+            INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+            WHERE stock_relationship.object_id = ? AND stock_relationship.type_id = ? ";
+
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+
+    $h1->execute($stock_id, $seed_transaction_type_id);
+
+    while(my($stock_id, $stock_name, $stock_type) = $h1->fetchrow_array()){
+      push @related_seedlots, ['source of', $stock_type, $stock_id, $stock_name]
+    }
+
+    my $q2 = "SELECT distinct(stock.stock_id), stock.uniquename, cvterm.name FROM stock_relationship
+            INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
+            INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+            WHERE stock_relationship.subject_id = ? AND stock_relationship.type_id = ? ";
+
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+
+    $h2->execute($stock_id, $seed_transaction_type_id);
+
+    while(my($stock_id, $stock_name, $stock_type) = $h2->fetchrow_array()){
+      push @related_seedlots, ['derived from', $stock_type, $stock_id, $stock_name]
+    }
+
+    return\@related_seedlots;
+
+}
+
+
+sub get_vector_related_stocks {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship')->cvterm_id();
+
+
+    my $q = "SELECT transformant.stock_id, transformant.uniquename, vector.stock_id, vector.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename
+        FROM stock AS transformant
+        JOIN stock_relationship AS plant_relationship ON (plant_relationship.object_id = transformant.stock_id) AND plant_relationship.type_id = ?
+        JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
+        JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformant.stock_id) AND vector_relationship.type_id = ?
+        JOIN stock as vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
+        LEFT JOIN stock_relationship AS transformation_relationship ON (transformation_relationship.subject_id = transformant.stock_id) AND transformation_relationship.type_id = ?
+        LEFT JOIN stock AS transformation ON (transformation_relationship.object_id = transformation.stock_id) AND transformation.type_id = ?
+        WHERE vector.stock_id = ? ORDER BY transformation.uniquename, transformant.uniquename";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $stock_id);
+
+    my @related_stocks =();
+    while(my($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = $h->fetchrow_array()){
+        push @related_stocks, [$transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name]
+    }
+
+    return \@related_stocks;
+
+}
+
 
 
 1;
