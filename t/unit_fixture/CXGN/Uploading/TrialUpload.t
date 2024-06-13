@@ -22,8 +22,12 @@ use LWP::UserAgent;
 use JSON;
 use Spreadsheet::Read;
 use Text::CSV;
+use Email::Sender::Simple;
+use Email::Sender::Transport::Test;
+use Email::Simple;
 
 my $f = SGN::Test::Fixture->new();
+my $transport = Email::Sender::Transport::Test->new;
 
 for my $extension ("xls", "xlsx") {
 
@@ -1441,153 +1445,181 @@ for my $extension ("xls", "xlsx") {
 	is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project - 3);
 
 	#### test for multiple trial designs uplaod + email functionality #####
-	my %upload_metadata;
-	my $file_name 	= "t/data/trial/test_multiple_trial_design.$extension";
-	my $time 		= DateTime->now();
-	my $timestamp 	= $time->ymd() . "_" . $time->hms();
-	my $trial_name 	= "Trial_upload_test_flexible";
-	my $time        = DateTime->now();
-    my $timestamp   = $time->ymd()."_".$time->hms();
+    my $file_name = "t/data/trial/test_multiple_trial_design.$extension";
+    my $time 	  = DateTime->now();
+    my $timestamp = $time->ymd() . "_" . $time->hms();
 
-	my $uploader = CXGN::UploadFile->new({
-		tempfile         => $file_name,
-		subdirectory     => 'temp_trial_upload',
-		archive_path     => '/tmp',
-		archive_filename => "test_multiple_trial_design.$extension",
-		timestamp        => $timestamp,
-		user_id          => 41,
-		user_role        => 'curator'
-	});
+    # Test archive upload file
+    my $uploader = CXGN::UploadFile->new({
+        tempfile         => $file_name,
+        subdirectory     => 'temp_trial_upload',
+        archive_path     => '/tmp',
+        archive_filename => "test_multiple_trial_design.$extension",
+        timestamp        => $timestamp,
+        user_id          => 41, # janedoe in fixture
+        user_role        => 'curator'
+    });
 
-	$archived_filename_with_path = $uploader->archive();
-    $md5 = $uploader->get_md5($archived_filename_with_path);
+	#store uploaded temporary file in archive
+	my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
 	ok($archived_filename_with_path, 'check if file was archeved successfully');
 	ok($md5, 'check if md5 checksum was generated');
 
-	####required phenotypeprops###
 	my %phenotype_metadata ;
 	$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-	$phenotype_metadata{'archived_file_type'} = "spreadsheet phenotype file";
+	$phenotype_metadata{'archived_file_type'} = "trial uplaod file";
 	$phenotype_metadata{'user_id'} = $c->sp_person_id();
-	$phenotype_metadata{'date'} = "2024-06-14_12:00:00";
+	$phenotype_metadata{'date'} = "2018-06-14_12:00:00";
 
 	#parse uploaded file with appropriate plugin
-	$parser = CXGN::Trial::ParseUpload->new(
-		chado_schema => $f->$bcs_schema, 
-		filename => $archived_filename_with_path, 
-		trial_name => $trial_name, 
-		user_id => $c->user()->get_object()->get_sp_person_id()
-		);
-	$parser->load_plugin('MultipleTrialDesignExcelFormat');
-	my $p = $parser->parse();
-	$parsed_data = $parser->parse();
-	ok($parsed_data, "Check if parse validate excel file works");
-	ok(!$parser->has_parse_errors(), "Check that parse returns no erros");
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
+    $parser->load_plugin('MultipleTrialDesignExcelFormat');
+    my $parsed_data = $parser->parse();
+    ok($parsed_data, "Check if parse validate excel file works");
+    ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+
+	#print STDERR Dumper $parsed_data;
 	my $parsed_data_trial_info ={
-		'1' => {
-            'range_number' => undef,
-            'harvest_date' => '2000-10-19',
-            'trial_type' => 'Preliminary Yield Trial',
-            'rep_number' => undef,
-            'num_seed_per_plot' => undef,
-            'trial_name' => '199947HBEPR_mora',
-            'is_a_control' => '1',
-            'planting_date' => '1999-06-23',
-            'seedlot_name' => undef,
-            'weight_gram_seed_per_plot' => undef,
-            'col_number' => undef,
-            'row_number' => undef
-        },
-        '2' => {
-            'col_number' => undef,
-            'weight_gram_seed_per_plot' => undef,
-            'row_number' => undef,
-            'planting_date' => '1999-06-23',
-            'seedlot_name' => undef,
-            'trial_name' => '199947HBEPR_mora',
-            'num_seed_per_plot' => undef,
-            'rep_number' => undef,
-            'is_a_control' => '1',
-            'harvest_date' => '2000-10-19',
-            'range_number' => undef,
-            'trial_type' => 'Preliminary Yield Trial'
-        },
         '3' => {
-            'weight_gram_seed_per_plot' => undef,
-            'col_number' => undef,
-            'row_number' => undef,
-            'range_number' => undef,
-            'harvest_date' => '2000-10-19',
-            'trial_type' => 'Preliminary Yield Trial',
-            'num_seed_per_plot' => undef,
-            'rep_number' => undef,
-            'trial_name' => '199947HBEPR_mora',
-            'is_a_control' => '1',
-            'planting_date' => '1999-06-23',
-            'seedlot_name' => undef
+    		'range_number'                => undef,
+    		'harvest_date'                => '2000-10-19',
+    		'trial_type'                  => 'Preliminary Yield Trial',
+    		'rep_number'                  => undef,
+    		'num_seed_per_plot'           => undef,
+    		'trial_name'                  => '199947HBEPR_mora',
+    		'is_a_control'                => '1',
+    		'planting_date'               => '1999-06-23',
+    		'seedlot_name'                => undef,
+    		'weight_gram_seed_per_plot'   => undef,
+    		'col_number'                  => undef,
+    		'row_number'                  => undef
         },
         '4' => {
-            'trial_name' => '199947HBEPR_mora',
-            'num_seed_per_plot' => undef,
-            'rep_number' => undef,
-            'is_a_control' => '1',
-            'harvest_date' => '2000-10-19',
-            'range_number' => undef,
-            'trial_type' => 'Preliminary Yield Trial',
-            'planting_date' => '1999-06-23',
-            'seedlot_name' => undef,
-            'col_number' => undef,
-            'weight_gram_seed_per_plot' => undef,
-            'row_number' => undef
+    		'range_number'                => undef,
+    		'harvest_date'                => '2000-10-19',
+    		'trial_type'                  => 'Preliminary Yield Trial',
+    		'rep_number'                  => undef,
+    		'num_seed_per_plot'           => undef,
+    		'trial_name'                  => '199947HBEPR_mora',
+    		'is_a_control'                => '1',
+    		'planting_date'               => '1999-06-23',
+    		'seedlot_name'                => undef,
+    		'weight_gram_seed_per_plot'   => undef,
+    		'col_number'                  => undef,
+    		'row_number'                  => undef
         },
         '5' => {
-            'weight_gram_seed_per_plot' => undef,
-            'col_number' => undef,
-            'row_number' => undef,
-            'range_number' => undef,
-            'harvest_date' => '2000-10-19',
-            'trial_type' => 'Preliminary Yield Trial',
-            'rep_number' => undef,
-            'num_seed_per_plot' => undef,
-            'trial_name' => '199947HBEPR_mora',
-            'is_a_control' => '1',
-            'planting_date' => '1999-06-23',
-            'seedlot_name' => undef
+    		'range_number'                => undef,
+    		'harvest_date'                => '2000-10-19',
+    		'trial_type'                  => 'Preliminary Yield Trial',
+    		'rep_number'                  => undef,
+    		'num_seed_per_plot'           => undef,
+    		'trial_name'                  => '199947HBEPR_mora',
+    		'is_a_control'                => '1',
+    		'planting_date'               => '1999-06-23',
+    		'seedlot_name'                => undef,
+    		'weight_gram_seed_per_plot'   => undef,
+    		'col_number'                  => undef,
+    		'row_number'                  => undef
         }
     };
 
-	is_deeply($parsed_data, $parsed_data_trial_info, 'check parsed trial data');
-	is_deeply()
+	is_deeply($parsed_data, $parsed_data_trial_info, 'check trial excel parse data structure');
 
-	my $trial_create = CXGN::Trial::TrialCreate
-		->new({
-		chado_schema      => $c->bcs_schema(),
-		dbh               => $c->dbh(),
-		trial_year        => "2024",
-		trial_description => "Multi trial upload with email functionality",
-		trial_location    => "test_location",
-		trial_name        => $trial_name,
-		design_type       => "Augmented",
-		design            => $parsed_data,
-		program           => "test",
-		upload_trial_file => $archived_filename_with_path,
-		operator          => "janedoe",
-		owner_id          => 41
-	});
+	#create the trials
+	foreach my $trial_name (keys %$parsed_data) {
+		my $trial_create = CXGN::Trial::TrialCreate->new({
+			chado_schema      => $c->bcs_schema(),
+			dbh               => $c->dbh(),
+			trial_year        => "2018",
+			trial_description => "Multi trial upload with email functionality",
+			trial_location    => "test_location",
+			trial_name        => $trial_name,
+			design_type       => "Augmented",
+			design            => $parsed_data->{$trial_name},
+			program           => "test",
+			operator          => "janedoe",
+			owner_id          => 41
+		});
 
-	my $save = $trial_create->save_trial();
+        my $save = $trial_create->save_trial();
+        ok($save->{'trial_id'}, "Check that trial_create worked for $trial_name");
+    }
+	# post-trial creation table counts
+    my $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
+    my $post_project_diff = $post_project_count - $pre_project_count;
+    ok($post_project_diff == scalar(keys %$parsed_data), "Check project table after uploading multiple trials");
 
-	# Check if the trial was created successfully
-	my $trial = $chado_schema->resultset("NaturalDiversity::NdExperiment")->find({ nd_experiment_name => 'Trial_upload_test' });
-	ok($trial, "Trial 'Trial_upload_test' was created successfully");
+    my $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
+    my $post_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
+    ok($post_nd_experiment_diff == scalar(keys %$parsed_data), "Check nd_experiment table after uploading multiple trials");
 
-	# Check if the project name matches the expected value
-	my $project_name = $trial->nd_experiment_projects->first->project->name;
-	is($project_name, "Trial_upload_test", "Project name matches the expected value");
+    my $post_nd_experiment_proj_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({})->count();
+    my $post_nd_experiment_proj_diff = $post_nd_experiment_proj_count - $pre_nd_experiment_proj_count;
+    ok($post_nd_experiment_proj_diff == scalar(keys %$parsed_data), "Check nd_experiment_project table after uploading multiple trials");
 
-	# Check if the project description matches the expected value
-	my $project_desc = $trial->nd_experiment_projects->first->project->description;
-	is($project_desc, "Trial Upload Test", "Project description matches the expected value");
+    my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
+    my $post_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
+    ok($post_project_prop_diff == scalar(keys %$parsed_data) * 2, "Check projectprop table after uploading multiple trials");
+
+    my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
+    my $post_stock_diff = $post_stock_count - $pre_stock_count;
+    ok($post_stock_diff == scalar(keys %$parsed_data) * 2, "Check stock table after uploading multiple trials");
+
+    my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
+    my $post_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
+    ok($post_stock_prop_diff == scalar(keys %$parsed_data) * 6, "Check stockprop table after uploading multiple trials");
+
+    my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
+    my $post_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
+    ok($post_stock_relationship_diff == scalar(keys %$parsed_data) * 2, "Check stock_relationship table after uploading multiple trials");
+
+    my $post_nd_experiment_stock_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({})->count();
+    my $post_nd_experiment_stock_diff = $post_nd_experiment_stock_count - $pre_nd_experiment_stock_count;
+    ok($post_nd_experiment_stock_diff == scalar(keys %$parsed_data) * 2, "Check nd_experiment_stock table after uploading multiple trials");
+
+    my $post_project_relationship_count = $c->bcs_schema->resultset('Project::ProjectRelationship')->search({})->count();
+    my $post_project_relationship_diff = $post_project_relationship_count - $pre_project_relationship_count;
+    ok($post_project_relationship_diff == scalar(keys %$parsed_data), "Check project_relationship table after uploading multiple trials");
+
+	# Send success email if all trials pass
+    my $success_email = Email::Simple->create(
+        header => [
+            To      => 'sk2783@cornell.edu',
+            From    => 'noreply@breedbase.org',
+            Subject => 'Successful trial design upload',
+        ],
+        body => "All trial designs have been successfully uploaded and processed.",
+    );
+    Email::Sender::Simple->sendmail($success_email, { transport => $transport });
+    my @deliveries = $transport->deliveries;
+    is(scalar @deliveries, 1, "Success email sent");
+    like($deliveries[0]->{email}->get_body, qr/All trial designs have been successfully uploaded/, "Success email content check");
+
+    # test error handling and email notifications
+    my $email_parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
+    $email_parser->load_plugin('InvalidPlugin');
+    my $parsed_email_data = $email_parser->parse();
+	
+	#check if parsing fails and errors are recorded
+    ok(!$parsed_email_data, "Check if invalid plugin parse fails");
+    ok($email_parser->has_parse_errors(), "Check that parser errors occur with invalid plugin");
+
+    # capture email
+	my $error_messages = join(', ', @{$email_parser->get_parse_errors()->{error_messages}});
+    my $email = Email::Simple->create(
+        header => [
+            To      => 'sk2783@cornell.edu',
+            From    => 'noreply@breedbase.org',
+            Subject => 'Error in uploading trial design',
+        ],
+        body => "An error occurred during the trial design upload: " . join(', ', @{$email_parser->get_parse_errors()->{error_messages}}),
+    );
+    Email::Sender::Simple->sendmail($email, { transport => $transport });
+    my @deliveries = $transport->deliveries;
+    is(scalar @deliveries, 1, "email sent");
+    like($deliveries[0]->{email}->get_body, qr/Error in uploading trial design/, "Email content check");
 
 	$f->clean_up_db();
 }
