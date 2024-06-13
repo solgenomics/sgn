@@ -22,27 +22,34 @@ solGS.dataset = {
     return data;
   },
 
-  getDatasetPops: function (dType) {
-    if (!Array.isArray(dType)) {
-      dType = [dType];
-    }
-    var dataset = new CXGN.Dataset();
-    var allDatasets = dataset.getDatasets();
+  addDataOwnerAttr(datasets, owner) {
 
+    for (var i = 0; i < datasets.length; i++) {
+      if (datasets[i]) {
+        datasets[i]["owner"] = owner;
+      }
+    }
+
+    return datasets;
+  },
+
+  converDatasetArrayToJson(datasets, datasetTypes) {
+
+    var dataset = new CXGN.Dataset();
     var dsIds = [];
     var datasetPops = [];
-    for (var i = 0; i < allDatasets.length; i++) {
-      var id = allDatasets[i][0];
-      var name = allDatasets[i][1];
+    for (var i = 0; i < datasets.length; i++) {
+      var id = datasets[i][0];
+      var name = datasets[i][1];
       var d = dataset.getDataset(id);
-
-      for (var j = 0; j < dType.length; j++) {
-        if (d.categories[dType[j]] && d.categories[dType[j]].length) {
+      console.log(`d: ${JSON.stringify(d)}`)
+      for (var j = 0; j < datasetTypes.length; j++) {
+        if (d.categories[datasetTypes[j]] && d.categories[datasetTypes[j]].length) {
           if (!dsIds.includes(id)) {
             var dsObj = {
               id: id,
               name: name,
-              type: dType[j],
+              type: datasetTypes[j],
               data_str: "dataset",
             };
             datasetPops.push(dsObj);
@@ -53,6 +60,27 @@ solGS.dataset = {
     }
 
     return datasetPops;
+
+  },
+
+  getDatasetPops: function (datasetTypes) {
+    if (!Array.isArray(datasetTypes)) {
+      datasetTypes = [datasetTypes];
+    }
+    var dataset = new CXGN.Dataset();
+    
+    var publicDatasets = dataset.getPublicDatasets();
+    publicDatasets = this.converDatasetArrayToJson(publicDatasets, datasetTypes);
+    publicDatasets = this.addDataOwnerAttr(publicDatasets, 'public')
+
+
+    var privateDatasets = dataset.getDatasets();
+    privateDatasets = this.converDatasetArrayToJson(privateDatasets, datasetTypes);
+    privateDatasets = this.addDataOwnerAttr(privateDatasets, 'private')
+    
+    var allDatasets = [privateDatasets, publicDatasets];
+    return allDatasets.flat();
+    
   },
 
   datasetTrainingPop: function (datasetId) {
@@ -97,10 +125,8 @@ solGS.dataset = {
           };
 
           if (trialsIds.length > 1) {
-            console.log("geno pro id " + genoProId);
             solGS.combinedTrials.downloadCombinedTrialsTrainingPopData(args);
           } else {
-            console.log("geno pro id " + genoProId);
             solGS.combinedTrials.downloadSingleTrialTrainingPopData(singleArgs);
           }
         } else {
