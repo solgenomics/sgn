@@ -7,7 +7,6 @@ $year
 $trial_type
 $trial_type_id
 $planting_date
-$show_transplanting_date
 $transplanting_date
 $harvest_date
 $trial_description
@@ -77,6 +76,7 @@ $field_trial_is_planned_to_cross
                       </div>
                     </div>
                 </div>
+% my $show_transplanting_date = $c->config->{show_transplanting_date} || 0;
 % if($show_transplanting_date){
     <div class="form-group">
         <label class="col-sm-3 control-label" for="edit_trial_transplanting_date">Transplanting Date: </label>
