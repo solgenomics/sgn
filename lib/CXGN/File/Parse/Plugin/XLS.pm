@@ -9,9 +9,8 @@ sub type {
 
 sub parse {
   my $self = shift;
-  my $file = shift;
-  my $type = shift;
-  return CXGN::File::Parse::Plugin::Excel->parse($file, $type);
+  my $super = shift;
+  return CXGN::File::Parse::Plugin::Excel->parse($super);
 }
 
 1;
