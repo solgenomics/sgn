@@ -82,6 +82,24 @@ OPTIONAL COLUMNS:
   my $opional_columns = $parsed->{optional_columns};
   my $additional_columns = $parsed->{additional_columns};
 
+COLUMN ALIASES
+  - Alternate column headers can be specified as column_aliases
+  - This will replace the alternate name with the preferred name in the final parsed data
+
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx',
+    required_columns => ['accession_name', 'species_name'],
+    column_aliases => {
+      'accession_name' => [ 'accession', 'name' ],
+      'species_name' => [ 'species' ]
+    }
+  );
+
+CASE SENSITIVITY
+  - Column names are case-insensitive for any names provided in required_columns, optional_columns, or column_aliases (known column names)
+  - If the file contains a column name in a different case than the known column name, the column name in the file
+      will be replaced by the known column name in the final parsed data
+
 =head1 DESCRIPTION
 
 The parse() function will return a hashref with the following properties:
@@ -174,7 +192,7 @@ has 'file' => (
 # File type, if not provided will use the file path extension to guess
 has 'type' => (
   isa => "Str",
-  is => "ro"
+  is => "rw"
 );
 
 # Array of required columns, will check to see if they are included in the file
@@ -189,7 +207,41 @@ has optional_columns => (
   is => "ro"
 );
 
+# Map of column aliases, where the key is the preferred column name and the value is an arrayref of alternate names
+has column_aliases => (
+  isa => "HashRef",
+  is => "ro"
+);
 
+
+#
+# PROCESS INITIAL ARGUMENTS
+# - Flatten the column aliases from 'preferred' => [ 'alt 1', 'alt 2' ] to 'alt 1' => 'preferred', 'alt 2' => 'preferred'
+#
+sub BUILDARGS {
+  my $orig = shift;
+  my %args = @_;
+
+  # flatten column aliases to alias = preferred
+  if ( $args{column_aliases} ) {
+    my %alias_map;
+    my $aliases = $args{column_aliases};
+    foreach my $pref ( keys %$aliases ) {
+      foreach my $alias ( @{$aliases->{$pref}} ) {
+        $alias_map{$alias} = $pref;
+      }
+    }
+    $args{column_aliases} = \%alias_map;
+  }
+
+  return \%args;
+}
+
+
+# 
+# PARSE DATA FILE
+# Read the data file and parse it into the uniform format using the appropriate plugin
+#
 sub parse {
   my $self = shift;
   my $file = $self->file();
@@ -200,6 +252,7 @@ sub parse {
   # If type is not defined, use the file extension
   if ( !$type ) {
     ($type) = $file =~ /\.([^.]+)$/;
+    $self->type($type);
   }
 
   # Check if the file exists
@@ -224,7 +277,7 @@ sub parse {
     my $parsed;
     my $error;
     try {
-      $parsed = $parser->parse($file, $type);
+      $parsed = $parser->parse($self);
     } catch {
       $error = "Encountered error while reading and parsing file: $_";
     };
@@ -235,8 +288,16 @@ sub parse {
     }
 
     # Get parsed columns and row data
+    my $errors = $parsed->{errors};
     my $columns = $parsed->{columns};
     my $data = $parsed->{data};
+
+    # Return if parsing errors
+    if ( scalar(@$errors) > 0 ) {
+      return {
+        errors => $errors
+      };
+    }
 
     # Check for empty files with no data
     if ( scalar(@$columns) < 1 || scalar(@$data) < 1 ) {
@@ -298,6 +359,59 @@ sub parse {
       errors => [ "No appropriate file parsing plugin for file: $file, type: $type" ]
     };
   }
+}
+
+#
+# CLEAN HEADER
+# - clean the header value
+# - check for case-insensitive matches of required and optional columns
+# - check for case-insensitive matches of column aliases
+#
+sub clean_header {
+  my $self = shift;
+  my $header = shift;
+  my $required_columns = $self->required_columns();
+  my $optional_columns = $self->optional_columns();
+  my $column_aliases = $self->column_aliases();
+
+  # Do usual value cleaning
+  $header = $self->clean_value($header);
+
+  # check for case-insensitive required column match
+  if ( $required_columns ) {
+    foreach my $col (@$required_columns ) {
+      $header = $col if ( uc($col) eq uc($header) );
+    }
+  }
+
+  # check for case-insensitive optional column match
+  if ( $optional_columns ) {
+    foreach my $col (@$optional_columns ) {
+      $header = $col if ( uc($col) eq uc($header) );
+    }
+  }
+
+  # check for case-insensitive column alias
+  if ( $column_aliases ) {
+    foreach my $alias ( keys(%$column_aliases) ) {
+      $header = $column_aliases->{$alias} if ( uc($alias) eq uc($header) );
+    }
+  }
+
+  return $header;
+}
+
+#
+# CLEAN VALUE
+# - remove leading & trailing whitespace
+#
+sub clean_value {
+  my $self = shift;
+  my $value = shift;
+  if ( $value && $value ne '' ) {
+    $value =~ s/^\s+|\s+$//g;   # trim whitespace
+  }
+  return $value;
 }
 
 1;

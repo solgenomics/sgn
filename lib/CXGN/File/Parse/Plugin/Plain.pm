@@ -1,6 +1,6 @@
 package CXGN::File::Parse::Plugin::Plain;
 
-use Moose;
+use CXGN::File::Parse;
 use Text::CSV;
 
 sub type {
@@ -9,8 +9,9 @@ sub type {
 
 sub parse {
   my $self = shift;
-  my $file = shift;
-  my $type = shift;
+  my $super = shift;
+  my $file = $super->file();
+  my $type = $super->type();
 
   # Parsed data to return
   my %rtn = (
@@ -59,7 +60,10 @@ sub parse {
   close $fh;
 
   # Set data columns
-  $rtn{columns} = $rows[0];
+  foreach my $c (@{$rows[0]}) {
+    $c = $super->clean_header($c);
+    push @{$rtn{columns}}, $c;
+  }
   my $row_max = scalar(@rows);
   my $col_max = scalar(@{$rows[0]})-1;
 
@@ -79,6 +83,7 @@ sub parse {
     for my $c ( 0..$col_max ) {
       my $h = $rows[0]->[$c];
       my $v = $rows[$r]->[$c];
+      $v = $super->clean_value($v);
       $row_info{$h} = $v;
 
       if ( $v && $v ne '' ) {

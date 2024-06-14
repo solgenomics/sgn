@@ -20,7 +20,13 @@ sub parse {
 
     my $parser = CXGN::File::Parse->new(
       file => $filename,
-      required_columns => [ 'Name', 'Abbreviation', 'Country Code', 'Country Name', 'Program', 'Type', 'Latitude', 'Longitude', 'Altitude' ]
+      required_columns => [ 'Name', 'Abbreviation', 'Country Code', 'Country Name', 'Program', 'Type', 'Latitude', 'Longitude', 'Altitude' ],
+      optional_columns => [ 'NOAA Station ID ' ],
+      column_aliases => {
+        'Altitude' => [ 'Elevation' ],
+        'Latitude' => [ 'Lat' ],
+        'Longitude' => [ 'Lon', 'Long' ]
+      }
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};

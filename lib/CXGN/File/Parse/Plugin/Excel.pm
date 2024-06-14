@@ -1,6 +1,5 @@
 package CXGN::File::Parse::Plugin::Excel;
 
-use Moose;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 
@@ -10,8 +9,9 @@ sub type {
 
 sub parse {
   my $self = shift;
-  my $file = shift;
-  my $type = shift;
+  my $super = shift;
+  my $file = $super->file();
+  my $type = $super->type();
 
   # Parsed data to return
   my %rtn = (
@@ -48,6 +48,8 @@ sub parse {
   for my $col ( 0 .. $col_max ) {
     my $c = $worksheet->get_cell(0, $col);
     my $v = $c->value() if $c;
+    $v = $super->clean_header($v);
+
     if ( $v && $v ne '' ) {
       push @{$rtn{columns}}, $v;
       $values_map{$v} = {};
@@ -61,10 +63,10 @@ sub parse {
     );
     my $skip_row = 1;
     for my $col ( 0 .. $col_max ) {
-      my $hc = $worksheet->get_cell(0, $col);
-      my $hv = $hc->value() if $hc;
+      my $hv = $rtn{columns}->[$col];
       my $c = $worksheet->get_cell($row, $col);
       my $v = $c->value() if $c;
+      $v = $super->clean_value($v);
       $row_info{$hv} = $v;
 
       if ( $v && $v ne '' ) {
