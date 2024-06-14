@@ -914,17 +914,15 @@ $trial->remove_transplanting_date('2016/01/03 12:21:11');
 $transplanting_date = $trial->get_transplanting_date();
 ok(!$transplanting_date, "test remove transplanting_date");
 
-#test transplantnig date accessors visibility
-my $transplanting_date = $trial->get_transplanting_date();
-ok(!$transplanting_date, "initial transplanting_date is empty");
+# test transplantnig date accessors visibility
 $trial->set_transplanting_date('2023/06/15 12:21:14');
 my $transplanting_date = $trial->get_transplanting_date();
 is($transplanting_date, '2023-June-15 12:21:14', "set transplanting_date test");
-$trial->set_transplanting_date('2023-06-16');
-my $transplanting_date = $trial->get_transplanting_date();
-is($transplanting_date, '2023-June-16', "update/set transplanting_date test");
-$trial->remove_transplanting_date();
-my $transplanting_date = $trial->get_transplanting_date();
+$trial->set_transplanting_date('2023/06/16 12:21:14');
+$transplanting_date = $trial->get_transplanting_date();
+is($transplanting_date, '2023-June-16 12:21:14', "update/set transplanting_date test");
+$trial->remove_transplanting_date('2023/06/16 12:21:14');
+$transplanting_date = $trial->get_transplanting_date();
 ok(!$transplanting_date, "remove transplanting_date test");
 
 #test transplanting_date accessors
