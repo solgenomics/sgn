@@ -12,8 +12,6 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-                <b>Locations may be uploaded in an Excel file (.xls or .xlsx)</b>
-                <br>
                 <b>Header:</b><br>
                 The first row (header) must contain the following:
                 <br>
@@ -45,8 +43,8 @@
                 <b>Altitude:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
                 <br><b>Optional values:</b><br>
                 <b>NOAA Station ID:</b> The NOAA Station ID that is nearest and most relevant to the location. <a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a><br>
-                <br>
 
+          <& /help/file_upload_type.mas, type => "Locations" &>
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
     <label for="locations_upload_file" style="display: inline-block;">Location File:</label>
     <input type="file" name="locations_upload_file" id="locations_upload_file" encoding="multipart/form-data" />
