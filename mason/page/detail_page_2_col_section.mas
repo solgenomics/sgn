@@ -14,6 +14,11 @@ $info_section_subtitle => "A subtitle"
 $buttons_html => undef
 $locations_by_program_json => undef
 
+#Trying to find the right one
+$project_id => undef
+$name => undef
+
+
 #Specific to trial detail page
 $has_plant_entries => undef
 $has_subplot_entries => undef
@@ -131,6 +136,9 @@ $analytics_protocol_type_name => undef
 $analytics_protocol_create_date => undef
 $analytics_protocol_properties => {}
 $analytics_protocol_result_summary => {}
+
+#Specific to activity page
+$vendor_id => undef
 
 </%args>
 
@@ -275,7 +283,7 @@ $analytics_protocol_result_summary => {}
                                 <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
 % } #End stock_additional_info_section
 % if ($info_section_id eq 'stock_trials_section'){
-                                <& /stock/trials.mas, stock_id => $stock_id &>
+                                <& /stock/trials.mas, stock_id => $stock_id, trial_id => $trial_id, trial_name => $trial_name, name => $name, project_id => $project_id&>
 % } #End stock_trials_section
 % if ($info_section_id eq 'stock_upload_files'){
                                 <& /stock/accession_files.mas, stock_id => $stock_id &>
@@ -296,6 +304,10 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'stock_related_stock_section'){
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
+% if ($info_section_id eq 'vector_related_stocks_section'){
+                                <& /stock/vector_related_stocks.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_related_stocks_section
+
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
 
@@ -309,6 +321,12 @@ $analytics_protocol_result_summary => {}
 % } #End stock_images_section
 % if ($info_section_id eq 'stock_sequencing_status_section'){
                                 <& /stock/sequencing_status.mas, stock_id => $stock_id &>
+% } #End stock audit section
+% if($info_section_id eq 'audit_table_section'){
+        <& /stock/audit.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename&>
+% } #End TRIALS audit section
+% if($info_section_id eq 'trial_audit_table_section'){
+        <& /breeders_toolbox/trial/trial_audit.mas, trial_id => $trial_id, project_id => $project_id&>
 % } #End stock requencing status section
 % if ($info_section_id eq 'stock_literature_annotation_section'){
                                 <&| /page/info_section.mas, title=>"Literature annotation (".scalar( @$pubs ).")" , id=>"publications" , collapsible=>1, collapsed=>1 &>
@@ -342,8 +360,12 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'stock_delete_section'){
                                 <& /stock/delete.mas, stock_id=>$stock_id &>
 % } #End stock_delete_section
-
-
+% if ($info_section_id eq 'population_delete_section'){
+                                <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>
+% } #End population_delete_section
+% if ($info_section_id eq 'population_members_section'){
+                                <& /stock/population_members.mas, stock_id=>$stock_id &>
+% } #End population_members_section
 % if ($info_section_id eq 'manage_tissue_samples_field_trials'){
                                 <& /breeders_toolbox/tissue_samples/field_trials_with_tissue_samples.mas &>
 % } #End manage_tissue_samples_field_trials
@@ -373,6 +395,9 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_project_plates'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_plates.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_plates
+% if ($info_section_id eq 'genotyping_data_archived_vcf') {
+                                <& /breeders_toolbox/genotyping_data_project/genotype_archived_vcf.mas, trial_id=>$trial_id &>
+% } #End genotyping_data_archived_vcf
 % if ($info_section_id eq 'genotyping_project_deletion_section'){
                                 <& /breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas, trial_id=>$trial_id &>
 % } #End genotyping_project_deletion_section
@@ -550,6 +575,20 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'program_product_profile_section'){
                                 <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
 % } #End program_product_profile_section
+
+% if ($info_section_id eq 'activity_project_details'){
+                                <& /tracking_activities/activity_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner, vendor_id => $vendor_id &>
+% } #End activity_project_details
+% if ($info_section_id eq 'active_tracking_identifiers_section'){
+                                <& /tracking_activities/active_tracking_identifiers.mas, trial_id=>$trial_id &>
+% } #End active_tracking_identifiers_section
+
+% if ($info_section_id eq 'transformation_project_details'){
+                                <& /transformation/transformation_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner &>
+% } #End transformation_project_details
+% if ($info_section_id eq 'transformations_in_project_section'){
+                                <& /transformation/transformations_in_project.mas, trial_id=>$trial_id &>
+% } #End transformations_in_project_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

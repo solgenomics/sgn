@@ -297,8 +297,8 @@
                                 <td>to_seedlot_name</td>
                                 <td>amount</td>
                                 <td>weight(g)</td>
-                                <td>transaction_description</td>
                                 <td>operator_name</td>
+                                <td>transaction_description</td>
                             </tr>
                         </tbody>
                     </table>
@@ -459,15 +459,14 @@
                                 <td>from_seedlot_name</td>
                                 <td>amount</td>
                                 <td>weight(g)</td>
-                                <td>transaction_description</td>
                                 <td>operator_name</td>
+                                <td>transaction_description</td>
                             </tr>
                         </tbody>
                     </table>
                     <b>Required fields:</b>
                     <ul>
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
-                        <li><b>to_seedlot_name:</b> Must exist in the database. Seeds were added to this seedlot.</li>
                         <li>
                             <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
                             <br/><b>AND/OR</b><br/>

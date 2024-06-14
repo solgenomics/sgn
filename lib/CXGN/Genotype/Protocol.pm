@@ -372,6 +372,7 @@ sub list {
 sub list_simple {
     print STDERR "Protocol list simple search\n";
     my $schema = shift;
+    my $protocol_list = shift;
     my @where_clause;
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
@@ -381,14 +382,22 @@ sub list_simple {
     my $pcr_marker_protocol_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
     my $pcr_marker_details_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
 
+    if ($protocol_list && scalar(@$protocol_list)>0) {
+        my $protocol_sql = join ("," , @$protocol_list);
+        push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
+    } else {
+        push @where_clause, "nd_protocol.type_id IN ($nd_protocol_type_id, $pcr_marker_protocol_type_id)"
+    }
+    my $where_clause = scalar(@where_clause) > 0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
+
     my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value->>'header_information_lines', nd_protocolprop.value->>'reference_genome_name', nd_protocolprop.value->>'species_name', nd_protocolprop.value->>'sample_observation_unit_type_name', jsonb_array_length(nd_protocolprop.value->'marker_names'), nd_protocolprop.value->>'marker_type'
         FROM nd_protocol
-        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id IN (?,?))
-        WHERE nd_protocol.type_id IN (?,?)
+        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id) AND nd_protocolprop.type_id IN (?,?)
+        $where_clause
         ORDER BY nd_protocol.nd_protocol_id ASC;";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($vcf_map_details_cvterm_id, $pcr_marker_details_type_id, $nd_protocol_type_id, $pcr_marker_protocol_type_id);
+    $h->execute($vcf_map_details_cvterm_id, $pcr_marker_details_type_id);
 
     my @results;
     while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $header_information_lines, $reference_genome_name, $species_name, $sample_type_name, $marker_count, $marker_type) = $h->fetchrow_array()) {
@@ -414,8 +423,42 @@ sub list_simple {
             marker_type => $marker_type
         };
     }
-    #print STDERR "SIMPLE LIST =".Dumper \@results."\n";
+#    print STDERR "SIMPLE LIST =".Dumper (\@results)."\n";
     return \@results;
 }
+
+
+sub set_name {
+    my $self = shift;
+    my $name = shift;
+    my $protocol_id = $self->nd_protocol_id;
+    my $protocol_row = $self->bcs_schema->resultset("NaturalDiversity::NdProtocol")->find({
+        nd_protocol_id => $protocol_id,
+    });
+
+    if ($protocol_row) {
+        $protocol_row->name($name);
+        $protocol_row->update();
+    }
+}
+
+
+sub set_description {
+    my $self = shift;
+    my $description = shift;
+    my $protocol_id = $self->nd_protocol_id;
+    my $protocol_row = $self->bcs_schema->resultset("NaturalDiversity::NdProtocol")->find({
+        nd_protocol_id => $protocol_id,
+    });
+
+    if ($protocol_row) {
+        $protocol_row->description($description);
+        $protocol_row->update();
+    }
+}
+
+
+
+
 
 1;

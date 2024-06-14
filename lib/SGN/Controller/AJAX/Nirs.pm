@@ -35,9 +35,9 @@ sub generate_spectral_plot_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $dbh = $c->dbc->dbh();
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 0);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
     my $dataset_id = $c->req->param('dataset_id');
     my $nd_protocol_id = $c->req->param('nd_protocol_id');
     my $query_associated_stocks = $c->req->param('query_associated_stocks') eq 'yes' ? 1 : 0;
@@ -106,10 +106,9 @@ sub generate_results_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $dbh = $c->dbc->dbh();
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 'submitter');
-
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
     print STDERR Dumper $c->req->params();
 
     my $format_id = $c->req->param('format');
@@ -437,11 +436,11 @@ sub generate_predictions_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $dbh = $c->dbc->dbh();
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 'submitter');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
     print STDERR Dumper $c->req->params();
 
     my $model_id = $c->req->param('model_id');

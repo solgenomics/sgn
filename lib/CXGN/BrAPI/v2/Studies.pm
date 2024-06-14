@@ -348,9 +348,9 @@ sub store {
 	$page_size = scalar(@study_dbids);
 	$page = 0;
 	if (scalar(@study_dbids)>0){
-		my $dbh = $c->dbc->dbh();
-		my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-		my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+		# my $dbh = $c->dbc->dbh();
+		# my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+		# my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
 		my $supported_crop = $c->config->{"supportedCrop"};
 
@@ -557,6 +557,32 @@ sub _search {
 	my $sort_by = shift;
 	my $sort_order = shift;
 
+	if($sort_order){
+		if(lc $sort_order eq "asc"){
+			$sort_order = ' ASC'
+		} elsif (lc $sort_order eq "desc"){
+			$sort_order = ' DESC';
+		} else{
+			$sort_order = undef;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortOrder valid values are: asc or desc", 400);
+		}
+	}
+
+	if($sort_by){
+		my %sort_by_items = (
+			"locationDbId" => " location.value ",
+			"studyDbId" => " study.project_id ",
+			"studyName" => " study.name",
+			"trialDbId" => " folder.project_id ",
+			"trialName" => " folder.name "
+		);
+		if ($sort_by_items{$sort_by}){
+			$sort_by = " ORDER BY " . $sort_by_items{$sort_by} ;
+		} else {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortBy valid values are only: locationDbId, studyDbId, studyName, trialDbId or trialName at the moment.", 400);
+		}
+	}
+
 	# my $c = shift;
 	my $page_obj = CXGN::Page->new();
     my $main_production_site_url = $page_obj->get_hostname();
@@ -691,7 +717,7 @@ sub _search {
 		my $external_references = $references->search();
 		my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
-
+ 
 		my %data_obj = (
 			active                      => JSON::true,
 			additionalInfo              => $additional_info,

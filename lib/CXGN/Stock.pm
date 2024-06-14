@@ -1251,6 +1251,7 @@ sub get_ancestor_hash {
     $pedigree{'cross_type'} = $female_parent_relationship->value();
 	$pedigree{'female_parent'} = get_ancestor_hash( $self, $female_parent_stock_id, $direct_descendant_ids );
   }
+
   my $male_parent_relationship = $stock_relationships->find({type_id => { in => [ $cvterm_male_parent->cvterm_id(), $cvterm_rootstock_of->cvterm_id() ]}, subject_id => {'not_in' => $direct_descendant_ids}});
   if ($male_parent_relationship) {
     my $male_parent_stock_id = $male_parent_relationship->subject_id();
@@ -1454,6 +1455,7 @@ sub get_parents {
     $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
     $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
     $parents{'father_id'} = $pedigree_hashref->{'male_parent'}->{'id'};
+    $parents{'cross_type'} = $pedigree_hashref->{'female_parent'}->{'cross_type'};
     return \%parents;
 }
 
@@ -2116,6 +2118,7 @@ sub merge {
     Other stock deleted: $other_stock_deleted.
 COUNTS
 
+	return undef;
 }
 
 

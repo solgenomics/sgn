@@ -96,7 +96,7 @@ sub observations_store {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!', 403);
     }
 
-    my $p = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->find({sp_person_id=>$user_id});
+    my $p = $c->dbic_schema("CXGN::People::Schema", undef, $user_id)->resultset("SpPerson")->find({sp_person_id=>$user_id});
     my $user_name = $p->username;
 
     ## Validate request structure and parse data
@@ -288,8 +288,7 @@ sub _search {
     my $counter = 0;
 
     foreach (@$data){
-
-        if (  $_->{phenotype_value}  && $_->{phenotype_value} ne "" ) {
+        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || $_->{phenotype_value} eq '0' ) {
             my $observation_id = "$_->{phenotype_id}";
             my $additional_info;
             my $external_references;

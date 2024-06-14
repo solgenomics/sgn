@@ -620,16 +620,16 @@ sub upload_seedlots_POST : Args(0) {
                 $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             }
 
-	    $sl->quality($val->{quality});
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
             $sl->accession_stock_id($val->{accession_stock_id});
             $sl->cross_stock_id($val->{cross_stock_id});
+            $sl->description($val->{description});
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
-	          $sl->quality($val->{quality});
+            $sl->quality($val->{quality});
             $sl->check_name_exists(0); #already validated
             my $return = $sl->store();
             if ( defined $return->{error} ) {

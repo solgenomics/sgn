@@ -1,0 +1,63 @@
+
+<%args>
+$genefamily_id
+$members => undef
+$member_count => undef
+$annot_data => undef
+$errors => undef
+$tree_data => undef
+$tree_link_disabled => undef
+$fasta_data => undef
+$seq_data => undef
+$align_link_disabled => undef
+
+</%args>
+
+
+<h1>Family detail for family <% $genefamily_id %></h1>
+<table><tr><td>Family: <b><% $genefamily_id %></b></td><td><% $annot_data %></td></tr>
+  <tr><td colspan="2">Note: <% $errors %></td></tr>
+</table>
+
+<h2>Gene family members</h2>
+Member count: <% $member_count %><br />
+<div id="family_members">
+  <% $members %>
+</div>	
+
+<table><tr>
+    <hr>
+    <td>View</td>
+    <td>
+      <form name="alignment_viewer_form" method="POST" action="/tools/align_viewer/index.pl">
+	<input type="hidden" name="seq_data" value="<% $seq_data %>" />
+	<input type="submit" value="Alignment" <% $align_link_disabled %> />
+	<input type="hidden" name="format" value="fasta" />
+      </form>
+    </td>
+
+    <td>
+      <form name="tree_browser_form" method="post" action="/tools/tree_browser/index.pl">
+	<input type="hidden" name="" value="<% $tree_data %>" />
+	<input type="submit" value="Tree" <% $tree_link_disabled %> />
+      </form>
+    </td>
+
+
+
+    </tr>
+</table>
+<hr>
+<table><tr><td>
+Sequences in fasta:</td><td>
+<form name="tree_browser_unaligned" method="post" action="/tools/align_viewer/index.pl">
+  <input type="hidden" name="seq_data" value="<% $fasta_data %>" />
+  <input type="hidden" name="format" value="fasta_unaligned" />
+  <input type="submit" value="Align" />
+</form>
+
+<td></tr>
+<td colspan="2">
+      <pre><% $fasta_data %></pre>
+</td></tr></table>
+

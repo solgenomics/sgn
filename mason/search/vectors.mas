@@ -2,7 +2,7 @@
 <%args>
 
 $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
-$stock_types     => undef
+$stock_types     => []
 $editable_vector_props => undef
 </%args>
 
@@ -18,8 +18,9 @@ $editable_vector_props => undef
 use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
 
 my $vector_cvterm_id;
+my $stock_types_number = scalar(@$stock_types);
 
-for (my $i=0; $i<= scalar(@$stock_types); $i++) {
+for (my $i=0; $i<= $stock_types_number; $i++) {
     if ( $stock_types->[$i][1] eq "vector_construct" ) {
         $vector_cvterm_id = $stock_types->[$i][0];
         last();
