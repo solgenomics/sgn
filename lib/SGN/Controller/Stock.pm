@@ -175,6 +175,13 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
 	my $stock = $c->stash->{stock};
 	my $stock_id = $stock ? $stock->get_stock_id : undef ;
+
+    if (!$stock_id) {
+        $c->stash->{message} = "The requested stock does not exist or has been deleted.";
+        $c->stash->{template} = 'generic_message.mas';
+        return;
+    }
+
 	my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
 	my $type = 1 if $stock_type && !$stock_type=~ m/population/;
 	# print message if stock_id is not valid

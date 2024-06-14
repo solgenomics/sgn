@@ -749,6 +749,7 @@ sub get_trial_design {
     foreach my $trial_id (@$trial_ids) {
         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
         my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
+        my $entry_numbers = $trial->get_entry_numbers();
 
         my $treatments = $trial->get_treatments();
         my @treatment_ids = map { $_->[0] } @{$treatments};
@@ -790,6 +791,7 @@ sub get_trial_design {
                     }
                 }
                 $detail_hash{'management_factor'} = join(",", @applied_treatments);
+                $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;
                 $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
 
             }
