@@ -173,6 +173,7 @@ $design_types => ()
 <tr>
 <td>
 <a name="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
+<a name="seedlot_create_accessions_bulk_upload"><p>Upload Seedlots and create accessions</p></a>
 <a name="add_seedlot_button"><p>Add A Seedlot</p></a>
 </td>
 <td>
@@ -186,6 +187,7 @@ $design_types => ()
 </table>
 </div>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/upload_seedlots_create_accessions_dialog.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
 <div class="well well-sm">
