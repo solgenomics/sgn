@@ -83,11 +83,18 @@ sub parse {
     for my $c ( 0..$col_max ) {
       my $h = $rows[0]->[$c];
       my $v = $rows[$r]->[$c];
-      $v = $super->clean_value($v);
+      $v = $super->clean_value($v, $h);
       $row_info{$h} = $v;
 
       if ( $v && $v ne '' ) {
-        $values_map{$h}->{$v} = 1;
+        if ( ref($v) eq 'ARRAY' ) {
+          foreach (@$v) {
+            $values_map{$h}->{$_} = 1;
+          }
+        }
+        else {
+          $values_map{$h}->{$v} = 1;
+        }
         $skip_row = 0;
       }
     }

@@ -95,6 +95,30 @@ COLUMN ALIASES
     }
   );
 
+COLUMN ARRAYS
+  - Specify columns that can include multiple items (separated by a delimiter)
+  - The default delimiter is a comma
+  - To use the default delimiter, you can specify the columns to parse as an array
+  - To specify a different delimiter, you can specify the columns to parse as a hash with the delimiter as the value
+  - The returned values in the data hash will be returned as a split array of values
+
+  # to use the default delimiter
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx',
+    required_columns => ['accession_name', 'species_name'],
+    column_arrays => ['synonym', 'organization_name']
+  );
+
+  # to specify the delimiter
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx',
+    required_columns => ['accession_name', 'species_name'],
+    column_arrays => {
+      'synonym' => ';',
+      'organization_name' => '&'
+    }
+  );
+
 CASE SENSITIVITY
   - Column names are case-insensitive for any names provided in required_columns, optional_columns, or column_aliases (known column names)
   - If the file contains a column name in a different case than the known column name, the column name in the file
@@ -213,6 +237,14 @@ has column_aliases => (
   is => "ro"
 );
 
+# Array or Map of column arrays
+# If an array, the default demiliter will be used for each specified colum name
+# If a hash, they key is the column name and the value is the delimiter used to split the value
+has column_arrays => (
+  isa => "ArrayRef[Str]|HashRef",
+  is => "ro"
+);
+
 
 #
 # PROCESS INITIAL ARGUMENTS
@@ -232,6 +264,23 @@ sub BUILDARGS {
       }
     }
     $args{column_aliases} = \%alias_map;
+  }
+
+  # flatten column arrays to column = delimiter
+  if ( $args{column_arrays} ) {
+    my %array_map;
+    my $v = $args{column_arrays};
+    if ( ref($v) eq 'HASH' ) {
+      foreach my $k (keys %$v) {
+        $array_map{$k} = $v->{$k};
+      }
+    }
+    elsif ( ref($v) eq 'ARRAY' ) {
+      foreach my $c (@$v) {
+        $array_map{$c} = ',';
+      }
+    }
+    $args{column_arrays} = \%array_map;
   }
 
   return \%args;
@@ -404,13 +453,30 @@ sub clean_header {
 #
 # CLEAN VALUE
 # - remove leading & trailing whitespace
+# - split column arrays
 #
 sub clean_value {
   my $self = shift;
   my $value = shift;
+  my $column = shift;
+  my $column_arrays = $self->column_arrays();
+
+  # trim whitespace
   if ( $value && $value ne '' ) {
-    $value =~ s/^\s+|\s+$//g;   # trim whitespace
+    $value =~ s/^\s+|\s+$//g;
   }
+
+  # split values
+  if ( $column && $column_arrays && exists $column_arrays->{$column} ) {
+    my $delim = $column_arrays->{$column};
+    my @values;
+    foreach my $v (split($delim, $value) ) {
+      $v =~ s/^\s+|\s+$//g;
+      push(@values, $v);
+    }
+    $value = \@values;
+  }
+
   return $value;
 }
 

@@ -66,11 +66,18 @@ sub parse {
       my $hv = $rtn{columns}->[$col];
       my $c = $worksheet->get_cell($row, $col);
       my $v = $c->value() if $c;
-      $v = $super->clean_value($v);
+      $v = $super->clean_value($v, $hv);
       $row_info{$hv} = $v;
 
       if ( $v && $v ne '' ) {
-        $values_map{$hv}->{$v} = 1;
+        if ( ref($v) eq 'ARRAY' ) {
+          foreach (@$v) {
+            $values_map{$hv}->{$_} = 1;
+          }
+        }
+        else {
+          $values_map{$hv}->{$v} = 1;
+        }
         $skip_row = 0;
       }
     }
