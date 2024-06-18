@@ -20,12 +20,15 @@ sub parse {
 
     my $parser = CXGN::File::Parse->new(
       file => $filename,
-      required_columns => [ 'Name', 'Abbreviation', 'Country Code', 'Country Name', 'Program', 'Type', 'Latitude', 'Longitude', 'Altitude' ],
-      optional_columns => [ 'NOAA Station ID ' ],
+      required_columns => [ 'Name', 'Abbreviation', 'Country Code', 'Country Name', 'Program', 'Type', 'Latitude', 'Longitude', 'Elevation' ],
+      optional_columns => [ 'NOAA Station ID' ],
       column_aliases => {
-        'Altitude' => [ 'Elevation' ],
+        'Elevation' => [ 'Altitude' ],
         'Latitude' => [ 'Lat' ],
         'Longitude' => [ 'Lon', 'Long' ]
+      },
+      column_arrays => {
+        'Program' => '&'
       }
     );
     my $parsed = $parser->parse();
@@ -42,7 +45,7 @@ sub parse {
 
     for my $row (@$parsed_data) {
         my $row_num = $row->{_row};
-        our($name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude,$noaa_station_id) = undef;
+        our($name,$abbreviation,$country_code,$country_name,$programs,$type,$latitude,$longitude,$altitude,$noaa_station_id) = undef;
 
         # check that name is defined and isn't already in database
         $name = $row->{'Name'};
@@ -69,16 +72,13 @@ sub parse {
         }
 
         # check that program is defined, is in database
-        $program = $row->{'Program'};
-
-        #split on comma and test each individual program
-        my @programs = split ("&", $program);
-        foreach my $bp (@programs) {
-            $bp =~ s/^\s+|\s+$//g; #trim whitespace
+        $programs = $row->{'Program'};
+        foreach my $bp (@$programs) {
             if (!$check->_is_valid_program($bp)) {
                 push @errors, "Row $row_num: Program $bp does not exist in the database.\n";
             }
         }
+        my $program_string = join("&", @$programs);
 
         # check that type is defined, is one of approved types
         $type = $row->{'Type'};
@@ -99,15 +99,15 @@ sub parse {
         }
 
         # check has length, is number between -418 and 8,848
-        $altitude = $row->{'Altitude'};
+        $altitude = $row->{'Elevation'};
         if( ($altitude !~ /^-?[0-9.]+$/) || ($altitude < -418) || ($altitude > 8848) ) {
-            push @errors, "Row $row_num: Altitude $altitude is not a number between -418 (Dead Sea) and 8,848 (Mt. Everest).\n";
+            push @errors, "Row $row_num: Elevation $altitude is not a number between -418 (Dead Sea) and 8,848 (Mt. Everest).\n";
         }
 
         $noaa_station_id = $row->{'NOAA Station ID'};
 
-        print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude, $noaa_station_id\n";
-        push @rows, [$name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude,$noaa_station_id];
+        print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program_string, $type, $latitude, $longitude, $altitude, $noaa_station_id\n";
+        push @rows, [$name,$abbreviation,$country_code,$country_name,$program_string,$type,$latitude,$longitude,$altitude,$noaa_station_id];
     }
 
     if (scalar @errors > 0) {
