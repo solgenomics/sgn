@@ -509,6 +509,7 @@ jQuery(document).ready(function () {
                   id: "cancel_queue_info",
                   click: function () {
                     jQuery(this).dialog("close");
+                    jQuery(runKinshipBtnId).show();
                   },
                 },
               },
