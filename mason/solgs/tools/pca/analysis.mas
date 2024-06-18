@@ -43,13 +43,14 @@ if (!$data_structure) {
 my $url = $c->req->path;
 
 
-my $title;
+my $title; 
 my $collapsed = 0;
-if ($url =~ /pca\/analysis/) {
-$title = 'Select a list of accessions or trials or a dataset and run PCA';
-} else {
-$title = 'Population structure (PCA)';
-$collapsed = 1;
+my $collapsible = 0;
+
+if ($url !~ /pca\/analysis/) {
+  $title = 'Principal Component Analysis (PCA)';
+  $collapsible = 1;
+  $collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
 </%perl>
@@ -60,13 +61,13 @@ $collapsed = 1;
 % if ($url =~ /pca\/analysis/) {
 
 <& /page/page_title.mas,
-   title => "Principal Component Analysis (PCA)"
+   title => 'Principal Component Analysis (PCA)'
   &>
 
 %}
 
 <&| /page/info_section.mas,
-  collapsible => 1,
+  collapsible => $collapsible,
   collapsed   => $collapsed,
   title       => $title
 &>
@@ -81,9 +82,10 @@ $collapsed = 1;
 % if ($url !~ /pca\/analysis/ ) {
   <& pca_options.mas &>
 %} else {
-
-  <& /solgs/tools/select_menu.mas,
-  analysis_type => 'pca', &>
+    <& /solgs/tools/login.mas,
+    tool_url => '/pca/analysis/' ,
+    analysis_type => 'pca' 
+    &>
 %}
 
   <& plot.mas,
