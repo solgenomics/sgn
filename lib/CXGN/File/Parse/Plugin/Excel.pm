@@ -71,14 +71,17 @@ sub parse {
 
       if ( $v && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {
-          foreach (@$v) {
-            $values_map{$hv}->{$_} = 1;
+          if ( scalar(@$v) > 0 ) {
+            foreach (@$v) {
+              $values_map{$hv}->{$_} = 1;
+            }
+            $skip_row = 0;
           }
         }
         else {
           $values_map{$hv}->{$v} = 1;
+          $skip_row = 0;
         }
-        $skip_row = 0;
       }
     }
     push @{$rtn{data}}, \%row_info if !$skip_row;
