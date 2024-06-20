@@ -243,6 +243,7 @@ solGS.pca = {
       }
     });
 
+    console.log(`Table: ${JSON.stringify(table)}`)
     table.rows.add(data).draw();
 
   },

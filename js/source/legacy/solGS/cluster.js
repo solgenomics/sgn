@@ -255,8 +255,6 @@ solGS.cluster = {
       `<button type="button" id=${runClusterBtnId}` +
       ` class="btn btn-success" data-selected-pop='${clusterArgs}'>Run cluster</button>`;
 
-    var tdId = `cluster_${clusterPopId}`;
-
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
     }
@@ -811,7 +809,7 @@ solGS.cluster = {
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
 
-      var clusterArgs = JSON.parse(selectedPopData.selectedPop);
+      clusterArgs = JSON.parse(selectedPopData.selectedPop);
       var clusterPopId = clusterArgs.data_str + "_" + clusterArgs.id;
 
       var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
