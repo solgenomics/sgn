@@ -41,6 +41,9 @@ blocks = data.frame(block_number = gl(nRep,nTrt),
                     row_number = gl(nRows,nCols,totalPlots),
                     col_number = gl(nCols,1,totalPlots))
 
+## Setting rep number orthogonal to block number
+rep_number = as.numeric(blocks$Cols)
+
 
 # treatments = data.frame(treatments =gl(nTrt,1,totalPlots))
 Z=design(all.clones,blocks, searches = 50, weighting=0.5)
@@ -94,12 +97,14 @@ if(plot_type == "serpentine"){
   }
 }
 
+fieldBook$rep_number <- rep_number
+
 
 #### create is_a_control
 names(fieldBook)[names(fieldBook) == "treatments"] <- "accession_name"
 fieldBook <- transform(fieldBook, is_a_control = ifelse(fieldBook$accession_name %in% controls, 1, 0))
 
-design <- fieldBook %>% dplyr::select(block_number, row_number, col_number, plot_number, accession_name, is_a_control)
+design <- fieldBook %>% dplyr::select(block_number, rep_number, row_number, col_number, plot_number, accession_name, is_a_control)
 
 head(design)
 

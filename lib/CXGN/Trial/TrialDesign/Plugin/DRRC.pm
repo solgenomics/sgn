@@ -132,7 +132,7 @@ if (-e $design_file) {
     my @headers = split('\t', $header_line);
 
     # Define column names you're interested in
-    my @desired_columns = ('block_number', 'row_number', 'col_number', 'plot_number', 'accession_name', 'is_a_control');
+    my @desired_columns = ('block_number', 'rep_number','row_number', 'col_number', 'plot_number', 'accession_name', 'is_a_control');
 
     # Find indices of desired columns
     my %column_indices;
@@ -152,6 +152,9 @@ if (-e $design_file) {
     $index_ref = $column_indices{'block_number'};
     push @block_numbers, map { (split('\t', $_))[$index_ref] } @lines;
 
+    $index_ref = $column_indices{'rep_number'};
+    push @rep_numbers, map { (split('\t', $_))[$index_ref] } @lines;
+
     $index_ref = $column_indices{'row_number'};
     push @fieldmap_row_numbers, map { (split('\t', $_))[$index_ref] } @lines;
 
@@ -167,8 +170,7 @@ if (-e $design_file) {
     $index_ref = $column_indices{'is_a_control'};
     push @is_a_control, map { (split('\t', $_))[$index_ref] } @lines;
 
-    $index_ref = $column_indices{'rep_number'};
-    push @rep_numbers, map { (split('\t', $_))[$index_ref] } @lines;
+
 
 
     print Dumper \%data;
