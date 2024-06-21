@@ -88,20 +88,20 @@ sub _search {
     my $main_production_site_url = $page_obj->get_hostname();
 
     my $lt = CXGN::List::Transform->new();
-    
+
     if (!$trait_ids_arrayref && $trait_list_arrayref) {
         $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
     }
 
     my $limit = $page_size;
     my $offset = $page_size*$page;
-    print STDERR "ObservationUnits call Checkpoint 1: ".DateTime->now()."\n"; 
+    print STDERR "ObservationUnits call Checkpoint 1: ".DateTime->now()."\n";
 
     my $layout_search = CXGN::Trial::TrialLayoutSearch->new(
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level->[0],
-            trial_list=>$study_ids_arrayref,            
+            trial_list=>$study_ids_arrayref,
             location_list=>$location_ids_arrayref,
             accession_list=>$accession_ids_arrayref,
             folder_list=>$folder_ids_arrayref,
@@ -141,8 +141,8 @@ sub _search {
 
         ## Formatting observations
         my $brapi_observations = [];
-        
-        if( lc $include_observations eq 'true' && $observations_data) {            
+
+        if( lc $include_observations eq 'true' && $observations_data) {
             my $observation_id = $obs_unit->{obsunit_stock_id};
             $brapi_observations = %{$observations_data}{$observation_id} ?  %{$observations_data}{$observation_id} : [];
         }
@@ -163,7 +163,7 @@ sub _search {
 
         ## Getting gps coordinates
         my $sp_rs ='';
-        eval { 
+        eval {
             $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
         };
         my %geolocation_lookup;
@@ -171,7 +171,7 @@ sub _search {
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
         my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{obsunit_stock_id}} ?$geolocation_lookup{$obs_unit->{obsunit_stock_id}} : undef;
-        my $geo_coordinates; 
+        my $geo_coordinates;
 
         if ($geo_coordinates_string){
             $geo_coordinates = decode_json $geo_coordinates_string;
@@ -204,13 +204,13 @@ sub _search {
             $plot = $obs_unit->{plot_number};
         }
 
-        ## Format position coordinates 
+        ## Format position coordinates
         my $level_name = $obs_unit->{obsunit_type_name};
         my $level_order = _order($level_name) + 0;
         my $level_code = eval "\$$level_name" || "";
-         
-        if ( $level_order_arrayref &&  ! grep { $_ eq $level_order } @{$level_order_arrayref}  ) { next; } 
-        if ( $level_code_arrayref &&  ! grep { $_ eq $level_code } @{$level_code_arrayref}  ) { next; } 
+
+        if ( $level_order_arrayref &&  ! grep { $_ eq $level_order } @{$level_order_arrayref}  ) { next; }
+        if ( $level_code_arrayref &&  ! grep { $_ eq $level_code } @{$level_code_arrayref}  ) { next; }
 
         my @observationLevelRelationships;
         if ($replicate) {
@@ -249,8 +249,8 @@ sub _search {
             positionCoordinateXType => 'GRID_COL',
             positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
             positionCoordinateYType => 'GRID_ROW',
-            observationLevel =>  { 
-                levelName => $level_name,       
+            observationLevel =>  {
+                levelName => $level_name,
                 levelOrder => $level_order,
                 levelCode => $level_code,
             },
@@ -282,12 +282,13 @@ sub _search {
             foreach my $arrayimage (@plot_image_ids){
                 push @ids, $arrayimage->[0];
             }
-        
+
         push @data_window, {
             externalReferences => @formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
+            germplasmTypeName => $obs_unit->{germplasm_type_name},
             locationDbId => qq|$obs_unit->{location_id}|,
             locationName => $obs_unit->{location_name},
             observationUnitDbId => qq|$obs_unit->{obsunit_stock_id}|,
@@ -306,8 +307,8 @@ sub _search {
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };
-        $total_count = $obs_unit->{full_count};       
-        
+        $total_count = $obs_unit->{full_count};
+
     }
     print STDERR "ObservationUnits call Checkpoint 4: ".DateTime->now()."\n";
     my $results = (data=>\@data_window);
@@ -342,7 +343,7 @@ sub detail {
 
     my $search_params = {
         observationUnitDbIds => [ $observation_unit_db_id ],
-        includeObservations  => 'true' 
+        includeObservations  => 'true'
     };
 
     my @data_files;
@@ -387,7 +388,7 @@ sub observationunits_update {
         my $trait_list_arrayref = $params->{observationVariableDbId} ? $params->{observationVariableDbId} : undef;
         my $program_ids_arrayref = $params->{programDbId} ? $params->{programDbId} : undef;
         my $folder_ids_arrayref = $params->{trialDbId} ? $params->{trialDbId} : undef;
-        my $observationUnit_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef; 
+        my $observationUnit_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
         my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
         my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
@@ -461,13 +462,13 @@ sub observationunits_update {
                 data_level=>'all',
                 observation_unit_id_list=>[$observation_unit_db_id],
                 # experiment_type=>'field_layout',
-                include_observations=>1,           
+                include_observations=>1,
             });
 
             my ($data_accession,$data_accession_observations) = $layout_accession_search->search();
             my $old_accession;
             my $old_accession_id;
-            
+
             foreach my $obs_unit (@$data_accession){
                 $old_accession = $obs_unit->{germplasm_uniquename};
                 $old_accession_id = $obs_unit->{germplasm_stock_id};
@@ -498,7 +499,7 @@ sub observationunits_update {
                     });
 
                     my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-                    if ($return_error) { 
+                    if ($return_error) {
                         print STDERR Dumper $return_error;
                         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
                     }
@@ -515,7 +516,7 @@ sub observationunits_update {
         #Update: geo coordinates
         my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || undef;
         if($geo_coordinates) {
-        
+
             my $geno_json_string = encode_json $geo_coordinates;
 
             #sub upload coordinates
@@ -541,15 +542,15 @@ sub observationunits_update {
         #update stockprops
         if ($level_number){
             if ($level_name eq 'plot'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plot_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
-            if ($level_name eq 'plant'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plant_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); } 
+            if ($level_name eq 'plant'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plant_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
         }
         if ($block_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$block_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$block_number },{ key=>'stockprop_c1' }); }
         if ($is_a_control){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$is_a_control_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$is_a_control },{ key=>'stockprop_c1' }); }
         if ($rep_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
         if ($range_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$range_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$range_number },{ key=>'stockprop_c1' }); }
         if ($row_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$row_number },{ key=>'stockprop_c1' }); }
-        if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }      
-        if (%additional_info){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$additional_info_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>encode_json \%additional_info },{ key=>'stockprop_c1' }); }      
+        if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }
+        if (%additional_info){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$additional_info_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>encode_json \%additional_info },{ key=>'stockprop_c1' }); }
 
         #store/update external references
         if ($observationUnit_x_ref){
@@ -561,7 +562,7 @@ sub observationunits_update {
                 id => $observation_unit_db_id
             });
             my $reference_result = $references->store();
-        } 
+        }
     }
 
     my @observation_unit_db_ids;
