@@ -342,8 +342,8 @@ sub _include_observations {
             push @{$data_window{$observation_unit_id}}, {
                 additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
                 externalReferences => $_->{phenotype_external_references} ? decode_json($_->{phenotype_external_references}) : undef,
-                germplasmDbId => qq|$_->{germplasm_stock_id}|,
-                germplasmName => $_->{germplasm_uniquename},
+                germplasmDbId => qq|$_->{accession_stock_id}|,
+                germplasmName => $_->{accession_uniquename},
                 observationUnitDbId => qq|$_->{obsunit_stock_id}|,
                 observationUnitName => $_->{obsunit_uniquename},
                 observationDbId => $observation_id,
