@@ -21,7 +21,7 @@ solGS.listTypeTrainingPopulation = {
     var lists = list.getLists(["plots", "trials"]);
     lists = list.addDataStrAttr(lists);
 
-    var datasets = solGS.dataset.getDatasetPops(["plots", "trials"]);
+    var datasets = solGS.dataset.getDatasetPops(["trials"]);
     var trainingPops = [lists, datasets];
 
     return trainingPops.flat();
@@ -62,7 +62,6 @@ solGS.listTypeTrainingPopulation = {
     var dataStr = trainingPop.data_str;
 
 
-    console.log(`createRowElements: ${JSON.stringify(trainingPop)}`)
     var trainingArgs;
 
     if (dataStr.match(/dataset/)) {
@@ -71,10 +70,12 @@ solGS.listTypeTrainingPopulation = {
       trainingArgs = this.createListTypeTrainingReqArgs(popId);
     }
 
+
     trainingArgs['analysis_type'] = `${dataStr}_type_training`;
     trainingArgs['data_structure'] = dataStr;
 
     trainingArgs = JSON.stringify(trainingArgs);
+    console.log(`createRowElements trainingArgs : ${trainingArgs}`)
 
     var trainingPopId = this.getTrainingPopId(popId, dataStr);
     var runSolgsBtnId = this.getRunSolgsId(trainingPopId);
@@ -108,7 +109,7 @@ solGS.listTypeTrainingPopulation = {
     var trainingTable =
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Population</th>" +
-      "<th>Data structure type</th>" +
+      "<th>Data structure</th>" +
       "<th>Ownership</th>" +
       "<th>Run solGS</th>" +
       "</tr></thead></table>";
@@ -126,7 +127,7 @@ solGS.listTypeTrainingPopulation = {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[3]
+        return a[4]
       }
     });
 
