@@ -495,12 +495,19 @@ sub test_controller : Path('ajax/trial/test_controller/') : ActionClass('REST') 
     return $c;
 }
 
-sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
+sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { print STDERR "went into save_experimental_design \n"; }
 
 sub save_experimental_design_POST : Args(0) {
+    #$| = 1;
+    print STDERR "This message means it is printing from the subroutine save_experimental_design_POST \n";
     my ($self, $c) = @_;
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    print STDERR "this is sp_person_id from saving trial details: ".$user_id."\n";
+   # open my $file(STDERR "This is getting read to file: user id: ".$user_id);
+
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $save;
@@ -515,7 +522,7 @@ sub save_experimental_design_POST : Args(0) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
         return;
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    
 
     my $user_name = $c->user()->get_object()->get_username();
     my $error;
@@ -982,7 +989,7 @@ sub upload_trial_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type, trial_name => $trial_name);
     $parser->load_plugin('TrialExcelFormat');
     $parsed_data = $parser->parse();
 
@@ -1030,7 +1037,7 @@ sub upload_trial_file_POST : Args(0) {
             trial_type => $trial_type,
             trial_name => $trial_name,
             design_type => $trial_design_method,
-            design => $parsed_data,
+            design => $parsed_data->{'design'},
             program => $program,
             upload_trial_file => $upload,
             operator => $user_name,
@@ -1042,6 +1049,7 @@ sub upload_trial_file_POST : Args(0) {
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
             trial_stock_type => $trial_stock_type
         );
+        my $entry_numbers = $parsed_data->{'entry_numbers'};
 
         print STDERR "Trial type is ".$trial_info_hash{'trial_type'}."\n";
 
@@ -1061,6 +1069,34 @@ sub upload_trial_file_POST : Args(0) {
             $chado_schema->txn_rollback();
         }
 
+        # save entry numbers, if provided
+        if ( $entry_numbers && scalar(keys %$entry_numbers) > 0 && $save->{'trial_id'} ) {
+            my %entry_numbers_prop;
+            my @stock_names = keys %$entry_numbers;
+
+            # Convert stock names from parsed trial template to stock ids for data storage
+            my $stocks = $chado_schema->resultset('Stock::Stock')->search({ uniquename=>{-in=>\@stock_names} });
+            while (my $s = $stocks->next()) {
+                $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
+            }
+
+            # Lookup synonyms of accession names
+            my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_synonym', 'stock_property')->cvterm_id();
+            my $acc_synonym_rs = $chado_schema->resultset("Stock::Stock")->search({
+                'me.is_obsolete' => { '!=' => 't' },
+                'stockprops.value' => { -in => \@stock_names},
+                'stockprops.type_id' => $synonym_cvterm_id
+            },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+            while (my $r=$acc_synonym_rs->next) {
+                if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
+                    $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
+                }
+            }
+
+            # store entry numbers
+            my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $save->{'trial_id'} });
+            $trial->set_entry_numbers(\%entry_numbers_prop);
+        }
     };
 
     try {
@@ -1236,6 +1272,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             operator => $user_name,
             owner_id => $user_id
         );
+        my $entry_numbers = $trial_design->{'entry_numbers'};
 
         if ($trial_design->{'trial_type'}){
             $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
@@ -1279,6 +1316,35 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             $trial_activity_obj->trial_activities(\%trial_activity);
             $trial_activity_obj->parent_id($trial_id);
             my $activity_prop_id = $trial_activity_obj->store();
+        }
+
+        # save entry numbers, if provided
+        if ( $entry_numbers && scalar(keys %$entry_numbers) > 0 && $current_save->{'trial_id'} ) {
+            my %entry_numbers_prop;
+            my @stock_names = keys %$entry_numbers;
+
+            # Convert stock names from parsed trial template to stock ids for data storage
+            my $stocks = $chado_schema->resultset('Stock::Stock')->search({ uniquename=>{-in=>\@stock_names} });
+            while (my $s = $stocks->next()) {
+                $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
+            }
+
+            # Lookup synonyms of accession names
+            my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_synonym', 'stock_property')->cvterm_id();
+            my $acc_synonym_rs = $chado_schema->resultset("Stock::Stock")->search({
+                'me.is_obsolete' => { '!=' => 't' },
+                'stockprops.value' => { -in => \@stock_names},
+                'stockprops.type_id' => $synonym_cvterm_id
+            },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+            while (my $r=$acc_synonym_rs->next) {
+                if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
+                    $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
+                }
+            }
+
+            # store entry numbers
+            my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $current_save->{'trial_id'} });
+            $trial->set_entry_numbers(\%entry_numbers_prop);
         }
       }
 

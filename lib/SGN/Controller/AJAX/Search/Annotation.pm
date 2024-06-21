@@ -21,7 +21,7 @@ sub annotation_search :Path('/ajax/search/annotation') Args(0) {
 
     my @lines;
     my $number_lines=0;
-    my $annotation_file = $c->get_conf('basepath') . '/static/documents/annotation.tsv';
+    my $annotation_file = $c->get_conf('basepath') . $c->req->param("file");
 
     if(-e $annotation_file){
         my $text = read_file($annotation_file);

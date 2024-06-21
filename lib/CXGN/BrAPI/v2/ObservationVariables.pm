@@ -45,9 +45,6 @@ sub observation_levels {
             levelName => 'rep',
             levelOrder => 0 },
         {
-            levelName => 'replicate',
-            levelOrder => 0 },
-        {
             levelName => 'block',
             levelOrder => 1 },
         {
@@ -83,7 +80,7 @@ sub search {
     my @cvterm_names = $inputs->{observationVariableNames} ? @{$inputs->{observationVariableNames}} : ();
     my @datatypes = $inputs->{datatypes} ? @{$inputs->{datatypes}} : ();
     my @db_ids = $inputs->{ontologyDbIds} ? @{$inputs->{ontologyDbIds}} : ();
-    my @dbxref_ids = $inputs->{externalReferenceIDs} ? @{$inputs->{externalReferenceIDs}} : ();
+    my @dbxref_ids = $inputs->{externalReferenceIds} ? @{$inputs->{externalReferenceIds}} : ();
     my @dbxref_terms = $inputs->{externalReferenceSources} ? @{$inputs->{externalReferenceSources}} : ();
     my @method_ids = $inputs->{methodDbIds} ? @{$inputs->{methodDbIds}} : ();
     my @scale_ids = $inputs->{scaleDbIds} ? @{$inputs->{scaleDbIds}} : ();
@@ -129,11 +126,13 @@ sub search {
         my @dbxrefid_where;
         if (scalar(@dbxref_ids)>0){
             foreach (@dbxref_ids) {
-                push @dbxrefid_where, "dbxref.accession = '$_'";
+                my ($db_name,$acc) = split(/:/, $_); 
+                push @dbxrefid_where, "dbxref.accession = '$acc'";
+                push @dbxrefid_where, "db.name = '$db_name'";
             }
         }
         if(scalar(@dbxrefid_where)>0) {
-            my $dbxref_id_where_str = '('. (join ' OR ', @dbxrefid_where) . ')';
+            my $dbxref_id_where_str = '('. (join ' AND ', @dbxrefid_where) . ')';
             push @sub_and_wheres, $dbxref_id_where_str;
         }
 
@@ -141,6 +140,8 @@ sub search {
         if (scalar(@dbxref_terms)>0) {
             foreach (@dbxref_terms) {
                 push @dbxref_term_where, "db.name = '$_'";
+                push @dbxref_term_where, "db.description = '$_'";
+                push @dbxref_term_where, "db.url = '$_'";
             }
         }
         if(scalar(@dbxref_term_where)>0) {
@@ -148,27 +149,28 @@ sub search {
             push @sub_and_wheres, $dbxref_term_where_str;
         }
 
-        my $sub_and_where_clause = join ' AND ', @sub_and_wheres;
+        @and_wheres = @sub_and_wheres;
+        # my $sub_and_where_clause = join ' AND ', @sub_and_wheres;
 
-        $join = "JOIN (" .
-            "select cvterm_id, json_agg(json_build_object(" .
-                "'referenceSource', references_query.reference_source, " .
-                "'referenceID', references_query.reference_id " .
-            ")) AS externalReferences " .
-            "from " .
-            "(" .
-            "select cvterm.cvterm_id, db.name as reference_source, dbxref.accession as reference_id " .
-            "FROM " .
-            "cvterm " .
-            "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) " .
-            "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) " .
-            "JOIN cvterm_dbxref on cvterm.cvterm_id = cvterm_dbxref.cvterm_id " .
-            "JOIN dbxref on cvterm_dbxref.dbxref_id = dbxref.dbxref_id " .
-            "JOIN db on dbxref.db_id = db.db_id " .
-            "where $sub_and_where_clause " .
-            ") as references_query " .
-            "group by cvterm_id " .
-        ") as external_references on external_references.cvterm_id = cvterm.cvterm_id "
+        # $join = "JOIN (" .
+        #     "select cvterm_id, json_agg(json_build_object(" .
+        #         "'referenceSource', references_query.reference_source, " .
+        #         "'referenceID', references_query.reference_id " .
+        #     ")) AS externalReferences " .
+        #     "from " .
+        #     "(" .
+        #     "select cvterm.cvterm_id, db.name as reference_source, dbxref.accession as reference_id " .
+        #     "FROM " .
+        #     "cvterm " .
+        #     "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) " .
+        #     "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) " .
+        #     "JOIN cvterm_dbxref on cvterm.cvterm_id = cvterm_dbxref.cvterm_id " .
+        #     "JOIN dbxref on cvterm_dbxref.dbxref_id = dbxref.dbxref_id " .
+        #     "JOIN db on dbxref.db_id = db.db_id " .
+        #     "where $sub_and_where_clause " .
+        #     ") as references_query " .
+        #     "group by cvterm_id " .
+        # ") as external_references on external_references.cvterm_id = cvterm.cvterm_id "
     }
 
     if (scalar(@datatypes)>0){
@@ -257,6 +259,7 @@ sub get_query {
         "WHERE $and_where " .
         "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.dbxref_id, dbxref.accession, additional_info.value ".
         "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset; "  ;
+
 
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     $sth->execute();
@@ -517,7 +520,8 @@ sub _construct_variable_response {
 
         if($c->config->{'brapi_include_CO_xref'}) {
             push @{ $external_references_json }, {
-                referenceID => "http://www.cropontology.org/terms/".$variable->db.":".$variable->accession . "/",
+                #referenceId => "http://www.cropontology.org/terms/".$variable->db.":".$variable->accession . "/",
+                referenceId => $variable->db.":".$variable->accession,
                 referenceSource => "Crop Ontology"
             };
         }
@@ -529,6 +533,14 @@ sub _construct_variable_response {
     my @synonyms = $variable->synonyms;
     my $variable_id = $variable->cvterm_id;
     my $variable_db_id = $variable->db_id ;
+
+    my $documentation_links;
+    if($variable->uri){
+        push @$documentation_links, {
+            "URL" => $variable->uri, 
+            "type" => "OBO"
+        };
+    }
 
     return {
         additionalInfo => $variable->additional_info || {},
@@ -543,8 +555,9 @@ sub _construct_variable_response {
         method => $method_json,
         observationVariableDbId => qq|$variable_id|,
         observationVariableName => $variable->name."|".$variable->db.":".$variable->accession,
+        observationVariablePUI => $variable->db.":".$variable->accession,
         ontologyReference => {
-            documentationLinks => $variable->uri ? $variable->uri : undef,
+            documentationLinks => $documentation_links,
             ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
             ontologyName => $variable->db ? $variable->db : undef,
             version => undef,
@@ -558,11 +571,13 @@ sub _construct_variable_response {
             additionalInfo => {},
             alternativeAbbreviations => undef,
             attribute => $variable->attribute ? $variable->attribute : undef,
+            attributePUI=> undef,
             entity => $variable->entity ? $variable->entity : undef,
+            entityPUI=> undef,
             externalReferences => $external_references_json,
             mainAbbreviation => undef,
             ontologyReference => {
-                documentationLinks => $variable->uri ? $variable->uri : undef,
+                documentationLinks => $documentation_links,
                 ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
                 ontologyName => $variable->db ? $variable->db : undef,
                 version => undef,
@@ -573,6 +588,7 @@ sub _construct_variable_response {
             traitDescription => $variable->definition,
             traitDbId => qq|$variable_id|,
             traitName => $variable->name,
+            traitPUI => undef,
         }
     }
 }

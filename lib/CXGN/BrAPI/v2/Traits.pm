@@ -59,30 +59,41 @@ sub list {
 		my $external_references_json= $external_references->search()->{$cvterm_id};
 		if($c->config->{'brapi_include_CO_xref'}) {
 			push @{ $external_references_json }, {
-				referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
+				referenceId => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
 				referenceSource => "Crop Ontology"
+			};
+		}
+
+		my $documentation_links;
+		if($trait->uri){
+			push @$documentation_links, {
+				"URL" => $trait->uri ? $trait->uri : undef,
+				"type" => undef
 			};
 		}
 
 		push @data, {
 			additionalInfo => {},
-			traitDbId => qq|$cvterm_id|,
-			traitName => $cvterm_name,
-			traitDescription => $cvterm_definition,
 			alternativeAbbreviations => undef,
 			attribute => undef,
+			attributePUI => undef,
 			entity => undef,
+			entityPUI => undef,
 			externalReferences => $external_references_json,
 			mainAbbreviation => undef,
 			ontologyReference => {
-                        documentationLinks => $trait->uri ? $trait->uri : undef,
-                        ontologyDbId => $trait->db_id ? $trait->db_id : undef,
-                        ontologyName => $trait->db ? $trait->db : undef,
-                        version => undef,
-                    },
+				documentationLinks => $documentation_links,
+				ontologyDbId => $trait->db_id ? $trait->db_id : undef,
+				ontologyName => $trait->db ? $trait->db : undef,
+				version => undef,
+			},
 			status => $obsolete = 0 ? "archived" : "active",
 			synonyms => $synonym,
-			traitClass => undef
+			traitClass => undef,
+			traitDbId => qq|$cvterm_id|,
+			traitDescription => $cvterm_definition,
+			traitName => $cvterm_name,
+			traitPUI => undef
 		};
 	}
 
@@ -117,8 +128,16 @@ sub detail {
 	my $external_references_json= $external_references->search()->{$cvterm_id};
 	if($c->config->{'brapi_include_CO_xref'}) {
 		push @{ $external_references_json }, {
-			referenceID => "http://www.cropontology.org/terms/".$trait->db.":".$trait->accession . "/",
+			referenceId => "http://www.cropontology.org/terms/".$trait->db.":".$trait->accession . "/",
 			referenceSource => "Crop Ontology"
+		};
+	}
+
+	my $documentation_links;
+	if($trait->uri){
+		push @$documentation_links, {
+			"URL" => $trait->uri ? $trait->uri : undef,
+			"type" => undef
 		};
 	}
 
@@ -126,11 +145,13 @@ sub detail {
 				additionalInfo => {},
 		        alternativeAbbreviations => undef,
                 attribute => undef,
+				attributePUI => undef,
                 entity => undef,
+				entityPUI => undef,
                 externalReferences => $external_references_json,
                 mainAbbreviation => undef,
                 ontologyReference => {
-                        documentationLinks => $trait->uri ? $trait->uri : undef,
+						documentationLinks => $documentation_links,
                         ontologyDbId => $trait->db_id ? $trait->db_id : undef,
                         ontologyName => $trait->db ? $trait->db : undef,
                         version => undef,
@@ -141,6 +162,7 @@ sub detail {
                 traitDescription => $trait->definition,
                 traitDbId => qq|$trait_id|,
 				traitName => $trait->name,
+				traitPUI => undef
 	);
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);

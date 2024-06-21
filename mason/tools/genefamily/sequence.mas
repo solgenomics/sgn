@@ -1,0 +1,37 @@
+
+<%args>
+$seq_id
+$build
+$family
+$desc => undef
+$seq => undef
+
+</%args>
+
+
+<h1>Sequence Details</h1>
+
+<h2>Identifier</h2>
+
+<% $seq_id %></h1>
+
+<h2>Viewing Build</h2>
+
+<% $build %>
+
+<h2>Family</h2>
+
+<a href="/tools/genefamily/details/<% $build %>/<% $family %>"><% $family %></a>
+
+<h2>Description</h2>
+
+<% $desc %>
+
+<h2>Sequence</h2>
+
+Length: <% length($seq) %>
+
+<pre>
+% $seq =~ s/(.{60})/$1\n/g;
+<% $seq %>
+</pre>

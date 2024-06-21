@@ -872,7 +872,7 @@ sub retrieve_high_dimensional_phenotypes_relationship_matrix {
 
 =head2 retrieve_accessions()
 
-retrieves accessions as a listref of listref [stock_id, uniquname]
+retrieves accessions as a listref of listref [stock_id, uniquename]
 
 =cut
 
