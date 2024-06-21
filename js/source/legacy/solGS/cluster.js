@@ -150,7 +150,7 @@ solGS.cluster = {
     }
   },
 
-  clusterRunClusterId: function (rowId) {
+  getRunClusterBtnId: function (rowId) {
     if (location.pathname.match(/cluster\/analysis/) && rowId) {
       return `run_cluster_${rowId}`;
     } else {
@@ -245,7 +245,7 @@ solGS.cluster = {
 
     dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts, clusterPopId);
     var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId);
-    var runClusterBtnId = solGS.cluster.clusterRunClusterId(clusterPopId);
+    var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
 
     var kNum = '<input class="form-control" type="text" placeholder="3" id="' + kNumId + '"/>';
 
@@ -533,11 +533,11 @@ solGS.cluster = {
       clusterArgs = JSON.parse(clusterArgs);
       clusterType = clusterArgs.cluster_type;
       clusterPopId = clusterArgs.cluster_pop_id;
-      runClusterId = this.clusterRunClusterId(clusterPopId);
+      runClusterBtnId = this.getRunClusterBtnId(clusterPopId);
     } else {
       clusterType = clusterArgs.cluster_type;
       clusterPopId = clusterArgs.cluster_pop_id;
-      runClusterId = this.clusterRunClusterId(clusterPopId);
+      runClusterBtnId = this.getRunClusterBtnId(clusterPopId);
     }
 
     if (typeof clusterArgs !== "string") {
@@ -930,7 +930,7 @@ jQuery(document).ready(function () {
 
       var canvas = solGS.cluster.canvas;
       var clusterMsgDiv = solGS.cluster.clusterMsgDiv;
-      var runClusterId;
+      var runClusterBtnId;
       var popType;
       var page = location.pathname;
       var selectedId, selectedName, dataStr;
@@ -973,7 +973,7 @@ jQuery(document).ready(function () {
       };
 
       clusterArgs = solGS.cluster.clusterResult(clusterArgs);
-      runClusterId = solGS.cluster.clusterRunClusterId(clusterPopId);
+      runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
       var page = clusterArgs.analysis_page;
 
       solGS.cluster
@@ -985,14 +985,14 @@ jQuery(document).ready(function () {
             solGS.cluster.plotClusterOutput(res);
 
             jQuery(clusterMsgDiv).empty();
-            jQuery("#" + runClusterId).show();
+            jQuery("#" + runClusterBtnId).show();
           } else {
 
 
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(clusterMsgDiv).empty();
 
-            runClusterId = `#${runClusterId}`;
+            runClusterBtnId = `#${runClusterBtnId}`;
 
             var title =
               "<p>This analysis may take a long time. " +
@@ -1025,7 +1025,7 @@ jQuery(document).ready(function () {
                   click: function () {
                     jQuery(this).dialog("close");
 
-                    jQuery(runClusterId).hide();
+                    jQuery(runClusterBtnId).hide();
                     jQuery(clusterMsgDiv)
                       .text("Running cluster... please wait...it may take minutes.")
                       .show();
@@ -1040,19 +1040,19 @@ jQuery(document).ready(function () {
                           solGS.cluster.plotClusterOutput(res);
 
                           jQuery(clusterMsgDiv).empty();
-                          jQuery(runClusterId).show();
+                          jQuery(runClusterBtnId).show();
                         } else {
                           jQuery(clusterMsgDiv).html(
                             "Error occured running the clustering. Possibly the R script failed."
                           );
                           jQuery(`${canvas} .multi-spinner-container`).hide();
-                          jQuery(runClusterId).show();
+                          jQuery(runClusterBtnId).show();
                         }
                       })
                       .fail(function () {
                         jQuery(clusterMsgDiv).html("Error occured running the clustering");
                         jQuery(`${canvas} .multi-spinner-container`).hide();
-                        jQuery(runClusterId).show();
+                        jQuery(runClusterBtnId).show();
                       });
                   },
                 },
@@ -1063,6 +1063,7 @@ jQuery(document).ready(function () {
                   id: "cancel_queue_info",
                   click: function () {
                     jQuery(this).dialog("close");
+                    jQuery(runClusterBtnId).show();
                   },
                 },
               },

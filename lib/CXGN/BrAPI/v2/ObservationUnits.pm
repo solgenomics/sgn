@@ -217,12 +217,7 @@ sub _search {
             push @observationLevelRelationships, {
                 levelCode => $replicate,
                 levelName => "rep",
-                levelOrder => _order("replicate"),
-            };
-            push @observationLevelRelationships, {
-                levelCode => $replicate,
-                levelName => "replicate",
-                levelOrder => _order("replicate"),
+                levelOrder => _order("rep"),
             };
         }
         if ($block) {
@@ -425,9 +420,9 @@ sub observationunits_update {
             if($_->{levelName} eq 'block'){
                 $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
             }
-            if($_->{levelName} eq 'replicate' || $_->{levelName} eq 'rep'){
+            if($_->{levelName} eq 'rep'){
                 $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
-                $_->{levelName} = 'replicate';
+                $_->{levelName} = 'rep';
             }
         }
         if (defined $raw_additional_info) {
@@ -679,9 +674,9 @@ sub observationunits_store {
             if($_->{levelName} eq 'block'){
                 $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
             }
-            if($_->{levelName} eq 'replicate' || $_->{levelName} eq 'rep'){
+            if($_->{levelName} eq 'rep'){
                 $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
-                $_->{levelName} = 'replicate';
+                $_->{levelName} = 'rep';
             }
         }
 
@@ -848,7 +843,7 @@ sub observationunits_store {
 sub _order {
     my $value = shift;
     my %levels = (
-        "replicate"  => 0,
+        "rep"  => 0,
         "block"  => 1,
         "plot" => 2,
         "subplot"=> 3,

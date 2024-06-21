@@ -241,13 +241,13 @@ sub auto : Private {
             my $count_h = $dbh -> prepare($count_q);
             $count_h -> execute();
             my ($count) = $count_h->fetchrow_array();
-            print STDERR "count: $count \n";
+            # print STDERR "count: $count \n";
 
             my $logged_in_user_q = "select * from logged_in_user";
             my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
             $logged_in_user_h->execute();
             my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
-            print STDERR "logged in user in Root.pm: ".Dumper($logged_in_user_arr)."\n";
+            # print STDERR "logged in user in Root.pm: ".Dumper($logged_in_user_arr)."\n";
 
             my $sp_person = CXGN::People::Person->new($dbh, $sp_person_id);
 
