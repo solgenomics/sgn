@@ -21,7 +21,7 @@ sub _validate_with_plugin {
     my %missing_accessions;
 
     # optional columns = these hard-coded columns plus any editable stock props
-    my @optional_columns = ('synonym', 'population_name', 'organization_name', 'location_code', 'ploidy_level', 'genome_structure', 'variety', 'donor', 'donor institute', 'donor PUI', 'country of origin', 'state', 'institute code', 'institute name', 'biological status of accession code', 'notes', 'accession number', 'PUI', 'seed source', 'type of germplasm storage code', 'acquisition date', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
+    my @optional_columns = ('synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
     push @optional_columns, @$editable_stockprops;
 
     my $parser = CXGN::File::Parse->new(
@@ -29,37 +29,37 @@ sub _validate_with_plugin {
       required_columns => [ 'accession_name', 'species_name' ],
       optional_columns => \@optional_columns,
       column_aliases => {
-        'accession_name' => ['accession'],
-        'species_name' => ['species'],
-        'synonym' => ['synonyms', 'synoym(s)'],
-        'population_name' => ['population name', 'populationName'],
-        'organization_name' => ['organization_names', 'organization_name(s)', 'organization name', 'organization names', 'organization name(s)', 'organizationName', 'organizationNames'],
-        'location_code' => ['location_codes', 'location_code(s)', 'location code', 'location codes', 'location code(s)', 'locationCode', 'locationCodes'],
-        'ploidy_level' => ['ploidy_levels', 'ploidy_level(s)', 'ploidy level', 'ploidy levels', 'ploidy level(s)', 'ploidyLevel', 'ploidyLevels'],
-        'genome_structure' => ['genome_structures', 'genome_structure(s)', 'genome structure', 'genome structures', 'genome structure(s)', 'genomeStructure', 'genomeStructures'],
+        'accession_name' => ['accession', 'accession_name', 'accession name', 'accessionName', 'germplasm', 'germplasm name', 'germplasmName'],
+        'species_name' => ['species', 'species_name', 'species name', 'speciesName'],
+        'synonyms' => ['synonym', 'synonyms', 'synonym(s)'],
+        'populationName' => ['population name', 'population names', 'population name(s)', 'population_name', 'population_names', 'population_name(s)', 'populationName', 'populationNames', 'populationName(s)'],
+        'organizationName' => ['organization_name', 'organization_names', 'organization_name(s)', 'organization name', 'organization names', 'organization name(s)', 'organizatioName', 'organizationNames', 'organizationName(s)', 'organization', 'organizations', 'organization(s)'],
+        'locationCode' => ['location_code', 'location_codes', 'location_code(s)', 'location code', 'location codes', 'location code(s)', 'locationCode', 'locationCodes', 'locationCode(s)'],
+        'ploidyLevel' => ['ploidy_level', 'ploidy_levels', 'ploidy_level(s)', 'ploidy level', 'ploidy levels', 'ploidy level(s)', 'ploidyLevel', 'ploidyLevels', 'ploidyLevel(s)'],
+        'genomeStructure' => ['genome_structure', 'genome_structures', 'genome_structure(s)', 'genome structure', 'genome structures', 'genome structure(s)', 'genomeStructure', 'genomeStructures'],
         'variety' => ['varieties', 'varietys', 'variety(s)'],
         'donor' => ['donors', 'donor(s)'],
         'donor institute' => ['donor institutes', 'donor institute(s)', 'donor_institute', 'donor_institutes', 'donor_institute(s)', 'donorInstitute', 'donorInstitutes'],
         'donor PUI' => ['donor PUI', 'donor PUIs', 'donor PUI(s)', 'donor_PUI', 'donor_PUIs', 'donor_PUI(s)', 'donorPUI', 'donorPUIs', 'donorPUI(s)'],
-        'country of origin' => ['country of origins', 'country of origin(s)', 'country_of_origin', 'country_of_origins', 'country_of_origin(s)', 'countryOfOrigin', 'countryOfOrigins', 'countryOfOriginCode'],
+        'countryOfOriginCode' => ['country of origin', 'country of origins', 'country of origin(s)', 'country_of_origin', 'country_of_origins', 'country_of_origin(s)', 'countryOfOrigin', 'countryOfOrigins', 'countryOfOriginCode'],
         'state' => ['states', 'state(s)'],
-        'institute code' => ['institute codes', 'institute code(s)', 'institute_code', 'institute_codes', 'institute_code(s)', 'instituteCode', 'instituteCodes'],
-        'institute name' => ['institute names', 'institute name(s)', 'institute_name', 'institute_names', 'institute_name(s)', 'instituteName', 'instituteNames'],
-        'biological status of accession code' => ['biological status of accession codes', 'biological status of accession code(s)', 'biological_status_of_accession_code', 'biological_status_of_accession_codes', 'biological_status_of_accession_code(s)', 'biologicalStatusOfAccessionCode', 'biologicalStatusOfAccessionCodes'],
-        'notes' => ['note', 'notes(s)'],
-        'accession number' => ['accession numbers', 'accession number(s)', 'accession_number', 'accession_numbers', 'accession_number(s)', 'accessionNumber', 'accessionNumbers'],
-        'PUI' => ['PUI', 'germplasmPUI'],
-        'seed source' => ['seed_source', 'germplasmSeedSource'],
-        'type of germplasm storage code' => ['type_of_germplasm_storage_code', 'typeOfGermplasmStorageCode'],
-        'acquisition date' => ['acquisition_date', 'acquisitionDate'],
+        'instituteCode' => ['institute code', 'institute codes', 'institute code(s)', 'institute_code', 'institute_codes', 'institute_code(s)', 'instituteCode', 'instituteCodes'],
+        'instituteName' => ['institute name', 'institute names', 'institute name(s)', 'institute_name', 'institute_names', 'institute_name(s)', 'instituteName', 'instituteNames'],
+        'biologicalStatusOfAccessionCode' => ['biological status of accession code', 'biological status of accession codes', 'biological status of accession code(s)', 'biological_status_of_accession_code', 'biological_status_of_accession_codes', 'biological_status_of_accession_code(s)', 'biologicalStatusOfAccessionCode', 'biologicalStatusOfAccessionCodes'],
+        'notes' => ['note', 'notes', 'notes(s)'],
+        'accessionNumber' => ['accession number', 'accession numbers', 'accession number(s)', 'accession_number', 'accession_numbers', 'accession_number(s)', 'accessionNumber', 'accessionNumbers'],
+        'germplasmPUI' => ['PUI', 'PUI(s)', 'germplasmPUI'],
+        'germplasmSeedSource' => ['seed source', 'seed_sources', 'seed_source(s)', 'germplasmSeedSource'],
+        'typeOfGermplasmStorageCode' => ['type of germplasm storage code', 'type_of_germplasm_storage_code', 'type_of_germplasm_storage_code(s)', 'typeOfGermplasmStorageCode'],
+        'acquisitionDate' => ['acquisition date', 'acquisition_date', 'acquisition_date(s)', 'acquisitionDate'],
         'transgenic' => ['transgenics', 'transgenic(s)'],
-        'introgression_parent' => ['introgression_parents', 'introgression_parent(s)'],
-        'introgression_backcross_parent' => ['introgression_backcross_parents', 'introgression_backcross_parent(s)'],
-        'introgression_chromosome' => ['introgression_chromosomes', 'introgression_chromosome(s)'],
-        'introgression_start_position_bp' => ['introgression_start_position_bps', 'introgression_start_position_bp(s)'],
-        'introgression_end_position_bp' => ['introgression_end_position_bps', 'introgression_end_position_bp(s)']
+        'introgression_parent' => ['introgression_parent', 'introgression_parents', 'introgression_parent(s)'],
+        'introgression_backcross_parent' => ['introgression_backcross_parent', 'introgression_backcross_parents', 'introgression_backcross_parent(s)'],
+        'introgression_chromosome' => ['introgression_chromosome', 'introgression_chromosomes', 'introgression_chromosome(s)'],
+        'introgression_start_position_bp' => ['introgression_start_position_bp', 'introgression_start_position_bps', 'introgression_start_position_bp(s)'],
+        'introgression_end_position_bp' => ['introgression_end_position_bp', 'introgression_end_position_bps', 'introgression_end_position_bp(s)']
       },
-      column_arrays => [ 'synonym' ]
+      column_arrays => [ 'synonyms' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
@@ -136,7 +136,7 @@ sub _parse_with_plugin {
   my %additional_columns_map = map {$_ => 1} @$additional_columns;
 
   my $accession_list = $parsed_values->{'accession_name'};
-  my $synonyms_list = $parsed_values->{'synonym'};
+  my $synonyms_list = $parsed_values->{'synonyms'};
   my $organism_list = $parsed_values->{'species_name'};
   my %accession_lookup;
   my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-ilike=>$accession_list}});
@@ -147,23 +147,20 @@ sub _parse_with_plugin {
   my %parsed_entries;
   for my $row ( @$parsed_data ) {
     my $row_num = $row->{_row};
-    my $accession_name = $row->{'accession_name'};
-    my $species_name = $row->{'species_name'};
-    my $population_names = $row->{'population_name'};
-    my $organization_names = $row->{'organization_name'};
-    my $synonyms = $row->{'synonym'};
+    my $accession = $row->{'accession_name'};
+    my $synonyms = $row->{'synonyms'};
 
     my $stock_id;
-    if(exists($accession_lookup{$accession_name})){
-      $stock_id = $accession_lookup{$accession_name};
+    if(exists($accession_lookup{$accession})){
+      $stock_id = $accession_lookup{$accession};
     }
 
     my %row_info = (
-      germplasmName => $accession_name,
-      defaultDisplayName => $accession_name,
-      species => $species_name,
-      populationName => $population_names,
-      organizationName => $organization_names,
+      germplasmName => $accession,
+      defaultDisplayName => $accession,
+      species => $row->{'species_name'},
+      populationName => $row->{'populationName'},
+      organizationName => $row->{'organizationName'},
       synonyms => $synonyms
     );
 
@@ -190,7 +187,7 @@ sub _parse_with_plugin {
       my $stockprops_value = $row->{$col};
 
       # ... skipping the basic items already included in the row_info
-      next if ( $col eq 'accession_name' || $col eq 'species_name' || $col eq 'population_name' || $col eq 'organization_name' || $col eq 'synonym');
+      next if ( $col eq 'accession_name' || $col eq 'species_name' || $col eq 'populationName' || $col eq 'organizationName' || $col eq 'synonyms');
 
       # ... skip empty / blank values
       next if !$stockprops_value;
@@ -203,13 +200,13 @@ sub _parse_with_plugin {
           'donor institute'=>'donorInstituteCode',
           'donor PUI'=>'germplasmPUI'
         );
-        if (exists($row_info{donors})) {
+        if (exists($row_info{'donors'})) {
           my $donors_hash = $row_info{donors}->[0];
           $donors_hash->{$donor_key_map{$col}} = $stockprops_value;
-          $row_info{donors} = [$donors_hash];
+          $row_info{'donors'} = [$donors_hash];
         }
         else {
-          $row_info{donors} = [{ $donor_key_map{$col} => $stockprops_value }];
+          $row_info{'donors'} = [{ $donor_key_map{$col} => $stockprops_value }];
         }
       }
       elsif ( exists($editable_stockprops_map{$col}) ) {

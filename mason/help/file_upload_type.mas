@@ -3,23 +3,33 @@
 </%args>
 
 <div class="file_upload_type">
-  <p>
-    <% $type %> may be uploaded using any of the supported file types: MS Excel (<strong>.xls or .xlsx</strong>), 
-    Comma-separated file (<strong>.csv</strong>), Tab-delimited file (<strong>.txt or .tsv</strong>), 
-    or Semicolon-separated file (<strong>.ssv</strong>).
-  </p>
-  <p>
-    Columns may be in any order in the file, as long as they have the correct header name.
-    Optional columns may be left out, if not used in your data.
-  </p>
+  <span class="file_icon glyphicon glyphicon-file"></span>
+  <div>
+    <p>
+      <% $type %> may be uploaded using any of the supported file types: MS Excel (<strong>.xls or .xlsx</strong>), 
+      Comma-separated file (<strong>.csv</strong>), Tab-delimited file (<strong>.txt or .tsv</strong>), 
+      or Semicolon-separated file (<strong>.ssv</strong>).
+    </p>
+    <p>
+      Columns may be in any order in the file, as long as they have the correct header name.
+      Optional columns may be left out, if not used in your data.
+    </p>
+  </div>
 </div>
 
 <style>
   .file_upload_type {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     margin: 15px;
     padding: 5px;
     border-radius: 5px;
     background: rgba(252, 211, 77, 0.5);
     border: 1px solid #d97706;
+  }
+  .file_icon {
+    color: #B96F1A;
+    font-size: 200%;
   }
 </style>

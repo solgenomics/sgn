@@ -301,6 +301,7 @@ sub parse {
   # If type is not defined, use the file extension
   if ( !$type ) {
     ($type) = $file =~ /\.([^.]+)$/;
+    $type = 'xls' if !$type;          # set default type to 'xls' if not defined (there are some test files with no extension)
     $self->type($type);
   }
 
