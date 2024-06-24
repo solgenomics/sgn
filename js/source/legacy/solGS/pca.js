@@ -267,11 +267,9 @@ solGS.pca = {
 
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
-    console.log(`${JSON.stringify(lists)}`)
     lists = list.addDataStrAttr(lists);
 
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    console.log(`datasets: ${JSON.stringify(datasets)}`)
     var pcaPops = [lists, datasets];
 
     return pcaPops.flat();
@@ -948,6 +946,7 @@ jQuery(document).ready(function () {
       if (!pcaPopId) {
         pcaArgs = solGS.pca.getSelectedPopPcaArgs(runPcaBtnId);
       }
+
       pcaPopId = pcaArgs.pca_pop_id;
       var canvas = solGS.pca.canvas;
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
