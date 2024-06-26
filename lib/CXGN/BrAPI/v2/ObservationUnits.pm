@@ -288,7 +288,6 @@ sub _search {
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
             $additional_info->{familyName} = $obs_unit->{family_uniquename}
-
         }
 
         push @data_window, {
@@ -298,7 +297,6 @@ sub _search {
             germplasmName => $obs_unit->{germplasm_uniquename},
             crossDbId => qq|$obs_unit->{cross_stock_id}|,
             crossName => $obs_unit->{cross_uniquename},
-            germplasmTypeName => $obs_unit->{germplasm_type_name},
             locationDbId => qq|$obs_unit->{location_id}|,
             locationName => $obs_unit->{location_name},
             observationUnitDbId => qq|$obs_unit->{obsunit_stock_id}|,
