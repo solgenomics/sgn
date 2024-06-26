@@ -837,12 +837,12 @@ export function init() {
                         html += `<strong>Plot Number:</strong> ${plot.observationUnitPosition.observationLevel.levelCode}<br />
                             <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
                             <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />`;
-                        if (plot.germplasmTypeName == "cross") {
-                            html += `<strong>Cross Unique ID:</strong> ${plot.germplasmName}`;
-                        } else if (plot.germplasmTypeName == "family_name") {
-                            html += `<strong>Family Name:</strong> ${plot.germplasmName}`;
+                        if (plot.crossName) {
+                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}`;
+                        } else if (plot.additionalInfo.familyName) {
+                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}`;
                         } else {
-                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}`;                                                        
+                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}`;
                         }
 
                         if ( local_this.heatmap_selected ) {

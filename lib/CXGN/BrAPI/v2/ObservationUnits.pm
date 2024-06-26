@@ -191,6 +191,8 @@ sub _search {
         my $block = $obs_unit->{block};
         my $plot;
         my $plant;
+        my $family_stock_id;
+        my $family_name;
 
         ## Following code lines add observationUnitParent to additionalInfo, useful for BI
         if ($obs_unit->{obsunit_type_name} eq 'plant') {
@@ -283,11 +285,19 @@ sub _search {
                 push @ids, $arrayimage->[0];
             }
 
+        if ($obs_unit->{family_stock_id}) {
+            $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
+            $additional_info->{familyName} = $obs_unit->{family_uniquename}
+
+        }
+
         push @data_window, {
             externalReferences => @formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
+            crossDbId => qq|$obs_unit->{cross_stock_id}|,
+            crossName => $obs_unit->{cross_uniquename},
             germplasmTypeName => $obs_unit->{germplasm_type_name},
             locationDbId => qq|$obs_unit->{location_id}|,
             locationName => $obs_unit->{location_name},
