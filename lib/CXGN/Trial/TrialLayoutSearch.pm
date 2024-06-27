@@ -149,7 +149,7 @@ sub search {
     my $from_clause = " FROM stock as observationunit
         JOIN stock_relationship ON (observationunit.stock_id=subject_id)
         JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
-        JOIN stock as germplasm ON (object_id=germplasm.stock_id AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id))
+        JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
         JOIN cvterm as germplasm_type ON (germplasm_type.cvterm_id = germplasm.type_id)
         JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
         JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
@@ -248,12 +248,6 @@ sub search {
     }
 
     my @observation_units;
-    my $accession_stock_id;
-    my $accession_name;
-    my $cross_stock_id;
-    my $cross_name;
-    my $family_stock_id;
-    my $family_name;
 
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $germplasm_type_name, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description,
     $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count) = $h->fetchrow_array()) {
@@ -266,6 +260,13 @@ sub search {
         if ($folder_description) { $folder_description =~ s/\R//g };
 
         push @observation_units, $observationunit_stock_id;
+
+        my $accession_stock_id;
+        my $accession_name;
+        my $cross_stock_id;
+        my $cross_name;
+        my $family_stock_id;
+        my $family_name;
 
         if ($germplasm_type_name eq 'cross') {
             $cross_stock_id = $germplasm_stock_id;
@@ -311,7 +312,6 @@ sub search {
             seedlot_id => $seedlot_id,
             seedlot_name => $seedlot_name,
         };
-
     }
 
     ## Query observations if requested. No requested by default

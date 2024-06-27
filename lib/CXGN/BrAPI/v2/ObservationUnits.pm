@@ -178,7 +178,7 @@ sub _search {
         }
 
         ## Getting additional info
-        my $additional_info;
+        my $additional_info = {};
         my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
         if ($rs->count() > 0){
             my $additional_info_json = $rs->first()->value();
