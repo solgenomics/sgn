@@ -137,18 +137,17 @@ $latest_trial_activity => undef
                 </td>
             </tr>
             <tr>
-                <td><b>Transplanting Date</b></td>
-                <td>
-                    <div id="transplanting_date">
 % if ($transplanting_date) {
-    <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $transplanting_date %>" ><% $transplanting_date %></a>
-% } else {
-%  print "<span class='text-danger'>[No Transplanting Date]</span>";
+<tr>
+    <td><b>Transplanting Date</b></td>
+    <td>
+        <div id="transplanting_date">
+            <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $transplanting_date %>"><% $transplanting_date %></a>
+        </div>
+    </td>
+</tr>
 % }
-                    </div>
-                </td>
-            </tr>
-            <tr>
+<tr>
                 <td><b>Harvest Date</b></td>
                 <td>
                     <div id="harvest_date">
