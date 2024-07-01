@@ -1,4 +1,3 @@
-
 package SGN::Controller::BreedersToolbox::Trial;
 
 use Moose;
@@ -337,7 +336,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my @management_factor_types = split ',',$field_management_factors;
         $c->stash->{management_factor_types} = \@management_factor_types;
         $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
-	$c->stash->{trial_stock_count} = $trial->get_trial_stock_count();
+	    $c->stash->{trial_stock_count} = $trial->get_trial_stock_count();
+        # $c->stash->{email_address} = $c->user->get_object->get_contact_email();
+        # $c->stash->{full_name} = $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name;
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 

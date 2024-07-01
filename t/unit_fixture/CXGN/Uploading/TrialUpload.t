@@ -22,8 +22,12 @@ use LWP::UserAgent;
 use JSON;
 use Spreadsheet::Read;
 use Text::CSV;
+use Email::Sender::Simple;
+use Email::Sender::Transport::Test;
+use Email::Simple;
 
 my $f = SGN::Test::Fixture->new();
+my $transport = Email::Sender::Transport::Test->new;
 
 for my $extension ("xls", "xlsx") {
 
@@ -1442,7 +1446,6 @@ for my $extension ("xls", "xlsx") {
 	my $after_deleting_empty_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
 	#deleting 2 associated genotyping plates and genotyping project
 	is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project - 3);
-
 
 	#Upload Trial with flexible column headers, entry Numbers, and auto generating plot names
 	my %upload_metadata;
