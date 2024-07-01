@@ -55,7 +55,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    
+
     print STDERR "This is sp_person_id from trial detail edit: $sp_person_id \n";
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
@@ -336,7 +336,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $start_date = shift;
     my $end_date = shift;
     my $include_dateless_items = shift;
-    
+
     #get userinfo from db
     my $user = $c->user();
     if (! $c->user) {
@@ -481,11 +481,11 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my @phenotype_data;
 
     my @numeric_trait_ids;
-    
+
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
 	push @numeric_trait_ids, $trait_id;
-	
+
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -514,18 +514,18 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     # get data from the non-numeric trait ids
     #
-    
+
     # prevent sql statement from failing if there are no numeric traits
     #
     my $exclude_numeric_trait_ids = "";
     if (@numeric_trait_ids) {
 	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
     }
-	
+
     my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value)
-	$select_clause_additional	
+	$select_clause_additional
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
             JOIN nd_experiment_phenotype USING(phenotype_id)
@@ -545,7 +545,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional ";
 
     my $h = $dbh->prepare($q);
-    
+
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
@@ -553,7 +553,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
-    
+
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
@@ -2311,7 +2311,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     } else {
         $c->stash->{rest} = {success => 1};
     }
-}   
+}
 
 sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $self = shift;
@@ -3235,7 +3235,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
@@ -3331,7 +3331,7 @@ sub get_female_plots : Chained('trial') PathPart('get_female_plots') Args(0) {
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
