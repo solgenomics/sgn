@@ -7,11 +7,10 @@
   <div>
     <p>
       <% $type %> may be uploaded using any of the supported file types: MS Excel (<strong>.xls or .xlsx</strong>), 
-      Comma-separated file (<strong>.csv</strong>), Tab-delimited file (<strong>.txt or .tsv</strong>), 
-      or Semicolon-separated file (<strong>.ssv</strong>).
+      comma-separated file (<strong>.csv</strong>), tab-delimited file (<strong>.txt or .tsv</strong>), 
+      or semicolon-separated file (<strong>.ssv</strong>).
     </p>
     <p>
-      Columns may be in any order in the file, as long as they have the correct header name.
       Optional columns may be left out, if not used in your data.
     </p>
   </div>
