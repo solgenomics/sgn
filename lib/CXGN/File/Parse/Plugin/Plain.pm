@@ -74,6 +74,7 @@ sub parse {
   }
 
   # Set data values
+  my $skips_in_a_row = 0;
   for my $r ( 1..$row_max ) {
     my $row = $rows[$r];
     my %row_info = (
@@ -101,6 +102,8 @@ sub parse {
         }
       }
     }
+    $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
+    last if $skips_in_a_row > 5;
     push @{$rtn{data}}, \%row_info if !$skip_row;
   }
 
