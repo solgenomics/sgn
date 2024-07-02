@@ -415,9 +415,10 @@ sub verify {
                     }
 
                     if (!exists($trait_categories_hash{$trait_value}) || $trait_value eq '') {
-                        $error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-                    }else {
-                        print "Trait value is valid $trait_value.\n";
+                        $error_message = "<small>This trait value should be one of ".join(", ", keys %trait_categories_hash).": <br/>Plot Name: (undefined)<br/>Trait Name: (undefined)<br/>Value: ".$trait_value."</small><hr>";
+                        print $error_message;
+                    } else {
+                        print "Trait value is valid.\n";
                     }
                 }
 
