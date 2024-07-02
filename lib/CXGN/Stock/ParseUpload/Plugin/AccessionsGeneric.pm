@@ -136,7 +136,7 @@ sub _parse_with_plugin {
   my %additional_columns_map = map {$_ => 1} @$additional_columns;
 
   my $accession_list = $parsed_values->{'accession_name'};
-  my $synonyms_list = $parsed_values->{'synonyms'};
+  my $synonyms_list = $parsed_values->{'synonyms'} || [];
   my $organism_list = $parsed_values->{'species_name'};
   my %accession_lookup;
   my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-ilike=>$accession_list}});
@@ -148,7 +148,7 @@ sub _parse_with_plugin {
   for my $row ( @$parsed_data ) {
     my $row_num = $row->{_row};
     my $accession = $row->{'accession_name'};
-    my $synonyms = $row->{'synonyms'};
+    my $synonyms = $row->{'synonyms'} || [];
 
     my $stock_id;
     if(exists($accession_lookup{$accession})){
