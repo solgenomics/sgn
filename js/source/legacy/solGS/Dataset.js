@@ -42,7 +42,6 @@ solGS.dataset = {
       var id = datasets[i][0];
       var name = datasets[i][1];
       var d = dataset.getDataset(id);
-      console.log(`d: ${JSON.stringify(d)}`)
       for (var j = 0; j < datasetTypes.length; j++) {
         if (d.categories[datasetTypes[j]] && d.categories[datasetTypes[j]].length) {
           if (!dsIds.includes(id)) {
@@ -182,7 +181,7 @@ solGS.dataset = {
     return args;
   },
 
-  createDatasetSelectionArgs: function (datasetId, datasetName) {
+  createDatasetTypeSelectionReqArgs: function (datasetId, datasetName) {
     var trainingPopDetails = solGS.getPopulationDetails();
     var selectionPopId = "dataset_" + datasetId;
 
@@ -213,9 +212,9 @@ solGS.dataset = {
     return args;
   },
 
-  checkPredictedDatasetSelection: function (datasetId, datasetName) {
-    var args = this.createDatasetSelectionArgs(datasetId, datasetName);
 
+  checkPredictedDatasetSelection: function (datasetId, datasetName) {
+    var args = this.createDatasetTypeSelectionReqArgs(datasetId, datasetName);
     var trainingPopGenoPro = jQuery("#genotyping_protocol_id").val();
     var selectionPopGenoPro = args.genotyping_protocol_id;
 
@@ -230,43 +229,27 @@ solGS.dataset = {
     } else {
       args = JSON.stringify(args);
 
-      jQuery.ajax({
+      var checkPredicted = jQuery.ajax({
         type: "POST",
         dataType: "json",
-        data: {
-          arguments: args,
-        },
+        data: { arguments: args },
         url: "/solgs/check/predicted/dataset/selection",
-        success: function (response) {
-          args = JSON.parse(args);
-
-          if (response.output) {
-            solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(
-              args,
-              response.output
-            );
-
-            if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-              solGS.sIndex.populateSindexMenu();
-              solGS.correlation.populateGenCorrMenu();
-              solGS.geneticGain.ggSelectionPopulations();
-              solGS.cluster.listClusterPopulations();
-            }
-          } else {
-            solGS.dataset.queueDatasetSelectionPredictionJob(datasetId);
-          }
-        },
       });
-    }
+
+      return checkPredicted;
+  }
+
   },
 
-  queueDatasetSelectionPredictionJob: function (datasetId) {
-    var args = this.createDatasetSelectionArgs(datasetId);
+  queueDatasetSelectionPredictionJob: function (datasetId, datasetName) {
+    var args = this.createDatasetTypeSelectionReqArgs(datasetId, datasetName);
     var modelId = args.training_pop_id;
     var selectionPopId = args.selection_pop_id;
+    var traitId = args.training_traits_ids;
+    var protocolId = args.genotyping_protocol_id;
 
     var hostName = window.location.protocol + "//" + window.location.host;
-    var page = hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId;
+    var page = hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId + "/trait/" + traitId + "/gp/" + protocolId;
 
     solGS.waitPage(page, args);
   },
