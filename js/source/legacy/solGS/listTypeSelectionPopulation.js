@@ -67,7 +67,7 @@ solGS.listTypeSelectionPopulation = {
     var selectionPopArgs;
 
     if (dataStr.match(/dataset/)) {
-      selectionPopArgs = solGS.dataset.createDatasetSelectionReqArgs(popId, popName);
+      selectionPopArgs = solGS.dataset.createDatasetTypeSelectionReqArgs(popId, popName);
       // popName = `<a href="/dataset/${popId}">${popName}</a>`;
   
     } else if (dataStr.match(/list/)) {
@@ -160,15 +160,10 @@ solGS.listTypeSelectionPopulation = {
 
   getSelectedPopSolgsArgs: function (runSolgsElemId) {
     var solgsArgs;
-    console.log(`getSelectedPopSolgsArgs runSolgsElemId - ${runSolgsElemId}`)
 
     var selectedPopDiv = document.getElementById(runSolgsElemId);
-    console.log(`getSelectedPopSolgsArgs selectedPopDiv - ${selectedPopDiv}`)
-
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
-      console.log(`getSelectedPopSolgsArgs selectedPopDATa - ${selectedPopData}`)
-
       solgsArgs = JSON.parse(selectedPopData.selectedPop);
     }
 
@@ -219,8 +214,6 @@ solGS.listTypeSelectionPopulation = {
       var selectionPopId = "list_" + listId;
       var protocolId = modelArgs.genotyping_protocol_id;
       var trainingTraitsIds = solGS.getTrainingTraitsIds();
-
-      console.log(`createListTypeSelectionReqArgs traits ids: ${trainingTraitsIds}`)
 
       var args = {
         list_name: listName,
@@ -339,10 +332,8 @@ jQuery(document).ready(function () {
   
   jQuery(selectionListPopsDataDiv).on("click", function (e) {
 
-
     var runSolgsBtnId = e.target.id;
-    
-   
+      
     if (runSolgsBtnId.match(/run_solgs/)) {
 
       var selectedPop = solGS.listTypeSelectionPopulation.getSelectedPopSolgsArgs(runSolgsBtnId);
@@ -386,15 +377,19 @@ jQuery(document).ready(function () {
           }
           
         } else {
-          solGS.dataset.checkPredictedDatasetSelection(selectedPop.id, selectedPop.name).done(function (res) {
-            var args = solGS.listTypeSelectionPopulation.createListTypeSelectionReqArgs(listId);
+          var selectedPop = solGS.listTypeSelectionPopulation.getSelectedPopSolgsArgs(runSolgsBtnId);
+          var datasetId = selectedPop.dataset_id;
+          var datasetName = selectedPop.dataset_name;
+
+          solGS.dataset.checkPredictedDatasetSelection(datasetId, datasetName).done(function (res) {
+            var args = solGS.dataset.createDatasetTypeSelectionReqArgs(datasetId, datasetName);
+            var selectionPopId = args.selection_pop_id;
 
             if (!res.output.match(/Predict/)) {
-              console.log(`res ouput: ${res.output}`)
-              console.log(`runSolgsBtnId: ${runSolgsBtnId}`)
+              var selDataTable = jQuery(tableId).DataTable()
+              var tableRowIdx = selDataTable.row('[id='+selectionPopId + ']').index();
+              selDataTable.cell(tableRowIdx, 3).data(res.output).draw();     
 
-              // solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(args, res.output);
-              jQuery(`#${runSolgsBtnId}`).html(res.output);
               if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
                 solGS.sIndex.populateSindexMenu();
                 solGS.correlation.populateGenCorrMenu();
@@ -402,9 +397,7 @@ jQuery(document).ready(function () {
                 solGS.cluster.listClusterPopulations();
               }
             } else {
-              console.log(`res ouput: ${res.output}`)
-
-              solGS.dataset.queueDatasetSelectionPredictionJob(selectedPop.id, selectedPop.name);
+              solGS.dataset.queueDatasetSelectionPredictionJob(datasetId, datasetName);
             }
           })
           .fail(function () {
