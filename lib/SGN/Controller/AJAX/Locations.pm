@@ -177,7 +177,7 @@ sub upload_locations_POST : Args(0) {
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    my $type = 'location excel';
+    my $type = 'location generic';
     my $parser = CXGN::Location::ParseUpload->new();
     my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
 
