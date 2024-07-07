@@ -1766,7 +1766,7 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
     my $download = $kasp_genotyping_data_download->download();
 
     my $format = 'csv';
-    my $download_file_name = 'BreedbaseKASPdata'.$format;
+    my $download_file_name = 'BreedbaseKASPdata'.'.'.$format;
 
     $c->res->content_type('Application/'.$format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
