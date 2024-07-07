@@ -567,13 +567,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional ";
 
     my $h = $dbh->prepare($q);
-<<<<<<< HEAD
     
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
-=======
-
-    $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
->>>>>>> master
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
 	my @return_array;
