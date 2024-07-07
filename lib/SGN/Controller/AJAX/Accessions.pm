@@ -275,7 +275,7 @@ sub verify_accessions_file_POST : Args(0) {
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search, append_synonyms=>$append_synonyms);
-    $parser->load_plugin('AccessionsXLS');
+    $parser->load_plugin('AccessionsGeneric');
     my $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
@@ -289,7 +289,7 @@ sub verify_accessions_file_POST : Args(0) {
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= $error_string."\n";
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
