@@ -6,7 +6,7 @@ class SelectMenu {
   constructor(menuId, menuClass, label) {
     menuId = menuId.replace(/#/, "");
     if(menuClass) {
-    menuClass = menuClass.replace(/\./, "");
+      menuClass = menuClass.replace(/\./, "");
     }
 
     this.menuId = menuId;
@@ -32,6 +32,28 @@ class SelectMenu {
     return menu;
   }
 
+  getSelectMenuOptions() {
+    var selectMenu = document.getElementById(this.menuId);
+    var options;
+    
+    if (selectMenu) {
+      options = selectMenu.options;
+    }
+
+    return options;
+  }
+
+  createOptionElement(dt) {
+    var option = document.createElement("option");
+
+    option.value = dt.id;
+    option.dataset.pop = JSON.stringify(dt);
+    option.innerHTML = dt.name;
+
+    return option;
+
+  }
+
   addOptions(data) {
     var menu = this.menu;
     if (!menu) {
@@ -39,15 +61,9 @@ class SelectMenu {
     }
 
     data.forEach(function (dt) {
-      var option = document.createElement("option");
-
-      option.value = dt.id;
-      option.dataset.pop = JSON.stringify(dt);
-      option.innerHTML = dt.name;
-
+      var option = this.createOptionElement(dt);
       menu.appendChild(option);
-
-    });
+    }.bind(this));
 
     return menu;
   }
