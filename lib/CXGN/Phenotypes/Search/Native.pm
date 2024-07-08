@@ -419,7 +419,8 @@ sub search {
     
     if ($start_date && $end_date) {
 	print STDERR "INCLUDING THE DATE QUERY...\n";
-	push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
+	#	push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
+		push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
 
     }
 
@@ -591,6 +592,7 @@ sub search {
 
     }
 
+    print STDERR "RESULT: ".Dumper(\@result)."\n";
     print STDERR "Search End:".localtime."\n";
     return \@result;
 }
