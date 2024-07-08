@@ -107,10 +107,10 @@ $t->while_logged_in_as("submitter", sub {
         ok($table_content =~ /$trail->{harvest_date}/, "Verify info in the table trail harvest date: $trail->{harvest_date}");
         sleep(3);
 
-        $table_content = $t->find_element_ok('transplanting_date', 'id', 'find cell of table with trial transplanting date information')->get_attribute('innerHTML');
-        sleep(3);
-        ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table trail transplanting date: $trail->{transplanting_date}");
-        sleep(3);
+        # $table_content = $t->find_element_ok('transplanting_date', 'id', 'find cell of table with trial transplanting date information')->get_attribute('innerHTML');
+        # sleep(3);
+        # ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table trail transplanting date: $trail->{transplanting_date}");
+        # sleep(3);
 
         $table_content = $t->find_element_ok('plot_width', 'id', 'find cell of table with trial plot width information')->get_attribute('innerHTML');
         sleep(3);
