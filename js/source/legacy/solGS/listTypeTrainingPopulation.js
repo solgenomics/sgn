@@ -60,7 +60,43 @@ solGS.listTypeTrainingPopulation = {
     var popId = trainingPop.id;
     var popName = trainingPop.name;
     var dataStr = trainingPop.data_str;
+   
+    if (dataStr.match(/dataset/)) {
+      popName = `<a href="/dataset/${popId}">${popName}</a>`;
+    }
 
+    var runSolgsBtn = this.getRunSolgsBtnElement(trainingPop);
+
+    var rowData = [popName,
+      dataStr, trainingPop.owner, runSolgsBtn, `${dataStr}_${popId}`];
+
+    return rowData;
+
+  },
+
+  getRunSolgsBtnElement: function(trainingPop) {
+    var popId = trainingPop.id;
+    var popName = trainingPop.name;
+    var dataStr = trainingPop.data_str;
+
+    var trainingPopId = this.getTrainingPopId(popId, dataStr);
+    var runSolgsBtnId = this.getRunSolgsId(trainingPopId);
+
+    var trainingArgs = this.getTrainingPopArgs(trainingPop);
+    trainingArgs = JSON.stringify(trainingArgs);
+
+    var runSolgsBtn =
+      `<button type="button" id=${runSolgsBtnId}` +
+      ` class="btn btn-success" data-selected-pop='${trainingArgs}'>Create Training Population</button>`;
+
+      return runSolgsBtn;
+
+  },
+
+  getTrainingPopArgs: function(trainingPop) {
+    var popId = trainingPop.id;
+    var popName = trainingPop.name;
+    var dataStr = trainingPop.data_str;
 
     var trainingArgs;
 
@@ -70,29 +106,12 @@ solGS.listTypeTrainingPopulation = {
       trainingArgs = this.createListTypeTrainingReqArgs(popId);
     }
 
-
     trainingArgs['analysis_type'] = `${dataStr}_type_training`;
     trainingArgs['data_structure'] = dataStr;
 
-    trainingArgs = JSON.stringify(trainingArgs);
-    console.log(`createRowElements trainingArgs : ${trainingArgs}`)
+    return trainingArgs;
 
-    var trainingPopId = this.getTrainingPopId(popId, dataStr);
-    var runSolgsBtnId = this.getRunSolgsId(trainingPopId);
-    var runSolgsBtn =
-      `<button type="button" id=${runSolgsBtnId}` +
-      ` class="btn btn-success" data-selected-pop='${trainingArgs}'>Run solGS</button>`;
-   
-    if (dataStr.match(/dataset/)) {
-      popName = `<a href="/dataset/${popId}">${popName}</a>`;
-    }
-
-    var rowData = [popName,
-      dataStr, trainingPop.owner, runSolgsBtn, `${dataStr}_${popId}`];
-
-    return rowData;
   },
-
 
   getRunSolgsId: function (trainingPopId) {
     if (trainingPopId) {
@@ -137,15 +156,10 @@ solGS.listTypeTrainingPopulation = {
 
   getSelectedPopSolgsArgs: function (runSolgsElemId) {
     var solgsArgs;
-    console.log(`getSelectedPopSolgsArgs runSolgsElemId - ${runSolgsElemId}`)
-
     var selectedPopDiv = document.getElementById(runSolgsElemId);
-    console.log(`getSelectedPopSolgsArgs selectedPopDiv - ${selectedPopDiv}`)
 
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
-      console.log(`getSelectedPopSolgsArgs selectedPopDATa - ${selectedPopData}`)
-
       solgsArgs = JSON.parse(selectedPopData.selectedPop);
     }
 
