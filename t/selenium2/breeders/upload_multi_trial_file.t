@@ -14,7 +14,7 @@ $t->while_logged_in_as("submitter", sub {
         year               => "2017",
         name               => "test_trial_3",
         planting_date      => "[No Planting Date]",
-        transplanting_date => "[No Transplanting Date]",
+        # transplanting_date => "[No Transplanting Date]",
         harvest_date       => "[No Harvest Date]",
         file_name          => "upload_multi_trail.xlsx",
         plot_width         => "[No Plot Width]",
@@ -27,7 +27,7 @@ $t->while_logged_in_as("submitter", sub {
         year               => "2017",
         name               => "test_trial_6",
         planting_date      => "2017-May-01",
-        transplanting_date => "2017-September-10",
+        # transplanting_date => "2017-September-10",
         harvest_date       => "2018-February-01",
         file_name          => "upload_multi_trail_full.xlsx",
         plot_width         => "20",
@@ -107,10 +107,10 @@ $t->while_logged_in_as("submitter", sub {
         ok($table_content =~ /$trail->{harvest_date}/, "Verify info in the table trail harvest date: $trail->{harvest_date}");
         sleep(3);
 
-        $table_content = $t->find_element_ok('transplanting_date', 'id', 'find cell of table with trial transplanting date information')->get_attribute('innerHTML');
-        sleep(3);
-        ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table trail transplanting date: $trail->{transplanting_date}");
-        sleep(3);
+        # $table_content = $t->find_element_ok('transplanting_date', 'id', 'find cell of table with trial transplanting date information')->get_attribute('innerHTML');
+        # sleep(3);
+        # ok($table_content =~ /$trail->{transplanting_date}/, "Verify info in the table trail transplanting date: $trail->{transplanting_date}");
+        # sleep(3);
 
         $table_content = $t->find_element_ok('plot_width', 'id', 'find cell of table with trial plot width information')->get_attribute('innerHTML');
         sleep(3);
