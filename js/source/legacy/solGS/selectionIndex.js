@@ -15,7 +15,7 @@ solGS.sIndex = {
   siPopsSelectMenuId: "#si_pops_select",
   siFormId: "#si_form",
 
-  populateSindexMenu: function () {
+  populateSindexMenu: function (newPop) {
     var modelData = this.getTrainingPopulationData();
 
     var sIndexPops = [modelData];
@@ -26,21 +26,18 @@ solGS.sIndex = {
         sIndexPops.push(trialSelPopsList);
       }
     }
+    
+    var menu = new SelectMenu(this.siPopsSelectMenuId);
 
-    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
-    if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
-      if (listTypeSelPops) {
-        sIndexPops.push(listTypeSelPops);
-      }
+    if (newPop){
+        menu.updateOptions(newPop);   
+    } else {
+      sIndexPops = sIndexPops.flat();
+      menu.createSelectMenu();
+      var menuElems = menu.createOptions(sIndexPops);
+      menu.displayMenu(menuElems, this.siPopsDiv)
     }
 
-    var menuId = this.siPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    sIndexPops = sIndexPops.flat();
-    var menuElem = menu.addOptions(sIndexPops);
-    var siPopsDiv = this.siPopsDiv;
-    jQuery(siPopsDiv).empty().append(menuElem).show();
   },
 
   addIndexedClustering: function () {
