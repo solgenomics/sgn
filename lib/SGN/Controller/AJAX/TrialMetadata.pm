@@ -334,16 +334,15 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
 
-#    my $start_date = $c->req()->param('start_date');
-#    my $end_date = $c->req()->param('end_date');
-#    my $include_dateless_items = $c->req->param('include_timeless_items');
+    my $start_date = $c->req()->param('start_date') || '1960-01-01';
+    my $end_date = $c->req()->param('end_date') || '2030-01-01';
+    my $include_dateless_items = $c->req->param('include_timeless_items');
 
-#    print STDERR "trait_phenotypes START DATE $start_date END DATE $end_date\n";
+#    my $start_date = shift;
+#    my $end_date = shift;
+#    my $include_dateless_items = shift;
 
-    my $start_date = shift;
-    my $end_date = shift;
-    my $include_dateless_items = shift;
-
+    print STDERR "trait_phenotypes START DATE $start_date END DATE $end_date\n";
 
     #get userinfo from db
     my $user = $c->user();
@@ -351,6 +350,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
       $c->stash->{rest} = {
         status => "not logged in"
       };
+      print STDERR "YOU ARE NOT LOGGED IN. RETURNING.\n";
       return;
     }
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -367,7 +367,11 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 	end_date => $end_date,
 	include_dateless_items => $include_dateless_items,
     );
+
+    print STDERR "GETTING DATA!\n";
     my @data = $phenotypes_search->get_phenotype_matrix();
+
+    print STDERR "DATA: ".Dumper(\@data);
     $c->stash->{rest} = {
       status => "success",
       data => \@data
@@ -382,10 +386,11 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
-    my $display = $c->req->param('display');
+    my $display = $c->req->param('display') || "plots";
     my $trial_stock_type = $c->req->param('trial_stock_type');
     my $start_date = $c->req->param('start_date');
     my $end_date = $c->req->param('end_date');
+    my $include_dateless_items = $c->req->param('include_dateless_items');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
@@ -393,7 +398,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $rel_type_id;
     my $total_complete_number;
 
-    print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date\n";
+    print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
     
     if ($display eq 'plots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -464,12 +469,25 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my $date_params = "";
     my @date_placeholders = ();
+    my $datelessq = "";
+    
+    if ($include_dateless_items) {
+	$datelessq = " ( collect_date IS NULL) ";
+    }
     if ($start_date && $end_date) {
-	$date_params = "  AND ( collect_date > ? and collect_date < ?) ";
+	if ($datelessq) {
+	    $date_params = " AND ( $datelessq OR ( collect_date::date > ? and collect_date::date < ?)) ";
+	}
+	else { 
+	    $date_params = " AND ( collect_date::date > ? and collect_date::date < ?) ";
+	}
 	@date_placeholders = ($start_date, $end_date);
     }
+
+
+    print STDERR "DATE PARAMS: $date_params\n";
     
-    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+    my $q1 = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value),
         to_char(avg(phenotype.value::real), 'FM999990.990'),
@@ -491,19 +509,28 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
-	    $date_params
+	    $date_params 
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
-        $order_by_additional;");
+        $order_by_additional";
 
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
+    print "NUMERIC QUERY: $q1\n";
 
+    my $h1 = $dbh->prepare($q1);
+    
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]*)?$';
+
+    print STDERR "TRIAL ID = ".$c->stash->{trial_id}." REGEX: $numeric_regex REL_TYPE_ID $rel_type_id STOCK TYPE ID $stock_type_id DATE PLACE HOLDERS: ".join(", ", @date_placeholders)."\n";
+    
+    $h1->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
+
+    
+    
     my @phenotype_data;
 
     my @numeric_trait_ids;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h1->fetchrow_array()) {
 
 	push @numeric_trait_ids, $trait_id;
 
@@ -543,6 +570,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
     }
 
+    print STDERR "RUN NON NUMERIC QUERY...\n";
+    
     my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value)
@@ -566,6 +595,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         ORDER BY cvterm.name ASC
         $order_by_additional ";
 
+    print STDERR "QUERY = $q\n";
+    
     my $h = $dbh->prepare($q);
     
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
@@ -576,6 +607,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         push @phenotype_data, \@return_array;
     }
 
+    print STDERR "DATA = ".Dumper(\@phenotype_data);
+    
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 

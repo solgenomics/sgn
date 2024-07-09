@@ -239,7 +239,7 @@ function datatables_display_phenosummary(type) {
         "buttons":  [
             'pageLength','copy', 'excel', 'csv', 'pdf'
         ],
-        "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date,
+        "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
     });
 
     summary_table.clear().draw();
@@ -301,7 +301,7 @@ function trait_summary_hist_display_change(value) {
                 jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
                 jQuery.ajax( {
-                    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date,
+                    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&inlcude_dateless_items=1',
                     type: 'POST',
                     success: function(response){
                         jQuery("#working_modal").modal("hide");
@@ -366,7 +366,7 @@ function trait_summary_hist_change(value) {
     alert('START '+start_date+' etc.');
     // console.log("value",value);
     jQuery.ajax( {
-        url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val()+'&start_date='+start_date+'&end_date='+end_date,
+        url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val()+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
         type: 'POST',
         beforeSend: function() {
             jQuery("#working_modal").modal("show");

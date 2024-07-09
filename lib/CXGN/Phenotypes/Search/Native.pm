@@ -419,11 +419,10 @@ sub search {
     
     if ($start_date && $end_date) {
 	print STDERR "INCLUDING THE DATE QUERY...\n";
-	#	push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
-		push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
+		push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
+	#push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
 
     }
-
 
     if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
         my $arrayref = $self->observation_id_list;
@@ -469,7 +468,7 @@ sub search {
 
     my  $q = $select_clause . $from_clause . $where_clause . $group_by . $order_clause . $limit_clause . $offset_clause;
 
-    #print STDERR "QUERY: $q\n\n";
+    print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
