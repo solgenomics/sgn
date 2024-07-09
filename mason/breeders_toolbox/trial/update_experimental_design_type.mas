@@ -33,6 +33,8 @@ $design_name
 %        $method = 'RCBD';
 %    } elsif ($type eq 'Resolvable Row-Column'){
 %        $method = 'RRC';
+%    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
+%        $method = 'DRRC';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){

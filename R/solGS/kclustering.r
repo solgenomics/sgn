@@ -157,8 +157,8 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
         metaFile <- grep("meta", inputFiles, value = TRUE)
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
-
-        if (!is.na(predictedTraits) && length(predictedTraits) > 1) {
+        
+        if (length(predictedTraits) > 1) {
             clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>%
                 select(c(germplasmName, predictedTraits))

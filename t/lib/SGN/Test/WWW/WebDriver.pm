@@ -202,7 +202,26 @@ sub download_linked_file {
     system("wget --header \"Cookie: sgn_session_id=$token\" --directory-prefix=/tmp $href");
 
 
-}    
+}
+
+
+sub wait_for_working_dialog {
+    my $self = shift;
+    my $max = shift || 300;
+
+    sleep(3);
+
+    my $is_hidden = 0;
+    my $count = 0;
+    print STDERR "... waiting for working dialog ...\n";
+    while ( !$is_hidden && $count < $max ) {
+        my $wd = $self->find_element("working_modal", "id");
+        $is_hidden = $wd->is_hidden();
+        $count++;
+        sleep(1);
+    }
+    print STDERR "... working dialog dismissed ...\n";
+}
 
 1;
    

@@ -45,9 +45,6 @@ sub observation_levels {
             levelName => 'rep',
             levelOrder => 0 },
         {
-            levelName => 'replicate',
-            levelOrder => 0 },
-        {
             levelName => 'block',
             levelOrder => 1 },
         {

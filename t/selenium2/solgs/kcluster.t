@@ -82,43 +82,34 @@ $d->while_logged_in_as(
 
         $d->get_ok( '/cluster/analysis', 'cluster home page' );
         sleep(5);
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $accessions_list_name . '"]',
-            'xpath',
-            'select clones list'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+       
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]',
+'//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]',
             'xpath',
             'select genotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok( '//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
         $d->find_element_ok(
-            '//*[starts-with(@id, "run_cluster")]',
+            '//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath',
             'run clones list (genotype) clustering'
         )->click();
         sleep(5);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(60);
+        sleep(90);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
             $sel_pops );
-        sleep(60);
+        sleep(90);
         $d->find_element_ok(
             '//img[@id="k-means-plot-'
               . $accessions_list_id
@@ -131,38 +122,29 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $plots_list_name . '"]',
-            'xpath',
-            'select plots list'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+       
+        $d->find_element_ok( '//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
+'//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
             'xpath',
             'select phenotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok( '//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
         $d->find_element_ok(
-            '//*[starts-with(@id, "run_cluster")]',
+            '//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath',
             'run plots list (phenotype) clustering'
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(60);
+        sleep(140);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -176,38 +158,29 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $trials_list_name . '"]',
-            'xpath',
-            'select trials list'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+       
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]',
+'//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]',
             'xpath',
             'select genotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
         $d->find_element_ok(
-            '//*[starts-with(@id, "run_cluster")]',
+            '//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath',
             'run trials list (genotype) clustering'
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(200);
+        sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -225,38 +198,29 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $trials_list_name . '"]',
-            'xpath',
-            'select trials list'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
+'//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
             'xpath',
             'select phenotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
         $d->find_element_ok(
-            '//*[starts-with(@id, "run_cluster")]',
+            '//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath',
             'run trials list (phenotype) clustering'
         )->click();
         sleep(5);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(100);
+        sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
+        my $sel_pops = $d->find_element('//*[contains(text(), "Cluster Analysis")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -272,29 +236,20 @@ $d->while_logged_in_as(
         `rm -r /tmp/localhost`;
         sleep(5);
 
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $trials_list_name . '"]',
-            'xpath',
-            'select trials list'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+
+        $d->find_element_ok( '//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
+'//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
             'xpath',
             'select genotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok( '//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "run_cluster")]',
+        $d->find_element_ok( '//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'queue_job', 'id', 'job queueing' )->click();
@@ -307,44 +262,35 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
 
         $d->driver->go_back();
         sleep(5);
 
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $trials_list_name . '"]',
-            'xpath',
-            'select trials list'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
+'//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
             'xpath',
             'select phenotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok( '//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
         $d->find_element_ok(
-            '//*[starts-with(@id, "run_cluster")]',
+            '//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath',
             'run trials list (pheno) cluster'
         )->click();
         sleep(5);
 
         # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(60);
+        # sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
+        my $sel_pops = $d->find_element('//*[contains(text(), "Cluster Analysis")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -355,41 +301,33 @@ $d->while_logged_in_as(
             'xpath', 'check k-means plot' )->click();
         sleep(5);
 
+
         $d->driver->refresh();
         sleep(3);
 
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $trials_dt_name . '"]',
-            'xpath',
-            'select trials dataset'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]',
+'//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]',
             'xpath',
             'select genotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
         $d->find_element_ok(
-            '//*[starts-with(@id, "run_cluster")]',
+            '//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath',
             'run trials dataset (genotype) cluster'
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(200);
+        sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);",
@@ -405,38 +343,29 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        $d->find_element_ok(
-            '//select[@id="cluster_pops_select"]/option[text()="'
-              . $trials_dt_name . '"]',
-            'xpath',
-            'select trials dataset'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath', 'go btn' )
-          ->click();
-        sleep(5);
-        $d->find_element_ok( '//*[starts-with(@id, "cluster_type_select")]',
+
+        $d->find_element_ok( '//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]',
             'xpath', 'select k-means' )->send_keys('K-means');
         sleep(1);
         $d->find_element_ok(
-'//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
+'//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]',
             'xpath',
             'select phenotype'
         )->click();
         sleep(1);
-        $d->find_element_ok( '//*[starts-with(@id, "k_number_input")]',
+        $d->find_element_ok( '//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]',
             'xpath', 'select k number' )->send_keys(4);
         sleep(1);
         $d->find_element_ok(
-            '//*[starts-with(@id, "run_cluster")]',
+            '//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]',
             'xpath',
             'run trials dataset (phenotype) cluster'
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(80);
+        sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);",
@@ -447,6 +376,8 @@ $d->while_logged_in_as(
             'xpath', 'check kmeans plot' )->click();
         sleep(5);
 
+
+#### trial page #######
         `rm -r /tmp/localhost`;
         sleep(5);
 
@@ -490,7 +421,7 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(60);
+        sleep(250);
         $d->find_element_ok( '//img[@id="k-means-plot-139-phenotype-k-4"]',
             'xpath', 'plot displayed' )->click();
         sleep(5);
@@ -534,7 +465,7 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(80);
+        sleep(250);
         $d->find_element_ok( '//img[@id="k-means-plot-139-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot' )->click();
         sleep(2);
@@ -563,7 +494,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(80);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(3);
@@ -596,7 +527,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(5);
@@ -639,7 +570,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(15);
@@ -699,7 +630,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(5);
@@ -772,7 +703,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(80);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-'
               . $accessions_list_id
@@ -842,7 +773,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(80);
+        sleep(250);
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
         $d->driver->execute_script(
@@ -917,7 +848,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(60);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-'
               . $accessions_dt_id
@@ -962,7 +893,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(80);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-traits-1971973596-phenotype-k-4"]',
             'xpath', 'check k-means plot' )->click();
@@ -1004,7 +935,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(80);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot'
@@ -1045,7 +976,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(60);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-traits-1971973596-gebv-k-4"]',
             'xpath', 'check k-means plot' )->click();
@@ -1074,7 +1005,7 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok( 'calculate_si', 'id', 'calc selection index' )
           ->click();
-        sleep(60);
+        sleep(250);
 
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -1113,7 +1044,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(60);
+        sleep(250);
         $d->find_element_ok(
 '//img[@id="k-means-plot-139-139-DMCP-3-FRW-5-genotype-k-4-gp-1-sp-15"]',
             'xpath', 'plot'
@@ -1160,7 +1091,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id',
             'no job queueing -- trial2 NaCRRI  geno cluster' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
 '//img[@id="k-means-plot-139-141-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'check trial2 NaCRRI  geno k-means plot'
@@ -1201,7 +1132,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(80);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-141-traits-1971973596-gebv-k-4"]',
             'xpath', 'check k-means plot' )->click();
@@ -1261,7 +1192,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(3);
@@ -1351,7 +1282,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(3);
@@ -1418,7 +1349,7 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok( 'calculate_si', 'id', 'calc selection index' )
           ->click();
-        sleep(60);
+        sleep(250);
 
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -1491,7 +1422,7 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok( 'calculate_si', 'id', 'calc selection index' )
           ->click();
-        sleep(60);
+        sleep(250);
         #
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -1578,7 +1509,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id',
             'wait to finish clustering trial2 NaCRRI genotype' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
 '//img[@id="k-means-plot-139-141-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot'
@@ -1631,7 +1562,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id',
             'wait to finish clustering in single trial model page' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-139-70666-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot' )->click();
@@ -1682,7 +1613,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(10);
@@ -1748,7 +1679,7 @@ $d->while_logged_in_as(
           ->send_keys('email@email.com');
         sleep(2);
         $d->find_element_ok( 'submit_job', 'id', 'submit' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok( 'Go back', 'partial_link_text', 'go back' )
           ->click();
         sleep(15);
@@ -1894,7 +1825,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
 '//img[@id="k-means-plot-2804608595-traits-1971973596-phenotype-k-4"]',
             'xpath', 'check k-means plot'
@@ -1934,7 +1865,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing -- GEBV' )
           ->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-2804608595-traits-1971973596-gebv-k-4"]',
             'xpath', 'check k-means plot' )->click();
@@ -1977,7 +1908,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing-- Genotype' )
           ->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
 '//img[@id="k-means-plot-2804608595-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'plot'
@@ -2114,7 +2045,7 @@ $d->while_logged_in_as(
             'xpath', 'run GEBV cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-2804608595-'
               . $accessions_dt_id
@@ -2235,7 +2166,7 @@ $d->while_logged_in_as(
             'xpath', 'run cluster' )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
 '//img[@id="k-means-plot-2804608595-141-traits-1971973596-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot'
@@ -2327,27 +2258,22 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(200);
+        sleep(250);
         $d->find_element_ok(
             '//img[@id="k-means-plot-2804608595-70741-genotype-k-4-gp-1"]',
             'xpath', 'check k-means plot' )->click();
         sleep(5);
 
-        foreach
-          my $list_id ( $trials_list_id, $accessions_list_id, $plots_list_id )
-        {
+        foreach my $list_id ( $trials_list_id, $accessions_list_id, $plots_list_id ) {
             $list_id =~ s/\w+_//g;
             $solgs_data->delete_list($list_id);
         }
 
-        foreach
-          my $dataset_id ( $trials_dt_id, $accessions_dt_id, $plots_dt_id )
-        {
+        foreach my $dataset_id ( $trials_dt_id, $accessions_dt_id, $plots_dt_id ) {
             $dataset_id =~ s/\w+_//g;
             $solgs_data->delete_dataset($dataset_id);
         }
 
-    }
-);
+});
 
 done_testing();

@@ -9,9 +9,9 @@ use Data::Dumper;
 use CXGN::List::Validate;
 use CXGN::Stock::Seedlot;
 
-my @REQUIRED_COLUMNS = qw|plot_name plot_number block_number|;
+my @REQUIRED_COLUMNS = qw|plot_number block_number|;
 # accession_name, cross_unique_id, or family_name are required depending on the trial_stock_type
-my @OPTIONAL_COLUMNS = qw|is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 sub _validate_with_plugin {
@@ -20,6 +20,7 @@ sub _validate_with_plugin {
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
   my $trial_stock_type = $self->get_trial_stock_type();
+  my $trial_name = $self->get_trial_name();
   my %errors;
   my @error_messages;
   my %warnings;
@@ -92,6 +93,11 @@ sub _validate_with_plugin {
     }
   }
 
+  # Check trial name for spaces
+  elsif ($trial_name =~ /\s/ ) {
+    push @error_messages, "Trial name <b>$trial_name</b> must not contain spaces.";
+  }
+
   my @pairs;
   my %seen_plot_numbers;
   my %seen_entry_numbers = (
@@ -156,15 +162,15 @@ sub _validate_with_plugin {
     }
 
     #skip blank lines
-    if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
+    if (!$stock_name && !$plot_number && !$block_number) {
       next;
     }
 
     #print STDERR "Check 02 ".localtime();
 
-    #plot_name must not be blank
+    ## PLOT NAME CHECK
     if (!$plot_name || $plot_name eq '' ) {
-      push @error_messages, "Row $row_name: plot name missing.";
+      $plot_name = _create_plot_name($trial_name, $plot_number);
     }
     elsif ($plot_name =~ /\s/ ) {
       push @error_messages, "Row $row_name: plot name must not contain spaces.";
@@ -281,7 +287,7 @@ sub _validate_with_plugin {
       if($worksheet->get_cell($row,$treatment_col)){
         my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
         if ( ($apply_treatment ne '' ) && defined($apply_treatment) && $apply_treatment ne '1'){
-          push @error_messages, "Treatment value in row $row_name should be either 1 or empty";
+          push @error_messages, "Treatment value for $treatment_name in row $row_name should be either 1 or empty";
         }
       }
     }
@@ -359,6 +365,7 @@ sub _parse_with_plugin {
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
   my $trial_stock_type = $self->get_trial_stock_type();
+  my $trial_name = $self->get_trial_name();
 
   # Match a dot, extension .xls / .xlsx
   my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -439,17 +446,20 @@ sub _parse_with_plugin {
     my $weight_gram_seed_per_plot = 0;
     my $entry_number;
 
+    if ($worksheet->get_cell($row,$columns{plot_number}->{index})) {
+      $plot_number =  $worksheet->get_cell($row,$columns{plot_number}->{index})->value();
+    }
     if ($worksheet->get_cell($row,$columns{plot_name}->{index})) {
       $plot_name = $worksheet->get_cell($row,$columns{plot_name}->{index})->value();
+    }
+    if (!$plot_name || $plot_name eq '') {
+      $plot_name = _create_plot_name($trial_name, $plot_number);
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,$columns{$stock_column_name}->{index})) {
       $stock_name = $worksheet->get_cell($row,$columns{$stock_column_name}->{index})->value();
     }
     $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,$columns{plot_number}->{index})) {
-      $plot_number =  $worksheet->get_cell($row,$columns{plot_number}->{index})->value();
-    }
     if ($worksheet->get_cell($row,$columns{block_number}->{index})) {
       $block_number =  $worksheet->get_cell($row,$columns{block_number}->{index})->value();
     }
@@ -485,7 +495,7 @@ sub _parse_with_plugin {
     }
 
     #skip blank lines
-    if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
+    if (!$stock_name && !$plot_number && !$block_number) {
       next;
     }
 
@@ -593,5 +603,10 @@ sub _parse_headers {
   }
 }
 
+sub _create_plot_name {
+  my $trial_name = shift;
+  my $plot_number = shift;
+  return $trial_name . "-PLOT_" . $plot_number;
+}
 
 1;

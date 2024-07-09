@@ -20,11 +20,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
   <div  class='row text-center'
        id='genotyping_protocol'
-       style='margin-top:30px;margin-bottom:60px;'>
+       style='margin:40px 0 40px 0;'>
     <div>
       <button class='btn btn-light'
 	      type='button'
-	      id='genotyping_protocol_message'>
+	      id='genotyping_protocol_message'>Retrieving genotyping protocols...please wait...
       </button>
       <button class='btn btn-success'
 	      type='button'

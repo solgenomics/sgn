@@ -50,8 +50,6 @@ solGS.acronyms = {
 
 
 jQuery(document).ready( function() {
-    console.log('loading acronyms....')
-
     jQuery('#trait_acronyms_div').show();
 
     solGS.acronyms.loadAcronyms().done( function(res) {

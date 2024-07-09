@@ -1443,6 +1443,170 @@ for my $extension ("xls", "xlsx") {
 	#deleting 2 associated genotyping plates and genotyping project
 	is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project - 3);
 
+
+	#Upload Trial with flexible column headers, entry Numbers, and auto generating plot names
+	my %upload_metadata;
+	my $file_name = "t/data/trial/trial_layout_example_flexible.$extension";
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd() . "_" . $time->hms();
+	my $trial_name = "Trial_upload_test_flexible";
+
+	#Test archive upload file
+	my $uploader = CXGN::UploadFile->new({
+		tempfile         => $file_name,
+		subdirectory     => 'temp_trial_upload',
+		archive_path     => '/tmp',
+		archive_filename => "trial_layout_example_flexible.$extension",
+		timestamp        => $timestamp,
+		user_id          => 41, #janedoe in fixture
+		user_role        => 'curator'
+	});
+
+	## Store uploaded temporary file in archive
+	my $archived_filename_with_path = $uploader->archive();
+	my $md5 = $uploader->get_md5($archived_filename_with_path);
+	ok($archived_filename_with_path);
+	ok($md5);
+
+	$upload_metadata{'archived_file'} = $archived_filename_with_path;
+	$upload_metadata{'archived_file_type'} = "trial upload file";
+	$upload_metadata{'user_id'} = $c->sp_person_id;
+	$upload_metadata{'date'} = "2014-02-14_09:10:11";
+
+	#parse uploaded file with appropriate plugin
+	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path, trial_name => $trial_name);
+	$parser->load_plugin('TrialExcelFormat');
+	my $p = $parser->parse();
+	$parsed_data = $p->{'design'};
+	my $entry_numbers = $p->{'entry_numbers'};
+	ok($parsed_data, "Check if parse validate excel file works");
+	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+
+	my $parsed_data_check = {
+		'1' => {
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_1',
+			'stock_name'   => 'test_accession1',
+			'col_number'   => '1',
+			'is_a_control' => 0,
+			'rep_number'   => '1',
+			'block_number' => '1',
+			'range_number' => '1',
+			'row_number'   => '1',
+			'plot_number'  => '1'
+		},
+		'6' => {
+			'rep_number'   => '2',
+			'is_a_control' => 0,
+			'block_number' => '2',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_6',
+			'stock_name'   => 'test_accession3',
+			'col_number'   => '2',
+			'range_number' => '2',
+			'row_number'   => '2',
+			'plot_number'  => '6'
+		},
+		'7' => {
+			'range_number' => '2',
+			'row_number'   => '3',
+			'plot_number'  => '7',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_7',
+			'stock_name'   => 'test_accession4',
+			'col_number'   => '2',
+			'rep_number'   => '1',
+			'is_a_control' => 0,
+			'block_number' => '2'
+		},
+		'4' => {
+			'range_number' => '1',
+			'plot_number'  => '4',
+			'row_number'   => '4',
+			'is_a_control' => 0,
+			'rep_number'   => '2',
+			'block_number' => '1',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_4',
+			'col_number'   => '1',
+			'stock_name'   => 'test_accession2'
+		},
+		'8' => {
+			'range_number' => '2',
+			'row_number'   => '4',
+			'plot_number'  => '8',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_8',
+			'stock_name'   => 'test_accession4',
+			'col_number'   => '2',
+			'rep_number'   => '2',
+			'is_a_control' => 0,
+			'block_number' => '2'
+		},
+		'2' => {
+			'range_number' => '1',
+			'plot_number'  => '2',
+			'row_number'   => '2',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_2',
+			'col_number'   => '1',
+			'stock_name'   => 'test_accession1',
+			'is_a_control' => 0,
+			'rep_number'   => '2',
+			'block_number' => '1'
+		},
+		'5' => {
+			'range_number' => '2',
+			'row_number'   => '1',
+			'plot_number'  => '5',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_5',
+			'stock_name'   => 'test_accession3',
+			'col_number'   => '2',
+			'is_a_control' => 0,
+			'rep_number'   => '1',
+			'block_number' => '2'
+		},
+		'3' => {
+			'stock_name'   => 'test_accession2',
+			'col_number'   => '1',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_3',
+			'block_number' => '1',
+			'is_a_control' => 0,
+			'rep_number'   => '1',
+			'row_number'   => '3',
+			'plot_number'  => '3',
+			'range_number' => '1'
+		}
+	};
+	my $entry_numbers_check = {
+		'test_accession4' => '4',
+		'test_accession2' => '2',
+		'test_accession3' => '3',
+		'test_accession1' => '1'
+	};
+
+	is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data');
+	is_deeply($entry_numbers, $entry_numbers_check, 'check trial excel entry numbers');
+
+	my $trial_create = CXGN::Trial::TrialCreate
+		->new({
+		chado_schema      => $c->bcs_schema(),
+		dbh               => $c->dbh(),
+		owner_id          => 41,
+		trial_year        => "2016",
+		trial_description => "Trial Upload Test Flexible",
+		trial_location    => "test_location",
+		trial_name        => $trial_name,
+		design_type       => "RCBD",
+		design            => $parsed_data,
+		program           => "test",
+		upload_trial_file => $archived_filename_with_path,
+		operator          => "janedoe"
+	});
+
+	my $save = $trial_create->save_trial();
+
+	ok($save->{'trial_id'}, "check that trial_create worked");
+	my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->name();
+	ok($project_name == $trial_name, "check that trial_create really worked");
+
+	my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
+	ok($project_desc == "Trial Upload Test Flexible", "check that trial_create really worked");
+
 	$f->clean_up_db();
 }
 

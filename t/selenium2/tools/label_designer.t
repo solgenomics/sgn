@@ -35,9 +35,8 @@ $t->while_logged_in_as("submitter", sub {
         '//select[@id="label_designer_data_level"]/option[@value="plots"]',
         "xpath",
         "select a data level")->click();
-    sleep(1);
 
-    sleep(12);
+    $t->wait_for_working_dialog();
 
     $t->driver->find_element("select_datasource_button","id", "click next")->click();
 
@@ -241,7 +240,7 @@ $t->while_logged_in_as("submitter", sub {
         "xpath",
         "select a data level")->click();
 
-    sleep(12);
+    $t->wait_for_working_dialog();
 
     $t->driver->find_element("select_datasource_button","id", "click next")->click();
 

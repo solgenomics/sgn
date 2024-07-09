@@ -7,6 +7,11 @@ use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
+#
+# DEPRECATED
+# This plugin has been replaced by the LocationsGeneric plugin
+#
+
 sub name {
     return "location excel";
 }

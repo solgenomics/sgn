@@ -332,6 +332,7 @@ sub list_seedlots {
     my $quality = shift;
     my $only_good_quality = shift;
     my $box_name = shift;
+    my $contents_cross_db_id = shift;
 
     select(STDERR);
     $| = 1;
@@ -394,6 +395,11 @@ sub list_seedlots {
                 push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
             }
         }
+    }
+
+    if ($contents_cross_db_id && scalar(@$contents_cross_db_id)>0) {
+        $search_criteria{'subject.type_id'} = $cross_type_id;
+        $search_criteria{'subject.stock_id'} = { -in => $contents_cross_db_id };
     }
 
     my @seedlot_search_joins = (

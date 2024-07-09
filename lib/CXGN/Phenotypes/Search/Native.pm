@@ -206,6 +206,8 @@ sub search {
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
     my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
@@ -294,7 +296,7 @@ sub search {
 
     my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=subject_id)
       JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
-      JOIN stock as accession ON (object_id=accession.stock_id AND accession.type_id = $accession_type_id)
+      JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id,$cross_type_id,$family_name_type_id)
       $design_layout_sql
       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
@@ -323,17 +325,17 @@ sub search {
       LEFT JOIN project_relationship folder_rel ON (project.project_id = folder_rel.subject_project_id AND folder_rel.type_id = $folder_rel_type_id)
       LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id)";
 
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, additional_info.value, external_references.value, count(phenotype.phenotype_id) OVER() AS full_count, string_agg(distinct(notes.value), ', ') AS notes ".$design_layout_select;
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, additional_info.value, external_references.value, count(phenotype.phenotype_id) OVER() AS full_count, string_agg(distinct(notes.value), ', ') AS notes ".$design_layout_select;
 
     my $order_clause = " ORDER BY 6, 2, 29";
 
-    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, additional_info.value, external_references.value ".$design_layout_select;
+    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, project.project_id, project.name, project.description, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location.value, planting_date.value, harvest_date.value, folder.project_id, folder.name, folder.description, cvterm.cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, phenotype.value, phenotype.uniquename, phenotype.phenotype_id, phenotype.collect_date, phenotype.operator, additional_info.value, external_references.value ".$design_layout_select;
 
     my @where_clause;
 
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
-        push @where_clause, "accession.stock_id in ($accession_sql)";
+        push @where_clause, "germplasm.stock_id in ($accession_sql)";
     }
 
     if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
@@ -394,7 +396,7 @@ sub search {
     }
 
     my $datelessq = "";
-    
+
     if ($self->include_dateless_items()) {
 	$datelessq = " phenotype.create_date IS NULL OR ";
     }
@@ -403,16 +405,16 @@ sub search {
     if ($self->start_date() =~ m/(\d{4}\-\d{2}\-\d{2})/) {
 	$start_date = $1;
     }
-    
+
     if ($self->end_date() =~ m/\d{4}\-\d{2}\-\d{2}/ ) {
 	$end_date = $1;
     }
 
-    if ($start_date && $end_date) { 
+    if ($start_date && $end_date) {
 	push @where_clause, " ( $datelessq ( phenotype.create_date > $start_date and phenotype.create_date < $end_date ) ) ";
 
     }
-    
+
 
     if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
         my $arrayref = $self->observation_id_list;
@@ -472,7 +474,7 @@ sub search {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $accession_uniquename, $accession_stock_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date,
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date,
     $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $phenotype_external_references, $full_count, $notes, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
         my $timestamp_value;
         my $operator_value;
@@ -522,7 +524,7 @@ sub search {
             $col_number = $col_number_select;
             $is_a_control = $is_a_control_select;
         }
-        my $synonyms = $synonym_hash_lookup{$accession_uniquename};
+        my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
         my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
@@ -536,8 +538,8 @@ sub search {
             obsunit_stock_id => $observationunit_stock_id,
             obsunit_uniquename => $observationunit_uniquename,
             obsunit_type_name => $observationunit_type_name,
-            accession_uniquename => $accession_uniquename,
-            accession_stock_id => $accession_stock_id,
+            accession_uniquename => $germplasm_uniquename,
+            accession_stock_id => $germplasm_stock_id,
             synonyms => $synonyms,
             trial_id => $project_project_id,
             trial_name => $project_name,

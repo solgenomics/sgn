@@ -25,6 +25,7 @@ sub search {
     my $accession_id = $params->{germplasmDbId} || '';
     my $accession_name = $params->{germplasmName} || '';
     my $cross_id = $params->{crossDbId} || '';
+    my $cross_name = $params->{crossName} || '';
 
     my $reference_ids_arrayref = $params->{externalReferenceID} || ();
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ();
@@ -51,11 +52,15 @@ sub search {
         $location,
         $minimum_count,
         $accession_name,
-        $cross_id,
+        $cross_name,
         1,
         $minimum_weight,
         $seedlot_id,
-        $accession_id
+        $accession_id,
+        undef,
+        undef,
+        undef,
+        $cross_id,
     );
 
     foreach (@$list){

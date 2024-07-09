@@ -1150,7 +1150,7 @@ sub pedigree_female_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
-    WHERE pedigree_female_parent.uniquename ilike ? ORDER BY pedigree_female_parent.uniquename";
+    WHERE pedigree_female_parent.uniquename ilike ? ORDER BY pedigree_female_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
@@ -1188,7 +1188,7 @@ sub pedigree_male_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
-    WHERE pedigree_male_parent.uniquename ilike ? ORDER BY pedigree_male_parent.uniquename";
+    WHERE pedigree_male_parent.uniquename ilike ? ORDER BY pedigree_male_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
@@ -1225,7 +1225,7 @@ sub cross_female_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
-    WHERE cross_female_parent.uniquename ilike ? ORDER BY cross_female_parent.uniquename";
+    WHERE cross_female_parent.uniquename ilike ? ORDER BY cross_female_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
@@ -1263,7 +1263,7 @@ sub cross_male_parent_autocomplete_GET : Args(0){
     JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
     JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
     JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
-    WHERE cross_male_parent.uniquename ilike ? ORDER BY cross_male_parent.uniquename";
+    WHERE cross_male_parent.uniquename ilike ? ORDER BY cross_male_parent.uniquename LIMIT 100";
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');

@@ -136,7 +136,8 @@ sub search {
 
     if ($marker_name_list && scalar(@$marker_name_list)>0) {
         foreach (@$marker_name_list) {
-            push @or_clause, "s.key = '$_'";
+            $_ =~ s/\s+//g;
+            push @or_clause, "s.key ILIKE '$_'";
         }
     }
     push @where_clause, "nd_protocolprop.type_id = $vcf_map_details_markers_cvterm_id";
