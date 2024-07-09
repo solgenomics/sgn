@@ -35,7 +35,7 @@ class SelectMenu {
   getSelectMenuOptions() {
     var selectMenu = document.getElementById(this.menuId);
     var options;
-    
+
     if (selectMenu) {
       options = selectMenu.options;
     }
@@ -54,7 +54,7 @@ class SelectMenu {
 
   }
 
-  addOptions(data) {
+  createOptions(data) {
     var menu = this.menu;
     if (!menu) {
       menu = this.createSelectMenu();
@@ -66,6 +66,21 @@ class SelectMenu {
     }.bind(this));
 
     return menu;
+  }
+
+  updateOptions(newPop) {
+    var options = this.getSelectMenuOptions();
+    if (options) {
+      if (newPop){
+        var newOption = this.createOptionElement(newPop);
+        options.add(newOption);
+      }
+    }
+
+  }
+
+  displayMenu(menuElems, menuDiv) {
+    jQuery(menuDiv).empty().append(menuElems).show();
   }
 
   addOptionsSeparator (text) {
