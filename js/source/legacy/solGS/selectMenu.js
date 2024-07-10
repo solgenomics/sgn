@@ -80,7 +80,9 @@ class SelectMenu {
   }
 
   displayMenu(menuElems, menuDiv) {
-    jQuery(menuDiv).empty().append(menuElems).show();
+    if (menuDiv) {
+      document.querySelector(menuDiv).appendChild(menuElems);
+    }
   }
 
   addOptionsSeparator (text) {
@@ -91,28 +93,5 @@ class SelectMenu {
     this.menu.appendChild(option);
   }
 
-  getSelectMenuByTypes (listTypes, datasetTypes) {
-    var list = new CXGN.List();
-    var lists = list.getLists(listTypes);
-    var privateLists = list.convertArrayToJson(lists.private_lists);
-
-    privateLists = privateLists.flat();
-    var selectMenu = this.addOptions(privateLists);
-
-    if (lists.public_lists[0]) {
-      var publicLists = list.convertArrayToJson(lists.public_lists);
-      this.addOptionsSeparator("public lists");
-      selectMenu = this.addOptions(publicLists);
-    }
-
-    var datasetPops = solGS.dataset.getDatasetPops(datasetTypes);
-    if (datasetPops) {
-      this.addOptionsSeparator("datasets");
-      selectMenu = this.addOptions(datasetPops);
-    }
-
-    return selectMenu;
-   
-  }
 
 }
