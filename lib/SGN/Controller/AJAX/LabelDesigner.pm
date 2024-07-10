@@ -944,19 +944,19 @@ sub get_data {
                 my $male_parent_name;
                 my $male_parent_id;
 
-                if ($cross->[2] eq ''){
+                if (!$cross->[2] || $cross->[2] eq ''){
                     $cross_combination = 'No cross combination available';
                 } else {
                     $cross_combination = $cross->[2];
                 }
 
-                if ($cross->[8] eq ''){
+                if (!$cross->[8] || $cross->[8] eq ''){
                     $male_parent_name = 'No male parent available';
                 } else {
                     $male_parent_name = $cross->[8];
                 }
 
-                if ($cross->[7] eq ''){
+                if (!$cross->[7] || $cross->[7] eq ''){
                     $male_parent_id = 'No male parent available';
                 } else {
                     $male_parent_id = $cross->[7];
@@ -979,15 +979,38 @@ sub get_data {
             foreach my $cross_id (@$cross_list_ids) {
                 my $cross = CXGN::Cross->new({ schema => $schema, cross_stock_id => $cross_id});
                 my $info = $cross->cross_parents();
+#                print STDERR "INFO =".Dumper($info)."\n";
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if (!$info->[0]->[13] || $$info->[0]->[13] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $info->[0]->[13];
+                }
+
+                if (!$info->[0]->[7] || $info->[0]->[7] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $info->[0]->[7];
+                }
+
+                if (!$info->[0]->[6] || $info->[0]->[6] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $info->[0]->[6];
+                }
+
                 $cross_info{$cross->cross_stock_id()} = {
                     'cross_name' => $cross->cross_name(),
                     'cross_id' => $cross->cross_stock_id(),
-                    'cross_combination' => $info->[0]->[13],
+                    'cross_combination' => $cross_combination,
                     'cross_type' => $info->[0]->[12],
                     'female_parent_name' => $info->[0]->[1],
                     'female_parent_id' => $info->[0]->[0],
-                    'male_parent_name' => $info->[0]->[7],
-                    'male_parent_id' => $info->[0]->[6]
+                    'male_parent_name' => $male_parent_name,
+                    'male_parent_id' => $male_parent_id
                 };
             }
         }
