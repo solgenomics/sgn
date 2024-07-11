@@ -430,6 +430,7 @@ sub verify {
     
     foreach my $plot_name (@plot_list) {
         foreach my $trait_name (@trait_list) {
+
             my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
 	    
 	    if (ref($measurements_array->[0])) {   ### we have a list of measurements, not just a trait_value timestamp pair
@@ -495,8 +496,8 @@ sub check_measurement {
 	    }
 	}
 	
-	if (exists($self->check_trait_category->{$trait_cvterm_id})) {
-	    my @trait_categories = split /\//, $self->check_trait_category->{$trait_cvterm_id};
+	if ($trait_value ne '' && exists($self->check_trait_category->{$trait_cvterm_id})) {
+	    my @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
 	    my %trait_categories_hash;
 	    if ($self->check_trait_format->{$trait_cvterm_id} eq 'Ordinal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Nominal') {
 		# Ordinal looks like <value>=<category>
@@ -514,8 +515,20 @@ sub check_measurement {
 	    if (!exists($trait_categories_hash{$trait_value})) {
 		$error_message .= "<small>This trait value should be one of ".$self->check_trait_category->{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
 	    }
+	    else {
+		#print STDERR "Trait value $trait_value is valid\n";
+	    }
 	}
-	
+
+	if ($self->has_timestamps()) {
+	    if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
+		if ($timestamp) {
+		    if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+			$error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+		    }
+		}
+	    }
+	}
 	
 	my $repeat_type = "single";
 	if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
