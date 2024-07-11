@@ -823,9 +823,8 @@ solGS.cluster = {
     return clusterArgs;
   },
 
-  listClusterPopulations: function () {
-    var modelData = solGS.sIndex.getTrainingPopulationData();
-
+  populateClusterMenu: function (newPop) {
+    var modelData = solGS.selectMenuModelArgs();
     var clusterPops = [modelData];
 
     if (modelData.id.match(/list/) == null) {
@@ -834,27 +833,15 @@ solGS.cluster = {
         clusterPops.push(trialSelPopsList);
       }
     }
-    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
-    if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
-      if (listTypeSelPops) {
-        clusterPops.push(listTypeSelPops);
-      }
+  
+    var menu = new SelectMenu(this.clusterPopsDiv, this.clusterPopsSelectMenuId);
+
+    if (newPop){
+        menu.updateOptions(newPop);   
+    } else {
+      menu.populateMenu(clusterPops);
     }
 
-    var clusterSIndexPops = solGS.sIndex.addIndexedClustering();
-
-    if (clusterSIndexPops) {
-      clusterPops.push(clusterSIndexPops);
-    }
-
-    var menuId = this.clusterPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    clusterPops = clusterPops.flat();
-    var menuElem = menu.addOptions(clusterPops);
-
-    var clusterPopsDiv = this.clusterPopsDiv;
-    jQuery(clusterPopsDiv).empty().append(menuElem).show();
   },
 };
 
@@ -1080,7 +1067,7 @@ jQuery(document).ready(function () {
 
   if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)) {
     setTimeout(function () {
-      solGS.cluster.listClusterPopulations();
+      solGS.cluster.populateClusterMenu();
     }, 5000);
 
     var dataTypeOpts = solGS.cluster.getDataTypeOpts();

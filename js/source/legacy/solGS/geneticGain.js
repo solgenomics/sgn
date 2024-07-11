@@ -209,7 +209,7 @@ solGS.geneticGain = {
     });
   },
 
-  ggSelectionPopulations: function (newPop) {
+  populateGeneticGainMenu: function (newPop) {
     var ggArgs = this.getGeneticGainArgs();
 
     var ggPops = [];
@@ -220,15 +220,12 @@ solGS.geneticGain = {
       }
     }
 
-    var menu = new SelectMenu(this.ggPopsSelectMenuId);
-
+    var menu = new SelectMenu(this.ggPopsDiv, this.ggPopsSelectMenuId);
+    
     if (newPop){
         menu.updateOptions(newPop);   
     } else {
-      ggPops = ggPops.flat();
-      menu.createSelectMenu();
-      var menuElems = menu.createOptions(ggPops);
-      menu.displayMenu(menuElems, this.ggPopsDiv)
+      menu.populateMenu(ggPops);
     }
 
   },
@@ -436,7 +433,7 @@ jQuery(document).ready(function () {
 
   if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
     setTimeout(function () {
-      solGS.geneticGain.ggSelectionPopulations();
+      solGS.geneticGain.populateGeneticGainMenu();
     }, 5000);
   }
 });

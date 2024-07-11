@@ -16,7 +16,7 @@ solGS.sIndex = {
   siFormId: "#si_form",
 
   populateSindexMenu: function (newPop) {
-    var modelData = this.getTrainingPopulationData();
+    var modelData = solGS.selectMenuModelArgs();
 
     var sIndexPops = [modelData];
 
@@ -27,36 +27,33 @@ solGS.sIndex = {
       }
     }
     
-    var menu = new SelectMenu(this.siPopsSelectMenuId);
+    var menu = new SelectMenu(this.siPopsDiv, this.siPopsSelectMenuId);
 
     if (newPop){
         menu.updateOptions(newPop);   
     } else {
-      sIndexPops = sIndexPops.flat();
-      menu.createSelectMenu();
-      var menuElems = menu.createOptions(sIndexPops);
-      menu.displayMenu(menuElems, this.siPopsDiv)
+      menu.populateMenu(sIndexPops);
     }
 
   },
 
-  addIndexedClustering: function () {
-    var indexed = solGS.sIndex.indexed;
-    var sIndexList = [];
-
-    if (indexed) {
-      for (var i = 0; i < indexed.length; i++) {
-        var indexData = {
-          id: indexed[i].sindex_id,
-          name: indexed[i].sindex_name,
+  addIndexedClustering: function (indexedPop) {
+    // var indexed = solGS.sIndex.indexed;
+    // var sIndexList = [];
+    // var indexData;
+    // if (indexed) {
+    //   for (var i = 0; i < indexed.length; i++) {
+        return  {
+          id: indexedPop.sindex_id,
+          name: indexedPop.sindex_name,
           pop_type: "selection_index",
         };
 
-        sIndexList.push(indexData);
-      }
-    }
+    // //     sIndexList.push(indexData);
+    // //   }
+    // // }
 
-    return sIndexList;
+    // return sIndexList;
   },
 
   saveIndexedPops: function (siId) {
@@ -263,17 +260,7 @@ solGS.sIndex = {
     };
   },
 
-  getTrainingPopulationData: function () {
-    var modelArgs = solGS.getModelArgs();
-
-    return {
-      id: modelArgs.training_pop_id,
-      name: modelArgs.training_pop_name,
-      pop_type: "training",
-    };
-  },
-
-  /////
+/////
 };
 ////
 
@@ -422,7 +409,10 @@ jQuery(document).on("click", "#calculate_si", function () {
           };
 
           solGS.sIndex.saveIndexedPops(sIndexed);
-          solGS.cluster.listClusterPopulations();
+
+          // //solGS.cluster.populateClusterMenu();
+          var sIndexedPopArgs = solGS.sIndex.addIndexedClustering(sIndexed);
+          solGS.cluster.populateClusterMenu(sIndexedPopArgs);
         }
       })
       .fail(function () {

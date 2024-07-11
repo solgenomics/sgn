@@ -105,15 +105,14 @@ solGS.anova = {
   },
 
   populateAnovaMenu: function (traits) {
-    var menuId = this.anovaTraitsSelectMenuId;
+    var selectId = this.anovaTraitsSelectMenuId;
+    var menuDivId = this.anovaTraitsDiv;
+
     var optionsLabel = "Select a trait";
     var menuClass = "form-control";
-    var menu = new SelectMenu(menuId, menuClass, optionsLabel);
-    traits = traits.flat();
-    var menuElem = menu.addOptions(traits);
-
-    var anovaTraitsDiv = this.anovaTraitsDiv;
-    jQuery(anovaTraitsDiv).empty().append(menuElem).show();
+    var menu = new SelectMenu(menuDivId, selectId, menuClass, optionsLabel);
+    menu.populateMenu(traits)
+  
   },
 
   clearTraitSelection: function () {
