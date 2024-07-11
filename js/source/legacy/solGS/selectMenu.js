@@ -3,13 +3,15 @@ creates and populates select menu with lists and datasets for analysis tools.
 */
 
 class SelectMenu {
-  constructor(menuId, menuClass, label) {
-    menuId = menuId.replace(/#/, "");
+  constructor(menuDivId, selectId, menuClass, label) {
+    menuDivId = menuDivId.replace(/#/, "");
+    selectId = selectId.replace(/#/, "");
     if(menuClass) {
       menuClass = menuClass.replace(/\./, "");
     }
 
-    this.menuId = menuId;
+    this.menuDivId = menuDivId;
+    this.selectId = selectId;
     this.menuClass = menuClass || "form-control";
     this.label = label || ''; // || "Select a population";
     this.menu;
@@ -17,7 +19,7 @@ class SelectMenu {
 
   createSelectMenu() {
     var menu = document.createElement("select");
-    menu.id = this.menuId;
+    menu.id = this.selectId;
     menu.className = this.menuClass;
 
     var option = document.createElement("option");
@@ -33,13 +35,13 @@ class SelectMenu {
   }
 
   getSelectMenuOptions() {
-    var selectMenu = document.getElementById(this.menuId);
+    var selectMenu = document.getElementById(this.selectId);
     var options;
 
     if (selectMenu) {
       options = selectMenu.options;
     }
-
+    
     return options;
   }
 
@@ -79,10 +81,8 @@ class SelectMenu {
 
   }
 
-  displayMenu(menuElems, menuDiv) {
-    if (menuDiv) {
-      document.querySelector(menuDiv).appendChild(menuElems);
-    }
+  displayMenu(menuElems) {
+    document.querySelector(`#${this.menuDivId}`).appendChild(menuElems);
   }
 
   addOptionsSeparator (text) {
@@ -91,6 +91,15 @@ class SelectMenu {
     option.disabled = true;
 
     this.menu.appendChild(option);
+  }
+
+
+  populateMenu(pops) {
+    pops = pops.flat();
+    this.createSelectMenu();
+    var menuElems = this.createOptions(pops);
+    this.displayMenu(menuElems);
+
   }
 
 
