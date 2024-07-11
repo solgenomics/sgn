@@ -416,6 +416,10 @@ jQuery(document).ready(function ($) {
         jQuery('#upload_genotypes_dialog').modal('show');
     });
 
+    jQuery('button[name="upload_major_loci_alleles_link"]').click(function() {
+        jQuery("#upload_major_loci_alleles_dialog").modal("show");
+    })
+
     jQuery('#upload_genotype_submit').click(function () {
         submit_genotype_data_upload()
     });

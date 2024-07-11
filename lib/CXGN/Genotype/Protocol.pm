@@ -458,6 +458,53 @@ sub set_description {
 }
 
 
+#
+# Set allele values for the markers in this protocol
+# @param alleles = a hashref of allele values, 
+#   where the key is the marker/locus name
+#   and the value is an arrayref of allowed allele values for that marker
+#
+sub set_alleles {
+    my $self = shift;
+    my $alleles = shift;
+    my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage->dbh();
+    my $species = $self->species_name();
+    my $protocol_id = $self->nd_protocol_id;
+
+    # Get the organism to use for the loci
+    my $qs = "SELECT common_name_id FROM sgn.common_name WHERE common_name ILIKE '" . $species . "%';";
+    my $sths = $dbh->prepare($qs);
+    $sths->execute();
+    my ($common_name_id) = $sths->fetchrow_array();
+
+    foreach my $locus (keys %$alleles) {
+        my $allele_values = $alleles->{$locus};
+        my $locus_symbol = uc($locus);
+        $locus_symbol =~ s/\s//g;
+
+        # Add the Major Locus to the phenome.locus table
+        my $q = "INSERT INTO phenome.locus (locus_name, locus_symbol, common_name_id) VALUES (?,?,?) RETURNING locus_id";
+        my $sth = $dbh->prepare($q);
+        $sth->execute($locus, $locus_symbol, $common_name_id || 1);
+        my ($locus_id) = $sth->fetchrow_array();
+
+        # Add each allele value for the locus
+        foreach my $av (@$allele_values) {
+            my $av_symbol = uc($av);
+            $av_symbol =~ s/\s//g;
+            $q = "INSERT INTO phenome.allele (locus_id, allele_name, allele_symbol) VALUES (?,?,?)";
+            $sth = $dbh->prepare($q);
+            $sth->execute($locus_id, $av, $av_symbol);
+        }
+
+        # Add the Major Locus / Geno Marker link
+        $q = "INSERT INTO phenome.locus_geno_marker (nd_protocol_id, marker_name, locus_id) VALUES (?,?,?)";
+        $sth = $dbh->prepare($q);
+        $sth->execute($protocol_id, $locus, $locus_id);
+    }
+}
+
 
 
 

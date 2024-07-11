@@ -1019,6 +1019,119 @@ $facilities
     </div>
 </div>
 
+
+<div class="modal fade" id="upload_major_loci_alleles_dialog" name="upload_major_loci_alleles_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadMLADialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="reset" class="close" id="upload_mla_close_modal_header" name="upload_mla_close_modal_header" aria-label="Close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadMLADialog">Upload Major Loci Alleles</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "upload_mla_workflow" &>
+
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Major Loci Allele Information" &>
+                            <p>This upload is used to add allele values to Major Loci markers in an existing Genotyping Protocol.</p>
+                            <p>For example, the <strong>1RS</strong> Major Locus can have the following allele values:
+                                <ul>
+                                    <li>Non-1RS</li>
+                                    <li>1RS:1BL</li>
+                                    <li>1RS:1AL</li>
+                                </ul>
+                            </p>
+                            <p>
+                                The first step will be to select the Genotyping Protocol that contains the Major Loci.
+                                This Genotyping Protocol <strong>must already exist in the database</strong>.
+                            </p>
+                            <p>
+                                The second step will be to upload the allele values that are associated with each Major Locus.
+                                The names of the Major Loci <strong>must match the marker names</strong> in the selected Genotyping Protocol.
+                            <hr>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
+                        <& /page/page_title.mas, title=>"Select Genotyping Protocol" &>
+                            <p>Select the Genotyping Protocol that contains the Major Loci.</p>
+
+                            <table id="upload_mla_protocol_search_results" width="100%" class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Select</th>
+                                        <th>Protocol Name</th>
+                                        <th>Header Description</th>
+                                        <th>Number of Markers</th>
+                                        <th>Protocol Description</th>
+                                        <th>Reference Genome</th>
+                                        <th>Species</th>
+                                        <th>Sample Unit</th>
+                                        <th>Create Date</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <hr>
+                            <center>
+                                <button class="btn btn-primary" id="upload_mla_protocol_check_button">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Upload" &>
+                        <& /page/page_title.mas, title=>"Upload Major Loci Alleles" &>
+                            <b>Header:</b><br>
+                            The first row (header) must contain the following:
+                            <br>
+                            <table class="table table-bordered table-hover">
+                            <tbody>
+                            <tr>
+                                <td>Locus</td>
+                                <td>Category</td>
+                                <td>Allele 1</td>
+                                <td>Allele 2</td>
+                                <td>...add additional Allele columns, as necessary</td>
+                            </tr>
+                            </tbody>
+                            </table>
+                            <b>Required values:</b><br>
+                            <b>Locus:</b> the name of the Major Locus (this must match the marker name in the selected Genotyping Protocol)<br>
+                            <b>Allele 1:</b> the name of a possible allele value for this Locus<br>
+                            <b>Allele 2:</b> the name of another possible allele value for this Locus (add as many Allele columns as necessary)<br>
+                            <br /><b>Optional values:</b><br>
+                            <b>Category:</b> the name of the trait category that the Major Locus belongs to<br>
+
+                            <& /help/file_upload_type.mas, type => "Major Loci Alleles" &>
+
+                            <br /><br />
+
+                            <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_mla_form" name="upload_mla_form">
+                                <label for="upload_mla_file" style="display: inline-block;">Major Loci Alleles File:</label>
+                                <input type="file" name="upload_mla_file" id="upload_mla_file" encoding="multipart/form-data" />
+                            </form>
+
+                            <br /><br />
+
+                            <div style="display:none; padding: 10px;" id="upload_mla_errors" class="alert-danger" role="alert"></div>
+                            <div style="display:none; padding: 10px;" id="upload_mla_success" class="alert-success" role="alert"></div>
+
+                            <hr />
+                            <center>
+                                <button type="button" class="btn btn-primary" name="upload_mla_submit" id="upload_mla_submit">Upload</button>
+                            </center>
+                        </&>
+
+                    </&><!-- End of workflow -->
+                </div>
+
+                <div class="modal-footer">
+                    <button type="reset" id="upload_mla_close_modal" name="upload_mla_close_modal" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <style>
 
 .ui-autocomplete { z-index:2147483647; }
@@ -1099,6 +1212,12 @@ jQuery(document).ready(function(){
     var upload_genotyping_data_protocol_table = jQuery('#upload_genotyping_data_protocol_search_results').DataTable( {
         'ajax': {
             'url':'/ajax/genotyping_data/protocols?select_checkbox_name=upload_genotyping_data_protocol_select',
+        },
+    });
+
+    var upload_mla_protocol_table = jQuery('#upload_mla_protocol_search_results').DataTable( {
+        'ajax': {
+            'url':'/ajax/genotyping_data/protocols?select_checkbox_name=upload_mla_protocol_select',
         },
     });
 
@@ -1318,6 +1437,73 @@ jQuery(document).ready(function(){
     jQuery("[name='upload_genotype_data_close_modal']").click(function() {
         jQuery('#upload_genotypes_dialog').modal('hide');
         location.reload();
+    });
+
+    jQuery('#upload_mla_protocol_check_button').click(function(){
+        selected = [];
+        jQuery('input[name="upload_mla_protocol_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1) {
+            alert('Only select one genotyping protocol!');
+        }
+        else {
+            if (selected.length == 0 ) {
+                alert('Select a genotyping protocol!');
+            }
+            else {
+                Workflow.complete('#upload_mla_protocol_check_button');
+                Workflow.focus('#upload_mla_workflow', 2);
+            }
+        }
+        return false;
+    });
+
+    jQuery('#upload_mla_submit').click( function() {
+        var genoProtocolId = jQuery("input[name='upload_mla_protocol_select']:checked")[0]?.value;
+        var uploadFile = jQuery("#upload_mla_file").val();
+
+        if ( !genoProtocolId || genoProtocolId === '' ) {
+            alert("Please go back and select a Genotyping Protocol");
+            return;
+        }
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery('#upload_mla_errors').hide();
+        jQuery('#upload_mla_success').hide();
+        jQuery('#upload_mla_form').attr("action", `/ajax/genotyping_protocol/add_major_loci_alleles/${genoProtocolId}`);
+        jQuery("#upload_mla_form").submit();
+    });
+
+    jQuery('#upload_mla_form').iframePostForm({
+        json: false,
+        post: function () {
+            var uploadFile = jQuery("#upload_mla_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadFile === '') {
+                jQuery('#working_modal').modal("hide");
+            }
+        },
+        complete: function (r) {
+            var clean_r = r.replace(/^<pre[^>]*>/, '');
+            clean_r = clean_r.replace('</pre>', '');
+            response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if ( response.success ) {
+                jQuery('#upload_mla_success').html(`<strong>Major Loci Alleles successfully stored in the database!`);
+                jQuery('#upload_mla_success').show();
+            }
+            else {
+                const errors = (response.error_string || "An unknown error occurred.  Please try again later or contact us for more help.").replaceAll('\n', '<br />');
+                jQuery('#upload_mla_errors').html(`<strong>Major Loci Alleles NOT stored due to the following errors:</strong><br /><br />${errors}`);
+                jQuery('#upload_mla_errors').show();
+            }
+        }
     });
 
 

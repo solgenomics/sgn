@@ -22,6 +22,7 @@ use JSON;
 use CXGN::Tools::Run;
 use CXGN::Genotype::ProtocolProp;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Genotype::ParseUpload;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -282,5 +283,88 @@ sub genotyping_protocol_details_POST : Args(0) {
 }
 
 
+sub genotyping_protocol_upload_mla : Path('/ajax/genotyping_protocol/add_major_loci_alleles') : ActionClass('REST') { }
+
+sub genotyping_protocol_upload_mla_POST : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $protocol_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $upload = $c->req->upload('upload_mla_file');
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my (@errors, %response);
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not uploading mla.\n";
+        push @errors, "You need to be logged in to upload major loci alleles.";
+        $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_role = $c->user->get_object->get_user_type();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => 'mla_upload',
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in archive
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        push @errors, "Could not save file $upload_original_name in archive";
+        $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
+        return;
+    }
+    unlink $upload_tempfile;
+
+    # Validate the upload file
+    my $parser = CXGN::Genotype::ParseUpload->new({
+        chado_schema => $schema,
+        filename => $archived_filename_with_path,
+        observation_unit_type_name => 'marker',
+        nd_protocol_id => $protocol_id
+    });
+    $parser->load_plugin('MajorLociAlleles');
+    my $parsed_data = $parser->parse();
+    my $parse_errors = $parser->get_parse_errors();
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            return;
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."\n";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        return;
+    }
+
+    # Store the allele information
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $schema,
+        nd_protocol_id => $protocol_id
+    });
+    $protocol->set_alleles($parsed_data);
+
+    $c->stash->{rest} = { success => 1 };
+    return;
+}
 
 1;
