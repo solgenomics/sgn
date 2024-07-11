@@ -2,6 +2,7 @@
 $preferred_species => ""
 $editable_stock_props
 $editable_stock_props_definitions
+$email_address => ""
 </%args>
 
 <%perl>
@@ -72,6 +73,14 @@ $editable_stock_props_definitions
                             <label class="col-sm-4 control-label">Upload File: </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="new_accessions_upload_file" id="new_accessions_upload_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Email Report: </label>
+                            <div class="col-sm-8">
+                                <input id="email_option_to_recieve_accession_upload_status" name="email_option_to_recieve_upload_status" type="checkbox" data-toggle="toggle" style="margin-right: 10px;">
+                                <label id="email_label_upload" class="control-label" style="display: none; margin-right: 10px;">Email:</label>
+                                <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address %>" style="display: none;">
                             </div>
                         </div>
                         <div class="form-group">

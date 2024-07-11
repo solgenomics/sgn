@@ -250,8 +250,27 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    function toggleEmailField() {
+        var checkbox = jQuery('#email_option_to_recieve_accession_upload_status');
+        var emailField = jQuery('#email_address_upload');
+        var emailLabel = jQuery('#email_label_upload');
+        if (checkbox.prop('checked')) {
+            emailField.show();
+            emailLabel.show();
+        } else {
+            emailField.hide();
+            emailLabel.hide();
+        }
+    }
+
+    jQuery('#email_option_to_recieve_accession_upload_status').on('change', toggleEmailField);
+    toggleEmailField();
+
     function add_accessions(full_info, species_names) {
+        var email_address = jQuery('#email_address_upload').val();
+        console.log("check email address:", email_address);
         console.log(full_info);
+
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -260,6 +279,7 @@ jQuery(document).ready(function ($) {
             data: {
                 'full_info': JSON.stringify(full_info),
                 'allowed_organisms': JSON.stringify(species_names),
+                'email_address_upload': email_address,
             },
             beforeSend: function(){
                 disable_ui();
@@ -319,6 +339,8 @@ jQuery(document).ready(function ($) {
             var populationName = $("#population_name_input").val();
             var organizationName = $("#organization_name_input").val();
             var accessionsToAdd = accessionList;
+            var emailAddress = $("#email_option_to_recieve_accession_upload_status").prop('checked') ? $("#email_address_upload").val() : "";
+
             if (!speciesName) {
                 alert("Species name required");
                 return;
@@ -336,18 +358,18 @@ jQuery(document).ready(function ($) {
 		function(r) {
 		    if (r.error) { alert(r.error); }
 		    else {
-			for(var i=0; i<accessionsToAdd.length; i++){
-			    infoToAdd.push({
-				'species':speciesName,
-				'defaultDisplayName':accessionsToAdd[i],
-				'germplasmName':accessionsToAdd[i],
-				'organizationName':organizationName,
-				'populationName':populationName,
-			    });
-			    speciesNames.push(speciesName);
-			}
+			    for(var i=0; i<accessionsToAdd.length; i++){
+			        infoToAdd.push({
+			    	    'species':speciesName,
+			    	    'defaultDisplayName':accessionsToAdd[i],
+			    	    'germplasmName':accessionsToAdd[i],
+			    	    'organizationName':organizationName,
+			    	    'populationName':populationName,
+			        });
+			        speciesNames.push(speciesName);
+			    }
 		    }
-		    add_accessions(infoToAdd, speciesNames)
+		    add_accessions(infoToAdd, speciesNames, emailAddress)
 		    $('#review_absent_dialog').modal("hide");
 
 		},

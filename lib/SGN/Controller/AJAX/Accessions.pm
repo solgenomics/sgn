@@ -34,6 +34,9 @@ use Encode;
 #use Encode::Detect;
 use JSON::XS qw | decode_json |;
 use utf8;
+use Email::MIME;
+use Email::Simple;
+use Email::Sender::Simple qw /sendmail/;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -378,8 +381,11 @@ sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') 
 
 sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
+
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $email_address = $c->req->param("email_address_upload");
+    # print STDERR "he email address: $email_address\n";
 
     my $full_info = $c->req->param('full_info') ? _parse_list_from_json($c, $c->req->param('full_info')) : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? _parse_list_from_json($c, $c->req->param('allowed_organisms')) : [];
@@ -462,27 +468,83 @@ sub add_accession_list_POST : Args(0) {
         }
     };
 
-    my $transaction_error;
+    # my $transaction_error;
+    my ($email_subject, $email_body);
     try {
         $schema->txn_do($coderef_bcs);
+
+        if ($email_address) {
+            # print STDERR "send email: $email_address\n";
+            print STDERR "transaction succeeded! committing accessions\n\n";
+
+            $email_subject = "Accessions upload status";
+            $email_body = "Dear $user_name,\n\n";
+            $email_body.= "Congratulations, all your accessions have been successfully uploaded to the database.\n\n";
+            $email_body.= "Upload details:\n";
+            $email_body.= "Total accessions added: " . scalar(@added_stocks) . "\n";
+            $email_body.= "\nThank you.\nHave a nice day\n";
+
+            my $email = Email::MIME->create(
+                header_str => [
+                    From    => 'noreply@breedbase.org',
+                    To      => $email_address,
+                    Subject => $email_subject,
+                ],
+                attributes   => {
+                    charset  => 'UTF-8',
+                    encoding => 'quoted-printable',
+                },
+                body_str => $email_body,
+            );
+
+            my $email_string = $email->as_string;
+            sendmail($email_string);
+        }
+
+        $c->stash->{rest} = {
+            success => "1",
+            added => \@added_fullinfo_stocks
+            # print STDERR Dumper \@added_fullinfo_stocks;
+        };
     } catch {
-        $transaction_error =  $_;
+        # $transaction_error =  $_;
+        my $error_message = "An error occurred while uploading accessions: $_\n";
+        print STDERR $error_message;
+
+        $email_subject = 'Error in Accession Upload';
+        $email_body    = "Dear $user_name,\n\n$error_message\n";
+        $email_body   .= "Please correct these errors and try uploading again.\n\n";
+        $email_body   .= "Thank you\nHave a nice day\n";
+
+        if ($email_address) {
+            my $error_email = Email::MIME->create(
+                header_str  => [
+                    From    => 'noreply@breedbase.org',
+                    To      => $email_address,
+                    Subject => $email_subject,
+                ],
+                attributes   => {
+                    charset  => 'UTF-8',
+                    encoding => 'quoted-printable',
+                },
+                body_str => $email_body,
+            );
+
+            my $error_email_string = $error_email->as_string;
+            sendmail($error_email_string);
+        }
+        $c->stash->{rest} = {error => $error_message};
     };
-    if ($transaction_error) {
-        $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
-        print STDERR "Transaction error storing stocks: $transaction_error\n";
-        return;
-    }
+    # if ($transaction_error) {
+    #     $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
+    #     print STDERR "Transaction error storing stocks: $transaction_error\n";
+    #     return;
+    # }
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-    #print STDERR Dumper \@added_fullinfo_stocks;
-    $c->stash->{rest} = {
-        success => "1",
-        added => \@added_fullinfo_stocks
-    };
     return;
 }
 

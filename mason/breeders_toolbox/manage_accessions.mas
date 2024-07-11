@@ -6,6 +6,7 @@ $list_id => undef
 $editable_stock_props => {}
 $editable_stock_props_definitions => {}
 $show_grafting_interface => ''
+$email_address => ""
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'CXGN.BreedersToolbox.UploadGrafts', 'CXGN.BreedersToolbox.UploadRenameAccessions' ] &>
@@ -34,7 +35,7 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=> $subtitle  &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
-<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions, email_address => $email_address &>
 <& /breeders_toolbox/upload_pedigrees_dialogs.mas &>
 <& /breeders_toolbox/upload_accession_rename_dialog.mas &>
 <& /breeders_toolbox/upload_graft_dialogs.mas &>
