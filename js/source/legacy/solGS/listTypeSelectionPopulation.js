@@ -275,9 +275,9 @@ jQuery(document).ready(function () {
                     var predictedPop = solGS.listTypeSelectionPopulation.getPredictedSelectionPopArgs(selectedPop)
 
                     solGS.sIndex.populateSindexMenu(predictedPop);
-                    // solGS.correlation.populateGenCorrMenu();
-                    // solGS.geneticGain.ggSelectionPopulations();
-                    // solGS.cluster.listClusterPopulations();
+                    solGS.correlation.populateGenCorrMenu(predictedPop);
+                    solGS.geneticGain.populateGeneticGainMenu(predictedPop);
+                    solGS.cluster.populateClusterMenu(predictedPop);
                   }
                 } else {
                   solGS.listTypeSelectionPopulation.showJobSubmissionDialog(listId);
@@ -307,9 +307,9 @@ jQuery(document).ready(function () {
                 var predictedPop = solGS.listTypeSelectionPopulation.getPredictedSelectionPopArgs(selectedPop)
 
                 solGS.sIndex.populateSindexMenu(predictedPop);
-                // solGS.correlation.populateGenCorrMenu();
-                // solGS.geneticGain.ggSelectionPopulations();
-                // solGS.cluster.listClusterPopulations();
+                solGS.correlation.populateGenCorrMenu(predictedPop);
+                solGS.geneticGain.populateGeneticGainMenu(predictedPop);
+                solGS.cluster.populateClusterMenu(predictedPop);
               }
             } else {
               solGS.dataset.queueDatasetSelectionPredictionJob(datasetId, datasetName);
