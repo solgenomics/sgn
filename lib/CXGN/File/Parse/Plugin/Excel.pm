@@ -66,7 +66,7 @@ sub parse {
     for my $col ( 0 .. $col_max ) {
       my $hv = $rtn{columns}->[$col];
       my $c = $worksheet->get_cell($row, $col);
-      my $v = $c->value() if $c;
+      my $v = $c ? $c->value() : undef;
       $v = $super->clean_value($v, $hv);
       $row_info{$hv} = $v;
 
