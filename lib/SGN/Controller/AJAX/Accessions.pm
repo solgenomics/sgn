@@ -468,7 +468,7 @@ sub add_accession_list_POST : Args(0) {
         }
     };
 
-    # my $transaction_error;
+    my $transaction_error;
     my ($email_subject, $email_body);
     try {
         $schema->txn_do($coderef_bcs);
@@ -507,7 +507,7 @@ sub add_accession_list_POST : Args(0) {
             # print STDERR Dumper \@added_fullinfo_stocks;
         };
     } catch {
-        # $transaction_error =  $_;
+        $transaction_error =  $_;
         my $error_message = "An error occurred while uploading accessions: $_\n";
         print STDERR $error_message;
 
@@ -535,11 +535,11 @@ sub add_accession_list_POST : Args(0) {
         }
         $c->stash->{rest} = {error => $error_message};
     };
-    # if ($transaction_error) {
-    #     $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
-    #     print STDERR "Transaction error storing stocks: $transaction_error\n";
-    #     return;
-    # }
+    if ($transaction_error) {
+        $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
+        print STDERR "Transaction error storing stocks: $transaction_error\n";
+        return;
+    }
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
