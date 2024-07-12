@@ -414,8 +414,12 @@ sub verify {
                         %trait_categories_hash = map { $_ => 1 } @trait_categories;
                     }
 
-                    if (!exists($trait_categories_hash{$trait_value})) {
-                        $error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                    if ($trait_value ne '' && !exists($trait_categories_hash{$trait_value})) {
+                        my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
+                        $error_message = "<small>This trait value should be one of $valid_values: <br/>Plot Name: $plot_name<br/>Trait Name: $trait_name<br/>Value: $trait_value</small><hr>";
+                        print $error_message;
+                    } else {
+                        print "Trait value is valid $trait_value.\n";
                     }
                 }
 

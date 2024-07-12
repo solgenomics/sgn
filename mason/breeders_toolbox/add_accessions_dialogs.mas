@@ -105,6 +105,8 @@ $email_address => ""
                         </div>
                     </form>
 
+                    <& /help/file_upload_type.mas, type => "Accessions" &>
+
                 </div>
 
             </div>
@@ -128,8 +130,6 @@ $email_address => ""
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Accessions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -179,6 +179,7 @@ $email_address => ""
 %  }
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Accessions" &>
             </div>
             <div class="modal-footer">
                 <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
