@@ -76,7 +76,7 @@ $email_address => ""
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Email Report: </label>
+                            <label class="col-sm-4 control-label">Email Alert: </label>
                             <div class="col-sm-8">
                                 <input id="email_option_to_recieve_accession_upload_status" name="email_option_to_recieve_upload_status" type="checkbox" data-toggle="toggle" style="margin-right: 10px;">
                                 <label id="email_label_upload" class="control-label" style="display: none; margin-right: 10px;">Email:</label>

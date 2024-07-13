@@ -268,9 +268,15 @@ jQuery(document).ready(function ($) {
 
     function add_accessions(full_info, species_names) {
         var email_address = jQuery('#email_address_upload').val();
+        var email_option_enabled = jQuery('#email_option_to_recieve_accession_upload_status').prop('checked') ? 1 : 0;
         console.log("check email address:", email_address);
         console.log(full_info);
 
+        if (!email_option_enabled) {
+            disable_ui();
+        } else {
+            alert('You will receive an email when the process is complete.');
+        }
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -280,13 +286,17 @@ jQuery(document).ready(function ($) {
                 'full_info': JSON.stringify(full_info),
                 'allowed_organisms': JSON.stringify(species_names),
                 'email_address_upload': email_address,
+                'email_option_enabled': email_option_enabled,
             },
-            beforeSend: function(){
-                disable_ui();
-            },
+            // beforeSend: function(){
+            //     disable_ui();
+            // },
             success: function (response) {
-                enable_ui();
-		//alert("ADD ACCESSIONS: "+JSON.stringify(response));
+                console.log("email_option_enabled on success:", email_option_enabled);
+                if (!email_option_enabled) {
+                    enable_ui();
+                }
+		        //alert("ADD ACCESSIONS: "+JSON.stringify(response));
                 if (response.error) {
                     alert(response.error);
                 } else {
@@ -299,6 +309,10 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function (response) {
+                console.log("email_option_enabled on error:", email_option_enabled);
+                if (!email_option_enabled) {
+                    enable_ui();
+                }
                 alert('An error occurred in processing. sorry'+response.responseText);
             }
         });
@@ -340,6 +354,7 @@ jQuery(document).ready(function ($) {
             var organizationName = $("#organization_name_input").val();
             var accessionsToAdd = accessionList;
             var emailAddress = $("#email_option_to_recieve_accession_upload_status").prop('checked') ? $("#email_address_upload").val() : "";
+            var email_option_enabled = $("#email_option_to_recieve_accession_upload_status").prop('checked') ? 1 : 0;
 
             if (!speciesName) {
                 alert("Species name required");
@@ -352,35 +367,35 @@ jQuery(document).ready(function ($) {
             if (!accessionsToAdd || accessionsToAdd.length == 0) {
                 alert("No accessions to add");
                 return;
+	        }
+
+	        verify_species_name().then(
+		    function(r) {
+		        if (r.error) { alert(r.error); }
+		        else {
+		    	    for(var i=0; i<accessionsToAdd.length; i++){
+		    	        infoToAdd.push({
+		    	    	    'species':speciesName,
+		    	    	    'defaultDisplayName':accessionsToAdd[i],
+		    	    	    'germplasmName':accessionsToAdd[i],
+		    	    	    'organizationName':organizationName,
+		    	    	    'populationName':populationName,
+		    	        });
+		    	        speciesNames.push(speciesName);
+		    	    }
+		        }
+		        add_accessions(infoToAdd, speciesNames);
+		        $('#review_absent_dialog').modal("hide");
+
+		    },
+		    function(r) {
+		        alert('ERROR! Try again later.');
+		    }
+	        );
 	    }
 
-	    verify_species_name().then(
-		function(r) {
-		    if (r.error) { alert(r.error); }
-		    else {
-			    for(var i=0; i<accessionsToAdd.length; i++){
-			        infoToAdd.push({
-			    	    'species':speciesName,
-			    	    'defaultDisplayName':accessionsToAdd[i],
-			    	    'germplasmName':accessionsToAdd[i],
-			    	    'organizationName':organizationName,
-			    	    'populationName':populationName,
-			        });
-			        speciesNames.push(speciesName);
-			    }
-		    }
-		    add_accessions(infoToAdd, speciesNames, emailAddress)
-		    $('#review_absent_dialog').modal("hide");
-
-		},
-		function(r) {
-		    alert('ERROR! Try again later.');
-		}
-	    );
-	}
-
-	add_accessions(infoToAdd, speciesNames)
-	$('#review_absent_dialog').modal("hide");
+	    add_accessions(infoToAdd, speciesNames, emailAddress, email_option_enabled);
+	    $('#review_absent_dialog').modal("hide");
 
         //window.location.href='/breeders/accessions';
     });

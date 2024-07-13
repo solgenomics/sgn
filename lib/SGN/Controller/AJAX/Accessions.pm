@@ -34,9 +34,7 @@ use Encode;
 #use Encode::Detect;
 use JSON::XS qw | decode_json |;
 use utf8;
-use Email::MIME;
-use Email::Simple;
-use Email::Sender::Simple qw /sendmail/;
+use CXGN::Contact;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -385,7 +383,8 @@ sub add_accession_list_POST : Args(0) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $email_address = $c->req->param("email_address_upload");
-    # print STDERR "he email address: $email_address\n";
+    my $email_option_enabled = $c->req->param("email_option_enabled");
+    print STDERR "here is the email_address: $email_address\n";
 
     my $full_info = $c->req->param('full_info') ? _parse_list_from_json($c, $c->req->param('full_info')) : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? _parse_list_from_json($c, $c->req->param('allowed_organisms')) : [];
@@ -473,7 +472,7 @@ sub add_accession_list_POST : Args(0) {
     try {
         $schema->txn_do($coderef_bcs);
 
-        if ($email_address) {
+        if ($email_option_enabled == 1 && $email_address) {
             # print STDERR "send email: $email_address\n";
             print STDERR "transaction succeeded! committing accessions\n\n";
 
@@ -484,21 +483,7 @@ sub add_accession_list_POST : Args(0) {
             $email_body.= "Total accessions added: " . scalar(@added_stocks) . "\n";
             $email_body.= "\nThank you.\nHave a nice day\n";
 
-            my $email = Email::MIME->create(
-                header_str => [
-                    From    => 'noreply@breedbase.org',
-                    To      => $email_address,
-                    Subject => $email_subject,
-                ],
-                attributes   => {
-                    charset  => 'UTF-8',
-                    encoding => 'quoted-printable',
-                },
-                body_str => $email_body,
-            );
-
-            my $email_string = $email->as_string;
-            sendmail($email_string);
+            CXGN::Contact::send_email($email_subject, $email_body, $email_address);
         }
 
         $c->stash->{rest} = {
@@ -511,27 +496,13 @@ sub add_accession_list_POST : Args(0) {
         my $error_message = "An error occurred while uploading accessions: $_\n";
         print STDERR $error_message;
 
-        $email_subject = 'Error in Accession Upload';
-        $email_body    = "Dear $user_name,\n\n$error_message\n";
-        $email_body   .= "Please correct these errors and try uploading again.\n\n";
-        $email_body   .= "Thank you\nHave a nice day\n";
+        if ($email_option_enabled == 1 && $email_address) {
+            $email_subject = 'Error in Accession Upload';
+            $email_body    = "Dear $user_name,\n\n$error_message\n";
+            $email_body   .= "Please correct these errors and try uploading again.\n\n";
+            $email_body   .= "Thank you\nHave a nice day\n";
 
-        if ($email_address) {
-            my $error_email = Email::MIME->create(
-                header_str  => [
-                    From    => 'noreply@breedbase.org',
-                    To      => $email_address,
-                    Subject => $email_subject,
-                ],
-                attributes   => {
-                    charset  => 'UTF-8',
-                    encoding => 'quoted-printable',
-                },
-                body_str => $email_body,
-            );
-
-            my $error_email_string = $error_email->as_string;
-            sendmail($error_email_string);
+            CXGN::Contact::send_email($email_subject, $email_body, $email_address);
         }
         $c->stash->{rest} = {error => $error_message};
     };
