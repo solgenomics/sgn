@@ -10,6 +10,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileRequest;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::TimeUtils;
+use DateTime;
 use utf8;
 use JSON;
 
@@ -300,8 +301,22 @@ sub _search {
                 seasonDbId => $_->{year}
             );
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-            if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
-            if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
+
+	    print STDERR "OBS TIMESTAMP: $obs_timestamp START : $start_time END: $end_time\n";
+	    
+	    if ($obs_timestamp) { 
+		my ($obs_year, $obs_month, $obs_day) = split /\-/, $obs_timestamp;
+		my ($start_year, $start_month, $start_day) = split /\-/, $start_time;
+		my ($end_year, $end_month, $end_day) = split /\-/, $end_time;
+		
+		my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
+		my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
+		my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
+	    
+	    
+		if ( $start_time && DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) { next; } #skip observations before date range
+		if ( $end_time && DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) { next; } #skip observations after date range
+	    }
 
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
